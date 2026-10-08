@@ -1,0 +1,177 @@
+import assert from "node:assert/strict";
+import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import test from "node:test";
+import { run as runT09 } from "../tools/checks/T09-offline.mjs";
+import { run as runT10 } from "../tools/checks/T10-sandbox.mjs";
+import { run as runT11 } from "../tools/checks/T11-behavior.mjs";
+import { run as runT12 } from "../tools/checks/T12-accessibility.mjs";
+import { run as runT13 } from "../tools/checks/T13-responsive.mjs";
+import { run as runT18 } from "../tools/checks/T18-markdown-pdf.mjs";
+import { markdownFromHtml } from "../tools/qa/md-from-html.mjs";
+import { pdfFromMarkdown } from "../tools/qa/pdf-from-md.mjs";
+
+const fixtures = path.resolve("tests/fixtures/qa");
+const runners = { T09: runT09, T10: runT10, T11: runT11, T12: runT12, T13: runT13, T18: runT18 };
+const expectedHtml = "course/module/topic/artifact.html";
+
+async function makeRepository(pageName, options = {}) {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-qa-"));
+  const topicRoot = path.join(root, "course", "module", "topic");
+  const evidenceRoot = path.join(root, "evidence", "course", "module", "topic");
+  await mkdir(topicRoot, { recursive: true });
+  await mkdir(evidenceRoot, { recursive: true });
+  await cp(path.join(fixtures, pageName), path.join(topicRoot, "artifact.html"));
+  await writeFile(
+    path.join(root, "course", "course.json"),
+    `${JSON.stringify({ id: "course", moduleOrder: ["module"] }, null, 2)}\n`,
+  );
+  await writeFile(
+    path.join(root, "course", "module", "module.json"),
+    `${JSON.stringify({ id: "module", topicOrder: ["topic"] }, null, 2)}\n`,
+  );
+  const topic = {
+    id: "topic",
+    title: "QA fixture",
+    artifacts: {
+      html: { status: "present" },
+      md: { status: options.markdown === false ? "absent" : "present" },
+      pdf: { status: options.pdf ? "present" : "absent" },
+    },
+  };
+  await writeFile(path.join(topicRoot, "topic.json"), `${JSON.stringify(topic, null, 2)}\n`);
+  const spec = options.spec ?? JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
+  await writeFile(path.join(evidenceRoot, "qa-paths.json"), `${JSON.stringify(spec, null, 2)}\n`);
+  if (options.markdownText !== undefined) {
+    await writeFile(path.join(topicRoot, "artifact.md"), options.markdownText);
+  }
+  return { root, topicRoot };
+}
+
+function context(root) {
+  return {
+    root,
+    explicit: true,
+    targets: [root],
+    scanRoots: [root],
+    display: (file) => path.relative(root, file).split(path.sep).join("/") || ".",
+  };
+}
+
+async function runFixture(rule, page, options) {
+  const repository = await makeRepository(page, options);
+  try {
+    return await runners[rule](context(repository.root));
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+  }
+}
+
+function assertPreciseFailure(errors, rule, message, file = expectedHtml) {
+  assert.equal(errors.length, 1, JSON.stringify(errors));
+  assert.equal(errors[0].rule, rule);
+  assert.equal(errors[0].file, file);
+  assert.match(errors[0].message, message);
+}
+
+for (const rule of ["T09", "T10", "T11", "T12", "T13"]) {
+  test(`${rule} accepts the known-good page`, { timeout: 60000 }, async () => {
+    assert.deepEqual(await runFixture(rule, "good.html"), []);
+  });
+}
+
+test("T09 writes a schema-shaped receipt only to gitignored output", { timeout: 60000 }, async () => {
+  const repository = await makeRepository("good.html");
+  try {
+    assert.deepEqual(await runT09(context(repository.root)), []);
+    const receiptFile = path.join(
+      repository.root,
+      "build",
+      "qa",
+      "course",
+      "module",
+      "topic",
+      "qa-receipt.json",
+    );
+    const receipt = JSON.parse(await readFile(receiptFile, "utf8"));
+    assert.equal(receipt.schemaVersion, 1);
+    assert.equal(receipt.checks[0].id, "T09");
+    assert.equal(receipt.passCount, 1);
+    assert.match(receipt.artifactHashes["artifact.html"], /^[a-f0-9]{64}$/);
+    assert.equal(receipt.toolVersions.playwright, "1.55.0");
+    await assert.rejects(
+      readFile(path.join(repository.root, "evidence", "course", "module", "topic", "qa-receipt.json")),
+      { code: "ENOENT" },
+    );
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+  }
+});
+
+test("T09 reports a blocked remote load against the exact HTML file", { timeout: 60000 }, async () => {
+  const errors = await runFixture("T09", "remote-load.html");
+  assertPreciseFailure(errors, "T09", /network request: https:\/\/example\.invalid\/remote\.png/);
+});
+
+test("T09 reports a console error against the exact HTML file", { timeout: 60000 }, async () => {
+  const errors = await runFixture("T09", "console-error.html");
+  assertPreciseFailure(errors, "T09", /console error: intentional fixture error/);
+});
+
+test("T10 catches a form-submission dependency in the strict sandbox", { timeout: 60000 }, async () => {
+  const simple = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
+  for (const name of Object.keys(simple.routes)) simple.routes[name] = [{ do: "click", selector: "#success" }];
+  simple.progress = simple.completion;
+  const errors = await runFixture("T10", "sandbox-form.html", { spec: simple });
+  assertPreciseFailure(errors, "T10", /data-pep-complete|sandbox|did not load/i);
+});
+
+test("T11 catches duplicate credit after restart", { timeout: 60000 }, async () => {
+  const errors = await runFixture("T11", "duplicate-credit.html");
+  assertPreciseFailure(errors, "T11", /#progress text did not match/);
+});
+
+test("T12 catches low contrast in forced dark mode", { timeout: 60000 }, async () => {
+  const simple = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
+  for (const name of Object.keys(simple.routes)) simple.routes[name] = [{ do: "click", selector: "#success" }];
+  simple.keyboard = [{ do: "click", selector: "#success" }];
+  simple.progress = simple.completion;
+  const errors = await runFixture("T12", "low-contrast-dark.html", { spec: simple });
+  assertPreciseFailure(errors, "T12", /dark contrast|color-contrast|axe serious\/critical/);
+});
+
+test("T13 catches horizontal overflow at 400 px", { timeout: 60000 }, async () => {
+  const errors = await runFixture("T13", "horizontal-overflow.html");
+  assertPreciseFailure(errors, "T13", /mobile horizontal overflow: 500 > 400/);
+});
+
+test("T18 accepts deterministic Markdown", { timeout: 60000 }, async () => {
+  const repository = await makeRepository("good.html");
+  try {
+    const html = path.join(repository.topicRoot, "artifact.html");
+    const markdown = path.join(repository.topicRoot, "artifact.md");
+    await writeFile(markdown, await markdownFromHtml(html));
+    await pdfFromMarkdown(markdown, path.join(repository.topicRoot, "artifact.pdf"));
+    const topic = JSON.parse(await readFile(path.join(repository.topicRoot, "topic.json"), "utf8"));
+    topic.artifacts.pdf.status = "present";
+    await writeFile(
+      path.join(repository.topicRoot, "topic.json"),
+      `${JSON.stringify(topic, null, 2)}\n`,
+    );
+    assert.deepEqual(await runT18(context(repository.root)), []);
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+  }
+});
+
+test("T18 catches Markdown parity mismatch against the exact file", { timeout: 60000 }, async () => {
+  const mismatch = await readFile(path.join(fixtures, "md-parity-mismatch.md"), "utf8");
+  const errors = await runFixture("T18", "good.html", { markdownText: mismatch });
+  assertPreciseFailure(
+    errors,
+    "T18",
+    /artifact\.md differs from deterministic HTML derivation/,
+    "course/module/topic/artifact.md",
+  );
+});

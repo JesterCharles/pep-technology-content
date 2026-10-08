@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pep.local/schemas/qa-paths.schema.json",
+  "title": "PEP per-topic QA paths",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "completion",
+    "progress",
+    "routes",
+    "simulatorEdges",
+    "restart",
+    "keyboard"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "completion": { "$ref": "#/$defs/assertion" },
+    "progress": { "$ref": "#/$defs/assertion" },
+    "routes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["success", "wrongFirst", "wrongTwice"],
+      "properties": {
+        "success": { "$ref": "#/$defs/actions" },
+        "wrongFirst": { "$ref": "#/$defs/actions" },
+        "wrongTwice": { "$ref": "#/$defs/actions" }
+      }
+    },
+    "simulatorEdges": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "actions"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "actions": { "$ref": "#/$defs/actions" }
+        }
+      }
+    },
+    "restart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actions", "credit"],
+      "properties": {
+        "actions": { "$ref": "#/$defs/actions" },
+        "credit": { "$ref": "#/$defs/assertion" }
+      }
+    },
+    "keyboard": { "$ref": "#/$defs/actions" }
+  },
+  "$defs": {
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/action" }
+    },
+    "assertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selector"],
+      "properties": {
+        "selector": { "type": "string", "minLength": 1 },
+        "text": { "type": "string" },
+        "value": { "type": "string" },
+        "attribute": { "type": "string", "minLength": 1 },
+        "equals": { "type": "string" }
+      },
+      "anyOf": [
+        { "required": ["text"] },
+        { "required": ["value"] },
+        { "required": ["attribute", "equals"] }
+      ]
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["do", "selector"],
+      "properties": {
+        "do": {
+          "enum": [
+            "click",
+            "check",
+            "fill",
+            "press",
+            "select",
+            "expectText",
+            "expectValue",
+            "expectAttribute",
+            "expectVisible",
+            "expectHidden",
+            "expectEnabled",
+            "expectDisabled",
+            "expectFocus"
+          ]
+        },
+        "selector": { "type": "string", "minLength": 1 },
+        "value": { "type": "string" },
+        "key": { "type": "string", "minLength": 1 },
+        "attribute": { "type": "string", "minLength": 1 },
+        "equals": { "type": "string" },
+        "text": { "type": "string" },
+        "timeoutMs": { "type": "integer", "minimum": 1, "maximum": 30000 }
+      }
+    }
+  }
+}

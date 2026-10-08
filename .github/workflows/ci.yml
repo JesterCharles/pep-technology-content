@@ -27,12 +27,29 @@ jobs:
         with:
           node-version-file: .nvmrc
 
+      - name: Cache Playwright Chromium
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39835a # v4.3.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-1.55.0-chromium
+
+      - name: Install dependencies and Playwright Chromium
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
       - name: Run repository gates
         run: |
-          if [ ! -f package.json ]; then
-            echo "Tooling has not landed: no package.json, so npm ci, npm test and npm run check are skipped."
-            exit 0
-          fi
-          npm ci
           npm test
           npm run check
+
+      - name: Upload QA diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: qa-screenshots-and-traces
+          path: |
+            build/qa/**/*.png
+            build/qa/**/*.zip
+          if-no-files-found: ignore
+          retention-days: 7
