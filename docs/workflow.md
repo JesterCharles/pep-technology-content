@@ -46,8 +46,7 @@ This document defines how learner content is authored, criticized, reconciled, g
 ### 2.5 Machine gates
 
 All gates run on the final bytes.
-Every gate runs locally and in CI except those that need uncommitted private staging: the lab solved-run gate (part of gate 15) runs locally only and is recorded as evidence of the form "solved at <commit> by run <id>", bound to the current lab bytes, and CI checks that record for presence and binding instead of rerunning it.
-
+Every gate runs locally and in CI except the lab solved-run gate (part of gate 15), which needs uncommitted private staging; `docs/lab-contract.md` defines how it is recorded and how CI checks that record.
 
 1. Schema: every manifest, lab, blueprint and evidence file validates.
 2. Tree: no `topics/` directory; allowed filenames only; no empty or placeholder files; manifests and files match; absences carry reasons.
