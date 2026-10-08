@@ -79,5 +79,8 @@ coding-lab/
 - `lab.json` is schema-valid and its prerequisites are verified.
 - The starter expectation holds.
 - The test command passes offline after setup against the private solution.
+  This solved-run gate runs locally against uncommitted private staging only, never in CI, because solutions never enter the repository.
+  It is recorded in the lab's evidence as text of the form "solved at <commit> by run <id>", bound to the sha256 of the current lab bytes.
+  CI checks that this record is present and that its binding equals the current lab bytes; a missing or stale record fails the gate.
 - Cleanup leaves nothing behind.
 - Labs run on Ubuntu in CI; other operating systems are recorded locally until CI covers them.

@@ -45,7 +45,9 @@ This document defines how learner content is authored, criticized, reconciled, g
 
 ### 2.5 Machine gates
 
-All gates run on the final bytes, locally and in CI:
+All gates run on the final bytes.
+Every gate runs locally and in CI except those that need uncommitted private staging: the lab solved-run gate (part of gate 15) runs locally only and is recorded as evidence of the form "solved at <commit> by run <id>", bound to the current lab bytes, and CI checks that record for presence and binding instead of rerunning it.
+
 
 1. Schema: every manifest, lab, blueprint and evidence file validates.
 2. Tree: no `topics/` directory; allowed filenames only; no empty or placeholder files; manifests and files match; absences carry reasons.
@@ -61,7 +63,7 @@ All gates run on the final bytes, locally and in CI:
 12. GIFT: parses, ASCII only, one correct answer, feedback on every option, category matches the topic.
 13. Video: live, public, embeddable and within budget.
 14. Markdown and PDF: heading and objective parity, static alternatives present, PDF renders with extractable text.
-15. Lab: the gates in `docs/lab-contract.md`.
+15. Lab: the gates in `docs/lab-contract.md`; the solved-run gate is local-only with recorded evidence that CI checks.
 16. Diagrams and licensing: inline SVG with title, description and text alternative; every third-party item has a license record.
 17. Critic gate: both critic reports or rechecks cover the final bytes, zero open critical or high findings, and reconciliation by a non-author.
 
