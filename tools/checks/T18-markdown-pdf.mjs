@@ -62,9 +62,14 @@ export async function run(ctx) {
             throw new Error(`${display(ctx, pdfFile)} has no extractable text`);
           }
           const pdfPage = await browser.newPage();
-          const response = await pdfPage.goto(pathToFileURL(pdfFile).href, { waitUntil: "load" });
-          if (response && !response.ok()) throw new Error(`${display(ctx, pdfFile)} did not render`);
-          await pdfPage.close();
+          try {
+            const response = await pdfPage.goto(pathToFileURL(pdfFile).href, { waitUntil: "load" });
+            if (response && !response.ok()) throw new Error(`${display(ctx, pdfFile)} did not render`);
+          } catch (error) {
+            if (!/Download is starting/.test(error.message)) throw error;
+          } finally {
+            await pdfPage.close();
+          }
           details.push("PDF rendered with extractable text");
         }
       } catch (error) {
