@@ -10,7 +10,7 @@ This repository is private and proprietary; see `LICENSE-NOTICE.md`.
 ```
 README.md  AGENTS.md  LICENSE-NOTICE.md
 docs/                         contracts: HTML artifact, lab, workflow
-schemas/ tools/ tests/        validation tooling (lands in later tooling PRs)
+schemas/ tools/ tests/        schemas, `tools/pep` CLI and unit-test fixtures
 components/                   versioned shared page components (later tooling PR)
 <course>/
   course.json  course.lock.json
@@ -54,10 +54,8 @@ npm test        # tool unit tests
 npm run check   # all content gates
 ```
 
-These commands become available when the tooling PRs add `package.json`; this skeleton does not provide them yet.
-Until then, CI passes with a log line stating that the tooling has not landed.
-
-The tooling under `tools/` will also provide a `tools/pep` CLI with the `check`, `lock`, `export`, `export-lab` and `new-topic` subcommands; its own help is the reference for usage.
+The executable `tools/pep` CLI provides `check`, `lock`, `export`, `export-lab` and `new-topic`.
+Use `tools/pep --help` or `tools/pep <subcommand> --help` for usage. Generated learner and lab bundles are written under the gitignored `build/` directory.
 
 ## Contributing
 
