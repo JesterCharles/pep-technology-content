@@ -1,0 +1,288 @@
+#!/usr/bin/env node
+import { readdir, readFile, rm, mkdir, writeFile, copyFile, stat, chmod } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { execFileSync } from "node:child_process";
+import {
+  defaultSkip,
+  error,
+  exists,
+  findCourseRoots,
+  formatError,
+  posix,
+  readJson,
+  relative,
+  sha256,
+  stableJson,
+  walk,
+} from "./lib/common.mjs";
+import { createCourseLock, createModuleLock } from "./lib/locks.mjs";
+const root = process.cwd(),
+  args = process.argv.slice(2),
+  command = args.shift();
+const helps = {
+  main: "Usage: tools/pep <check|lock|export|export-lab|new-topic> [options]",
+  check: "Usage: tools/pep check [--changed] [--only <gate-id>] [paths...]",
+  lock: "Usage: tools/pep lock [<course>|<course>/<module>]",
+  export: "Usage: tools/pep export [<course>]",
+  "export-lab": "Usage: tools/pep export-lab <lab-id>",
+  "new-topic": "Usage: tools/pep new-topic <course>/<module>/<topic>",
+};
+function die(message, code = 1) {
+  console.error(message);
+  process.exit(code);
+}
+function help(name = "main") {
+  console.log(helps[name] ?? helps.main);
+}
+async function copyTree(src, dest) {
+  for (const f of (await walk(src)).files) {
+    const rel = path.relative(src, f);
+    await mkdir(path.dirname(path.join(dest, rel)), { recursive: true });
+    await copyFile(f, path.join(dest, rel));
+  }
+}
+async function check() {
+  let only,
+    changed = false,
+    paths = [];
+  while (args.length) {
+    const a = args.shift();
+    if (a === "--help") return help("check");
+    if (a === "--changed") changed = true;
+    else if (a === "--only") {
+      only = args.shift();
+      if (!only) die("check: --only requires a gate id");
+    } else if (a.startsWith("-")) die(`check: unknown option ${a}`);
+    else paths.push(a);
+  }
+  if (changed && paths.length) die("check: --changed cannot be combined with paths");
+  if (changed) {
+    let base;
+    try {
+      base = execFileSync("git", ["merge-base", "HEAD", "origin/main"], {
+        encoding: "utf8",
+      }).trim();
+      paths = execFileSync("git", ["diff", "--name-only", base, "--"], { encoding: "utf8" })
+        .trim()
+        .split("\n")
+        .filter(Boolean);
+    } catch (e) {
+      die(`check: unable to compare with origin/main: ${e.message}`);
+    }
+    if (!paths.length) {
+      console.log("check: no changed files");
+      return;
+    }
+  }
+  const explicit = paths.length > 0,
+    targets = (explicit ? paths : ["."]).map((p) => path.resolve(root, p));
+  for (const t of targets)
+    if (!(await exists(t))) die(`check: path does not exist: ${relative(root, t)}`);
+  const ctx = {
+    root,
+    explicit,
+    targets,
+    scanRoots: targets,
+    skip: explicit ? undefined : defaultSkip(root),
+    display: (f) => relative(root, f),
+  };
+  const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "checks");
+  const mods = [];
+  for (const name of (await readdir(dir)).filter((n) => n.endsWith(".mjs")).sort()) {
+    const mod = await import(pathToFileURL(path.join(dir, name)));
+    if (!mod.id || !mod.gate || !mod.description || typeof mod.run !== "function")
+      die(`check: invalid check module ${name}`);
+    if (!only || only === mod.id || only === String(mod.gate)) mods.push(mod);
+  }
+  if (only && !mods.length) die(`check: unknown gate id ${only}`);
+  let errors = [];
+  for (const mod of mods) {
+    try {
+      errors.push(...(await mod.run(ctx)));
+    } catch (e) {
+      errors.push(error(mod.id, ".", `check crashed: ${e.message}`));
+    }
+  }
+  errors.sort((a, b) => formatError(a).localeCompare(formatError(b)));
+  if (errors.length) {
+    for (const e of errors) console.error(formatError(e));
+    die(`check: ${errors.length} error(s)`);
+  }
+  console.log(`check: ${mods.length} checks passed`);
+}
+async function lock() {
+  if (args[0] === "--help") return help("lock");
+  if (args.length > 1) die("lock: expected at most one target");
+  const target = args[0],
+    parts = target?.split("/");
+  const ctx = {
+    root,
+    explicit: false,
+    targets: [root],
+    scanRoots: [root],
+    skip: defaultSkip(root),
+    display: (f) => relative(root, f),
+  };
+  const courses = await findCourseRoots(ctx);
+  let wrote = 0;
+  for (const cr of courses) {
+    const c = await readJson(path.join(cr, "course.json"));
+    if (parts && parts[0] !== c.id) continue;
+    if (parts?.length === 2) {
+      const out = path.join(cr, parts[1], "module.lock.json");
+      await writeFile(out, stableJson(await createModuleLock(root, c.id, parts[1])));
+      console.log(relative(root, out));
+      wrote++;
+      continue;
+    }
+    const cf = path.join(cr, "course.lock.json");
+    await writeFile(cf, stableJson(await createCourseLock(root, c.id)));
+    console.log(relative(root, cf));
+    wrote++;
+    for (const mid of c.moduleOrder ?? []) {
+      const mf = path.join(cr, mid, "module.lock.json");
+      await writeFile(mf, stableJson(await createModuleLock(root, c.id, mid)));
+      console.log(relative(root, mf));
+      wrote++;
+    }
+  }
+  if (target && !wrote) die(`lock: target not found: ${target}`);
+}
+async function exportCourse() {
+  if (args[0] === "--help") return help("export");
+  if (args.length > 1) die("export: expected at most one course");
+  const cid = args[0],
+    ctx = {
+      root,
+      explicit: false,
+      targets: [root],
+      scanRoots: [root],
+      skip: defaultSkip(root),
+      display: (f) => relative(root, f),
+    },
+    courses = await findCourseRoots(ctx),
+    base = path.join(root, "build", "export");
+  await rm(cid ? path.join(base, cid) : base, { recursive: true, force: true });
+  const links = [];
+  for (const cr of courses) {
+    const c = await readJson(path.join(cr, "course.json"));
+    if (cid && c.id !== cid) continue;
+    for (const f of (await walk(cr)).files) {
+      const rel = path.relative(cr, f);
+      if (
+        /(?:^|\/)artifact\.(?:html|md|pdf|gift)$|(?:^|\/)video-artifact\.md$|(?:^|\/)coding-lab\//.test(
+          posix(rel),
+        )
+      ) {
+        const d = path.join(base, c.id, rel);
+        await mkdir(path.dirname(d), { recursive: true });
+        await copyFile(f, d);
+        if (f.endsWith("artifact.html")) links.push(posix(path.join(c.id, rel)));
+      }
+    }
+  }
+  if (cid && !links.length) die(`export: course not found or has no HTML: ${cid}`);
+  await mkdir(base, { recursive: true });
+  await writeFile(
+    path.join(base, "index.html"),
+    `<!doctype html><meta charset="utf-8"><title>PEP review</title><h1>PEP review</h1><ul>${links
+      .sort()
+      .map((x) => `<li><a href="${x}">${x}</a></li>`)
+      .join("")}</ul>\n`,
+  );
+  console.log(relative(root, base));
+}
+async function exportLab() {
+  if (args[0] === "--help") return help("export-lab");
+  if (args.length !== 1) die("export-lab: lab-id is required");
+  const id = args[0];
+  let found;
+  for (const f of (await walk(root, { skip: defaultSkip(root) })).files)
+    if (path.basename(f) === "lab.json") {
+      try {
+        if ((await readJson(f)).id === id) {
+          found = path.dirname(f);
+          break;
+        }
+      } catch {}
+    }
+  if (!found) die(`export-lab: lab not found: ${id}`);
+  for (const f of (await walk(found)).files)
+    if (/(?:answer[-_]?key|rubric|solution|hidden[-_]?test)/i.test(path.basename(f)))
+      die(`export-lab: forbidden file ${relative(root, f)}`);
+  const dest = path.join(root, "build", "labs", ...id.split("/"));
+  await rm(dest, { recursive: true, force: true });
+  await copyTree(found, dest);
+  const records = [];
+  for (const f of (await walk(dest)).files.sort()) {
+    const rel = posix(path.relative(dest, f));
+    if (rel === "LAB_BUNDLE.sha256") continue;
+    records.push(`${sha256(await readFile(f))}  ${rel}`);
+  }
+  await writeFile(path.join(dest, "LAB_BUNDLE.sha256"), `${records.join("\n")}\n`);
+  console.log(relative(root, dest));
+}
+async function newTopic() {
+  if (args[0] === "--help") return help("new-topic");
+  if (args.length !== 1 || args[0].split("/").length !== 3)
+    die("new-topic: expected <course>/<module>/<topic>");
+  const [c, m, t] = args[0].split("/");
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(t)) die("new-topic: topic id must be a slug");
+  if (!(await exists(path.join(root, c, m, "module.json"))))
+    die(`new-topic: module not found: ${c}/${m}`);
+  const dir = path.join(root, c, m, t),
+    file = path.join(dir, "topic.json");
+  if (await exists(file)) die(`new-topic: already exists: ${args[0]}`);
+  const absent = { status: "absent", reason: "Not yet authored." },
+    manifest = {
+      schemaVersion: 1,
+      id: t,
+      title: t
+        .split("-")
+        .map((x) => x[0].toUpperCase() + x.slice(1))
+        .join(" "),
+      kind: "core",
+      curriculum: [],
+      objectives: [],
+      prerequisites: [],
+      minutes: {
+        aboutLabel: 0,
+        budget: 0,
+        modeledP50: 0,
+        modeledWorstPath: 0,
+        basis: "Set during intake.",
+      },
+      artifacts: {
+        html: { ...absent },
+        md: { ...absent },
+        pdf: { ...absent },
+        gift: { ...absent },
+        video: { ...absent },
+        lab: { ...absent },
+      },
+      freshness: {
+        status: "unverified",
+        checkedAt: null,
+        sourcesRef: `evidence/${c}/${m}/${t}/sources.json`,
+        unverifiedItems: ["Source review pending."],
+      },
+      licensing: [],
+      lab: "none",
+      components: {},
+    };
+  await mkdir(dir, { recursive: true });
+  await writeFile(file, stableJson(manifest));
+  console.log(relative(root, file));
+}
+try {
+  if (!command || command === "--help" || command === "help") help();
+  else if (command === "check") await check();
+  else if (command === "lock") await lock();
+  else if (command === "export") await exportCourse();
+  else if (command === "export-lab") await exportLab();
+  else if (command === "new-topic") await newTopic();
+  else die(`unknown command: ${command}\n${helps.main}`);
+} catch (e) {
+  die(`${command}: ${e.message}`);
+}

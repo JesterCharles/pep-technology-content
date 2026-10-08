@@ -54,7 +54,7 @@ HTML is the primary learner artifact; every other topic file is a companion to i
 - The repository gate interface is `npm ci`, `npm test` and `npm run check`; CI runs them once `package.json` lands.
 - The `tools/pep` CLI under `tools/` provides `check`, `lock`, `export`, `export-lab` and `new-topic`; read its help for usage.
 - The QA harness ships with that tooling; run it locally through `npm run check`.
-- Until the tooling PRs land, none of these commands exist and CI reports that the tooling has not landed.
+- Use `tools/pep <subcommand> --help` for deterministic, offline CLI usage; generated exports stay under gitignored `build/`.
 
 ## Sources
 
