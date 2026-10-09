@@ -34,7 +34,16 @@ Total: 19 topics, 141 legacy about-minutes (legacy `course.json` `totalAboutMinu
 
 ## Topic list with relations
 
-Topic ids are kept exactly. Objectives are copied verbatim from the legacy `module.json`; this intake writes no new objective text.
+Topic ids are kept exactly. Objectives and titles are copied verbatim from the legacy `module.json`, except the changes accepted at intake reconciliation (`intake-reconciliation.json.txt`):
+
+- `ai-foundations/foundations-course-check`: kind `review`, title "Practice: Foundations course review" (education-03).
+- `ai-foundations/ai-rules-of-use`: title "Rules of use: what to share and redact" (education-05).
+- `git-foundations/undoing-revert-and-reset`: prerequisite `commits-diffs-and-gitignore` and a self-contained o3 on shared versus local history (education-04).
+- `git-foundations/merge-vs-rebase` o1: merge commit versus fast-forward (sme-03).
+- `linux-foundations/environment-variables-and-secrets` o3: ignore `.env` before it is ever added; revoke or rotate a committed secret (sme-04).
+- `linux-foundations/file-permissions` o3: execute permission for `./script.sh` versus `bash script.sh` (sme-05).
+
+Each changed title and objective must be carried into that page's header in its module PR, where module critics check it against the page bytes.
 
 | # | Topic | Module | Kind | Pointer | Day | Relation | Calendar row |
 |---|---|---|---|---|---|---|---|
@@ -56,7 +65,7 @@ Topic ids are kept exactly. Objectives are copied verbatim from the legacy `modu
 | 16 | `ai-rules-of-use` | `ai-foundations` | reading | `/tracks/0/weeks/0/days/0/topics/4` | F1 | split | Reading: AI assistant setup and rules of use |
 | 17 | `agile-scrum-user-stories` | `ai-foundations` | reading | `/tracks/0/weeks/0/days/0/topics/5` | F1 | exact | Reading: how Agile teams work (Scrum, user stories) |
 | 18 | `checking-ai-changes` | `ai-foundations` | core | `/tracks/0/weeks/0/days/2/topics/2` | F3 | shared | Pull requests, review comments and checking AI-made changes before merging |
-| 19 | `foundations-course-check` | `ai-foundations` | core | `/tracks/0/weeks/0/days/2/topics/4` | F3 | exact | Tooling module check |
+| 19 | `foundations-course-check` | `ai-foundations` | review | `/tracks/0/weeks/0/days/2/topics/4` | F3 | exact | Tooling module check |
 
 Relations:
 
@@ -66,7 +75,7 @@ Relations:
 - **exact** for every other row, including `/tracks/0/weeks/0/days/2/topics/4` "Tooling module check": its learner-facing formative page `ai-foundations/foundations-course-check` stays a topic, not an assessment. The same calendar row's `moduleCheck` assessment is the course blueprint `assessments/tooling-module-check`, so the row has one topic and one blueprint.
 - Mapping evidence: each relation restates the legacy `sourceMappings` entry for that topic, which names the same curriculum pointer and the split or shared half.
 
-16 calendar source rows become 19 pages: two splits and one shared row. The `F1-F3` counts per plan section 2.3 are 11 core rows and 5 `Reading:` rows.
+16 calendar source rows become 19 pages: two splits and one shared row. Plan section 2.3 counts 11 core rows and 5 `Reading:` rows in F1-F3; as pages, 11 are core, 6 reading and 2 review.
 
 ## Artifact applicability
 
@@ -95,11 +104,11 @@ Legend: **R** required, imported in the module PR; **V** required when a suitabl
 | `ai-foundations/ai-rules-of-use` | reading | R | R | R | R | V | - |
 | `ai-foundations/agile-scrum-user-stories` | reading | R | R | R | R | V | - |
 | `ai-foundations/checking-ai-changes` | core | R | R | - | R | V | - |
-| `ai-foundations/foundations-course-check` | core | R | R | - | R | V | - |
+| `ai-foundations/foundations-course-check` | review | R | R | - | - | - | - |
 
 Notes:
 
-- `foundations-course-check` is classified `core`, matching the legacy manifest (no `kind`, so instructional) and plan section 2.3, which counts "Tooling module check" among the 11 core rows. It therefore keeps GIFT and video applicability. Reclassifying it as `review` (the page is itself cross-course retrieval) would drop its legacy GIFT question and video; that is left to criticism rather than decided here.
+- `foundations-course-check` is classified `review` (reconciliation education-03): all its objectives retrieve or apply earlier learning, so it carries HTML and Markdown only. It stays a formative topic, separate from the course assessment blueprint. Its legacy GIFT question and video are not imported.
 - `git-and-shell-review` is `review` (legacy `kind: review`). The legacy companions include one GIFT question and one video for it; under the review rule neither is imported.
 - Legacy companions live outside the package (plan section 2.5): `linux-foundations-questions.gift` (15 questions, written against the 2026-10-06 Linux pages, to be re-grounded in R4), `git-ai-foundations-questions.gift` (14 questions) and the two video curation files (19 links). R4 splits them per topic.
 
@@ -110,63 +119,78 @@ Notes:
 
 ## Minute budgets
 
-Values per topic in `topic.json` `minutes`:
+Values per topic in `topic.json` `minutes`, after the course-1 timing resolution decided at reconciliation:
 
 - `aboutLabel`: the legacy `module.json` `minutes`, copied.
-- `modeledP50` and `modeledWorstPath`: the p50 and p90 of the frozen `tools/timing/estimate_reading.py` (sha256 `0deca96bf5e367aeae51a82abdbd4b6ce0d0289ecc9868c9eff3701016edf96f`, a byte-identical copy of the legacy estimator) run on the authoritative legacy page bytes. They are measured, not invented, and are what gate T14 recomputes once the page is imported unchanged.
-- `budget`: plan section 4 item 9. The day type's reading and worked-example pool is split by weight (core row 2, `Reading:` row 1) over the day's calendar rows; a split or shared row's share is divided equally between its pages; 2 in-page exercise minutes are added; the result is floored to an integer.
-  - F1 and F2 are Concept days: pool = Reading 15 + Worked example 12 = 27 minutes. F1 has 9 weight units (3 core, 3 reading) and F2 has 9 (4 core, 1 reading), so 3.00 minutes per unit.
-  - F3 is a Practice day: Practice has no reading or worked-example block, so the pool is its Refresher (reading) block, 5 minutes, over 9 weight units (4 core, 1 reading), so 0.56 minutes per unit.
+- `budget`: the captain-approved legacy minutes label (equal to `aboutLabel`).
+- `modeledP50`: the p50 of the frozen `tools/timing/estimate_reading.py` (sha256 `0deca96bf5e367aeae51a82abdbd4b6ce0d0289ecc9868c9eff3701016edf96f`, a byte-identical copy of the legacy estimator) run on the authoritative legacy page bytes.
+- `modeledWorstPath`: the legacy worst-required-route value where the legacy manifest records one (ai-foundations `timing.worstRequiredRetryP50`); otherwise the captain-approved legacy label covering the worst required route, re-measured in the module PR.
 
-| Topic | Day | Pool share | Budget | Legacy about-label | Estimator P50 | Estimator worst path |
-|---|---|---|---|---|---|---|
-| `navigating-the-shell` | F1 | 6.00 | 8 | 8 | 7.95 | 11.52 |
-| `pipes-and-grep` | F1 | 3.00 | 5 | 6 | 5.89 | 8.54 |
-| `file-permissions` | F1 | 3.00 | 5 | 7 | 6.0 | 8.69 |
-| `environment-variables-and-secrets` | F1 | 6.00 | 8 | 6 | 5.72 | 8.29 |
-| `localhost-and-ports` | F1 | 3.00 | 5 | 6 | 4.78 | 6.93 |
-| `commits-diffs-and-gitignore` | F2 | 6.00 | 8 | 9 | 7.91 | 11.46 |
-| `branches-and-switching` | F2 | 6.00 | 8 | 6 | 5.28 | 7.65 |
-| `undoing-revert-and-reset` | F2 | 6.00 | 8 | 7 | 5.9 | 8.55 |
-| `stash` | F2 | 3.00 | 5 | 7 | 5.87 | 8.51 |
-| `remotes-clone-push-fetch-pull` | F2 | 6.00 | 8 | 8 | 7.67 | 11.12 |
-| `merge-conflicts` | F3 | 1.11 | 3 | 6 | 5.74 | 8.32 |
-| `merge-vs-rebase` | F3 | 0.56 | 2 | 6 | 5.31 | 7.7 |
-| `pull-requests-and-review` | F3 | 0.56 | 2 | 7 | 6.5 | 9.42 |
-| `git-and-shell-review` | F3 | 1.11 | 3 | 7 | 6.28 | 9.11 |
-| `ai-assistant-setup` | F1 | 1.50 | 3 | 9 | 5.49 | 7.96 |
-| `ai-rules-of-use` | F1 | 1.50 | 3 | 8 | 5.14 | 7.45 |
-| `agile-scrum-user-stories` | F1 | 3.00 | 5 | 10 | 6.7 | 9.71 |
-| `checking-ai-changes` | F3 | 0.56 | 2 | 9 | 5.44 | 7.89 |
-| `foundations-course-check` | F3 | 1.11 | 3 | 9 | 6.19 | 8.98 |
+| Topic | Day | Budget = about-label | Estimator P50 | modeledWorstPath | Worst-path basis | Plan 4.9 formula budget (superseded) | Estimator p90 (reference) |
+|---|---|---|---|---|---|---|---|
+| `navigating-the-shell` | F1 | 8 | 7.95 | 8 | legacy label | 8 | 11.52 |
+| `pipes-and-grep` | F1 | 6 | 5.89 | 6 | legacy label | 5 | 8.54 |
+| `file-permissions` | F1 | 7 | 6.0 | 7 | legacy label | 5 | 8.69 |
+| `environment-variables-and-secrets` | F1 | 6 | 5.72 | 6 | legacy label | 8 | 8.29 |
+| `localhost-and-ports` | F1 | 6 | 4.78 | 6 | legacy label | 5 | 6.93 |
+| `commits-diffs-and-gitignore` | F2 | 9 | 7.91 | 9 | legacy label | 8 | 11.46 |
+| `branches-and-switching` | F2 | 6 | 5.28 | 6 | legacy label | 8 | 7.65 |
+| `undoing-revert-and-reset` | F2 | 7 | 5.9 | 7 | legacy label | 8 | 8.55 |
+| `stash` | F2 | 7 | 5.87 | 7 | legacy label | 5 | 8.51 |
+| `remotes-clone-push-fetch-pull` | F2 | 8 | 7.67 | 8 | legacy label | 8 | 11.12 |
+| `merge-conflicts` | F3 | 6 | 5.74 | 6 | legacy label | 3 | 8.32 |
+| `merge-vs-rebase` | F3 | 6 | 5.31 | 6 | legacy label | 2 | 7.7 |
+| `pull-requests-and-review` | F3 | 7 | 6.5 | 7 | legacy label | 2 | 9.42 |
+| `git-and-shell-review` | F3 | 7 | 6.28 | 7 | legacy label | 3 | 9.11 |
+| `ai-assistant-setup` | F1 | 9 | 5.49 | 7.9 | legacy worstRequiredRetryP50 | 3 | 7.96 |
+| `ai-rules-of-use` | F1 | 8 | 5.14 | 7.31 | legacy worstRequiredRetryP50 | 3 | 7.45 |
+| `agile-scrum-user-stories` | F1 | 10 | 6.7 | 9.35 | legacy worstRequiredRetryP50 | 5 | 9.71 |
+| `checking-ai-changes` | F3 | 9 | 5.44 | 8.07 | legacy worstRequiredRetryP50 | 2 | 7.89 |
+| `foundations-course-check` | F3 | 9 | 6.19 | 8.5 | legacy worstRequiredRetryP50 | 3 | 8.98 |
 
-Day totals (all within the 120-minute day, which T14 checks against estimator P50): F1: budgets 42, about-labels 60, P50 47.67; F2: budgets 37, about-labels 37, P50 32.63; F3: budgets 15, about-labels 44, P50 35.46.
+Day totals (within the 120-minute day; T14 checks estimator P50 against it): F1: budgets 60, P50 47.67; F2: budgets 37, P50 32.63; F3: budgets 44, P50 35.46.
 
-### Budget conflict to resolve before R2
+### Budget conflict and its resolution
 
-The plan's budget formula does not fit the authored pages. Once the pages are imported unchanged in R2, gate T14 will fail:
+The first intake commit set `budget` from the plan section 4 item 9 formula: the day type's reading and worked-example pool (Concept: Reading 15 + Worked example 12 = 27 minutes; Practice: Refresher 5 minutes) split by weight (core 2, reading 1), divided between the pages of a split or shared row, plus 2 exercise minutes, floored. Those budgets (column "superseded" above) sat below the estimator P50 on 12 of 19 pages, and the legacy labels sat below the estimator p90 on 14 of 19, so gate T14 would have failed at the R2 import.
 
-- Estimator P50 above the formula budget on 12 of 19 topics: `pipes-and-grep`, `file-permissions`, `stash`, `merge-conflicts`, `merge-vs-rebase`, `pull-requests-and-review`, `git-and-shell-review`, `ai-assistant-setup`, `ai-rules-of-use`, `agile-scrum-user-stories`, `checking-ai-changes`, `foundations-course-check`. The F3 Practice pool (5 minutes for 6 pages) cannot hold any authored page.
-- Legacy about-label below the estimator worst path on 14 of 19 topics: `navigating-the-shell`, `pipes-and-grep`, `file-permissions`, `environment-variables-and-secrets`, `localhost-and-ports`, `commits-diffs-and-gitignore`, `branches-and-switching`, `undoing-revert-and-reset`, `stash`, `remotes-clone-push-fetch-pull`, `merge-conflicts`, `merge-vs-rebase`, `pull-requests-and-review`, `git-and-shell-review`. The legacy labels were set by a different per-unit model (recorded in the legacy AI `module.json` `timing` fields), not by this estimator's p90.
-
-This intake records the formula and the measured values as instructed and invents no timing. Resolving the conflict (a different pool reading for Practice days, budgets from the legacy labels, relabeling, or page changes) is a timing-policy decision above this intake, needed before the R2 import.
+Resolution (firstmate, at reconciliation of this intake; not a critic finding): for course 1 each topic budget is its captain-approved legacy minutes label, and `modeledWorstPath` follows the legacy worst-required-route record as above. `modeledP50` stays the estimator P50, and the estimator p90 is kept here as a reference only. Revising the budget formula for new courses is deferred to the pilot retrospective (plan step R7).
 
 ## F3 assessment blueprint
 
 `git-linux-ai-foundations/assessments/tooling-module-check/blueprint.json`:
 
-- Calendar identity copied verbatim from the snapshot F3 `assessment`: `kind` `moduleCheck`, `formats` `MCQ` and `coding`, `passMark` 70. The calendar gives no weights or cut scores for a module check, so `weights` is empty.
-- Objectives covered: 49 topic objective ids (`<course>/<module>/<topic>#oN`) from the 17 instructional topics. The two retrieval pages (`git-and-shell-review`, `foundations-course-check`) add no new objectives and are not listed.
+- Calendar identity copied verbatim from the snapshot F3 `assessment`: `kind` `moduleCheck`, `formats` `MCQ` and `coding`, `passMark` 70. The calendar gives no weights or cut scores for a module check, so `weights` is empty. Reconciliation rejected sme-01 with evidence: plan section 3.5 lists `passMark` and weights as calendar identity, and the pass mark is published in the learner-facing calendar.
+- Objectives covered (education-01): a balanced representative set that the 13 items can directly elicit, each prefixed with the format that checks it. MCQ covers one objective per item across the three modules; the 3 coding tasks cover hands-on shell and Git objectives. The two review pages add no new objectives and are not listed.
+
+  - MCQ: git-linux-ai-foundations/linux-foundations/pipes-and-grep#o1
+  - MCQ: git-linux-ai-foundations/linux-foundations/environment-variables-and-secrets#o2
+  - MCQ: git-linux-ai-foundations/linux-foundations/localhost-and-ports#o3
+  - MCQ: git-linux-ai-foundations/git-foundations/undoing-revert-and-reset#o3
+  - MCQ: git-linux-ai-foundations/git-foundations/stash#o1
+  - MCQ: git-linux-ai-foundations/git-foundations/remotes-clone-push-fetch-pull#o3
+  - MCQ: git-linux-ai-foundations/git-foundations/merge-vs-rebase#o3
+  - MCQ: git-linux-ai-foundations/ai-foundations/ai-rules-of-use#o1
+  - MCQ: git-linux-ai-foundations/ai-foundations/agile-scrum-user-stories#o3
+  - MCQ: git-linux-ai-foundations/ai-foundations/checking-ai-changes#o3
+  - coding: git-linux-ai-foundations/linux-foundations/navigating-the-shell#o3
+  - coding: git-linux-ai-foundations/linux-foundations/file-permissions#o2
+  - coding: git-linux-ai-foundations/git-foundations/commits-diffs-and-gitignore#o2
+  - coding: git-linux-ai-foundations/git-foundations/commits-diffs-and-gitignore#o3
+  - coding: git-linux-ai-foundations/git-foundations/branches-and-switching#o2
+  - coding: git-linux-ai-foundations/git-foundations/merge-conflicts#o3
+
 - Proposed item counts and duration, from the F3 Practice day blocks: the Quiz block (MCQ assessment, 10 minutes) and the "Timed, without AI" block (coding assessment, 30 minutes).
   - MCQ: 10 items in 10 minutes, about 1 minute per scenario-based item.
   - coding: 3 short shell and Git tasks in 30 minutes, about 10 minutes each.
-  - `durationMinutes` 40 = 10 + 30. The "without AI" block title sets the allowed-resources line: no AI assistant.
+  - `durationMinutes` 40 = 10 + 30.
+- Allowed resources (education-02, sme-02): the no-AI rule applies only to the coding part, because only the calendar's "Timed, without AI" block states it; the calendar states no AI restriction for the Quiz block. The coding part uses the provided terminal with a POSIX shell and Git. Any further resource rule (notes, course pages, built-in help, web documentation) is set and shown by the platform assessment owner; the repository invents no assessment policy.
 - The blueprint holds no items, keys, correct answers, rubrics, scoring guides, hidden tests, reference solutions or score secrets; gates T01 and T07 check its key names.
-- The blueprint is new authored content and needs fresh independent educational and technology-SME criticism before reconciliation.
+- Criticism: fresh independent educational and technology-SME critics reviewed the blueprint and new text; their reports and the non-author reconciliation are committed verbatim (see Intake criticism).
 
 ## Official sources per topic
 
-Each topic's legacy official sources were re-fetched live for this intake; `evidence/git-linux-ai-foundations/source-snapshot.json` records each URL with retrieval time, sha256 of the fetched bytes and the topic sections used (URL fragments from the legacy records). All 52 URLs returned HTTP 200. Raw fetched pages are not committed.
+Each topic's legacy official sources were re-fetched live for this intake; `evidence/git-linux-ai-foundations/source-snapshot.json` records each URL with retrieval time, sha256 of the fetched bytes and the topic sections used (URL fragments from the legacy records). All 55 URLs returned HTTP 200. Three provider data-use sources were added for `ai-rules-of-use` at reconciliation (sme-06): Claude Code data usage, GitHub Copilot model-training policy and the GitHub General Privacy Statement; they are listed first in that topic's row below. Raw fetched pages are not committed.
 
 Freshness: every `topic.json` records `unverified` with no `checkedAt`, because no page is imported yet. Each lists the legacy freshness status and the legacy unverified items; plan step R6 SME criticism re-verifies the imported bytes.
 
@@ -187,12 +211,16 @@ Freshness: every `topic.json` records `unverified` with no `checkedAt`, because 
 | `pull-requests-and-review` | verified | https://docs.github.com/en/pull-requests/reference/pull-requests<br>https://docs.github.com/en/pull-requests/reference/pull-request-reviews<br>https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-protected-branches/about-protected-branches#require-pull-request-reviews-before-merging<br>https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/merging-a-pull-request |
 | `git-and-shell-review` | partially-verified | https://git-scm.com/docs/git-switch#_description<br>https://git-scm.com/docs/git-add#_description<br>https://git-scm.com/docs/git-push#OPTIONS |
 | `ai-assistant-setup` | partially-verified | https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions<br>https://code.claude.com/docs/en/memory<br>https://docs.github.com/en/copilot/how-tos/configure-content-exclusion/exclude-content-from-copilot<br>https://docs.github.com/en/copilot/get-started/best-practices<br>https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html |
-| `ai-rules-of-use` | partially-verified | https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/<br>https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent |
+| `ai-rules-of-use` | partially-verified | https://code.claude.com/docs/en/data-usage<br>https://docs.github.com/en/copilot/how-tos/manage-your-account/manage-policies<br>https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement<br>https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/<br>https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent |
 | `agile-scrum-user-stories` | partially-verified | https://scrumguides.org/scrum-guide.html<br>https://cucumber.io/docs/gherkin/reference/ |
 | `checking-ai-changes` | verified | https://docs.github.com/en/pull-requests/how-tos/review-pull-requests/reviewing-proposed-changes-in-a-pull-request<br>https://docs.github.com/en/copilot/get-started/best-practices |
 | `foundations-course-check` | partially-verified | https://pubs.opengroup.org/onlinepubs/9799919799/utilities/cd.html<br>https://pubs.opengroup.org/onlinepubs/9799919799/utilities/chmod.html<br>https://pubs.opengroup.org/onlinepubs/9799919799/utilities/ls.html<br>https://git-scm.com/docs/gitignore<br>https://git-scm.com/docs/git-stash<br>https://docs.github.com/en/copilot/get-started/best-practices |
 
 Calendar references for the `tool` technology: [Pro Git book](https://git-scm.com/book/en/v2), [GitHub: connecting with SSH](https://docs.github.com/en/authentication/connecting-to-github-with-ssh), [Learning the shell](https://linuxcommand.org/lc3_learning_the_shell.php), [GitHub Copilot docs](https://docs.github.com/en/copilot), [The Scrum Guide](https://scrumguides.org/scrum-guide.html).
+
+## Intake criticism
+
+The two critic reports and the reconciliation for commit 45d93b3 are committed verbatim as `intake-critic-education.json.txt`, `intake-critic-sme.json.txt` and `intake-reconciliation.json.txt`. The `.json.txt` suffix is needed because `tools/pep lock` (`tools/lib/locks.mjs`, `createCourseLock`) binds every `reviewedSha256` in course-level `.json` evidence to `<course>/artifact.html`, which does not exist for a course, so the lock rejects these files under any `.json` name. Their bytes are still recorded in `course.lock.json`. Each file was validated against `schemas/critic-report.schema.json` or `schemas/reconciliation.schema.json` when it was added. Outcome: 10 findings accepted and applied in one correction loop; 1 rejected with evidence (sme-01).
 
 ## Legacy page hashes (for R2)
 
