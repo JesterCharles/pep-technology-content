@@ -21,6 +21,8 @@ const mapping = [
   [/\/reconciliation\.json$/, "reconciliation"],
   [/\/qa-receipt\.json$/, "qa-receipt"],
   [/\/curriculum\.lock\.json$/, "curriculum-lock"],
+  [/\/evidence\/legacy\/course-1-packages\.json$/, "legacy-course-packages"],
+  [/\/evidence\/legacy\/tournament\.json$/, "legacy-tournament"],
 ];
 function parseFrontmatter(text) {
   if (!text.startsWith("---\n")) throw new Error("missing opening ---");

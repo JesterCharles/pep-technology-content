@@ -86,6 +86,36 @@ The gates in `docs/workflow.md` check it mechanically wherever a rule is machine
 - Pages stay standalone and hand-authored; components are copied in, never loaded at runtime.
 - A drift gate flags embedded component copies that differ from their declared version.
 
+### Component embedding markers
+
+Every copied component fragment is enclosed by markers that name its component, version and fragment kind.
+The bytes between markers, including the final newline, must equal the corresponding file under
+`components/<name>/`.
+
+```html
+<!-- pep:component terminal@1 html -->
+...exact contents of components/terminal/component.html...
+<!-- /pep:component terminal html -->
+```
+
+CSS and JavaScript use block-comment markers so the standalone page remains valid:
+
+```css
+/* pep:component terminal@1 css */
+...exact contents of components/terminal/component.css...
+/* /pep:component terminal css */
+```
+
+```js
+/* pep:component terminal@1 js */
+...exact contents of components/terminal/component.js...
+/* /pep:component terminal js */
+```
+
+Each marked component must be declared at the same version in `topic.json` `components`. A declaration must
+have at least one marked fragment. Pages with neither markers nor declarations pass the component gate. See
+`docs/tools/components.md` for extraction and checking details.
+
 ## 12. Companion artifacts
 
 Every companion is present or honestly absent: an absent companion is recorded in `topic.json` with a reason, and empty or placeholder files are forbidden.
