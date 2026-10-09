@@ -81,10 +81,23 @@ for (const [fixture, message] of giftFailures) {
   });
 }
 
+test("T14 accepts a recorded worst path independently of estimator P90", () => {
+  const result = runCheck("T14", "tests/fixtures/timing-worst-path");
+  assert.equal(result.status, 0, result.stderr);
+});
+
 test("T14 rejects an estimator over-budget page", () => {
   const result = runCheck("T14", "tests/fixtures/timing-over-budget");
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /estimated P50 .* exceeds 1 minute budget/);
+});
+
+test("T14 validates worst-path metadata", () => {
+  const result = runCheck("T14", "tests/fixtures/timing-invalid-metadata");
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /modeledWorstPath must be at least modeledP50/);
+  assert.match(result.stderr, /minutes\.basis must be non-empty/);
+  assert.match(result.stderr, /aboutLabel does not cover modeledWorstPath/);
 });
 
 test("T15 rejects a stale source receipt", () => {

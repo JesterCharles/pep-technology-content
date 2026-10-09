@@ -24,9 +24,12 @@ equal the simplified curriculum topic lists in order.
 
 `tools/timing/estimate_reading.py` is frozen at SHA-256
 `0deca96bf5e367aeae51a82abdbd4b6ce0d0289ecc9868c9eff3701016edf96f`. Do not alter its cost table to make a
-page pass. T14 runs it with Python 3 on every present `artifact.html`, checks the modeled values and topic budget,
-requires the about label to cover the modeled worst path, enforces the 15-minute ceiling, and sums pages mapped to
-each calendar day against that day type's block total.
+page pass. T14 runs it with Python 3 on every present `artifact.html`. The recorded `modeledP50` must match the
+estimator P50 within 0.01, and that P50 must fit the topic budget. The estimator P90 is informational only: it is
+not the worst required path. Authors model the worst route a learner must take per interactive unit—two wrong
+graded attempts and wrong-first explores before settling—and record that model and its evidence in the non-empty
+`minutes.basis`. `modeledWorstPath` must be at least `modeledP50`, and the about label must cover it. T14 also
+enforces the 15-minute topic ceiling and sums pages mapped to each calendar day against that day type's block total.
 
 Run it directly while authoring:
 

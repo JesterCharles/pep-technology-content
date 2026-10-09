@@ -82,17 +82,20 @@ export async function run(ctx) {
             ),
           );
         }
-        if (Math.abs(result.p90 - minutes.modeledWorstPath) > 0.01) {
-          out.push(
-            error(
-              id,
-              ctx.display(topicFile),
-              `modeledWorstPath ${minutes.modeledWorstPath} does not match estimator ${result.p90}`,
-            ),
-          );
+        if (!Number.isFinite(minutes.modeledWorstPath)) {
+          out.push(error(id, ctx.display(topicFile), "modeledWorstPath must be a number"));
+        } else {
+          if (minutes.modeledWorstPath < minutes.modeledP50) {
+            out.push(
+              error(id, ctx.display(topicFile), "modeledWorstPath must be at least modeledP50"),
+            );
+          }
+          if (minutes.aboutLabel < minutes.modeledWorstPath) {
+            out.push(error(id, ctx.display(topicFile), "aboutLabel does not cover modeledWorstPath"));
+          }
         }
-        if (minutes.aboutLabel < minutes.modeledWorstPath) {
-          out.push(error(id, ctx.display(topicFile), "aboutLabel does not cover modeledWorstPath"));
+        if (typeof minutes.basis !== "string" || minutes.basis.trim() === "") {
+          out.push(error(id, ctx.display(topicFile), "minutes.basis must be non-empty"));
         }
         for (const value of [minutes.aboutLabel, minutes.budget, minutes.modeledWorstPath]) {
           if (value > 15) {
