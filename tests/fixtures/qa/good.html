@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Known-good QA fixture</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #fff;
+      --ink: #172033;
+      --line: #596274;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #111827; --ink: #f3f4f6; --line: #aeb8ca; }
+    }
+    * { box-sizing: border-box; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font: 16px/1.5 system-ui;
+      margin: 0 auto;
+      max-width: 50rem;
+      padding: 1rem;
+    }
+    button, input {
+      background: var(--bg);
+      border: 2px solid var(--line);
+      color: var(--ink);
+      font: inherit;
+      margin: 0.25rem;
+      padding: 0.5rem;
+    }
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid #d97706;
+      outline-offset: 2px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main id="lesson" data-pep-complete="false">
+    <h1>Known-good QA fixture</h1>
+    <section class="objectives" data-pep-objectives>
+      <h2>Objectives</h2>
+      <ul><li>Complete a safe interaction.</li></ul>
+    </section>
+    <section class="teach" data-pep-teaching>
+      <h2>Teaching</h2>
+      <p>Direct controls work without network access.</p>
+    </section>
+    <section id="model" data-pep-model>
+      <h2>Model</h2>
+      <p>A control updates local state.</p>
+    </section>
+    <section
+      data-interaction="practice"
+      data-static-alt="Choose the safe action, then compare it with the explained result."
+    >
+      <h2>Practice</h2>
+      <button id="success" data-essential>Finish correctly</button>
+      <button id="wrong">Try a wrong answer</button>
+      <button id="retry-right" hidden>Retry correctly</button>
+      <button id="retry-wrong" hidden>Retry incorrectly</button>
+      <label for="command">Practice command</label><input id="command">
+      <button id="sim">Complete simulator</button>
+      <button id="restart">Restart simulator</button>
+      <p id="terminal-log"></p>
+      <p id="progress">0 of 1</p>
+      <p id="feedback" aria-live="polite"></p>
+    </section>
+    <section data-pep-recap>
+      <h2>Recap</h2>
+      <p>Use direct controls and check resulting state.</p>
+    </section>
+    <section data-pep-sources>
+      <h2>Sources</h2>
+      <p>Fixture source, reviewed 2026-10-08.</p>
+    </section>
+  </main>
+  <script>
+    const lesson = document.querySelector('#lesson');
+    const feedback = document.querySelector('#feedback');
+    let credited = false;
+    try {
+      localStorage.setItem('qa-fixture', 'ok');
+      localStorage.removeItem('qa-fixture');
+    } catch {}
+    const complete = text => {
+      lesson.dataset.pepComplete = 'true';
+      feedback.textContent = text;
+      document.querySelector('#progress').textContent = '1 of 1';
+    };
+    document.querySelector('#success').addEventListener('click', () => complete('Correct.'));
+    document.querySelector('#wrong').addEventListener('click', () => {
+      feedback.textContent = 'Try again.';
+      document.querySelector('#retry-right').hidden = false;
+      document.querySelector('#retry-wrong').hidden = false;
+    });
+    document.querySelector('#retry-right').addEventListener('click', () => {
+      complete('Correct on retry.');
+    });
+    document.querySelector('#retry-wrong').addEventListener('click', () => {
+      complete('Answered and settled, not correct.');
+    });
+    document.querySelector('#command').addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        document.querySelector('#terminal-log').textContent = 'not available in this practice terminal';
+      }
+    });
+    document.querySelector('#sim').addEventListener('click', () => {
+      if (!credited) credited = true;
+      document.querySelector('#progress').textContent = credited ? '1 of 1' : '0 of 1';
+    });
+    document.querySelector('#restart').addEventListener('click', () => {
+      credited = false;
+      document.querySelector('#progress').textContent = '0 of 1';
+      feedback.textContent = 'Activity restarted.';
+    });
+  </script>
+</body>
+</html>

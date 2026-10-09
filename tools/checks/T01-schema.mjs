@@ -20,6 +20,7 @@ const mapping = [
   [/\/critic-(?:education|sme)\.json$/, "critic-report"],
   [/\/reconciliation\.json$/, "reconciliation"],
   [/\/qa-receipt\.json$/, "qa-receipt"],
+  [/\/qa-paths\.json$/, "qa-paths"],
   [/\/curriculum\.lock\.json$/, "curriculum-lock"],
   [/\/evidence\/legacy\/course-1-packages\.json$/, "legacy-course-packages"],
   [/\/evidence\/legacy\/tournament\.json$/, "legacy-tournament"],
