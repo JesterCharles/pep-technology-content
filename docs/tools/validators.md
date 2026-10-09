@@ -3,6 +3,12 @@
 These validators back offline gates T14-T17 and T19. Network access is always explicit: `npm run check`
 never performs HTTP requests.
 
+## Assessment blueprint objectives (T01)
+
+Every blueprint objective is an exact `<course>/<module>/<topic>#<objective-id>` reference to an objective in that
+topic's `topic.json`. The optional `objectiveFormats` object maps those same references to non-empty, unique arrays
+of formats declared by the blueprint. T01 checks both the topic reference and the map's keys and values.
+
 ## Curriculum snapshot (T19)
 
 The frozen inputs are in `curriculum/snapshot/`. `pep-curriculum.json` is copied byte for byte from the

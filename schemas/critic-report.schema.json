@@ -9,11 +9,47 @@
     "schemaVersion": { "const": 1 },
     "role": { "enum": ["education", "sme"] },
     "author": { "type": "string", "minLength": 1 },
+    "reviewedPath": { "$ref": "#/$defs/path" },
     "reviewedSha256": { "$ref": "#/$defs/hash" },
-    "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } }
+    "artifactHashes": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "$ref": "#/$defs/path" },
+      "additionalProperties": { "$ref": "#/$defs/hash" }
+    },
+    "findings": { "type": "array", "items": { "$ref": "#/$defs/finding" } },
+    "recheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["of", "items"],
+      "properties": {
+        "of": { "$ref": "#/$defs/path" },
+        "items": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/recheckItem" }
+        }
+      }
+    }
   },
   "$defs": {
     "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+"
+    },
+    "recheckItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["findingId", "status", "file", "reviewedSha256", "note"],
+      "properties": {
+        "findingId": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["resolved", "open"] },
+        "file": { "$ref": "#/$defs/path" },
+        "reviewedSha256": { "$ref": "#/$defs/hash" },
+        "note": { "type": "string", "minLength": 1 }
+      }
+    },
     "finding": {
       "type": "object",
       "additionalProperties": false,
