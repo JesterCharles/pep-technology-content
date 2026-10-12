@@ -35,13 +35,21 @@ There is one canonical `<course>/<module>/<topic>/` tree. There is no `topics/` 
 
 ### Standard and Fast track overlays
 
-The authoritative overlay declarations are the `standard` and `fast` objects under `tracks` in `curriculum/snapshot/pep-calendar.json`. That frozen calendar and the simplified curriculum snapshot are integrity-bound by `curriculum/curriculum.lock.json` and `curriculum/snapshot/SHA256SUMS`; edit neither snapshot by hand. Re-extract an approved calendar update with:
+The authoritative calendar declares tracks as entries in the `tracks` array in `curriculum/snapshot/pep-calendar.json`: `/tracks/0/id` is `foundation`, `/tracks/1/id` is `standard`, and `/tracks/2/id` is `fast`. That frozen calendar and the simplified curriculum snapshot are integrity-bound by `curriculum/curriculum.lock.json` and `curriculum/snapshot/SHA256SUMS`; edit neither snapshot by hand. Re-extract an approved calendar update with:
 
 ```sh
 node authoring/tools/curriculum/extract-calendar.mjs /path/to/pep-calendar.html /tmp/pep-calendar.json
 ```
 
-Each Fast day declares `sourceStandardDays`, the Standard program-day numbers it combines or condenses. A topic's single `<course>/<module>/<topic>/topic.json` manifest records every applicable Standard and Fast calendar day id in `curriculum[].calendarDayIds`, tied to the authoritative curriculum `pointer` and its `exact`, `split` or `shared` relation. An overlay changes sequencing or emphasis only: it never creates another course, module, topic manifest or learner-artifact copy.
+A Fast instructional day at `/tracks/2/weeks/<week-index>/days/<day-index>` can carry three source-mapping fields:
+
+- `sourceStandardDays` lists the Standard program-day numbers used as sources for that Fast day. For example, `/tracks/2/weeks/0/days/0/sourceStandardDays` is `[1, 2]` for `FT1`.
+- `alsoCovers` lists additional covered Standard-day annotations. Each entry names a `standardDay`, its `title`, and any specifically enumerated `topics`; an empty array means no additional annotation. For example, `/tracks/2/weeks/0/days/0/alsoCovers` names Standard day 1.
+- `skimsStandardDay` is either `null` or the Standard program-day number whose material is skimmed rather than fully covered. For example, `/tracks/2/weeks/0/days/1/skimsStandardDay` is `4` for `FT2`.
+
+`authoring/schemas/track.schema.json` defines the normalized overlay contract: each day requires `sourceStandardDays` as stable string day ids, while selected `topics` use references plus an explicit `full`, `skim`, or `review` emphasis. The source-calendar-only `alsoCovers` and `skimsStandardDay` keys are therefore translated into topic selection and emphasis, not copied into a normalized overlay.
+
+A topic still has one `<course>/<module>/<topic>/topic.json`. Its `/curriculum/<mapping-index>/calendarDayIds` lists every applicable calendar id, such as `S1` and `FT1`, and the same mapping records the authoritative curriculum `pointer` and its `exact`, `split`, or `shared` relation. An overlay changes sequencing or emphasis only: it never creates another course, module, topic manifest, or learner-artifact copy.
 
 ## Add another curriculum course
 
