@@ -184,6 +184,71 @@ test("T25 leaves an explicitly open high recheck open", async () => {
   assert.match(result.stderr, /high finding finding-1 remains open/);
 });
 
+test("T25 lets a later current resolved recheck supersede an earlier open one", async () => {
+  const { root, digest } = await fixture();
+  const oldDigest = "0".repeat(64);
+  const original = report("education", oldDigest, { findings: [highFinding(oldDigest)] });
+  const makeRecheck = (reviewedDigest, status, note) => report("education", reviewedDigest, {
+    recheck: {
+      of: "evidence/demo-course/demo-module/demo-topic/critic-education.json",
+      items: [
+        {
+          findingId: "finding-1",
+          status,
+          file: target,
+          reviewedSha256: reviewedDigest,
+          note,
+        },
+      ],
+    },
+  });
+  await writeTopicEvidence(
+    root,
+    original,
+    report("sme", digest),
+    reconciliation(digest, [decision("accept")]),
+    [
+      ["critic-education-recheck.json", makeRecheck(oldDigest, "open", "Still present.")],
+      ["second-critic-education-recheck.json", makeRecheck(digest, "resolved", "Corrected.")],
+    ],
+  );
+  const result = check(root);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("T25 ignores a later stale resolved recheck", async () => {
+  const { root, digest } = await fixture();
+  const oldDigest = "0".repeat(64);
+  const original = report("education", digest, { findings: [highFinding(digest)] });
+  const makeRecheck = (reviewedDigest, status, note) => report("education", reviewedDigest, {
+    recheck: {
+      of: "evidence/demo-course/demo-module/demo-topic/critic-education.json",
+      items: [
+        {
+          findingId: "finding-1",
+          status,
+          file: target,
+          reviewedSha256: reviewedDigest,
+          note,
+        },
+      ],
+    },
+  });
+  await writeTopicEvidence(
+    root,
+    original,
+    report("sme", digest),
+    reconciliation(digest, [decision("accept")]),
+    [
+      ["critic-education-recheck.json", makeRecheck(digest, "open", "Still present.")],
+      ["second-critic-education-recheck.json", makeRecheck(oldDigest, "resolved", "Outdated correction.")],
+    ],
+  );
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /high finding finding-1 remains open/);
+});
+
 test("T25 accepts a current resolved same-role recheck", async () => {
   const { root, digest } = await fixture();
   const oldDigest = "0".repeat(64);
