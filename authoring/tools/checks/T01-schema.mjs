@@ -93,22 +93,36 @@ function parseFrontmatter(text) {
   if (!text.startsWith("---\n")) throw new Error("missing opening ---");
   const end = text.indexOf("\n---\n", 4);
   if (end < 0) throw new Error("missing closing ---");
+  const parseScalar = (value) => {
+    if (value === "true" || value === "false") return value === "true";
+    if (/^\d+(\.\d+)?$/.test(value)) return Number(value);
+    if (value === "[]") return [];
+    return value;
+  };
   const out = {};
   let key;
+  let listItem;
   for (const line of text.slice(4, end).split("\n")) {
-    if (/^\s*-\s+/.test(line)) {
+    const listMatch = line.match(/^\s*-\s+(.+)$/);
+    if (listMatch) {
       if (!Array.isArray(out[key])) out[key] = [];
-      out[key].push(line.replace(/^\s*-\s+/, ""));
+      const mappingMatch = listMatch[1].match(/^([A-Za-z][\w-]*):\s*(.*)$/);
+      listItem = mappingMatch
+        ? { [mappingMatch[1]]: parseScalar(mappingMatch[2]) }
+        : parseScalar(listMatch[1]);
+      out[key].push(listItem);
+      continue;
+    }
+    const continuationMatch = line.match(/^\s+([A-Za-z][\w-]*):\s*(.*)$/);
+    if (continuationMatch && listItem && typeof listItem === "object") {
+      listItem[continuationMatch[1]] = parseScalar(continuationMatch[2]);
       continue;
     }
     const m = line.match(/^([A-Za-z][\w-]*):\s*(.*)$/);
     if (!m) continue;
     key = m[1];
-    let v = m[2];
-    if (v === "true" || v === "false") v = v === "true";
-    else if (/^\d+(\.\d+)?$/.test(v)) v = Number(v);
-    else if (v === "[]") v = [];
-    out[key] = v;
+    listItem = undefined;
+    out[key] = parseScalar(m[2]);
   }
   return out;
 }

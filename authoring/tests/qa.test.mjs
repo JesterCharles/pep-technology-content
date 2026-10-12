@@ -173,6 +173,52 @@ rejected: []
   assert.deepEqual(errors, []);
 });
 
+test("T01 accepts block lists of mappings", async () => {
+  const errors = await runFrontmatter(`---
+title: Terminal overview
+channel: Example channel
+url: https://example.com/video
+runtimeMinutes: 4.5
+embeddable: true
+checkedAt: 2026-10-12
+covers: []
+gaps: []
+cautions: []
+alternates:
+  - title: Alternative video
+    url: https://example.com/alternative
+rejected:
+  - title: Rejected video
+    url: https://example.com/rejected
+    reason: Too long
+---
+
+# Video`);
+  assert.deepEqual(errors, []);
+});
+
+test("T01 rejects a malformed mapping in a block list", async () => {
+  const errors = await runFrontmatter(`---
+title: Terminal overview
+channel: Example channel
+url: https://example.com/video
+runtimeMinutes: 4.5
+embeddable: true
+checkedAt: 2026-10-12
+covers: []
+gaps: []
+cautions: []
+alternates:
+  - title: Alternative video
+    url https://example.com/alternative
+rejected: []
+---
+
+# Video`);
+  assert.equal(errors.length, 1, JSON.stringify(errors));
+  assert.match(errors[0].message, /\/alternates\/0 must have required property 'url'/);
+});
+
 test("T01 rejects a scalar where front matter requires a list", async () => {
   const errors = await runFrontmatter(`---
 title: Terminal overview
@@ -279,6 +325,13 @@ test("Markdown derivation preserves list items, table cells, and block boundarie
   assert.match(markdown, /\| Command \| Meaning \|\n\| --- \| --- \|\n\| pwd \| print folder \|/);
   assert.match(markdown, /\|  \|  \|\n\| --- \| --- \|\n\| localhost \| this computer \|/);
   assert.match(markdown, /Static alternative remains present\./);
+});
+
+test("Markdown derivation separates flex siblings but preserves inline text runs", { timeout: 60000 }, async () => {
+  const markdown = await markdownFromHtml(path.join(fixtures, "md-structure.html"));
+  assert.match(markdown, /- API_KEY=demo-123 shell only/);
+  assert.match(markdown, /- app\.sh/);
+  assert.doesNotMatch(markdown, /app \.sh/);
 });
 
 test("Markdown derivation emits nested companion sections exactly once", { timeout: 60000 }, async () => {

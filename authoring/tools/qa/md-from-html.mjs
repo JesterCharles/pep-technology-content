@@ -67,6 +67,7 @@ export async function deriveMarkdown(page) {
       "UL",
     ]);
     const ignoredTags = new Set(["SCRIPT", "STYLE", "TEMPLATE", "NOSCRIPT"]);
+    const blockDisplays = new Set(["block", "flow-root", "flex", "grid", "list-item", "table"]);
 
     function shouldSkip(element, owner, root) {
       if (element === root) return false;
@@ -78,12 +79,25 @@ export async function deriveMarkdown(page) {
         (element.tagName === "SUMMARY" || /^H[1-6]$/.test(element.tagName));
     }
 
+    function separateAdjacentElements(parent, previous, child) {
+      if (previous?.nodeType !== Node.ELEMENT_NODE || child.nodeType !== Node.ELEMENT_NODE) {
+        return false;
+      }
+      const parentDisplay = getComputedStyle(parent).display;
+      const parentLaysOutItems = ["flex", "inline-flex", "grid", "inline-grid"].includes(parentDisplay);
+      return parentLaysOutItems || blockDisplays.has(getComputedStyle(previous).display) ||
+        blockDisplays.has(getComputedStyle(child).display);
+    }
+
     function inlineText(node, owner, root) {
       if (node.nodeType === Node.TEXT_NODE) return node.nodeValue ?? "";
       if (node.nodeType !== Node.ELEMENT_NODE) return "";
       if (ignoredTags.has(node.tagName) || shouldSkip(node, owner, root)) return "";
       if (node.tagName === "BR") return "\n";
-      return [...node.childNodes].map((child) => inlineText(child, owner, root)).join("");
+      const children = [...node.childNodes];
+      return children.map((child, index) =>
+        `${separateAdjacentElements(node, children[index - 1], child) ? " " : ""}${inlineText(child, owner, root)}`
+      ).join("");
     }
 
     function renderList(list, owner, root, depth = 0) {
@@ -162,7 +176,8 @@ export async function deriveMarkdown(page) {
         if (text) parts.push(text);
         inline = "";
       };
-      for (const child of parent.childNodes) {
+      const children = [...parent.childNodes];
+      for (const [index, child] of children.entries()) {
         if (child.nodeType === Node.TEXT_NODE) {
           inline += child.nodeValue ?? "";
           continue;
@@ -174,6 +189,7 @@ export async function deriveMarkdown(page) {
           const rendered = renderElement(child, owner, root, depth);
           if (rendered) parts.push(rendered);
         } else {
+          if (separateAdjacentElements(parent, children[index - 1], child)) inline += " ";
           inline += inlineText(child, owner, root);
         }
       }
