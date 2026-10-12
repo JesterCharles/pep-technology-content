@@ -8,100 +8,89 @@
 
 ## Teaching
 
-Start with a guess
+### Start with a guess
 
 A team works in two-week sprints. On the first day, the team meets to decide what to work on.
 
-One sprint, four events
-          Scrum works in sprints: fixed periods of one month or less. Sprint Planning starts each sprint by choosing work from the ordered product backlog. During the sprint, Developers meet for a 15-minute Daily Scrum to adjust their plan. At the end, the Sprint Review inspects the result with stakeholders, then the Sprint Retrospective improves how the team works.
-          Three accountabilities: the Product Owner orders the backlog, the Scrum Master helps the team use Scrum, and Developers build the work.
+### One sprint, four events
 
-User stories and acceptance criteria
-          Many Scrum teams write backlog items as user stories, a common practice the Scrum Guide does not require. Form: As a user role, I want something they can do, so that a benefit. Leave out how it will be built.
-          Each story gets acceptance criteria: checks with a clear yes or no. A testable criterion names a situation, an action and an observable result, often as Given, When, Then. “Works well” or “fast” cannot be checked.
+Scrum works in sprints: fixed periods of one month or less. Sprint Planning starts each sprint by choosing work from the ordered product backlog. During the sprint, Developers meet for a 15-minute Daily Scrum to adjust their plan. At the end, the Sprint Review inspects the result with stakeholders, then the Sprint Retrospective improves how the team works.
 
-Apply it to a new story
-          Testable criteria are also what you will check AI-made changes against in the next topic.
+Three accountabilities: the Product Owner orders the backlog, the Scrum Master helps the team use Scrum, and Developers build the work.
+
+### User stories and acceptance criteria
+
+Many Scrum teams write backlog items as user stories, a common practice the Scrum Guide does not require. Form: As a user role, I want something they can do, so that a benefit. Leave out how it will be built.
+
+Each story gets acceptance criteria: checks with a clear yes or no. A testable criterion names a situation, an action and an observable result, often as Given, When, Then. “Works well” or “fast” cannot be checked.
+
+### Apply it to a new story
+
+Testable criteria are also what you will check AI-made changes against in the next topic.
 
 ## Model
 
 One sprint
-1
-?
-2
-?
-every day
-3
-?
-4
-?
+
+1. 1?
+2. 2?every day
+3. 3?
+4. 4?
 
 Then the next sprint starts with planning again.
 
-Product Owner orders the backlog
-Scrum Master helps the team use Scrum
-Developers build the work
+- Product Owner orders the backlog
+- Scrum Master helps the team use Scrum
+- Developers build the work
+
+As aDrop a card hereHint
+
+I wantDrop a card hereHint
+
+so thatDrop a card hereHint
+
+Acceptance criterionDrop a card hereHint
+
+Story card
+
+As a …
+
+I want …
+
+so that …
+
+Acceptance criterion …
 
 ## Recap
 
-Recap
+- A sprint runs Sprint Planning, Daily Scrums, the Sprint Review, then the Sprint Retrospective.
+- The Product Owner orders the backlog, the Scrum Master helps the team use Scrum, Developers build.
+- A user story: As a role, I want a capability, so that a benefit.
+- Acceptance criteria are yes-or-no checks: a situation, an action, an observable result.
 
-            A sprint runs Sprint Planning, Daily Scrums, the Sprint Review, then the Sprint Retrospective.
-            The Product Owner orders the backlog, the Scrum Master helps the team use Scrum, Developers build.
-            A user story: As a role, I want a capability, so that a benefit.
-            Acceptance criteria are yes-or-no checks: a situation, an action, an observable result.
-
-            Cheat sheet
-
-              Sprintfixed period, one month or less
-              Sprint Planningchoose work from the ordered product backlog
-              Daily Scrum15 minutes, Developers adjust the plan
-              Sprint Reviewinspect the result with stakeholders
-              Sprint Retrospectiveimprove how the team works
-              Acceptance criterionGiven a situation, When an action, Then an observable result
-
-            Accountabilities and events follow the 2020 Scrum Guide; user stories and Given, When, Then are common team practices, not Scrum requirements.
-
-            Sources and review date
-            Claims on this page were checked against the live official pages below on 6 October 2026 (UTC). Links open outside this lesson.
-
-              The 2020 Scrum Guide: The Sprint; Sprint Planning; Daily Scrum; Sprint Review; Sprint Retrospective; Product Owner; Scrum Master. November 2020 edition, the current official guide as published on scrumguides.org; it does not mention user stories.
-              Gherkin Reference (Cucumber): Given and Then steps. Given, When, Then is a common way to write acceptance criteria, not a Scrum requirement.
-
-            Not tied to one source: how widely teams use user stories is not measured here.
-
-          Next topic: Checking AI-made changes before merging
+Next topic: Checking AI-made changes before merging
 
 ## Cheat sheet
 
-Cheat sheet
+|  |  |
+| --- | --- |
+| Sprint | fixed period, one month or less |
+| Sprint Planning | choose work from the ordered product backlog |
+| Daily Scrum | 15 minutes, Developers adjust the plan |
+| Sprint Review | inspect the result with stakeholders |
+| Sprint Retrospective | improve how the team works |
+| Acceptance criterion | Given a situation, When an action, Then an observable result |
 
-              Sprintfixed period, one month or less
-              Sprint Planningchoose work from the ordered product backlog
-              Daily Scrum15 minutes, Developers adjust the plan
-              Sprint Reviewinspect the result with stakeholders
-              Sprint Retrospectiveimprove how the team works
-              Acceptance criterionGiven a situation, When an action, Then an observable result
-
-            Accountabilities and events follow the 2020 Scrum Guide; user stories and Given, When, Then are common team practices, not Scrum requirements.
-
-Sources and review date
-            Claims on this page were checked against the live official pages below on 6 October 2026 (UTC). Links open outside this lesson.
-
-              The 2020 Scrum Guide: The Sprint; Sprint Planning; Daily Scrum; Sprint Review; Sprint Retrospective; Product Owner; Scrum Master. November 2020 edition, the current official guide as published on scrumguides.org; it does not mention user stories.
-              Gherkin Reference (Cucumber): Given and Then steps. Given, When, Then is a common way to write acceptance criteria, not a Scrum requirement.
-
-            Not tied to one source: how widely teams use user stories is not measured here.
+Accountabilities and events follow the 2020 Scrum Guide; user stories and Given, When, Then are common team practices, not Scrum requirements.
 
 ## Sources
 
-Sources and review date
-            Claims on this page were checked against the live official pages below on 6 October 2026 (UTC). Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 6 October 2026 (UTC). Links open outside this lesson.
 
-              The 2020 Scrum Guide: The Sprint; Sprint Planning; Daily Scrum; Sprint Review; Sprint Retrospective; Product Owner; Scrum Master. November 2020 edition, the current official guide as published on scrumguides.org; it does not mention user stories.
-              Gherkin Reference (Cucumber): Given and Then steps. Given, When, Then is a common way to write acceptance criteria, not a Scrum requirement.
+- The 2020 Scrum Guide: The Sprint; Sprint Planning; Daily Scrum; Sprint Review; Sprint Retrospective; Product Owner; Scrum Master. November 2020 edition, the current official guide as published on scrumguides.org; it does not mention user stories.
+- Gherkin Reference (Cucumber): Given and Then steps. Given, When, Then is a common way to write acceptance criteria, not a Scrum requirement.
 
-            Not tied to one source: how widely teams use user stories is not measured here.
+Not tied to one source: how widely teams use user stories is not measured here.
 
 ## Static interaction alternatives
 

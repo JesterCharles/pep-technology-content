@@ -8,102 +8,68 @@
 
 ## Teaching
 
-Warm up from memory
+### Warm up from memory
 
 This check covers the shell, Git and AI topics of the course. Every scenario is a benign simulation in the fictional home folder /home/ana; nothing runs on your computer. The warm-up is never marked wrong.
 
-Shell: make a script runnable
-          ls -l shows permissions for owner, group and others: r read, w write, x execute. Numeric modes add read 4, write 2 and execute 1 per group: 7 is rwx, 6 is rw-, 4 is r--. Running ./start.sh needs x.
+### Shell: make a script runnable
 
-Git: keep secrets out of commits
-          Keep secrets such as a token in a .env file and read them as environment variables, never in code. List .env in .gitignore, one pattern per line, before your first commit: Git then leaves that untracked file out of git add. Ignoring a file Git already tracks does not remove it from history.
+ls -l shows permissions for owner, group and others: r read, w write, x execute. Numeric modes add read 4, write 2 and execute 1 per group: 7 is rwx, 6 is rw-, 4 is r--. Running ./start.sh needs x.
 
-AI: claims versus evidence
-          An assistant's answer is a proposal, and its summary is a set of claims. A verified result is one you checked yourself: you read the diff line by line and ran the acceptance criteria with the expected output.
+### Git: keep secrets out of commits
+
+Keep secrets such as a token in a .env file and read them as environment variables, never in code. List .env in .gitignore, one pattern per line, before your first commit: Git then leaves that untracked file out of git add. Ignoring a file Git already tracks does not remove it from history.
+
+### AI: claims versus evidence
+
+An assistant's answer is a proposal, and its summary is a set of claims. A verified result is one you checked yourself: you read the diff line by line and ran the acceptance criteria with the expected output.
 
 ## Model
 
 One local project, three lenses (simulated)
-Shell
-pwd
-/tmp
-start.sh
--rw-r--r--
-Git
-.gitignore
-(empty)
-untracked
-.env (holds a token)
-AI change
-claim
-“Tested, works.”
-evidence
-none yet
+
+### Shell
+
+pwd/tmpstart.sh-rw-r--r--
+
+### Git
+
+.gitignore(empty)untracked.env (holds a token)
+
+### AI change
+
+claim“Tested, works.”evidencenone yet
 
 ## Recap
 
-Recap
+- Relative paths start where you are; a script needs x to run, as in chmod 744.
+- List .env in .gitignore before the first commit; a later delete leaves secrets in history.
+- An assistant's summary is claims; your own run against the acceptance criteria is evidence.
+- Redact secrets before they reach a prompt, and check every proposal before it is merged.
 
-            Relative paths start where you are; a script needs x to run, as in chmod 744.
-            List .env in .gitignore before the first commit; a later delete leaves secrets in history.
-            An assistant's summary is claims; your own run against the acceptance criteria is evidence.
-            Redact secrets before they reach a prompt, and check every proposal before it is merged.
-
-            Cheat sheet
-
-              chmod 744 fileowner rwx; group and others read only
-              .gitignore line .envGit skips the untracked file .env
-              # .env / !.enva comment / re-include, not ignore
-              Verified resultyour run matched the acceptance criterion
-
-            Sources and review date
-            Claims on this page were checked against the live official pages below on 6 October 2026 (UTC). Links open outside this lesson.
-
-              cd: relative paths start from PWD; on error the working directory remains unchanged. POSIX.1-2024 (IEEE Std 1003.1-2024), the standard behind sh; GNU Bash and coreutils manuals could not be reached on 6 October 2026, so Bash- or GNU-specific details are not separately verified.
-              chmod: octal modes set permission bits absolutely (0400 read, 0200 write, 0100 execute for the owner). POSIX.1-2024.
-              ls: -l permission characters r, w, x. POSIX.1-2024.
-              gitignore: comments (#), negation (!), untracked files only, tracked files unaffected. Git manual, last updated in 2.55.0; unchanged in 2.56.0.
-              git-stash: -u, --include-untracked. Git manual, last updated in 2.56.0.
-              Best practices for using GitHub Copilot: Check Copilot's work. Supports checking a proposal with your own run.
-
-            Scenarios are benign simulations in a fictional home folder; nothing runs on your computer.
-
-          Next: this was the final AI Foundations topic. Return to the course page.
+Next: this was the final AI Foundations topic. Return to the course page.
 
 ## Cheat sheet
 
-Cheat sheet
-
-              chmod 744 fileowner rwx; group and others read only
-              .gitignore line .envGit skips the untracked file .env
-              # .env / !.enva comment / re-include, not ignore
-              Verified resultyour run matched the acceptance criterion
-
-Sources and review date
-            Claims on this page were checked against the live official pages below on 6 October 2026 (UTC). Links open outside this lesson.
-
-              cd: relative paths start from PWD; on error the working directory remains unchanged. POSIX.1-2024 (IEEE Std 1003.1-2024), the standard behind sh; GNU Bash and coreutils manuals could not be reached on 6 October 2026, so Bash- or GNU-specific details are not separately verified.
-              chmod: octal modes set permission bits absolutely (0400 read, 0200 write, 0100 execute for the owner). POSIX.1-2024.
-              ls: -l permission characters r, w, x. POSIX.1-2024.
-              gitignore: comments (#), negation (!), untracked files only, tracked files unaffected. Git manual, last updated in 2.55.0; unchanged in 2.56.0.
-              git-stash: -u, --include-untracked. Git manual, last updated in 2.56.0.
-              Best practices for using GitHub Copilot: Check Copilot's work. Supports checking a proposal with your own run.
-
-            Scenarios are benign simulations in a fictional home folder; nothing runs on your computer.
+|  |  |
+| --- | --- |
+| chmod 744 file | owner rwx; group and others read only |
+| .gitignore line .env | Git skips the untracked file .env |
+| # .env / !.env | a comment / re-include, not ignore |
+| Verified result | your run matched the acceptance criterion |
 
 ## Sources
 
-Sources and review date
-            Claims on this page were checked against the live official pages below on 6 October 2026 (UTC). Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 6 October 2026 (UTC). Links open outside this lesson.
 
-              cd: relative paths start from PWD; on error the working directory remains unchanged. POSIX.1-2024 (IEEE Std 1003.1-2024), the standard behind sh; GNU Bash and coreutils manuals could not be reached on 6 October 2026, so Bash- or GNU-specific details are not separately verified.
-              chmod: octal modes set permission bits absolutely (0400 read, 0200 write, 0100 execute for the owner). POSIX.1-2024.
-              ls: -l permission characters r, w, x. POSIX.1-2024.
-              gitignore: comments (#), negation (!), untracked files only, tracked files unaffected. Git manual, last updated in 2.55.0; unchanged in 2.56.0.
-              git-stash: -u, --include-untracked. Git manual, last updated in 2.56.0.
-              Best practices for using GitHub Copilot: Check Copilot's work. Supports checking a proposal with your own run.
+- cd: relative paths start from PWD; on error the working directory remains unchanged. POSIX.1-2024 (IEEE Std 1003.1-2024), the standard behind sh; GNU Bash and coreutils manuals could not be reached on 6 October 2026, so Bash- or GNU-specific details are not separately verified.
+- chmod: octal modes set permission bits absolutely (0400 read, 0200 write, 0100 execute for the owner). POSIX.1-2024.
+- ls: -l permission characters r, w, x. POSIX.1-2024.
+- gitignore: comments (#), negation (!), untracked files only, tracked files unaffected. Git manual, last updated in 2.55.0; unchanged in 2.56.0.
+- git-stash: -u, --include-untracked. Git manual, last updated in 2.56.0.
+- Best practices for using GitHub Copilot: Check Copilot's work. Supports checking a proposal with your own run.
 
-            Scenarios are benign simulations in a fictional home folder; nothing runs on your computer.
+Scenarios are benign simulations in a fictional home folder; nothing runs on your computer.
 
 ## Static interaction alternatives
 

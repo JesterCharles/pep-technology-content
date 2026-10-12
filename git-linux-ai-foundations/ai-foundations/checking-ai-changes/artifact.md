@@ -8,24 +8,28 @@
 
 ## Teaching
 
-Start with a guess
+### Start with a guess
 
 An assistant opened a change for review. Its summary says: “Prints the port the app uses. Keeps the 8080 default. All tests pass.”
 
 The change, summary and outputs are synthetic examples. Nothing calls a real AI model or runs on your computer.
 
-Claims are not evidence
-          An AI-made change arrives as a diff plus a summary. Treat each sentence of the summary as a claim. The diff is evidence of what changed: a line can support a claim, contradict it, or show that a check was weakened, such as a deleted test.
-          Read every changed line, removed lines included. Removals hide the biggest surprises.
+### Claims are not evidence
 
-Run the acceptance criteria
-          A supported claim is still unverified. Run the story's acceptance criteria and compare the output with the expected result. Only a matching run turns a proposal into a verified result.
+An AI-made change arrives as a diff plus a summary. Treat each sentence of the summary as a claim. The diff is evidence of what changed: a line can support a claim, contradict it, or show that a check was weakened, such as a deleted test.
 
-            AC1: given PORT=5000, running sh start.sh prints Using port 5000.
-            AC2: given no PORT, it prints Using port 8080.
+Read every changed line, removed lines included. Removals hide the biggest surprises.
 
-Decide with evidence
-          A review decision names its evidence: the line, the failed check, what to change. Who wrote the change does not decide it; the evidence does.
+### Run the acceptance criteria
+
+A supported claim is still unverified. Run the story's acceptance criteria and compare the output with the expected result. Only a matching run turns a proposal into a verified result.
+
+- AC1: given PORT=5000, running sh start.sh prints Using port 5000.
+- AC2: given no PORT, it prints Using port 8080.
+
+### Decide with evidence
+
+A review decision names its evidence: the line, the failed check, what to change. Who wrote the change does not decide it; the evidence does.
 
 ## Model
 
@@ -33,80 +37,46 @@ Claims beside evidence (synthetic change)
 
 Summary claims
 
-Prints the port the app uses.
-Not checked yet
-Keeps the 8080 default.
-Not checked yet
-All tests pass.
-Not checked yet
+1. Prints the port the app uses.Not checked yet
+2. Keeps the 8080 default.Not checked yet
+3. All tests pass.Not checked yet
 
 Diff
 
 start.sh
 
-  #!/bin/sh
-- PORT="${PORT:-8080}"
-+ PORT=3000
-+ echo "Using port $PORT"
-  echo "Starting app"
+#!/bin/sh- PORT="${PORT:-8080}"+ PORT=3000+ echo "Using port $PORT" echo "Starting app"
 
 tests/test_start.sh
 
-  run_test check_prints_port
-- run_test check_default_port
+run_test check_prints_port- run_test check_default_port
 
 ## Recap
 
-Recap
+- Treat an assistant's summary as claims, not evidence.
+- Read every changed line, especially removals and deleted tests.
+- Run the acceptance criteria; only a matching run is a verified result.
+- Approve or request changes by citing specific evidence, whoever wrote the change.
 
-            Treat an assistant's summary as claims, not evidence.
-            Read every changed line, especially removals and deleted tests.
-            Run the acceptance criteria; only a matching run is a verified result.
-            Approve or request changes by citing specific evidence, whoever wrote the change.
-
-            Cheat sheet
-
-              Supporteda diff line matches the claim; still not run
-              Contradicteda diff line or a run shows the opposite
-              Weakeneda test or check was removed, so “passes” proves less
-              Verifiedyou ran the acceptance criteria and the output matched
-
-            Sources and review date
-            Claims on this page were checked against the live official pages below on 6 October 2026 (UTC). Links open outside this lesson.
-
-              Reviewing proposed changes in a pull request (GitHub Docs): approve or request changes. GitHub's wording; other hosts use similar review states.
-              Best practices for using GitHub Copilot: Check Copilot's work; understand suggested code before you implement it. Applies to AI-made changes generally.
-
-            The change, summary and terminal runs are synthetic simulations written for this lesson, not real AI output or command execution.
-
-          Next topic: Foundations course check
+Next topic: Foundations course check
 
 ## Cheat sheet
 
-Cheat sheet
-
-              Supporteda diff line matches the claim; still not run
-              Contradicteda diff line or a run shows the opposite
-              Weakeneda test or check was removed, so “passes” proves less
-              Verifiedyou ran the acceptance criteria and the output matched
-
-Sources and review date
-            Claims on this page were checked against the live official pages below on 6 October 2026 (UTC). Links open outside this lesson.
-
-              Reviewing proposed changes in a pull request (GitHub Docs): approve or request changes. GitHub's wording; other hosts use similar review states.
-              Best practices for using GitHub Copilot: Check Copilot's work; understand suggested code before you implement it. Applies to AI-made changes generally.
-
-            The change, summary and terminal runs are synthetic simulations written for this lesson, not real AI output or command execution.
+|  |  |
+| --- | --- |
+| Supported | a diff line matches the claim; still not run |
+| Contradicted | a diff line or a run shows the opposite |
+| Weakened | a test or check was removed, so “passes” proves less |
+| Verified | you ran the acceptance criteria and the output matched |
 
 ## Sources
 
-Sources and review date
-            Claims on this page were checked against the live official pages below on 6 October 2026 (UTC). Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 6 October 2026 (UTC). Links open outside this lesson.
 
-              Reviewing proposed changes in a pull request (GitHub Docs): approve or request changes. GitHub's wording; other hosts use similar review states.
-              Best practices for using GitHub Copilot: Check Copilot's work; understand suggested code before you implement it. Applies to AI-made changes generally.
+- Reviewing proposed changes in a pull request (GitHub Docs): approve or request changes. GitHub's wording; other hosts use similar review states.
+- Best practices for using GitHub Copilot: Check Copilot's work; understand suggested code before you implement it. Applies to AI-made changes generally.
 
-            The change, summary and terminal runs are synthetic simulations written for this lesson, not real AI output or command execution.
+The change, summary and terminal runs are synthetic simulations written for this lesson, not real AI output or command execution.
 
 ## Static interaction alternatives
 
