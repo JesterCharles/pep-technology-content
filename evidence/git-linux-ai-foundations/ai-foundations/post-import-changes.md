@@ -1,24 +1,24 @@
 # ai-foundations: changes after the byte-faithful import
 
 For critics: every learner-page change made after the import commit, in order.
-The import itself is proven by `import-fidelity.txt` (commit `6312549`, five pages byte-identical to
+The import itself is proven by `import-fidelity.txt` (commit `5cf88fe`, five pages byte-identical to
 `git-linux-ai-foundations-20261007-evolv-terminal-repair/ai-foundations/0[1-5]-*.html`).
-`git diff 6312549 -- git-linux-ai-foundations/ai-foundations/*/artifact.html` shows all of them.
+`git diff 5cf88fe -- git-linux-ai-foundations/ai-foundations/*/artifact.html` shows all of them.
 
-1. `cef84d1` normalization only (no content change)
+1. `5a4f56f` normalization only (no content change)
    - `pep:` meta regenerated from the manifests: `pep:course` and `pep:module` are ids, `pep:topic` is the
      `topic.json` title (two titles differ from the page h1, which is unchanged), `pep:source` added.
    - `<link rel="icon" href="data:,">` removed (T08 forbids `data:` resource loads).
    - foundations-course-check: the dead package-root link `../index.html` removed; its sentence kept as text.
-2. `49fc4c4` known production repair (category B), checking-ai-changes only
+2. `4c8473f` known production repair (category B), checking-ai-changes only
    - The practice terminal's `<form>` + `submit` listener became the package's non-form direct dispatch:
      a `div.cmdline`, a `type="button"` Run button, and one `runCmd()` called by Run click and by Enter
      (not during IME composition). Commands, output, history keys and feedback are unchanged.
-3. `98434f0` T07 fake-secret shortening, ai-rules-of-use only
+3. `c44cda4` T07 fake-secret shortening, ai-rules-of-use only
    - Synthetic `FAKE-PW-2291` became `FAKE-PW-291`; the partly masked distractor `FAKE-PW-22**` became
      `FAKE-PW-2**` so it still shows a partial mask. Firstmate instruction: shorten obviously fake values
      that trip the 12-character secret pattern; never change the tooling.
-4. `9c4f926` contract header and static alternatives (approved for every course-1 module)
+4. `4ffdd27` contract header and static alternatives (approved for every course-1 module)
    - An open `details.goals` under the h1: `About N minutes` (topic.json `aboutLabel`) and the exact
      topic.json objectives in `ul.objectives[data-pep-objectives]`, plus three CSS rules.
    - An author-written `data-static-alt` on every `data-interaction` element, restating the activity, the
