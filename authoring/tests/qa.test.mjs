@@ -75,7 +75,7 @@ async function runFrontmatter(frontmatter) {
   const directory = await mkdtemp(path.join(os.tmpdir(), "pep-frontmatter-"));
   const file = path.join(directory, "video-artifact.md");
   await writeFile(file, `${frontmatter}\n`);
-  const root = path.resolve(import.meta.dirname, "..");
+  const root = path.resolve(import.meta.dirname, "../..");
   try {
     return await runT01({
       root,
