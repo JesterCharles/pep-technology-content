@@ -8,7 +8,7 @@ Every topic artifact is recorded absent: applicable companions with the reason "
 
 - Curriculum snapshot: `curriculum/snapshot/pep-curriculum.json` (sha256 `9520f1fde24630604a82ecc1188726339ee02233d0274c622f4dda9c8c0204f8`) and `curriculum/snapshot/pep-calendar.json` (sha256 `634da8de5c6034e269b56347b2009fa24eb74eb9bd94f6bd8d5f65f54459ce00`), curriculum version `2026-10-01` per `curriculum/curriculum.lock.json`.
 - Confirmed coverage matrix v3 (read-only, frozen): `matrix-v3.json` (sha256 `4e936d703e64dba4f7973458b57aed0e921fad0d5afecca319cf7cec7806c4cd`) and `discrepancies-v3.json` (sha256 `ba6580b06af9d94d6f4ed53cf82986cdbd3db357fee09d2b268511505b2b9c3a`). Its 41 `python` topic-string rows (22 Standard, 19 Fast) are the authoritative topic inventory and expected-artifact scope.
-- Repository contracts on `main`: `AGENTS.md`, `docs/workflow.md`, `docs/html-artifact-contract.md`, `docs/lab-contract.md`, `docs/tools/*.md`, `schemas/`, and the new-course budget rule in `docs/tools/validators.md`.
+- Repository contracts on `main`: `AGENTS.md`, `authoring/docs/workflow.md`, `authoring/docs/html-artifact-contract.md`, `authoring/docs/lab-contract.md`, `authoring/docs/tools/*.md`, `authoring/schemas/`, and the new-course budget rule in `authoring/docs/tools/validators.md`.
 - Plan: approved PEP technology-content plan sections 2.3, 3, 4, 5, 6, 7.1 and 11.
 - Terminal foundation: `components/terminal` version 1 (from the repaired course-1 Evolv package `git-linux-ai-foundations-20261007-evolv-terminal-repair`): form-free direct Run-button and Enter-key dispatch, captain-confirmed working in Evolv (platform success, not a captured trace). Reused as is, not re-derived.
 
@@ -255,7 +255,7 @@ Planned `data-pipelines` lab design, for the module author and critics:
 - Database: a learner-local PostgreSQL server installed natively (the platform's PostgreSQL from the SQL course), never a container. The lab creates and drops its own database or schema, read from an environment variable connection string, and `lab.json` declares it for cleanup.
 - AI enrichment: tests use a deterministic fake model client with fixed valid and invalid responses; no network, API key or vendor account. The redaction step for `keeping-sensitive-data-out-of-prompts` is tested on fixture records.
 - Determinism: fixed fixtures, no wall clock, network or locale dependence; the starter fails named public tests with stable messages.
-- No reference solution, hidden test or key is committed; the solved-run gate runs locally against uncommitted private staging (`docs/lab-contract.md` section 8).
+- No reference solution, hidden test or key is committed; the solved-run gate runs locally against uncommitted private staging (`authoring/docs/lab-contract.md` section 8).
 
 No lab, with reason:
 
@@ -265,7 +265,7 @@ No lab, with reason:
 
 ## Minute budgets
 
-Rule: the revised new-course budget rule merged on `main` (`docs/tools/validators.md`, Reading time): each integer topic budget is at least `ceil(max(estimator P50, modeledWorstPath))`, at most 15, never a weighted share of a day pool, and the topic budgets mapped to a calendar day must fit that day type's complete block total (120 minutes for Concept, Lab, Review and Fast days).
+Rule: the revised new-course budget rule merged on `main` (`authoring/docs/tools/validators.md`, Reading time): each integer topic budget is at least `ceil(max(estimator P50, modeledWorstPath))`, at most 15, never a weighted share of a day pool, and the topic budgets mapped to a calendar day must fit that day type's complete block total (120 minutes for Concept, Lab, Review and Fast days).
 
 Basis at intake: no `artifact.html` exists, so the estimator cannot run. Each topic records an intake planning model in `minutes.basis`: `modeledP50` is the target page time (core 9, Reading 6, review 9 minutes), `modeledWorstPath` adds 2.5 minutes for the worst required route (two wrong graded attempts and wrong-first explores per interactive unit; course-1 measured gaps of 2.41-2.65 minutes above P50), and `budget = aboutLabel = ceil(max(modeledP50, modeledWorstPath))`. The module PR replaces `modeledP50` with the frozen estimator P50 on the authored bytes, re-models the worst path and keeps the budget at or above the rule's minimum; T14 then checks day totals.
 
@@ -342,7 +342,7 @@ FT9 carries all nine `python-fundamentals` pages and is T14's binding constraint
 
 ## Official sources per topic
 
-Closes `source-gap-python-official-evidence` (category A, sequenced to this intake). On 2026-10-12 this intake fetched 81 live first-party sources: the Python documentation (docs.python.org, serving Python 3.15.0), the Python Packaging User Guide, pytest, psycopg 3, PostgreSQL 18, Pydantic, Claude Platform and OpenAI API structured-output guides, Claude Code data usage, OWASP GenAI LLM02:2025, FastAPI, HTTPX, RFC 6750, RFC 9110, Spring Boot reference, and PyPI release metadata for the lab pins. `evidence/python/source-snapshot.json` records each final URL (after redirects), retrieval time, sha256 of the fetched bytes and the topics and sections it supports. All 81 returned HTTP 200; no source was unreachable, so there are no source gaps. Raw fetched pages are not committed.
+Closes `source-gap-python-official-evidence` (category A, sequenced to this intake). On 2026-10-12 this intake fetched 81 live first-party sources: the Python documentation (docs.python.org, serving Python 3.15.0), the Python Packaging User Guide, pytest, psycopg 3, PostgreSQL 18, Pydantic, Claude Platform and OpenAI API structured-output guides, Claude Code data usage, OWASP GenAI LLM02:2025, FastAPI, HTTPX, RFC 6750, RFC 9110, Spring Boot reference, and PyPI release metadata for the lab pins. `authoring/evidence/python/source-snapshot.json` records each final URL (after redirects), retrieval time, sha256 of the fetched bytes and the topics and sections it supports. All 81 returned HTTP 200; no source was unreachable, so there are no source gaps. Raw fetched pages are not committed.
 
 Notes for authors and SME critics:
 
@@ -381,7 +381,7 @@ Calendar references for the `python` technology: [Python tutorial](https://docs.
 | Record | Resolution |
 |---|---|
 | `source-gap-python-modules` | Module grouping chosen and recorded above as a second-mate grouping decision, not syllabus: three modules by calendar day sequence. Pending approval at merge. |
-| `source-gap-python-official-evidence` | 81 live first-party sources fetched and frozen with sha256 and retrieval times in `evidence/python/source-snapshot.json`; no gaps. |
+| `source-gap-python-official-evidence` | 81 live first-party sources fetched and frozen with sha256 and retrieval times in `authoring/evidence/python/source-snapshot.json`; no gaps. |
 
 ## Intake criticism
 
