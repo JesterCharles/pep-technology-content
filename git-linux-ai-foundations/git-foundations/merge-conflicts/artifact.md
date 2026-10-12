@@ -8,41 +8,66 @@
 
 ## Teaching
 
-Start with a guess
+### Start with a guess
 
 Merging joins the work of two branches. Usually Git combines them on its own. The model shows main and feature/title, which both changed the page heading.
 
+### Reading and resolving a conflict
+
+When both branches changed the same lines, Git stops with a conflict and writes both versions into the file:
+
+- <<<<<<< HEAD starts your current branch's version.
+- ======= separates the two.
+- >>>>>>> feature/title ends the incoming branch's version.
+
+To resolve: edit the file to the final text and delete all three marker lines; git add the file to mark it resolved; git commit to finish the merge. git merge --abort cancels everything.
+
+### Apply it to a new conflict
+
+Same markers, different file.
+
 ## Model
 
-Practice repository
-Simulation: no real Git runs
-History
-newest first
-C4
-Store title
-feature/title
-C3
-Shop title
-HEAD → main
-C2
-Add cart
-index.html, heading line
-index.html on main
+Practice repositorySimulation: no real Git runs
+
+### Historynewest first
+
+1. C4Store titlefeature/title
+2. C3Shop titleHEAD → main
+3. C2Add cart
+
+### index.html, heading lineindex.html on main
+
+```
 Welcome to PEP Shop
+```
 
 ## Recap
 
-RecapA common conflict happens when both branches change the same area and Git cannot combine the changes automatically; Git stops and asks you.Between <<<<<<< HEAD and ======= is your current branch; after it, the incoming branch.Resolve by editing to the final text and deleting all markers, then git add and git commit.Git lets you commit leftover markers, so check the file first. git merge --abort starts over.Cheat sheetgit merge <branch>merge <branch> into the current branchgit statuslists unmerged (conflicted) filesgit add <file>mark a conflict resolvedgit commitfinish the mergegit merge --abortcancel and restore the pre-merge stateSources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.git-merge: how conflicts are presentedgit-merge: how to resolve conflictsgit-merge: merge strategiesNext topic: Merge vs rebase
+- A common conflict happens when both branches change the same area and Git cannot combine the changes automatically; Git stops and asks you.
+- Between <<<<<<< HEAD and ======= is your current branch; after it, the incoming branch.
+- Resolve by editing to the final text and deleting all markers, then git add and git commit.
+- Git lets you commit leftover markers, so check the file first. git merge --abort starts over.
+
+Next topic: Merge vs rebase
 
 ## Cheat sheet
 
-Cheat sheetgit merge <branch>merge <branch> into the current branchgit statuslists unmerged (conflicted) filesgit add <file>mark a conflict resolvedgit commitfinish the mergegit merge --abortcancel and restore the pre-merge state
-
-Sources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.git-merge: how conflicts are presentedgit-merge: how to resolve conflictsgit-merge: merge strategies
+|  |  |
+| --- | --- |
+| git merge <branch> | merge <branch> into the current branch |
+| git status | lists unmerged (conflicted) files |
+| git add <file> | mark a conflict resolved |
+| git commit | finish the merge |
+| git merge --abort | cancel and restore the pre-merge state |
 
 ## Sources
 
-Sources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.git-merge: how conflicts are presentedgit-merge: how to resolve conflictsgit-merge: merge strategies
+Teaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.
+
+- git-merge: how conflicts are presented
+- git-merge: how to resolve conflicts
+- git-merge: merge strategies
 
 ## Static interaction alternatives
 

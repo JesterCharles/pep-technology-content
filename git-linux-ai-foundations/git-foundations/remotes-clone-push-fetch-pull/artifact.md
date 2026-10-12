@@ -8,47 +8,78 @@
 
 ## Teaching
 
-Start with a guess
+### Start with a guess
 
 Your team shares one copy of the repository on GitHub. The model shows your computer on the left and GitHub on the right; the dashed origin/main label is your computer's note of GitHub's main.
 
+### Prove who you are, then clone
+
+A remote is another copy of the repository, usually on GitHub, named origin.
+
+Over SSH you prove who you are with a key pair. id_ed25519 is the private key: it never leaves your computer. id_ed25519.pub is the public key: you paste it into GitHub's SSH keys settings.
+
+git clone git@github.com:pep/shop.git then copies the whole history and sets up origin.
+
+### fetch, pull and push
+
+Your clone has your own main plus origin/main, a note of where GitHub's main was when you last talked to it.
+
+- git fetch downloads new commits and moves only origin/main.
+- git pull fetches, then moves your branch forward to match. With no pull setting configured, it stops if both sides gained new commits. Options or configuration can choose a different integration strategy; git pull --no-rebase merges instead.
+- git push uploads your commits and moves GitHub's main, but only if your branch already contains everything GitHub has.
+
+### Apply it to a rejected push
+
+Same rule: push only adds to GitHub's history; it never drops a teammate's commit.
+
 ## Model
 
-Practice repository
-Simulation: no real Git runs
-Your computer
-local repository
-C2
-Add cart
-HEAD → main
-origin/main
-C1
-Start shop
-GitHub (origin)
-remote repository
-C3
-Sam: add search
-main
-C2
-Add cart
-C1
-Start shop
+Practice repositorySimulation: no real Git runs
+
+### Your computerlocal repository
+
+1. C2Add cartHEAD → mainorigin/main
+2. C1Start shop
+
+### GitHub (origin)remote repository
+
+1. C3Sam: add searchmain
+2. C2Add cart
+3. C1Start shop
 
 GitHub SSH keys: id_ed25519.pub (public)
 
 ## Recap
 
-RecapShare only the public key (.pub); the private key never leaves your computer.git clone copies the history and sets up origin.git fetch moves origin/main only; git pull also updates your branch, and stops if both sides changed unless a pull strategy is configured.git push is accepted only when your branch already contains everything on GitHub.Cheat sheetgit clone <url>copy a remote repositorygit fetchdownload; update origin/main onlygit pullfetch, then fast-forward your branchgit pull --no-rebasefetch and merge when both sides changedgit pushupload your commits~/.ssh/id_ed25519.pubpublic key: safe to paste into GitHubSources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28), and GitHub Docs (the pages show no version or update date). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.GitHub: generating a new SSH keyGitHub: adding a new SSH key to your accountGitHub: Error: Permission denied (publickey)git-clone: descriptiongit-fetch: descriptiongit-pull: description and merge options (--ff-only default)git-push: note about fast-forwardsNext topic: Merge conflicts
+- Share only the public key (.pub); the private key never leaves your computer.
+- git clone copies the history and sets up origin.
+- git fetch moves origin/main only; git pull also updates your branch, and stops if both sides changed unless a pull strategy is configured.
+- git push is accepted only when your branch already contains everything on GitHub.
+
+Next topic: Merge conflicts
 
 ## Cheat sheet
 
-Cheat sheetgit clone <url>copy a remote repositorygit fetchdownload; update origin/main onlygit pullfetch, then fast-forward your branchgit pull --no-rebasefetch and merge when both sides changedgit pushupload your commits~/.ssh/id_ed25519.pubpublic key: safe to paste into GitHub
-
-Sources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28), and GitHub Docs (the pages show no version or update date). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.GitHub: generating a new SSH keyGitHub: adding a new SSH key to your accountGitHub: Error: Permission denied (publickey)git-clone: descriptiongit-fetch: descriptiongit-pull: description and merge options (--ff-only default)git-push: note about fast-forwards
+|  |  |
+| --- | --- |
+| git clone <url> | copy a remote repository |
+| git fetch | download; update origin/main only |
+| git pull | fetch, then fast-forward your branch |
+| git pull --no-rebase | fetch and merge when both sides changed |
+| git push | upload your commits |
+| ~/.ssh/id_ed25519.pub | public key: safe to paste into GitHub |
 
 ## Sources
 
-Sources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28), and GitHub Docs (the pages show no version or update date). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.GitHub: generating a new SSH keyGitHub: adding a new SSH key to your accountGitHub: Error: Permission denied (publickey)git-clone: descriptiongit-fetch: descriptiongit-pull: description and merge options (--ff-only default)git-push: note about fast-forwards
+Teaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28), and GitHub Docs (the pages show no version or update date). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.
+
+- GitHub: generating a new SSH key
+- GitHub: adding a new SSH key to your account
+- GitHub: Error: Permission denied (publickey)
+- git-clone: description
+- git-fetch: description
+- git-pull: description and merge options (--ff-only default)
+- git-push: note about fast-forwards
 
 ## Static interaction alternatives
 

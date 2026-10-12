@@ -8,38 +8,65 @@
 
 ## Teaching
 
-Start with a guess
+### Start with a guess
 
 Everyone commits a mistake sometimes. Git has two ways to undo one, and the safe choice depends on who already has the commit. In the model, the dashed label origin/main marks what you have already pushed.
 
+### Revert what others already have
+
+git revert C3 adds a new commit that applies the opposite of C3's change. History keeps C3, so people who already have it simply pull the fix.
+
+git reset instead moves your branch name back to an earlier commit; later commits drop out of your branch. If others already have those commits, your history no longer matches theirs, and Git rejects a normal push.
+
+Rule of thumb: revert anything you have pushed.
+
+### Reset what only you have
+
+git reset is fine for commits nobody else has. HEAD~1 means one commit before where you are.
+
+- --soft: the branch moves back; that commit's changes wait, staged, in the staging area.
+- No option (the default, --mixed): changes stay in the working copy, unstaged.
+- --hard: the branch moves back and staged and working-copy changes to tracked files are thrown away.
+
+### Apply it to a new mistake
+
+Decide by one question: does anyone else already have the commit?
+
 ## Model
 
-Practice repository
-Simulation: no real Git runs
-C3
-Change price calc
-HEAD → main
-origin/main
-C2
-Add cart
-C1
-Start shop
+Practice repositorySimulation: no real Git runs
+
+1. C3Change price calcHEAD → mainorigin/main
+2. C2Add cart
+3. C1Start shop
 
 Staging area: empty. Working copy changes: none.
 
 ## Recap
 
-Recapgit revert <commit> adds a new commit that undoes an earlier one. History keeps the original. Use it for anything pushed.git reset moves your branch back. Use it only for commits nobody else has.--soft keeps the changes staged; the default keeps them unstaged; --hard throws them away.A reset of pushed commits makes your history differ from everyone else's, and a normal push is rejected.Cheat sheetgit revert <commit>new commit that undoes <commit>git reset --soft HEAD~1undo last commit, keep changes stagedgit reset HEAD~1undo last commit, keep changes unstagedgit reset --hard HEAD~1undo last commit and discard its changesSources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.git-revert: descriptiongit-reset: options (--soft, --mixed, --hard)git-push: note about fast-forwardsNext topic: Stash: setting work aside
+- git revert <commit> adds a new commit that undoes an earlier one. History keeps the original. Use it for anything pushed.
+- git reset moves your branch back. Use it only for commits nobody else has.
+- --soft keeps the changes staged; the default keeps them unstaged; --hard throws them away.
+- A reset of pushed commits makes your history differ from everyone else's, and a normal push is rejected.
+
+Next topic: Stash: setting work aside
 
 ## Cheat sheet
 
-Cheat sheetgit revert <commit>new commit that undoes <commit>git reset --soft HEAD~1undo last commit, keep changes stagedgit reset HEAD~1undo last commit, keep changes unstagedgit reset --hard HEAD~1undo last commit and discard its changes
-
-Sources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.git-revert: descriptiongit-reset: options (--soft, --mixed, --hard)git-push: note about fast-forwards
+|  |  |
+| --- | --- |
+| git revert <commit> | new commit that undoes <commit> |
+| git reset --soft HEAD~1 | undo last commit, keep changes staged |
+| git reset HEAD~1 | undo last commit, keep changes unstaged |
+| git reset --hard HEAD~1 | undo last commit and discard its changes |
 
 ## Sources
 
-Sources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.git-revert: descriptiongit-reset: options (--soft, --mixed, --hard)git-push: note about fast-forwards
+Teaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.
+
+- git-revert: description
+- git-reset: options (--soft, --mixed, --hard)
+- git-push: note about fast-forwards
 
 ## Static interaction alternatives
 

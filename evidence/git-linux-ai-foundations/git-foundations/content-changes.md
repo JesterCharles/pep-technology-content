@@ -1,7 +1,7 @@
 # git-foundations: post-normalization content changes
 
 Every byte change to an imported learner page after normalization is listed here for the critics.
-Import fidelity: `import-fidelity.txt` (commit 2dc5979). Normalization (pep: meta tags, data: favicon link removed): commit 1ac047c.
+Import fidelity: `import-fidelity.txt` (commit c9ea980). Normalization (pep: meta tags, data: favicon link removed): commit f84ce28.
 
 ## 1. Fake secret value shortened (firstmate decision 002, item 1)
 
@@ -21,4 +21,4 @@ Import fidelity: `import-fidelity.txt` (commit 2dc5979). Normalization (pep: met
 - EDU-004 (git-and-shell-review): objective o2 narrowed in `topic.json` and the page header from "Choose the right Git command for a described situation" to "Choose the commands that take one change from the repository folder to a pushed branch"; the opening teach text no longer claims the module's ideas all work together, and now says the page practises one change from the shell to GitHub with the recap listing the other ideas for reference. No checks or syllabus added.
 - sme-git-001 (stash): teaching, recap, cheat sheet and GIFT feedback now say `git stash pop` removes the entry once it applies cleanly; after a conflict the entry stays until `git stash drop`.
 - sme-git-002 (merge-conflicts): recap and GIFT feedback now say a common conflict happens when both branches change the same area and Git cannot combine the changes automatically. Exercise unchanged.
-- EDU-001: deferred to repository PR #13 (Markdown derivation); `artifact.md` is regenerated with the current tool only to match the corrected HTML.
+- EDU-001: after repository PR #13 (Markdown derivation) landed, all nine `artifact.md` files and the two PDFs were regenerated with the tool; no derived file was hand-edited.

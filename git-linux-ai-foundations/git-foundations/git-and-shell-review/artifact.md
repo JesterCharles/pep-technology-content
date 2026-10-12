@@ -8,45 +8,71 @@
 
 ## Teaching
 
-Warm up: recall first
+### Warm up: recall first
 
 This topic is review: nothing new. You practise one change from the shell to GitHub; the recap lists the module's other ideas for reference. Recall before you look anything up.
 
+### One change, start to finish
+
+The steps: A typical change: go to the repository folder, branch, stage, commit, push. Then you would open a pull request.
+
+Reminders:
+
+- Git commands work only inside a folder that contains .git; ls -a shows it.
+- git switch -c name carries your uncommitted changes onto the new branch.
+- The first push of a new branch needs -u origin name to create it on GitHub and link it.
+
+### Apply it: shell meets Git
+
+Review check: where you are in the shell decides which repository Git sees.
+
 ## Model
 
-Practice repository
-Simulation: no real Git runs
+Practice repositorySimulation: no real Git runs
 
 Shell location: /home/ana/projects/shop
 
-Working copy
-shop
-clean
-Staging area
-next commit
-receipt.js
-staged
-Commits
-HEAD on main
-C7 Add receipt (main)
-GitHub
-branches
-main
-C7
+### Working copyshop
+
+- clean
+
+### Staging areanext commit
+
+- receipt.jsstaged
+
+### CommitsHEAD on main
+
+- C7 Add receipt (main)
+
+### GitHubbranches
+
+- mainC7
 
 ## Recap
 
-Module recapChanges move working copy → staging (git add) → commit; .gitignore keeps secrets out.Branches are movable names; commit moves the one HEAD is on. Stash sets work aside.Revert what is pushed; reset only local commits. Fetch looks, pull merges, push shares.Resolve conflicts by editing out markers; merge shared work; land changes through reviewed pull requests.Cheat sheetcd ~/projects/shopgo to the repository foldergit switch -c <name>new branch, changes come alonggit add / git commitstage, then savegit push -u origin <name>first push of a new branchSources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings. Shell error wording follows GNU Bash and could not be checked: the GNU manual site did not respond.git-switch: descriptiongit-add: descriptiongit-push: options (--set-upstream)Next: back to the course page for Linux and AI Foundations.
+- Changes move working copy → staging (git add) → commit; .gitignore keeps secrets out.
+- Branches are movable names; commit moves the one HEAD is on. Stash sets work aside.
+- Revert what is pushed; reset only local commits. Fetch looks, pull merges, push shares.
+- Resolve conflicts by editing out markers; merge shared work; land changes through reviewed pull requests.
+
+Next: back to the course page for Linux and AI Foundations.
 
 ## Cheat sheet
 
-Cheat sheetcd ~/projects/shopgo to the repository foldergit switch -c <name>new branch, changes come alonggit add / git commitstage, then savegit push -u origin <name>first push of a new branch
-
-Sources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings. Shell error wording follows GNU Bash and could not be checked: the GNU manual site did not respond.git-switch: descriptiongit-add: descriptiongit-push: options (--set-upstream)
+|  |  |
+| --- | --- |
+| cd ~/projects/shop | go to the repository folder |
+| git switch -c <name> | new branch, changes come along |
+| git add / git commit | stage, then save |
+| git push -u origin <name> | first push of a new branch |
 
 ## Sources
 
-Sources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings. Shell error wording follows GNU Bash and could not be checked: the GNU manual site did not respond.git-switch: descriptiongit-add: descriptiongit-push: options (--set-upstream)
+Teaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings. Shell error wording follows GNU Bash and could not be checked: the GNU manual site did not respond.
+
+- git-switch: description
+- git-add: description
+- git-push: options (--set-upstream)
 
 ## Static interaction alternatives
 

@@ -8,36 +8,56 @@
 
 ## Teaching
 
-Start with a guess
+### Start with a guess
 
 While you worked on feature, main gained a commit. There are two ways to bring that work into your branch. The model shows the starting history.
 
+### Two ways to take in main
+
+Both commands bring main's new work into your branch.
+
+Merge: git merge main keeps every existing commit and adds a merge commit with two parents.
+
+Rebase: git rebase main replays your commits on top of main's tip. Each replayed commit is new, with a new ID (C3 becomes C3′); the old ones are abandoned. History becomes a straight line.
+
+The rule: Because rebase replaces commits, never rebase commits other people already have. Merging is always safe.
+
+### Apply it to a shared branch
+
+Same two tools; now a teammate depends on your commits.
+
 ## Model
 
-Practice repository
-Simulation: no real Git runs
-C4
-Fix tax
-main
-C3
-Add search
-HEAD → feature
-C2
-Add cart
+Practice repositorySimulation: no real Git runs
+
+1. C4Fix taxmain
+2. C3Add searchHEAD → feature
+3. C2Add cart
 
 ## Recap
 
-Recapgit merge main keeps all commits and adds a merge commit with two parents.git rebase main replays your commits as new commits on main's tip, making a straight line.Rebased commits get new IDs; the old ones are abandoned.Never rebase commits others already have. When in doubt, merge.Cheat sheetgit merge mainjoin main into your branch with a merge commitgit rebase mainreplay your commits on top of mainC3 vs C3′same change, different commit after a rebaseSources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.git-rebase: descriptiongit-rebase: recovering from upstream rebasegit-merge: descriptionNext topic: Pull requests and review comments
+- git merge main keeps all commits and adds a merge commit with two parents.
+- git rebase main replays your commits as new commits on main's tip, making a straight line.
+- Rebased commits get new IDs; the old ones are abandoned.
+- Never rebase commits others already have. When in doubt, merge.
+
+Next topic: Pull requests and review comments
 
 ## Cheat sheet
 
-Cheat sheetgit merge mainjoin main into your branch with a merge commitgit rebase mainreplay your commits on top of mainC3 vs C3′same change, different commit after a rebase
-
-Sources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.git-rebase: descriptiongit-rebase: recovering from upstream rebasegit-merge: description
+|  |  |
+| --- | --- |
+| git merge main | join main into your branch with a merge commit |
+| git rebase main | replay your commits on top of main |
+| C3 vs C3′ | same change, different commit after a rebase |
 
 ## Sources
 
-Sources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.git-rebase: descriptiongit-rebase: recovering from upstream rebasegit-merge: description
+Teaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.
+
+- git-rebase: description
+- git-rebase: recovering from upstream rebase
+- git-merge: description
 
 ## Static interaction alternatives
 

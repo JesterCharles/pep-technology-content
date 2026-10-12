@@ -8,35 +8,60 @@
 
 ## Teaching
 
-Start with a guess
+### Start with a guess
 
 A branch lets you build something without disturbing main. The model shows history as commits, newest at the top, with labels for branch names.
 
+### A branch is a movable name
+
+A branch is a name that points at one commit. HEAD marks the branch you are on.
+
+When you commit, the new commit's parent is the commit you were on, and only the branch HEAD is on moves forward. Other branch names stay put.
+
+- git branch login creates login here but leaves you where you are.
+- git switch login moves HEAD to an existing branch.
+- git switch -c login creates it and switches in one step.
+
+Switching also swaps your working-copy files to match that branch.
+
+### Apply it to a new branch
+
+Same rule, new names: a commit moves only the branch HEAD is on.
+
 ## Model
 
-Practice repository
-Simulation: no real Git runs
-C2
-Add cart
-HEAD → main
-C1
-Start shop
+Practice repositorySimulation: no real Git runs
+
+1. C2Add cartHEAD → main
+2. C1Start shop
 
 HEAD is on main. Working copy files: app.js, cart.js
 
 ## Recap
 
-RecapA branch is a movable name that points at one commit; HEAD marks the branch you are on.A commit moves only the branch HEAD is on. Other branches stay where they were.git branch name creates; git switch name moves HEAD; git switch -c name does both.Switching changes your working-copy files to match the branch you switch to.Cheat sheetgit branchlist branches; * marks the one you are ongit branch <name>create a branch here, stay where you aregit switch <name>move HEAD to an existing branchgit switch -c <name>create a branch and switch to itSources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.git-branch: descriptiongit-switch: descriptiongit-commit: descriptionNext topic: Undoing mistakes: revert and reset
+- A branch is a movable name that points at one commit; HEAD marks the branch you are on.
+- A commit moves only the branch HEAD is on. Other branches stay where they were.
+- git branch name creates; git switch name moves HEAD; git switch -c name does both.
+- Switching changes your working-copy files to match the branch you switch to.
+
+Next topic: Undoing mistakes: revert and reset
 
 ## Cheat sheet
 
-Cheat sheetgit branchlist branches; * marks the one you are ongit branch <name>create a branch here, stay where you aregit switch <name>move HEAD to an existing branchgit switch -c <name>create a branch and switch to it
-
-Sources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.git-branch: descriptiongit-switch: descriptiongit-commit: description
+|  |  |
+| --- | --- |
+| git branch | list branches; * marks the one you are on |
+| git branch <name> | create a branch here, stay where you are |
+| git switch <name> | move HEAD to an existing branch |
+| git switch -c <name> | create a branch and switch to it |
 
 ## Sources
 
-Sources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.git-branch: descriptiongit-switch: descriptiongit-commit: description
+Teaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.
+
+- git-branch: description
+- git-switch: description
+- git-commit: description
 
 ## Static interaction alternatives
 
