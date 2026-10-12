@@ -1,24 +1,33 @@
 ---
-title: GitInGifs Working Directory & Staging Area
-channel: GitLab
+title: "GitInGifs Working Directory & Staging Area"
+channel: "GitLab"
 url: https://www.youtube.com/watch?v=ddo6dL3eVe8
 runtimeMinutes: 3
 embeddable: true
 checkedAt: 2026-10-12
-covers: []
-  - o1 where a change lives: the working directory as the folder where you edit, the staging area filled with git add, and a commit as a saved snapshot in the local repository (transcript)
-  - o2 in part: git status lists changes, git add can stage all changed files or only some, and staged files appear under "Changes to be committed" (transcript)
-gaps: []
-  - o2: git diff versus git diff --staged is not covered (transcript)
-  - o3: .gitignore and keeping a secrets file out of Git are not covered (transcript)
-  - Unstaging with git restore --staged is not covered (transcript)
-cautions: []
-  - First-party channel (GitLab), verified on the official GitLab channel id UCnMGQ8QHMAnVIsI3xJrihhg
-  - Gif and meme presentation; goes on to git push and the remote repository, which topic 5 teaches
-  - Low audience (605 views at check time); the description ends with a sales contact link
-  - Fit was judged from YouTube's auto-generated English captions and the description; frames were not re-inspected in this pass
-alternates: []
-rejected: []
+covers:
+  - "o1 where a change lives: the working directory as the folder where you edit, the staging area filled with git add, and a commit as a saved snapshot in the local repository (transcript)"
+  - "o2 in part: git status lists changes, git add can stage all changed files or only some, and staged files appear under \"Changes to be committed\" (transcript)"
+gaps:
+  - "o2: git diff versus git diff --staged is not covered (transcript)"
+  - "o3: .gitignore and keeping a secrets file out of Git are not covered (transcript)"
+  - "Unstaging with git restore --staged is not covered (transcript)"
+cautions:
+  - "First-party channel (GitLab), verified on the official GitLab channel id UCnMGQ8QHMAnVIsI3xJrihhg"
+  - "Gif and meme presentation; goes on to git push and the remote repository, which topic 5 teaches"
+  - "Low audience (605 views at check time); the description ends with a sales contact link"
+  - "Fit was judged from YouTube's auto-generated English captions and the description; frames were not re-inspected in this pass"
+alternates:
+  - title: "Git basics: status and add commands"
+    url: https://www.youtube.com/watch?v=zztkA8cJaCs
+  - title: "What is a .gitignore file and why do you need it?"
+    url: https://www.youtube.com/watch?v=0qdRS3xYwIY
+  - title: "git diff --staged Will Diff Files You've Staged vs What's Commit"
+    url: https://www.youtube.com/watch?v=qAgkFa5VsCc
+rejected:
+  - title: "Git: Commits in Visual Studio Code"
+    url: https://www.youtube.com/watch?v=E6ADS2k8oNQ
+    reason: "505 s. Within budget, but the transcript shows it is a tour of VS Code buttons for add, unstage, amend, undo, stash and clean; it has no staging-area model, no diff and no .gitignore."
 ---
 
 # Video companion: Commits, diffs and .gitignore
@@ -48,8 +57,3 @@ How verified: full auto-generated English caption track, video description and l
 ## Rejected
 
 - Visual Studio Code (first-party), [Git: Commits in Visual Studio Code](https://www.youtube.com/watch?v=E6ADS2k8oNQ), 505 s. Within budget, but the transcript shows it is a tour of VS Code buttons for add, unstage, amend, undo, stash and clean; it has no staging-area model, no diff and no .gitignore.
-
-## Front-matter note
-
-`alternates` and `rejected` are empty in the front matter because the repository's T01 front-matter parser reads list items only as strings while the schema requires objects. The records above are the authoritative list.
-The full search is in `evidence/git-linux-ai-foundations/git-foundations/video-search.md`.

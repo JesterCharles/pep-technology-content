@@ -1,25 +1,36 @@
 ---
-title: Fetch Changes in any JetBrains IDE
-channel: JetBrains
+title: "Fetch Changes in any JetBrains IDE"
+channel: "JetBrains"
 url: https://www.youtube.com/watch?v=tnz2I9rxrfk
 runtimeMinutes: 3.1
 embeddable: true
 checkedAt: 2026-10-12
-covers: []
-  - o3 in part: fetch gets the new commits but does not apply them to your local branch or working copy (transcript, description)
-  - o2: after a fetch the log shows origin/main with two new commits while the local main does not have them (transcript)
-  - o3 in part: the IDE's Update action combines a fetch with pulling the changes into your branch (transcript)
-gaps: []
-  - o1: SSH key pairs, and which half you share, are not covered (transcript)
-  - o3: clone and push are not covered (transcript)
-  - No git commands are typed; fetch and update are IDE actions (transcript)
-cautions: []
-  - First-party channel (JetBrains, channel id UCGp4UBwpTNegd_4nCpuBcow)
-  - JetBrains IDE walkthrough; "Update Project" is a JetBrains term for fetch plus merge or rebase
-  - No single first-party video under 8 minutes was found that covers SSH keys, clone, push and fetch versus pull together
-  - Fit was judged from the auto-generated caption track and the description; frames were not inspected
-alternates: []
-rejected: []
+covers:
+  - "o3 in part: fetch gets the new commits but does not apply them to your local branch or working copy (transcript, description)"
+  - "o2: after a fetch the log shows origin/main with two new commits while the local main does not have them (transcript)"
+  - "o3 in part: the IDE's Update action combines a fetch with pulling the changes into your branch (transcript)"
+gaps:
+  - "o1: SSH key pairs, and which half you share, are not covered (transcript)"
+  - "o3: clone and push are not covered (transcript)"
+  - "No git commands are typed; fetch and update are IDE actions (transcript)"
+cautions:
+  - "First-party channel (JetBrains, channel id UCGp4UBwpTNegd_4nCpuBcow)"
+  - "JetBrains IDE walkthrough; \"Update Project\" is a JetBrains term for fetch plus merge or rebase"
+  - "No single first-party video under 8 minutes was found that covers SSH keys, clone, push and fetch versus pull together"
+  - "Fit was judged from the auto-generated caption track and the description; frames were not inspected"
+alternates:
+  - title: "Git Push, Pull, and Fetch Explained for Beginners | Part 3"
+    url: https://www.youtube.com/watch?v=mwgFRnwTTXI
+  - title: "How to clone a remote repository in Git"
+    url: https://www.youtube.com/watch?v=0XYymJLW_KQ
+  - title: "Syncing your local and remote Git repositories"
+    url: https://www.youtube.com/watch?v=-ZWEbzxXQWM
+  - title: "How to never type passwords when using Git operations: GitHub Changelog"
+    url: https://www.youtube.com/watch?v=6XaZ0ryZRcY
+rejected:
+  - title: "Set up your SSH security key in less than two minutes - GitHub Checkout"
+    url: https://www.youtube.com/watch?v=EbsmqUJy5ag
+    reason: "204 s. Its description is about hardware security keys for SSH, which goes beyond the page's basic key pair."
 ---
 
 # Video companion: Remotes: SSH keys, clone, push, fetch vs pull
@@ -49,8 +60,3 @@ How verified: caption transcript, video description and live player metadata.
 ## Rejected
 
 - GitHub (first-party), [Set up your SSH security key in less than two minutes - GitHub Checkout](https://www.youtube.com/watch?v=EbsmqUJy5ag), 204 s. Its description is about hardware security keys for SSH, which goes beyond the page's basic key pair.
-
-## Front-matter note
-
-`alternates` and `rejected` are empty in the front matter because the repository's T01 front-matter parser reads list items only as strings while the schema requires objects. The records above are the authoritative list.
-The full search is in `evidence/git-linux-ai-foundations/git-foundations/video-search.md`.

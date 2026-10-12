@@ -1,24 +1,38 @@
 ---
-title: How to merge a pull request | Introduction to GitHub
-channel: GitHub
+title: "How to merge a pull request | Introduction to GitHub"
+channel: "GitHub"
 url: https://www.youtube.com/watch?v=FDXSgyDGmho
 runtimeMinutes: 3.4
 embeddable: true
 checkedAt: 2026-10-12
-covers: []
-  - o1: a merge conflict occurs when changes are made to the same part of the same file on two different branches (transcript)
-  - o2 in part: a terminal git merge main stops with a message and the file shows conflict markers (transcript)
-  - o3: pick the final text, then git add, git commit -m "resolve merge conflict", git status and git push, after which the pull request shows no conflict (transcript)
-gaps: []
-  - o2: the <<<<<<<, ======= and >>>>>>> markers are not named or read side by side in the narration (transcript)
-  - The final text is chosen with the editor's "Accept Current Change" action rather than by hand-editing and deleting markers (transcript)
-  - git merge --abort is not covered (transcript)
-cautions: []
-  - First-party channel (GitHub, channel id UC7c3Kb6jYCRj4JOHHZTxKsQ)
-  - Framed as merging a pull request; the first 40 seconds recap pull requests and review (topic 8)
-  - Fit was judged from captions (auto-generated and en-US tracks exist; the auto track was read) and live metadata; frames were not inspected
-alternates: []
-rejected: []
+covers:
+  - "o1: a merge conflict occurs when changes are made to the same part of the same file on two different branches (transcript)"
+  - "o2 in part: a terminal git merge main stops with a message and the file shows conflict markers (transcript)"
+  - "o3: pick the final text, then git add, git commit -m \"resolve merge conflict\", git status and git push, after which the pull request shows no conflict (transcript)"
+gaps:
+  - "o2: the <<<<<<<, ======= and >>>>>>> markers are not named or read side by side in the narration (transcript)"
+  - "The final text is chosen with the editor's \"Accept Current Change\" action rather than by hand-editing and deleting markers (transcript)"
+  - "git merge --abort is not covered (transcript)"
+cautions:
+  - "First-party channel (GitHub, channel id UC7c3Kb6jYCRj4JOHHZTxKsQ)"
+  - "Framed as merging a pull request; the first 40 seconds recap pull requests and review (topic 8)"
+  - "Fit was judged from captions (auto-generated and en-US tracks exist; the auto track was read) and live metadata; frames were not inspected"
+alternates:
+  - title: "Resolving Merge Conflicts - How to Use Git and GitHub"
+    url: https://www.youtube.com/watch?v=iRyUUGsNHrU
+  - title: "Resolving Git Merge Conflicts: The Easy Way"
+    url: https://www.youtube.com/watch?v=mSfq1SoMocg
+  - title: "Handling Merge Conflicts in Visual Studio [Ep 3] | Intermediate Series"
+    url: https://www.youtube.com/watch?v=FTT9pHMvRT8
+  - title: "Source Control Tip 9: Dealing with Merge Conflicts in VS Code"
+    url: https://www.youtube.com/watch?v=ybCxPHzRJfA
+rejected:
+  - title: "The EXTREMELY helpful guide to merge conflicts"
+    url: https://www.youtube.com/watch?v=HosPml1qkrg
+    reason: "501 s: exceeds the 6-minute budget."
+  - title: "Resolving merge conflicts (4 of 5) | Getting started with GitHub"
+    url: https://www.youtube.com/watch?v=XrXBDSxUvNE
+    reason: "407 s: exceeds the 6-minute budget, and its conflict arises from a rejected push rather than a branch merge."
 ---
 
 # Video companion: Merge conflicts
@@ -50,8 +64,3 @@ How verified: caption transcript and live player metadata.
 
 - Visual Studio Code (first-party), [The EXTREMELY helpful guide to merge conflicts](https://www.youtube.com/watch?v=HosPml1qkrg), 501 s: exceeds the 6-minute budget.
 - Microsoft Visual Studio (first-party), [Resolving merge conflicts (4 of 5) | Getting started with GitHub](https://www.youtube.com/watch?v=XrXBDSxUvNE), 407 s: exceeds the 6-minute budget, and its conflict arises from a rejected push rather than a branch merge.
-
-## Front-matter note
-
-`alternates` and `rejected` are empty in the front matter because the repository's T01 front-matter parser reads list items only as strings while the schema requires objects. The records above are the authoritative list.
-The full search is in `evidence/git-linux-ai-foundations/git-foundations/video-search.md`.

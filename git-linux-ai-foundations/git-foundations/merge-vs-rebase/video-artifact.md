@@ -1,24 +1,35 @@
 ---
-title: Branches: Merging, Rebasing, and Squashing in Visual Studio and GitHub [Ep 2] | Advanced Series
-channel: Microsoft Visual Studio
+title: "Branches: Merging, Rebasing, and Squashing in Visual Studio and GitHub [Ep 2] | Advanced Series"
+channel: "Microsoft Visual Studio"
 url: https://www.youtube.com/watch?v=8Hg9rNRVw7I
 runtimeMinutes: 2.1
 embeddable: true
 checkedAt: 2026-10-12
-covers: []
-  - o1 in part: merging gives the primary branch a new merge commit and keeps the other branch's history as a detour in the graph (transcript)
-  - o2: rebasing replays every commit of the secondary branch on top of the primary branch, giving a linear graph (transcript)
-  - Merge and rebase add the same changes; they differ in how commits are connected (transcript)
-gaps: []
-  - o1: a fast-forward merge that only moves the branch pointer is not covered (transcript)
-  - o2: that replayed commits are new commits with new IDs is not stated outright (transcript)
-  - o3: the rule not to rebase commits other people already have is not covered (transcript)
-cautions: []
-  - First-party channel (Microsoft Visual Studio, channel id UChqrDOwARrxdJF-ykAptc7w)
-  - Visual Studio context menus and GitHub pull-request merge options; squashing goes beyond the page
-  - Fit was judged from the auto-generated caption track and the description; frames were not inspected
-alternates: []
-rejected: []
+covers:
+  - "o1 in part: merging gives the primary branch a new merge commit and keeps the other branch's history as a detour in the graph (transcript)"
+  - "o2: rebasing replays every commit of the secondary branch on top of the primary branch, giving a linear graph (transcript)"
+  - "Merge and rebase add the same changes; they differ in how commits are connected (transcript)"
+gaps:
+  - "o1: a fast-forward merge that only moves the branch pointer is not covered (transcript)"
+  - "o2: that replayed commits are new commits with new IDs is not stated outright (transcript)"
+  - "o3: the rule not to rebase commits other people already have is not covered (transcript)"
+cautions:
+  - "First-party channel (Microsoft Visual Studio, channel id UChqrDOwARrxdJF-ykAptc7w)"
+  - "Visual Studio context menus and GitHub pull-request merge options; squashing goes beyond the page"
+  - "Fit was judged from the auto-generated caption track and the description; frames were not inspected"
+alternates:
+  - title: "Git Tutorial: Rebasing & Merging"
+    url: https://www.youtube.com/watch?v=a_msiOrYLgM
+  - title: "Git merge vs rebase: what is the difference?"
+    url: https://www.youtube.com/watch?v=k32vCDCa5kw
+  - title: "Git Rebase in any JetBrains IDE"
+    url: https://www.youtube.com/watch?v=wiU3TL3jM8I
+  - title: "Git Merge vs. Rebase: Which One Should You Use?"
+    url: https://www.youtube.com/watch?v=x7oSRtTtoc8
+rejected:
+  - title: "How and when do I merge or rebase?"
+    url: https://www.youtube.com/watch?v=Nftif2ynvdA
+    reason: "938 s: exceeds the 6-minute budget."
 ---
 
 # Video companion: Merge vs rebase
@@ -48,8 +59,3 @@ How verified: caption transcript, video description and live player metadata.
 ## Rejected
 
 - JetBrains (first-party), [How and when do I merge or rebase?](https://www.youtube.com/watch?v=Nftif2ynvdA), 938 s: exceeds the 6-minute budget.
-
-## Front-matter note
-
-`alternates` and `rejected` are empty in the front matter because the repository's T01 front-matter parser reads list items only as strings while the schema requires objects. The records above are the authoritative list.
-The full search is in `evidence/git-linux-ai-foundations/git-foundations/video-search.md`.

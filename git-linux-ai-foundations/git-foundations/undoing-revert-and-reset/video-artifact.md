@@ -1,23 +1,31 @@
 ---
-title: How to undo a mistake on GitHub
-channel: GitHub
+title: "How to undo a mistake on GitHub"
+channel: "GitHub"
 url: https://www.youtube.com/watch?v=a1oRZ1kAA6M
 runtimeMinutes: 0.7
 embeddable: true
 checkedAt: 2026-10-12
-covers: []
-  - o1 and o3: if the commit is already pushed, revert it, which creates a new commit that undoes the changes (transcript, description)
-  - o3: if the commit is not pushed yet, a reset can take the commit back while keeping your changes (transcript, description)
-  - o2 in part: a hard reset also deletes your changes, so use it only if you mean to (transcript)
-gaps: []
-  - The reset command text is shown on screen but not spoken ("you can run this command"); --soft was not confirmed by name (transcript)
-  - o2: the effect of --soft and --hard on branch, staging area and working copy is not laid out side by side (transcript)
-  - Revert is shown as a click on GitHub, not as git revert in a terminal (transcript, description)
-cautions: []
-  - First-party channel (GitHub, channel id UC7c3Kb6jYCRj4JOHHZTxKsQ)
-  - A 42-second short-form tip from the GitHub for Beginners season 3 series; it ends with a promotion for that series
-  - Fit was judged from the auto-generated caption track and the description; frames were not inspected
-alternates: []
+covers:
+  - "o1 and o3: if the commit is already pushed, revert it, which creates a new commit that undoes the changes (transcript, description)"
+  - "o3: if the commit is not pushed yet, a reset can take the commit back while keeping your changes (transcript, description)"
+  - "o2 in part: a hard reset also deletes your changes, so use it only if you mean to (transcript)"
+gaps:
+  - "The reset command text is shown on screen but not spoken (\"you can run this command\"); --soft was not confirmed by name (transcript)"
+  - "o2: the effect of --soft and --hard on branch, staging area and working copy is not laid out side by side (transcript)"
+  - "Revert is shown as a click on GitHub, not as git revert in a terminal (transcript, description)"
+cautions:
+  - "First-party channel (GitHub, channel id UC7c3Kb6jYCRj4JOHHZTxKsQ)"
+  - "A 42-second short-form tip from the GitHub for Beginners season 3 series; it ends with a promotion for that series"
+  - "Fit was judged from the auto-generated caption track and the description; frames were not inspected"
+alternates:
+  - title: "Git Reset vs Revert - Which One Should You Use?"
+    url: https://www.youtube.com/watch?v=HuyPRodkME8
+  - title: "Recovering from mistakes while working with git in Visual Studio [Ep 4] | Intermediate Series"
+    url: https://www.youtube.com/watch?v=tkJ1yIktteQ
+  - title: "How to Undo Commits in any JetBrains IDE"
+    url: https://www.youtube.com/watch?v=_-3COzBp5qg
+  - title: "Undo a git commit - git reset/revert - pushed/not pushed"
+    url: https://www.youtube.com/watch?v=GytsxgB4-HU
 rejected: []
 ---
 
@@ -49,8 +57,3 @@ How verified: caption transcript, video description and live player metadata.
 ## Rejected
 
 None beyond the alternates; every candidate checked fits the 7-minute budget.
-
-## Front-matter note
-
-`alternates` and `rejected` are empty in the front matter because the repository's T01 front-matter parser reads list items only as strings while the schema requires objects. The records above are the authoritative list.
-The full search is in `evidence/git-linux-ai-foundations/git-foundations/video-search.md`.
