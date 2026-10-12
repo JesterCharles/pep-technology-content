@@ -34,7 +34,7 @@ Total: 19 topics, 141 legacy about-minutes (legacy `course.json` `totalAboutMinu
 
 ## Topic list with relations
 
-Topic ids are kept exactly. Objectives and titles are copied verbatim from the legacy `module.json`, except the changes accepted at intake reconciliation (`intake-reconciliation.json.txt`):
+Topic ids are kept exactly. Objectives and titles are copied verbatim from the legacy `module.json`, except the changes accepted at intake reconciliation (`intake-reconciliation.json`):
 
 - `ai-foundations/foundations-course-check`: kind `review`, title "Practice: Foundations course review" (education-03).
 - `ai-foundations/ai-rules-of-use`: title "Rules of use: what to share and redact" (education-05).
@@ -172,7 +172,7 @@ Resolution (firstmate, at reconciliation of this intake; not a critic finding): 
   - `git-linux-ai-foundations/git-foundations/merge-vs-rebase#o3` (MCQ)
   - `git-linux-ai-foundations/ai-foundations/ai-rules-of-use#o1` (MCQ)
   - `git-linux-ai-foundations/ai-foundations/agile-scrum-user-stories#o3` (MCQ)
-  - `git-linux-ai-foundations/ai-foundations/checking-ai-changes#o3` (MCQ)
+  - `git-linux-ai-foundations/ai-foundations/checking-ai-changes#o1` (MCQ)
   - `git-linux-ai-foundations/linux-foundations/navigating-the-shell#o3` (coding)
   - `git-linux-ai-foundations/linux-foundations/file-permissions#o2` (coding)
   - `git-linux-ai-foundations/git-foundations/commits-diffs-and-gitignore#o2` (coding)
