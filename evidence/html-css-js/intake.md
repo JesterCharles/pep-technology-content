@@ -183,7 +183,7 @@ The S27 Project-day blocks (plan, build, timed without AI, commit and walkthroug
 
 ## Lab plan
 
-Labs belong to the Standard track's lab overlay; Fast Track skips coding labs and moves to direct project implementation.
+Labs belong to the Standard track's lab overlay; Fast Track skips coding labs and moves to direct project implementation, planned as the four Fast project increments in section Fast project increments (FT12-FT15).
 Lab scope follows the confirmed coverage matrix: it expects a lab overlay only on the Standard Lab days S21 and S26 (reconciliation sme-03 removed the extra S23 lab the first draft planned). The S27 Project row's project brief is planned separately in section Project brief (S27).
 No lab uses Docker, Podman or any learner-side container engine. Each lab has exactly one language-native test command, runs offline after a one-time `npm ci`, ships public tests only and commits no solution or hidden test (`docs/lab-contract.md`).
 Planned prerequisite: Node.js 22.12 or later (`node --version`), which meets the Vite requirement (Node.js 20.19+ or 22.12+) and the Vitest requirement (Node 22.12.0 or later) recorded from the official guides on 2026-10-12, and provides the built-in `node:test` runner and global `fetch` (Node.js v22 documentation, in the source snapshot).
@@ -217,11 +217,11 @@ These are already-authorized matrix items (the matrix's S27 project-row expectat
 | Field | Plan |
 |---|---|
 | Artifact | `html-css-js/coding-lab`, scope `course` (a cumulative build across all four modules), following the `docs/lab-contract.md` layout: `lab.json`, `README.md` (the learner-facing brief), `starter/`, `tests/`, `fixtures/`, `expected/`. The course-level lab id is valid under `schemas/lab.schema.json` on `main` (merged "Allow course-level coding lab IDs"); this branch picks it up when it is rebased. |
-| Calendar row and reuse | One canonical brief with a fixed step sequence (below). Standard S27 Project day, Build block: the 50 minutes of build steps after the topic pages (section Minute budgets), skipping the embedded teach steps. Fast Track FT15 Project block: the same brief with its 20 minutes of embedded teach steps plus the 50 minutes of build steps, 70 minutes in all (reconciliation 2, sme-recheck-01). Neither overlay copies it. |
+| Calendar row and reuse | One canonical brief with a fixed step sequence (below). Standard S27 Project day, Build block: the 50 minutes of build steps after the topic pages (section Minute budgets), skipping the embedded teach steps. Fast Track FT15 Project block, as Fast project increment 4: the same brief with its 20 minutes of embedded teach steps plus the 50 minutes of build steps, 70 minutes in all (reconciliation 2, sme-recheck-01). Neither overlay copies it. |
 | Outcomes | A Vite browser client for the learner's own Spring Boot API: it lists and creates records with `fetch`, reads the API base URL from a `VITE_`-prefixed variable through `import.meta.env`, renders API data with `textContent` rather than HTML strings, shows the `title` and `detail` of `application/problem+json` error responses, reaches the API through a Vite dev proxy or a Spring CORS configuration, and includes one learner-written Vitest test of a plain formatting function. |
 | First step | In a scratch directory outside the lab, scaffold a throwaway Vite vanilla project with `npm create vite`, start its dev server and confirm the local URL: the authentic performance of `project-setup-with-npm-and-vite` o1 (reconciliation education-02). `lab.json` declares that scratch path and the cleanup step removes it. Then `npm ci` and `npm run dev` in `starter/`. |
-| Starter scaffold | A Vite vanilla project with `vite` and `vitest` pinned and `package-lock.json` committed; `index.html`, `src/main.js`, `src/api.js` and `src/format.js` with clearly marked TODOs; runnable as shipped (`npm run dev` serves the unfinished page). |
-| Test command | `npm test` (runs `vitest run`), offline after the one-time `npm ci`. Public Vitest tests run in the Node environment against a deterministic `node:http` stub on `127.0.0.1` with an ephemeral port that returns JSON and `application/problem+json` responses; no Spring Boot server, browser or container is needed for the tests. The shipped starter fails the named public tests with stable messages. |
+| Starter scaffold | One `starter/` for the whole cumulative project (section Fast project increments): a Vite vanilla project with `vite`, `vitest` and `jsdom` pinned and `package-lock.json` committed; a plain base `index.html` (a heading, an empty record list and a two-field labelled form, no styles), an empty `styles.css`, and `src/` files with clearly marked TODOs per increment, including `src/main.js`, `src/api.js` and `src/format.js` for this brief; runnable as shipped (`npm run dev` serves the unfinished page). |
+| Test command | `npm test` (runs `vitest run`), offline after the one-time `npm ci`; this brief runs `npm test -- increment-4`, the project's one command filtered to its own tests (Vitest CLI filtering). Public Vitest tests run in the Node environment against a deterministic `node:http` stub on `127.0.0.1` with an ephemeral port that returns JSON and `application/problem+json` responses; no Spring Boot server, browser or container is needed for the tests. The shipped starter fails the named public tests with stable messages. |
 | Checked by the learner, not by tests | The real Spring Boot API call in a browser, the CORS or proxy fix, and the page's appearance: the README lists them as manual checks with expected results, because CORS and rendering need a real browser. |
 | Prerequisites | Node.js 22.12 or later; the learner's Spring Boot API from the `spring-boot` course (S1-S13 / FT1-FT8) running locally. |
 | Not committed | Reference solution, hidden tests and any scoring material: uncommitted private staging only, recorded as "solved at <commit> by run <id>" (`docs/lab-contract.md` section 8). |
@@ -256,10 +256,92 @@ Step sequence (reconciliation 2, sme-recheck-01). Each build step that applies a
 | T6 | Teach: why the browser blocks the cross-origin read, and the two fixes (Vite dev proxy, Spring CORS configuration) | `fixing-cors-spring-security-config-vs-vite-dev-proxy` | embedded | 3 | skip |
 | 6 | Reach the real API through one fix and complete the README's manual browser checks | as T6 | T6 | 7 | 7 |
 | T7 | Teach: `test` and `expect`, `npm test`, reading a failing assertion, `toBe` versus `toEqual` | `testing-a-plain-function-with-vitest` o1-o3 | embedded | 5 | skip |
-| 7 | Write one Vitest test for `src/format.js`, run `npm test` and make it pass | as T7 | T7 | 8 | 8 |
+| 7 | Write one Vitest test for `src/format.js`, run `npm test -- increment-4` and make it pass | as T7 | T7 | 8 | 8 |
 | | Total | | | 70 (teach 20 + build 50) | 50 |
 
 Prerequisite alignment result: on Standard, the three S27 concepts are taught by their pages earlier in the same Build block, and every other applied concept is taught on an earlier day. On Fast FT15, each concept first taught that day (the three S27-row concepts and the S26-row fetch, ProblemDetail and CORS concepts the brief applies) is taught by its embedded teach step immediately before the step that applies it, inside the 70-minute Project block; FT15's full topic pages are not needed to start a step and are not claimed as FT15 time. The cookies and token-storage Reading is not applied by the brief. The calendar rows stay where they are; no syllabus changes.
+
+## Fast project increments (FT12-FT15)
+
+Captain decision `pep-fast-project-block`, option A (production inventory amendment 1): every Fast-template day's 70-minute Project block runs one increment of one cumulative reusable project per Fast course. These are already-authorized inventory items (4 for `html-css-js`: FT12, FT13, FT14 and FT15), not new syllabus; the calendar rows do not move. The intake records the plan only; the files are authored later.
+
+| Field | Plan |
+|---|---|
+| Artifact | The course project `html-css-js/coding-lab` (section Project brief (S27)): one cumulative project, a records browser client for the learner's own Spring Boot API, built in four increments. It is the same artifact the Standard S27 Project row uses; nothing is copied per track. |
+| Presentation | Fast learners meet it as "Project increment N" in their Project block, never as a coding lab. The README has one section per increment with outcomes, prerequisites, teach-then-check steps, build steps and the test command. Standard S27 uses only increment 4 (the S27 step sequence). |
+| Scaffold | One `starter/` (section Project brief (S27)) holds every increment's TODO files; each increment names the files it provides and edits. The Fast learner carries their own work forward from increment to increment. The base page exists so Standard S27 can start without increments 1-3; it is scaffolding, not a solution: the authoring gate runs the increment-1 public tests against the shipped base page and requires them to fail. |
+| Tests and command | Public Vitest tests in `tests/increment-1/` to `tests/increment-4/`. The project has one language-native test command, `npm test` (`vitest run`), offline after the one-time `npm ci`; an increment runs it filtered to its own tests with `npm test -- increment-N` (Vitest CLI filtering). Page and DOM tests use Vitest's `jsdom` environment (per-file `@vitest-environment jsdom`); API tests use the Node environment and the deterministic `node:http` stub on `127.0.0.1`. The shipped starter fails each increment's named tests with stable messages. |
+| Reuse of Standard material | Where the skills match, an increment reuses the Standard rules and design rather than inventing new ones: increment 1's layout checks are the S21 `html-and-css` lab's layout rules (flex and grid declarations, `min-width` media queries, viewport meta); increments 3 and 4 use the S26 `fetch-and-browser-client` lab's `node:http` stub design; increment 4 is the S27 brief unchanged. Each test file lives once, in the course project; the module labs keep their own `node --test` suites because each lab is exported self-contained. |
+| Checked by the learner, not by tests | Visual layout at narrow and wide widths, keyboard use of the form, a DevTools breakpoint (increment 3) and the real API call and CORS fix (increment 4): manual checks with expected results in the README. |
+| Not a deliverable | Optional Standard extensions. Reference solutions, hidden tests and scoring material stay out of the repository (`docs/lab-contract.md` section 8). |
+| Setup | Node.js 22.12 or later; no container engine. Increment 4 also needs the learner's Spring Boot API running locally. |
+| Authoring | The same course-level PR as the S27 brief, after the four module PRs. |
+
+Teach-before-apply rule: every concept an increment applies is either taught on an earlier Fast day or taught by a short embedded teach-then-check step (the rule, one worked snippet, one quick check, and the page section to read in full later) immediately before the build step that first uses it. Every Fast day's topics are first taught that same day, and the full pages sit in the reported Fast overflow, so each increment carries its own teach-then-check steps inside its 70 minutes. Minutes are intake planning allowances, measured when the project is authored.
+
+### Increment 1 (FT12): page, form and layout
+
+Outcomes: the base page becomes a semantic, accessible, responsive page with a validated add-record form and one plain JavaScript rule function. Applies FT12 rows 0-8.
+
+| # | Step | Applies | Minutes |
+|---|---|---|---|
+| T0 | Teach-then-check: run `node --version`, `npm ci` and `npm test -- increment-1`, and read which named tests fail (npm itself is taught on FT13) | running the project's test command | 4 |
+| T1 | Teach-then-check: landmarks, one `h1`, heading order | `semantic-html-page-structure` | 3 |
+| 1 | Give the page header, main and footer landmarks and a heading outline | as T1 | 6 |
+| T2 | Teach-then-check: labels, `type`, `required`, `minlength`, the constraint validation the browser gives free | `forms-and-html5-validation` | 4 |
+| 2 | Turn the base form into a validated add-record form | as T2 | 8 |
+| T3 | Teach-then-check: accessible names, a status region, keyboard focus order | `accessibility-basics` | 3 |
+| 3 | Add a status message region and check keyboard use by hand | as T3 | 5 |
+| T4 | Teach-then-check: box model, flex for one axis, grid for two, mobile-first `min-width` media queries and the viewport meta | `the-box-model`, `flexbox`, `grid`, `responsive-mobile-first-layout` | 5 |
+| 4 | Lay out the page mobile-first in `styles.css` and check narrow and wide widths in a browser | as T4 | 12 |
+| T5 | Teach-then-check: JavaScript for a Java developer, `let` and `const`, `===` (the `export` line is provided; modules are taught on FT13) | `javascript-for-java-developers`, `let-const-and-equals` | 4 |
+| 5 | Write `isValidTitle` and `normalizeTitle` in `src/rules.js` | as T5 | 6 |
+| 6 | Run `npm test -- increment-1` until it passes | all | 10 |
+| | Total | | 70 (teach 23 + build 47) |
+
+### Increment 2 (FT13): records logic in a Vite project
+
+Outcomes: the page is served by Vite, and record logic lives in pure, tested ES modules. Applies FT13 rows 0-5 and increment 1's rules.
+
+| # | Step | Applies | Minutes |
+|---|---|---|---|
+| T1 | Teach-then-check: `package.json`, `package-lock.json`, `npm ci` versus `npm install`, `npm run dev` | `project-setup-with-npm-and-vite` | 4 |
+| 1 | Start the Vite dev server on the project and open the page | as T1 | 4 |
+| T2 | Teach-then-check: named `export` and `import` | `modules-import-and-export` | 3 |
+| 2 | Import the increment-1 rules into `src/records.js` | as T2 | 4 |
+| T3 | Teach-then-check: functions as values, arrow functions, callbacks, `map`, `filter`, `reduce` | `functions-as-values-arrow-functions-and-callbacks`, `arrays-and-objects-map-filter-reduce` | 5 |
+| 3 | Write `visibleRecords`, `titles`, `countByStatus` and `sortRecords(records, compare)` | as T3 | 15 |
+| T4 | Teach-then-check: destructuring and spread | `destructuring-and-spread` | 3 |
+| 4 | Write `withRecord` and `withoutRecord`, which return new arrays and never mutate | as T4 | 6 |
+| T5 | Teach-then-check: scope and closures | `scope-and-closures` | 3 |
+| 5 | Write `makeIdGenerator()`, a closure over a private counter | as T5 | 5 |
+| 6 | Run `npm test -- increment-2` until it passes | all | 18 |
+| | Total | | 70 (teach 18 + build 52) |
+
+### Increment 3 (FT14): interactive page
+
+Outcomes: the page renders records safely, adds and removes them through events, and loads its starting data asynchronously from a local fixture (no network; `fetch` is taught on FT15). Applies FT14 rows 0-4 and 6 and increments 1-2. Row 5 (the event loop, skim) is not applied.
+
+| # | Step | Applies | Minutes |
+|---|---|---|---|
+| T1 | Teach-then-check: `querySelector`, `createElement`, `textContent` | `selecting-and-changing-the-dom` | 4 |
+| 1 | Write `renderRecords(listElement, records)` in `src/render.js` | as T1 | 10 |
+| T2 | Teach-then-check: why data never goes into `innerHTML` | `preventing-cross-site-scripting` | 3 |
+| 2 | Render the fixture record whose title contains markup and confirm it shows as text | as T2 | 4 |
+| T3 | Teach-then-check: `addEventListener`, `preventDefault`, bubbling and one delegated listener | `events-and-event-bubbling` | 4 |
+| 3 | Handle form submit and per-record delete through one listener on the list | as T3 | 14 |
+| T4 | Teach-then-check: promises, `async` and `await`, `try` and `catch` | `promises`, `async-and-await` | 4 |
+| 4 | Await the provided `loadRecords()` (a promise over a local fixture) and show loading and error states | as T4 | 10 |
+| T5 | Teach-then-check: set a line-of-code breakpoint and read a value in DevTools | `debugging-with-devtools-breakpoints` (skim) | 2 |
+| 5 | Pause inside `renderRecords` in real DevTools and record one value (manual check) | as T5 | 3 |
+| 6 | Run `npm test -- increment-3` until it passes | all | 12 |
+| | Total | | 70 (teach 17 + build 53) |
+
+### Increment 4 (FT15): browser client for the Spring Boot API
+
+Increment 4 is the S27 brief and its approved just-in-time step sequence (section Project brief (S27)), unchanged: 20 teach plus 50 build minutes, test command `npm test -- increment-4`. On Fast, steps 3 and 4 connect increment 3's renderer and form handler to `fetch` instead of writing them from scratch, so the Fast learner has slack inside the same allowance; Standard S27 learners write them in those steps.
+
+Prerequisite alignment result: every concept applied in increments 1-4 is taught either on an earlier Fast day or by its embedded teach-then-check step immediately before first use, inside the day's 70-minute Project block. The FT12-FT15 page overflow stays reported (section Minute budgets) and no increment depends on it.
 
 ## Minute budgets
 
@@ -281,13 +363,13 @@ Every fixed block of each day's frozen template (`pep-calendar.json` `dayTypes`)
 | S23 | Practice: Warm-up 10, Refresher 5, Exercise ladder 45, AI-assisted extension 10, Timed without AI 30, Quiz 10, Explain your code 10 | 3 pages, 30 | Warm-up 10: platform. Refresher 5 + 25 of Exercise ladder: the three topic pages (30), whose in-page exercises are the ladder's first rungs. Remaining 20 of Exercise ladder, AI-assisted extension 10, Timed 30 and Explain 10: platform. Quiz 10: the topic GIFT quizzes. No lab (matrix: no overlay). | 120 | fits |
 | S26 | Lab: as S21 | 4 pages, 38 | Warm-up 8: platform, may draw on the GIFT quizzes. Lab brief 7 + 31 of Guided lab: the four topic pages (38). Remaining 54 of Guided lab: `fetch-and-browser-client/coding-lab`. Redo 10 and Reflection 10: platform. No topic video scheduled. | 120 | fits; lab duration 54 |
 | S27 | Project: Warm-up 5, Plan the work 10, Build 80, Timed without AI 15, Commit and walkthrough note 10 | 3 pages, 30 | Warm-up 5: platform. Plan 10: platform. Build 80: the three topic pages (30), each read before the project step that applies it, plus 50 minutes of the S27 project brief (`html-css-js/coding-lab`), whose first step scaffolds a Vite project and starts its dev server (`project-setup-with-npm-and-vite` o1). Timed 15 and Commit 10: platform. No topic video scheduled. | 120 | fits; build time drops to 50 minutes, a pacing note for the reconciler |
-| FT12 | Fast: Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5 | 9 pages, 90 | Warm-up 5: platform. Skim 10: first 10 page minutes. Diagnostic 15, Project 70, Timed 15, Reflection 5: platform (Fast direct project; no lab). The other 80 page minutes have no block. | 200 | **overflow 80** |
-| FT13 | Fast: as FT12 | 6 pages, 60 | As FT12. The other 50 page minutes have no block. | 170 | **overflow 50** |
-| FT14 | Fast: as FT12 | 7 pages, 70 | As FT12. The other 60 page minutes have no block. | 180 | **overflow 60** |
-| FT15 | Fast: as FT12 | 7 pages, 68 | As FT12, except Project 70: the S27 project brief (`html-css-js/coding-lab`), one canonical brief, run with its embedded teach steps (20) before the build steps they serve (50), per the step sequence in section Project brief (S27); its first step scaffolds a Vite project and starts its dev server (`project-setup-with-npm-and-vite` o1). Warm-up 5 + Skim 10 + Diagnostic 15 + Project 70 + Timed 15 + Reflection 5 = 120 in template. The other 58 page minutes are not claimed as FT15 time and have no block. | 178 | **overflow 58** |
+| FT12 | Fast: Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5 | 9 pages, 90 | Warm-up 5: platform. Skim 10: first 10 page minutes. Project 70: Fast project increment 1 with its embedded teach-then-check steps (section Fast project increments). Diagnostic 15, Timed 15, Reflection 5: platform (no lab). The other 80 page minutes are not claimed as FT12 time and have no block. | 200 | **overflow 80** |
+| FT13 | Fast: as FT12 | 6 pages, 60 | As FT12, with Project 70: increment 2. The other 50 page minutes have no block. | 170 | **overflow 50** |
+| FT14 | Fast: as FT12 | 7 pages, 70 | As FT12, with Project 70: increment 3. The other 60 page minutes have no block. | 180 | **overflow 60** |
+| FT15 | Fast: as FT12 | 7 pages, 68 | As FT12, except Project 70: increment 4, which is the S27 project brief (`html-css-js/coding-lab`), one canonical brief, run with its embedded teach steps (20) before the build steps they serve (50), per the step sequence in section Project brief (S27); its first step scaffolds a Vite project and starts its dev server (`project-setup-with-npm-and-vite` o1). Warm-up 5 + Skim 10 + Diagnostic 15 + Project 70 + Timed 15 + Reflection 5 = 120 in template. The other 58 page minutes are not claimed as FT15 time and have no block. | 178 | **overflow 58** |
 
 Standard days fit their templates with the planned allowances; if measured page budgets rise in a module PR, the lab or build share on S21, S26 and S27, or the platform exercise share on Concept and Practice days, shrinks by the same minutes, and a day whose page minutes exceed its assignable blocks is reported as overflow, never compressed.
-Fast days overflow: the Fast template gives canonical pages only the 10-minute Skim block, and the ` (skim)` rows do not shorten the shared pages. No topic or block is dropped. FT15's project does not depend on that overflow: its embedded teach steps fit inside the Project block. The FT12-FT15 overflow stays reported for the Fast overlay (`pep-t1-track-overlays`), not hidden, and needs an explicit Fast pacing decision outside the gate (plan section 2.4 treats Fast page totals as a platform pacing matter and escalates gross overflow).
+Fast days overflow: the Fast template gives canonical pages only the 10-minute Skim block, and the ` (skim)` rows do not shorten the shared pages. No topic or block is dropped. No Fast increment depends on that overflow: each increment's embedded teach-then-check steps fit inside its 70-minute Project block. The FT12-FT15 overflow stays reported for the Fast overlay (`pep-t1-track-overlays`), not hidden, and needs an explicit Fast pacing decision outside the gate (plan section 2.4 treats Fast page totals as a platform pacing matter and escalates gross overflow).
 
 For reference, gate T14 sums only the planned topic budgets per day against the 120-minute day total and passes: S20, S22, S24 and S25 40; S21, S23 and S27 30; S26 38; FT12 90; FT13 60; FT14 70; FT15 68.
 
@@ -295,9 +377,10 @@ For reference, gate T14 sums only the planned topic budgets per day against the 
 
 Closes `source-gap-html-css-js-official-evidence`.
 Every source below was fetched live on 2026-10-12 (UTC) for this intake (the two Node.js v22 lab-runtime sources were added at reconciliation sme-04); `evidence/html-css-js/source-snapshot.json` records each final URL with retrieval time, the sha256 of the fetched bytes and the topic sections used.
-All 87 URLs returned HTTP 200; there is no unreachable source and no recorded gap. Redirects were recorded at their final URL (for example MDN's HTML elements reference and grid guide, the npm CLI pages and the Vitest API index). Raw fetched pages are not committed.
+All 90 URLs returned HTTP 200; there is no unreachable source and no recorded gap. Redirects were recorded at their final URL (for example MDN's HTML elements reference and grid guide, the npm CLI pages and the Vitest API index). Raw fetched pages are not committed.
 First-party means the owning standard or vendor: WHATWG (HTML, DOM, Fetch), W3C (WCAG, ARIA, CSS modules), the CSS Working Group drafts, Ecma TC39, the IETF RFC Editor, Node.js, npm, Vite, Vitest, Spring, Chrome and Firefox DevTools, OWASP for security guidance, and MDN, the reference the calendar names for `web`.
 Lab runtime (not a topic): [Node.js v22 test runner](https://nodejs.org/docs/latest-v22.x/api/test.html) and [Node.js v22 global objects, fetch](https://nodejs.org/docs/latest-v22.x/api/globals.html), fetched from Node.js v22.23.3 documentation.
+Course project runtime (not a topic, added for the Fast project increments): [Vitest test environments](https://vitest.dev/guide/environment), [Vitest test filtering](https://vitest.dev/guide/filtering) and [jsdom](https://github.com/jsdom/jsdom) (MIT license), fetched 2026-10-12.
 Recorded at fetch: Vite requires Node.js 20.19+ or 22.12+; Vitest requires Vite 6.4.0 or later and Node 22.12.0 or later; the ECMAScript draft fetched is ECMAScript 2027.
 
 Freshness: every `topic.json` records `unverified` with no `checkedAt`, because no page exists. The module PR binds each page claim to `evidence/html-css-js/<module>/<topic>/sources.json` and refreshes the receipts; SME criticism re-verifies them.
@@ -353,3 +436,5 @@ Outcome: all 8 findings accepted and applied in one correction loop:
 Captain decision `pep-project-rows` (option A), folded into this correction loop: the S27 project brief plan (section Project brief (S27)), with `environment-settings-for-the-api-address` and `testing-a-plain-function-with-vitest` set to `lab: course:html-css-js`, and the education-02 Fast mapping moved from FT13 to FT15, where the reused brief runs.
 
 Second reconciliation: the education recheck (`intake-critic-education-recheck.json`) raised no finding; the SME recheck (`intake-critic-sme-recheck.json`) confirmed sme-01 to sme-05 resolved and raised sme-recheck-01 (FT15 applied S27 concepts before teaching them within the fixed template). `intake-2-reconciliation.json` accepted it, and this loop applied it as the just-in-time step sequence in section Project brief (S27) and the FT15 row of section Minute budgets: one canonical brief, the frozen syllabus, FT15 within its 120-minute template, and the Fast page overflow still reported.
+
+Follow-up loop (captain decision `pep-fast-project-block`, option A): the four Fast project increments are planned in section Fast project increments (FT12-FT15), the FT12-FT15 Project blocks in section Minute budgets now name them, and three course-project runtime sources (Vitest environments and filtering, jsdom) are added to the source snapshot. The S27 brief's starter and test command note the shared starter and the `increment-4` filter.
