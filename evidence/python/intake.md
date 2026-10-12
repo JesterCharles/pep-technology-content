@@ -7,7 +7,7 @@ Every topic artifact is recorded absent: applicable companions with the reason "
 ## Inputs
 
 - Curriculum snapshot: `curriculum/snapshot/pep-curriculum.json` (sha256 `9520f1fde24630604a82ecc1188726339ee02233d0274c622f4dda9c8c0204f8`) and `curriculum/snapshot/pep-calendar.json` (sha256 `634da8de5c6034e269b56347b2009fa24eb74eb9bd94f6bd8d5f65f54459ce00`), curriculum version `2026-10-01` per `curriculum/curriculum.lock.json`.
-- Confirmed coverage matrix v3 (read-only, frozen): `matrix-v3.json` (sha256 `4e936d703e64dba4f7973458b57aed0e921fad0d5afecca319cf7cec7806c4cd`) and `discrepancies-v3.json` (sha256 `ba6580b06af9d94d6f4ed53cf82986cdbd3db357fee09d2b268511505b2b9c3a`). Its 43 `python` topic-string rows are the authoritative topic inventory and expected-artifact scope.
+- Confirmed coverage matrix v3 (read-only, frozen): `matrix-v3.json` (sha256 `4e936d703e64dba4f7973458b57aed0e921fad0d5afecca319cf7cec7806c4cd`) and `discrepancies-v3.json` (sha256 `ba6580b06af9d94d6f4ed53cf82986cdbd3db357fee09d2b268511505b2b9c3a`). Its 41 `python` topic-string rows (22 Standard, 19 Fast) are the authoritative topic inventory and expected-artifact scope.
 - Repository contracts on `main`: `AGENTS.md`, `docs/workflow.md`, `docs/html-artifact-contract.md`, `docs/lab-contract.md`, `docs/tools/*.md`, `schemas/`, and the new-course budget rule in `docs/tools/validators.md`.
 - Plan: approved PEP technology-content plan sections 2.3, 3, 4, 5, 6, 7.1 and 11.
 - Terminal foundation: `components/terminal` version 1 (from the repaired course-1 Evolv package `git-linux-ai-foundations-20261007-evolv-terminal-repair`): form-free direct Run-button and Enter-key dispatch, captain-confirmed working in Evolv (platform success, not a captured trace). Reused as is, not re-derived.
@@ -74,12 +74,12 @@ Rows that are not learner topics:
 - S19 row 1 and FT11 row 4 "Python module check": the course-level blueprint `python/assessments/python-module-check` (never a learner topic).
 - S19 row 0 "Python review": review page `fastapi-services/python-review` (kind `review`, no new syllabus). It is Standard-only; Fast has no review row.
 
-Coverage: all 43 matrix v3 topic-string rows map — 41 to a canonical topic (FT11 row 1 to two, per the confirmed matrix) and 2 to the blueprint. No topic was added, merged or renamed beyond the calendar.
+Coverage: all 41 matrix v3 topic-string rows map — 39 to canonical topics (FT11 row 1 to two, per the confirmed matrix) and 2 to the blueprint. No topic was added, merged or renamed beyond the calendar.
 
 Relation notes:
 
 - FT11 row 1 "FastAPI routes that serve pipeline results" combines S18 rows 0 and 1; per the confirmed matrix it is `split` across `fastapi-routes` and `serving-pipeline-results-as-an-api`.
-- FT10 row 1 "Loading into a staging table with psycopg and upserts" is a wording variant of S16 row 2 and maps `exact` to `loading-into-a-staging-table-with-upserts`, as the matrix does. S16 row 1 (`connecting-to-postgres-from-python-with-psycopg`) has no Fast row, so the loading page must recap the psycopg connection basics it uses for Fast learners; that topic stays Standard depth.
+- FT10 row 1 "Loading into a staging table with psycopg and upserts" is a wording variant of S16 row 2 and maps `exact` to `loading-into-a-staging-table-with-upserts`, as the matrix does. S16 row 1 (`connecting-to-postgres-from-python-with-psycopg`) has no Fast row, so the loading page is self-contained on the Fast route (reconciliation python-intake-edu-003): its o1 teaches the minimum psycopg connection and `with`-block setup just in time, and its `prerequisites` omit the Standard-only connection topic. On the Standard route the connection topic still precedes it in `topicOrder` and deepens parameters and transactions. The `data-pipelines` module PR checks the Fast route starting without the connection page.
 - FT11 row 0 (AI enrichment) and row 3 (sensitive data, skim) are Fast's placement of S17 rows 2 and 3; they keep their `data-pipelines` home.
 
 Prerequisites: in-course prerequisites use full `python/<module>/<topic>` ids. Cross-course prerequisites name course ids only (`git-linux-ai-foundations`, `java-foundations`, `sql-jdbc-foundations`, `spring-boot`) until those courses' topic ids exist; `java-foundations`, `sql-jdbc-foundations` and `spring-boot` are planned intake ids.
@@ -125,15 +125,15 @@ Two or three observable objectives per topic, with exact ids (also in each `topi
   - o2: Read a pytest failure report to locate the failing assertion and the values it compared
   - o3: Use pytest.raises, a fixture and @pytest.mark.parametrize to test error cases and several inputs without repeating code
 - `data-pipelines/reading-csv-and-json-files-with-generators`
-  - o1: Read rows from a CSV file with csv.DictReader and records from a JSON file, opening each file in a with statement with an explicit encoding
-  - o2: Write a generator function with yield that streams parsed records one at a time, and explain why it keeps memory use flat on a large file
+  - o1: Read rows from a CSV file with csv.DictReader and records from a JSON Lines file (json.loads on each line) or a small JSON document (json.load), opening each file in a with statement with an explicit encoding
+  - o2: Write a generator function with yield that streams parsed records one at a time, and explain that memory stays bounded only when the source is also read record by record (csv rows or JSON Lines), not when json.load has already read the whole document
   - o3: Chain generators into an extract step (read, parse, filter) and predict what happens when a generator is iterated a second time
 - `data-pipelines/connecting-to-postgres-from-python-with-psycopg`
   - o1: Connect to a learner-local PostgreSQL database with psycopg.connect, reading the connection string from an environment variable instead of hard-coding it
   - o2: Run a parameterized query with %s placeholders and fetch its rows, and explain why formatting values into the SQL string invites SQL injection
   - o3: Manage the connection and transaction with with blocks, predicting when psycopg commits and when it rolls back
 - `data-pipelines/loading-into-a-staging-table-with-upserts`
-  - o1: Load parsed records into a staging table in batches with executemany or COPY instead of one statement per row
+  - o1: Open a psycopg connection from an environment-variable connection string in a with block, then load parsed records into a staging table in batches with executemany or COPY instead of one statement per row
   - o2: Write an INSERT ... ON CONFLICT ... DO UPDATE upsert keyed on a unique constraint and predict the table after the same load runs twice
   - o3: Explain why the load is made idempotent so a failed or repeated run leaves no duplicate rows
 - `data-pipelines/elt-transforming-in-sql-after-loading`
@@ -175,6 +175,39 @@ Two or three observable objectives per topic, with exact ids (also in each `topi
 ## Cross-track model
 
 Standard and Fast Track share this one canonical tree; there are no per-track copies. Standard adds the coding lab through its lab overlay; Fast skips coding labs and moves to direct project implementation. Fast's emphasis (`skim`) and day packing are track-overlay metadata, written when the track overlays are built, not in this course tree.
+
+### Fast route roles (input to the Fast overlay)
+
+Reconciliation python-intake-edu-001: the Fast day is the frozen route of six fixed blocks — Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70 (direct project implementation, no coding lab), Timed without AI 15, Reflection 5 = 120 minutes. The required Fast route is those blocks, not the sum of every mapped page, so pages take one of these roles on it:
+
+- **diagnostic entry**: the try-first diagnostic probes this page's objectives first;
+- **conditional remediation**: the learner opens the full page only when the diagnostic shows a gap, inside the Project block;
+- **skim/reference**: a `(skim)` row, read in the 10-minute Skim block and kept as reference;
+- **project support**: consulted while building during the 70-minute Project block.
+
+| Fast day | Page | Calendar row | Roles on the Fast route |
+|---|---|---|---|
+| FT9 | `python-syntax-for-java-developers` | 0 | diagnostic entry; conditional remediation |
+| FT9 | `functions-and-arguments` | 1 | diagnostic entry; conditional remediation |
+| FT9 | `lists-dicts-sets-and-tuples` | 2 | diagnostic entry; conditional remediation |
+| FT9 | `slicing-and-comprehensions` | 3 | diagnostic entry; conditional remediation |
+| FT9 | `modules-imports-and-virtual-environments` | 4 | diagnostic entry; project support (venv and installs) |
+| FT9 | `testing-with-pytest` | 5 | diagnostic entry; project support (running the project's tests) |
+| FT9 | `mutability-and-aliasing` | 6 (skim) | skim/reference |
+| FT9 | `exceptions-and-logging` | 7 (skim) | skim/reference |
+| FT9 | `writing-and-running-script-files` | 8 (skim) | skim/reference; project support |
+| FT10 | `reading-csv-and-json-files-with-generators` | 0 | diagnostic entry; project support |
+| FT10 | `loading-into-a-staging-table-with-upserts` | 1 | diagnostic entry; project support (self-contained psycopg setup) |
+| FT10 | `cleaning-and-validating-records-with-pydantic-and-type-hints` | 2 | diagnostic entry; project support |
+| FT10 | `elt-transforming-in-sql-after-loading` | 3 (skim) | skim/reference |
+| FT10 | `deduplicating-in-sql-vs-in-python` | 4 (skim) | skim/reference |
+| FT11 | `ai-enrichment-with-validated-outputs` | 0 | diagnostic entry; project support |
+| FT11 | `fastapi-routes` | 1 (split) | diagnostic entry; project support |
+| FT11 | `serving-pipeline-results-as-an-api` | 1 (split) | conditional remediation; project support |
+| FT11 | `calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts` | 2 | diagnostic entry; project support |
+| FT11 | `keeping-sensitive-data-out-of-prompts` | 3 (skim) | skim/reference |
+
+These roles are proposals for the Fast overlay (`pep-t1-track-overlays`), which validates the required Fast route against the six blocks; this intake neither compresses page budgets nor adds or removes topics. T14's per-day sum of page budgets remains a separate repository gate (see Minute budgets).
 
 ## Artifact applicability
 
@@ -261,19 +294,50 @@ Basis at intake: no `artifact.html` exists, so the estimator cannot run. Each to
 | `python-review` | S19 | 9 | 11.5 | 12 |
 
 Day totals of planned budgets against the 120-minute day: S14 48, S15 60, S16 48, S17 45, S18 36, S19 12, FT9 108, FT10 60, FT11 57.
-FT9 carries all nine `python-fundamentals` pages and is the binding constraint: 12 minutes of headroom, so the module author must keep the module's measured budgets within a 120-minute FT9 total (an average of 13.3 minutes per page). If honest minimums overflow, T14 reports it and the overflow needs an explicit pacing decision outside the gate; budgets are never compressed.
+FT9 carries all nine `python-fundamentals` pages and is T14's binding constraint: 12 minutes of headroom, so the module's measured budgets must total at most 120 minutes on FT9 (an average of 13.3 minutes per page). If honest minimums overflow, T14 reports it and the overflow needs an explicit pacing decision outside the gate; budgets are never compressed. T14's page-budget sum is not the Fast learner's route: the required Fast route is the six fixed blocks, with page roles as in Fast route roles above.
 
 ## Python module check blueprint
 
-`python/assessments/python-module-check/blueprint.json`, one course-level blueprint shared by Standard S19 and Fast FT11:
+`python/assessments/python-module-check/blueprint.json`, one course-level blueprint whose identity and objective pool are shared by Standard S19 and Fast FT11, and whose timing is scoped to S19 (reconciliation python-intake-edu-002 and python-sme-001-fast-duration-unbound):
 
-- Calendar identity copied verbatim from the snapshot `assessment` of both S19 and FT11 (identical): `kind` `moduleCheck`, `formats` `MCQ` and `coding`, `passMark` 70. The calendar gives no weights or cut scores, so `weights` is empty. `dayId` is `S19`, the Standard Review day whose "Module check" block sets the duration; the schema holds one day id, and the instructions and this intake record that FT11 uses the same check.
-- Duration and item counts from the S19 Review day "Module check" block (MCQ + coding assessment, 45 minutes): MCQ 15 items in 15 minutes (about 1 minute per scenario item) and coding 2 short tasks in 30 minutes (about 15 minutes each); `durationMinutes` 45. The MCQ/coding split inside the 45 minutes is this intake's proposal; the calendar gives only the block total.
-- Objectives: 21 exact `python/<module>/<topic>#<objective-id>` references with `objectiveFormats`. Only topics that both tracks study are assessed, so `connecting-to-postgres-from-python-with-psycopg` and `python-review` are excluded. MCQ checks one objective per item across all three modules; the coding tasks check hands-on objectives that need only Python, pytest and Pydantic (no database server, network or AI service).
-  - MCQ (15): `python-syntax-for-java-developers#o2`, `functions-and-arguments#o1`, `lists-dicts-sets-and-tuples#o1`, `slicing-and-comprehensions#o1`, `mutability-and-aliasing#o1`, `modules-imports-and-virtual-environments#o1`, `exceptions-and-logging#o2`, `testing-with-pytest#o2`, `reading-csv-and-json-files-with-generators#o3`, `loading-into-a-staging-table-with-upserts#o2`, `elt-transforming-in-sql-after-loading#o1`, `ai-enrichment-with-validated-outputs#o1`, `keeping-sensitive-data-out-of-prompts#o1`, `fastapi-routes#o2`, `calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts#o2`.
-  - coding (6 objectives over 2 tasks): `slicing-and-comprehensions#o2`, `exceptions-and-logging#o1`, `reading-csv-and-json-files-with-generators#o2`, `cleaning-and-validating-records-with-pydantic-and-type-hints#o2`, `deduplicating-in-sql-vs-in-python#o1`, `testing-with-pytest#o3`.
+- Calendar identity copied verbatim from the snapshot `assessment` of both S19 and FT11 (identical): `kind` `moduleCheck`, `formats` `MCQ` and `coding`, `passMark` 70. The calendar gives no weights or cut scores, so `weights` is empty. `dayId` is `S19`, the Standard Review day whose "Module check" block sets the duration; the schema holds one day id. The learner instructions state the timed parts for S19 only and tell Fast learners that the platform shows FT11's timing.
+- Duration and item counts (S19 only) from the S19 Review day "Module check" block (MCQ + coding assessment, 45 minutes): MCQ 15 items in 15 minutes (about 1 minute per scenario item) and coding 2 short tasks in 30 minutes (about 15 minutes each); `durationMinutes` 45. The MCQ/coding split inside the 45 minutes is this intake's proposal; the calendar gives only the block total. No FT11 duration or split is stated.
+- Objectives: 19 exact `python/<module>/<topic>#<objective-id>` references with `objectiveFormats`, one per topic that both tracks study. `connecting-to-postgres-from-python-with-psycopg` (Standard-only; its connection setup is assessed through no item because Fast learners meet only the minimum inside the loading page) and `python-review` (review, no new objectives) are excluded. MCQ checks one objective per item; the coding tasks check the hands-on objectives that need only Python, pytest and Pydantic (no database server, network or AI service).
+
+  Topic-to-assessment coverage (reconciliation python-intake-edu-004):
+
+  | Module | Topic | Objective | Format |
+  |---|---|---|---|
+  | python-fundamentals | `python-syntax-for-java-developers` | o2 | MCQ |
+  | python-fundamentals | `functions-and-arguments` | o1 | MCQ |
+  | python-fundamentals | `lists-dicts-sets-and-tuples` | o1 | MCQ |
+  | python-fundamentals | `slicing-and-comprehensions` | o1 | MCQ |
+  | python-fundamentals | `mutability-and-aliasing` | o1 | MCQ |
+  | python-fundamentals | `modules-imports-and-virtual-environments` | o1 | MCQ |
+  | python-fundamentals | `exceptions-and-logging` | o2 | MCQ |
+  | python-fundamentals | `writing-and-running-script-files` | o2 | MCQ |
+  | python-fundamentals | `testing-with-pytest` | o3 | coding (task 2) |
+  | data-pipelines | `reading-csv-and-json-files-with-generators` | o2 | coding (task 1) |
+  | data-pipelines | `connecting-to-postgres-from-python-with-psycopg` | — | not assessed: Standard-only topic |
+  | data-pipelines | `loading-into-a-staging-table-with-upserts` | o2 | MCQ |
+  | data-pipelines | `elt-transforming-in-sql-after-loading` | o1 | MCQ |
+  | data-pipelines | `cleaning-and-validating-records-with-pydantic-and-type-hints` | o2 | coding (task 1) |
+  | data-pipelines | `deduplicating-in-sql-vs-in-python` | o1 | coding (task 2) |
+  | data-pipelines | `ai-enrichment-with-validated-outputs` | o1 | MCQ |
+  | data-pipelines | `keeping-sensitive-data-out-of-prompts` | o1 | MCQ |
+  | fastapi-services | `fastapi-routes` | o2 | MCQ |
+  | fastapi-services | `serving-pipeline-results-as-an-api` | o2 | MCQ |
+  | fastapi-services | `calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts` | o2 | MCQ |
+  | fastapi-services | `python-review` | — | not assessed: review page, no new objectives |
+
+  Changes from the first draft: `writing-and-running-script-files#o2` and `serving-pipeline-results-as-an-api#o2` replace duplicate coverage (`testing-with-pytest#o2` and `reading-csv-and-json-files-with-generators#o3` as MCQ, now covered by the coding tasks), so each shared topic contributes exactly one objective.
+
+- Coding tasks (reconciliation python-intake-edu-005), two tasks of about 15 minutes each within the 30-minute coding part:
+  - Task 1, stream and validate records: `reading-csv-and-json-files-with-generators#o2` and `cleaning-and-validating-records-with-pydantic-and-type-hints#o2`. Observable evidence: a generator function yields records from a CSV fixture one at a time; rows that fail a given Pydantic model are collected with their `ValidationError` details instead of stopping the run; the public pytest file for the task passes.
+  - Task 2, deduplicate and test: `deduplicating-in-sql-vs-in-python#o1` and `testing-with-pytest#o3`. Observable evidence: a function deduplicates records on a stated natural key keeping the latest record; the learner's own test uses `@pytest.mark.parametrize` over several inputs and `pytest.raises` for one error case, and `python -m pytest` passes.
+  - Timing rationale: per task about 3 minutes to read the starter and fixture, 8 minutes to implement and 4 minutes to run pytest and fix one failure; two objectives per task keeps the required path inside 15 minutes. The first draft's six coding objectives were narrowed to these four highest-value observable skills; `slicing-and-comprehensions#o2` and `exceptions-and-logging#o1` were moved out, and those topics stay covered by their MCQ objectives. The assessment owner pilots the authored tasks against the 30 minutes; no task is authored in this repository.
 - Allowed resources: the frozen calendar states no resource rule for the S19 "Module check" block, so any rule is set and shown by the platform assessment owner; the repository invents no assessment policy. The coding part needs a Python 3 environment with pytest and Pydantic provided or named by the platform owner.
-- Open pacing item (not decided here): the Fast day type has no 45-minute "Module check" block (its blocks are Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5), yet FT11 carries the same `moduleCheck`. Scheduling the check inside FT11 is a platform pacing matter outside this intake and outside assessment policy authority; it is flagged for firstmate.
+- Open pacing item for the Fast overlay and the platform assessment owner (not decided here): the Fast day type has no 45-minute "Module check" block (its blocks are Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5, already 120 minutes), yet FT11 carries the same `moduleCheck`. FT11 delivery timing and placement are unresolved; this intake states no Fast schedule and invents no assessment policy.
 - The blueprint holds no items, keys, correct answers, rubrics, scoring guides, hidden tests, reference solutions or score secrets; gates T01 and T07 check its key names.
 
 ## Official sources per topic
@@ -299,7 +363,7 @@ Notes for authors and SME critics:
 | `testing-with-pytest` | https://docs.pytest.org/en/stable/<br>https://docs.pytest.org/en/stable/getting-started.html<br>https://docs.pytest.org/en/stable/how-to/assert.html<br>https://docs.pytest.org/en/stable/how-to/fixtures.html<br>https://docs.pytest.org/en/stable/how-to/parametrize.html<br>https://docs.pytest.org/en/stable/how-to/usage.html |
 | `reading-csv-and-json-files-with-generators` | https://docs.python.org/3/library/csv.html<br>https://docs.python.org/3/library/json.html<br>https://docs.python.org/3/howto/functional.html<br>https://docs.python.org/3/tutorial/classes.html |
 | `connecting-to-postgres-from-python-with-psycopg` | https://www.psycopg.org/psycopg3/docs/basic/install.html<br>https://www.psycopg.org/psycopg3/docs/basic/usage.html<br>https://www.psycopg.org/psycopg3/docs/basic/params.html<br>https://www.psycopg.org/psycopg3/docs/basic/transactions.html<br>https://www.psycopg.org/psycopg3/docs/api/connections.html<br>https://www.postgresql.org/docs/current/libpq-connect.html |
-| `loading-into-a-staging-table-with-upserts` | https://www.psycopg.org/psycopg3/docs/basic/usage.html<br>https://www.psycopg.org/psycopg3/docs/basic/params.html<br>https://www.psycopg.org/psycopg3/docs/api/cursors.html<br>https://www.psycopg.org/psycopg3/docs/basic/copy.html<br>https://www.postgresql.org/docs/current/sql-insert.html |
+| `loading-into-a-staging-table-with-upserts` | https://www.psycopg.org/psycopg3/docs/basic/install.html<br>https://www.psycopg.org/psycopg3/docs/basic/usage.html<br>https://www.psycopg.org/psycopg3/docs/basic/params.html<br>https://www.psycopg.org/psycopg3/docs/api/cursors.html<br>https://www.psycopg.org/psycopg3/docs/basic/copy.html<br>https://www.postgresql.org/docs/current/sql-insert.html |
 | `elt-transforming-in-sql-after-loading` | https://www.psycopg.org/psycopg3/docs/basic/transactions.html<br>https://www.postgresql.org/docs/current/sql-insert.html<br>https://www.postgresql.org/docs/current/queries-with.html<br>https://www.postgresql.org/docs/current/sql-createtableas.html |
 | `cleaning-and-validating-records-with-pydantic-and-type-hints` | https://pydantic.dev/docs/validation/latest/concepts/models/<br>https://pydantic.dev/docs/validation/latest/concepts/validators/<br>https://pydantic.dev/docs/validation/latest/errors/validation_errors/<br>https://docs.python.org/3/library/typing.html |
 | `deduplicating-in-sql-vs-in-python` | https://docs.python.org/3/builtins/stdtypes.html<br>https://www.postgresql.org/docs/current/sql-select.html<br>https://www.postgresql.org/docs/current/functions-window.html<br>https://www.postgresql.org/docs/current/tutorial-window.html |
@@ -321,4 +385,4 @@ Calendar references for the `python` technology: [Python tutorial](https://docs.
 
 ## Intake criticism
 
-The author does not approve this first output. Fresh independent educational and technology-SME critics review the committed manifests, objectives, blueprint and this intake; their reports and a non-author reconciliation are committed as course-level evidence (`intake-critic-education.json`, `intake-critic-sme.json`, `intake-reconciliation.json`) after review.
+Fresh independent educational and technology-SME critics reviewed the first intake commit (`ed8ef66`). Their reports and the non-author reconciliation are committed unchanged as `intake-critic-education.json`, `intake-critic-sme.json` and `intake-reconciliation.json`, except that the reconciliation's decisions gain `file` and `fixedInSha256` for the corrected bytes. Outcome: all 8 findings accepted (3 high, 4 medium, 1 low) and applied in one correction loop: Fast route roles (edu-001), S19-scoped blueprint timing with FT11 timing left open (edu-002, sme-001), a self-contained Fast loading page (edu-003), a topic-to-assessment coverage table (edu-004), coding task bundles with a timing rationale (edu-005), corrected matrix row counts (edu-006) and a qualified generator-memory objective (sme-002). The high findings await the critics' rechecks on the corrected bytes.
