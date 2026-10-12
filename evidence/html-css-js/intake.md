@@ -113,7 +113,7 @@ Prerequisites name in-course topics by `<course>/<module>/<topic>`, course-1 top
 | `destructuring-and-spread` | o1: Extract values from arrays and objects with destructuring, including default values<br>o2: Copy and merge arrays and objects with spread syntax<br>o3: Predict that a spread copy is shallow: nested objects stay shared | `html-css-js/javascript-fundamentals/arrays-and-objects-map-filter-reduce` |
 | `modules-import-and-export` | o1: Export named and default values from a module file<br>o2: Import named and default exports with the matching syntax<br>o3: Explain why a browser page needs script type="module" to use import | `html-css-js/javascript-fundamentals/functions-as-values-arrow-functions-and-callbacks` |
 | `scope-and-closures` | o1: Identify which variables a function can see from its block, function and module scope<br>o2: Write a function that returns a closure keeping private state between calls<br>o3: Predict the values logged by callbacks created in a loop declared with let | `html-css-js/javascript-fundamentals/let-const-and-equals`<br>`html-css-js/javascript-fundamentals/functions-as-values-arrow-functions-and-callbacks` |
-| `project-setup-with-npm-and-vite` | o1: Scaffold a Vite project with npm and start its development server on your own machine (performed as the first step of the S27 project build, or of Fast direct project work; rehearsed in the page's practice terminal)<br>o2: Explain the roles of package.json, package-lock.json and node_modules<br>o3: Distinguish dependencies from devDependencies and choose npm install or npm ci for a situation | `html-css-js/javascript-fundamentals/modules-import-and-export`<br>`git-linux-ai-foundations/linux-foundations/navigating-the-shell`<br>`git-linux-ai-foundations/linux-foundations/localhost-and-ports` |
+| `project-setup-with-npm-and-vite` | o1: Scaffold a Vite project with npm and start its development server on your own machine (performed as the first step of the S27 browser-client project, reused on Fast Track FT15; rehearsed in the page's practice terminal)<br>o2: Explain the roles of package.json, package-lock.json and node_modules<br>o3: Distinguish dependencies from devDependencies and choose npm install or npm ci for a situation | `html-css-js/javascript-fundamentals/modules-import-and-export`<br>`git-linux-ai-foundations/linux-foundations/navigating-the-shell`<br>`git-linux-ai-foundations/linux-foundations/localhost-and-ports` |
 | `selecting-and-changing-the-dom` | o1: Select elements with querySelector and querySelectorAll<br>o2: Change text, attributes and classes, and add or remove elements<br>o3: Predict the page the DOM shows after a sequence of changes | `html-css-js/html-and-css/semantic-html-page-structure`<br>`html-css-js/javascript-fundamentals/arrays-and-objects-map-filter-reduce` |
 | `events-and-event-bubbling` | o1: Attach event listeners with addEventListener<br>o2: Trace an event's bubbling path and distinguish event.target from event.currentTarget<br>o3: Use event delegation and preventDefault in a list or form handler | `html-css-js/dom-tooling-and-async/selecting-and-changing-the-dom` |
 | `preventing-cross-site-scripting` | o1: Explain how untrusted text inserted with innerHTML can run script<br>o2: Render untrusted data with textContent or other safe DOM APIs instead of HTML strings<br>o3: Identify the risky sink in a code sample and rewrite it safely | `html-css-js/dom-tooling-and-async/selecting-and-changing-the-dom` |
@@ -166,12 +166,12 @@ Legend: **R** required, authored in the module PR; **V** required when a suitabl
 | `fetch-and-browser-client/fixing-cors-spring-security-config-vs-vite-dev-proxy` | core | R | R | - | R | V | - |
 | `fetch-and-browser-client/cookies-vs-localstorage-where-tokens-should-live` | reading | R | R | R | R | V | - |
 | `fetch-and-browser-client/calling-your-spring-boot-api-from-the-browser` | core | R | R | - | R | V | module:fetch-and-browser-client |
-| `fetch-and-browser-client/environment-settings-for-the-api-address` | core | R | R | - | R | V | - |
-| `fetch-and-browser-client/testing-a-plain-function-with-vitest` | core | R | R | - | R | V | - |
+| `fetch-and-browser-client/environment-settings-for-the-api-address` | core | R | R | - | R | V | course:html-css-js |
+| `fetch-and-browser-client/testing-a-plain-function-with-vitest` | core | R | R | - | R | V | course:html-css-js |
 
 Applicability notes from reconciliation:
 
-- `project-setup-with-npm-and-vite` (education-02): the page's practice terminal rehearses command choice; objective o1's authentic performance is the first step of the S27 project build (Standard) and of the Fast direct project work on FT13.
+- `project-setup-with-npm-and-vite` (education-02): the page's practice terminal rehearses command choice; objective o1's authentic performance is the first step of the S27 browser-client project brief, used on Standard S27 and reused on Fast Track FT15.
 - `debugging-with-devtools-breakpoints` (education-03): no lab; the page carries an authentic local-browser step in which the learner debugs the page's own buggy practice script in real Chrome or Firefox DevTools; the simulator and the GIFT quiz evidence o2.
 
 ## Assessment blueprint
@@ -184,7 +184,7 @@ The S27 Project-day blocks (plan, build, timed without AI, commit and walkthroug
 ## Lab plan
 
 Labs belong to the Standard track's lab overlay; Fast Track skips coding labs and moves to direct project implementation.
-Lab scope follows the confirmed coverage matrix: it expects a lab overlay only on the Standard Lab days S21 and S26 (reconciliation sme-03 removed the extra S23 lab the first draft planned).
+Lab scope follows the confirmed coverage matrix: it expects a lab overlay only on the Standard Lab days S21 and S26 (reconciliation sme-03 removed the extra S23 lab the first draft planned). The S27 Project row's project brief is planned separately in section Project brief (S27).
 No lab uses Docker, Podman or any learner-side container engine. Each lab has exactly one language-native test command, runs offline after a one-time `npm ci`, ships public tests only and commits no solution or hidden test (`docs/lab-contract.md`).
 Planned prerequisite: Node.js 22.12 or later (`node --version`), which meets the Vite requirement (Node.js 20.19+ or 22.12+) and the Vitest requirement (Node 22.12.0 or later) recorded from the official guides on 2026-10-12, and provides the built-in `node:test` runner and global `fetch` (Node.js v22 documentation, in the source snapshot).
 
@@ -197,17 +197,50 @@ No other lab is planned:
 
 - `javascript-fundamentals` has no lab: the matrix gives S22 and S23 no lab overlay. The pages' simulators carry the practice, and the S23 Practice-day exercise ladder is a platform activity.
 - `dom-tooling-and-async` has no lab: S24 and S25 are Concept days with no calendar lab day and no matrix lab overlay; the pages' simulators carry the practice, with two authentic real-tool steps below.
-- `project-setup-with-npm-and-vite` (reconciliation education-02): objective o1 (scaffold a Vite project and start its dev server on the learner's own machine) is performed for real as the first step of the S27 project build on the Standard track, and as the first step of the Fast direct project work on FT13. The page's practice terminal is preparation that checks command reasoning; it is not claimed to verify scaffolding or server start.
+- `project-setup-with-npm-and-vite` (reconciliation education-02): objective o1 (scaffold a Vite project and start its dev server on the learner's own machine) is performed for real as the first step of the S27 browser-client project brief (section Project brief (S27)), used on Standard S27 and reused unchanged on Fast Track FT15. The page's practice terminal is preparation that checks command reasoning; it is not claimed to verify scaffolding or server start.
 - `debugging-with-devtools-breakpoints` (reconciliation education-03): no lab is added, because the matrix gives this topic no lab overlay. The page itself carries an authentic local-browser step: `artifact.html` contains a small buggy practice script (no extra file is needed, since a topic directory allows only the contract filenames), and the learner debugs it in real Chrome or Firefox DevTools, setting a line-of-code and a conditional breakpoint, stepping and watching values, then reports the faulty line and its fix for the page to check. The simulator prepares the workflow. Objective o1 and o3 are evidenced by that real-DevTools step; o2 (predicting values while stepping) by the simulator and the formative quiz.
-- `fixing-cors-spring-security-config-vs-vite-dev-proxy`: CORS is enforced only by browsers, so the Node stub lab cannot reproduce it; the page simulator and the S27 Project build against the learner's real Spring Boot API carry it.
-- `environment-settings-for-the-api-address` and `testing-a-plain-function-with-vitest`: Vite-specific build-time behavior and Vitest itself are practised in the S27 Project build (Fast: project implementation) and in the pages.
+- `fixing-cors-spring-security-config-vs-vite-dev-proxy`: CORS is enforced only by browsers, so no scripted test can reproduce it honestly; the page simulator and the S27 project brief, run by the learner in a browser against their real Spring Boot API, carry it.
+- `environment-settings-for-the-api-address` and `testing-a-plain-function-with-vitest`: practised in the S27 project brief (`lab: course:html-css-js`), whose starter reads the API address from `import.meta.env` and whose test command is Vitest.
 - S20 topics, `the-box-model` and the Reading topic: practised in the pages; S20 is a Concept day.
-- No course lab is planned; `course.json` `courseLabs` is empty.
+- The only course-level lab is the S27 project brief below; `course.json` `courseLabs` stays empty until a course-level PR authors it.
 
 Module labs are listed in `module.json` `moduleLabs` only once authored, so the intake carries no placeholder lab directory. The educational critic confirms each `lab: none` reason.
 
 Terminal interaction: any practice terminal in these pages (for example `npm create vite`, `npm install`, `npm run dev` in `project-setup-with-npm-and-vite`, or `npx vitest run` in `testing-a-plain-function-with-vitest`) reuses the canonical terminal foundation unchanged: the repaired course-1 Evolv package's non-form direct Run and Enter dispatch, embedded from `components/terminal` version 1.
 That behavior is captain-confirmed working in Evolv (platform success, not a captured DOM or console trace); it is not re-derived or redesigned here.
+
+## Project brief (S27)
+
+Captain decision `pep-project-rows`, option A: each calendar Project row gets one reusable learner-facing project brief with outcomes, prerequisite alignment, a starter scaffold and public language-native tests; no containers; reference solutions and hidden tests stay out of the repository; one canonical artifact is reused by the Standard and Fast overlays, never duplicated.
+These are already-authorized matrix items (the matrix's S27 project-row expectation), not new syllabus. The intake records the plan only; the files are authored later.
+
+| Field | Plan |
+|---|---|
+| Artifact | `html-css-js/coding-lab`, scope `course` (a cumulative build across all four modules), following the `docs/lab-contract.md` layout: `lab.json`, `README.md` (the learner-facing brief), `starter/`, `tests/`, `fixtures/`, `expected/`. The course-level lab id is valid under `schemas/lab.schema.json` on `main` (merged "Allow course-level coding lab IDs"); this branch picks it up when it is rebased. |
+| Calendar row and reuse | Standard S27 Project day, Build block (50 minutes after the topic pages, section Minute budgets); reused unchanged as the Fast Track FT15 Project block (70 minutes). Neither overlay copies it. |
+| Outcomes | A Vite browser client for the learner's own Spring Boot API: it lists and creates records with `fetch`, reads the API base URL from a `VITE_`-prefixed variable through `import.meta.env`, renders API data with `textContent` rather than HTML strings, shows the `title` and `detail` of `application/problem+json` error responses, reaches the API through a Vite dev proxy or a Spring CORS configuration, and includes one learner-written Vitest test of a plain formatting function. |
+| First step | In a scratch directory outside the lab, scaffold a throwaway Vite vanilla project with `npm create vite`, start its dev server and confirm the local URL: the authentic performance of `project-setup-with-npm-and-vite` o1 (reconciliation education-02). `lab.json` declares that scratch path and the cleanup step removes it. Then `npm ci` and `npm run dev` in `starter/`. |
+| Starter scaffold | A Vite vanilla project with `vite` and `vitest` pinned and `package-lock.json` committed; `index.html`, `src/main.js`, `src/api.js` and `src/format.js` with clearly marked TODOs; runnable as shipped (`npm run dev` serves the unfinished page). |
+| Test command | `npm test` (runs `vitest run`), offline after the one-time `npm ci`. Public Vitest tests run in the Node environment against a deterministic `node:http` stub on `127.0.0.1` with an ephemeral port that returns JSON and `application/problem+json` responses; no Spring Boot server, browser or container is needed for the tests. The shipped starter fails the named public tests with stable messages. |
+| Checked by the learner, not by tests | The real Spring Boot API call in a browser, the CORS or proxy fix, and the page's appearance: the README lists them as manual checks with expected results, because CORS and rendering need a real browser. |
+| Prerequisites | Node.js 22.12 or later; the learner's Spring Boot API from the `spring-boot` course (S1-S13 / FT1-FT8) running locally. |
+| Not committed | Reference solution, hidden tests and any scoring material: uncommitted private staging only, recorded as "solved at <commit> by run <id>" (`docs/lab-contract.md` section 8). |
+| Authoring | A course-level PR after the four module PRs, on a course branch editing course-level files only; it adds the lab to `course.json` `courseLabs`. |
+
+Prerequisite alignment (every concept the brief applies, and where it is taught first):
+
+| Applied concept | Topic | Standard | Fast |
+|---|---|---|---|
+| Page structure, labels, accessible controls | `semantic-html-page-structure`, `forms-and-html5-validation`, `accessibility-basics` | S20 | FT12 |
+| Layout | `the-box-model`, `flexbox`, `grid`, `responsive-mobile-first-layout` | S20-S21 | FT12 |
+| JavaScript language, arrays, destructuring, modules, closures | `javascript-fundamentals` topics | S22-S23 | FT12-FT13 |
+| npm and Vite project setup | `project-setup-with-npm-and-vite` | S24 | FT13 |
+| DOM, events, safe rendering | `selecting-and-changing-the-dom`, `events-and-event-bubbling`, `preventing-cross-site-scripting` | S24 | FT14 |
+| Promises, async and await | `promises`, `async-and-await` | S25 | FT14 |
+| Fetch, HTTP errors and ProblemDetail, CORS, token storage | `fetching-data`, `handling-http-errors-and-problemdetail-responses`, `fixing-cors-spring-security-config-vs-vite-dev-proxy`, `cookies-vs-localstorage-where-tokens-should-live` | S26 | FT15 |
+| Calling the Spring Boot API, API address from the environment, Vitest | the three S27-row topics | S27 (same day) | FT15 (same day) |
+
+Alignment gap, recorded honestly: the calendar places the three S27 rows on the project day itself (and FT15 combines S26 and S27), so those three concepts are taught on the day the project runs, not before it. The brief orders its steps so each one follows the matching topic page in that day's Build block (Standard) or after that day's pages (Fast). Every other applied concept is taught on an earlier day. Moving these rows would be a syllabus change, which is out of scope; this needs a decision from the reconciler or captain if same-day teaching does not satisfy "taught before the project day".
 
 ## Minute budgets
 
@@ -228,11 +261,11 @@ Every fixed block of each day's frozen template (`pep-calendar.json` `dayTypes`)
 | S21 | Lab: Warm-up 8, Lab brief 7, Guided lab 85, Redo one step without AI 10, Reflection 10 | 3 pages, 30 | Warm-up 8: platform, may draw on the GIFT quizzes. Lab brief 7 + 23 of Guided lab: the three topic pages (30) as the lab primer. Remaining 62 of Guided lab: `html-and-css/coding-lab`. Redo 10 and Reflection 10: platform. Topic videos are not scheduled on this day (the Lab template's only video is setup video inside the guided lab). | 120 | fits; lab duration 62 |
 | S23 | Practice: Warm-up 10, Refresher 5, Exercise ladder 45, AI-assisted extension 10, Timed without AI 30, Quiz 10, Explain your code 10 | 3 pages, 30 | Warm-up 10: platform. Refresher 5 + 25 of Exercise ladder: the three topic pages (30), whose in-page exercises are the ladder's first rungs. Remaining 20 of Exercise ladder, AI-assisted extension 10, Timed 30 and Explain 10: platform. Quiz 10: the topic GIFT quizzes. No lab (matrix: no overlay). | 120 | fits |
 | S26 | Lab: as S21 | 4 pages, 38 | Warm-up 8: platform, may draw on the GIFT quizzes. Lab brief 7 + 31 of Guided lab: the four topic pages (38). Remaining 54 of Guided lab: `fetch-and-browser-client/coding-lab`. Redo 10 and Reflection 10: platform. No topic video scheduled. | 120 | fits; lab duration 54 |
-| S27 | Project: Warm-up 5, Plan the work 10, Build 80, Timed without AI 15, Commit and walkthrough note 10 | 3 pages, 30 | Warm-up 5: platform. Plan 10: platform. Build 80: the three topic pages (30) used as the build's reference, plus 50 minutes of building, whose first step scaffolds the Vite project and starts its dev server (`project-setup-with-npm-and-vite` o1). Timed 15 and Commit 10: platform. No topic video scheduled. | 120 | fits; build time drops to 50 minutes, a pacing note for the reconciler |
+| S27 | Project: Warm-up 5, Plan the work 10, Build 80, Timed without AI 15, Commit and walkthrough note 10 | 3 pages, 30 | Warm-up 5: platform. Plan 10: platform. Build 80: the three topic pages (30), each read before the project step that applies it, plus 50 minutes of the S27 project brief (`html-css-js/coding-lab`), whose first step scaffolds a Vite project and starts its dev server (`project-setup-with-npm-and-vite` o1). Timed 15 and Commit 10: platform. No topic video scheduled. | 120 | fits; build time drops to 50 minutes, a pacing note for the reconciler |
 | FT12 | Fast: Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5 | 9 pages, 90 | Warm-up 5: platform. Skim 10: first 10 page minutes. Diagnostic 15, Project 70, Timed 15, Reflection 5: platform (Fast direct project; no lab). The other 80 page minutes have no block. | 200 | **overflow 80** |
-| FT13 | Fast: as FT12 | 6 pages, 60 | As FT12; the Project block's first step scaffolds the Vite project and starts its dev server (`project-setup-with-npm-and-vite` o1). The other 50 page minutes have no block. | 170 | **overflow 50** |
+| FT13 | Fast: as FT12 | 6 pages, 60 | As FT12. The other 50 page minutes have no block. | 170 | **overflow 50** |
 | FT14 | Fast: as FT12 | 7 pages, 70 | As FT12. The other 60 page minutes have no block. | 180 | **overflow 60** |
-| FT15 | Fast: as FT12 | 7 pages, 68 | As FT12. The other 58 page minutes have no block. | 178 | **overflow 58** |
+| FT15 | Fast: as FT12 | 7 pages, 68 | As FT12, except Project 70: the S27 project brief (`html-css-js/coding-lab`), reused unchanged, whose first step scaffolds a Vite project and starts its dev server (`project-setup-with-npm-and-vite` o1). The other 58 page minutes have no block. | 178 | **overflow 58** |
 
 Standard days fit their templates with the planned allowances; if measured page budgets rise in a module PR, the lab or build share on S21, S26 and S27, or the platform exercise share on Concept and Practice days, shrinks by the same minutes, and a day whose page minutes exceed its assignable blocks is reported as overflow, never compressed.
 Fast days overflow: the Fast template gives canonical pages only the 10-minute Skim block, and the ` (skim)` rows do not shorten the shared pages. No topic or block is dropped. This needs an explicit Fast pacing decision outside the gate (plan section 2.4 treats Fast page totals as a platform pacing matter and escalates gross overflow).
@@ -290,10 +323,12 @@ The two critic reports and the reconciliation for the first intake commit are co
 Outcome: all 8 findings accepted and applied in one correction loop:
 
 - education-01: per-day block allocation and lab durations (section Minute budgets); the Fast days are reported as overflow.
-- education-02: `project-setup-with-npm-and-vite` o1 mapped to the first step of the S27 project build and of Fast direct project work (section Lab plan; `topic.json` o1 and lab reason).
+- education-02: `project-setup-with-npm-and-vite` o1 mapped to the first step of the S27 project brief, reused on Fast FT15 (section Lab plan; `topic.json` o1 and lab reason).
 - education-03: `debugging-with-devtools-breakpoints` objectives rewritten around an in-page real-DevTools step, with no new lab (section Lab plan; `topic.json`).
 - sme-01: `javascript-for-java-developers` o1 names the Number and BigInt numeric primitives.
 - sme-02: `fixing-cors-spring-security-config-vs-vite-dev-proxy` o1 restates what CORS restricts and when a preflight happens.
 - sme-03: the S23 `javascript-fundamentals` module lab is removed; its seven topics record `lab: none`.
 - sme-04: the Node.js v22 test runner and global fetch documentation are added to the source snapshot.
 - sme-05: `forms-and-html5-validation` o1 requires a visible label for each visible user-input control and accessible names for other controls.
+
+Captain decision `pep-project-rows` (option A), folded into this correction loop: the S27 project brief plan (section Project brief (S27)), with `environment-settings-for-the-api-address` and `testing-a-plain-function-with-vitest` set to `lab: course:html-css-js`, and the education-02 Fast mapping moved from FT13 to FT15, where the reused brief runs.
