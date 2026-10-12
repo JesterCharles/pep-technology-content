@@ -15,7 +15,7 @@ This document defines how learner content is authored, criticized, reconciled, g
 
 - Fix the course slice from the curriculum, the module map, the topic list and draft objectives.
 - Decide artifact applicability per topic and the lab plan, following `docs/html-artifact-contract.md` and `docs/lab-contract.md`.
-- Set minute budgets from the curriculum day blocks.
+- Set minute budgets with the allocation policy in `docs/tools/validators.md`.
 - Freeze the official source list per topic, version-specific, and record curriculum snapshot hashes.
 - Intake ships manifests only, never placeholder artifacts.
 

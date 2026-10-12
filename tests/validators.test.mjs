@@ -86,10 +86,29 @@ test("T14 accepts a recorded worst path independently of estimator P90", () => {
   assert.equal(result.status, 0, result.stderr);
 });
 
-test("T14 rejects an estimator over-budget page", () => {
+test("T14 accepts required-path budgets when P50 exceeds the old share, including practice", () => {
+  const result = runCheck("T14", "tests/fixtures/timing-budget-policy");
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("T14 keeps course 1 on its approved legacy-label basis", () => {
+  const result = runCheck("T14", "tests/fixtures/timing-legacy-label");
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("T14 rejects a budget below the rounded-up P50", () => {
   const result = runCheck("T14", "tests/fixtures/timing-over-budget");
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /estimated P50 .* exceeds 1 minute budget/);
+  assert.match(result.stderr, /budget 1 is below required 2 minutes .*P50 1\.7/);
+});
+
+test("T14 reports day overflow instead of compressing honest topic budgets", () => {
+  const result = runCheck("T14", "tests/fixtures/timing-day-overflow");
+  assert.notEqual(result.status, 0);
+  assert.match(
+    result.stderr,
+    /F4 topic budgets total 135\.00 exceeds 120 minute day total by 15\.00 minutes; budgets were not compressed/,
+  );
 });
 
 test("T14 validates worst-path metadata", () => {
