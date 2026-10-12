@@ -2,10 +2,12 @@ import { readdir } from "node:fs/promises";
 import path from "node:path";
 import {
   error,
+  evidencePath,
   exists,
   findCourseRoots,
   readJson,
   relative,
+  resolveRepositoryPath,
   walk,
 } from "../lib/common.mjs";
 import { bindingsForEvidenceFile } from "../lib/locks.mjs";
@@ -55,7 +57,7 @@ async function scopesForCourse(repoRoot, courseRoot, course) {
     {
       kind: "course",
       contentRoot: courseRoot,
-      evidenceRoot: path.join(repoRoot, "evidence", course.id),
+      evidenceRoot: evidencePath(repoRoot, course.id),
       reviewable: courseReviewable,
       historicalRoots: (course.moduleOrder ?? []).map((moduleId) =>
         path.join(courseRoot, moduleId),
@@ -69,7 +71,7 @@ async function scopesForCourse(repoRoot, courseRoot, course) {
     scopes.push({
       kind: "module",
       contentRoot: moduleRoot,
-      evidenceRoot: path.join(repoRoot, "evidence", course.id, moduleId),
+      evidenceRoot: evidencePath(repoRoot, course.id, moduleId),
       reviewable: [
         ...(await assessmentFiles(moduleRoot)),
         ...(await labFiles(moduleRoot)),
@@ -86,7 +88,7 @@ async function scopesForCourse(repoRoot, courseRoot, course) {
       scopes.push({
         kind: "topic",
         contentRoot: topicRoot,
-        evidenceRoot: path.join(repoRoot, "evidence", course.id, moduleId, topicId),
+        evidenceRoot: evidencePath(repoRoot, course.id, moduleId, topicId),
         reviewable,
       });
     }
@@ -181,7 +183,12 @@ async function checkScope(ctx, scope) {
 
   const reportsByPath = new Map(reports.map((report) => [report.evidencePath, report]));
   for (const report of reports.filter((candidate) => candidate.isRecheck)) {
-    const original = reportsByPath.get(report.data.recheck?.of);
+    const originalReference = report.data.recheck?.of;
+    const originalPath =
+      typeof originalReference === "string"
+        ? relative(ctx.root, await resolveRepositoryPath(ctx.root, originalReference))
+        : null;
+    const original = reportsByPath.get(originalPath);
     if (
       !original ||
       original.isRecheck ||

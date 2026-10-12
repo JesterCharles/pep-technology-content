@@ -2,7 +2,7 @@
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { walk } from "../lib/common.mjs";
+import { resolveRepositoryPath, walk } from "../lib/common.mjs";
 import { artifactSha256, fetchBytes, sha256 } from "./receipts.mjs";
 
 async function topicFiles(root, inputs) {
@@ -27,7 +27,9 @@ async function topicFiles(root, inputs) {
 async function main() {
   const inputs = process.argv.slice(2);
   if (inputs.includes("--help")) {
-    console.log("Usage: node tools/net/check-links.mjs [topic-or-course-path ...]");
+    console.log(
+      "Usage: node authoring/tools/net/check-links.mjs [topic-or-course-path ...]",
+    );
     return;
   }
   const root = process.cwd();
@@ -37,7 +39,7 @@ async function main() {
     if (topic.artifacts?.html?.status !== "present") {
       continue;
     }
-    const receiptFile = path.resolve(root, topic.freshness.sourcesRef);
+    const receiptFile = await resolveRepositoryPath(root, topic.freshness.sourcesRef);
     let prior;
     try {
       prior = JSON.parse(await readFile(receiptFile, "utf8"));

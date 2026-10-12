@@ -1,20 +1,20 @@
 # Unified learner-page QA
 
-The Playwright Chromium harness implements gates T09-T13 and T18 from `docs/workflow.md`.
+The Playwright Chromium harness implements gates T09-T13 and T18 from `authoring/docs/workflow.md`.
 It replaces the three course-1 module-specific harness formats with one JSON path format.
 
 ## Run it
 
 ```sh
 npm run check
-node tools/qa/run.mjs
-node tools/qa/run.mjs java-foundations/basics/a-topic
-node tools/qa/run.mjs --write-evidence java-foundations/basics/a-topic
+node authoring/tools/qa/run.mjs
+node authoring/tools/qa/run.mjs java-foundations/basics/a-topic
+node authoring/tools/qa/run.mjs --write-evidence java-foundations/basics/a-topic
 ```
 
 Normal runs write receipts and failure diagnostics under gitignored `build/qa/`.
 Only the explicit `--write-evidence` form writes
-`evidence/<course>/<module>/<topic>/qa-receipt.json`.
+`authoring/evidence/<course>/<module>/<topic>/qa-receipt.json`.
 Screenshots and traces always remain under `build/qa/`; never commit them.
 
 Every check logs `no topics with artifact.html; skipped` and passes when its scan has no HTML topics.
@@ -23,8 +23,8 @@ The harness uses the Playwright-managed Chromium pinned by `package-lock.json`.
 ## Topic path file
 
 Every HTML topic has
-`evidence/<course>/<module>/<topic>/qa-paths.json`, validated by
-`schemas/qa-paths.schema.json`.
+`authoring/evidence/<course>/<module>/<topic>/qa-paths.json`, validated by
+`authoring/schemas/qa-paths.schema.json`.
 Selectors belong to the page, not to the harness. A path is an ordered list of declarative actions.
 The three required routes must independently finish the topic:
 
@@ -147,14 +147,14 @@ Git `tNN.json` files, and the reusable route roles of AI `spec.js`. No course-1 
 ## Markdown and PDF tools
 
 ```sh
-node tools/qa/md-from-html.mjs path/artifact.html path/artifact.md
-node tools/qa/pdf-from-md.mjs path/artifact.md path/artifact.pdf
+node authoring/tools/qa/md-from-html.mjs path/artifact.html path/artifact.md
+node authoring/tools/qa/pdf-from-md.mjs path/artifact.md path/artifact.pdf
 ```
 
 Markdown derivation includes the H1 title, objectives, teaching, model, recap, cheat sheet, sources, and every
 `data-interaction` element's author-written `data-static-alt` value or descendant block. Missing objectives or static
 alternatives fail rather
-than being invented. PDF rendering uses `tools/qa/print-template.html` version 1 and pinned Playwright Chromium.
+than being invented. PDF rendering uses `authoring/tools/qa/print-template.html` version 1 and pinned Playwright Chromium.
 
 ## Provenance
 

@@ -6,6 +6,7 @@ import {
   findCourseRoots,
   loadCourse,
   readJson,
+  resolveRepositoryPath,
   sha256,
 } from "../lib/common.mjs";
 import { freshnessIssue } from "../net/receipts.mjs";
@@ -31,7 +32,10 @@ export async function run(ctx) {
         ) {
           out.push(error(id, ctx.display(topicFile), "unverified source claims must be listed"));
         }
-        const receiptFile = path.resolve(ctx.root, topic.freshness?.sourcesRef ?? "");
+        const receiptFile = await resolveRepositoryPath(
+          ctx.root,
+          topic.freshness?.sourcesRef ?? "",
+        );
         if (!(await exists(receiptFile))) {
           out.push(error(id, ctx.display(topicFile), "source receipt does not exist"));
           continue;

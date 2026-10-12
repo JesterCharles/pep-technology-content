@@ -13,14 +13,14 @@ import { run as runT18 } from "../tools/checks/T18-markdown-pdf.mjs";
 import { markdownFromHtml } from "../tools/qa/md-from-html.mjs";
 import { pdfFromMarkdown } from "../tools/qa/pdf-from-md.mjs";
 
-const fixtures = path.resolve("tests/fixtures/qa");
+const fixtures = path.resolve("authoring/tests/fixtures/qa");
 const runners = { T09: runT09, T10: runT10, T11: runT11, T12: runT12, T13: runT13, T18: runT18 };
 const expectedHtml = "course/module/topic/artifact.html";
 
 async function makeRepository(pageName, options = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), "pep-qa-"));
   const topicRoot = path.join(root, "course", "module", "topic");
-  const evidenceRoot = path.join(root, "evidence", "course", "module", "topic");
+  const evidenceRoot = path.join(root, "authoring", "evidence", "course", "module", "topic");
   await mkdir(topicRoot, { recursive: true });
   await mkdir(evidenceRoot, { recursive: true });
   let html = await readFile(path.join(fixtures, pageName), "utf8");
@@ -122,7 +122,7 @@ test("T09 writes a schema-shaped receipt only to gitignored output", { timeout: 
     assert.match(receipt.artifactHashes["artifact.html"], /^[a-f0-9]{64}$/);
     assert.equal(receipt.toolVersions.playwright, "1.55.0");
     await assert.rejects(
-      readFile(path.join(repository.root, "evidence", "course", "module", "topic", "qa-receipt.json")),
+      readFile(path.join(repository.root, "authoring", "evidence", "course", "module", "topic", "qa-receipt.json")),
       { code: "ENOENT" },
     );
   } finally {

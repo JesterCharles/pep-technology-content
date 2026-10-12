@@ -1,10 +1,12 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import {
+  evidencePath,
   fileRecord,
   posix,
   readJson,
   relative,
+  resolveRepositoryPath,
   sha256,
   walk,
 } from "./common.mjs";
@@ -71,12 +73,14 @@ export function jsonBindings(value, defaultTarget = null) {
   return result;
 }
 
-function bindingTarget(repoRoot, binding, artifactRoot) {
+async function bindingTarget(repoRoot, binding, artifactRoot) {
   if (!binding.target) return null;
   if (!binding.relativeToArtifact && path.isAbsolute(binding.target)) return null;
   const base = binding.relativeToArtifact ? artifactRoot : repoRoot;
   if (!base) return null;
-  const target = path.resolve(base, binding.target);
+  const target = binding.relativeToArtifact
+    ? path.resolve(base, binding.target)
+    : await resolveRepositoryPath(repoRoot, binding.target);
   const root = path.resolve(repoRoot);
   if (target !== root && !target.startsWith(`${root}${path.sep}`)) return null;
   return target;
@@ -96,7 +100,7 @@ export async function bindingsForEvidenceFile(
         `${relative(repoRoot, evidenceFile)}: binding has no target at ${binding.field}`,
       );
     }
-    const artifactFile = bindingTarget(repoRoot, binding, artifactRoot);
+    const artifactFile = await bindingTarget(repoRoot, binding, artifactRoot);
     if (!artifactFile) {
       throw new Error(
         `${relative(repoRoot, evidenceFile)}: binding ${binding.field} names missing target ${binding.target}`,
@@ -153,7 +157,7 @@ export async function createModuleLock(repoRoot, courseId, moduleId) {
   const moduleFiles = moduleWalk.files.filter(
     (file) => path.basename(file) !== "module.lock.json",
   );
-  const evidenceRoot = path.join(repoRoot, "evidence", courseId, moduleId);
+  const evidenceRoot = evidencePath(repoRoot, courseId, moduleId);
   const evidenceWalk = await walk(evidenceRoot);
   const allFiles = [...moduleFiles, ...evidenceWalk.files];
   const bindings = await evidenceBindings(repoRoot, evidenceWalk.files, (evidenceFile) => {
@@ -196,7 +200,7 @@ export async function createCourseLock(repoRoot, courseId) {
   const courseFiles = [path.join(courseRoot, "course.json")];
   for (const name of ["assessments", "coding-lab"])
     courseFiles.push(...(await walk(path.join(courseRoot, name))).files);
-  const evidenceRoot = path.join(repoRoot, "evidence", courseId);
+  const evidenceRoot = evidencePath(repoRoot, courseId);
   const evidenceWalk = await walk(evidenceRoot);
   const moduleIds = new Set(courseManifest.moduleOrder ?? []);
   const courseEvidence = evidenceWalk.files.filter((file) => {

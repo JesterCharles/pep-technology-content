@@ -168,7 +168,9 @@ export function validateGift(bytes, expectedCategory) {
 async function main() {
   const [file, expectedCategory] = process.argv.slice(2);
   if (!file || !expectedCategory || process.argv.includes("--help")) {
-    console.log("Usage: node tools/gift/validate.mjs <artifact.gift> <course/module/topic>");
+    console.log(
+      "Usage: node authoring/tools/gift/validate.mjs <artifact.gift> <course/module/topic>",
+    );
     return;
   }
   const questions = validateGift(await readFile(file), expectedCategory);

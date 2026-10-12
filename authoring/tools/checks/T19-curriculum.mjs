@@ -1,6 +1,7 @@
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import {
+  authoringPath,
   error,
   exists,
   readJson,
@@ -48,8 +49,21 @@ function compareTopics(calendar, curriculum) {
   return issues;
 }
 
+const historicalExtractionTool = "tools/curriculum/extract-calendar.mjs";
+
+export async function lockedFilePath(base, recordPath) {
+  const direct = path.isAbsolute(recordPath) ? recordPath : path.join(base, recordPath);
+  if (
+    recordPath === historicalExtractionTool &&
+    !(await exists(direct))
+  ) {
+    return authoringPath(base, "tools", "curriculum", "extract-calendar.mjs");
+  }
+  return direct;
+}
+
 async function verifyRecord(base, record) {
-  const file = path.isAbsolute(record.path) ? record.path : path.join(base, record.path);
+  const file = await lockedFilePath(base, record.path);
   if (!(await exists(file))) {
     return path.isAbsolute(record.path) ? null : `locked file is missing: ${record.path}`;
   }

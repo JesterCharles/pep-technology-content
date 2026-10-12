@@ -86,7 +86,9 @@ export async function markdownFromHtml(htmlFile) {
 async function main() {
   const [input, output] = process.argv.slice(2);
   if (!input || !output) {
-    console.error("Usage: node tools/qa/md-from-html.mjs <artifact.html> <artifact.md>");
+    console.error(
+      "Usage: node authoring/tools/qa/md-from-html.mjs <artifact.html> <artifact.md>",
+    );
     process.exitCode = 2;
     return;
   }

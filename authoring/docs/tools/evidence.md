@@ -1,10 +1,10 @@
 # Review evidence and critic gate
 
-`tools/pep check --only T25` runs gate 18. It checks each topic, module and course review scope independently.
+`authoring/tools/pep check --only T25` runs gate 18. It checks each topic, module and course review scope independently.
 
 ## Files
 
-Topic evidence uses these exact names under `evidence/<course>/<module>/<topic>/`:
+Topic evidence uses these exact names under `authoring/evidence/<course>/<module>/<topic>/`:
 
 - `critic-education.json`
 - `critic-sme.json`
@@ -14,14 +14,14 @@ Topic evidence uses these exact names under `evidence/<course>/<module>/<topic>/
 
 Course- and module-level evidence prefixes the same names with the reviewed unit, such as
 `intake-critic-education.json` or `module-check-reconciliation.json`. Reports and reconciliations are validated by
-`schemas/critic-report.schema.json` and `schemas/reconciliation.schema.json`.
+`authoring/schemas/critic-report.schema.json` and `authoring/schemas/reconciliation.schema.json`.
 
 A report can name its primary repo-relative target in `reviewedPath`. A recheck report adds:
 
 ```json
 {
   "recheck": {
-    "of": "evidence/course/module/topic/critic-education.json",
+    "of": "authoring/evidence/course/module/topic/critic-education.json",
     "items": [
       {
         "findingId": "education-1",
@@ -40,7 +40,7 @@ A report can name its primary repo-relative target in `reviewedPath`. A recheck 
 
 ## Hash binding
 
-For an object containing `reviewedSha256` or `artifactSha256`, `tools/pep lock` resolves the target in this order:
+For an object containing `reviewedSha256` or `artifactSha256`, `authoring/tools/pep lock` resolves the target in this order:
 
 1. that object's `reviewedPath`;
 2. that object's `file`;
@@ -61,7 +61,16 @@ A course-level evidence reference to module content is historical: the course lo
 but omits that cross-scope binding, so later module changes do not stale the shared course lock. Such a historical
 intake reference can close its course-level intake finding, but it never supplies current critic coverage for module
 content; current module coverage must come from evidence under that module. T06 requires committed locks to be
-byte-identical to regeneration. Regenerate with `tools/pep lock` after changing content or evidence.
+byte-identical to regeneration. Regenerate with `authoring/tools/pep lock` after changing content or evidence.
+
+## Legacy evidence references
+
+New manifests, receipts and review records use `authoring/evidence/...`. Course 1 and its attested review records
+predate the `authoring/` layout and retain their original `evidence/...` strings so their bytes and review authority
+do not change during the repository move. When no real root `evidence/` path exists, the tooling resolves only that
+legacy prefix to `authoring/evidence/`. A real root `evidence/` tree always wins; no other old root prefix is aliased.
+Generated locks record the physical `authoring/evidence/...` path even when a preserved record used the legacy
+spelling.
 
 ## Gate 18 behavior
 

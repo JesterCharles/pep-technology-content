@@ -12,7 +12,7 @@ coding-lab/
   lab.json     declarative manifest
   README.md    learner instructions
   starter/     files the learner edits, runnable as shipped
-  tests/       public tests only
+  tests/                 public tests only
   fixtures/    small, deterministic, license-clean data
   expected/    expected learner-visible output
 ```

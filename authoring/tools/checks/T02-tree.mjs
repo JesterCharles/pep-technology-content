@@ -1,5 +1,13 @@
 import path from "node:path";
-import { error, findCourseRoots, readJson, walk, SLUG_RE } from "../lib/common.mjs";
+import {
+  error,
+  evidencePath,
+  findCourseRoots,
+  readJson,
+  RESERVED_ROOTS,
+  walk,
+  SLUG_RE,
+} from "../lib/common.mjs";
 export const id = "T02";
 export const gate = 2;
 export const description = "canonical course/module/topic tree";
@@ -27,12 +35,16 @@ export async function run(ctx) {
     } catch {
       continue;
     }
+    const courseFile = path.join(cr, "course.json");
+    if (!ctx.explicit && path.dirname(cr) !== ctx.root) {
+      out.push(error(id, ctx.display(courseFile), "course directory must be a direct child of the repository root"));
+    } else if (!ctx.explicit && RESERVED_ROOTS.has(path.basename(cr))) {
+      out.push(error(id, ctx.display(courseFile), "reserved root cannot be a course directory"));
+    }
     if (path.basename(cr) !== c.id)
-      out.push(
-        error(id, ctx.display(path.join(cr, "course.json")), "course directory must equal id"),
-      );
+      out.push(error(id, ctx.display(courseFile), "course directory must equal id"));
 
-    const evidenceRoot = path.join(ctx.root, "evidence", c.id);
+    const evidenceRoot = evidencePath(ctx.root, c.id);
     const moduleIds = new Set(c.moduleOrder ?? []);
     const topicIds = new Map();
     for (const mid of c.moduleOrder ?? []) {

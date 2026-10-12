@@ -6,9 +6,9 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
-const repo = path.resolve(import.meta.dirname, "..");
-const pep = path.join(repo, "tools", "pep");
-const verifyImport = path.join(repo, "tools", "legacy", "verify-import.mjs");
+const repo = path.resolve(import.meta.dirname, "../..");
+const pep = path.join(repo, "authoring", "tools", "pep");
+const verifyImport = path.join(repo, "authoring", "tools", "legacy", "verify-import.mjs");
 
 function runNode(script, args, cwd = repo) {
   return spawnSync(process.execPath, [script, ...args], { cwd, encoding: "utf8" });
@@ -26,7 +26,7 @@ function sha256(text) {
 
 for (const name of ["matching", "plain"]) {
   test(`T24 accepts ${name} component fixture`, () => {
-    const fixture = path.join(repo, "tests", "fixtures", "components", name);
+    const fixture = path.join(repo, "authoring", "tests", "fixtures", "components", name);
     const result = runNode(pep, ["check", "--only", "T24", fixture]);
     assert.equal(result.status, 0, result.stderr);
   });
@@ -38,7 +38,7 @@ for (const [name, message] of [
   ["version-mismatch", "does not match topic.json"],
 ]) {
   test(`T24 rejects ${name} component fixture`, () => {
-    const fixture = path.join(repo, "tests", "fixtures", "components", name);
+    const fixture = path.join(repo, "authoring", "tests", "fixtures", "components", name);
     const result = runNode(pep, ["check", "--only", "T24", fixture]);
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, new RegExp(message.replaceAll(".", "\\.")));
@@ -46,17 +46,17 @@ for (const [name, message] of [
 }
 
 test("legacy course package schema rejects an invalid index", () => {
-  const fixture = path.join(repo, "tests", "fixtures", "legacy-schema-course");
+  const fixture = path.join(repo, "authoring", "tests", "fixtures", "legacy-schema-course");
   const result = runNode(pep, ["check", "--only", "T01", fixture]);
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /legacy-schema-course\/evidence\/legacy\/course-1-packages\.json/);
+  assert.match(result.stderr, /legacy-schema-course\/authoring\/evidence\/legacy\/course-1-packages\.json/);
 });
 
 test("legacy tournament schema rejects an invalid index", () => {
-  const fixture = path.join(repo, "tests", "fixtures", "legacy-schema-tournament");
+  const fixture = path.join(repo, "authoring", "tests", "fixtures", "legacy-schema-tournament");
   const result = runNode(pep, ["check", "--only", "T01", fixture]);
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /legacy-schema-tournament\/evidence\/legacy\/tournament\.json/);
+  assert.match(result.stderr, /legacy-schema-tournament\/authoring\/evidence\/legacy\/tournament\.json/);
 });
 
 async function syntheticImportRepository(drift = false) {
@@ -83,9 +83,9 @@ async function syntheticImportRepository(drift = false) {
       },
     ],
   };
-  await mkdir(path.join(root, "evidence", "legacy"), { recursive: true });
+  await mkdir(path.join(root, "authoring", "evidence", "legacy"), { recursive: true });
   await writeFile(
-    path.join(root, "evidence", "legacy", "course-1-packages.json"),
+    path.join(root, "authoring", "evidence", "legacy", "course-1-packages.json"),
     `${JSON.stringify(legacy, null, 2)}\n`,
   );
   runGit(root, ["add", "."]);
@@ -112,7 +112,7 @@ test("verify-import writes a receipt for byte-identical synthetic imports", asyn
   const result = runNode(verifyImport, [commit, "demo-course/demo-module"], root);
   assert.equal(result.status, 0, result.stderr);
   const receipt = await readFile(
-    path.join(root, "evidence", "demo-course", "demo-module", "import-fidelity.txt"),
+    path.join(root, "authoring", "evidence", "demo-course", "demo-module", "import-fidelity.txt"),
     "utf8",
   );
   assert.match(receipt, /result: pass \(2 learner pages byte-identical\)/);

@@ -2,7 +2,7 @@
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { walk } from "../lib/common.mjs";
+import { evidencePath, walk } from "../lib/common.mjs";
 import { artifactSha256, fetchBytes } from "./receipts.mjs";
 
 export function parseVideoFrontmatter(markdown) {
@@ -112,7 +112,9 @@ async function videoFiles(root, inputs) {
 async function main() {
   const inputs = process.argv.slice(2);
   if (inputs.includes("--help")) {
-    console.log("Usage: node tools/net/check-video.mjs [video-or-course-path ...]");
+    console.log(
+      "Usage: node authoring/tools/net/check-video.mjs [video-or-course-path ...]",
+    );
     return;
   }
   const root = process.cwd();
@@ -148,7 +150,7 @@ async function main() {
       embeddable: status.oEmbedStatus === 200,
       ...status,
     };
-    const receiptFile = path.join(root, "evidence", course, module, topic, "video.json");
+    const receiptFile = evidencePath(root, course, module, topic, "video.json");
     await mkdir(path.dirname(receiptFile), { recursive: true });
     await writeFile(receiptFile, `${JSON.stringify(receipt, null, 2)}\n`);
     console.log(path.relative(root, receiptFile));

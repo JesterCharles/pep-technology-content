@@ -5,8 +5,8 @@ import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 
-const repo = path.resolve(import.meta.dirname, "..");
-const pep = path.join(repo, "tools", "pep");
+const repo = path.resolve(import.meta.dirname, "../..");
+const pep = path.join(repo, "authoring", "tools", "pep");
 const objective = "demo-course/demo-module/demo-topic#o1";
 
 async function writeJson(file, value) {
@@ -16,9 +16,13 @@ async function writeJson(file, value) {
 
 async function schemaFixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "pep-schema-"));
-  await cp(path.join(repo, "schemas"), path.join(root, "schemas"), { recursive: true });
   await cp(
-    path.join(repo, "tests/fixtures/positive/demo-course"),
+    path.join(repo, "authoring", "schemas"),
+    path.join(root, "authoring", "schemas"),
+    { recursive: true },
+  );
+  await cp(
+    path.join(repo, "authoring/tests/fixtures/positive/demo-course"),
     path.join(root, "demo-course"),
     { recursive: true },
   );
@@ -63,7 +67,7 @@ test("T01 accepts objectiveFormats and prefixed recheck evidence", async () => {
   );
   const hash = "0".repeat(64);
   await writeJson(
-    path.join(root, "evidence/demo-course/intake-critic-education-recheck.json"),
+    path.join(root, "authoring/evidence/demo-course/intake-critic-education-recheck.json"),
     {
       schemaVersion: 1,
       role: "education",
@@ -72,7 +76,7 @@ test("T01 accepts objectiveFormats and prefixed recheck evidence", async () => {
       reviewedSha256: hash,
       findings: [],
       recheck: {
-        of: "evidence/demo-course/intake-critic-education.json",
+        of: "authoring/evidence/demo-course/intake-critic-education.json",
         items: [
           {
             findingId: "finding-1",
@@ -85,7 +89,7 @@ test("T01 accepts objectiveFormats and prefixed recheck evidence", async () => {
       },
     },
   );
-  await writeJson(path.join(root, "evidence/demo-course/intake-reconciliation.json"), {
+  await writeJson(path.join(root, "authoring/evidence/demo-course/intake-reconciliation.json"), {
     schemaVersion: 1,
     author: "author",
     decidedBy: "reconciler",
@@ -111,7 +115,7 @@ test("T02 rejects malformed review evidence filenames", async () => {
   await writeJson(
     path.join(
       root,
-      "evidence/demo-course/demo-module/demo-topic/critic-education-final.json",
+      "authoring/evidence/demo-course/demo-module/demo-topic/critic-education-final.json",
     ),
     {},
   );

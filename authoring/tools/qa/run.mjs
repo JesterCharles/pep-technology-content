@@ -11,7 +11,7 @@ const paths = [];
 for (const argument of args) {
   if (argument === "--write-evidence") writeEvidence = true;
   else if (argument === "--help") {
-    console.log("Usage: node tools/qa/run.mjs [--write-evidence] [paths...]");
+    console.log("Usage: node authoring/tools/qa/run.mjs [--write-evidence] [paths...]");
     process.exit(0);
   } else if (argument.startsWith("-")) {
     console.error(`Unknown option: ${argument}`);

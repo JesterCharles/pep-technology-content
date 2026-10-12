@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import {
   error,
+  evidencePath,
   exists,
   findCourseRoots,
   loadCourse,
@@ -41,9 +42,8 @@ export async function run(ctx) {
         if (metadata.embeddable !== true) {
           out.push(error(id, ctx.display(artifact), "video metadata must mark the selection embeddable"));
         }
-        const receiptFile = path.join(
+        const receiptFile = evidencePath(
           ctx.root,
-          "evidence",
           course.manifest.id,
           module.id,
           topic.id,

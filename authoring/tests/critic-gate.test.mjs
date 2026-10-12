@@ -7,8 +7,8 @@ import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { createCourseLock, createModuleLock } from "../tools/lib/locks.mjs";
 
-const repo = path.resolve(import.meta.dirname, "..");
-const pep = path.join(repo, "tools", "pep");
+const repo = path.resolve(import.meta.dirname, "../..");
+const pep = path.join(repo, "authoring", "tools", "pep");
 const target = "demo-course/demo-module/demo-topic/artifact.html";
 const topicManifest = "demo-course/demo-module/demo-topic/topic.json";
 
@@ -24,7 +24,7 @@ async function writeJson(file, value) {
 async function fixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "pep-critic-"));
   await cp(
-    path.join(repo, "tests/fixtures/positive/demo-course"),
+    path.join(repo, "authoring/tests/fixtures/positive/demo-course"),
     path.join(root, "demo-course"),
     { recursive: true },
   );
@@ -57,7 +57,7 @@ function reconciliation(digest, decisions, overrides = {}) {
 }
 
 async function writeTopicEvidence(root, education, sme, reconcile = null, rechecks = []) {
-  const evidence = path.join(root, "evidence/demo-course/demo-module/demo-topic");
+  const evidence = path.join(root, "authoring/evidence/demo-course/demo-module/demo-topic");
   if (education) await writeJson(path.join(evidence, "critic-education.json"), education);
   if (sme) await writeJson(path.join(evidence, "critic-sme.json"), sme);
   if (reconcile) await writeJson(path.join(evidence, "reconciliation.json"), reconcile);
@@ -111,7 +111,7 @@ test("T25 accepts historical removed-target criticism with a current replacement
   const original = report("education", "0".repeat(64), { reviewedPath: removedTarget });
   const recheck = report("education", digest, {
     recheck: {
-      of: "evidence/demo-course/demo-module/demo-topic/critic-education.json",
+      of: "authoring/evidence/demo-course/demo-module/demo-topic/critic-education.json",
       items: [],
     },
   });
@@ -160,7 +160,7 @@ test("T25 leaves an explicitly open high recheck open", async () => {
   const original = report("education", digest, { findings: [highFinding(digest)] });
   const recheck = report("education", digest, {
     recheck: {
-      of: "evidence/demo-course/demo-module/demo-topic/critic-education.json",
+      of: "authoring/evidence/demo-course/demo-module/demo-topic/critic-education.json",
       items: [
         {
           findingId: "finding-1",
@@ -190,7 +190,7 @@ test("T25 accepts a current resolved same-role recheck", async () => {
   const original = report("education", oldDigest, { findings: [highFinding(oldDigest)] });
   const recheck = report("education", digest, {
     recheck: {
-      of: "evidence/demo-course/demo-module/demo-topic/critic-education.json",
+      of: "authoring/evidence/demo-course/demo-module/demo-topic/critic-education.json",
       items: [
         {
           findingId: "finding-1",
@@ -231,7 +231,7 @@ test("T25 requires recheck.of to identify a same-role original report", async ()
   const { root, digest } = await fixture();
   const recheck = report("education", digest, {
     recheck: {
-      of: "evidence/demo-course/demo-module/demo-topic/critic-sme.json",
+      of: "authoring/evidence/demo-course/demo-module/demo-topic/critic-sme.json",
       items: [],
     },
   });
@@ -318,7 +318,7 @@ test("T25 covers a course-level assessment blueprint with prefixed evidence", as
   const blueprintPath = "demo-course/assessments/intake/blueprint.json";
   await writeJson(path.join(root, blueprintPath), { fixture: true });
   const blueprintDigest = hash(await readFile(path.join(root, blueprintPath)));
-  const evidence = path.join(root, "evidence/demo-course");
+  const evidence = path.join(root, "authoring/evidence/demo-course");
   await writeJson(
     path.join(evidence, "intake-critic-education.json"),
     report("education", blueprintDigest, { reviewedPath: blueprintPath }),
@@ -336,7 +336,7 @@ test("T25 keeps course intake rechecks historical after module changes", async (
   await writeTopicEvidence(root, report("education", digest), report("sme", digest));
   const manifestFile = path.join(root, topicManifest);
   const intakeDigest = hash(await readFile(manifestFile));
-  const evidence = path.join(root, "evidence/demo-course");
+  const evidence = path.join(root, "authoring/evidence/demo-course");
   const finding = {
     ...highFinding(intakeDigest),
     location: { file: topicManifest, line: 1 },
@@ -353,7 +353,7 @@ test("T25 keeps course intake rechecks historical after module changes", async (
     report("sme", intakeDigest, {
       reviewedPath: topicManifest,
       recheck: {
-        of: "evidence/demo-course/intake-critic-sme.json",
+        of: "authoring/evidence/demo-course/intake-critic-sme.json",
         items: [
           {
             findingId: "finding-1",
@@ -382,7 +382,7 @@ test("lock bindings use location.file and preserve stale hashes", async () => {
   const { root, digest } = await fixture();
   const evidence = path.join(
     root,
-    "evidence/demo-course/demo-module/demo-topic/location.json",
+    "authoring/evidence/demo-course/demo-module/demo-topic/location.json",
   );
   await writeJson(evidence, {
     findings: [{ location: { file: target }, reviewedSha256: digest }],
@@ -405,7 +405,7 @@ test("reviewedPath takes precedence over file and location.file", async () => {
   const { root, digest } = await fixture();
   const evidence = path.join(
     root,
-    "evidence/demo-course/demo-module/demo-topic/precedence.json",
+    "authoring/evidence/demo-course/demo-module/demo-topic/precedence.json",
   );
   await writeJson(evidence, {
     reviewedPath: target,
@@ -421,7 +421,7 @@ test("reviewedPath takes precedence over file and location.file", async () => {
 
 test("course-level binding without a target fails", async () => {
   const { root } = await fixture();
-  await writeJson(path.join(root, "evidence/demo-course/unbound.json"), {
+  await writeJson(path.join(root, "authoring/evidence/demo-course/unbound.json"), {
     reviewedSha256: "0".repeat(64),
   });
   await assert.rejects(
@@ -434,7 +434,7 @@ test("a removed binding is explicit, historical, and accepted by T06", async () 
   const { root } = await fixture();
   const evidence = path.join(
     root,
-    "evidence/demo-course/demo-module/demo-topic/removed.json",
+    "authoring/evidence/demo-course/demo-module/demo-topic/removed.json",
   );
   const removedTarget = "demo-course/demo-module/demo-topic/removed-artifact.html";
   await writeJson(evidence, {
@@ -459,7 +459,7 @@ test("a removed binding is explicit, historical, and accepted by T06", async () 
     path.join(root, "demo-course/demo-module/module.lock.json"),
     moduleLock,
   );
-  await cp(path.join(repo, "schemas"), path.join(root, "schemas"), { recursive: true });
+  await cp(path.join(repo, "authoring/schemas"), path.join(root, "authoring/schemas"), { recursive: true });
   const schemaResult = check(root, "T01");
   assert.equal(schemaResult.status, 0, schemaResult.stderr);
   const result = check(root, "T06");
@@ -469,7 +469,7 @@ test("a removed binding is explicit, historical, and accepted by T06", async () 
 test("lock regeneration with stale evidence is stable", async () => {
   const { root } = await fixture();
   await writeJson(
-    path.join(root, "evidence/demo-course/demo-module/demo-topic/stale.json"),
+    path.join(root, "authoring/evidence/demo-course/demo-module/demo-topic/stale.json"),
     { reviewedSha256: "0".repeat(64) },
   );
   const first = await createModuleLock(root, "demo-course", "demo-module");
@@ -481,7 +481,7 @@ test("lock regeneration with stale evidence is stable", async () => {
 async function lockFixtureWithHistoricalCourseBinding() {
   const { root } = await fixture();
   const manifestFile = path.join(root, topicManifest);
-  await writeJson(path.join(root, "evidence/demo-course/intake-history.json"), {
+  await writeJson(path.join(root, "authoring/evidence/demo-course/intake-history.json"), {
     reviewedPath: topicManifest,
     reviewedSha256: hash(await readFile(manifestFile)),
   });

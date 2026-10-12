@@ -2,7 +2,13 @@ import Ajv2020 from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { error, findForbiddenKeys, readJson, walk } from "../lib/common.mjs";
+import {
+  authoringPath,
+  error,
+  findForbiddenKeys,
+  readJson,
+  walk,
+} from "../lib/common.mjs";
 
 export const id = "T01";
 export const gate = 1;
@@ -112,7 +118,7 @@ export async function run(ctx) {
   const validators = {};
   for (const [, name] of mapping)
     validators[name] = ajv.compile(
-      await readJson(path.join(ctx.root, "schemas", `${name}.schema.json`)),
+      await readJson(authoringPath(ctx.root, "schemas", `${name}.schema.json`)),
     );
   const errors = [];
   for (const target of ctx.scanRoots) {
@@ -132,7 +138,11 @@ export async function run(ctx) {
         if (!validators[pair[1]])
           validators[pair[1]] = ajv.compile(
             await readJson(
-              path.join(ctx.root, "schemas", "video-artifact.frontmatter.schema.json"),
+              authoringPath(
+                ctx.root,
+                "schemas",
+                "video-artifact.frontmatter.schema.json",
+              ),
             ),
           );
       }

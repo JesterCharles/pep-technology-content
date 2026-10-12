@@ -14,8 +14,8 @@ This document defines how learner content is authored, criticized, reconciled, g
 ### 2.1 Intake and source freeze
 
 - Fix the course slice from the curriculum, the module map, the topic list and draft objectives.
-- Decide artifact applicability per topic and the lab plan, following `docs/html-artifact-contract.md` and `docs/lab-contract.md`.
-- Set minute budgets with the allocation policy in `docs/tools/validators.md`.
+- Decide artifact applicability per topic and the lab plan, following `authoring/docs/html-artifact-contract.md` and `authoring/docs/lab-contract.md`.
+- Set minute budgets with the allocation policy in `authoring/docs/tools/validators.md`.
 - Freeze the official source list per topic, version-specific, and record curriculum snapshot hashes.
 - Intake ships manifests only, never placeholder artifacts.
 
@@ -46,7 +46,7 @@ This document defines how learner content is authored, criticized, reconciled, g
 ### 2.5 Machine gates
 
 All gates run on the final bytes.
-Every gate runs locally and in CI except the lab solved-run gate (part of gate 15), which needs uncommitted private staging; `docs/lab-contract.md` defines how it is recorded and how CI checks that record.
+Every gate runs locally and in CI except the lab solved-run gate (part of gate 15), which needs uncommitted private staging; `authoring/docs/lab-contract.md` defines how it is recorded and how CI checks that record.
 
 1. Schema: every manifest, lab, blueprint and evidence file validates.
 2. Tree: no `topics/` directory; allowed filenames only; no empty or placeholder files; manifests and files match; absences carry reasons.
@@ -62,21 +62,21 @@ Every gate runs locally and in CI except the lab solved-run gate (part of gate 1
 12. GIFT: parses, ASCII only, one correct answer, feedback on every option, category matches the topic.
 13. Video: live, public, embeddable and within budget.
 14. Markdown and PDF: heading and objective parity, static alternatives present, PDF renders with extractable text.
-15. Lab: the gates in `docs/lab-contract.md`; the solved-run gate is local-only with recorded evidence that CI checks.
+15. Lab: the gates in `authoring/docs/lab-contract.md`; the solved-run gate is local-only with recorded evidence that CI checks.
 16. Diagrams: inline SVG with title, description and text alternative.
 17. Licensing: every third-party item has a license record.
 18. Critic gate: both critic reports or rechecks cover the final bytes, zero open critical or high findings, and reconciliation by a non-author.
 
-The tooling under `tools/` implements these gates behind `npm run check`.
+The tooling under `authoring/tools/` implements these gates behind `npm run check`.
 
 ### 2.6 Evidence
 
-- Topic evidence lives under `evidence/<course>/<module>/<topic>/`. Course evidence lives directly under `evidence/<course>/`; module assessment and lab evidence may live directly under `evidence/<course>/<module>/`.
+- Topic evidence lives under `authoring/evidence/<course>/<module>/<topic>/`. Course evidence lives directly under `authoring/evidence/<course>/`; module assessment and lab evidence may live directly under `authoring/evidence/<course>/<module>/`.
 - Topic critic filenames are `critic-education.json`, `critic-sme.json`, `critic-education-recheck.json`, `critic-sme-recheck.json` and `reconciliation.json`. Course- and module-level records prefix those names with the reviewed unit, for example `intake-critic-sme.json` and `intake-reconciliation.json`.
 - A critic report's optional `reviewedPath` names its repo-relative review target. A recheck names its original same-role report in `recheck.of`; each rechecked item records its finding id, `resolved` or `open` status, repo-relative file, current reviewed sha256 and a note. A recheck may have no new `findings`.
 - For each `reviewedSha256` or `artifactSha256`, the binding target is the containing object's `reviewedPath`, then its `file`, then its `location.file`, then the nearest ancestor `reviewedPath`. Topic evidence otherwise defaults to that topic's `artifact.html`; evidence at other levels must name a target. `artifactHashes` retains its map-key-relative behavior.
-- `tools/pep lock` records each in-scope evidence hash, resolved target and `current: true|false`. Stale hashes are retained rather than preventing regeneration. A target removed after immutable review evidence was recorded remains explicitly marked `current: false`, `historical: true`, and `missing: true`; it cannot provide current T25 coverage. T06 requires every lock to exist and be byte-identical to regeneration, while T25 rejects stale critic coverage.
-  - `<course>/<module>/module.lock.json` covers that module's files and `evidence/<course>/<module>/`.
+- `authoring/tools/pep lock` records each in-scope evidence hash, resolved target and `current: true|false`. Stale hashes are retained rather than preventing regeneration. A target removed after immutable review evidence was recorded remains explicitly marked `current: false`, `historical: true`, and `missing: true`; it cannot provide current T25 coverage. T06 requires every lock to exist and be byte-identical to regeneration, while T25 rejects stale critic coverage.
+  - `<course>/<module>/module.lock.json` covers that module's files and `authoring/evidence/<course>/<module>/`.
   - `<course>/course.lock.json` covers only course-level files: `course.json`, course assessments, course labs and course-level evidence. A course evidence reference to module content is a historical intake record: its bytes remain protected by the course evidence file record, but its target is excluded from current course-lock bindings so later module work cannot stale the shared lock.
 - The per-module lock exists so parallel module PRs never edit one shared manifest.
 - Screenshots, traces and browser profiles are CI artifacts or private local data, never committed.
@@ -90,9 +90,9 @@ The tooling under `tools/` implements these gates behind `npm run check`.
 
 ## 4. Branch scope and delivery
 
-- Module branch: one focused branch and PR per module, editing only `<course>/<module>/` and `evidence/<course>/<module>/`.
+- Module branch: one focused branch and PR per module, editing only `<course>/<module>/` and `authoring/evidence/<course>/<module>/`.
 - Course branch: course-wide assembly or shared course metadata, in a separate branch and PR after module integration, editing course-level files only.
-- Tooling branch: repository-wide tooling in its own branch and PR, editing `schemas/`, `tools/`, `tests/`, `components/`, `docs/`, CI and root config only.
+- Tooling branch: repository-wide tooling in its own branch and PR, editing `authoring/schemas/`, `authoring/tools/`, `authoring/tests/`, `components/`, `authoring/docs/`, CI and root config only.
 - Never mix these scopes in one branch, and never let parallel workers edit the same manifest or lock.
 - Content and mixed changes run full validation; internal tooling may use a direct PR.
 - Every merge requires approval.

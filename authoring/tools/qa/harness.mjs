@@ -4,7 +4,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
 import { chromium } from "playwright";
-import { findCourseRoots, readJson } from "../lib/common.mjs";
+import { evidencePath, findCourseRoots, readJson } from "../lib/common.mjs";
 
 export const VIEWPORTS = [
   { name: "desktop", width: 1366, height: 768, theme: "light", zoom: 1 },
@@ -12,7 +12,9 @@ export const VIEWPORTS = [
   { name: "mobile", width: 400, height: 860, theme: "dark", zoom: 1 },
   { name: "zoom-200", width: 1366, height: 768, theme: "light", zoom: 2 },
 ];
-const PACKAGE = JSON.parse(await readFile(new URL("../../package.json", import.meta.url), "utf8"));
+const PACKAGE = JSON.parse(
+  await readFile(new URL("../../../package.json", import.meta.url), "utf8"),
+);
 
 function digest(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -48,9 +50,9 @@ export async function findHtmlTopics(ctx) {
           manifest,
           displayHtml: ctx.display(path.join(topicRoot, "artifact.html")),
           displaySpec: ctx.display(
-            path.join(ctx.root, "evidence", course.id, moduleId, topicId, "qa-paths.json"),
+            evidencePath(ctx.root, course.id, moduleId, topicId, "qa-paths.json"),
           ),
-          spec: path.join(ctx.root, "evidence", course.id, moduleId, topicId, "qa-paths.json"),
+          spec: evidencePath(ctx.root, course.id, moduleId, topicId, "qa-paths.json"),
         });
       }
     }
@@ -537,7 +539,7 @@ const CHECKERS = {
 export async function updateReceipt(ctx, topic, rule, passed, detail, writeEvidence = false) {
   writeEvidence ||= process.env.PEP_QA_WRITE_EVIDENCE === "1";
   const outputRoot = writeEvidence
-    ? path.join(ctx.root, "evidence", topic.courseId, topic.moduleId, topic.topicId)
+    ? evidencePath(ctx.root, topic.courseId, topic.moduleId, topic.topicId)
     : path.join(ctx.root, "build", "qa", topic.courseId, topic.moduleId, topic.topicId);
   const receiptFile = path.join(outputRoot, "qa-receipt.json");
   let receipt;

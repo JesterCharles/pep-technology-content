@@ -6,7 +6,7 @@ never performs HTTP requests.
 ## Schema validation (T01)
 
 Video artifact front matter supports scalar values and YAML block lists. Block-list keys such as `covers`, `gaps`,
-and `cautions` are validated as arrays by `schemas/video-artifact.frontmatter.schema.json`.
+and `cautions` are validated as arrays by `authoring/schemas/video-artifact.frontmatter.schema.json`.
 
 Every blueprint objective is an exact `<course>/<module>/<topic>#<objective-id>` reference to an objective in that
 topic's `topic.json`. The optional `objectiveFormats` object maps those same references to non-empty, unique arrays
@@ -22,8 +22,14 @@ and extraction-tool version.
 Re-extract when an approved curriculum update is received:
 
 ```sh
-node tools/curriculum/extract-calendar.mjs /path/to/pep-calendar.html /tmp/pep-calendar.json
+node authoring/tools/curriculum/extract-calendar.mjs /path/to/pep-calendar.html /tmp/pep-calendar.json
 ```
+
+`curriculum/curriculum.lock.json` binds the extractor's exact bytes. Its embedded help still contains the frozen
+string `Usage: node tools/curriculum/extract-calendar.mjs <calendar.html> [output.json]`; do not edit that string
+just to reflect the move. This exact file and string are the sole stale-root-path allowlist exception. Contributor
+documentation uses the current command above, while T19 narrowly resolves the historical locked path to the moved,
+byte-identical extractor.
 
 T19 compares the local source when its locked absolute path is available. On CI, where it is not available, T19
 verifies the committed files against the lock and `SHA256SUMS`. It always proves that all 105 calendar topic lists
@@ -31,7 +37,7 @@ equal the simplified curriculum topic lists in order.
 
 ## Reading time (T14)
 
-`tools/timing/estimate_reading.py` is frozen at SHA-256
+`authoring/tools/timing/estimate_reading.py` is frozen at SHA-256
 `0deca96bf5e367aeae51a82abdbd4b6ce0d0289ecc9868c9eff3701016edf96f`. Do not alter its cost table to make a
 page pass. T14 runs it with Python 3 on every present `artifact.html`. The recorded `modeledP50` must match the
 estimator P50 within 0.01. The estimator P90 is informational only: it is not the worst required path. Authors model the worst route a learner must take per interactive unit—two wrong
@@ -53,7 +59,7 @@ leaving the legacy `budget` unchanged. No other course can select this basis.
 Run it directly while authoring:
 
 ```sh
-python3 tools/timing/estimate_reading.py path/to/artifact.html
+python3 authoring/tools/timing/estimate_reading.py path/to/artifact.html
 ```
 
 ## Formative GIFT (T16)
@@ -61,21 +67,21 @@ python3 tools/timing/estimate_reading.py path/to/artifact.html
 Validate one topic quiz directly:
 
 ```sh
-node tools/gift/validate.mjs path/to/artifact.gift course-id/module-id/topic-id
+node authoring/tools/gift/validate.mjs path/to/artifact.gift course-id/module-id/topic-id
 ```
 
-The validator implements the Moodle GIFT importer paths documented in `tools/gift/PROVENANCE.md`. A quiz must be
+The validator implements the Moodle GIFT importer paths documented in `authoring/tools/gift/PROVENANCE.md`. A quiz must be
 ASCII, contain no `<` or `>`, use `$CATEGORY: course/module/topic`, title every question, have exactly one `=`
 correct option, and give every option `#` feedback beginning `Correct.` or `Not quite.`. Escape literal GIFT
 control characters with a backslash.
 
 ## Source link receipts (T15)
 
-Create `evidence/<course>/<module>/<topic>/sources.json` with source URLs and non-empty `sectionsUsed` arrays,
+Create `authoring/evidence/<course>/<module>/<topic>/sources.json` with source URLs and non-empty `sectionsUsed` arrays,
 then refresh it over the network:
 
 ```sh
-node tools/net/check-links.mjs course-id/module-id/topic-id
+node authoring/tools/net/check-links.mjs course-id/module-id/topic-id
 ```
 
 The command performs a GET, follows redirects, records final HTTP status, retrieval time, response SHA-256, and the
@@ -105,10 +111,10 @@ requires HTTP 200, current artifact bytes, and dates no older than 30 days. Exam
 After authoring a schema-valid `video-artifact.md`, run:
 
 ```sh
-node tools/net/check-video.mjs course-id/module-id/topic-id
+node authoring/tools/net/check-video.mjs course-id/module-id/topic-id
 ```
 
 The command uses the provider's JSON oEmbed endpoint to establish public availability and embeddability. It obtains
 runtime from oEmbed when provided, or from YouTube's public player metadata, and writes
-`evidence/<course>/<module>/<topic>/video.json`. T17 runs offline and requires a receipt bound to the current video
+`authoring/evidence/<course>/<module>/<topic>/video.json`. T17 runs offline and requires a receipt bound to the current video
 file, no older than 30 days, with successful oEmbed and runtime no greater than `topic.json`'s minute budget.

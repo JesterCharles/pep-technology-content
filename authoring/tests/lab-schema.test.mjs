@@ -3,9 +3,9 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 
-const repo = path.resolve(import.meta.dirname, "..");
+const repo = path.resolve(import.meta.dirname, "../..");
 const schema = JSON.parse(
-  await readFile(path.join(repo, "schemas/lab.schema.json"), "utf8"),
+  await readFile(path.join(repo, "authoring/schemas/lab.schema.json"), "utf8"),
 );
 const labId = new RegExp(schema.properties.id.pattern);
 

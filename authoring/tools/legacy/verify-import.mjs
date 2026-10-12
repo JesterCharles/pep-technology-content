@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { evidencePath } from "../lib/common.mjs";
 
 function fail(message) {
   console.error(`verify-import: ${message}`);
@@ -32,7 +33,7 @@ if (parts.length !== 2 || parts.some((part) => !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.tes
 }
 const [course, moduleId] = parts;
 const root = process.cwd();
-const indexPath = path.join(root, "evidence", "legacy", "course-1-packages.json");
+const indexPath = evidencePath(root, "legacy", "course-1-packages.json");
 let index;
 try {
   index = JSON.parse(await readFile(indexPath, "utf8"));
@@ -87,7 +88,7 @@ if (added.length !== expected.length) {
 if (missing.length) problems.push(`missing authoritative pages: ${missing.sort().join(", ")}`);
 if (problems.length) fail(problems.join("; "));
 
-const receiptPath = path.join(root, "evidence", course, moduleId, "import-fidelity.txt");
+const receiptPath = evidencePath(root, course, moduleId, "import-fidelity.txt");
 const lines = [
   "PEP course-1 import fidelity receipt",
   `commit: ${commit}`,

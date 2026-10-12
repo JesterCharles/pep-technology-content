@@ -32,7 +32,9 @@ export async function pdfFromMarkdown(markdownFile, pdfFile) {
 async function main() {
   const [input, output] = process.argv.slice(2);
   if (!input || !output) {
-    console.error("Usage: node tools/qa/pdf-from-md.mjs <artifact.md> <artifact.pdf>");
+    console.error(
+      "Usage: node authoring/tools/qa/pdf-from-md.mjs <artifact.md> <artifact.pdf>",
+    );
     process.exitCode = 2;
     return;
   }

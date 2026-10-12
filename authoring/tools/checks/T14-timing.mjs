@@ -3,6 +3,7 @@ import { promisify } from "node:util";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import {
+  authoringPath,
   error,
   exists,
   findCourseRoots,
@@ -29,7 +30,7 @@ function requiredBudget(result, minutes) {
 }
 
 async function estimate(root, file) {
-  const tool = path.join(root, "tools", "timing", "estimate_reading.py");
+  const tool = authoringPath(root, "tools", "timing", "estimate_reading.py");
   const { stdout } = await runFile("python3", [tool, file], {
     encoding: "utf8",
     timeout: 30_000,
@@ -49,7 +50,12 @@ function calendarDays(calendar) {
 
 export async function run(ctx) {
   const out = [];
-  const estimator = path.join(ctx.root, "tools", "timing", "estimate_reading.py");
+  const estimator = authoringPath(
+    ctx.root,
+    "tools",
+    "timing",
+    "estimate_reading.py",
+  );
   if (sha256(await readFile(estimator)) !== estimatorSha256) {
     out.push(error(id, ctx.display(estimator), "frozen estimator hash has changed"));
     return out;

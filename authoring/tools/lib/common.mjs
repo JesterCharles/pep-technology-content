@@ -3,18 +3,15 @@ import { lstat, readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 export const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const AUTHORING_ROOT = "authoring";
 export const RESERVED_ROOTS = new Set([
   ".git",
   ".github",
+  AUTHORING_ROOT,
   "build",
   "components",
   "curriculum",
-  "docs",
-  "evidence",
   "node_modules",
-  "schemas",
-  "tests",
-  "tools",
   "tracks",
 ]);
 
@@ -45,6 +42,28 @@ export async function exists(file) {
     return false;
   }
 }
+
+export function authoringPath(root, ...parts) {
+  return path.join(root, AUTHORING_ROOT, ...parts);
+}
+
+export function evidencePath(root, ...parts) {
+  return authoringPath(root, "evidence", ...parts);
+}
+
+// Course 1 and its review records predate the authoring/ layout. Preserve their
+// attested bytes while resolving only the old evidence/ namespace. A real root
+// evidence/ tree always wins, which keeps the compatibility behavior narrow.
+export async function resolveRepositoryPath(root, reference) {
+  const direct = path.resolve(root, reference);
+  if (path.isAbsolute(reference) || (await exists(path.join(root, "evidence")))) {
+    return direct;
+  }
+  const rel = relative(root, direct);
+  if (rel !== "evidence" && !rel.startsWith("evidence/")) return direct;
+  return authoringPath(root, rel);
+}
+
 export async function isDirectory(file) {
   try {
     return (await stat(file)).isDirectory();
@@ -87,8 +106,8 @@ export function defaultSkip(root) {
       name === "node_modules" ||
       rel === "build" ||
       rel.startsWith("build/") ||
-      rel === "tests/fixtures" ||
-      rel.startsWith("tests/fixtures/")
+      rel === "authoring/tests/fixtures" ||
+      rel.startsWith("authoring/tests/fixtures/")
     );
   };
 }
