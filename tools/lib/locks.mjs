@@ -1,7 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import {
-  exists,
   fileRecord,
   posix,
   readJson,
@@ -86,10 +85,11 @@ function bindingTarget(repoRoot, binding, artifactRoot) {
 export async function bindingsForEvidenceFile(
   repoRoot,
   evidenceFile,
-  { artifactRoot = null, defaultTarget = null } = {},
+  { artifactRoot = null, defaultTarget = null, historicalRoots = [] } = {},
 ) {
   const value = await readJson(evidenceFile);
   const output = [];
+  const resolvedHistoricalRoots = historicalRoots.map((root) => path.resolve(root));
   for (const binding of jsonBindings(value, defaultTarget)) {
     if (!binding.target) {
       throw new Error(
@@ -97,26 +97,32 @@ export async function bindingsForEvidenceFile(
       );
     }
     const artifactFile = bindingTarget(repoRoot, binding, artifactRoot);
-    if (!artifactFile || !(await exists(artifactFile))) {
+    if (!artifactFile) {
       throw new Error(
         `${relative(repoRoot, evidenceFile)}: binding ${binding.field} names missing target ${binding.target}`,
       );
     }
-    let bytes;
-    try {
-      bytes = await readFile(artifactFile);
-    } catch {
-      throw new Error(
-        `${relative(repoRoot, evidenceFile)}: binding ${binding.field} names missing target ${binding.target}`,
-      );
+    const historical = resolvedHistoricalRoots.some(
+      (root) => artifactFile === root || artifactFile.startsWith(`${root}${path.sep}`),
+    );
+    let current = false;
+    if (!historical) {
+      let bytes;
+      try {
+        bytes = await readFile(artifactFile);
+      } catch {
+        throw new Error(
+          `${relative(repoRoot, evidenceFile)}: binding ${binding.field} names missing target ${binding.target}`,
+        );
+      }
+      current = sha256(bytes) === binding.sha256;
     }
-    const currentSha256 = sha256(bytes);
     output.push({
       evidencePath: relative(repoRoot, evidenceFile),
       field: binding.field,
       artifactPath: relative(repoRoot, artifactFile),
       sha256: binding.sha256,
-      current: currentSha256 === binding.sha256,
+      ...(historical ? { historical: true } : { current }),
     });
   }
   return output;
@@ -186,9 +192,9 @@ export async function createModuleLock(repoRoot, courseId, moduleId) {
 export async function createCourseLock(repoRoot, courseId) {
   const courseRoot = path.join(repoRoot, courseId);
   const courseManifest = await readJson(path.join(courseRoot, "course.json"));
-  const files = [path.join(courseRoot, "course.json")];
+  const courseFiles = [path.join(courseRoot, "course.json")];
   for (const name of ["assessments", "coding-lab"])
-    files.push(...(await walk(path.join(courseRoot, name))).files);
+    courseFiles.push(...(await walk(path.join(courseRoot, name))).files);
   const evidenceRoot = path.join(repoRoot, "evidence", courseId);
   const evidenceWalk = await walk(evidenceRoot);
   const moduleIds = new Set(courseManifest.moduleOrder ?? []);
@@ -196,17 +202,21 @@ export async function createCourseLock(repoRoot, courseId) {
     const first = path.relative(evidenceRoot, file).split(path.sep)[0];
     return !moduleIds.has(first);
   });
-  files.push(...courseEvidence);
+  const files = [...courseFiles, ...courseEvidence];
   const bindings = await evidenceBindings(repoRoot, courseEvidence, () => ({
     artifactRoot: courseRoot,
+    historicalRoots: [...moduleIds].map((moduleId) => path.join(courseRoot, moduleId)),
   }));
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     course: courseId,
+    evidenceBindingScope: "course-level-files",
     files: await records(repoRoot, files),
-    evidenceBindings: bindings.sort((a, b) =>
-      `${a.evidencePath}:${a.field}`.localeCompare(`${b.evidencePath}:${b.field}`),
-    ),
+    evidenceBindings: bindings
+      .filter((binding) => !binding.historical)
+      .sort((a, b) =>
+        `${a.evidencePath}:${a.field}`.localeCompare(`${b.evidencePath}:${b.field}`),
+      ),
   };
 }
 

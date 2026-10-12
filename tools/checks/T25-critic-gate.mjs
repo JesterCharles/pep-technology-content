@@ -47,15 +47,19 @@ async function labFiles(root) {
 }
 
 async function scopesForCourse(repoRoot, courseRoot, course) {
+  const courseReviewable = [
+    ...(await assessmentFiles(courseRoot)),
+    ...(await labFiles(courseRoot)),
+  ];
   const scopes = [
     {
       kind: "course",
       contentRoot: courseRoot,
       evidenceRoot: path.join(repoRoot, "evidence", course.id),
-      reviewable: [
-        ...(await assessmentFiles(courseRoot)),
-        ...(await labFiles(courseRoot)),
-      ],
+      reviewable: courseReviewable,
+      historicalRoots: (course.moduleOrder ?? []).map((moduleId) =>
+        path.join(courseRoot, moduleId),
+      ),
     },
   ];
 
@@ -97,12 +101,15 @@ function bindingOptions(repoRoot, scope) {
       scope.kind === "topic"
         ? relative(repoRoot, path.join(scope.contentRoot, "artifact.html"))
         : null,
+    historicalRoots: scope.historicalRoots ?? [],
   };
 }
 
 function currentItemBinding(report, index) {
   return report.bindings.some(
-    (binding) => binding.field === `recheck.items[${index}].reviewedSha256` && binding.current,
+    (binding) =>
+      binding.field === `recheck.items[${index}].reviewedSha256` &&
+      (binding.current || binding.historical),
   );
 }
 

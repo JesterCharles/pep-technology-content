@@ -10,6 +10,7 @@ import { createCourseLock, createModuleLock } from "../tools/lib/locks.mjs";
 const repo = path.resolve(import.meta.dirname, "..");
 const pep = path.join(repo, "tools", "pep");
 const target = "demo-course/demo-module/demo-topic/artifact.html";
+const topicManifest = "demo-course/demo-module/demo-topic/topic.json";
 
 function hash(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -94,11 +95,13 @@ test("T25 reports a missing critic role", async () => {
   assert.match(result.stderr, /artifact\.html: missing current sme critic coverage/);
 });
 
-test("T25 rejects stale critic coverage", async () => {
+test("T25 rejects module critic evidence bound to old bytes", async () => {
   const { root, digest } = await fixture();
-  await writeTopicEvidence(root, report("education", digest), report("sme", "0".repeat(64)));
+  await writeTopicEvidence(root, report("education", digest), report("sme", digest));
+  await writeFile(path.join(root, target), "changed after module criticism\n");
   const result = check(root);
   assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /artifact\.html: missing current education critic coverage/);
   assert.match(result.stderr, /artifact\.html: missing current sme critic coverage/);
 });
 
@@ -291,6 +294,53 @@ test("T25 covers a course-level assessment blueprint with prefixed evidence", as
   assert.equal(result.status, 0, result.stderr);
 });
 
+test("T25 keeps course intake rechecks historical after module changes", async () => {
+  const { root, digest } = await fixture();
+  await writeTopicEvidence(root, report("education", digest), report("sme", digest));
+  const manifestFile = path.join(root, topicManifest);
+  const intakeDigest = hash(await readFile(manifestFile));
+  const evidence = path.join(root, "evidence/demo-course");
+  const finding = {
+    ...highFinding(intakeDigest),
+    location: { file: topicManifest, line: 1 },
+  };
+  await writeJson(
+    path.join(evidence, "intake-critic-sme.json"),
+    report("sme", intakeDigest, {
+      reviewedPath: topicManifest,
+      findings: [finding],
+    }),
+  );
+  await writeJson(
+    path.join(evidence, "intake-critic-sme-recheck.json"),
+    report("sme", intakeDigest, {
+      reviewedPath: topicManifest,
+      recheck: {
+        of: "evidence/demo-course/intake-critic-sme.json",
+        items: [
+          {
+            findingId: "finding-1",
+            status: "resolved",
+            file: topicManifest,
+            reviewedSha256: intakeDigest,
+            note: "Resolved on the final intake bytes.",
+          },
+        ],
+      },
+    }),
+  );
+  await writeJson(
+    path.join(evidence, "intake-reconciliation.json"),
+    reconciliation(intakeDigest, [decision("accept")], { reviewedPath: topicManifest }),
+  );
+  const manifest = JSON.parse(await readFile(manifestFile, "utf8"));
+  manifest.title = "Changed during module authoring";
+  await writeJson(manifestFile, manifest);
+
+  const result = check(root);
+  assert.equal(result.status, 0, result.stderr);
+});
+
 test("lock bindings use location.file and preserve stale hashes", async () => {
   const { root, digest } = await fixture();
   const evidence = path.join(
@@ -365,4 +415,51 @@ test("lock regeneration with stale evidence is stable", async () => {
   const second = await createModuleLock(root, "demo-course", "demo-module");
   assert.deepEqual(second, first);
   assert.ok(first.evidenceBindings.some((binding) => binding.current === false));
+});
+
+async function lockFixtureWithHistoricalCourseBinding() {
+  const { root } = await fixture();
+  const manifestFile = path.join(root, topicManifest);
+  await writeJson(path.join(root, "evidence/demo-course/intake-history.json"), {
+    reviewedPath: topicManifest,
+    reviewedSha256: hash(await readFile(manifestFile)),
+  });
+  const courseLock = await createCourseLock(root, "demo-course");
+  const moduleLock = await createModuleLock(root, "demo-course", "demo-module");
+  await writeJson(path.join(root, "demo-course/course.lock.json"), courseLock);
+  await writeJson(
+    path.join(root, "demo-course/demo-module/module.lock.json"),
+    moduleLock,
+  );
+  return { root, manifestFile, courseLock };
+}
+
+async function changeTopicManifest(manifestFile) {
+  const manifest = JSON.parse(await readFile(manifestFile, "utf8"));
+  manifest.title = "Changed during module authoring";
+  await writeJson(manifestFile, manifest);
+}
+
+test("editing module topic.json leaves the course lock current", async () => {
+  const { root, manifestFile, courseLock } =
+    await lockFixtureWithHistoricalCourseBinding();
+  await changeTopicManifest(manifestFile);
+  assert.deepEqual(await createCourseLock(root, "demo-course"), courseLock);
+  await writeJson(
+    path.join(root, "demo-course/demo-module/module.lock.json"),
+    await createModuleLock(root, "demo-course", "demo-module"),
+  );
+
+  const result = check(root, "T06");
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("T06 still rejects a stale module lock without staling the course lock", async () => {
+  const { root, manifestFile } = await lockFixtureWithHistoricalCourseBinding();
+  await changeTopicManifest(manifestFile);
+
+  const result = check(root, "T06");
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /module\.lock\.json: module lock is stale/);
+  assert.doesNotMatch(result.stderr, /course\.lock\.json: course lock is stale/);
 });
