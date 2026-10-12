@@ -182,7 +182,7 @@ Not applied in any part: `custom-hooks` and `what-makes-a-component-re-render` (
 
 ### Embedded teach-then-check steps and Fast-day fit (react-edu-recheck-001, -002)
 
-Every objective a part applies is preceded, inside the project activity, by a minuted embedded teach-then-check step: a worked example on the project's own code, then one check the learner must pass before building with it. On Fast days the 10-minute Skim, the topic pages and the Try-first diagnostic are reference and diagnosis, not the instruction the increment depends on. Each part applies only the objectives listed below; any other objective of an applied topic is not applied in the project, and each part's public tests check only its listed objectives. Minutes are planning targets, re-measured when the project is authored.
+Each requirement a part applies is preceded, inside the project activity, by a minuted embedded teach-then-check step: a worked example on the project's own code, then one check the learner must pass before building with it. On Fast days the 10-minute Skim, the topic pages and the Try-first diagnostic are reference and diagnosis, not the instruction the increment depends on. The objective ids in this table name where each step's content comes from; they are not coverage claims. What the project actually covers, requirement by requirement, is in Project coverage claims below. Minutes are planning targets, re-measured when the project is authored.
 
 | Part (day and block) | Teach-then-check steps, in order: objectives taught and checked (minutes) | Teach | Build | Block |
 |---|---|---|---|---|
@@ -193,7 +193,59 @@ Every objective a part applies is preceded, inside the project activity, by a mi
 | P5 (FT20 Project) | 1. `getByRole` by accessible name and `getByLabelText` — `ui-tests-with-testing-library-querying-by-role-and-label#o1` (5). 2. `getBy`, `queryBy` and `findBy` — `#o2` (4). 3. user-event typing and clicking with an assertion on visible output — `#o3` (4) | 13 | 12 | 25 of 70 |
 | P3, P4, P5 (S33 Build, Standard) | 1-3. The FT18 steps 3, 4 and 5 — `create-edit-and-delete-against-the-api#o1`, `#o2`, `#o3` (12); then build P3. 4. The FT18 step 6 — `handling-submission-errors-in-forms#o1`, `#o2`, `#o3` (6); then build P4. 5. The FT20 steps 1-3 in one pass — `ui-tests-with-testing-library-querying-by-role-and-label#o1`, `#o2`, `#o3` (6); then write the P5 tests. Controlled and accessible forms are taught on S32 before S33 | 24 | P3 25, P4 13, P5 15 | 77 of 80 |
 
-Objectives of applied topics not applied in any part (taught on their pages, not used by the project): `components-and-jsx#o2`, `props#o2`, `props#o3`, `conditional-display#o2`, `#o3`, `usestate#o2`, `#o3`, `updating-state-immutably#o1`, `#o3`, `navigation#o2`, `lifting-state-up#o3`, `controlled-forms#o3`, `accessible-forms#o2`, `#o3`, `login-with-a-session-cookie-or-jwt#o1`, `protected-pages-and-role-based-screens#o3`, `handling-401-and-403-redirect-and-sign-out#o1`, `turning-off-the-dev-profile#o1`.
+Objectives of applied topics not used by the project at all (owned by their topic pages and quizzes): `components-and-jsx#o2`, `props#o2`, `props#o3`, `conditional-display#o2`, `#o3`, `usestate#o2`, `#o3`, `updating-state-immutably#o1`, `#o3`, `navigation#o2`, `lifting-state-up#o3`, `controlled-forms#o3`, `accessible-forms#o2`, `#o3`, `login-with-a-session-cookie-or-jwt#o1`, `protected-pages-and-role-based-screens#o3`, `handling-401-and-403-redirect-and-sign-out#o1`, `turning-off-the-dev-profile#o1`.
+
+### Project coverage claims (react-edu-recheck-001, react-edu-recheck3-001)
+
+The project claims only the specific objective requirements a part teaches, checks, applies and verifies with its public tests. Every objective listed below is owned by its topic page and practice quiz; the project's claim is the stated requirement only. **Partial** means the project covers part of a compound objective and the rest is taught and checked only on the topic page and quiz. Public tests are learner-visible, contain no model answer, and verify behaviour of the learner's code or, for P5, the learner's own test file.
+
+| Part | Objective | Requirement the project covers | Coverage | Public test evidence |
+|---|---|---|---|---|
+| P1 | `project-structure#o1` | roles of `index.html`, `src/main.jsx`, `src/App.jsx` and `package.json` in the provided Vite starter (no scaffolding: the starter is given) | partial | starter app mounts and renders from `src/main.jsx` |
+| P1 | `project-structure#o2` | a component moved to its own module with a default and a named export, both imported | full | the module exports exist and the app renders through them |
+| P1 | `components-and-jsx#o1` | a function component returning JSX rendered inside another | full | the list renders through the learner's components |
+| P1 | `components-and-jsx#o3` | a computed value shown with a curly-brace expression | full | the item count text renders |
+| P1 | `props#o1` | props destructured in the child, with a default value | full | the child renders the passed and the default values |
+| P1 | `usestate#o1` | a state variable updated from an event handler | full | clicking add or remove changes the rendered list |
+| P1 | `updating-state-immutably#o2` | add and remove array items without mutation (replace with `map` is not applied) | partial | add and remove render correctly; the previous array is unchanged |
+| P1 | `rendering-lists-with-keys#o1` | `map` over the data (showing a subset with `filter` is not applied) | partial | one rendered item per record |
+| P1 | `rendering-lists-with-keys#o2` | a stable key from the data | partial (explaining why not the index stays on the page) | items keep their state after reordering |
+| P1 | `conditional-display#o1` | an empty view with one of `? :` or `&&` (the full if, `? :`, `&&` set stays on the page) | partial | the empty view appears for an empty list |
+| P2 | `loading-data-with-useeffect#o1` | `fetch` in an Effect with the result stored in state | full | records render after the stubbed response |
+| P2 | `loading-data-with-useeffect#o2` | a dependency array that re-runs the Effect when the `:id` changes | partial (the empty-array meaning stays on the page) | navigating to another id loads that record |
+| P2 | `loading-data-with-useeffect#o3` | a cleanup that ignores a stale response (the Strict Mode explanation stays on the page) | partial | a slow stale response does not overwrite the current record |
+| P2 | `loading-and-error-states#o1` | distinct loading, success and error screens | full | each screen renders for its stubbed response |
+| P2 | `loading-and-error-states#o2` | a non-2xx response treated as an error via `response.ok` (aborted and malformed requests stay on the page) | partial | a stubbed 500 shows the error screen |
+| P2 | `loading-and-error-states#o3` | an empty result shown differently from an error | full | an empty array shows the empty view, not the error |
+| P2 | `routing-and-route-parameters#o1` | routes with a layout route and `Outlet` | full | list and detail render inside the layout |
+| P2 | `routing-and-route-parameters#o2` | a `:id` segment read with `useParams` | full | `/records/2` shows record 2 |
+| P2 | `routing-and-route-parameters#o3` | a catch-all not-found route | full | an unknown path shows the not-found page |
+| P2 | `navigation#o1` | `Link` or `NavLink` between list and detail (what a full reload loses stays on the page) | partial | clicking a record link shows its detail without a reload |
+| P2 | `lifting-state-up#o1` | selection state in the closest common parent | full | the selected record is shown in both sibling views |
+| P2 | `lifting-state-up#o2` | a handler prop through which a child changes that state | full | selecting in one view updates the other |
+| P3 | `controlled-forms#o1` | a controlled text input (checkbox and select stay on the page) | partial | typed text appears in the field and in submitted data |
+| P3 | `controlled-forms#o2` | submission with `onSubmit` and `preventDefault`, reading values from state | full | submitting sends the field values without a page reload |
+| P3 | `accessible-forms#o1` | visible labels associated with each field | full | fields are found by `getByLabelText` |
+| P3 | `create-edit-and-delete-against-the-api#o1` | POST, PUT and DELETE with a JSON body and `Content-Type` | full | the stub receives the expected method, header and body |
+| P3 | `create-edit-and-delete-against-the-api#o2` | the list reconciled with the server response after create, edit and delete | full | the list matches the stubbed response after each action |
+| P3 | `create-edit-and-delete-against-the-api#o3` | submit disabled while a request is in flight | full | a double click sends one request |
+| P4 | `handling-submission-errors-in-forms#o1` | API field errors shown next to their fields | full | a stubbed 400 with field errors shows each message by its field |
+| P4 | `handling-submission-errors-in-forms#o2` | a form-level message for network and server errors, keeping the input | full | a stubbed 500 shows the message and the typed values remain |
+| P4 | `handling-submission-errors-in-forms#o3` | a client required-field check before sending | full | an empty required field sends no request and shows a message |
+| P5 | `ui-tests-with-testing-library-querying-by-role-and-label#o1` | the learner's test finds a control with `getByRole` by accessible name and a field with `getByLabelText` | full | the learner's test file passes and uses both queries |
+| P5 | `ui-tests-with-testing-library-querying-by-role-and-label#o2` | the learner's test uses `queryBy...` to assert an error message is absent before submitting and `findBy...` to wait for saved data (`getBy` for present elements) | partial (the general choice for any situation stays on the page) | the learner's test passes and uses `queryBy` and `findBy` queries |
+| P5 | `ui-tests-with-testing-library-querying-by-role-and-label#o3` | user-event typing and clicking with an assertion on visible output | full | the learner's test passes and uses user-event |
+| P6 | `sharing-state-with-context#o1` | an auth context provided above the routes and read with `useContext` | full | a nested component shows the signed-in user |
+| P6 | `sharing-state-with-context#o2` | context combined with state so readers re-render on sign-in and sign-out | full | signing out updates every reader |
+| P6 | `login-with-a-session-cookie-or-jwt#o2` | login submission with success and failure, user kept in state | full | a stubbed success signs in; a stubbed failure shows a message |
+| P6 | `login-with-a-session-cookie-or-jwt#o3` | sending the credential for the one chosen type (`credentials: 'include'` or a Bearer header) | partial | later stubbed requests carry the chosen credential |
+| P6 | `protected-pages-and-role-based-screens#o1` | a route guard redirecting signed-out users with `Navigate` | full | a signed-out visit to a guarded route shows the login page |
+| P6 | `protected-pages-and-role-based-screens#o2` | screens and controls shown by role | full | an admin-only control is hidden for a user role |
+| P6 | `handling-401-and-403-redirect-and-sign-out#o2` | on 401, client auth state cleared and redirect with a return path (the HttpOnly session distinction stays on the page) | partial | a stubbed 401 signs out and returns after login |
+| P6 | `handling-401-and-403-redirect-and-sign-out#o3` | on 403, the session kept and a not-allowed message shown | full | a stubbed 403 shows the message and stays signed in |
+| P6 | `turning-off-the-dev-profile#o3` | the front end handling a refused unauthenticated request (the live back-end check is a manual step) | partial | covered by the 401 handling test above |
+
+Taught and checked inside a part but not claimed as project coverage, because no public test verifies them: `project-structure#o3` (`npm run dev` versus `npm run build`, P1 step 1) and `turning-off-the-dev-profile#o2` (starting the back end without the dev profile and setting the Vite API variable, a manual step in the P6 brief). Their coverage is owned by their topic pages and quizzes.
 
 
 - Each Fast day keeps its frozen 120-minute template (Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5; FT19 uses the Lab template). Each increment, teaching included, fits its Project or Guided-lab block.
@@ -204,7 +256,7 @@ Objectives of applied topics not applied in any part (taught on their pages, not
 
 S33 (Project day: Warm-up 5, Plan the work 10, Build 80, Timed without AI 15, Commit and walkthrough note 10) follows the frozen row order. Inside Build: teach-then-check the three create, edit and delete objectives (request methods with a JSON body, reconciling the screen with the response, the duplicate-submit guard), then build P3; teach-then-check submission errors, then build P4; teach-then-check Testing Library queries by role and label, then write the P5 tests (step table above). Each S33 concept is taught and checked before its first project use; the three S33 topic pages are reference. Earlier concepts P3-P5 rely on (controlled and accessible forms, fetch and error states) are taught on S30 and S32.
 
-P5 outcome and evidence (both tracks): the learner writes at least one test that renders the P3-P4 form, finds a control with `getByRole` by accessible name and a field with `getByLabelText`, types and submits with user-event, and asserts a visible result. The P5 public tests check that the learner's test file exists, passes under `npm test`, and uses role and label queries; they never contain a model answer.
+P5 outcome and evidence (both tracks): the learner writes at least one test that renders the P3-P4 form, finds a control with `getByRole` by accessible name and a field with `getByLabelText`, asserts with `queryBy...` that an error message is absent before submitting, types and submits with user-event, and waits with `findBy...` for the saved result. The P5 public tests check that the learner's test file exists, passes under `npm test`, and uses role, label, `queryBy` and `findBy` queries and user-event; they never contain a model answer.
 
 ### Scaffold and checkpoint layout (react-edu-recheck-003)
 
@@ -339,5 +391,7 @@ Fresh independent educational and technology-SME critics reviewed the first inta
 Second round: the SME recheck (`intake-critic-sme-recheck.json`) resolved react-intake-sme-01 to -03. The education recheck (`intake-critic-education-recheck.json`) resolved react-edu-002 to -004, kept react-edu-001 open by sequencing, and raised react-edu-recheck-001 (high), -002 (high) and -003 (medium) on the course-project plan. The non-author reconciliation `intake-2-reconciliation.json` accepted all three; they are applied in one loop in Course project above (embedded teach-then-check steps fitted to each day's block, the fixed S33 sequence with UI testing in P3-P5, and the shared-starter layout with per-path active parts). The reconciliation adds only `file` and `fixedInSha256` for the applied decisions.
 
 Third round: the second education recheck (`intake-2-critic-education-recheck.json`) resolved react-edu-recheck-003 and kept react-edu-recheck-001 and -002 open at objective level (`project-structure` in P1; response refresh and the duplicate-submit guard in P3). `intake-3-reconciliation.json` accepted both; the step table above now lists, per part, every applied objective by exact id with a minuted worked example and check before its first use, and narrows each part to those objectives.
+
+Fourth round: the third education recheck (`intake-3-critic-education-recheck.json`) resolved react-edu-recheck-002, kept react-edu-recheck-001 open because parts claimed whole compound objectives, and raised react-edu-recheck3-001 (medium, P5 evidence for `#o2`). `intake-4-reconciliation.json` accepted both as narrowing: the blanket coverage claim is removed, Project coverage claims maps each part to the specific requirements it teaches, checks, applies and publicly tests, compound objectives are marked partial and owned by their topic pages, and P5 adds a public check for `queryBy` and `findBy` use.
 
 react-edu-001 (high) stays open for gate T25 until a same-role recheck resolves it after the sequenced `html-css-js` ids are added.
