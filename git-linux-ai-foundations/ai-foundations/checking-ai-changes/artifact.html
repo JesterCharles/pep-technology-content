@@ -301,11 +301,11 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
           <div class="term" id="x2" data-interaction="terminal" data-steps="2" data-pep-explore>
             <p class="sim" id="sim-k">Simulated terminal: nothing runs on your computer.</p>
             <pre class="log" id="log" role="log" aria-labelledby="sim-k" tabindex="0"></pre>
-            <form class="cmdline" id="cmd-form" autocomplete="off">
+            <div class="cmdline" id="cmd-form">
               <label for="cmd" class="prompt"><span aria-hidden="true">$</span><span class="vh">Type a command</span></label>
               <input id="cmd" type="text" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command, then press Enter" aria-describedby="task-3 cmd-help">
-              <button type="submit" class="ghost" id="run">Run</button>
-            </form>
+              <button type="button" class="ghost" id="run">Run</button>
+            </div>
             <details class="cmdref" id="cmdref">
               <summary>Command help</summary>
               <p id="cmd-help">Up and Down recall your earlier commands; Escape clears the line.</p>
@@ -404,13 +404,15 @@ PAGE.apply={
 PAGE.init=function(eng){E=eng;$=eng.$;$$=eng.$$;initClaims();renderDiff(DIFF1,false);renderClaims(CLAIMS.map(function(c){return {t:c.t,s:'Not checked yet',cls:''};}));
   var hist=[],hi=0;
   function echo(cmd,lines,cls){var log=$('#log');var a=document.createElement('span');a.textContent='$ '+cmd+'\n';log.appendChild(a);var b=document.createElement('span');if(cls)b.className=cls;b.textContent=lines+'\n';log.appendChild(b);log.scrollTop=log.scrollHeight;}
-  $('#cmd-form').addEventListener('submit',function(e){e.preventDefault();var inp=$('#cmd'),raw=inp.value,cmd=raw.trim().replace(/\s+/g,' ');if(!cmd)return;hist.push(raw.trim());hi=hist.length;inp.value='';
+  function runCmd(){var inp=$('#cmd'),raw=inp.value,cmd=raw.trim().replace(/\s+/g,' ');if(!cmd)return;hist.push(raw.trim());hi=hist.length;inp.value='';
     var n=/^PORT=5000 sh (\.\/)?start\.sh$/.test(cmd)?1:/^sh (\.\/)?start\.sh$/.test(cmd)?2:0;
     if(n&&!ran[n])runAc(n);
     else if(n){echo(cmd,'Using port 3000 / Starting app (already checked; the result has not changed)');E.say([{c:'verdict info',s:'AC'+n+' already ran. Run the other check too.'}]);}
-    else{echo(cmd,'not available in this practice terminal: it only runs the two acceptance-criteria checks.','fail');E.say([{c:'verdict no',s:'Not available in this practice terminal. Type one of the acceptance-criteria commands from the teaching above, then press Enter.'}]);}});
+    else{echo(cmd,'not available in this practice terminal: it only runs the two acceptance-criteria checks.','fail');E.say([{c:'verdict no',s:'Not available in this practice terminal. Type one of the acceptance-criteria commands from the teaching above, then press Enter.'}]);}}
+  $('#run').addEventListener('click',runCmd);
   $('#cmd').addEventListener('keydown',function(e){var inp=e.target;
-    if(e.key==='ArrowUp'&&hist.length){e.preventDefault();hi=Math.max(0,hi-1);inp.value=hist[hi];}
+    if(e.key==='Enter'&&!e.isComposing){e.preventDefault();runCmd();}
+    else if(e.key==='ArrowUp'&&hist.length){e.preventDefault();hi=Math.max(0,hi-1);inp.value=hist[hi];}
     else if(e.key==='ArrowDown'&&hist.length){e.preventDefault();hi=Math.min(hist.length,hi+1);inp.value=hi<hist.length?hist[hi]:'';}
     else if(e.key==='Escape'&&inp.value){e.preventDefault();inp.value='';}});
   $$('.ins').forEach(function(b){b.addEventListener('click',function(){var inp=$('#cmd');inp.value=b.getAttribute('data-cmd');inp.focus();});});
