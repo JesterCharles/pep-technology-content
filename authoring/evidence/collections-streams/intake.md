@@ -8,8 +8,8 @@ Every topic artifact is recorded absent: applicable companions with the reason "
 
 - Curriculum snapshot: `curriculum/snapshot/pep-curriculum.json` (sha256 `9520f1fde24630604a82ecc1188726339ee02233d0274c622f4dda9c8c0204f8`) and `curriculum/snapshot/pep-calendar.json` (sha256 `634da8de5c6034e269b56347b2009fa24eb74eb9bd94f6bd8d5f65f54459ce00`), curriculum version `2026-10-01` per `curriculum/curriculum.lock.json`.
 - Topic-string inventory and expected-artifact scope: the frozen P0 coverage matrix v3 rows for course `collections-streams` (15 topic rows, one assessment row, four day rows) and its discrepancy records.
-- Contracts: `AGENTS.md`, `docs/workflow.md`, `docs/html-artifact-contract.md`, `docs/lab-contract.md`, `docs/tools/validators.md` (new-course budget rule), `docs/tools/evidence.md`, `docs/tools/components.md`; plan sections 2.3, 3, 4, 5, 6, 7.1 and 11.
-- Reference pattern: the course-1 intake (`evidence/git-linux-ai-foundations/intake.md`), without its legacy-label timing basis.
+- Contracts: `authoring/AGENTS.md`, `authoring/docs/workflow.md`, `authoring/docs/html-artifact-contract.md`, `authoring/docs/lab-contract.md`, `authoring/docs/tools/validators.md` (new-course budget rule), `authoring/docs/tools/evidence.md`, `authoring/docs/tools/components.md`; plan sections 2.3, 3, 4, 5, 6, 7.1 and 11.
+- Reference pattern: the course-1 intake (`authoring/evidence/git-linux-ai-foundations/intake.md`), without its legacy-label timing basis.
 
 ## Course slice
 
@@ -114,7 +114,7 @@ Legend: **R** required, authored in the module PR; **V** conditional video (auth
 
 ## Lab plan
 
-No lab uses Docker, Podman, Compose, Testcontainers or any other learner-side container engine. Each lab has exactly one language-native test command, runs offline after a one-time dependency download, and holds only public tests (`docs/lab-contract.md`).
+No lab uses Docker, Podman, Compose, Testcontainers or any other learner-side container engine. Each lab has exactly one language-native test command, runs offline after a one-time dependency download, and holds only public tests (`authoring/docs/lab-contract.md`).
 
 | Lab | Scope | Topics practised | Toolchain | Test command | Planned minutes |
 |---|---|---|---|---|---|
@@ -132,9 +132,9 @@ No lab uses Docker, Podman, Compose, Testcontainers or any other learner-side co
 
 ## Minute budgets
 
-Rule: the new-course rule in `docs/tools/validators.md` (merged on main): each integer topic budget is at least `ceil(max(estimator P50, modeledWorstPath))`, capped at 15 minutes, with no day-pool weighted shares and no compression. The course-1 `legacy-label:` basis does not apply.
+Rule: the new-course rule in `authoring/docs/tools/validators.md` (merged on main): each integer topic budget is at least `ceil(max(estimator P50, modeledWorstPath))`, capped at 15 minutes, with no day-pool weighted shares and no compression. The course-1 `legacy-label:` basis does not apply.
 
-Basis at intake: no `artifact.html` exists, so the estimator cannot run. Each value is a planning estimate for the planned page shape, recorded in `minutes.basis`; the module PR re-measures `modeledP50` with the frozen `tools/timing/estimate_reading.py` (sha256 `0deca96bf5e367aeae51a82abdbd4b6ce0d0289ecc9868c9eff3701016edf96f`) and the worst required route (two wrong graded attempts and wrong-first explores per interactive unit) on the authored bytes, and raises `budget` and `aboutLabel` if the measured minimum is higher. T14 enforces this once the HTML is present.
+Basis at intake: no `artifact.html` exists, so the estimator cannot run. Each value is a planning estimate for the planned page shape, recorded in `minutes.basis`; the module PR re-measures `modeledP50` with the frozen `authoring/tools/timing/estimate_reading.py` (sha256 `0deca96bf5e367aeae51a82abdbd4b6ce0d0289ecc9868c9eff3701016edf96f`) and the worst required route (two wrong graded attempts and wrong-first explores per interactive unit) on the authored bytes, and raises `budget` and `aboutLabel` if the measured minimum is higher. T14 enforces this once the HTML is present.
 
 | Topic | Day | Kind | aboutLabel | budget | planned modeledP50 | planned modeledWorstPath |
 |---|---|---|---|---|---|---|
@@ -205,7 +205,7 @@ No day exceeds its 120-minute template. F26 is full: any measured page-budget in
 
 ## Official sources per topic
 
-This intake closes discrepancy `source-gap-collections-streams-official-evidence`. Every source below was fetched live on 2026-10-12; `evidence/collections-streams/source-snapshot.json` records each URL with retrieval time, the sha256 of the fetched bytes and the sections used. All 78 URLs returned HTTP 200, and each section name was checked against the fetched page title or text. Sources are first-party: Oracle Java SE 25 API documentation and Java Language Specification SE 25, Oracle's dev.java tutorials and JDBC tutorial, PostgreSQL 18 documentation (version-pinned, for the SQL side of the filter-or-aggregate decision, SME-004), and the Apache Maven, JUnit and H2 project documentation for the lab toolchain. Java SE 25 is the current LTS release; Java SE 26 and 27 documentation also exists, and the module PRs align to java-foundations' JDK pin.
+This intake closes discrepancy `source-gap-collections-streams-official-evidence`. Every source below was fetched live on 2026-10-12; `authoring/evidence/collections-streams/source-snapshot.json` records each URL with retrieval time, the sha256 of the fetched bytes and the sections used. All 78 URLs returned HTTP 200, and each section name was checked against the fetched page title or text. Sources are first-party: Oracle Java SE 25 API documentation and Java Language Specification SE 25, Oracle's dev.java tutorials and JDBC tutorial, PostgreSQL 18 documentation (version-pinned, for the SQL side of the filter-or-aggregate decision, SME-004), and the Apache Maven, JUnit and H2 project documentation for the lab toolchain. Java SE 25 is the current LTS release; Java SE 26 and 27 documentation also exists, and the module PRs align to java-foundations' JDK pin.
 
 | Topic | Official sources |
 |---|---|
