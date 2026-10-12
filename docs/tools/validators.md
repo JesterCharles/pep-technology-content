@@ -3,7 +3,10 @@
 These validators back offline gates T14-T17 and T19. Network access is always explicit: `npm run check`
 never performs HTTP requests.
 
-## Assessment blueprint objectives (T01)
+## Schema validation (T01)
+
+Video artifact front matter supports scalar values and YAML block lists. Block-list keys such as `covers`, `gaps`,
+and `cautions` are validated as arrays by `schemas/video-artifact.frontmatter.schema.json`.
 
 Every blueprint objective is an exact `<course>/<module>/<topic>#<objective-id>` reference to an objective in that
 topic's `topic.json`. The optional `objectiveFormats` object maps those same references to non-empty, unique arrays

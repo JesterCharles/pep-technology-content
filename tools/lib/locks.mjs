@@ -102,27 +102,28 @@ export async function bindingsForEvidenceFile(
         `${relative(repoRoot, evidenceFile)}: binding ${binding.field} names missing target ${binding.target}`,
       );
     }
-    const historical = resolvedHistoricalRoots.some(
+    let historical = resolvedHistoricalRoots.some(
       (root) => artifactFile === root || artifactFile.startsWith(`${root}${path.sep}`),
     );
     let current = false;
+    let missing = false;
     if (!historical) {
-      let bytes;
       try {
-        bytes = await readFile(artifactFile);
-      } catch {
-        throw new Error(
-          `${relative(repoRoot, evidenceFile)}: binding ${binding.field} names missing target ${binding.target}`,
-        );
+        current = sha256(await readFile(artifactFile)) === binding.sha256;
+      } catch (cause) {
+        if (cause.code !== "ENOENT") throw cause;
+        historical = true;
+        missing = true;
       }
-      current = sha256(bytes) === binding.sha256;
     }
     output.push({
       evidencePath: relative(repoRoot, evidenceFile),
       field: binding.field,
       artifactPath: relative(repoRoot, artifactFile),
       sha256: binding.sha256,
-      ...(historical ? { historical: true } : { current }),
+      current,
+      ...(historical ? { historical: true } : {}),
+      ...(missing ? { missing: true } : {}),
     });
   }
   return output;
@@ -213,7 +214,7 @@ export async function createCourseLock(repoRoot, courseId) {
     evidenceBindingScope: "course-level-files",
     files: await records(repoRoot, files),
     evidenceBindings: bindings
-      .filter((binding) => !binding.historical)
+      .filter((binding) => !binding.historical || binding.missing)
       .sort((a, b) =>
         `${a.evidencePath}:${a.field}`.localeCompare(`${b.evidencePath}:${b.field}`),
       ),

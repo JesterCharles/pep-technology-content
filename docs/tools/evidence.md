@@ -48,14 +48,18 @@ For an object containing `reviewedSha256` or `artifactSha256`, `tools/pep lock` 
 4. the nearest ancestor object's `reviewedPath`;
 5. for topic evidence only, the topic's `artifact.html`.
 
-These paths are repository-relative. A binding with no target, a path outside the repository or a missing current-scope target
-file fails lock generation. `artifactHashes` maps keep their existing behavior: each map key is resolved relative
-to the associated course, module or topic artifact root.
+These paths are repository-relative. A binding with no target or a path outside the repository fails lock
+generation. `artifactHashes` maps keep their existing behavior: each map key is resolved relative to the associated
+course, module or topic artifact root.
 
-Generated locks retain both fresh and stale in-scope hashes and mark each binding with `current`. A course-level
-evidence reference to module content is historical: the course lock protects the evidence file bytes but omits
-that cross-scope binding, so later module changes do not stale the shared course lock. Such a historical intake
-reference can close its course-level intake finding, but it never supplies current critic coverage for module
+Generated locks retain fresh and stale in-scope hashes and mark each binding with `current`. When a target recorded
+by immutable review evidence has since been removed, its binding remains in the lock with `current: false`,
+`historical: true`, and `missing: true`. It cannot provide current critic coverage; replacement files still require
+current education and SME coverage.
+
+A course-level evidence reference to module content is historical: the course lock protects the evidence file bytes
+but omits that cross-scope binding, so later module changes do not stale the shared course lock. Such a historical
+intake reference can close its course-level intake finding, but it never supplies current critic coverage for module
 content; current module coverage must come from evidence under that module. T06 requires committed locks to be
 byte-identical to regeneration. Regenerate with `tools/pep lock` after changing content or evidence.
 

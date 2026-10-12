@@ -118,11 +118,66 @@ async function assertState(target, assertion) {
 
 async function focusVisible(locator) {
   return locator.evaluate((element) => {
-    element.focus();
-    const style = getComputedStyle(element);
-    const outline = style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0;
-    const shadow = style.boxShadow !== "none";
-    return outline || shadow;
+    const parse = (value) => {
+      const match = value.match(/rgba?\(([^)]+)\)/);
+      if (!match) return null;
+      const parts = match[1].split(/[ ,/]+/).filter(Boolean).map(Number);
+      return [parts[0], parts[1], parts[2], parts[3] ?? 1];
+    };
+    const blend = (front, back) => {
+      const alpha = front[3];
+      return [0, 1, 2].map((i) => front[i] * alpha + back[i] * (1 - alpha)).concat(1);
+    };
+    const background = (node) => {
+      let result = [255, 255, 255, 1];
+      const layers = [];
+      for (let current = node; current; current = current.parentElement) {
+        const color = parse(getComputedStyle(current).backgroundColor);
+        if (color && color[3] > 0) layers.push(color);
+      }
+      for (const color of layers.reverse()) result = blend(color, result);
+      return result;
+    };
+    const luminance = (color) => {
+      const rgb = color.slice(0, 3).map((value) => {
+        const channel = value / 255;
+        return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+    };
+    const ratio = (first, second) => {
+      const values = [luminance(first), luminance(second)].sort((a, b) => b - a);
+      return (values[0] + 0.05) / (values[1] + 0.05);
+    };
+    const chain = [];
+    for (let node = element; node; node = node.parentElement) chain.push(node);
+    document.activeElement?.blur();
+    const before = chain.map((node) => {
+      const style = getComputedStyle(node);
+      return {
+        outline: `${style.outlineStyle}|${style.outlineWidth}|${style.outlineColor}`,
+        shadow: style.boxShadow,
+      };
+    });
+    element.focus({ preventScroll: true });
+    return chain.some((node, index) => {
+      const style = getComputedStyle(node);
+      const behind = background(node.parentElement ?? document.body);
+      const outline = `${style.outlineStyle}|${style.outlineWidth}|${style.outlineColor}`;
+      if (
+        outline !== before[index].outline &&
+        style.outlineStyle !== "none" &&
+        parseFloat(style.outlineWidth) > 0
+      ) {
+        const color = parse(style.outlineColor);
+        if (color && color[3] > 0 && ratio(blend(color, behind), behind) >= 3) return true;
+      }
+      if (style.boxShadow === "none" || style.boxShadow === before[index].shadow) return false;
+      return (style.boxShadow.match(/rgba?\([^)]+\)/g) ?? []).some((value) => {
+        const color = parse(value);
+        return color && color[3] > 0 && ratio(blend(color, behind), behind) >= 3;
+      });
+    });
   });
 }
 
@@ -338,8 +393,9 @@ function contrastAudit(page) {
         if (parseFloat(widths[index]) < 1 || styles[index] === "none") continue;
         const border = parse(colors[index]);
         const behind = background(element.parentElement ?? document.body);
-        if (border && ratio(blend(border, behind), behind) < 3) {
-          failures.push(`${label(element)} border ${ratio(border, behind).toFixed(2)} < 3`);
+        const borderRatio = border ? ratio(blend(border, behind), behind) : null;
+        if (border && border[3] > 0 && borderRatio < 3) {
+          failures.push(`${label(element)} border ${borderRatio.toFixed(2)} < 3`);
           break;
         }
       }
@@ -398,35 +454,55 @@ async function checkResponsive(browser, topic) {
               "select",
               "textarea",
             ].join(",");
+            const isVisible = (element) =>
+              element.checkVisibility({ checkOpacity: true, checkVisibilityCSS: true });
+            const visibleTextRects = (element) => {
+              const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+              const rects = [];
+              for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+                if (!node.textContent.trim() || !isVisible(node.parentElement)) continue;
+                const range = document.createRange();
+                range.selectNodeContents(node);
+                rects.push(...[...range.getClientRects()].filter((box) => box.width >= 1 && box.height >= 1));
+              }
+              return rects;
+            };
+            const renderedBoxes = (element) => {
+              if (!isVisible(element)) return [];
+              const own = [...element.getClientRects()].filter((box) => box.width >= 1 && box.height >= 1);
+              const text = visibleTextRects(element);
+              if (own.length) return [...own, ...text];
+              const descendants = [...element.querySelectorAll("*")]
+                .filter(isVisible)
+                .flatMap((node) => [...node.getClientRects()])
+                .filter((box) => box.width >= 1 && box.height >= 1);
+              return [...descendants, ...text];
+            };
             const clipped = [...document.querySelectorAll(essentialSelector)]
-              .filter((element) => element.getClientRects().length)
-              .filter((element) => {
-                const box = element.getBoundingClientRect();
-                if (
-                  box.left < -1 ||
-                  box.right > root.scrollWidth + 1 ||
-                  box.bottom + scrollY > root.scrollHeight + 1
-                ) return true;
-                if (box.width < 1 || box.height < 1) {
-                  return (
-                    element.matches("button,input,select,textarea,[data-essential]") ||
-                    element.textContent.trim().length > 0
-                  );
-                }
-                for (let parent = element.parentElement; parent; parent = parent.parentElement) {
-                  const style = getComputedStyle(parent);
-                  if (!/(hidden|clip)/.test(`${style.overflowX} ${style.overflowY}`)) continue;
-                  const parentBox = parent.getBoundingClientRect();
+              .map((element) => ({ element, boxes: renderedBoxes(element) }))
+              .filter(({ boxes }) => boxes.length)
+              .filter(({ element, boxes }) => {
+                for (const box of boxes) {
                   if (
-                    box.left < parentBox.left - 1 ||
-                    box.right > parentBox.right + 1 ||
-                    box.top < parentBox.top - 1 ||
-                    box.bottom > parentBox.bottom + 1
+                    box.left < -1 ||
+                    box.right > root.scrollWidth + 1 ||
+                    box.bottom + scrollY > root.scrollHeight + 1
                   ) return true;
+                  for (let parent = element; parent; parent = parent.parentElement) {
+                    const style = getComputedStyle(parent);
+                    if (!/(hidden|clip)/.test(`${style.overflowX} ${style.overflowY}`)) continue;
+                    const parentBox = parent.getBoundingClientRect();
+                    if (
+                      box.left < parentBox.left - 1 ||
+                      box.right > parentBox.right + 1 ||
+                      box.top < parentBox.top - 1 ||
+                      box.bottom > parentBox.bottom + 1
+                    ) return true;
+                  }
                 }
                 return false;
               })
-              .map((element) => element.id || element.tagName.toLowerCase());
+              .map(({ element }) => element.id || element.tagName.toLowerCase());
             return { scrollWidth: root.scrollWidth, clientWidth: root.clientWidth, clipped };
           });
           if (geometry.scrollWidth > geometry.clientWidth + 1) {

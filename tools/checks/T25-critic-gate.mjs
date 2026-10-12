@@ -109,6 +109,7 @@ function currentItemBinding(report, index) {
   return report.bindings.some(
     (binding) =>
       binding.field === `recheck.items[${index}].reviewedSha256` &&
+      !binding.missing &&
       (binding.current || binding.historical),
   );
 }
