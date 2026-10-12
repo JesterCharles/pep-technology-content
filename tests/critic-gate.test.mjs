@@ -105,6 +105,43 @@ test("T25 rejects module critic evidence bound to old bytes", async () => {
   assert.match(result.stderr, /artifact\.html: missing current sme critic coverage/);
 });
 
+test("T25 accepts historical removed-target criticism with a current replacement recheck", async () => {
+  const { root, digest } = await fixture();
+  const removedTarget = "demo-course/demo-module/demo-topic/removed-artifact.html";
+  const original = report("education", "0".repeat(64), { reviewedPath: removedTarget });
+  const recheck = report("education", digest, {
+    recheck: {
+      of: "evidence/demo-course/demo-module/demo-topic/critic-education.json",
+      items: [],
+    },
+  });
+  await writeTopicEvidence(
+    root,
+    original,
+    report("sme", digest),
+    null,
+    [["critic-education-recheck.json", recheck]],
+  );
+
+  const result = check(root);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("T25 does not count removed targets as current critic coverage", async () => {
+  const { root, digest } = await fixture();
+  const removedTarget = "demo-course/demo-module/demo-topic/removed-artifact.html";
+  await writeTopicEvidence(
+    root,
+    report("education", "0".repeat(64), { reviewedPath: removedTarget }),
+    report("sme", digest),
+  );
+
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /artifact\.html: missing current education critic coverage/);
+  assert.doesNotMatch(result.stderr, /names missing target/);
+});
+
 test("T25 leaves accepted high findings open without a resolved recheck", async () => {
   const { root, digest } = await fixture();
   await writeTopicEvidence(
@@ -393,16 +430,40 @@ test("course-level binding without a target fails", async () => {
   );
 });
 
-test("binding to a missing target fails", async () => {
+test("a removed binding is explicit, historical, and accepted by T06", async () => {
   const { root } = await fixture();
-  await writeJson(path.join(root, "evidence/demo-course/missing.json"), {
-    reviewedPath: "demo-course/missing.json",
+  const evidence = path.join(
+    root,
+    "evidence/demo-course/demo-module/demo-topic/removed.json",
+  );
+  const removedTarget = "demo-course/demo-module/demo-topic/removed-artifact.html";
+  await writeJson(evidence, {
+    reviewedPath: removedTarget,
     reviewedSha256: "0".repeat(64),
   });
-  await assert.rejects(
-    createCourseLock(root, "demo-course"),
-    /binding reviewedSha256 names missing target demo-course\/missing\.json/,
+
+  const moduleLock = await createModuleLock(root, "demo-course", "demo-module");
+  const binding = moduleLock.evidenceBindings.find((entry) =>
+    entry.evidencePath.endsWith("removed.json"),
   );
+  assert.equal(binding.artifactPath, removedTarget);
+  assert.equal(binding.current, false);
+  assert.equal(binding.historical, true);
+  assert.equal(binding.missing, true);
+
+  await writeJson(
+    path.join(root, "demo-course/course.lock.json"),
+    await createCourseLock(root, "demo-course"),
+  );
+  await writeJson(
+    path.join(root, "demo-course/demo-module/module.lock.json"),
+    moduleLock,
+  );
+  await cp(path.join(repo, "schemas"), path.join(root, "schemas"), { recursive: true });
+  const schemaResult = check(root, "T01");
+  assert.equal(schemaResult.status, 0, schemaResult.stderr);
+  const result = check(root, "T06");
+  assert.equal(result.status, 0, result.stderr);
 });
 
 test("lock regeneration with stale evidence is stable", async () => {

@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
-import { cp, mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { run as runT01 } from "../tools/checks/T01-schema.mjs";
 import { run as runT09 } from "../tools/checks/T09-offline.mjs";
 import { run as runT10 } from "../tools/checks/T10-sandbox.mjs";
 import { run as runT11 } from "../tools/checks/T11-behavior.mjs";
@@ -22,7 +23,9 @@ async function makeRepository(pageName, options = {}) {
   const evidenceRoot = path.join(root, "evidence", "course", "module", "topic");
   await mkdir(topicRoot, { recursive: true });
   await mkdir(evidenceRoot, { recursive: true });
-  await cp(path.join(fixtures, pageName), path.join(topicRoot, "artifact.html"));
+  let html = await readFile(path.join(fixtures, pageName), "utf8");
+  if (options.transformHtml) html = options.transformHtml(html);
+  await writeFile(path.join(topicRoot, "artifact.html"), html);
   await writeFile(
     path.join(root, "course", "course.json"),
     `${JSON.stringify({ id: "course", moduleOrder: ["module"] }, null, 2)}\n`,
@@ -65,6 +68,24 @@ async function runFixture(rule, page, options) {
     return await runners[rule](context(repository.root));
   } finally {
     await rm(repository.root, { recursive: true, force: true });
+  }
+}
+
+async function runFrontmatter(frontmatter) {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "pep-frontmatter-"));
+  const file = path.join(directory, "video-artifact.md");
+  await writeFile(file, `${frontmatter}\n`);
+  const root = path.resolve(import.meta.dirname, "..");
+  try {
+    return await runT01({
+      root,
+      explicit: true,
+      targets: [file],
+      scanRoots: [file],
+      display: (target) => path.basename(target),
+    });
+  } finally {
+    await rm(directory, { recursive: true, force: true });
   }
 }
 
@@ -132,6 +153,91 @@ test("T11 catches duplicate credit after restart", { timeout: 60000 }, async () 
   assertPreciseFailure(errors, "T11", /#progress text did not match/);
 });
 
+test("T01 accepts YAML block lists while preserving scalar front matter", async () => {
+  const errors = await runFrontmatter(`---
+title: Terminal overview
+channel: Example channel
+url: https://example.com/video
+runtimeMinutes: 4.5
+embeddable: true
+checkedAt: 2026-10-12
+covers:
+  - Shell navigation
+gaps: []
+cautions: []
+alternates: []
+rejected: []
+---
+
+# Video`);
+  assert.deepEqual(errors, []);
+});
+
+test("T01 rejects a scalar where front matter requires a list", async () => {
+  const errors = await runFrontmatter(`---
+title: Terminal overview
+channel: Example channel
+url: https://example.com/video
+runtimeMinutes: 4.5
+embeddable: true
+checkedAt: 2026-10-12
+covers: Shell navigation
+gaps: []
+cautions: []
+alternates: []
+rejected: []
+---
+
+# Video`);
+  assert.equal(errors.length, 1, JSON.stringify(errors));
+  assert.match(errors[0].message, /\/covers must be array/);
+});
+
+test("T12 ignores fully transparent borders", { timeout: 60000 }, async () => {
+  const errors = await runFixture("T12", "good.html", {
+    transformHtml: (html) => html.replace(
+      '<main id="lesson" data-pep-complete="false">',
+      '<main id="lesson" data-pep-complete="false"><div style="border: 2px solid transparent"></div>',
+    ),
+  });
+  assert.deepEqual(errors, []);
+});
+
+test("T12 catches a rendered low-contrast border", { timeout: 60000 }, async () => {
+  const errors = await runFixture("T12", "good.html", {
+    transformHtml: (html) => html.replace(
+      '<main id="lesson" data-pep-complete="false">',
+      '<main id="lesson" data-pep-complete="false"><div id="low-border" style="border: 2px solid #ddd">Bordered panel</div>',
+    ),
+  });
+  assertPreciseFailure(errors, "T12", /light contrast: #low-border border .* < 3/);
+});
+
+test("T12 accepts a contrasting focus-within ancestor indicator", { timeout: 60000 }, async () => {
+  const errors = await runFixture("T12", "good.html", {
+    transformHtml: (html) => html
+      .replace(
+        "</style>",
+        "#success:focus, #success:focus-visible { outline: none; } #focus-wrap:focus-within { box-shadow: 0 0 0 3px #005fcc; } </style>",
+      )
+      .replace(
+        '<button id="success" data-essential>Finish correctly</button>',
+        '<div id="focus-wrap"><button id="success" data-essential>Finish correctly</button></div>',
+      ),
+  });
+  assert.deepEqual(errors, []);
+});
+
+test("T12 rejects keyboard focus with no indicator in its ancestor chain", { timeout: 60000 }, async () => {
+  const errors = await runFixture("T12", "good.html", {
+    transformHtml: (html) => html.replace(
+      "</style>",
+      "button:focus, button:focus-visible { outline: none; box-shadow: none; } </style>",
+    ),
+  });
+  assertPreciseFailure(errors, "T12", /#success has no visible focus indicator/);
+});
+
 test("T12 catches low contrast in forced dark mode", { timeout: 60000 }, async () => {
   const simple = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
   for (const name of Object.keys(simple.routes)) simple.routes[name] = [{ do: "click", selector: "#success" }];
@@ -139,6 +245,26 @@ test("T12 catches low contrast in forced dark mode", { timeout: 60000 }, async (
   simple.progress = simple.completion;
   const errors = await runFixture("T12", "low-contrast-dark.html", { spec: simple });
   assertPreciseFailure(errors, "T12", /dark contrast|color-contrast|axe serious\/critical/);
+});
+
+test("T13 skips zero-size hidden live text and controls in closed details", { timeout: 60000 }, async () => {
+  const errors = await runFixture("T13", "good.html", {
+    transformHtml: (html) => html.replace(
+      '<main id="lesson" data-pep-complete="false">',
+      '<main id="lesson" data-pep-complete="false"><div id="empty-live" aria-live="polite" style="height:0;overflow:hidden"><span hidden>Old feedback</span></div><details><summary>Optional details</summary><button style="width:2000px">Closed action</button></details>',
+    ),
+  });
+  assert.deepEqual(errors, []);
+});
+
+test("T13 catches visibly clipped essential text", { timeout: 60000 }, async () => {
+  const errors = await runFixture("T13", "good.html", {
+    transformHtml: (html) => html.replace(
+      '<main id="lesson" data-pep-complete="false">',
+      '<main id="lesson" data-pep-complete="false"><div style="width:120px;overflow:hidden"><p id="clipped-text" data-essential style="width:300px">Visible essential text is clipped</p></div>',
+    ),
+  });
+  assertPreciseFailure(errors, "T13", /desktop clipped essentials: clipped-text/);
 });
 
 test("T13 catches horizontal overflow at 400 px", { timeout: 60000 }, async () => {

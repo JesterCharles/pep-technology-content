@@ -91,7 +91,7 @@ function parseFrontmatter(text) {
   let key;
   for (const line of text.slice(4, end).split("\n")) {
     if (/^\s*-\s+/.test(line)) {
-      out[key] ??= [];
+      if (!Array.isArray(out[key])) out[key] = [];
       out[key].push(line.replace(/^\s*-\s+/, ""));
       continue;
     }

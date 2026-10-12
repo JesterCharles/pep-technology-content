@@ -36,7 +36,9 @@ The three required routes must independently finish the topic:
 `progress` separately asserts that each route reached 100%. `restart.actions` completes, restarts, and repeats an
 activity; `restart.credit` proves credit was not duplicated. `keyboard` is the complete success route using semantic
 keyboard activation. The harness requires visible focus at each
-keyboard activation and verifies the same completion assertion.
+keyboard activation and verifies the same completion assertion. A focus indicator may be on the control or a
+`:focus-within` ancestor, but it must appear on focus and its outline or shadow must contrast at least 3:1 with the
+adjacent background.
 
 ### Actions
 
@@ -134,9 +136,11 @@ Git `tNN.json` files, and the reusable route roles of AI `spec.js`. No course-1 
   unguarded Web Storage access fail naturally.
 - **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion.
 - **T12:** permits no serious or critical axe findings; runs the keyboard and reduced-motion success routes; requires
-  `aria-live`; checks direct body text at 4.5:1 and rendered borders at 3:1 in forced light and dark themes.
+  `aria-live`; checks direct body text at 4.5:1 and rendered borders at 3:1 in forced light and dark themes. Fully
+  transparent borders are not rendered and are excluded.
 - **T13:** checks 1366x768 light, 1366x681 light, 400x860 dark, and an equivalent 200% zoom CSS viewport. It rejects
-  horizontal overflow and clipped elements marked `data-essential`.
+  horizontal overflow and clipped essential controls or text. Non-rendered content—including descendants of closed
+  `details`, CSS-hidden content, and zero-size live regions with no visible descendants—is excluded.
 - **T18:** regenerates Markdown in memory and requires byte equality. A declared PDF must load as PDF and contain an
   extractable text map (or produce non-empty `pdftotext` output when that tool is installed).
 
