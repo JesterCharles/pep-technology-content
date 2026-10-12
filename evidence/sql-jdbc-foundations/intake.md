@@ -38,13 +38,13 @@ Rules applied: modules follow calendar day order, no day is split across modules
 |---|---|---|---|---|
 | `relational-design` | Relational Design | F19 | 5 | One day that builds one model: setup, keys, design, normalization, DDL. |
 | `crud-aggregates-and-joins` | CRUD, Aggregates and Joins | F20, F21 | 8 | F20 "Aggregate functions" leads straight into F21 "GROUP BY and HAVING"; F21 alone (3 topics) is too small a batch. |
-| `reporting-indexes-and-review` | Reporting Queries, Indexes and Review | F22, F24 | 6 | F22's four topics plus the two F24 review pages that close the course, as course 1 places its review pages at the end of the modules they close. |
+| `reporting-indexes-and-review` | Reporting Queries, Indexes, JDBC Project and Review | F22, F23, F24 | 7 | F22's four topics, the F23 JDBC project brief and the two F24 review pages that close the course, as course 1 places its review pages at the end of the modules they close. |
 
-Total: 19 topic pages, matching the matrix count for this course (19 topic pages, 17 quizzes, 3 print handouts, 1 project row, 1 assessment blueprint).
+Total: 20 pages: the matrix's 19 topic pages (17 quizzes, 3 print handouts) plus the F23 project brief, which is the matrix's one authorized project-row artifact for this course; the F24 module check is the one assessment blueprint.
 
 ## Topic list with relations
 
-Topic ids are the matrix's proposed slugs, unchanged. Every relation is `exact`: one source row, one page; no row is split or shared.
+Topic ids are the matrix's proposed slugs, unchanged, except the F23 project brief, whose id `jdbc-data-access-project` follows the F23 calendar title. Every relation is `exact`: each source row maps wholly to one page and no row is split or shared; the project brief is the one page that takes all five F23 rows, because they form one project row.
 
 | # | Topic | Module | Kind | Pointer | Day | Relation |
 |---|---|---|---|---|---|---|
@@ -65,14 +65,15 @@ Topic ids are the matrix's proposed slugs, unchanged. Every relation is `exact`:
 | 15 | `window-functions-top-n-per-group` | `reporting-indexes-and-review` | core | `/tracks/0/weeks/4/days/1/topics/1` | F22 | exact |
 | 16 | `indexes` | `reporting-indexes-and-review` | core | `/tracks/0/weeks/4/days/1/topics/2` | F22 | exact |
 | 17 | `query-plans-with-explain` | `reporting-indexes-and-review` | reading | `/tracks/0/weeks/4/days/1/topics/3` | F22 | exact |
-| 18 | `sql-review-joins-grouping-window-functions` | `reporting-indexes-and-review` | review | `/tracks/0/weeks/4/days/3/topics/0` | F24 | exact |
-| 19 | `jdbc-review` | `reporting-indexes-and-review` | review | `/tracks/0/weeks/4/days/3/topics/1` | F24 | exact |
+| 18 | `jdbc-data-access-project` | `reporting-indexes-and-review` | lab-brief | `/tracks/0/weeks/4/days/2/topics/0` to `/topics/4` | F23 | exact (five rows, one project) |
+| 19 | `sql-review-joins-grouping-window-functions` | `reporting-indexes-and-review` | review | `/tracks/0/weeks/4/days/3/topics/0` | F24 | exact |
+| 20 | `jdbc-review` | `reporting-indexes-and-review` | review | `/tracks/0/weeks/4/days/3/topics/1` | F24 | exact |
 
 Rows that are not topic pages:
 
-- **F23 project rows** (`/tracks/0/weeks/4/days/2/topics/0-4`): F23 is a Project day, and the matrix scopes each of its five rows to the expected artifact `project-row` only (overlay metadata, not a learner file). They become the F23 project row in the Foundation track overlay and blueprint inputs, never topic pages or new syllabus. The matrix's proposed slugs for them (`connecting-java-to-postgres-with-jdbc`, `prepared-statements-and-sql-injection`, `transactions-and-acid`, `swapping-the-in-memory-repository-for-a-jdbc-one`, `testing-a-repository-against-a-provided-test-database`) are not created as topics. `jdbc-review` retrieves and reinforces those concepts on F24, and the F23 Build block is served by the planned course lab below.
+- **F23 project rows** (`/tracks/0/weeks/4/days/2/topics/0-4`): one project row, delivered as one canonical project artifact, `jdbc-data-access-project` (captain decision `pep-project-rows`, option A; reconciliation `sql-intake-edu-001`). See "F23 project artifact plan" below. The matrix's proposed per-row slugs (`connecting-java-to-postgres-with-jdbc` and four more) are not created as topics.
 - **F24 row 2 "SQL module check"**: the course blueprint `assessments/sql-module-check`, not a topic.
-- **Review rows** F24 rows 0-1 are `review` pages: retrieval over earlier pages and the F23 project, no new syllabus.
+- **Review rows** F24 rows 0-1 are `review` pages: retrieval over earlier pages and the F23 project brief, no new syllabus.
 
 Prerequisites: same-module topics are named by topic id, other modules by `<course>/<module>/<topic>`, and other courses by course id only (`java-foundations`, whose topic ids do not exist yet). `course.json` names `git-linux-ai-foundations` (shell and terminal use) and `java-foundations` (JDBC and the F23 repository swap build on its Java project).
 
@@ -84,7 +85,7 @@ Each topic has 2-3 observable objectives with ids `o1`-`o3` in its `topic.json`.
 
 Rules (captain, as applied in course 1): core topics require HTML, derived Markdown and a practice GIFT quiz, with a curated video when a suitable verified one exists; Reading topics also carry a printable PDF; review topics carry HTML and Markdown only; absent companions record a reason. Every page embeds interactive practice (matrix `simulator`).
 
-Legend: **R** required, authored in the module PR; **V** required when a suitable verified public video exists, otherwise recorded absent with the search record; **M** practised in the planned module lab; **-** not applicable, with the reason in `topic.json`.
+Legend: **R** required, authored in the module PR; **V** required when a suitable verified public video exists, otherwise recorded absent with the search record; **M** practised in the planned module lab; **T** the topic's own coding lab, authored in the module PR; **-** not applicable, with the reason in `topic.json`.
 
 | Topic | Kind | html | md | pdf | gift | video | lab |
 |---|---|---|---|---|---|---|---|
@@ -105,10 +106,11 @@ Legend: **R** required, authored in the module PR; **V** required when a suitabl
 | `reporting-indexes-and-review/window-functions-top-n-per-group` | core | R | R | - | R | V | M |
 | `reporting-indexes-and-review/indexes` | core | R | R | - | R | V | - |
 | `reporting-indexes-and-review/query-plans-with-explain` | reading | R | R | R | R | V | - |
+| `reporting-indexes-and-review/jdbc-data-access-project` | lab-brief | R | R | - | - | - | T |
 | `reporting-indexes-and-review/sql-review-joins-grouping-window-functions` | review | R | R | - | - | - | - |
 | `reporting-indexes-and-review/jdbc-review` | review | R | R | - | - | - | - |
 
-Totals: 19 HTML and Markdown, 17 GIFT quizzes, 3 PDF handouts, up to 17 videos; this matches the matrix scope.
+Totals: 20 HTML and Markdown (19 topic pages and the project brief), 17 GIFT quizzes, 3 PDF handouts, up to 17 videos and 1 topic coding lab for the project. The project brief carries no PDF, GIFT or video: it is not a Reading topic, its public tests, the F23 "Timed, without AI" block and the F24 module check assess it, and the Project day has no video block.
 
 Terminal interaction: any page that simulates a `psql` session or other command entry reuses the canonical terminal foundation, shared component `components/terminal@1`, which carries the repaired course-1 Evolv package's non-form direct Run-button and Enter-key dispatch (`git-linux-ai-foundations-20261007-evolv-terminal-repair`). That behavior is captain-confirmed working in Evolv (platform success, not a captured DOM or console trace); module PRs embed it unchanged and do not re-derive or redesign it. SQL simulators state plainly what they do not support and never show output real PostgreSQL would not show.
 
@@ -122,11 +124,46 @@ Every lab runs against the learner-local PostgreSQL server that the F19 reading 
 | Relational design lab | module, `sql-jdbc-foundations/relational-design/coding-lab/` | `tables-keys-and-relationships`, `designing-tables-from-a-user-story`, `create-table-data-types-and-constraints`: learner writes `schema.sql` for a user story; public JUnit tests load it into the lab database and check tables, keys and that constraint-violating inserts are rejected | `mvn -q -o test` | `relational-design` module PR |
 | Queries lab | module, `sql-jdbc-foundations/crud-aggregates-and-joins/coding-lab/` | the 8 module topics: learner writes `.sql` statements and a seed script; tests run the statements through pgJDBC against seeded fixture data and compare result rows, and run the seed script, including its `\copy`, through the real `psql` client invoked from the same Maven test command, so `seeding-sample-data#o3` is genuinely exercised | `mvn -q -o test` | `crud-aggregates-and-joins` module PR |
 | Reporting lab | module, `sql-jdbc-foundations/reporting-indexes-and-review/coding-lab/` | `subqueries-and-ctes`, `window-functions-top-n-per-group`: CTE and top-N-per-group queries checked against fixture data | `mvn -q -o test` | `reporting-indexes-and-review` module PR |
-| JDBC data access lab (F23 project Build block) | course, `sql-jdbc-foundations/coding-lab/` | F23 project rows: connect to the learner-local PostgreSQL with pgJDBC and `DriverManager`, `PreparedStatement` parameters, a transaction with commit and rollback, and a JDBC repository that replaces an in-memory one behind the same interface, tested against the lab-created test database | `mvn -q -o test` | a later course-level PR; whether F23 gets a required project artifact is escalated to the captain (`sql-intake-edu-001`), so this lab stays a candidate until that decision returns |
+| JDBC data access project lab (F23 Build block) | topic, `sql-jdbc-foundations/reporting-indexes-and-review/jdbc-data-access-project/coding-lab/` | the five F23 rows, objectives `jdbc-data-access-project#o1`-`#o3`; see "F23 project artifact plan" | `mvn -q -o test` | `reporting-indexes-and-review` module PR; required |
 
 Setup for every lab is one online `mvn -q dependency:go-offline` (Maven Dependency Plugin), then the test command runs offline against the local server. Dependencies (pgJDBC, JUnit Jupiter) are pinned in each `pom.xml` per `docs/lab-contract.md`; prerequisites are a JDK, Maven, and PostgreSQL with `psql`, each with a version check in the README.
 Not given a lab: the three Reading topics (readings carry no lab), `indexes` and `query-plans-with-explain` (plan choice on small lab data depends on table statistics and cost settings, so a graded lab could not be deterministic; the page simulator teaches PostgreSQL's documented plans), and the two review pages (the F24 Review day's platform "Practice without AI" block covers practice).
-`moduleLabs` and `courseLabs` stay empty until each lab directory exists; topic manifests record `lab: module:<module-id>` for the covered topics.
+`moduleLabs` and `courseLabs` stay empty until each lab directory exists; topic manifests record `lab: module:<module-id>` for the covered topics, and `jdbc-data-access-project` records `lab: topic`.
+
+## F23 project artifact plan
+
+Captain decision `pep-project-rows`, option A (reconciliation `sql-intake-edu-001`): the F23 project row gets one reusable learner-facing project artifact. This intake records the plan; the `reporting-indexes-and-review` module PR authors the files.
+
+- **Location (one canonical artifact):** `sql-jdbc-foundations/reporting-indexes-and-review/jdbc-data-access-project/`, kind `lab-brief`: `artifact.html` (the project brief, primary) and `artifact.md`, plus `coding-lab/` (`lab.json`, `README.md`, `starter/`, `tests/`, `fixtures/`, `expected/`). No Standard or Fast day has an F23 equivalent today; any track overlay that needs this project references `sql-jdbc-foundations/reporting-indexes-and-review/jdbc-data-access-project` and never copies it.
+- **Outcomes** (`topic.json` objectives): o1 connect a Java program to the learner-local PostgreSQL through pgJDBC and `DriverManager` with settings from environment variables and try-with-resources (row 0); o2 implement a JDBC repository behind the existing repository interface with `PreparedStatement` parameters and a multi-statement transaction that commits or rolls back as a unit (rows 1, 2, 3); o3 run the public tests against an isolated test database the tests create and drop, and use a failing test to fix a repository bug (row 4).
+- **Starter scaffold:** a Maven project with a pinned pgJDBC and JUnit Jupiter `pom.xml`; the repository interface and its in-memory implementation, matching the Java course's in-memory repository pattern; an empty JDBC repository class to complete; `schema.sql` and a small seed fixture; a test-database helper that reads `PGHOST`, `PGPORT`, `PGUSER` and `PGDATABASE`, creates a uniquely named database, applies the schema and drops it afterwards. As shipped, the starter compiles and the named public tests fail with stable messages.
+- **Public tests and command:** JUnit tests for each repository method, for parameter binding (a value containing a quote is stored literally, not executed) and for rollback (a failing step leaves no partial change), run with `mvn -q -o test` after one online `mvn -q dependency:go-offline`. No container; the learner-local PostgreSQL server only.
+- **Never in the repository:** the reference solution and any hidden tests; they live in uncommitted private staging, and the solved run is recorded only as "solved at <commit> by run <id>" (`docs/lab-contract.md`).
+- **Minutes:** the brief page is budgeted at 15 (see Minute budgets); the lab's `lab.json` plans 80 minutes, the F23 Build block. The calendar's 10-minute "Plan the work" and 15-minute "Timed, without AI" blocks stay platform activities.
+
+### Prerequisite alignment
+
+Every concept the project applies is taught before F23, either by an earlier topic objective or by instruction inside the brief itself. Java course topic ids do not exist yet, so those rows name the course id and the calendar row that teaches the concept; the Java course intake confirms the objective ids.
+
+| Concept the project applies | Taught by |
+|---|---|
+| Tables, primary and foreign keys | `sql-jdbc-foundations/relational-design/tables-keys-and-relationships#o1`, `#o2` |
+| Reading and running a CREATE TABLE schema | `sql-jdbc-foundations/relational-design/create-table-data-types-and-constraints#o1`, `#o2` |
+| INSERT, UPDATE and DELETE with a targeted WHERE | `sql-jdbc-foundations/crud-aggregates-and-joins/insert-update-and-delete#o1`, `#o2` |
+| SELECT with WHERE and ORDER BY | `sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting#o1`, `#o2` |
+| Seed data that respects foreign keys | `sql-jdbc-foundations/crud-aggregates-and-joins/seeding-sample-data#o1` |
+| Environment variables for connection settings and keeping secrets out of code | `git-linux-ai-foundations/linux-foundations/environment-variables-and-secrets` (objectives o1-o3) |
+| Running `psql` against the local server | `sql-jdbc-foundations/relational-design/installing-postgres-and-a-sql-client#o2` |
+| Classes, interfaces, dependency inversion | `java-foundations` (F12 "Interfaces and default methods"; F13 "SOLID basics: single responsibility, dependency inversion") |
+| An in-memory repository behind an interface | `java-foundations` (F16 "An in-memory repository behind an interface") |
+| Checked exceptions and try-with-resources | `java-foundations` (F14 "Checked vs unchecked exceptions"; "try/catch/finally and try-with-resources") |
+| Maven builds and dependencies | `java-foundations` (F10 "Maven builds and dependencies") |
+| JUnit tests: arrange, act, assert | `java-foundations` (F17 "Unit tests with JUnit, written test-first") |
+| Connecting through pgJDBC: driver, `jdbc:postgresql` URL, `DriverManager`, `Connection` | brief instruction (row 0), gap closed in the brief: no earlier page teaches JDBC |
+| `PreparedStatement` parameters and why concatenation allows SQL injection | brief instruction (row 1) |
+| Transactions and ACID: `setAutoCommit(false)`, commit, rollback | brief instruction (row 2, the F23 Reading row) |
+| Swapping the repository implementation behind its interface | brief instruction (row 3), building on the F16 Java repository |
+| Testing against a provided test database that is created and dropped | brief instruction (row 4) |
 
 ## Minute budgets
 
@@ -135,6 +172,7 @@ Basis: the new-course rule in `docs/tools/validators.md` (Reading time, T14): ev
 - `modeledP50`: a per-kind target from course-1 measured estimator P50 on comparable pages (frozen `tools/timing/estimate_reading.py`, sha256 `0deca96bf5e367aeae51a82abdbd4b6ce0d0289ecc9868c9eff3701016edf96f`): core 7.0, reading 5.0, review 6.5.
 - `modeledWorstPath`: the target P50 times 1.42, the mean course-1 ratio of recorded worst-required-route (`worstRequiredRetryP50`) to estimator P50 over its five pages that record both (7.9/5.49, 7.31/5.14, 9.35/6.7, 8.07/5.44, 8.5/6.19): core 10.0, reading 7.1, review 9.2.
 - `budget` = `aboutLabel` = `ceil(max(modeledP50, modeledWorstPath))`: core 10, reading 8, review 10.
+- `jdbc-data-access-project` (lab-brief): target P50 10 (the core target plus about 3 minutes for the brief instruction that teaches JDBC concepts no earlier page covers), worst path 14.2, budget 15, the page ceiling; if the authored brief's honest minimum exceeds 15, the module PR moves teaching into the lab README rather than compressing the budget.
 - Each module PR replaces the modeled values with the estimator P50 and the modeled worst required route of the authored page, raises the budget when the honest minimum is higher, and never compresses it.
 
 | Day | Day type (block total) | Topics | Planned budget total | Headroom |
@@ -143,7 +181,7 @@ Basis: the new-course rule in `docs/tools/validators.md` (Reading time, T14): ev
 | F20 | Concept (120) | 5 core | 50 | 70 |
 | F21 | Concept (120) | 3 core | 30 | 90 |
 | F22 | Concept (120) | 1 reading, 3 core | 38 | 82 |
-| F23 | Project (120) | no topic pages | 0 | 120 |
+| F23 | Project (120) | 1 project brief (budget 15; the 80-minute Build block time lives in the lab's `lab.json`) | 15 | 105 |
 | F24 | Review (120) | 2 review | 20 | 100 |
 
 Every topic could rise to the 15-minute ceiling without a day exceeding its 120-minute block total (largest: F20 at 75), so no pacing decision is foreseeable.
@@ -154,10 +192,10 @@ Every topic could rise to the 15-minute ceiling without a day exceeding its 120-
 
 - Calendar identity copied verbatim from the snapshot F24 `assessment`: `kind` `moduleCheck`, `formats` `MCQ` and `coding`, `passMark` 70. The calendar gives no weights or cut scores, so `weights` is empty.
 - Item counts and duration from the F24 Review day's "Module check" block (`MCQ + coding assessment`, 45 minutes): `durationMinutes` 45. The calendar does not split the block, so this intake proposes MCQ 15 items (about 1 minute each, 15 minutes) and coding 2 short tasks (about 15 minutes each, 30 minutes) that write SQL and query a database from Java with JDBC.
-- Objectives covered: a representative set the 17 items can elicit, each exact reference mapped in `objectiveFormats` to one format. MCQ covers one objective per item across all three modules and both F24 review areas; the 2 coding tasks cover 5 hands-on objectives: four SQL query-writing objectives and the central JDBC outcome `jdbc-review#o1` (connect, prepare, execute, read, close), so the coding format elicits JDBC as well as SQL (`sql-intake-edu-003`).
+- Objectives covered: a representative set the 17 items can elicit, each exact reference mapped in `objectiveFormats` to one format. MCQ covers one objective per item across all three modules and both F24 review areas; the 2 coding tasks cover 6 hands-on objectives: four SQL query-writing objectives, the central JDBC outcome `jdbc-review#o1` (connect, prepare, execute, read, close) and the F23 project outcome `jdbc-data-access-project#o2` (a repository with bound parameters and a transaction), so the coding format elicits JDBC as well as SQL (`sql-intake-edu-003`, completed after `sql-intake-edu-001`).
   - MCQ (15): `relational-design/tables-keys-and-relationships#o2`, `relational-design/designing-tables-from-a-user-story#o3`, `relational-design/normalization-basics#o1`, `crud-aggregates-and-joins/insert-update-and-delete#o2`, `crud-aggregates-and-joins/filtering-and-sorting#o1`, `crud-aggregates-and-joins/handling-nulls-coalesce-and-case#o1`, `crud-aggregates-and-joins/aggregate-functions#o2`, `crud-aggregates-and-joins/group-by-and-having#o3`, `crud-aggregates-and-joins/anti-joins-and-self-joins#o1`, `reporting-indexes-and-review/subqueries-and-ctes#o2`, `reporting-indexes-and-review/window-functions-top-n-per-group#o3`, `reporting-indexes-and-review/indexes#o1`, `reporting-indexes-and-review/query-plans-with-explain#o2`, `reporting-indexes-and-review/jdbc-review#o2`, `reporting-indexes-and-review/jdbc-review#o3`.
-  - coding (5): `relational-design/create-table-data-types-and-constraints#o2`, `crud-aggregates-and-joins/inner-and-left-joins#o2`, `crud-aggregates-and-joins/group-by-and-having#o2`, `reporting-indexes-and-review/window-functions-top-n-per-group#o2`, `reporting-indexes-and-review/jdbc-review#o1`.
-  - `jdbc-review` objectives are listed, unlike course 1's review pages, because F23 has no topic pages: the review page holds the only JDBC objectives the course-level check can reference.
+  - coding (6): `relational-design/create-table-data-types-and-constraints#o2`, `crud-aggregates-and-joins/inner-and-left-joins#o2`, `crud-aggregates-and-joins/group-by-and-having#o2`, `reporting-indexes-and-review/window-functions-top-n-per-group#o2`, `reporting-indexes-and-review/jdbc-review#o1`, `reporting-indexes-and-review/jdbc-data-access-project#o2`.
+  - `jdbc-review` objectives are listed, unlike course 1's review pages, because the course's JDBC instruction lives in one project brief: the review page's retrieval objectives let the check sample JDBC across all five F23 rows.
 - Allowed resources: the calendar states no AI or resource rule for the F24 Module check block (its "without AI" wording belongs to the separate "Practice without AI" block), so the blueprint states none and defers to the platform assessment owner; the coding environment is whatever the platform provides. The repository invents no assessment policy.
 - The blueprint holds no items, keys, correct answers, rubrics, scoring guides, hidden tests, reference solutions or score secrets; gates T01 and T07 check its key names.
 
@@ -186,6 +224,7 @@ First-party only: postgresql.org (PostgreSQL documentation and downloads), jdbc.
 | `indexes` | https://www.postgresql.org/docs/current/indexes.html<br>https://www.postgresql.org/docs/current/indexes-intro.html<br>https://www.postgresql.org/docs/current/indexes-types.html<br>https://www.postgresql.org/docs/current/indexes-multicolumn.html<br>https://www.postgresql.org/docs/current/sql-createindex.html<br>https://www.postgresql.org/docs/current/ddl-constraints.html |
 | `query-plans-with-explain` | https://www.postgresql.org/docs/current/using-explain.html<br>https://www.postgresql.org/docs/current/sql-explain.html |
 | `sql-review-joins-grouping-window-functions` | https://www.postgresql.org/docs/current/tutorial-join.html<br>https://www.postgresql.org/docs/current/queries-table-expressions.html<br>https://www.postgresql.org/docs/current/tutorial-window.html<br>https://www.postgresql.org/docs/current/tutorial.html |
+| `jdbc-data-access-project` | https://docs.oracle.com/javase/tutorial/jdbc/basics/connecting.html<br>https://docs.oracle.com/javase/tutorial/jdbc/basics/processingsqlstatements.html<br>https://docs.oracle.com/javase/tutorial/jdbc/basics/retrieving.html<br>https://docs.oracle.com/javase/tutorial/jdbc/basics/prepared.html<br>https://docs.oracle.com/javase/tutorial/jdbc/basics/transactions.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/package-summary.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/DriverManager.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/Connection.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/PreparedStatement.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/ResultSet.html<br>https://jdbc.postgresql.org/documentation/use/<br>https://jdbc.postgresql.org/documentation/query/<br>https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html<br>https://www.postgresql.org/docs/current/tutorial-transactions.html<br>https://www.postgresql.org/docs/current/transaction-iso.html<br>https://www.postgresql.org/docs/current/libpq-envars.html<br>https://www.postgresql.org/docs/current/sql-createdatabase.html<br>https://www.postgresql.org/docs/current/sql-dropdatabase.html |
 | `jdbc-review` | https://docs.oracle.com/javase/tutorial/jdbc/basics/index.html<br>https://docs.oracle.com/javase/tutorial/jdbc/basics/connecting.html<br>https://docs.oracle.com/javase/tutorial/jdbc/basics/processingsqlstatements.html<br>https://docs.oracle.com/javase/tutorial/jdbc/basics/retrieving.html<br>https://docs.oracle.com/javase/tutorial/jdbc/basics/prepared.html<br>https://docs.oracle.com/javase/tutorial/jdbc/basics/transactions.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/package-summary.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/DriverManager.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/Connection.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/PreparedStatement.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/ResultSet.html<br>https://jdbc.postgresql.org/documentation/use/<br>https://jdbc.postgresql.org/documentation/query/<br>https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html<br>https://www.postgresql.org/docs/current/tutorial-transactions.html<br>https://www.postgresql.org/docs/current/transaction-iso.html |
 | lab plan | https://jdbc.postgresql.org/documentation/use/<br>https://www.postgresql.org/docs/current/libpq-envars.html<br>https://www.postgresql.org/docs/current/sql-createdatabase.html<br>https://www.postgresql.org/docs/current/sql-dropdatabase.html<br>https://www.postgresql.org/docs/current/app-psql.html<br>https://maven.apache.org/plugins/maven-dependency-plugin/go-offline-mojo.html<br>https://docs.junit.org/current/user-guide/ |
 
@@ -200,7 +239,7 @@ Freshness: every `topic.json` records `unverified` with no `checkedAt`, because 
 
 ## Intake criticism
 
-Fresh independent educational and technology-SME critics reviewed the first intake commit; their reports and the non-author reconciliation are committed unchanged as `intake-critic-education.json`, `intake-critic-sme.json` and `intake-reconciliation.json`. Outcome: 6 findings accepted and applied in one correction loop (`sql-intake-edu-002` to `-004`, `sql-sme-001` to `-003`); 1 escalated to the captain (`sql-intake-edu-001`, whether the F23 project row gets a required project artifact), so F23 stays as described above until that decision returns.
+Fresh independent educational and technology-SME critics reviewed the first intake commit; their reports and the non-author reconciliation are committed unchanged as `intake-critic-education.json`, `intake-critic-sme.json` and `intake-reconciliation.json`. Outcome: all 7 findings accepted and applied in one correction loop. `sql-intake-edu-001` was escalated and the captain chose option A for project rows (`pep-project-rows`), so the reconciliation file was re-copied with that decision.
 
 Changes applied:
 
@@ -208,3 +247,4 @@ Changes applied:
 - Blueprint coding maps `jdbc-review#o1`; `jdbc-review` o1 reads "Retrieve and apply" so the coding format can elicit it (`sql-intake-edu-003`).
 - `filtering-and-sorting` o3 no longer adds pagination; it is now deterministic ordering with explicit sort keys, and the blueprint maps `filtering-and-sorting#o1` (`sql-intake-edu-004`); the LIMIT and OFFSET source is removed from the snapshot.
 - A first-party normalization source closes that gap (`sql-sme-003`).
+- F23 gets one canonical project artifact, `jdbc-data-access-project` (lab-brief, topic coding lab), with outcomes, prerequisite alignment, scaffold and public tests planned above; the blueprint coding part also maps `jdbc-data-access-project#o2` (`sql-intake-edu-001`, `sql-intake-edu-003`).
