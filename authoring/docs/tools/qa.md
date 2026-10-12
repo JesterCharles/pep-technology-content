@@ -152,9 +152,11 @@ node authoring/tools/qa/pdf-from-md.mjs path/artifact.md path/artifact.pdf
 ```
 
 Markdown derivation includes the H1 title, objectives, teaching, model, recap, cheat sheet, sources, and every
-`data-interaction` element's author-written `data-static-alt` value or descendant block. Missing objectives or static
-alternatives fail rather
-than being invented. PDF rendering uses `authoring/tools/qa/print-template.html` version 1 and pinned Playwright Chromium.
+`data-interaction` element's author-written `data-static-alt` value or descendant block. It preserves semantic block
+boundaries, list markers, and table rows. Nested section markers have structural ownership, so a recap containing a
+cheat sheet and sources emits each section once; repeated text in distinct sections is not deduplicated. Missing
+objectives or static alternatives fail rather than being invented. PDF rendering uses
+`authoring/tools/qa/print-template.html` version 1 and pinned Playwright Chromium.
 
 ## Provenance
 

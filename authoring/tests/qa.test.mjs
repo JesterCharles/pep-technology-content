@@ -272,6 +272,35 @@ test("T13 catches horizontal overflow at 400 px", { timeout: 60000 }, async () =
   assertPreciseFailure(errors, "T13", /mobile horizontal overflow: 500 > 400/);
 });
 
+test("Markdown derivation preserves list items, table cells, and block boundaries", { timeout: 60000 }, async () => {
+  const markdown = await markdownFromHtml(path.join(fixtures, "md-structure.html"));
+  assert.match(markdown, /### Teaching sequence\n\nLegitimate repeated sentence\./);
+  assert.match(markdown, /- First adjacent item\.\n- Second adjacent item\./);
+  assert.match(markdown, /\| Command \| Meaning \|\n\| --- \| --- \|\n\| pwd \| print folder \|/);
+  assert.match(markdown, /\|  \|  \|\n\| --- \| --- \|\n\| localhost \| this computer \|/);
+  assert.match(markdown, /Static alternative remains present\./);
+});
+
+test("Markdown derivation emits nested companion sections exactly once", { timeout: 60000 }, async () => {
+  const markdown = await markdownFromHtml(path.join(fixtures, "md-structure.html"));
+  for (const heading of ["Recap", "Cheat sheet", "Sources"]) {
+    assert.equal(markdown.split(`## ${heading}`).length - 1, 1, markdown);
+  }
+  for (const text of ["Recap first point.", "localhost", "Official source one."]) {
+    assert.equal(markdown.split(text).length - 1, 1, markdown);
+  }
+});
+
+test("Markdown derivation is deterministic", { timeout: 60000 }, async () => {
+  const fixture = path.join(fixtures, "md-structure.html");
+  assert.equal(await markdownFromHtml(fixture), await markdownFromHtml(fixture));
+});
+
+test("Markdown derivation keeps legitimate repeated text in distinct sections", { timeout: 60000 }, async () => {
+  const markdown = await markdownFromHtml(path.join(fixtures, "md-structure.html"));
+  assert.equal(markdown.split("Legitimate repeated sentence.").length - 1, 2, markdown);
+});
+
 test("T18 accepts deterministic Markdown", { timeout: 60000 }, async () => {
   const repository = await makeRepository("good.html");
   try {
