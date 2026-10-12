@@ -42,7 +42,7 @@ The grouping below pairs consecutive Standard days in calendar order so each mod
 | Module | Title | Standard days | Fast Track rows | Topics | Planned lab |
 |---|---|---|---|---|---|
 | `html-and-css` | HTML and CSS | S20, S21 | FT12 rows 0-6 | 7 | module lab (S21 overlay) |
-| `javascript-fundamentals` | JavaScript Fundamentals | S22, S23 | FT12 rows 7-8; FT13 rows 0-4 | 7 | module lab (S23 overlay) |
+| `javascript-fundamentals` | JavaScript Fundamentals | S22, S23 | FT12 rows 7-8; FT13 rows 0-4 | 7 | none |
 | `dom-tooling-and-async` | Tooling, the DOM and Async JavaScript | S24, S25 | FT13 row 5; FT14 rows 0-6 | 8 | none |
 | `fetch-and-browser-client` | Fetch and the Browser Client | S26, S27 | FT15 rows 0-6 | 7 | module lab (S26 overlay) |
 
@@ -100,30 +100,30 @@ Prerequisites name in-course topics by `<course>/<module>/<topic>`, course-1 top
 | Topic | Objectives | Prerequisites |
 |---|---|---|
 | `semantic-html-page-structure` | o1: Choose the semantic element (header, nav, main, article, section, aside, footer) that matches each region of a page<br>o2: Arrange headings h1-h6 into an outline without skipping levels<br>o3: Replace generic div wrappers in a page with semantic elements that keep the same layout | none |
-| `forms-and-html5-validation` | o1: Build a form whose every input has an associated label<br>o2: Apply required, type, pattern, min and max so the browser blocks invalid input before submission<br>o3: Explain why server-side validation is still required when the browser validates a form | `html-css-js/html-and-css/semantic-html-page-structure` |
+| `forms-and-html5-validation` | o1: Give each visible user-input control an associated visible label, and give controls without a label an accessible name<br>o2: Apply required, type, pattern, min and max so the browser blocks invalid input before submission<br>o3: Explain why server-side validation is still required when the browser validates a form | `html-css-js/html-and-css/semantic-html-page-structure` |
 | `accessibility-basics` | o1: Identify missing alternative text, missing labels and keyboard traps in a sample page<br>o2: Choose a native HTML element over an ARIA role when both give the same behavior<br>o3: Check that every interactive control in a page can be reached and operated with the keyboard alone | `html-css-js/html-and-css/semantic-html-page-structure`<br>`html-css-js/html-and-css/forms-and-html5-validation` |
 | `the-box-model` | o1: Label the content, padding, border and margin areas of a box<br>o2: Calculate an element's rendered width under box-sizing content-box and border-box<br>o3: Predict when adjacent vertical margins collapse | `html-css-js/html-and-css/semantic-html-page-structure` |
 | `flexbox` | o1: Lay out items in a row or column with display: flex and flex-direction<br>o2: Distribute and align items with justify-content, align-items and gap<br>o3: Predict how flex-grow, flex-shrink and flex-basis share leftover space | `html-css-js/html-and-css/the-box-model` |
 | `grid` | o1: Define columns and rows with grid-template-columns, the fr unit, repeat() and minmax()<br>o2: Place items into named areas with grid-template-areas<br>o3: Choose Grid or Flexbox for a described layout and justify the choice | `html-css-js/html-and-css/flexbox` |
 | `responsive-mobile-first-layout` | o1: Write base styles for a narrow screen and add min-width media queries for wider screens<br>o2: Explain what the viewport meta element changes on a mobile browser<br>o3: Adapt a layout so it has no horizontal scrolling at 400 px width | `html-css-js/html-and-css/flexbox`<br>`html-css-js/html-and-css/grid` |
-| `javascript-for-java-developers` | o1: Contrast JavaScript's dynamic typing and single number type with Java's static types<br>o2: Predict the result of typeof for primitive values, objects, arrays and null<br>o3: Run a JavaScript file with Node.js and read its console output | `java-foundations` |
+| `javascript-for-java-developers` | o1: Contrast JavaScript's dynamic typing and its Number and BigInt numeric primitives with Java's static numeric types<br>o2: Predict the result of typeof for primitive values, objects, arrays and null<br>o3: Run a JavaScript file with Node.js and read its console output | `java-foundations` |
 | `let-const-and-equals` | o1: Choose const by default and let only when a variable is reassigned<br>o2: Predict that a const object's properties can still change while the binding cannot<br>o3: Predict the results of == and === comparisons across types, and use === by default | `html-css-js/javascript-fundamentals/javascript-for-java-developers` |
 | `functions-as-values-arrow-functions-and-callbacks` | o1: Store a function in a variable and pass it to another function as a callback<br>o2: Rewrite a function expression as an arrow function, including the concise body form<br>o3: Predict whether a callback runs immediately or later in a given call | `html-css-js/javascript-fundamentals/let-const-and-equals` |
 | `arrays-and-objects-map-filter-reduce` | o1: Create and read object literals and arrays of objects<br>o2: Transform an array of objects with map and filter without mutating the original array<br>o3: Compute a total with reduce and an explicit initial value | `html-css-js/javascript-fundamentals/functions-as-values-arrow-functions-and-callbacks` |
 | `destructuring-and-spread` | o1: Extract values from arrays and objects with destructuring, including default values<br>o2: Copy and merge arrays and objects with spread syntax<br>o3: Predict that a spread copy is shallow: nested objects stay shared | `html-css-js/javascript-fundamentals/arrays-and-objects-map-filter-reduce` |
 | `modules-import-and-export` | o1: Export named and default values from a module file<br>o2: Import named and default exports with the matching syntax<br>o3: Explain why a browser page needs script type="module" to use import | `html-css-js/javascript-fundamentals/functions-as-values-arrow-functions-and-callbacks` |
 | `scope-and-closures` | o1: Identify which variables a function can see from its block, function and module scope<br>o2: Write a function that returns a closure keeping private state between calls<br>o3: Predict the values logged by callbacks created in a loop declared with let | `html-css-js/javascript-fundamentals/let-const-and-equals`<br>`html-css-js/javascript-fundamentals/functions-as-values-arrow-functions-and-callbacks` |
-| `project-setup-with-npm-and-vite` | o1: Scaffold a Vite project with npm and start its development server<br>o2: Explain the roles of package.json, package-lock.json and node_modules<br>o3: Distinguish dependencies from devDependencies and choose npm install or npm ci for a situation | `html-css-js/javascript-fundamentals/modules-import-and-export`<br>`git-linux-ai-foundations/linux-foundations/navigating-the-shell`<br>`git-linux-ai-foundations/linux-foundations/localhost-and-ports` |
+| `project-setup-with-npm-and-vite` | o1: Scaffold a Vite project with npm and start its development server on your own machine (performed as the first step of the S27 project build, or of Fast direct project work; rehearsed in the page's practice terminal)<br>o2: Explain the roles of package.json, package-lock.json and node_modules<br>o3: Distinguish dependencies from devDependencies and choose npm install or npm ci for a situation | `html-css-js/javascript-fundamentals/modules-import-and-export`<br>`git-linux-ai-foundations/linux-foundations/navigating-the-shell`<br>`git-linux-ai-foundations/linux-foundations/localhost-and-ports` |
 | `selecting-and-changing-the-dom` | o1: Select elements with querySelector and querySelectorAll<br>o2: Change text, attributes and classes, and add or remove elements<br>o3: Predict the page the DOM shows after a sequence of changes | `html-css-js/html-and-css/semantic-html-page-structure`<br>`html-css-js/javascript-fundamentals/arrays-and-objects-map-filter-reduce` |
 | `events-and-event-bubbling` | o1: Attach event listeners with addEventListener<br>o2: Trace an event's bubbling path and distinguish event.target from event.currentTarget<br>o3: Use event delegation and preventDefault in a list or form handler | `html-css-js/dom-tooling-and-async/selecting-and-changing-the-dom` |
 | `preventing-cross-site-scripting` | o1: Explain how untrusted text inserted with innerHTML can run script<br>o2: Render untrusted data with textContent or other safe DOM APIs instead of HTML strings<br>o3: Identify the risky sink in a code sample and rewrite it safely | `html-css-js/dom-tooling-and-async/selecting-and-changing-the-dom` |
 | `promises` | o1: Describe the pending, fulfilled and rejected states of a promise<br>o2: Chain then calls and handle a rejection with catch<br>o3: Run independent promises together with Promise.all and predict how one rejection affects it | `html-css-js/javascript-fundamentals/functions-as-values-arrow-functions-and-callbacks` |
 | `async-and-await` | o1: Rewrite a then chain with async and await<br>o2: Handle a rejected await with try and catch<br>o3: Predict that an async function always returns a promise | `html-css-js/dom-tooling-and-async/promises` |
 | `the-event-loop` | o1: Predict the output order of synchronous code, promise callbacks and setTimeout callbacks<br>o2: Explain why a long synchronous task freezes the page | `html-css-js/dom-tooling-and-async/promises`<br>`html-css-js/dom-tooling-and-async/async-and-await` |
-| `debugging-with-devtools-breakpoints` | o1: Set line-of-code and conditional breakpoints in the DevTools Sources panel<br>o2: Step over, into and out of functions while watching variable values<br>o3: Locate the line that causes a described bug using breakpoints rather than console.log | `html-css-js/dom-tooling-and-async/events-and-event-bubbling` |
+| `debugging-with-devtools-breakpoints` | o1: Set a line-of-code breakpoint and a conditional breakpoint on the page's buggy practice script in real Chrome or Firefox DevTools<br>o2: Predict variable values as execution steps over, into and out of a paused function<br>o3: Identify the faulty line and its fix in the page's buggy practice script by pausing, stepping and watching values in real DevTools | `html-css-js/dom-tooling-and-async/events-and-event-bubbling` |
 | `fetching-data` | o1: Request JSON with fetch and await and read the parsed body<br>o2: Explain why fetch resolves on HTTP error statuses and check response.ok<br>o3: Render fetched data into the page safely | `html-css-js/dom-tooling-and-async/async-and-await`<br>`html-css-js/dom-tooling-and-async/preventing-cross-site-scripting` |
 | `handling-http-errors-and-problemdetail-responses` | o1: Distinguish a network failure from an HTTP error response in fetch code<br>o2: Read the type, title, status and detail members of an application/problem+json response<br>o3: Show the learner-facing message that matches a 4xx or 5xx response | `html-css-js/fetch-and-browser-client/fetching-data`<br>`spring-boot` |
-| `fixing-cors-spring-security-config-vs-vite-dev-proxy` | o1: Explain why a browser blocks a cross-origin response and what a preflight request is<br>o2: Choose a Spring Security CORS configuration or a Vite dev-server proxy for a described setup<br>o3: Diagnose a CORS error from the browser console and network panel | `html-css-js/fetch-and-browser-client/fetching-data`<br>`html-css-js/dom-tooling-and-async/project-setup-with-npm-and-vite`<br>`spring-boot` |
+| `fixing-cors-spring-security-config-vs-vite-dev-proxy` | o1: Explain that the browser stops frontend JavaScript from reading a cross-origin response unless CORS permits it, and that only requests outside the CORS-safelisted conditions trigger a preflight<br>o2: Choose a Spring Security CORS configuration or a Vite dev-server proxy for a described setup<br>o3: Diagnose a CORS error from the browser console and network panel | `html-css-js/fetch-and-browser-client/fetching-data`<br>`html-css-js/dom-tooling-and-async/project-setup-with-npm-and-vite`<br>`spring-boot` |
 | `cookies-vs-localstorage-where-tokens-should-live` | o1: Compare an HttpOnly cookie with localStorage for script access and exposure to cross-site scripting<br>o2: Explain what the Secure, HttpOnly and SameSite cookie attributes do | `html-css-js/dom-tooling-and-async/preventing-cross-site-scripting` |
 | `calling-your-spring-boot-api-from-the-browser` | o1: Send GET and POST requests with a JSON body and Content-Type header to a REST API<br>o2: Map API responses, including error responses, to updates in the page | `html-css-js/fetch-and-browser-client/handling-http-errors-and-problemdetail-responses`<br>`html-css-js/fetch-and-browser-client/fixing-cors-spring-security-config-vs-vite-dev-proxy`<br>`spring-boot` |
 | `environment-settings-for-the-api-address` | o1: Read the API base URL from import.meta.env with a VITE_-prefixed variable defined in a .env file<br>o2: Explain why values exposed to client code are public and must never hold secrets | `html-css-js/dom-tooling-and-async/project-setup-with-npm-and-vite` |
@@ -146,13 +146,13 @@ Legend: **R** required, authored in the module PR; **V** required when a suitabl
 | `html-and-css/flexbox` | core | R | R | - | R | V | module:html-and-css |
 | `html-and-css/grid` | core | R | R | - | R | V | module:html-and-css |
 | `html-and-css/responsive-mobile-first-layout` | core | R | R | - | R | V | module:html-and-css |
-| `javascript-fundamentals/javascript-for-java-developers` | core | R | R | - | R | V | module:javascript-fundamentals |
-| `javascript-fundamentals/let-const-and-equals` | core | R | R | - | R | V | module:javascript-fundamentals |
-| `javascript-fundamentals/functions-as-values-arrow-functions-and-callbacks` | core | R | R | - | R | V | module:javascript-fundamentals |
-| `javascript-fundamentals/arrays-and-objects-map-filter-reduce` | core | R | R | - | R | V | module:javascript-fundamentals |
-| `javascript-fundamentals/destructuring-and-spread` | core | R | R | - | R | V | module:javascript-fundamentals |
-| `javascript-fundamentals/modules-import-and-export` | core | R | R | - | R | V | module:javascript-fundamentals |
-| `javascript-fundamentals/scope-and-closures` | core | R | R | - | R | V | module:javascript-fundamentals |
+| `javascript-fundamentals/javascript-for-java-developers` | core | R | R | - | R | V | - |
+| `javascript-fundamentals/let-const-and-equals` | core | R | R | - | R | V | - |
+| `javascript-fundamentals/functions-as-values-arrow-functions-and-callbacks` | core | R | R | - | R | V | - |
+| `javascript-fundamentals/arrays-and-objects-map-filter-reduce` | core | R | R | - | R | V | - |
+| `javascript-fundamentals/destructuring-and-spread` | core | R | R | - | R | V | - |
+| `javascript-fundamentals/modules-import-and-export` | core | R | R | - | R | V | - |
+| `javascript-fundamentals/scope-and-closures` | core | R | R | - | R | V | - |
 | `dom-tooling-and-async/project-setup-with-npm-and-vite` | core | R | R | - | R | V | - |
 | `dom-tooling-and-async/selecting-and-changing-the-dom` | core | R | R | - | R | V | - |
 | `dom-tooling-and-async/events-and-event-bubbling` | core | R | R | - | R | V | - |
@@ -169,6 +169,11 @@ Legend: **R** required, authored in the module PR; **V** required when a suitabl
 | `fetch-and-browser-client/environment-settings-for-the-api-address` | core | R | R | - | R | V | - |
 | `fetch-and-browser-client/testing-a-plain-function-with-vitest` | core | R | R | - | R | V | - |
 
+Applicability notes from reconciliation:
+
+- `project-setup-with-npm-and-vite` (education-02): the page's practice terminal rehearses command choice; objective o1's authentic performance is the first step of the S27 project build (Standard) and of the Fast direct project work on FT13.
+- `debugging-with-devtools-breakpoints` (education-03): no lab; the page carries an authentic local-browser step in which the learner debugs the page's own buggy practice script in real Chrome or Firefox DevTools; the simulator and the GIFT quiz evidence o2.
+
 ## Assessment blueprint
 
 None. No calendar day in S20-S27 or FT12-FT15 carries an assessment (`assessment: null` on all twelve days), so this course has no calendar module check.
@@ -179,18 +184,21 @@ The S27 Project-day blocks (plan, build, timed without AI, commit and walkthroug
 ## Lab plan
 
 Labs belong to the Standard track's lab overlay; Fast Track skips coding labs and moves to direct project implementation.
+Lab scope follows the confirmed coverage matrix: it expects a lab overlay only on the Standard Lab days S21 and S26 (reconciliation sme-03 removed the extra S23 lab the first draft planned).
 No lab uses Docker, Podman or any learner-side container engine. Each lab has exactly one language-native test command, runs offline after a one-time `npm ci`, ships public tests only and commits no solution or hidden test (`docs/lab-contract.md`).
-Planned prerequisite: Node.js 22.12 or later (`node --version`), which meets the Vite requirement (Node.js 20.19+ or 22.12+) and the Vitest requirement (Node 22.12.0 or later) recorded from the official guides on 2026-10-12, and provides the built-in `node:test` runner and global `fetch`.
+Planned prerequisite: Node.js 22.12 or later (`node --version`), which meets the Vite requirement (Node.js 20.19+ or 22.12+) and the Vitest requirement (Node 22.12.0 or later) recorded from the official guides on 2026-10-12, and provides the built-in `node:test` runner and global `fetch` (Node.js v22 documentation, in the source snapshot).
 
-| Lab | Scope and day | Covers | Test command | Design |
-|---|---|---|---|---|
-| `html-css-js/html-and-css/coding-lab` | module; Standard S21 Lab day | `flexbox`, `grid`, `responsive-mobile-first-layout` | `node --test` | Daemon-free and browser-free: public tests read the learner-written `index.html` and `styles.css` and check stated layout rules (flex and grid declarations, `min-width` media queries, viewport meta). Rendered appearance is checked by the learner in a browser and practised in the page simulators; the lab README says so plainly. |
-| `html-css-js/javascript-fundamentals/coding-lab` | module; Standard S23 Practice-day exercise ladder | all 7 `javascript-fundamentals` topics | `node --test` | Exercise ladder of ES module functions (types and equality, callbacks, map/filter/reduce, destructuring and spread, import and export, closures) with public `node:test` tests; no dependencies. |
-| `html-css-js/fetch-and-browser-client/coding-lab` | module; Standard S26 Lab day | `fetching-data`, `handling-http-errors-and-problemdetail-responses`, `calling-your-spring-boot-api-from-the-browser` | `node --test` | The learner writes an API client module; public tests start a deterministic `node:http` stub on `127.0.0.1` with an ephemeral port that returns JSON and `application/problem+json` responses, so the tests are offline and need no Spring Boot server. |
+| Lab | Scope and day | Planned duration | Covers | Test command | Design |
+|---|---|---|---|---|---|
+| `html-css-js/html-and-css/coding-lab` | module; Standard S21 Lab day | 62 minutes (section Minute budgets) | `flexbox`, `grid`, `responsive-mobile-first-layout` | `node --test` | Daemon-free and browser-free: public tests read the learner-written `index.html` and `styles.css` and check stated layout rules (flex and grid declarations, `min-width` media queries, viewport meta). Rendered appearance is checked by the learner in a browser and practised in the page simulators; the lab README says so plainly. |
+| `html-css-js/fetch-and-browser-client/coding-lab` | module; Standard S26 Lab day | 54 minutes (section Minute budgets) | `fetching-data`, `handling-http-errors-and-problemdetail-responses`, `calling-your-spring-boot-api-from-the-browser` | `node --test` | The learner writes an API client module; public tests start a deterministic `node:http` stub on `127.0.0.1` with an ephemeral port that returns JSON and `application/problem+json` responses, so the tests are offline and need no Spring Boot server. |
 
 No other lab is planned:
 
-- `dom-tooling-and-async` has no lab: S24 and S25 are Concept days with no calendar lab day, and DOM, events and DevTools need a browser that a `node --test` lab does not give honestly; the pages' simulators carry the practice.
+- `javascript-fundamentals` has no lab: the matrix gives S22 and S23 no lab overlay. The pages' simulators carry the practice, and the S23 Practice-day exercise ladder is a platform activity.
+- `dom-tooling-and-async` has no lab: S24 and S25 are Concept days with no calendar lab day and no matrix lab overlay; the pages' simulators carry the practice, with two authentic real-tool steps below.
+- `project-setup-with-npm-and-vite` (reconciliation education-02): objective o1 (scaffold a Vite project and start its dev server on the learner's own machine) is performed for real as the first step of the S27 project build on the Standard track, and as the first step of the Fast direct project work on FT13. The page's practice terminal is preparation that checks command reasoning; it is not claimed to verify scaffolding or server start.
+- `debugging-with-devtools-breakpoints` (reconciliation education-03): no lab is added, because the matrix gives this topic no lab overlay. The page itself carries an authentic local-browser step: `artifact.html` contains a small buggy practice script (no extra file is needed, since a topic directory allows only the contract filenames), and the learner debugs it in real Chrome or Firefox DevTools, setting a line-of-code and a conditional breakpoint, stepping and watching values, then reports the faulty line and its fix for the page to check. The simulator prepares the workflow. Objective o1 and o3 are evidenced by that real-DevTools step; o2 (predicting values while stepping) by the simulator and the formative quiz.
 - `fixing-cors-spring-security-config-vs-vite-dev-proxy`: CORS is enforced only by browsers, so the Node stub lab cannot reproduce it; the page simulator and the S27 Project build against the learner's real Spring Boot API carry it.
 - `environment-settings-for-the-api-address` and `testing-a-plain-function-with-vitest`: Vite-specific build-time behavior and Vitest itself are practised in the S27 Project build (Fast: project implementation) and in the pages.
 - S20 topics, `the-box-model` and the Reading topic: practised in the pages; S20 is a Concept day.
@@ -210,31 +218,34 @@ The rule needs a measured page, and no page exists yet, so the intake records a 
 - `modeledP50` and `modeledWorstPath`: 0, meaning not measured; `minutes.basis` says so in every `topic.json`.
 - In the module PR the author records the frozen estimator P50, models the worst required route (two wrong graded attempts and wrong-first explores before settling), and raises `budget` and `aboutLabel` to at least `ceil(max(P50, modeledWorstPath))`. A budget is never lowered below that minimum to fit a day.
 
-Planned day totals against the day type's complete block total (T14 sums the budgets of present pages mapped to each day):
+### Block allocation per day (reconciliation education-01)
 
-| Day | Day type | Topics | Planned budgets | Day total |
-|---|---|---|---|---|
-| S20 | Concept | 4 | 40 | 120 |
-| S21 | Lab | 3 | 30 | 120 |
-| S22 | Concept | 4 | 40 | 120 |
-| S23 | Practice | 3 | 30 | 120 |
-| S24 | Concept | 4 | 40 | 120 |
-| S25 | Concept | 4 | 40 | 120 |
-| S26 | Lab | 4 | 38 | 120 |
-| S27 | Project | 3 | 30 | 120 |
-| FT12 | Fast | 9 | 90 | 120 |
-| FT13 | Fast | 6 | 60 | 120 |
-| FT14 | Fast | 7 | 70 | 120 |
-| FT15 | Fast | 7 | 68 | 120 |
+Every fixed block of each day's frozen template (`pep-calendar.json` `dayTypes`) is assigned below. Each artifact is counted once: inside one named block, or as additional time when no block can hold it. "Platform" marks blocks that Evolv delivers and this repository does not author; the formative GIFT quizzes may supply warm-up and quiz items, and the topic videos are scheduled only in the Concept-day Short video block.
 
-All planned totals fit. Pacing risk: FT12 maps 9 topics, so it overflows its 120-minute total if the measured topics average more than 13.3 minutes; FT14 (7 topics) and FT15 (7 topics) overflow above an average of about 17, beyond the 15-minute cap, so they cannot overflow. An FT12 overflow at authoring needs an explicit pacing decision outside the gate (Fast pages may exceed the 10-minute skim block; plan section 2.4).
+| Day | Template (block minutes) | Topic pages (planned) | Allocation | Total | Fit |
+|---|---|---|---|---|---|
+| S20, S22, S24, S25 | Concept: Warm-up 8, Reading 15, Short video 8, Worked example 12, Short exercises 20, Faded then fresh 40, Mini-quiz 7, Reflection 10 | 4 pages, 40 | Warm-up 8: platform, may draw on the topic GIFT quizzes. Reading 15 + Worked example 12 + 13 of Short exercises: the four topic pages (40), whose teach-then-do steps and simulators are the worked examples and first short exercises. Remaining 7 of Short exercises and Faded then fresh 40: platform coding practice. Short video 8: topic videos whose runtimes sum to 8 minutes or less across the day (a video that does not fit is recorded absent with the reason). Mini-quiz 7: the topic GIFT quizzes (about 30 seconds per question, 3 per topic). Reflection 10: platform. | 120 | fits |
+| S21 | Lab: Warm-up 8, Lab brief 7, Guided lab 85, Redo one step without AI 10, Reflection 10 | 3 pages, 30 | Warm-up 8: platform, may draw on the GIFT quizzes. Lab brief 7 + 23 of Guided lab: the three topic pages (30) as the lab primer. Remaining 62 of Guided lab: `html-and-css/coding-lab`. Redo 10 and Reflection 10: platform. Topic videos are not scheduled on this day (the Lab template's only video is setup video inside the guided lab). | 120 | fits; lab duration 62 |
+| S23 | Practice: Warm-up 10, Refresher 5, Exercise ladder 45, AI-assisted extension 10, Timed without AI 30, Quiz 10, Explain your code 10 | 3 pages, 30 | Warm-up 10: platform. Refresher 5 + 25 of Exercise ladder: the three topic pages (30), whose in-page exercises are the ladder's first rungs. Remaining 20 of Exercise ladder, AI-assisted extension 10, Timed 30 and Explain 10: platform. Quiz 10: the topic GIFT quizzes. No lab (matrix: no overlay). | 120 | fits |
+| S26 | Lab: as S21 | 4 pages, 38 | Warm-up 8: platform, may draw on the GIFT quizzes. Lab brief 7 + 31 of Guided lab: the four topic pages (38). Remaining 54 of Guided lab: `fetch-and-browser-client/coding-lab`. Redo 10 and Reflection 10: platform. No topic video scheduled. | 120 | fits; lab duration 54 |
+| S27 | Project: Warm-up 5, Plan the work 10, Build 80, Timed without AI 15, Commit and walkthrough note 10 | 3 pages, 30 | Warm-up 5: platform. Plan 10: platform. Build 80: the three topic pages (30) used as the build's reference, plus 50 minutes of building, whose first step scaffolds the Vite project and starts its dev server (`project-setup-with-npm-and-vite` o1). Timed 15 and Commit 10: platform. No topic video scheduled. | 120 | fits; build time drops to 50 minutes, a pacing note for the reconciler |
+| FT12 | Fast: Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5 | 9 pages, 90 | Warm-up 5: platform. Skim 10: first 10 page minutes. Diagnostic 15, Project 70, Timed 15, Reflection 5: platform (Fast direct project; no lab). The other 80 page minutes have no block. | 200 | **overflow 80** |
+| FT13 | Fast: as FT12 | 6 pages, 60 | As FT12; the Project block's first step scaffolds the Vite project and starts its dev server (`project-setup-with-npm-and-vite` o1). The other 50 page minutes have no block. | 170 | **overflow 50** |
+| FT14 | Fast: as FT12 | 7 pages, 70 | As FT12. The other 60 page minutes have no block. | 180 | **overflow 60** |
+| FT15 | Fast: as FT12 | 7 pages, 68 | As FT12. The other 58 page minutes have no block. | 178 | **overflow 58** |
+
+Standard days fit their templates with the planned allowances; if measured page budgets rise in a module PR, the lab or build share on S21, S26 and S27, or the platform exercise share on Concept and Practice days, shrinks by the same minutes, and a day whose page minutes exceed its assignable blocks is reported as overflow, never compressed.
+Fast days overflow: the Fast template gives canonical pages only the 10-minute Skim block, and the ` (skim)` rows do not shorten the shared pages. No topic or block is dropped. This needs an explicit Fast pacing decision outside the gate (plan section 2.4 treats Fast page totals as a platform pacing matter and escalates gross overflow).
+
+For reference, gate T14 sums only the planned topic budgets per day against the 120-minute day total and passes: S20, S22, S24 and S25 40; S21, S23 and S27 30; S26 38; FT12 90; FT13 60; FT14 70; FT15 68.
 
 ## Official sources per topic
 
 Closes `source-gap-html-css-js-official-evidence`.
-Every source below was fetched live on 2026-10-12 (UTC) for this intake; `evidence/html-css-js/source-snapshot.json` records each final URL with retrieval time, the sha256 of the fetched bytes and the topic sections used.
-All 85 URLs returned HTTP 200; there is no unreachable source and no recorded gap. Redirects were recorded at their final URL (for example MDN's HTML elements reference and grid guide, the npm CLI pages and the Vitest API index). Raw fetched pages are not committed.
+Every source below was fetched live on 2026-10-12 (UTC) for this intake (the two Node.js v22 lab-runtime sources were added at reconciliation sme-04); `evidence/html-css-js/source-snapshot.json` records each final URL with retrieval time, the sha256 of the fetched bytes and the topic sections used.
+All 87 URLs returned HTTP 200; there is no unreachable source and no recorded gap. Redirects were recorded at their final URL (for example MDN's HTML elements reference and grid guide, the npm CLI pages and the Vitest API index). Raw fetched pages are not committed.
 First-party means the owning standard or vendor: WHATWG (HTML, DOM, Fetch), W3C (WCAG, ARIA, CSS modules), the CSS Working Group drafts, Ecma TC39, the IETF RFC Editor, Node.js, npm, Vite, Vitest, Spring, Chrome and Firefox DevTools, OWASP for security guidance, and MDN, the reference the calendar names for `web`.
+Lab runtime (not a topic): [Node.js v22 test runner](https://nodejs.org/docs/latest-v22.x/api/test.html) and [Node.js v22 global objects, fetch](https://nodejs.org/docs/latest-v22.x/api/globals.html), fetched from Node.js v22.23.3 documentation.
 Recorded at fetch: Vite requires Node.js 20.19+ or 22.12+; Vitest requires Vite 6.4.0 or later and Node 22.12.0 or later; the ECMAScript draft fetched is ECMAScript 2027.
 
 Freshness: every `topic.json` records `unverified` with no `checkedAt`, because no page exists. The module PR binds each page claim to `evidence/html-css-js/<module>/<topic>/sources.json` and refreshes the receipts; SME criticism re-verifies them.
@@ -275,4 +286,14 @@ Calendar references for `web`: [MDN: Learn web development](https://developer.mo
 
 ## Intake criticism
 
-Pending. The manifests, objectives, applicability, lab plan and this intake receive fresh independent educational and technology-SME criticism, then non-author reconciliation, before any correction; the author does not approve this first output.
+The two critic reports and the reconciliation for the first intake commit are committed unchanged as `intake-critic-education.json`, `intake-critic-sme.json` and `intake-reconciliation.json`.
+Outcome: all 8 findings accepted and applied in one correction loop:
+
+- education-01: per-day block allocation and lab durations (section Minute budgets); the Fast days are reported as overflow.
+- education-02: `project-setup-with-npm-and-vite` o1 mapped to the first step of the S27 project build and of Fast direct project work (section Lab plan; `topic.json` o1 and lab reason).
+- education-03: `debugging-with-devtools-breakpoints` objectives rewritten around an in-page real-DevTools step, with no new lab (section Lab plan; `topic.json`).
+- sme-01: `javascript-for-java-developers` o1 names the Number and BigInt numeric primitives.
+- sme-02: `fixing-cors-spring-security-config-vs-vite-dev-proxy` o1 restates what CORS restricts and when a preflight happens.
+- sme-03: the S23 `javascript-fundamentals` module lab is removed; its seven topics record `lab: none`.
+- sme-04: the Node.js v22 test runner and global fetch documentation are added to the source snapshot.
+- sme-05: `forms-and-html5-validation` o1 requires a visible label for each visible user-input control and accessible names for other controls.
