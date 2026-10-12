@@ -33,13 +33,13 @@ S39 and FT23 carry the calendar assessment `moduleCheck` (formats MCQ and coding
 | Order | Module | Title | Standard days | Fast days | Topics |
 |---|---|---|---|---|---|
 | 1 | `containers-and-compose` | Containers and Compose | S36, S37 | FT21; FT22 row 0 | 8 |
-| 2 | `microservices-and-ci-cd` | Microservices and CI/CD | S38, S39 | FT22 rows 1-4; FT23 rows 0-2 | 7 |
+| 2 | `microservices-and-ci-cd` | Microservices and CI/CD | S38, S39 | FT22 rows 1-4; FT23 rows 0-2 | 8 |
 
 Alternatives considered: one module per day (four modules of 3-4 topics, below the usual 4-9 batch size, and S39 would hold only three topics), or one course-wide module (15 topics, too large for one author context). The FT22 row 0 health-check topic belongs to module 1 because its Standard row is S37; the Fast overlay will reference it from FT22.
 
 ## Topic list with relations
 
-Topic ids are second-mate slugs chosen at intake (the matrix's proposed slugs are marked `pending-intake-proposed-slug`); seven are shortened from the matrix proposals for stable, readable paths: `multi-stage-builds`, `compose-spring-boot-and-database`, `service-name-networking`, `adding-fastapi-service-to-compose`, `service-to-service-calls`, `sql-nosql-gateways-and-discovery` and `github-actions-pipeline`. The slug change is recorded here so the Fast overlay and the matrix can be re-pointed.
+Topic ids are second-mate slugs chosen at intake (the matrix's proposed slugs are marked `pending-intake-proposed-slug`); six are shortened from the matrix proposals for stable, readable paths (`multi-stage-builds`, `compose-spring-boot-and-database`, `service-name-networking`, `adding-fastapi-service-to-compose`, `service-to-service-calls`, `github-actions-pipeline`), and the matrix's single `sql-vs-nosql-api-gateways-and-service-discovery` proposal becomes the split pair `sql-vs-nosql` and `api-gateways-and-service-discovery`. The slug change is recorded here so the Fast overlay and the matrix can be re-pointed.
 
 | # | Topic | Module | Kind | Standard row | Fast row | Relation | Calendar strings |
 |---|---|---|---|---|---|---|---|
@@ -54,18 +54,20 @@ Topic ids are second-mate slugs chosen at intake (the matrix's proposed slugs ar
 | 9 | `monolith-vs-microservices` | `microservices-and-ci-cd` | core | S38 `/tracks/1/weeks/7/days/2/topics/0` | FT22 `/tracks/2/weeks/4/days/1/topics/1` | exact | S38: Monolith vs microservices: a database per service and the trade-offs<br>FT22: Monolith vs microservices: a database per service and the trade-offs |
 | 10 | `adding-fastapi-service-to-compose` | `microservices-and-ci-cd` | core | S38 `/tracks/1/weeks/7/days/2/topics/1` | FT22 `/tracks/2/weeks/4/days/1/topics/2` | exact | S38: Adding the FastAPI service and its database to Compose<br>FT22: Adding the FastAPI service and its database to Compose |
 | 11 | `service-to-service-calls` | `microservices-and-ci-cd` | core | S38 `/tracks/1/weeks/7/days/2/topics/2` | FT22 `/tracks/2/weeks/4/days/1/topics/3` | exact | S38: Service-to-service calls: tokens, timeouts and failed downstream calls<br>FT22: Service-to-service calls: tokens, timeouts and failed downstream calls |
-| 12 | `sql-nosql-gateways-and-discovery` | `microservices-and-ci-cd` | reading | S38 `/tracks/1/weeks/7/days/2/topics/3` | FT22 `/tracks/2/weeks/4/days/1/topics/4` | exact | S38: Reading: SQL vs NoSQL, API gateways and service discovery<br>FT22: SQL vs NoSQL, API gateways and service discovery (skim) |
-| 13 | `github-actions-pipeline` | `microservices-and-ci-cd` | core | S39 `/tracks/1/weeks/7/days/3/topics/0` | FT23 `/tracks/2/weeks/4/days/2/topics/0` | exact | S39: A GitHub Actions pipeline: tests, then image builds<br>FT23: A GitHub Actions pipeline: tests, then image builds |
-| 14 | `secrets-in-ci` | `microservices-and-ci-cd` | core | S39 `/tracks/1/weeks/7/days/3/topics/1` | FT23 `/tracks/2/weeks/4/days/2/topics/1` | exact | S39: Secrets in CI<br>FT23: Secrets in CI |
-| 15 | `jenkins-registries-cd-and-kubernetes` | `microservices-and-ci-cd` | reading | S39 `/tracks/1/weeks/7/days/3/topics/2` | FT23 `/tracks/2/weeks/4/days/2/topics/2` | exact | S39: Reading (optional): Jenkins, registries, CD and Kubernetes<br>FT23: Reading (optional): Jenkins, registries, CD and Kubernetes |
+| 12 | `sql-vs-nosql` | `microservices-and-ci-cd` | reading | S38 `/tracks/1/weeks/7/days/2/topics/3` | FT22 `/tracks/2/weeks/4/days/1/topics/4` | split | S38: Reading: SQL vs NoSQL, API gateways and service discovery<br>FT22: SQL vs NoSQL, API gateways and service discovery (skim) |
+| 13 | `api-gateways-and-service-discovery` | `microservices-and-ci-cd` | reading | S38 `/tracks/1/weeks/7/days/2/topics/3` | FT22 `/tracks/2/weeks/4/days/1/topics/4` | split | S38: Reading: SQL vs NoSQL, API gateways and service discovery<br>FT22: SQL vs NoSQL, API gateways and service discovery (skim) |
+| 14 | `github-actions-pipeline` | `microservices-and-ci-cd` | core | S39 `/tracks/1/weeks/7/days/3/topics/0` | FT23 `/tracks/2/weeks/4/days/2/topics/0` | exact | S39: A GitHub Actions pipeline: tests, then image builds<br>FT23: A GitHub Actions pipeline: tests, then image builds |
+| 15 | `secrets-in-ci` | `microservices-and-ci-cd` | core | S39 `/tracks/1/weeks/7/days/3/topics/1` | FT23 `/tracks/2/weeks/4/days/2/topics/1` | exact | S39: Secrets in CI<br>FT23: Secrets in CI |
+| 16 | `jenkins-registries-cd-and-kubernetes` | `microservices-and-ci-cd` | reading | S39 `/tracks/1/weeks/7/days/3/topics/2` | FT23 `/tracks/2/weeks/4/days/2/topics/2` | exact | S39: Reading (optional): Jenkins, registries, CD and Kubernetes<br>FT23: Reading (optional): Jenkins, registries, CD and Kubernetes |
 
 Relations:
 
-- **exact** for every topic: each topic carries one mapping per track, and each calendar row maps to exactly one topic. No row is split and no row is shared, because every row names one teachable idea that fits one page within the 15-minute cap.
+- **split** S38 row 3 `/tracks/1/weeks/7/days/2/topics/3` "Reading: SQL vs NoSQL, API gateways and service discovery" and its Fast variant FT22 row 4 `/tracks/2/weeks/4/days/1/topics/4`: `sql-vs-nosql` (data-store choice) and `api-gateways-and-service-discovery` (gateway routing and service discovery). The row names two separate decisions, and one page cannot build both models honestly (intake reconciliation education-01). The frozen row is unchanged and no concept is added or removed.
+- **exact** for every other topic: each carries one mapping per track and each of those calendar rows maps to exactly one topic. No row is shared.
 - Fast wording variants map to the same canonical topic (plan section 2.4): "Multi-stage builds: back-end and front-end images" and the longer Standard wording; "Health checks and depends_on" and "depends_on with health checks". `(skim)` rows (image layers, debugging, SQL vs NoSQL) are track emphasis for the Fast overlay, not separate pages.
 - `Reading:` and `Reading (optional):` rows are kind `reading`; the optional status is track metadata for the overlay.
 - S39 row 3 and FT23 row 3 "Containers and CI/CD module check" map to the course blueprint `containers-cicd/assessments/containers-cicd-module-check`, never to a learner topic (matrix `assessmentRef` scope `course`). No review row exists in this slice, so the intake adds no review page.
-- 15 calendar rows per track (30 strings) become 15 topics plus one blueprint; plan section 2.3 counts 16 rows including the module check.
+- 15 calendar rows per track (30 strings) become 16 topics (one split) plus one blueprint; plan section 2.3 counts 16 rows including the module check.
 
 Prerequisites: in-course prerequisites are exact `<course>/<module>/<topic>` references. Course 1 topic ids exist, so `git-linux-ai-foundations` topics are named exactly. Other courses (`sql-jdbc-foundations`, `spring-boot`, `python`, `react`, `html-css-js`) have no topic ids yet and are named by course id only.
 
@@ -74,7 +76,7 @@ Prerequisites: in-course prerequisites are exact `<course>/<module>/<topic>` ref
 - `containers-cicd/containers-and-compose/containers-and-images`
   - o1: Tell an image (a read-only, layered template) from a container (a running or stopped instance created from an image) in a described scenario
   - o2: Predict what a given docker run or podman run command does: which image it starts, the container name, and the effect of -d and --rm
-  - o3: Explain that Podman runs the same OCI images without a background daemon and accepts the same core build, run, ps and images commands used in this course
+  - o3: Explain that Podman runs the same OCI images, is daemonless on Linux but on macOS and Windows runs containers inside a Linux virtual machine started with podman machine, and accepts the same core build, run, ps and images commands used in this course
 - `containers-cicd/containers-and-compose/image-layers-and-build-caching`
   - o1: Explain that RUN, COPY and ADD instructions each add an image layer and that a changed step invalidates the build cache for every later step
   - o2: Reorder a Dockerfile so dependency files are copied and installed before application source, and predict which steps rebuild after a source-only change
@@ -84,7 +86,7 @@ Prerequisites: in-course prerequisites are exact `<course>/<module>/<topic>` ref
   - o2: Write a two-stage Dockerfile for the front end that builds static files with Node and serves only the build output with nginx
   - o3: Explain how COPY --from keeps compilers, package caches and source files out of the final image, and why that makes the image smaller
 - `containers-cicd/containers-and-compose/ports-volumes-and-environment-variables`
-  - o1: Publish a container port with -p HOST:CONTAINER and predict which host URL reaches the service
+  - o1: Publish a container port with -p and predict who can reach it: 8080:80 listens on every host address, while 127.0.0.1:8080:80 is reachable only from the local machine, the default for development
   - o2: Choose a named volume for database data and a bind mount for source files you edit, and predict what survives removing the container
   - o3: Pass configuration into a container with -e or --env-file instead of writing the values into the image
 - `containers-cicd/containers-and-compose/compose-spring-boot-and-database`
@@ -113,19 +115,23 @@ Prerequisites: in-course prerequisites are exact `<course>/<module>/<topic>` ref
   - o3: Explain why the server inside the container must listen on 0.0.0.0 rather than 127.0.0.1 for a published or service-to-service port to work
 - `containers-cicd/microservices-and-ci-cd/service-to-service-calls`
   - o1: Forward a bearer token in the Authorization header on a call from one service to another, with the token taken from the incoming request or configuration rather than hard-coded
-  - o2: Set connect and read timeouts on an outgoing HTTP call and predict what the caller does without them when the downstream service hangs
+  - o2: Set explicit connect and read timeouts on an outgoing call with HTTPX in the FastAPI service and with Spring's RestClient, and compare them with each client's documented default and with timeouts deliberately disabled when the downstream service hangs
   - o3: Turn a failed or timed-out downstream call into a clear error response, such as 502, 503 or 504, instead of a hang or an unhandled exception
-- `containers-cicd/microservices-and-ci-cd/sql-nosql-gateways-and-discovery`
-  - o1: Contrast a relational (SQL) store with document and key-value (NoSQL) stores for a described data need
-  - o2: Explain what an API gateway does for clients that use several services
-  - o3: Explain service discovery and relate it to how Compose resolves service names
+- `containers-cicd/microservices-and-ci-cd/sql-vs-nosql`
+  - o1: Contrast a relational (SQL) store with document and key-value (NoSQL) stores on schema, querying and consistency
+  - o2: Choose a store type for a described service's data and justify the choice from its access pattern
+  - o3: Explain how database-per-service lets two services use different store types
+- `containers-cicd/microservices-and-ci-cd/api-gateways-and-service-discovery`
+  - o1: Explain what an API gateway does for clients that use several services: one entry point, routing, and shared concerns such as authentication
+  - o2: Explain service discovery and tell client-side discovery from server-side discovery
+  - o3: Relate Compose's service-name DNS resolution to service discovery
 - `containers-cicd/microservices-and-ci-cd/github-actions-pipeline`
   - o1: Read a workflow file and identify its trigger (on), jobs, runner (runs-on) and steps
   - o2: Write a workflow in which a test job runs first and an image-build job runs only after it succeeds, using needs
   - o3: Explain what actions/checkout and docker/build-push-action do in the build job, and when an image is only built versus also pushed
 - `containers-cicd/microservices-and-ci-cd/secrets-in-ci`
   - o1: Reference a repository secret as ${{ secrets.NAME }} in a workflow instead of writing the credential into the file
-  - o2: Explain that GitHub redacts secret values in logs, and why a workflow run triggered from a fork does not receive repository secrets
+  - o2: Explain that GitHub attempts to redact registered secrets in logs but that redaction is not a permission boundary, so a workflow never prints a secret and masks other sensitive values with add-mask, and that a run triggered from a fork receives no repository secrets (GITHUB_TOKEN excepted)
   - o3: Restrict the GITHUB_TOKEN with a permissions block to the least access the workflow needs
 - `containers-cicd/microservices-and-ci-cd/jenkins-registries-cd-and-kubernetes`
   - o1: Compare a declarative Jenkinsfile pipeline with a GitHub Actions workflow: stages and steps versus jobs and steps
@@ -134,7 +140,7 @@ Prerequisites: in-course prerequisites are exact `<course>/<module>/<topic>` ref
 
 ## Artifact applicability
 
-Scope follows the frozen matrix rows (`expectedArtifacts`): every topic requires a topic page (`artifact.html`), its text alternative (`artifact.md`), an in-page simulator, and a practice quiz (`artifact.gift`); a video when a suitable verified one exists; a print handout (`artifact.pdf`) for the two `Reading:` rows; and a Standard lab overlay for each day S36-S39, met by the two module labs below. The matrix gives the optional S39 reading no print handout, so its PDF is recorded not applicable.
+Scope follows the frozen matrix rows (`expectedArtifacts`): every topic requires a topic page (`artifact.html`), its text alternative (`artifact.md`), an in-page simulator, and a practice quiz (`artifact.gift`); a video when a suitable verified one exists; a print handout (`artifact.pdf`) for the two `Reading:` rows, which is three pages because S38 row 3 is split; and a Standard lab overlay for each day S36-S39, met by the two module labs below. The matrix gives the optional S39 reading no print handout, so its PDF is recorded not applicable.
 
 Legend: **R** required, authored in the module PR; **V** required when a suitable, live, public, embeddable video within budget exists, otherwise absent with the search record; **M** practised in the planned module lab; **-** not applicable, with the reason in `topic.json`.
 
@@ -151,7 +157,8 @@ Legend: **R** required, authored in the module PR; **V** required when a suitabl
 | `microservices-and-ci-cd/monolith-vs-microservices` | core | R | R | - | R | V | - |
 | `microservices-and-ci-cd/adding-fastapi-service-to-compose` | core | R | R | - | R | V | M |
 | `microservices-and-ci-cd/service-to-service-calls` | core | R | R | - | R | V | - |
-| `microservices-and-ci-cd/sql-nosql-gateways-and-discovery` | reading | R | R | R | R | V | - |
+| `microservices-and-ci-cd/sql-vs-nosql` | reading | R | R | R | R | V | - |
+| `microservices-and-ci-cd/api-gateways-and-service-discovery` | reading | R | R | R | R | V | - |
 | `microservices-and-ci-cd/github-actions-pipeline` | core | R | R | - | R | V | M |
 | `microservices-and-ci-cd/secrets-in-ci` | core | R | R | - | R | V | M |
 | `microservices-and-ci-cd/jenkins-registries-cd-and-kubernetes` | reading | R | R | - | R | V | - |
@@ -168,8 +175,11 @@ Approved Q4b: daemon-free validation of learner-written Dockerfile, Compose and 
 | `containers-cicd/microservices-and-ci-cd/coding-lab` | module | S38, S39 (required); Fast not required | `adding-fastapi-service-to-compose`, `github-actions-pipeline`, `secrets-in-ci` | `compose.yaml` (extended), `fastapi/Dockerfile`, `.github/workflows/ci.yml` | `node --test` |
 
 - Language and command: JavaScript on Node.js 24, `node --test` (the lab contract's JavaScript example). One-time offline-capable setup `npm ci` installs one pinned YAML parser with its committed lockfile; the test command then runs fully offline. The public tests parse the learner's files as text and YAML and check stated rules (for example: named stages and `COPY --from`; dependency manifests copied before source; `.dockerignore` entries; a named volume for database data; credentials read from `${VAR}` interpolation or `env_file`, not literals; connection URLs that use a service name, not `localhost`; a database `healthcheck` with `depends_on` `condition: service_healthy`; a test job and a build job with `needs`; `${{ secrets.NAME }}` references and a `permissions` block). They never build images, start containers or call a daemon.
+- Port exposure (intake reconciliation ops-sme-002): the module 1 lab rejects a Compose `ports` entry that omits the host IP and requires `127.0.0.1:HOST:CONTAINER` loopback binding for development; pages and simulators contrast `8080:80` (every host address) with `127.0.0.1:8080:80` (local machine only), and development examples default to loopback.
+- Action pinning (intake reconciliation ops-sme-001): the module 2 lab has a public test, and the README a learner instruction, that rejects branch names, floating or version tags and unqualified refs in every non-local `uses:` entry and requires a full-length 40-character commit SHA, with the human-readable release tag kept in a trailing comment, for example `actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1` and `docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0` (tag commits read from the GitHub API on 2026-10-12). Page examples use the same pins. GitHub documents pinning to a full-length commit SHA as the only immutable reference for a third-party action (secure use reference).
+- Secrets (intake reconciliation ops-sme-003): no page, simulator or lab example prints a secret; examples mask other sensitive values with `::add-mask::`, and teaching text treats log redaction as best effort, not a permission boundary.
 - Starters fail the named public tests with stable messages; no solutions or hidden tests are committed; the solved-run record follows `docs/lab-contract.md` section 10.
-- Topics with no lab (`containers-and-images`, `debugging-with-logs-and-exec`, `monolith-vs-microservices`, `service-to-service-calls`, `sql-nosql-gateways-and-discovery`, `jenkins-registries-cd-and-kubernetes`) record `lab: none` with a reason: they need a running engine, servers or a cluster, or they are conceptual, so the page simulator gives the honest practice. The educational critic confirms each omission.
+- Topics with no lab (`containers-and-images`, `debugging-with-logs-and-exec`, `monolith-vs-microservices`, `service-to-service-calls`, `sql-vs-nosql`, `api-gateways-and-service-discovery`, `jenkins-registries-cd-and-kubernetes`) record `lab: none` with a reason: they need a running engine, servers or a cluster, they are conceptual, or (for `service-to-service-calls`, education-04) running both services locally adds multi-runtime setup with too little learning beyond a simulator that directly checks token forwarding, timeout choice and failure responses. The educational critic confirms each omission.
 - `module.json` `moduleLabs` stays empty and topics record `lab: module:<module>` until the module PR adds the lab directory, so no manifest names a file that does not exist.
 - The S39/FT23 coding part of the module check is likewise daemon-free (a Compose-file edit), so no assessment needs an engine.
 
@@ -177,7 +187,7 @@ Approved Q4b: daemon-free validation of learner-written Dockerfile, Compose and 
 
 Rule: the revised new-course rule merged on `main` (`docs/tools/validators.md`, section Reading time): each integer topic budget is at least `ceil(max(estimator P50, modeledWorstPath))`, capped at 15 minutes, with no weighted day-pool shares and no compression. Course 1's `legacy-label:` basis is not used.
 
-No page exists at intake, so the estimator cannot run. Each `modeledP50` is the planned estimator P50 target for the page and each `modeledWorstPath` the planned worst required route (two wrong graded attempts per interactive unit and wrong-first explores before settling). Planning basis: course-1 core pages measured estimator P50 5-8 minutes with worst routes up to about 9.4; these topics carry denser command and file syntax, so core pages plan P50 7-9 and worst 10-12, and readings plan P50 6-7 and worst 8-9. `budget` = `aboutLabel` = `ceil(max(P50, worst))`. The module PR replaces `modeledP50` with the frozen estimator's P50 on the authored bytes, re-models the worst path and raises the budget if the measured minimum is higher; T14 then enforces it.
+No page exists at intake, so the estimator cannot run. Each `modeledP50` is the planned estimator P50 target for the page and each `modeledWorstPath` the planned worst required route (two wrong graded attempts per interactive unit and wrong-first explores before settling). Planning basis: course-1 core pages measured estimator P50 5-8 minutes with worst routes up to about 9.4; these topics carry denser command and file syntax, so core pages plan P50 7-9 and worst 10-12, and readings plan P50 5-7 and worst 7-9. `budget` = `aboutLabel` = `ceil(max(P50, worst))`. The module PR replaces `modeledP50` with the frozen estimator's P50 on the authored bytes, re-models the worst path and raises the budget if the measured minimum is higher; T14 then enforces it.
 
 | Topic | Days | Planned P50 | Planned worst path | Budget = about-label |
 |---|---|---|---|---|
@@ -192,12 +202,13 @@ No page exists at intake, so the estimator cannot run. Each `modeledP50` is the 
 | `monolith-vs-microservices` | S38, FT22 | 7 | 10 | 10 |
 | `adding-fastapi-service-to-compose` | S38, FT22 | 7 | 10 | 10 |
 | `service-to-service-calls` | S38, FT22 | 9 | 12 | 12 |
-| `sql-nosql-gateways-and-discovery` | S38, FT22 | 7 | 9 | 9 |
+| `sql-vs-nosql` | S38, FT22 | 5 | 7 | 7 |
+| `api-gateways-and-service-discovery` | S38, FT22 | 5 | 7 | 7 |
 | `github-actions-pipeline` | S39, FT23 | 9 | 12 | 12 |
 | `secrets-in-ci` | S39, FT23 | 7 | 10 | 10 |
 | `jenkins-registries-cd-and-kubernetes` | S39, FT23 | 7 | 9 | 9 |
 
-Day totals against the 120-minute day (T14 sums each topic budget on every day it maps to): S36: 43; S37: 41; S38: 41; S39: 31; FT21: 74; FT22: 51; FT23: 31. All fit; the Lab and Fast day blocks keep the rest of the day for the guided lab or project, the without-AI block and the reflection.
+Day totals against the 120-minute day (T14 sums each topic budget on every day it maps to): S36: 43; S37: 41; S38: 46; S39: 31; FT21: 74; FT22: 56; FT23: 31. All fit; the Lab and Fast day blocks keep the rest of the day for the guided lab or project, the without-AI block and the reflection.
 
 ## S39/FT23 assessment blueprint
 
@@ -212,8 +223,8 @@ Day totals against the 120-minute day (T14 sums each topic budget on every day i
   - `containers-cicd/containers-and-compose/debugging-with-logs-and-exec#o3` (MCQ)
   - `containers-cicd/microservices-and-ci-cd/monolith-vs-microservices#o2` (MCQ)
   - `containers-cicd/microservices-and-ci-cd/service-to-service-calls#o2` (MCQ)
-  - `containers-cicd/microservices-and-ci-cd/github-actions-pipeline#o2` (MCQ)
-  - `containers-cicd/microservices-and-ci-cd/secrets-in-ci#o1` (MCQ)
+  - `containers-cicd/microservices-and-ci-cd/github-actions-pipeline#o1` (MCQ)
+  - `containers-cicd/microservices-and-ci-cd/secrets-in-ci#o2` (MCQ)
   - `containers-cicd/containers-and-compose/service-name-networking#o2` (coding)
   - `containers-cicd/containers-and-compose/depends-on-with-health-checks#o2` (coding)
 
@@ -222,16 +233,33 @@ Day totals against the 120-minute day (T14 sums each topic budget on every day i
   - Fast FT23 (Fast day): MCQ in the "Try-first diagnostic" MCQ-and-coding block (15 minutes) and coding in the "Timed, without AI" coding-assessment block (15 minutes). The Fast Warm-up quiz block (5 minutes) is too short for the shared MCQ part.
   - MCQ: 8 items in 8 minutes, about 1 minute per scenario item, one item per MCQ objective. coding: 1 Compose-file task in 10 minutes covering the two coding objectives. `durationMinutes` 18 = 8 + 10, which fits the smaller Standard blocks and leaves Fast slack.
   - Where each part is scheduled on the platform is the platform assessment owner's call; this is the intake proposal for critic review.
-- Allowed resources: the no-AI rule applies only to the coding part, because only the calendar's "Redo one step without AI" (S39) and "Timed, without AI" (FT23) blocks state it. The coding part needs only a text editor and no container engine. Any further resource rule is set and shown by the platform assessment owner; the repository invents no assessment policy.
+- Allowed resources: the coding part is without AI, because the calendar's "Redo one step without AI" (S39) and "Timed, without AI" (FT23) blocks state it, and it needs only a text editor and no container engine. The MCQ part's resource rule is left to the platform assessment owner (education-03): the blueprint states no AI or notes rule for it. Any further resource rule is set and shown by the platform assessment owner; the repository invents no assessment policy.
+- Objective choice (education-02): the MCQ part maps only objectives whose verbs a multiple-choice item can directly elicit (identify, explain, predict, choose); workflow-writing objectives are practised in the module 2 lab, not assessed by MCQ.
 - The blueprint holds no items, keys, correct answers, rubrics, scoring guides, hidden tests, reference solutions or score secrets; T01 and T07 check its key names.
 
 ## Official sources per topic
 
-Closes category-A record `source-gap-containers-cicd-official-evidence`. Every source below was fetched live on 2026-10-12 with `curl -L`; `evidence/containers-cicd/source-snapshot.json` records each final URL with its retrieval time, the sha256 of the fetched bytes and the topic sections used. All 84 sources returned HTTP 200 and each page title was checked against the expected document. Raw fetched pages are not committed.
+Closes category-A record `source-gap-containers-cicd-official-evidence`. Every source below was fetched live on 2026-10-12 with `curl -L`; `evidence/containers-cicd/source-snapshot.json` records each final URL with its retrieval time, the sha256 of the fetched bytes and the topic sections used. All 96 sources returned HTTP 200 (84 at the first freeze, 12 added at the correction loop: the Podman machine pages and the tagged release pages for the compatibility baseline) and each page title was checked against the expected document. Raw fetched pages are not committed.
 
 Source classes: official product documentation and references (Docker, Podman, Compose, GitHub, Spring, FastAPI, HTTPX, Vite, nginx, PostgreSQL, Jenkins, Kubernetes), open specifications (OCI image, runtime and distribution specs, the Compose Specification, IETF RFCs 6750 and 9110), and vendor architecture guidance (Microsoft Azure Architecture Center). For the microservices and gateway patterns, `microservices.io` (the pattern catalogue's author) and the Lewis and Fowler article are the primary sources of those pattern definitions and are listed as such, alongside the Azure guidance.
 
-Version note: these are the current published documents (Docker Docs and Compose Specification `main`, Spring Boot current reference, PostgreSQL `current`, Kubernetes current docs). The module PR records the tool versions its pages demonstrate.
+Version note: the documentation sources are the current published documents (Docker Docs and Compose Specification `main`, Spring Boot current reference, PostgreSQL `current`, Kubernetes current docs); their bytes are frozen by hash. The demonstrated versions are fixed by the compatibility baseline below, which cites tagged release pages.
+
+### Compatibility baseline
+
+Added at intake reconciliation (ops-sme-006). Every page example, simulator transcript and lab fixture names this baseline; a module PR that demonstrates a different version updates this table in a course-level change first. Versions are the latest stable releases on 2026-10-12, read from each project's GitHub releases API or release index and frozen as tagged release pages in the source snapshot. "Demonstrated minimum" is the oldest version the course claims for its examples: older lines were not checked and are not supported. "Tested" means run by the course tooling; no container tool is run, because learners and labs use no engine and pages simulate its output.
+
+| Tool | Demonstrated minimum | Tested | Source (tagged) | OS notes |
+|---|---|---|---|---|
+| Docker Engine and CLI | 29.9 | not run (simulated output only) | https://github.com/moby/moby/releases/tag/docker-v29.9.0; https://docs.docker.com/engine/release-notes/29/ | Engine runs on Linux; Docker Desktop on macOS and Windows runs it in a Linux VM |
+| Docker Compose (`docker compose` CLI plugin) | 5.6 | not run (simulated output; labs parse files only) | https://github.com/docker/compose/releases/tag/v5.6.0 | Same Compose file on every OS; `depends_on` `condition: service_healthy` per the current Compose reference |
+| Podman | 6.1 | not run (simulated output only) | https://github.com/podman-container-tools/podman/releases/tag/v6.1.4 | Daemonless on Linux; on macOS and Windows a Linux VM started with `podman machine` (ops-sme-005) |
+| Node.js | 24.21 (24.x LTS) | lab tests with `node --test` in the module PRs; repository tooling pins `engines.node` 24.x | https://nodejs.org/en/blog/release/v24.21.0 | macOS, Linux, Windows |
+| Spring Boot (RestClient via its managed Spring Framework) | 4.1 | not run at intake; Spring examples are file and simulator content | https://github.com/spring-projects/spring-boot/releases/tag/v4.1.1 | RestClient timeouts depend on the configured request factory (ops-sme-004) |
+| FastAPI | 0.143 | not run at intake | https://github.com/fastapi/fastapi/releases/tag/0.143.0 | `fastapi run` listens on 0.0.0.0 |
+| HTTPX | 0.28 | not run at intake | https://github.com/encode/httpx/releases/tag/0.28.1 | Default five-second network-inactivity timeout; can be disabled (ops-sme-004) |
+| actions/checkout | v7.0.1, pinned to `3d3c42e5aac5ba805825da76410c181273ba90b1` | lab tests check the pin format only | https://github.com/actions/checkout/releases/tag/v7.0.1 | GitHub-hosted runner |
+| docker/build-push-action | v7.4.0, pinned to `c3c9e263c25d99ce0380d002d59b67737d91b0dc` | lab tests check the pin format only | https://github.com/docker/build-push-action/releases/tag/v7.4.0 | GitHub-hosted runner |
 
 Redirects recorded: `https://learn.microsoft.com/en-us/azure/architecture/data-guide/big-data/non-relational-data` now resolves to `.../data-guide/technology-choices/understand-data-store-models`; `https://docs.github.com/en/actions/concepts/use-cases/deploying-with-github-actions` now resolves to `.../actions/how-tos/deploy/configure-and-manage-deployments/control-deployments`. The snapshot stores the final URLs.
 
@@ -241,7 +269,7 @@ Freshness: every `topic.json` records `unverified` with no `checkedAt`, because 
 
 | Topic | Official first-party sources |
 |---|---|
-| `containers-and-images` | https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/<br>https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/<br>https://docs.docker.com/reference/cli/docker/container/run/<br>https://docs.podman.io/en/latest/index.html<br>https://docs.podman.io/en/latest/Introduction.html<br>https://docs.podman.io/en/latest/markdown/podman-run.1.html<br>https://github.com/opencontainers/image-spec/blob/main/spec.md<br>https://github.com/opencontainers/runtime-spec/blob/main/spec.md |
+| `containers-and-images` | https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/<br>https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/<br>https://docs.docker.com/reference/cli/docker/container/run/<br>https://docs.podman.io/en/latest/index.html<br>https://docs.podman.io/en/latest/Introduction.html<br>https://docs.podman.io/en/latest/markdown/podman-machine.1.html<br>https://docs.podman.io/en/latest/markdown/podman-machine-start.1.html<br>https://docs.podman.io/en/latest/markdown/podman-run.1.html<br>https://github.com/opencontainers/image-spec/blob/main/spec.md<br>https://github.com/opencontainers/runtime-spec/blob/main/spec.md |
 | `image-layers-and-build-caching` | https://docs.docker.com/get-started/docker-concepts/building-images/understanding-image-layers/<br>https://docs.docker.com/build/cache/<br>https://docs.docker.com/build/cache/invalidation/<br>https://docs.docker.com/build/cache/optimize/<br>https://docs.docker.com/build/concepts/context/<br>https://docs.docker.com/reference/dockerfile/ |
 | `multi-stage-builds` | https://docs.docker.com/build/building/multi-stage/<br>https://docs.docker.com/build/building/best-practices/<br>https://docs.docker.com/reference/dockerfile/<br>https://docs.spring.io/spring-boot/reference/packaging/container-images/dockerfiles.html<br>https://docs.podman.io/en/latest/markdown/podman-build.1.html<br>https://vite.dev/guide/build.html<br>https://nginx.org/en/docs/beginners_guide.html<br>https://hub.docker.com/_/nginx |
 | `ports-volumes-and-environment-variables` | https://docs.docker.com/get-started/docker-concepts/running-containers/publishing-ports/<br>https://docs.docker.com/engine/network/port-publishing/<br>https://docs.docker.com/engine/storage/volumes/<br>https://docs.docker.com/engine/storage/bind-mounts/<br>https://docs.docker.com/get-started/docker-concepts/running-containers/overriding-container-defaults/<br>https://docs.docker.com/reference/cli/docker/container/run/ |
@@ -252,13 +280,28 @@ Freshness: every `topic.json` records `unverified` with no `checkedAt`, because 
 | `monolith-vs-microservices` | https://learn.microsoft.com/en-us/azure/architecture/guide/architecture-styles/microservices<br>https://learn.microsoft.com/en-us/azure/architecture/microservices/design/data-considerations<br>https://microservices.io/patterns/data/database-per-service.html<br>https://martinfowler.com/articles/microservices.html |
 | `adding-fastapi-service-to-compose` | https://fastapi.tiangolo.com/deployment/docker/<br>https://fastapi.tiangolo.com/fastapi-cli/<br>https://fastapi.tiangolo.com/advanced/settings/<br>https://docs.docker.com/reference/compose-file/services/<br>https://docs.docker.com/compose/how-tos/networking/<br>https://hub.docker.com/_/postgres |
 | `service-to-service-calls` | https://www.rfc-editor.org/rfc/rfc6750.html<br>https://www.rfc-editor.org/rfc/rfc9110.html<br>https://www.python-httpx.org/advanced/timeouts/<br>https://docs.spring.io/spring-framework/reference/integration/rest-clients.html<br>https://learn.microsoft.com/en-us/azure/architecture/patterns/retry<br>https://learn.microsoft.com/en-us/azure/architecture/patterns/circuit-breaker |
-| `sql-nosql-gateways-and-discovery` | https://learn.microsoft.com/en-us/azure/architecture/data-guide/technology-choices/understand-data-store-models (requested https://learn.microsoft.com/en-us/azure/architecture/data-guide/big-data/non-relational-data)<br>https://learn.microsoft.com/en-us/azure/architecture/microservices/design/gateway<br>https://microservices.io/patterns/apigateway.html<br>https://microservices.io/patterns/server-side-discovery.html<br>https://microservices.io/patterns/client-side-discovery.html<br>https://docs.docker.com/compose/how-tos/networking/ |
+| `sql-vs-nosql` | https://learn.microsoft.com/en-us/azure/architecture/data-guide/technology-choices/understand-data-store-models (requested https://learn.microsoft.com/en-us/azure/architecture/data-guide/big-data/non-relational-data)<br>https://learn.microsoft.com/en-us/azure/architecture/microservices/design/data-considerations<br>https://microservices.io/patterns/data/database-per-service.html |
+| `api-gateways-and-service-discovery` | https://learn.microsoft.com/en-us/azure/architecture/microservices/design/gateway<br>https://microservices.io/patterns/apigateway.html<br>https://microservices.io/patterns/server-side-discovery.html<br>https://microservices.io/patterns/client-side-discovery.html<br>https://docs.docker.com/compose/how-tos/networking/ |
 | `github-actions-pipeline` | https://docs.github.com/en/actions/get-started/understand-github-actions<br>https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax<br>https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-jobs<br>https://github.com/actions/checkout<br>https://github.com/docker/build-push-action<br>https://docs.docker.com/build/ci/github-actions/ |
 | `secrets-in-ci` | https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets<br>https://docs.github.com/en/actions/reference/security/secrets<br>https://docs.github.com/en/actions/reference/security/secure-use<br>https://docs.github.com/en/actions/concepts/security/github_token<br>https://docs.docker.com/build/ci/github-actions/secrets/<br>https://docs.docker.com/build/building/secrets/ |
 | `jenkins-registries-cd-and-kubernetes` | https://www.jenkins.io/doc/book/pipeline/<br>https://www.jenkins.io/doc/book/pipeline/jenkinsfile/<br>https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry<br>https://docs.docker.com/docker-hub/repos/<br>https://github.com/opencontainers/distribution-spec/blob/main/spec.md<br>https://kubernetes.io/docs/concepts/overview/<br>https://kubernetes.io/docs/concepts/workloads/controllers/deployment/<br>https://kubernetes.io/docs/concepts/services-networking/service/<br>https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/control-deployments (requested https://docs.github.com/en/actions/concepts/use-cases/deploying-with-github-actions) |
+| compatibility baseline (all topics) | https://github.com/moby/moby/releases/tag/docker-v29.9.0<br>https://docs.docker.com/engine/release-notes/29/ (requested https://docs.docker.com/engine/release-notes/)<br>https://github.com/docker/compose/releases/tag/v5.6.0<br>https://github.com/podman-container-tools/podman/releases/tag/v6.1.4 (requested https://github.com/containers/podman/releases/tag/v6.1.4)<br>https://nodejs.org/en/blog/release/v24.21.0<br>https://github.com/spring-projects/spring-boot/releases/tag/v4.1.1<br>https://github.com/fastapi/fastapi/releases/tag/0.143.0<br>https://github.com/encode/httpx/releases/tag/0.28.1<br>https://github.com/actions/checkout/releases/tag/v7.0.1<br>https://github.com/docker/build-push-action/releases/tag/v7.4.0 |
 
 Calendar references for the `ops` technology (snapshot `technologies` entry): [Docker: get started](https://docs.docker.com/get-started/), [Podman documentation](https://docs.podman.io/), [GitHub Actions](https://docs.github.com/en/actions). The snapshot pins the specific pages under them.
 
 ## Intake criticism
 
-Pending. The manifests, objectives, blueprint and this intake receive fresh, independent educational and technology-SME criticism on the committed bytes, followed by non-author reconciliation; the author does not approve its own first output. The critic reports, rechecks and reconciliation are committed here as `intake-critic-education.json`, `intake-critic-sme.json` and `intake-reconciliation.json`, and accepted findings are applied in one correction loop.
+Fresh, independent educational and technology-SME critics reviewed the first intake commit (`4a66b4b`); a non-author second mate reconciled their findings. The reports and reconciliation are committed unchanged as `intake-critic-education.json`, `intake-critic-sme.json` and `intake-reconciliation.json`, except that each reconciliation decision gains `file` and `fixedInSha256` naming the corrected bytes. Outcome: all 10 findings accepted (education-01 to 04, ops-sme-001 to 006) and applied in one correction loop:
+
+- education-01: S38 row 3 split into `sql-vs-nosql` and `api-gateways-and-service-discovery`.
+- education-02: MCQ objectives `github-actions-pipeline#o1` and `secrets-in-ci#o2` replace `#o2` and `#o1`.
+- education-03: the MCQ resource rule is left to the platform assessment owner.
+- education-04: the `service-to-service-calls` lab-omission reason states the applicability judgment.
+- ops-sme-001: lab plan requires full-length commit-SHA pins for non-local actions.
+- ops-sme-002: `ports-volumes-and-environment-variables#o1` and the lab plan make the bind address observable and default to loopback.
+- ops-sme-003: `secrets-in-ci#o2` treats redaction as best effort, never printing secrets, add-mask, and the fork caveat with the GITHUB_TOKEN exception.
+- ops-sme-004: `service-to-service-calls#o2` names HTTPX and Spring RestClient and compares explicit, default and disabled timeouts; versions are in the compatibility baseline.
+- ops-sme-005: `containers-and-images#o3` qualifies Podman as daemonless on Linux with the macOS and Windows `podman machine` VM.
+- ops-sme-006: compatibility baseline added above.
+
+The high finding ops-sme-001 needs a same-role resolved recheck before gate 18 (T25) closes.
