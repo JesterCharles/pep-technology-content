@@ -8,46 +8,53 @@
 
 ## Teaching
 
-Start with a guess
+### Start with a guess
 
 Practice prediction, not scored.
 
-Where am I, and what is here?
-  The filled row is your current folder, the working directory.
-  pwd prints it as a full path. ls lists what it holds but skips hidden names, which start with a dot. ls -a shows them too, plus . (this folder) and .. (its parent).
+### Where am I, and what is here?
 
-Four ways a path can start
+The filled row is your current folder, the working directory.
 
-    Relative, like projects/pep: read from your current folder.
-    Absolute, like /tmp: read from the root.
-    ~, like ~/notes: starts at home, /home/ana here.
-    ..: the parent folder, one level up.
+pwd prints it as a full path. ls lists what it holds but skips hidden names, which start with a dot. ls -a shows them too, plus . (this folder) and .. (its parent).
 
-  ls plus a path lists that folder without moving you.
+### Four ways a path can start
 
-Move with cd
-  cd plus a path moves you there; cd ~ or plain cd goes home.
-  Spaces split words: cd class notes passes two words and fails. Keep the name whole with cd "class notes" or cd class\ notes.
-  Every part of a path must be an existing folder; a failed cd prints an error and you stay put.
+- Relative, like projects/pep: read from your current folder.
+- Absolute, like /tmp: read from the root.
+- ~, like ~/notes: starts at home, /home/ana here.
+- ..: the parent folder, one level up.
 
-Apply it somewhere new
-  Same rules, new starting point.
+ls plus a path lists that folder without moving you.
+
+### Move with cd
+
+cd plus a path moves you there; cd ~ or plain cd goes home.
+
+Spaces split words: cd class notes passes two words and fails. Keep the name whole with cd "class notes" or cd class\ notes.
+
+Every part of a path must be an existing folder; a failed cd prints an error and you stay put.
+
+### Apply it somewhere new
+
+Same rules, new starting point.
 
 ## Model
 
 Ana's fictional folders. The terminal is a simulation.
-/
-home/
-ana/
-.profile
-class notes/
-lesson.txt
-notes/
-today.md
-projects/
-pep/
-README.md
-tmp/
+
+- /
+- home/
+- ana/
+- .profile
+- class notes/
+- lesson.txt
+- notes/
+- today.md
+- projects/
+- pep/
+- README.md
+- tmp/
 
 Current folder
 
@@ -55,33 +62,43 @@ not shown yet
 
 Last path read
 
-None yet.
+1. None yet.
 
 filled you are here outlined path read
 
 ## Recap
 
-Recap
-  pwd shows where you are; ls -a adds hidden names./ starts at the root, a relative path where you are, ~ at home; .. is up one.Quote or escape spaces; a failed cd leaves you in place.
+- pwd shows where you are; ls -a adds hidden names.
+- / starts at the root, a relative path where you are, ~ at home; .. is up one.
+- Quote or escape spaces; a failed cd leaves you in place.
 
-    Cheat sheet
-    pwdprint the current folderls / ls -alist entries / include hidden onesls pathlist another folder without movingcd pathmove to a foldercd ..up one levelcd ~ or cdhomecd "class notes"a name with a space
-    Error wording, ls ordering and quoting of spaced names vary between shells and systems; the rules above do not.
-
-  Sources and review datePartly checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: cd and other builtinsGNU Bash 5.3 Reference Manual: quotingGNU Bash 5.3 Reference Manual: tilde expansionGNU Coreutils manual: ls invocationGNU Coreutils manual: pwd invocationNot confirmed by these sources: the exact wording of the "too many arguments" error, GNU ls quoting a spaced name by default on a terminal, and which folder a new terminal opens in. The page labels these as varying.
-  Next topic: Pipes and grep
+Next topic: Pipes and grep
 
 ## Cheat sheet
 
-Cheat sheet
-    pwdprint the current folderls / ls -alist entries / include hidden onesls pathlist another folder without movingcd pathmove to a foldercd ..up one levelcd ~ or cdhomecd "class notes"a name with a space
-    Error wording, ls ordering and quoting of spaced names vary between shells and systems; the rules above do not.
+|  |  |
+| --- | --- |
+| pwd | print the current folder |
+| ls / ls -a | list entries / include hidden ones |
+| ls path | list another folder without moving |
+| cd path | move to a folder |
+| cd .. | up one level |
+| cd ~ or cd | home |
+| cd "class notes" | a name with a space |
 
-Sources and review datePartly checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: cd and other builtinsGNU Bash 5.3 Reference Manual: quotingGNU Bash 5.3 Reference Manual: tilde expansionGNU Coreutils manual: ls invocationGNU Coreutils manual: pwd invocationNot confirmed by these sources: the exact wording of the "too many arguments" error, GNU ls quoting a spaced name by default on a terminal, and which folder a new terminal opens in. The page labels these as varying.
+Error wording, ls ordering and quoting of spaced names vary between shells and systems; the rules above do not.
 
 ## Sources
 
-Sources and review datePartly checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: cd and other builtinsGNU Bash 5.3 Reference Manual: quotingGNU Bash 5.3 Reference Manual: tilde expansionGNU Coreutils manual: ls invocationGNU Coreutils manual: pwd invocationNot confirmed by these sources: the exact wording of the "too many arguments" error, GNU ls quoting a spaced name by default on a terminal, and which folder a new terminal opens in. The page labels these as varying.
+Partly checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.
+
+- GNU Bash 5.3 Reference Manual: cd and other builtins
+- GNU Bash 5.3 Reference Manual: quoting
+- GNU Bash 5.3 Reference Manual: tilde expansion
+- GNU Coreutils manual: ls invocation
+- GNU Coreutils manual: pwd invocation
+
+Not confirmed by these sources: the exact wording of the "too many arguments" error, GNU ls quoting a spaced name by default on a terminal, and which folder a new terminal opens in. The page labels these as varying.
 
 ## Static interaction alternatives
 

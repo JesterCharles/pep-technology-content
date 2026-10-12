@@ -8,43 +8,40 @@
 
 ## Teaching
 
-Start with a guess
+### Start with a guess
 
 Look at the programs on your laptop, then guess. Practice prediction, not scored.
 
-localhost and ports
+### localhost and ports
 
-    localhost is a name for this same computer: IPv4 127.0.0.1, IPv6 ::1. A request to it never leaves your machine.
-    Ports: one computer runs many programs that answer requests; each listens on its own port, a number up to 65535.
-    Reading a URL: http://localhost:8080/health has host localhost, port 8080, path /health.
-    No port: http uses 80. Nothing listening: connection refused.
+- localhost is a name for this same computer: IPv4 127.0.0.1, IPv6 ::1. A request to it never leaves your machine.
+- Ports: one computer runs many programs that answer requests; each listens on its own port, a number up to 65535.
+- Reading a URL: http://localhost:8080/health has host localhost, port 8080, path /health.
+- No port: http uses 80. Nothing listening: connection refused.
 
-One port, one listener
-  Normally only one program at a time can listen on a port. Starting another on a busy port fails with an error such as address already in use; the exact wording depends on the tool.
-  Fix it by stopping the old program or by choosing a free port.
+### One port, one listener
 
-Apply it to a new case
-  Two laptops this time. Ask which computer localhost names.
+Normally only one program at a time can listen on a port. Starting another on a busy port fails with an error such as address already in use; the exact wording depends on the tool.
+
+Fix it by stopping the old program or by choosing a free port.
+
+### Apply it to a new case
+
+Two laptops this time. Ask which computer localhost names.
 
 ## Model
 
 Programs and ports. A simulation: no real network requests are made.
 
-Your laptop
-localhost = 127.0.0.1
+Your laptop localhost = 127.0.0.1
 
-3000
-web app, listening
-5000
-nothing listening
-8080
-api, listening
+- 3000web app, listening
+- 5000nothing listening
+- 8080api, listening
 
-Ben's laptop
-another computer
+Ben's laptop another computer
 
-8080
-api, listening
+- 8080api, listening
 
 A request to localhost never reaches this machine.
 
@@ -52,27 +49,35 @@ No request sent yet.
 
 ## Recap
 
-Recap
-  localhost (127.0.0.1) always means the computer you are on.The port picks which program gets the request: http://localhost:8080 means port 8080.connection refused: nothing listens there. address already in use: something already does.localhost never reaches another computer, such as a teammate's laptop.
+- localhost (127.0.0.1) always means the computer you are on.
+- The port picks which program gets the request: http://localhost:8080 means port 8080.
+- connection refused: nothing listens there. address already in use: something already does.
+- localhost never reaches another computer, such as a teammate's laptop.
 
-    Cheat sheet
-    localhost, 127.0.0.1this computerhttp://host:port/pathparts of a URLno port in an http URLport 80connection refusednothing listening on that portaddress already in useport taken: stop the old program or pick another port
-    Error wording differs between browsers, frameworks and operating systems; what each error means does not.
-
-  Sources and review dateVerified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.RFC 6761 section 6.3: localhost namesRFC 6890 section 2.2.2: 127.0.0.0/8 loopbackRFC 9110 section 4.2.1: http URIs and default port 80RFC 6335 section 6: port number rangesLinux man-pages 6.19: connect(2) ECONNREFUSEDLinux man-pages 6.19: bind(2) EADDRINUSE
-  Next: back to the course index for the next module
+Next: back to the course index for the next module
 
 ## Cheat sheet
 
-Cheat sheet
-    localhost, 127.0.0.1this computerhttp://host:port/pathparts of a URLno port in an http URLport 80connection refusednothing listening on that portaddress already in useport taken: stop the old program or pick another port
-    Error wording differs between browsers, frameworks and operating systems; what each error means does not.
+|  |  |
+| --- | --- |
+| localhost, 127.0.0.1 | this computer |
+| http://host:port/path | parts of a URL |
+| no port in an http URL | port 80 |
+| connection refused | nothing listening on that port |
+| address already in use | port taken: stop the old program or pick another port |
 
-Sources and review dateVerified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.RFC 6761 section 6.3: localhost namesRFC 6890 section 2.2.2: 127.0.0.0/8 loopbackRFC 9110 section 4.2.1: http URIs and default port 80RFC 6335 section 6: port number rangesLinux man-pages 6.19: connect(2) ECONNREFUSEDLinux man-pages 6.19: bind(2) EADDRINUSE
+Error wording differs between browsers, frameworks and operating systems; what each error means does not.
 
 ## Sources
 
-Sources and review dateVerified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.RFC 6761 section 6.3: localhost namesRFC 6890 section 2.2.2: 127.0.0.0/8 loopbackRFC 9110 section 4.2.1: http URIs and default port 80RFC 6335 section 6: port number rangesLinux man-pages 6.19: connect(2) ECONNREFUSEDLinux man-pages 6.19: bind(2) EADDRINUSE
+Verified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.
+
+- RFC 6761 section 6.3: localhost names
+- RFC 6890 section 2.2.2: 127.0.0.0/8 loopback
+- RFC 9110 section 4.2.1: http URIs and default port 80
+- RFC 6335 section 6: port number ranges
+- Linux man-pages 6.19: connect(2) ECONNREFUSED
+- Linux man-pages 6.19: bind(2) EADDRINUSE
 
 ## Static interaction alternatives
 

@@ -8,67 +8,79 @@
 
 ## Teaching
 
-Start with a guess
+### Start with a guess
 
 Read the log on the right, then guess. Practice prediction, not scored.
 
-Filter lines with grep, join commands with |
-  grep PATTERN FILE prints only the lines that contain the pattern. It matches exact case, so ERROR and error differ.
-  A pipe, |, sends one command's standard output (stdout) into the next command's standard input (stdin). Error messages go to standard error (stderr), which a plain | does not pass. In cat app.log | grep ERROR, cat prints the file and grep filters what flows in.
+### Filter lines with grep, join commands with |
 
-Two useful options: -i and -v
+grep PATTERN FILE prints only the lines that contain the pattern. It matches exact case, so ERROR and error differ.
 
-    -i ignores case: grep -i error matches ERROR and error.
-    -v inverts the match: it keeps the lines that do not contain the pattern.
+A pipe, |, sends one command's standard output (stdout) into the next command's standard input (stdin). Error messages go to standard error (stderr), which a plain | does not pass. In cat app.log | grep ERROR, cat prints the file and grep filters what flows in.
 
-  Options go before the pattern: grep -v INFO app.log.
+### Two useful options: -i and -v
 
-Count with wc -l
-  wc -l counts the lines it receives. Pipe a filter into it to count matches: grep ERROR app.log | wc -l prints 3.
-  Each extra | adds a stage, and the data flows left to right.
+- -i ignores case: grep -i error matches ERROR and error.
+- -v inverts the match: it keeps the lines that do not contain the pattern.
 
-Apply it to a new question
-  Same log, new goal. Think in stages: what survives the filter, and what turns lines into a number?
+Options go before the pattern: grep -v INFO app.log.
+
+### Count with wc -l
+
+wc -l counts the lines it receives. Pipe a filter into it to count matches: grep ERROR app.log | wc -l prints 3.
+
+Each extra | adds a stage, and the data flows left to right.
+
+### Apply it to a new question
+
+Same log, new goal. Think in stages: what survives the filter, and what turns lines into a number?
 
 ## Model
 
 The pipeline, stage by stage. app.log is a fictional file; the terminal is a simulation.
-app.log
-10 lines
-09:00 INFO server started on port 8080
-09:01 INFO user ana signed in
-09:02 WARN slow response from /orders
-09:03 ERROR database timeout
-09:04 INFO user ben signed in
-09:05 error retry failed for job 7
-09:06 ERROR database timeout
-09:07 WARN disk 85% full
-09:08 INFO user ana signed out
-09:09 ERROR payment service unavailable
+
+1. app.log10 lines
+
+1. 09:00 INFO server started on port 8080
+2. 09:01 INFO user ana signed in
+3. 09:02 WARN slow response from /orders
+4. 09:03 ERROR database timeout
+5. 09:04 INFO user ben signed in
+6. 09:05 error retry failed for job 7
+7. 09:06 ERROR database timeout
+8. 09:07 WARN disk 85% full
+9. 09:08 INFO user ana signed out
+10. 09:09 ERROR payment service unavailable
 
 ## Recap
 
-Recap
-  grep keeps lines that contain a pattern; it is case-sensitive unless you add -i.-v keeps the lines that do not match.A pipe | sends one command's standard output into the next command's standard input, left to right; stderr is not passed.wc -l counts lines, so filter first, then count.
+- grep keeps lines that contain a pattern; it is case-sensitive unless you add -i.
+- -v keeps the lines that do not match.
+- A pipe | sends one command's standard output into the next command's standard input, left to right; stderr is not passed.
+- wc -l counts lines, so filter first, then count.
 
-    Cheat sheet
-    grep PAT filelines containing PATgrep -i PATignore casegrep -v PATlines not containing PATa | ba's stdout becomes b's stdinwc -lcount lines
-    grep patterns are regular expressions; plain words like the ones here match literally.
-
-  Sources and review dateChecked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: pipelinesGNU grep manual: introductionGNU grep manual: matching control, -i and -vGNU Coreutils manual: wc invocation
-  Next topic: File permissions
+Next topic: File permissions
 
 ## Cheat sheet
 
-Cheat sheet
-    grep PAT filelines containing PATgrep -i PATignore casegrep -v PATlines not containing PATa | ba's stdout becomes b's stdinwc -lcount lines
-    grep patterns are regular expressions; plain words like the ones here match literally.
+|  |  |
+| --- | --- |
+| grep PAT file | lines containing PAT |
+| grep -i PAT | ignore case |
+| grep -v PAT | lines not containing PAT |
+| a \| b | a's stdout becomes b's stdin |
+| wc -l | count lines |
 
-Sources and review dateChecked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: pipelinesGNU grep manual: introductionGNU grep manual: matching control, -i and -vGNU Coreutils manual: wc invocation
+grep patterns are regular expressions; plain words like the ones here match literally.
 
 ## Sources
 
-Sources and review dateChecked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: pipelinesGNU grep manual: introductionGNU grep manual: matching control, -i and -vGNU Coreutils manual: wc invocation
+Checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.
+
+- GNU Bash 5.3 Reference Manual: pipelines
+- GNU grep manual: introduction
+- GNU grep manual: matching control, -i and -v
+- GNU Coreutils manual: wc invocation
 
 ## Static interaction alternatives
 

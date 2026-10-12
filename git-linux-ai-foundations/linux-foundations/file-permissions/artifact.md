@@ -8,61 +8,81 @@
 
 ## Teaching
 
-Start with a guess
+### Start with a guess
 
 Look at deploy.sh on the right, then guess. Practice prediction, not scored.
 
-Read a permission string
-  ls -l starts each line with a permission string. The first character is the type: - for a file, d for a directory.
-  The next nine are three groups of rwx: the owner (ana), the group (dev), then everyone else. r is read, w is write, x is execute: run a file, or enter a directory. A - means that permission is off.
+### Read a permission string
 
-Permissions as numbers
-  Each permission has a value: r = 4, w = 2, x = 1. Add the values in a group to get one digit, then write the digits for owner, group and others.
-  rwx = 7, r-x = 5, r-- = 4, --- = 0. So rwxr-x--- is 750.
+ls -l starts each line with a permission string. The first character is the type: - for a file, d for a directory.
 
-Apply a mode with chmod
-  chmod MODE FILE changes a file's permissions, for example chmod 750 deploy.sh.
-  To run a script in the current folder, type ./deploy.sh; the ./ says it is right here. Without x, the shell answers Permission denied.
+The next nine are three groups of rwx: the owner (ana), the group (dev), then everyone else. r is read, w is write, x is execute: run a file, or enter a directory. A - means that permission is off.
 
-Apply it to a new file
-  Same rules, a file holding secrets. Decide each group's letters first, then the digits.
+### Permissions as numbers
+
+Each permission has a value: r = 4, w = 2, x = 1. Add the values in a group to get one digit, then write the digits for owner, group and others.
+
+rwx = 7, r-x = 5, r-- = 4, --- = 0. So rwxr-x--- is 750.
+
+### Apply a mode with chmod
+
+chmod MODE FILE changes a file's permissions, for example chmod 750 deploy.sh.
+
+To run a script in the current folder, type ./deploy.sh; the ./ says it is right here. Without x, the shell answers Permission denied.
+
+### Apply it to a new file
+
+Same rules, a file holding secrets. Decide each group's letters first, then the digits.
 
 ## Model
 
 ls -l in Ana's fictional pep folder. The terminal is a simulation.
 
+- -rw-r--r--ana dev812README.md
+- -rw-r--r--ana dev164deploy.sh
+- -rw-------ana dev48secrets.env
+- drwxr-xr-xana dev4096src
+
 Permissions of deploy.sh
 
-Who	r 4	w 2	x 1	Digit
-Owner ana	r	w	-	6
-Group dev	r	-	-	4
-Others everyone else	r	-	-	4
+| Who | r 4 | w 2 | x 1 | Digit |
+| --- | --- | --- | --- | --- |
+| Owner ana | r | w | - | 6 |
+| Group dev | r | - | - | 4 |
+| Others everyone else | r | - | - | 4 |
 
 String -rw-r--r-- Mode 644
 
 ## Recap
 
-Recap
-  ls -l shows the type, then three rwx groups: owner, group, others.r = 4, w = 2, x = 1; add them per group, so rwxr-x--- is 750.chmod MODE FILE applies a mode; you need r and x to run a script with ./.Give others nothing on secret files, and avoid 777.
+- ls -l shows the type, then three rwx groups: owner, group, others.
+- r = 4, w = 2, x = 1; add them per group, so rwxr-x--- is 750.
+- chmod MODE FILE applies a mode; you need r and x to run a script with ./.
+- Give others nothing on secret files, and avoid 777.
 
-    Cheat sheet
-    ls -lshow permissionschmod 750 frwxr-x---chmod 644 frw-r--r--chmod 600 frw-------./script.shrun a script here
-    chmod also has a letter form, such as chmod u+x deploy.sh; this topic practises the numeric form. A script also needs r because the shell reads it.
-
-  Sources and review dateChecked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Coreutils manual: chmod invocationGNU Coreutils manual: numeric modesPOSIX.1-2024: ls long format permissionsLinux man-pages 6.19: execve(2) errors and interpreter scriptsGNU Bash 5.3 Reference Manual: command search and execution
-  Next topic: Environment variables and keeping secrets out of code
+Next topic: Environment variables and keeping secrets out of code
 
 ## Cheat sheet
 
-Cheat sheet
-    ls -lshow permissionschmod 750 frwxr-x---chmod 644 frw-r--r--chmod 600 frw-------./script.shrun a script here
-    chmod also has a letter form, such as chmod u+x deploy.sh; this topic practises the numeric form. A script also needs r because the shell reads it.
+|  |  |
+| --- | --- |
+| ls -l | show permissions |
+| chmod 750 f | rwxr-x--- |
+| chmod 644 f | rw-r--r-- |
+| chmod 600 f | rw------- |
+| ./script.sh | run a script here |
 
-Sources and review dateChecked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Coreutils manual: chmod invocationGNU Coreutils manual: numeric modesPOSIX.1-2024: ls long format permissionsLinux man-pages 6.19: execve(2) errors and interpreter scriptsGNU Bash 5.3 Reference Manual: command search and execution
+chmod also has a letter form, such as chmod u+x deploy.sh; this topic practises the numeric form. A script also needs r because the shell reads it.
 
 ## Sources
 
-Sources and review dateChecked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Coreutils manual: chmod invocationGNU Coreutils manual: numeric modesPOSIX.1-2024: ls long format permissionsLinux man-pages 6.19: execve(2) errors and interpreter scriptsGNU Bash 5.3 Reference Manual: command search and execution
+Checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.
+
+- GNU Coreutils manual: chmod invocation
+- GNU Coreutils manual: numeric modes
+- POSIX.1-2024: ls long format permissions
+- Linux man-pages 6.19: execve(2) errors and interpreter scripts
+- GNU Bash 5.3 Reference Manual: command search and execution
 
 ## Static interaction alternatives
 
