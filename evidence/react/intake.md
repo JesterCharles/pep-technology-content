@@ -26,7 +26,7 @@ Every topic artifact is recorded absent: applicable companions with the reason "
 | FT16 | Components and props + State and lists | Fast | `/tracks/2/weeks/3/days/0` | 0. Components and JSX; 1. Props; 2. useState; 3. Updating state immutably; 4. Rendering lists with keys; 5. Project structure (skim); 6. Conditional display (skim) |
 | FT17 | Effects and custom hooks + Routing and rendering | Fast | `/tracks/2/weeks/3/days/1` | 0. Routing and route parameters; 1. Navigation; 2. Loading data with useEffect; 3. Loading and error states; 4. Lifting state up; 5. What makes a component re-render (skim); 6. Custom hooks (skim) |
 | FT18 | Forms and shared state + CRUD screens and UI tests | Fast | `/tracks/2/weeks/3/days/2` | 0. Controlled forms; 1. Create, edit and delete against the API; 2. Handling submission errors in forms; 3. Accessible forms (skim) |
-| FT19 | Login and protected pages | Lab (requiredLab); presented as Project implementation | `/tracks/2/weeks/3/days/3` | 0. Sharing state with Context; 1. Login with a session cookie or JWT; 2. Protected pages and role-based screens; 3. Handling 401 and 403: redirect and sign out; 4. Turning off the dev profile |
+| FT19 | Login and protected pages | Project implementation (source snapshot dayType: Lab, requiredLab) | `/tracks/2/weeks/3/days/3` | 0. Sharing state with Context; 1. Login with a session cookie or JWT; 2. Protected pages and role-based screens; 3. Handling 401 and 403: redirect and sign out; 4. Turning off the dev profile |
 | FT20 | Web and React review and check | Fast | `/tracks/2/weeks/3/days/4` | 0. UI tests with Testing Library: querying by role and label; 1. JavaScript fundamentals review; 2. React review; 3. Web and React module check |
 
 S35 and FT20 each carry the calendar assessment `moduleCheck` (formats MCQ and coding, pass mark 70). Both map to the one course-level blueprint `react/assessments/web-and-react-module-check`.
@@ -89,7 +89,12 @@ Row accounting (matrix v3, 54 `react` topic rows):
 
 ### Objectives
 
-Each topic has 2-3 observable objectives with exact ids `o1`-`o3`, recorded in its `topic.json`. Nothing is used before it is taught on either track: context re-rendering is taught in `sharing-state-with-context` (S32/FT19), after `what-makes-a-component-re-render` (S31/FT17), which therefore names only state and parent triggers.
+Each topic has 2-3 observable objectives with exact ids `o1`-`o3`, recorded in its `topic.json`. Nothing is used before it is taught on either track:
+
+- Re-render triggers (react-intake-sme-03): `what-makes-a-component-re-render` (S31/FT17) o1 names a state update and a parent re-render as two causes taught so far, without claiming the list is complete. `sharing-state-with-context` (S32/FT19) o2 adds a changed context value as a further trigger, and `react-review` o1 retrieves all three.
+- Submission errors (react-edu-003): the frozen FT18 order teaches `handling-submission-errors-in-forms` (row 2) before `accessible-forms` (row 3, skim), so `accessible-forms` is not a prerequisite of the submission-errors topic. That page teaches just in time the minimum notification behaviour it needs (an error message next to its field and a form-level message), without assuming prior mastery; the later Accessible forms page consolidates labels, field associations, `aria-describedby`, `aria-invalid`, focus and live regions. The frozen rows are not reordered.
+- 401 and 403 (react-intake-sme-02): `handling-401-and-403-redirect-and-sign-out` states the general HTTP meanings first (401: the request lacks valid authentication credentials; 403: the server understood the request but refuses it, which does not by itself prove the requester is authenticated), then the project API contract (401: clear client authentication state and sign in again; 403: keep the session and show not-authorized). Clearing client state is distinguished from the server ending an HttpOnly cookie session.
+- fetch errors (react-intake-sme-01): `loading-and-error-states` o2 teaches that fetch does not reject merely because the server returned a non-2xx status, so `response.ok` is checked; aborted and malformed requests are handled separately.
 
 ### Prerequisites
 
@@ -148,7 +153,24 @@ Labs follow `docs/lab-contract.md`: no Docker, Podman, Compose, Testcontainers o
 - Starter expectation: each starter fails named public tests with stable messages until the learner completes the steps.
 - Terminal interaction (running `npm ci` and `npm test`) uses the learner's own terminal or the platform's coding-lab terminal; any in-page terminal reuses `components/terminal@1`.
 - Concept-day topics (S28-S30) and the S33 Project-day topics have no lab: the page simulators give their practice, and the Concept-day exercise blocks and the Project-day Build block run on the platform. Review pages have no lab: the Review-day "Practice without AI" block runs on the platform. The educational critic confirms each omission.
+- The S33 and FT19 Project rows are not coding labs; they use the project briefs in the next section.
 - `course.json` `courseLabs` and each `module.json` `moduleLabs` stay empty until a lab is authored; each covered topic records `lab: "module:<module>"` and its `lab` artifact absent with the planned path.
+
+## Project briefs (S33 and FT19)
+
+Captain decision pep-project-rows, option A: each calendar Project row in this course gets one reusable learner-facing project brief with outcomes, prerequisite alignment, a starter scaffold and public language-native tests. These are already-authorized matrix items (`project-row`), not new scope. One canonical artifact is reused by the Standard and Fast overlays and never duplicated; no containers; reference solutions and hidden tests stay out of the repository (uncommitted private staging only).
+
+| Stage | Calendar row | Overlay use | Applies topics | Test command (after one-time `npm ci`) |
+|---|---|---|---|---|
+| 1. CRUD screens and UI tests | S33 (Standard Project day, Build block) | Standard: S33 Build block. Fast: the same stage, reused by the Fast overlay for the S33 content taught on FT18 | `create-edit-and-delete-against-the-api`, `handling-submission-errors-in-forms`, `ui-tests-with-testing-library-querying-by-role-and-label`, with `controlled-forms` and `loading-and-error-states` | `npm test` |
+| 2. Login and protected pages | FT19 (Fast, presented as Project implementation) | Fast: FT19. Standard: the same objectives are practised in the S34 module lab; the overlay may offer stage 2 as the Project 2 continuation, never as a copy | `sharing-state-with-context`, `login-with-a-session-cookie-or-jwt`, `protected-pages-and-role-based-screens`, `handling-401-and-403-redirect-and-sign-out`, `turning-off-the-dev-profile` | `npm test` |
+
+- Location: one course-scope directory `react/coding-lab/` in the lab-contract layout (`lab.json`, `README.md` with one brief per stage, `starter/`, public `tests/`, `fixtures/`, `expected/`), because each brief spans more than one module and each module directory already holds its planned Lab-day lab. Its id is `react/coding-lab` (course-scope lab ids are allowed on main since #10). It is listed in `course.json` `courseLabs` only once authored.
+- Authoring: course-scope files cannot ride a module PR (`docs/workflow.md` section 4), so the brief is authored in a course-level PR after the `forms-context-and-crud` (stage 1) and `auth-and-review` (stage 2) module PRs merge, with its own education and SME criticism.
+- Outcomes: stage 1, a list-and-detail screen that creates, edits and deletes records through the API with field- and form-level error handling and Testing Library tests that query by role and label; stage 2, sign-in with the chosen credential type, guarded routes with role-based screens, 401 and 403 handling, and the front end working against the secured back end.
+- Prerequisite alignment: stage 1 applies S28-S32 topics taught before S33, plus the three S33 topic pages, which are the in-build references on the Project day (the Project day type has no reading block). On Fast it follows FT16-FT18. Stage 2 applies topics taught on S28-S33 and the FT19 topic pages as in-build references on FT19; on Standard it follows S34. Whether a same-day topic page counts as taught before the project day is recorded here for the educational critic of the brief.
+- Tests: public tests run offline with Vitest, React Testing Library and user-event in jsdom; API calls go through a stubbed `fetch` with fixed fixtures, so no Spring Boot server, database or container is needed. The starter fails named public tests with stable messages until each stage is complete.
+- Topic manifests: the three S33 topics record `lab: "course:react"` with the planned path; the FT19 topics keep their S34 module-lab reference, and their lab reason names stage 2 for Fast.
 
 ## Minute budgets
 
@@ -169,7 +191,7 @@ Basis at intake: no page exists, so the estimator cannot run. Each topic records
 | FT16 | Fast | 7 | 70 | 105 | 120 |
 | FT17 | Fast | 7 | 70 | 105 | 120 |
 | FT18 | Fast | 4 | 40 | 60 | 120 |
-| FT19 | Lab | 5 | 50 | 75 | 120 |
+| FT19 | Project implementation (source snapshot dayType: Lab) | 5 | 50 | 75 | 120 |
 | FT20 | Fast | 3 | 30 | 45 | 120 |
 
 No React day maps more than 7 topics, and 7 × 15 = 105 ≤ 120, so the honest-minimum rule cannot overflow any React day even if every page reaches the 15-minute ceiling. Fast days pack two Standard days into 120 minutes; the pages exceed the Fast day's 10-minute Skim block, which is a platform pacing matter reported, not compressed (plan section 2.4).
@@ -179,7 +201,8 @@ No React day maps more than 7 topics, and 7 × 15 = 105 ≤ 120, so the honest-m
 `react/assessments/web-and-react-module-check/blueprint.json`:
 
 - Calendar identity copied verbatim from the snapshot S35 and FT20 `assessment` objects (identical): `kind` `moduleCheck`, `formats` `MCQ` and `coding`, `passMark` 70. `dayId` is `S35`; FT20 maps to the same blueprint. The calendar gives no weights or cut scores, so `weights` is empty.
-- Objectives covered: 21 exact `react/<module>/<topic>#oN` references, a representative set across all four modules that the items can directly elicit; `objectiveFormats` maps each to MCQ or coding. The "Web" half of the check is represented by `javascript-fundamentals-review` objectives; `html-css-js` objective ids are added when that course's topic ids exist.
+- Objectives covered: 21 exact `react/<module>/<topic>#oN` references, a representative set across all four modules that the items can directly elicit; `objectiveFormats` maps each to MCQ or coding. `what-makes-a-component-re-render#o1` is now non-exhaustive (react-intake-sme-03), so its MCQ expectation is the two triggers taught by S31/FT17.
+- **Known gap, coverage incomplete (react-edu-001, accepted and sequenced):** the check is named Web and React, but no `html-css-js` objective is listed yet; the Web half is represented only by `javascript-fundamentals-review` o1 and o2. The `html-css-js` intake lands first; this blueprint is then rebased to add a representative set of the merged `html-css-js` objective ids, mapped to the existing MCQ or coding formats within the 15-item, 2-task, 45-minute plan. No id is invented here. Until then the blueprint is not the finished Web and React coverage map. (The blueprint schema has no notes field, so this note lives here.)
 
   - `react/components-and-state/props#o3` (MCQ)
   - `react/components-and-state/conditional-display#o2` (MCQ)
@@ -207,7 +230,7 @@ No React day maps more than 7 topics, and 7 × 15 = 105 ≤ 120, so the honest-m
   - MCQ: 15 items in about 15 minutes, about 1 minute per scenario-based item (the course-1 pace).
   - coding: 2 short React tasks in about 30 minutes, about 15 minutes each (task 1: list and state update with lifted state; task 2: controlled form with loading and error states).
   - `durationMinutes` 45 = the calendar block.
-- FT20 is a Fast day with no dedicated module-check block (its blocks are Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5). The shared blueprint keeps the 45-minute calendar module-check duration; fitting it into FT20 is a platform pacing decision, recorded here and not resolved by inventing a second blueprint.
+- Track scope (react-edu-002): the one-sitting, 45-minute instruction applies to S35 on the Standard track. FT20 is a Fast day with no dedicated module-check block (its blocks are Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5), so the learner instruction for FT20 says only that the same check is taken that day and the platform shows when. **Open pacing item** for the Fast overlay and the platform assessment owner: which FT20 blocks the 45-minute check replaces or combines, keeping FT20 within 120 minutes. No Fast schedule is stated and no policy or second blueprint is invented.
 - Allowed resources: the calendar states no AI or other resource rule for the S35 "Module check" block, so the blueprint invents none; the platform assessment owner sets and shows any rule. The coding part uses the coding environment the assessment platform provides.
 - The blueprint holds no items, keys, correct answers, rubrics, scoring guides, hidden tests, reference solutions or score secrets; gates T01 and T07 check its key names.
 
@@ -262,4 +285,12 @@ Calendar references for the `react` technology: [react.dev: Learn React](https:/
 
 ## Intake criticism
 
-Pending. Fresh independent educational and technology-SME critics review these manifests, objectives, blueprint and evidence on the committed bytes; their reports and the non-author reconciliation are committed as course-level evidence (`intake-critic-education.json`, `intake-critic-sme.json`, `intake-reconciliation.json`). Until then gate T25 reports missing critic coverage for the new blueprint. The author does not approve its own first output.
+Fresh independent educational and technology-SME critics reviewed the first intake commit (blueprint sha256 `49daaabb24dd18b313eb78aad5c80cd7379cab7d6ce46e522a1e2e3fa2e4afcb`, plus every manifest and this file). Their reports and the non-author reconciliation are committed verbatim as `intake-critic-education.json`, `intake-critic-sme.json` and `intake-reconciliation.json`; the reconciliation adds only `file` and `fixedInSha256` for each applied decision. Outcome: 7 findings, all accepted, applied in one correction loop together with the captain's project-row decision:
+
+- react-edu-001 (high): accepted and sequenced; recorded as a known gap above, closed after the `html-css-js` intake merges.
+- react-edu-002 (medium): blueprint instructions scoped to S35; FT20 pacing recorded as open.
+- react-edu-003 (medium): `accessible-forms` removed as a prerequisite of `handling-submission-errors-in-forms`; just-in-time notification teaching recorded.
+- react-edu-004 (low): FT19 relabelled Project implementation (source snapshot dayType: Lab) in the day tables.
+- react-intake-sme-01, -02, -03 (medium): objective wording corrected in `loading-and-error-states`, `handling-401-and-403-redirect-and-sign-out`, `what-makes-a-component-re-render`, `sharing-state-with-context` and `react-review`.
+
+The high finding stays open for gate T25 until a same-role recheck resolves it after the sequenced `html-css-js` ids are added.
