@@ -17,6 +17,16 @@ export const description = "reading time and calendar day budgets";
 
 const runFile = promisify(execFile);
 const estimatorSha256 = "0deca96bf5e367aeae51a82abdbd4b6ce0d0289ecc9868c9eff3701016edf96f";
+const legacyCourseId = "git-linux-ai-foundations";
+const legacyBasisPrefix = "legacy-label:";
+
+function usesLegacyLabelBasis(course, minutes) {
+  return course.manifest.id === legacyCourseId && minutes.basis?.startsWith(legacyBasisPrefix);
+}
+
+function requiredBudget(result, minutes) {
+  return Math.ceil(Math.max(result.p50, minutes.modeledWorstPath));
+}
 
 async function estimate(root, file) {
   const tool = path.join(root, "tools", "timing", "estimate_reading.py");
@@ -64,12 +74,25 @@ export async function run(ctx) {
           continue;
         }
         const minutes = topic.minutes ?? {};
-        if (result.p50 > minutes.budget) {
+        const legacyLabelBasis = usesLegacyLabelBasis(course, minutes);
+        if (!legacyLabelBasis && Number.isFinite(minutes.modeledWorstPath)) {
+          const minimum = requiredBudget(result, minutes);
+          if (minutes.budget < minimum) {
+            out.push(
+              error(
+                id,
+                ctx.display(topicFile),
+                `budget ${minutes.budget} is below required ${minimum} minutes ` +
+                  `(max of P50 ${result.p50} and worst path ${minutes.modeledWorstPath}, rounded up)`,
+              ),
+            );
+          }
+        } else if (legacyLabelBasis && result.p50 > minutes.aboutLabel) {
           out.push(
             error(
               id,
               ctx.display(artifact),
-              `estimated P50 ${result.p50} exceeds ${minutes.budget} minute budget`,
+              `estimated P50 ${result.p50} exceeds approved ${minutes.aboutLabel} minute legacy label`,
             ),
           );
         }
@@ -106,8 +129,11 @@ export async function run(ctx) {
         const dayIds = new Set(
           (topic.curriculum ?? []).flatMap((mapping) => mapping.calendarDayIds ?? []),
         );
-        for (const dayId of dayIds) {
-          totals.set(dayId, (totals.get(dayId) ?? 0) + result.p50);
+        const dayBudget = legacyLabelBasis ? minutes.aboutLabel : minutes.budget;
+        if (Number.isFinite(dayBudget)) {
+          for (const dayId of dayIds) {
+            totals.set(dayId, (totals.get(dayId) ?? 0) + dayBudget);
+          }
         }
       }
     }
@@ -135,7 +161,8 @@ export async function run(ctx) {
           error(
             id,
             ctx.display(calendarFile),
-            `${dayId} artifact total ${total.toFixed(2)} exceeds ${blockMinutes} allocated minutes`,
+            `${dayId} topic budgets total ${total.toFixed(2)} exceeds ${blockMinutes} minute day total ` +
+              `by ${(total - blockMinutes).toFixed(2)} minutes; budgets were not compressed`,
           ),
         );
       }

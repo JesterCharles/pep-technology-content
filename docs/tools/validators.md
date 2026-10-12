@@ -31,11 +31,21 @@ equal the simplified curriculum topic lists in order.
 `tools/timing/estimate_reading.py` is frozen at SHA-256
 `0deca96bf5e367aeae51a82abdbd4b6ce0d0289ecc9868c9eff3701016edf96f`. Do not alter its cost table to make a
 page pass. T14 runs it with Python 3 on every present `artifact.html`. The recorded `modeledP50` must match the
-estimator P50 within 0.01, and that P50 must fit the topic budget. The estimator P90 is informational only: it is
-not the worst required path. Authors model the worst route a learner must take per interactive unit—two wrong
+estimator P50 within 0.01. The estimator P90 is informational only: it is not the worst required path. Authors model the worst route a learner must take per interactive unit—two wrong
 graded attempts and wrong-first explores before settling—and record that model and its evidence in the non-empty
-`minutes.basis`. `modeledWorstPath` must be at least `modeledP50`, and the about label must cover it. T14 also
-enforces the 15-minute topic ceiling and sums pages mapped to each calendar day against that day type's block total.
+`minutes.basis`. `modeledWorstPath` must be at least `modeledP50`, and the about label must cover it.
+
+For every new course, set each integer topic budget to at least
+`ceil(max(estimator P50, modeledWorstPath))`. Do not divide a day pool into weighted shares and then lower a topic
+below that minimum; this replaces the former core/reading weighted-share rule, including on Practice days. Each
+budget remains capped at 15 minutes. T14 sums the declared topic budgets mapped to a calendar day and compares that
+sum with the day type's complete block total. When the honest minimums do not fit, T14 reports the total and overflow;
+it never caps or proportionally compresses topic budgets. That failure requires an explicit pacing decision outside
+the gate.
+
+Course 1 (`git-linux-ai-foundations`) is the sole exception. Its approved labels remain authoritative when
+`minutes.basis` starts with `legacy-label:`. T14 uses each such `aboutLabel` for P50 coverage and calendar-day totals,
+leaving the legacy `budget` unchanged. No other course can select this basis.
 
 Run it directly while authoring:
 
