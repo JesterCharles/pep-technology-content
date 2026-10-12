@@ -161,24 +161,24 @@ Resolution (firstmate, at reconciliation of this intake; not a critic finding): 
 `git-linux-ai-foundations/assessments/tooling-module-check/blueprint.json`:
 
 - Calendar identity copied verbatim from the snapshot F3 `assessment`: `kind` `moduleCheck`, `formats` `MCQ` and `coding`, `passMark` 70. The calendar gives no weights or cut scores for a module check, so `weights` is empty. Reconciliation rejected sme-01 with evidence: plan section 3.5 lists `passMark` and weights as calendar identity, and the pass mark is published in the learner-facing calendar.
-- Objectives covered (education-01): a balanced representative set that the 13 items can directly elicit, each prefixed with the format that checks it. MCQ covers one objective per item across the three modules; the 3 coding tasks cover hands-on shell and Git objectives. The two review pages add no new objectives and are not listed.
+- Objectives covered (education-01): a balanced representative set that the 13 items can directly elicit; `objectiveFormats` maps each to the format that checks it (sme-07). MCQ covers one objective per item across the three modules; the 3 coding tasks cover hands-on shell and Git objectives. The two review pages add no new objectives and are not listed.
 
-  - MCQ: git-linux-ai-foundations/linux-foundations/pipes-and-grep#o1
-  - MCQ: git-linux-ai-foundations/linux-foundations/environment-variables-and-secrets#o2
-  - MCQ: git-linux-ai-foundations/linux-foundations/localhost-and-ports#o3
-  - MCQ: git-linux-ai-foundations/git-foundations/undoing-revert-and-reset#o3
-  - MCQ: git-linux-ai-foundations/git-foundations/stash#o1
-  - MCQ: git-linux-ai-foundations/git-foundations/remotes-clone-push-fetch-pull#o3
-  - MCQ: git-linux-ai-foundations/git-foundations/merge-vs-rebase#o3
-  - MCQ: git-linux-ai-foundations/ai-foundations/ai-rules-of-use#o1
-  - MCQ: git-linux-ai-foundations/ai-foundations/agile-scrum-user-stories#o3
-  - MCQ: git-linux-ai-foundations/ai-foundations/checking-ai-changes#o3
-  - coding: git-linux-ai-foundations/linux-foundations/navigating-the-shell#o3
-  - coding: git-linux-ai-foundations/linux-foundations/file-permissions#o2
-  - coding: git-linux-ai-foundations/git-foundations/commits-diffs-and-gitignore#o2
-  - coding: git-linux-ai-foundations/git-foundations/commits-diffs-and-gitignore#o3
-  - coding: git-linux-ai-foundations/git-foundations/branches-and-switching#o2
-  - coding: git-linux-ai-foundations/git-foundations/merge-conflicts#o3
+  - `git-linux-ai-foundations/linux-foundations/pipes-and-grep#o1` (MCQ)
+  - `git-linux-ai-foundations/linux-foundations/environment-variables-and-secrets#o2` (MCQ)
+  - `git-linux-ai-foundations/linux-foundations/localhost-and-ports#o3` (MCQ)
+  - `git-linux-ai-foundations/git-foundations/undoing-revert-and-reset#o3` (MCQ)
+  - `git-linux-ai-foundations/git-foundations/stash#o1` (MCQ)
+  - `git-linux-ai-foundations/git-foundations/remotes-clone-push-fetch-pull#o3` (MCQ)
+  - `git-linux-ai-foundations/git-foundations/merge-vs-rebase#o3` (MCQ)
+  - `git-linux-ai-foundations/ai-foundations/ai-rules-of-use#o1` (MCQ)
+  - `git-linux-ai-foundations/ai-foundations/agile-scrum-user-stories#o3` (MCQ)
+  - `git-linux-ai-foundations/ai-foundations/checking-ai-changes#o3` (MCQ)
+  - `git-linux-ai-foundations/linux-foundations/navigating-the-shell#o3` (coding)
+  - `git-linux-ai-foundations/linux-foundations/file-permissions#o2` (coding)
+  - `git-linux-ai-foundations/git-foundations/commits-diffs-and-gitignore#o2` (coding)
+  - `git-linux-ai-foundations/git-foundations/commits-diffs-and-gitignore#o3` (coding)
+  - `git-linux-ai-foundations/git-foundations/branches-and-switching#o2` (coding)
+  - `git-linux-ai-foundations/git-foundations/merge-conflicts#o3` (coding)
 
 - Proposed item counts and duration, from the F3 Practice day blocks: the Quiz block (MCQ assessment, 10 minutes) and the "Timed, without AI" block (coding assessment, 30 minutes).
   - MCQ: 10 items in 10 minutes, about 1 minute per scenario-based item.
@@ -220,7 +220,7 @@ Calendar references for the `tool` technology: [Pro Git book](https://git-scm.co
 
 ## Intake criticism
 
-The two critic reports and the reconciliation for commit 45d93b3 are committed verbatim as `intake-critic-education.json.txt`, `intake-critic-sme.json.txt` and `intake-reconciliation.json.txt`. The `.json.txt` suffix is needed because `tools/pep lock` (`tools/lib/locks.mjs`, `createCourseLock`) binds every `reviewedSha256` in course-level `.json` evidence to `<course>/artifact.html`, which does not exist for a course, so the lock rejects these files under any `.json` name. Their bytes are still recorded in `course.lock.json`. Each file was validated against `schemas/critic-report.schema.json` or `schemas/reconciliation.schema.json` when it was added. Outcome: 10 findings accepted and applied in one correction loop; 1 rejected with evidence (sme-01).
+The two critic reports and the reconciliation for the first intake commit are committed as `intake-critic-education.json`, `intake-critic-sme.json` and `intake-reconciliation.json`. They are the reviewers' records unchanged except for one added top-level `reviewedPath` naming the blueprint, the file their top-level `reviewedSha256` judged, so `tools/pep lock` can bind that hash under the course-level hash-binding rules (`docs/tools/evidence.md`). Outcome: 10 findings accepted and applied in one correction loop; 1 rejected with evidence (sme-01). A later recheck accepted sme-07: blueprint objectives are exact `<course>/<module>/<topic>#<objective-id>` references, with the MCQ or coding mapping in `objectiveFormats`.
 
 ## Legacy page hashes (for R2)
 
