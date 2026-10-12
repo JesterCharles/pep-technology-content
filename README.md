@@ -53,7 +53,7 @@ A topic still has one `<course>/<module>/<topic>/topic.json`. Its `/curriculum/<
 
 ## Add another curriculum course
 
-1. **Add a root course directory.** Choose a stable slug and create `<course>/course.json` directly under the repository root. Course discovery is structural for non-reserved root children, so the same layout works for Java, SQL, Python, web, React, container/CI or Spring curricula. `authoring/`, `components/` and `curriculum/` are reserved and cannot be courses.
+1. **Add a root course directory.** Choose a stable slug and create `<course>/course.json` directly under the repository root. Course discovery is structural for non-reserved root children, so the same layout works for Java, SQL, Python, web, React, container/CI or Spring curricula. `authoring/`, `components/`, `curriculum/` and `evidence/` are reserved and cannot be courses.
 2. **Add modules in the course.** Create `<course>/<module>/module.json` and list module ids in `course.json` `moduleOrder`. Ordering belongs in manifests, not directory-name prefixes.
 3. **Add topics directly under each module.** Create `<course>/<module>/<topic>/topic.json`, list topic ids in `module.json` `topicOrder`, and put the primary `artifact.html` plus declared companions beside it. Use `authoring/tools/pep new-topic <course>/<module>/<topic>` to create an absent-artifact manifest without placeholders.
 4. **Add labs only where they earn their setup cost.** A lab may live under a topic, module or course as `coding-lab/`. It uses one language-native test command and no container engine; see `authoring/docs/lab-contract.md`.

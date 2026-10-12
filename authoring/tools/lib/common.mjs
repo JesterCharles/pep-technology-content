@@ -11,6 +11,7 @@ export const RESERVED_ROOTS = new Set([
   "build",
   "components",
   "curriculum",
+  "evidence",
   "node_modules",
   "tracks",
 ]);
@@ -52,13 +53,11 @@ export function evidencePath(root, ...parts) {
 }
 
 // Course 1 and its review records predate the authoring/ layout. Preserve their
-// attested bytes while resolving only the old evidence/ namespace. A real root
-// evidence/ tree always wins, which keeps the compatibility behavior narrow.
+// attested bytes while resolving only the old evidence/ namespace. A reference
+// that exists at its root path always wins, which keeps the alias narrow.
 export async function resolveRepositoryPath(root, reference) {
   const direct = path.resolve(root, reference);
-  if (path.isAbsolute(reference) || (await exists(path.join(root, "evidence")))) {
-    return direct;
-  }
+  if (path.isAbsolute(reference) || (await exists(direct))) return direct;
   const rel = relative(root, direct);
   if (rel !== "evidence" && !rel.startsWith("evidence/")) return direct;
   return authoringPath(root, rel);

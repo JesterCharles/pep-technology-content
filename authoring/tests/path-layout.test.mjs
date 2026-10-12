@@ -37,7 +37,7 @@ test("authoring evidence references resolve directly", async () => {
   );
 });
 
-test("a real root evidence tree disables the legacy alias", async () => {
+test("a reference present at the root evidence path resolves directly", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "pep-evidence-root-"));
   const rootFile = path.join(root, "evidence/course/sources.json");
   await put(rootFile, "root\n");
@@ -46,6 +46,18 @@ test("a real root evidence tree disables the legacy alias", async () => {
   assert.equal(
     await resolveRepositoryPath(root, "evidence/course/sources.json"),
     rootFile,
+  );
+});
+
+test("an untracked root evidence leftover does not disable the legacy alias", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-evidence-leftover-"));
+  await put(path.join(root, "evidence/course/video-receipt.json"), "leftover\n");
+  const physical = path.join(root, "authoring/evidence/course/sources.json");
+  await put(physical, "authoring\n");
+
+  assert.equal(
+    await resolveRepositoryPath(root, "evidence/course/sources.json"),
+    physical,
   );
 });
 
@@ -81,7 +93,7 @@ test("default scans reject a valid course below the repository root", async () =
 
 test("default scans reject reserved roots as courses", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "pep-reserved-course-"));
-  for (const id of ["authoring", "components", "curriculum"]) {
+  for (const id of ["authoring", "components", "curriculum", "evidence"]) {
     await put(
       path.join(root, id, "course.json"),
       `${JSON.stringify({ id, moduleOrder: [] }, null, 2)}\n`,
@@ -93,7 +105,7 @@ test("default scans reject reserved roots as courses", async () => {
     encoding: "utf8",
   });
   assert.notEqual(result.status, 0);
-  for (const id of ["authoring", "components", "curriculum"]) {
+  for (const id of ["authoring", "components", "curriculum", "evidence"]) {
     assert.match(
       result.stderr,
       new RegExp(`${id}/course\\.json: reserved root cannot be a course directory`),

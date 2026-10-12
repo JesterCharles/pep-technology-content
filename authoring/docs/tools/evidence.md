@@ -67,8 +67,9 @@ byte-identical to regeneration. Regenerate with `authoring/tools/pep lock` after
 
 New manifests, receipts and review records use `authoring/evidence/...`. Course 1 and its attested review records
 predate the `authoring/` layout and retain their original `evidence/...` strings so their bytes and review authority
-do not change during the repository move. When no real root `evidence/` path exists, the tooling resolves only that
-legacy prefix to `authoring/evidence/`. A real root `evidence/` tree always wins; no other old root prefix is aliased.
+do not change during the repository move. When the referenced file does not exist at its root `evidence/` path, the
+tooling resolves only that legacy prefix to `authoring/evidence/`; the decision is made per reference, and a file that
+exists at the root path wins. `evidence/` is a reserved root, and no other old root prefix is aliased.
 Generated locks record the physical `authoring/evidence/...` path even when a preserved record used the legacy
 spelling.
 

@@ -66,7 +66,7 @@ HTML is the primary learner artifact; every other topic file is a companion to i
 ## Delivery
 
 - Scope each branch and PR to one of: one module, course-level files, or repository tooling.
-  A module branch edits only its module directory and its `authoring/evidence/<course>/<module>/` subtree; a course branch edits course-level files only; a tooling branch edits `authoring/`, `components/`, CI and root config only.
+  A module branch edits only its module directory and its `authoring/evidence/<course>/<module>/` subtree; a course branch edits course-level files only; a tooling branch edits `authoring/` excluding `authoring/evidence/`, plus `components/`, CI and root config only.
 - Never let parallel branches edit the same manifest or lock.
 - All gates must pass; merge only with approval.
 
