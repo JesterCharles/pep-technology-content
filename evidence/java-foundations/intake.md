@@ -33,13 +33,13 @@ Every topic artifact is recorded absent: applicable companions with the reason "
 
 F18 carries the calendar assessment `moduleCheck` (formats MCQ and coding, pass mark 70), which becomes this course's one course-level assessment blueprint. No Standard or Fast Track day belongs to `java-foundations` in the frozen matrix (all 75 rows are Foundation rows), so the blueprint has one calendar day.
 
-Calendar rows: 60. They become 53 topic pages (45 core, 6 Reading, 2 review), 6 project rows and 1 assessment blueprint, matching plan section 2.3 (Core 45, Reading 6, review/other 9).
+Calendar rows: 60. They become 59 topics (45 core, 6 Reading, 2 review and 6 project briefs) and 1 assessment blueprint, matching plan section 2.3 (Core 45, Reading 6, review/other 9: 2 review rows, 6 project rows and the module check).
 
 ## Module map
 
 Grouping decision (closes matrix record `source-gap-java-foundations-modules`): this is a second-mate grouping decision, not syllabus.
 The calendar gives no module structure for Java, so modules follow calendar day order, keep each day whole, and hold 4-9 topics as the batch unit for later authoring.
-Day pairs are joined only where the content continues (F4-F5 basics, F6-F7 methods, F9 and F11 classes around the F10 Project day, F12-F13 object-oriented design, F17-F18 testing and review); F8, F14 and F15 each stand alone because their content does not continue into the next instruction day.
+Day pairs are joined only where the content continues (F4-F5 basics, F6-F7 methods, F9 and F11 classes around the F10 Project day, F12-F13 object-oriented design, F15 HTTP with the F16 web project, F17-F18 testing and review); F8 and F14 stand alone because their content does not continue into the next day. The three F10 project briefs form their own module `classes-in-practice` so that `classes-and-objects` stays at 9 topics; by calendar day learners meet them between its F9 and F11 topics, and module order is authoring order, not learner order.
 Module counts were not inferred from weeks or day types.
 
 | # | Module | Title | Days | Topics | Planned minutes |
@@ -48,16 +48,17 @@ Module counts were not inferred from weeks or day types.
 | 2 | `methods-and-recursion` | Methods and Recursion | F6, F7 | 9 | 90 |
 | 3 | `arrays-lists-and-maps` | Arrays, Lists and Maps | F8 | 4 | 40 |
 | 4 | `classes-and-objects` | Classes and Objects | F9, F11 | 9 | 88 |
-| 5 | `inheritance-and-design` | Inheritance, Interfaces and Design | F12, F13 | 9 | 86 |
-| 6 | `exceptions-and-logging` | Exceptions and Logging | F14 | 5 | 48 |
-| 7 | `http-and-javalin` | HTTP and Javalin | F15 | 4 | 38 |
-| 8 | `testing-and-java-review` | Testing and Java Review | F17, F18 | 6 | 58 |
+| 5 | `classes-in-practice` | Classes in Practice (Project 1 briefs) | F10 | 3 | 15 |
+| 6 | `inheritance-and-design` | Inheritance, Interfaces and Design | F12, F13 | 9 | 86 |
+| 7 | `exceptions-and-logging` | Exceptions and Logging | F14 | 5 | 48 |
+| 8 | `http-and-javalin` | HTTP and Javalin | F15, F16 | 7 | 53 |
+| 9 | `testing-and-java-review` | Testing and Java Review | F17, F18 | 6 | 58 |
 
-Total: 53 topics, 518 planned minutes. `java-basics` (F4-F5) is the lab-contract pilot (plan section 11).
+Total: 59 topics, 548 planned minutes. `java-basics` (F4-F5) is the lab-contract pilot (plan section 11).
 
 ## Topic list with relations
 
-Every one of the 53 instructional and review rows maps to exactly one topic with relation `exact`. No row is split and no row is shared: each calendar string names one focused idea that fits one page within the 15-minute ceiling, and the overlapping ideas below stay separate rows because the calendar teaches them on different days for different purposes.
+Every one of the 59 instructional, review and project rows maps to exactly one topic with relation `exact`. No row is split and no row is shared: each calendar string names one focused idea that fits one page within the 15-minute ceiling, and the overlapping ideas below stay separate rows because the calendar teaches them on different days for different purposes.
 
 - `methods-and-recursion/method-overloading` (F6, overloading as a method-design tool) and `inheritance-and-design/polymorphism-overriding-vs-overloading` (F12, contrasting it with overriding): the F12 page lists the F6 page as a prerequisite and builds on it rather than re-teaching it.
 - `inheritance-and-design/functional-interfaces-and-anonymous-classes` (F13) and `http-and-javalin/lambdas-as-handlers` (F15): F15 depends on F13 and introduces lambda syntax.
@@ -105,37 +106,43 @@ Topic ids follow the matrix's proposed slugs, shortened where the proposal was a
 | 22 | `constructors` | `classes-and-objects` | core | `/tracks/0/weeks/1/days/3/topics/1` | F9 | exact | Constructors |
 | 23 | `access-modifiers` | `classes-and-objects` | core | `/tracks/0/weeks/1/days/3/topics/2` | F9 | exact | Access modifiers |
 | 24 | `encapsulation-with-getters-and-setters` | `classes-and-objects` | core | `/tracks/0/weeks/1/days/3/topics/3` | F9 | exact | Encapsulation with getters and setters |
-| 25 | `stack-vs-heap-and-object-references` | `classes-and-objects` | core | `/tracks/0/weeks/2/days/0/topics/0` | F11 | exact | Stack vs heap and object references |
-| 26 | `string-immutability` | `classes-and-objects` | core | `/tracks/0/weeks/2/days/0/topics/1` | F11 | exact | String immutability |
-| 27 | `double-equals-vs-equals` | `classes-and-objects` | core | `/tracks/0/weeks/2/days/0/topics/2` | F11 | exact | == vs equals |
-| 28 | `final-and-tostring` | `classes-and-objects` | reading | `/tracks/0/weeks/2/days/0/topics/3` | F11 | exact | Reading: final and toString |
-| 29 | `enums` | `classes-and-objects` | core | `/tracks/0/weeks/2/days/0/topics/4` | F11 | exact | Enums |
-| 30 | `inheritance` | `inheritance-and-design` | core | `/tracks/0/weeks/2/days/1/topics/0` | F12 | exact | Inheritance |
-| 31 | `polymorphism-overriding-vs-overloading` | `inheritance-and-design` | core | `/tracks/0/weeks/2/days/1/topics/1` | F12 | exact | Polymorphism: overriding vs overloading |
-| 32 | `abstract-classes` | `inheritance-and-design` | core | `/tracks/0/weeks/2/days/1/topics/2` | F12 | exact | Abstract classes |
-| 33 | `interfaces-and-default-methods` | `inheritance-and-design` | core | `/tracks/0/weeks/2/days/1/topics/3` | F12 | exact | Interfaces and default methods |
-| 34 | `composition-over-inheritance` | `inheritance-and-design` | core | `/tracks/0/weeks/2/days/2/topics/0` | F13 | exact | Composition over inheritance |
-| 35 | `solid-basics` | `inheritance-and-design` | core | `/tracks/0/weeks/2/days/2/topics/1` | F13 | exact | SOLID basics: single responsibility, dependency inversion |
-| 36 | `functional-interfaces-and-anonymous-classes` | `inheritance-and-design` | core | `/tracks/0/weeks/2/days/2/topics/2` | F13 | exact | Functional interfaces and anonymous classes |
-| 37 | `records` | `inheritance-and-design` | reading | `/tracks/0/weeks/2/days/2/topics/3` | F13 | exact | Reading: records |
-| 38 | `singleton-and-factory-patterns` | `inheritance-and-design` | reading | `/tracks/0/weeks/2/days/2/topics/4` | F13 | exact | Reading: singleton and factory patterns |
-| 39 | `checked-vs-unchecked-exceptions` | `exceptions-and-logging` | core | `/tracks/0/weeks/2/days/3/topics/0` | F14 | exact | Checked vs unchecked exceptions |
-| 40 | `try-catch-finally-and-try-with-resources` | `exceptions-and-logging` | core | `/tracks/0/weeks/2/days/3/topics/1` | F14 | exact | try/catch/finally and try-with-resources |
-| 41 | `custom-exceptions` | `exceptions-and-logging` | core | `/tracks/0/weeks/2/days/3/topics/2` | F14 | exact | Custom exceptions |
-| 42 | `reading-stack-traces` | `exceptions-and-logging` | core | `/tracks/0/weeks/2/days/3/topics/3` | F14 | exact | Reading stack traces |
-| 43 | `logging` | `exceptions-and-logging` | reading | `/tracks/0/weeks/2/days/3/topics/4` | F14 | exact | Reading: logging |
-| 44 | `how-a-request-travels` | `http-and-javalin` | reading | `/tracks/0/weeks/2/days/4/topics/0` | F15 | exact | Reading: how a request travels from browser to server |
-| 45 | `http-methods-status-codes-and-json` | `http-and-javalin` | core | `/tracks/0/weeks/2/days/4/topics/1` | F15 | exact | HTTP methods, status codes and JSON |
-| 46 | `routes-and-handlers-in-javalin` | `http-and-javalin` | core | `/tracks/0/weeks/2/days/4/topics/2` | F15 | exact | Routes and handlers in Javalin |
-| 47 | `lambdas-as-handlers` | `http-and-javalin` | core | `/tracks/0/weeks/2/days/4/topics/3` | F15 | exact | Lambdas as handlers: shorthand for functional interfaces |
-| 48 | `junit-test-first` | `testing-and-java-review` | core | `/tracks/0/weeks/3/days/1/topics/0` | F17 | exact | Unit tests with JUnit, written test-first: arrange, act, assert, assertThrows |
-| 49 | `test-doubles-fakes-and-stubs` | `testing-and-java-review` | core | `/tracks/0/weeks/3/days/1/topics/1` | F17 | exact | Test doubles: fakes and stubs |
-| 50 | `mocking-with-mockito` | `testing-and-java-review` | core | `/tracks/0/weeks/3/days/1/topics/2` | F17 | exact | Mocking with Mockito |
-| 51 | `code-coverage` | `testing-and-java-review` | reading | `/tracks/0/weeks/3/days/1/topics/3` | F17 | exact | Reading: code coverage |
-| 52 | `java-review` | `testing-and-java-review` | review | `/tracks/0/weeks/3/days/2/topics/0` | F18 | exact | Java review: core language, HTTP with Javalin, testing |
-| 53 | `reading-older-java-code` | `testing-and-java-review` | review | `/tracks/0/weeks/3/days/2/topics/1` | F18 | exact | Reading older Java code (8, 11, 17) |
+| 25 | `modeling-real-world-objects-as-classes` | `classes-in-practice` | lab-brief | `/tracks/0/weeks/1/days/4/topics/0` | F10 | exact | Modeling real-world objects as classes |
+| 26 | `null-and-nullpointerexception` | `classes-in-practice` | lab-brief | `/tracks/0/weeks/1/days/4/topics/1` | F10 | exact | null and NullPointerException |
+| 27 | `maven-builds-and-dependencies` | `classes-in-practice` | lab-brief | `/tracks/0/weeks/1/days/4/topics/2` | F10 | exact | Maven builds and dependencies |
+| 28 | `stack-vs-heap-and-object-references` | `classes-and-objects` | core | `/tracks/0/weeks/2/days/0/topics/0` | F11 | exact | Stack vs heap and object references |
+| 29 | `string-immutability` | `classes-and-objects` | core | `/tracks/0/weeks/2/days/0/topics/1` | F11 | exact | String immutability |
+| 30 | `double-equals-vs-equals` | `classes-and-objects` | core | `/tracks/0/weeks/2/days/0/topics/2` | F11 | exact | == vs equals |
+| 31 | `final-and-tostring` | `classes-and-objects` | reading | `/tracks/0/weeks/2/days/0/topics/3` | F11 | exact | Reading: final and toString |
+| 32 | `enums` | `classes-and-objects` | core | `/tracks/0/weeks/2/days/0/topics/4` | F11 | exact | Enums |
+| 33 | `inheritance` | `inheritance-and-design` | core | `/tracks/0/weeks/2/days/1/topics/0` | F12 | exact | Inheritance |
+| 34 | `polymorphism-overriding-vs-overloading` | `inheritance-and-design` | core | `/tracks/0/weeks/2/days/1/topics/1` | F12 | exact | Polymorphism: overriding vs overloading |
+| 35 | `abstract-classes` | `inheritance-and-design` | core | `/tracks/0/weeks/2/days/1/topics/2` | F12 | exact | Abstract classes |
+| 36 | `interfaces-and-default-methods` | `inheritance-and-design` | core | `/tracks/0/weeks/2/days/1/topics/3` | F12 | exact | Interfaces and default methods |
+| 37 | `composition-over-inheritance` | `inheritance-and-design` | core | `/tracks/0/weeks/2/days/2/topics/0` | F13 | exact | Composition over inheritance |
+| 38 | `solid-basics` | `inheritance-and-design` | core | `/tracks/0/weeks/2/days/2/topics/1` | F13 | exact | SOLID basics: single responsibility, dependency inversion |
+| 39 | `functional-interfaces-and-anonymous-classes` | `inheritance-and-design` | core | `/tracks/0/weeks/2/days/2/topics/2` | F13 | exact | Functional interfaces and anonymous classes |
+| 40 | `records` | `inheritance-and-design` | reading | `/tracks/0/weeks/2/days/2/topics/3` | F13 | exact | Reading: records |
+| 41 | `singleton-and-factory-patterns` | `inheritance-and-design` | reading | `/tracks/0/weeks/2/days/2/topics/4` | F13 | exact | Reading: singleton and factory patterns |
+| 42 | `checked-vs-unchecked-exceptions` | `exceptions-and-logging` | core | `/tracks/0/weeks/2/days/3/topics/0` | F14 | exact | Checked vs unchecked exceptions |
+| 43 | `try-catch-finally-and-try-with-resources` | `exceptions-and-logging` | core | `/tracks/0/weeks/2/days/3/topics/1` | F14 | exact | try/catch/finally and try-with-resources |
+| 44 | `custom-exceptions` | `exceptions-and-logging` | core | `/tracks/0/weeks/2/days/3/topics/2` | F14 | exact | Custom exceptions |
+| 45 | `reading-stack-traces` | `exceptions-and-logging` | core | `/tracks/0/weeks/2/days/3/topics/3` | F14 | exact | Reading stack traces |
+| 46 | `logging` | `exceptions-and-logging` | reading | `/tracks/0/weeks/2/days/3/topics/4` | F14 | exact | Reading: logging |
+| 47 | `how-a-request-travels` | `http-and-javalin` | reading | `/tracks/0/weeks/2/days/4/topics/0` | F15 | exact | Reading: how a request travels from browser to server |
+| 48 | `http-methods-status-codes-and-json` | `http-and-javalin` | core | `/tracks/0/weeks/2/days/4/topics/1` | F15 | exact | HTTP methods, status codes and JSON |
+| 49 | `routes-and-handlers-in-javalin` | `http-and-javalin` | core | `/tracks/0/weeks/2/days/4/topics/2` | F15 | exact | Routes and handlers in Javalin |
+| 50 | `lambdas-as-handlers` | `http-and-javalin` | core | `/tracks/0/weeks/2/days/4/topics/3` | F15 | exact | Lambdas as handlers: shorthand for functional interfaces |
+| 51 | `an-in-memory-repository-behind-an-interface` | `http-and-javalin` | lab-brief | `/tracks/0/weeks/3/days/0/topics/0` | F16 | exact | An in-memory repository behind an interface |
+| 52 | `wiring-routes-service-and-repository-end-to-end` | `http-and-javalin` | lab-brief | `/tracks/0/weeks/3/days/0/topics/1` | F16 | exact | Wiring routes, service and repository end to end |
+| 53 | `error-responses-and-status-codes` | `http-and-javalin` | lab-brief | `/tracks/0/weeks/3/days/0/topics/2` | F16 | exact | Error responses and status codes |
+| 54 | `junit-test-first` | `testing-and-java-review` | core | `/tracks/0/weeks/3/days/1/topics/0` | F17 | exact | Unit tests with JUnit, written test-first: arrange, act, assert, assertThrows |
+| 55 | `test-doubles-fakes-and-stubs` | `testing-and-java-review` | core | `/tracks/0/weeks/3/days/1/topics/1` | F17 | exact | Test doubles: fakes and stubs |
+| 56 | `mocking-with-mockito` | `testing-and-java-review` | core | `/tracks/0/weeks/3/days/1/topics/2` | F17 | exact | Mocking with Mockito |
+| 57 | `code-coverage` | `testing-and-java-review` | reading | `/tracks/0/weeks/3/days/1/topics/3` | F17 | exact | Reading: code coverage |
+| 58 | `java-review` | `testing-and-java-review` | review | `/tracks/0/weeks/3/days/2/topics/0` | F18 | exact | Java review: core language, HTTP with Javalin, testing |
+| 59 | `reading-older-java-code` | `testing-and-java-review` | review | `/tracks/0/weeks/3/days/2/topics/1` | F18 | exact | Reading older Java code (8, 11, 17) |
 
-Kinds: `reading` for the five `Reading:` rows; `review` for the two F18 review-day rows (the matrix expects a page, text alternative and in-page practice for each, with no quiz); `core` for every other row, including F14 "Reading stack traces", which is a core skill row, not a `Reading:` row.
+Kinds: `reading` for the five `Reading:` rows; `review` for the two F18 review-day rows (the matrix expects a page, text alternative and in-page practice for each, with no quiz); `lab-brief` for the six F10 and F16 project rows (project briefs; the topic schema has no project kind); `core` for every other row, including F14 "Reading stack traces", which is a core skill row, not a `Reading:` row.
 
 ### Objectives
 
@@ -144,20 +151,20 @@ Each topic has 3 observable objectives with exact ids `o1`-`o3`; `topic.json` is
 - `java-basics/installing-java-and-the-ide`: o1 Install a JDK 25 LTS build and Apache Maven, then confirm both with java -version and mvn -v; o2 Tell the JDK from a JRE and explain why javac, java and Maven must each be found on the PATH; o3 Open a Maven project in the IDE and select JDK 25 as its project SDK.
 - `java-basics/running-a-first-program`: o1 Compile a source file with javac and run the resulting class with java; o2 Run a single source file directly with java Hello.java and say when that shortcut is enough; o3 Fix a program from a compiler error message by locating its file, line and cause.
 - `java-basics/primitive-types-and-variables`: o1 Choose among int, long, double, boolean and char for a value and declare a variable of that type; o2 Predict the result of integer division, overflow and a narrowing cast; o3 Tell a declaration from an assignment and use var only where the type is obvious.
-- `java-basics/strings-and-string-methods`: o1 Build strings with literals, concatenation and text blocks; o2 Use length, charAt, substring, indexOf, toUpperCase and strip, predicting zero-based indexes; o3 Explain why a String method returns a new string instead of changing the original.
+- `java-basics/strings-and-string-methods`: o1 Build strings with literals, concatenation and text blocks; o2 Use length, charAt, substring, indexOf, toUpperCase and strip, predicting zero-based indexes; o3 Explain that String objects are immutable: length, charAt and indexOf return a number or a character, and toUpperCase or strip return a String value without changing the original.
 - `java-basics/arithmetic-comparison-and-logical-operators`: o1 Evaluate expressions using arithmetic, remainder and compound assignment operators with correct precedence; o2 Write boolean conditions with comparison operators and &&, || and !; o3 Predict when && and || short-circuit and skip evaluating their right side.
 - `java-basics/if-else-and-switch`: o1 Choose between branches with if, else if and else, ordering the conditions correctly; o2 Write a switch with arrow labels, including a switch expression that yields a value; o3 Predict fall-through in an old-style colon switch that has no break.
 - `java-basics/for-while-and-do-while-loops`: o1 Write a for loop with the correct start, condition and update for a counted task; o2 Choose while or do-while for a loop whose repeat count is not known in advance; o3 Trace a loop to find an off-by-one error and use break and continue on purpose.
 - `methods-and-recursion/writing-methods`: o1 Declare a method with typed parameters and a return type, and call it with matching arguments; o2 Return a value from every path of a method, and use void when nothing is returned; o3 Extract a repeated block of code into a well-named method.
 - `methods-and-recursion/method-overloading`: o1 Overload a method by changing its parameter list; o2 Predict which overload the compiler picks for a given call, including a widening conversion; o3 Explain why a different return type alone cannot overload a method.
 - `methods-and-recursion/static-members-and-methods`: o1 Call a static method through its class name and explain why main is static; o2 Use a static field shared by all calls and tell it from a local variable; o3 Explain why a static method cannot use an instance field without an object.
-- `methods-and-recursion/pass-by-value`: o1 Predict that reassigning a primitive parameter leaves the caller's variable unchanged; o2 Predict that changing an array's elements through a parameter is visible to the caller; o3 Explain why reassigning a reference parameter does not change the caller's reference.
+- `methods-and-recursion/pass-by-value`: o1 Predict that reassigning a primitive parameter leaves the caller's variable unchanged; o2 Predict that reassigning a String parameter inside a method leaves the caller's variable referring to its original String; o3 Explain that Java passes every argument by value, and that for an object the value copied is the reference.
 - `methods-and-recursion/method-practice`: o1 Decompose a small problem into methods with clear inputs and outputs; o2 Test a method by calling it with ordinary, boundary and invalid inputs and checking the results; o3 Refactor duplicated code into one reusable method without changing behavior.
 - `methods-and-recursion/recursion-and-the-call-stack`: o1 Write a recursive method with a base case and a recursive step that moves toward it; o2 Trace the call stack of a recursive method, frame by frame, including the returns; o3 Explain why a missing or unreachable base case ends in StackOverflowError.
-- `methods-and-recursion/two-pointers-reversing-and-counting`: o1 Reverse a string or array in place with two indexes moving toward each other; o2 Count matching pairs in a sorted array with two pointers instead of nested loops; o3 Choose the loop condition that stops two pointers exactly when they meet or cross.
+- `methods-and-recursion/two-pointers-reversing-and-counting`: o1 Build and return a reversed String by reading characters with two indexes that move toward each other; o2 Count matching characters or pairs in a String with two indexes instead of nested loops; o3 Choose the loop condition that stops two indexes exactly when they meet or cross.
 - `methods-and-recursion/debugging-with-breakpoints`: o1 Set a breakpoint and run a program in the IDE debugger; o2 Step over, step into and step out while watching variable values change; o3 Locate the line where a variable first takes a wrong value.
 - `methods-and-recursion/ai-assistants-explain-not-answer`: o1 Ask an AI assistant to explain an error or a piece of code without asking for the finished solution; o2 Check an assistant's explanation against the official documentation or by running the code; o3 Record what the assistant produced and what you verified yourself.
-- `arrays-lists-and-maps/declaring-and-looping-over-arrays`: o1 Declare, create and initialize an array, and read and write elements by index; o2 Loop over an array with an index-based for loop and an enhanced for loop, choosing between them; o3 Predict when an index throws ArrayIndexOutOfBoundsException.
+- `arrays-lists-and-maps/declaring-and-looping-over-arrays`: o1 Declare, create and initialize an array, and read and write elements by index; o2 Loop over an array with an index-based for loop and an enhanced for loop, choosing between them; o3 Reverse an array in place with two indexes and predict when an index throws ArrayIndexOutOfBoundsException.
 - `arrays-lists-and-maps/linear-and-binary-search`: o1 Write a linear search that returns the index of a target or -1; o2 Trace binary search on a sorted array, narrowing the low and high bounds each step; o3 Explain why binary search requires sorted input and how its step count grows with input size.
 - `arrays-lists-and-maps/arraylist-basics`: o1 Create an ArrayList and use add, get, set, remove and size; o2 Choose an ArrayList over an array when the number of elements changes; o3 Explain why a list of numbers is declared List<Integer> rather than List<int>.
 - `arrays-lists-and-maps/hashmap-basics`: o1 Store and look up values by key with put and get; o2 Use containsKey or getOrDefault to handle a missing key instead of an unexpected null; o3 Count occurrences of words or characters with a HashMap.
@@ -165,6 +172,9 @@ Each topic has 3 observable objectives with exact ids `o1`-`o3`; `topic.json` is
 - `classes-and-objects/constructors`: o1 Write a constructor that initializes every field from its parameters; o2 Use this to tell a field from a parameter with the same name, and chain constructors with this(...); o3 Explain when the compiler supplies a default constructor and when it does not.
 - `classes-and-objects/access-modifiers`: o1 Apply private, package-private, protected and public to fields and methods; o2 Predict whether code in another class or package compiles against a given modifier; o3 Choose the most restrictive access that still lets the code work.
 - `classes-and-objects/encapsulation-with-getters-and-setters`: o1 Hide fields behind private access and expose them through getters; o2 Write a setter or method that validates input and rejects an invalid state; o3 Decide when a field should have no setter at all.
+- `classes-in-practice/modeling-real-world-objects-as-classes`: o1 Model a described real-world entity as a class with private fields, a constructor and behavior methods; o2 Enforce the entity's rules in its constructor and methods so that an invalid object cannot be created; o3 Make the brief's public tests pass with mvn -q -o test.
+- `classes-in-practice/null-and-nullpointerexception`: o1 Explain what null means for a reference variable and name operations that throw NullPointerException, such as calling a method or reading a field through null; o2 Prevent a NullPointerException by checking for null or by rejecting a null argument with Objects.requireNonNull; o3 Handle a HashMap lookup that finds no value with getOrDefault or a null check.
+- `classes-in-practice/maven-builds-and-dependencies`: o1 Read a POM's coordinates (groupId, artifactId, version) and its dependencies section; o2 Declare a test-scope dependency in the POM and fetch it once with mvn -q dependency:go-offline; o3 Run mvn -q -o test and tell a compile failure from a failing test in its output.
 - `classes-and-objects/stack-vs-heap-and-object-references`: o1 Draw where local variables, objects and references live for a short program; o2 Predict the effect of two references pointing to the same object; o3 Explain when an object becomes unreachable and eligible for garbage collection.
 - `classes-and-objects/string-immutability`: o1 Predict that String methods return new strings and leave the original unchanged; o2 Use StringBuilder to build a string inside a loop; o3 Explain why immutability makes strings safe to share between references.
 - `classes-and-objects/double-equals-vs-equals`: o1 Predict the result of == and equals on primitives, strings and other objects; o2 Compare strings for content with equals instead of ==; o3 Explain why a class must override equals to compare its objects by content.
@@ -186,37 +196,74 @@ Each topic has 3 observable objectives with exact ids `o1`-`o3`; `topic.json` is
 - `exceptions-and-logging/logging`: o1 Explain why a program logs instead of printing with System.out; o2 Choose a log level for an event, from debug to error; o3 Log an exception with its stack trace and without sensitive data.
 - `http-and-javalin/how-a-request-travels`: o1 Trace a request from URL through name lookup and connection to a server response; o2 Name the parts of a URL: scheme, host, port, path and query; o3 Explain what localhost and a port mean for a server running on your machine.
 - `http-and-javalin/http-methods-status-codes-and-json`: o1 Choose GET, POST, PUT or DELETE for an operation and say which methods are safe or idempotent; o2 Pick a status code class (2xx, 4xx, 5xx) and a specific code for a response; o3 Read and write a JSON object with nested values and arrays.
-- `http-and-javalin/routes-and-handlers-in-javalin`: o1 Start a Javalin server on a port and register GET and POST routes; o2 Read path parameters, query parameters and a JSON body from the request Context; o3 Set the response status and return JSON from a handler.
+- `http-and-javalin/routes-and-handlers-in-javalin`: o1 Trace which registered route and handler a request reaches, given its HTTP method and path; o2 Select the Context call that reads a path parameter, a query parameter or a JSON body; o3 Predict the status code and JSON body that a given handler sends back.
 - `http-and-javalin/lambdas-as-handlers`: o1 Rewrite an anonymous class handler as a lambda; o2 Explain that a lambda implements the single abstract method of a functional interface; o3 Replace a simple lambda with a method reference.
+- `http-and-javalin/an-in-memory-repository-behind-an-interface`: o1 Implement a given repository interface with an in-memory HashMap store; o2 Keep calling code dependent on the repository interface rather than on the in-memory class; o3 Make the brief's public tests pass with mvn -q -o test.
+- `http-and-javalin/wiring-routes-service-and-repository-end-to-end`: o1 Pass the repository into a service and the service into Javalin handlers through constructors; o2 Register GET and POST routes whose handlers call the service and return JSON; o3 Trace a request from route through handler and service to repository and back, and make the in-process public tests pass with mvn -q -o test.
+- `http-and-javalin/error-responses-and-status-codes`: o1 Return 400 for invalid input and 404 for a missing resource, each with a JSON error body; o2 Map a custom exception to an error response with a Javalin exception handler; o3 Make the brief's public tests for error responses pass with mvn -q -o test.
 - `testing-and-java-review/junit-test-first`: o1 Write a failing JUnit test before the code, then make it pass; o2 Structure a test as arrange, act and assert with assertEquals and assertTrue; o3 Test that code throws the expected exception with assertThrows.
 - `testing-and-java-review/test-doubles-fakes-and-stubs`: o1 Replace a dependency with a hand-written fake that works in memory; o2 Write a stub that returns canned answers for a test; o3 Explain why depending on an interface makes a class testable.
 - `testing-and-java-review/mocking-with-mockito`: o1 Create a mock and stub a method with when(...).thenReturn(...); o2 Verify that a method was called with expected arguments; o3 Decide when a hand-written fake is clearer than a mock.
 - `testing-and-java-review/code-coverage`: o1 Read a JaCoCo report for line and branch coverage; o2 Explain why high coverage does not prove code is correct; o3 Find an untested branch and add a test for it.
 - `testing-and-java-review/java-review`: o1 Retrieve core language rules for types, control flow, methods and classes to predict a program's output; o2 Trace a Javalin request through route, handler and status code; o3 Choose the right assertion or test double for a unit test.
-- `testing-and-java-review/reading-older-java-code`: o1 Recognize which Java release a feature needs, such as lambdas (8), var (10), switch expressions (14) and records (16); o2 Rewrite an older idiom, such as an anonymous class or a colon switch, in its modern form; o3 Read code written for Java 8, 11 or 17 and predict that it still compiles on JDK 25.
+- `testing-and-java-review/reading-older-java-code`: o1 Recognize which Java release a feature needs, such as lambdas (8), var (10), switch expressions (14) and records (16); o2 Rewrite an older idiom, such as an anonymous class or a colon switch, in its modern form; o3 Inspect a short Java 8, 11 or 17 example, predict whether it compiles on JDK 25, and name the feature or migration issue behind the prediction.
 
 ### Prerequisites
 
 Prerequisites name in-course topics by full key. Cross-course prerequisites name course-1 topic keys, because those ids exist: `navigating-the-shell` and `environment-variables-and-secrets` (installing the JDK and Maven, setting `JAVA_HOME` and `PATH`; logging without secrets), `localhost-and-ports` (how a request travels), and `ai-rules-of-use` and `checking-ai-changes` (AI assistants that explain). `course.json` names the course-1 course id `git-linux-ai-foundations`.
 
-## Project rows
+## Project briefs
 
-F10 and F16 are calendar Project days, so their planned page total above is 0. Their six rows are project rows: the matrix scopes each as `project-row` (overlay metadata, not a learner file), and the calendar applies them in the Project day's Build block for Project 1. They become no topic page and no new syllabus. The track-overlay intake records them in `tracks/foundation.json`; the matrix's proposed slugs below are kept as their row names.
+Captain decision pep-project-rows, option A (intake reconciliation education-01 and java-sme-001): each of the six F10 and F16 Project-day rows is one reusable learner-facing project brief. These are 6 of the 14 project artifacts already authorized in the coverage matrix, not new syllabus.
 
-| Day | Pointer | Calendar row | Proposed row id | Taught by |
-|---|---|---|---|---|
-| F10 | `/tracks/0/weeks/1/days/4/topics/0` | Modeling real-world objects as classes | `modeling-real-world-objects-as-classes` | `classes-and-objects/classes-and-objects`, `constructors`, `encapsulation-with-getters-and-setters` (F9) |
-| F10 | `/tracks/0/weeks/1/days/4/topics/1` | null and NullPointerException | `null-and-nullpointerexception` | `arrays-lists-and-maps/hashmap-basics` o2 (null for a missing key, F8); later `exceptions-and-logging/reading-stack-traces` o3 (F14). Gap: before F10 no page explains null and the exception itself; see Open intake questions |
-| F10 | `/tracks/0/weeks/1/days/4/topics/2` | Maven builds and dependencies | `maven-builds-and-dependencies` | the `java-basics` pilot lab (F4-F5) runs `mvn` on a provided POM. Gap: no page teaches POM dependencies; see Open intake questions |
-| F16 | `/tracks/0/weeks/3/days/0/topics/0` | An in-memory repository behind an interface | `an-in-memory-repository-behind-an-interface` | `inheritance-and-design/interfaces-and-default-methods`, `solid-basics` (F12-F13); `arrays-lists-and-maps/hashmap-basics` (F8) |
-| F16 | `/tracks/0/weeks/3/days/0/topics/1` | Wiring routes, service and repository end to end | `wiring-routes-service-and-repository-end-to-end` | `http-and-javalin/routes-and-handlers-in-javalin` (F15); `inheritance-and-design/solid-basics` (F13) |
-| F16 | `/tracks/0/weeks/3/days/0/topics/2` | Error responses and status codes | `error-responses-and-status-codes` | `http-and-javalin/http-methods-status-codes-and-json` (F15); `exceptions-and-logging/custom-exceptions` (F14) |
+- Location: one topic per row, `java-foundations/<module>/<row-id>/`, kind `lab-brief`. `artifact.html` (with `artifact.md`) is the brief: goal, outcomes, the in-brief instruction listed below, steps and how to test. `coding-lab/` is a topic lab (`lab: topic`) holding the starter scaffold (`starter/`), public tests (`tests/`) and `expected/` output under `docs/lab-contract.md`.
+- Outcomes: the brief's three objectives in `topic.json`; the public tests check each outcome that code can show.
+- Test command: `mvn -q -o test` after one-time `mvn -q dependency:go-offline`, on macOS, Linux and Windows. The F16 Javalin tests run the app in-process on localhost (Javalin testing tutorial), with no container engine.
+- Never in the repository: reference solutions and hidden tests, which stay in uncommitted private staging.
+- Tracks: one canonical brief per row. The Standard and Fast overlays reference the same topic and lab, never a copy.
+- The module PR authors the brief and its lab; the intake records only the plan.
+
+| Day | Pointer | Calendar row | Topic |
+|---|---|---|---|
+| F10 | `/tracks/0/weeks/1/days/4/topics/0` | Modeling real-world objects as classes | `classes-in-practice/modeling-real-world-objects-as-classes` |
+| F10 | `/tracks/0/weeks/1/days/4/topics/1` | null and NullPointerException | `classes-in-practice/null-and-nullpointerexception` |
+| F10 | `/tracks/0/weeks/1/days/4/topics/2` | Maven builds and dependencies | `classes-in-practice/maven-builds-and-dependencies` |
+| F16 | `/tracks/0/weeks/3/days/0/topics/0` | An in-memory repository behind an interface | `http-and-javalin/an-in-memory-repository-behind-an-interface` |
+| F16 | `/tracks/0/weeks/3/days/0/topics/1` | Wiring routes, service and repository end to end | `http-and-javalin/wiring-routes-service-and-repository-end-to-end` |
+| F16 | `/tracks/0/weeks/3/days/0/topics/2` | Error responses and status codes | `http-and-javalin/error-responses-and-status-codes` |
+
+### Prerequisite alignment
+
+Every concept a brief applies is taught before its project day, either by an earlier topic objective or by explicit instruction inside the brief, which its public tests then check.
+
+| Brief | Applied concept | Taught by |
+|---|---|---|
+| `modeling-real-world-objects-as-classes` | fields, methods and objects | `classes-and-objects/classes-and-objects` o1-o3 (F9) |
+| `modeling-real-world-objects-as-classes` | constructors | `classes-and-objects/constructors` o1-o2 (F9) |
+| `modeling-real-world-objects-as-classes` | private fields and validated setters | `classes-and-objects/access-modifiers` o3, `encapsulation-with-getters-and-setters` o1-o2 (F9) |
+| `modeling-real-world-objects-as-classes` | running the public tests | `java-basics` pilot lab (`mvn -q -o test`, F4-F5) |
+| `null-and-nullpointerexception` | what null is; operations that throw NullPointerException | in-brief instruction (o1), checked by a public test that expects the exception for a null use |
+| `null-and-nullpointerexception` | null checks and Objects.requireNonNull | in-brief instruction (o2), checked by public tests passing null arguments |
+| `null-and-nullpointerexception` | missing HashMap key | `arrays-lists-and-maps/hashmap-basics` o2 (F8), applied in o3 |
+| `maven-builds-and-dependencies` | POM coordinates and the dependencies section | in-brief instruction (o1) |
+| `maven-builds-and-dependencies` | declaring a test-scope dependency; go-offline | in-brief instruction (o2), checked because the public tests compile only once the learner declares the dependency |
+| `maven-builds-and-dependencies` | compile failure versus failing test | in-brief instruction (o3); `running-a-first-program` o3 (compiler errors, F4) |
+| `an-in-memory-repository-behind-an-interface` | implementing an interface | `inheritance-and-design/interfaces-and-default-methods` o1 (F12) |
+| `an-in-memory-repository-behind-an-interface` | depending on an interface | `inheritance-and-design/solid-basics` o2-o3 (F13) |
+| `an-in-memory-repository-behind-an-interface` | HashMap store; missing key | `arrays-lists-and-maps/hashmap-basics` o1-o2 (F8); `null-and-nullpointerexception` brief (F10) |
+| `an-in-memory-repository-behind-an-interface` | POM and test command | `maven-builds-and-dependencies` brief (F10) |
+| `wiring-routes-service-and-repository-end-to-end` | constructor injection | `inheritance-and-design/solid-basics` o2 (F13) |
+| `wiring-routes-service-and-repository-end-to-end` | routes, handlers and Context | `http-and-javalin/routes-and-handlers-in-javalin` o1-o3 (trace, select and predict, F15); writing and registering the handlers is in-brief instruction (o2), checked by the in-process public tests |
+| `wiring-routes-service-and-repository-end-to-end` | lambda handlers | `http-and-javalin/lambdas-as-handlers` o1-o2 (F15) |
+| `error-responses-and-status-codes` | 400 and 404 status codes; JSON bodies | `http-and-javalin/http-methods-status-codes-and-json` o2-o3 (F15) |
+| `error-responses-and-status-codes` | custom exceptions | `exceptions-and-logging/custom-exceptions` o1-o2 (F14) |
+| `error-responses-and-status-codes` | Javalin exception mapping | in-brief instruction (o2), checked by public tests that expect the mapped status and body |
 
 ## Artifact applicability
 
-Rules (plan section 5, matrix expected-artifact scope): core topics require HTML, derived Markdown and a practice GIFT quiz, with a curated video when a suitable verified one exists; Reading topics also carry a printable PDF; review topics carry HTML and Markdown only; project rows and the module check carry no learner file. Each page's in-page simulator or practice is part of its HTML. Absent companions record a reason.
+Rules (plan section 5, matrix expected-artifact scope): core topics require HTML, derived Markdown and a practice GIFT quiz, with a curated video when a suitable verified one exists; Reading topics also carry a printable PDF; review topics carry HTML and Markdown only; project briefs carry HTML, Markdown and a topic coding lab; the module check carries no learner file. Each page's in-page simulator or practice is part of its HTML. Absent companions record a reason.
 
-Legend: **R** required, authored in the module PR; **V** required when a suitable verified video exists, otherwise absent with the search record; **L** practised in the planned module lab; **-** not applicable, with the reason in `topic.json`.
+Legend: **R** required, authored in the module PR; **V** required when a suitable verified video exists, otherwise absent with the search record; **L** practised in the planned module lab; **T** topic coding lab (scaffold and public tests), authored in the module PR; **-** not applicable, with the reason in `topic.json`.
 
 | Topic | Kind | html | md | pdf | gift | video | lab |
 |---|---|---|---|---|---|---|---|
@@ -244,6 +291,9 @@ Legend: **R** required, authored in the module PR; **V** required when a suitabl
 | `classes-and-objects/constructors` | core | R | R | - | R | V | - |
 | `classes-and-objects/access-modifiers` | core | R | R | - | R | V | - |
 | `classes-and-objects/encapsulation-with-getters-and-setters` | core | R | R | - | R | V | - |
+| `classes-in-practice/modeling-real-world-objects-as-classes` | lab-brief | R | R | - | - | - | T |
+| `classes-in-practice/null-and-nullpointerexception` | lab-brief | R | R | - | - | - | T |
+| `classes-in-practice/maven-builds-and-dependencies` | lab-brief | R | R | - | - | - | T |
 | `classes-and-objects/stack-vs-heap-and-object-references` | core | R | R | - | R | V | - |
 | `classes-and-objects/string-immutability` | core | R | R | - | R | V | - |
 | `classes-and-objects/double-equals-vs-equals` | core | R | R | - | R | V | - |
@@ -267,6 +317,9 @@ Legend: **R** required, authored in the module PR; **V** required when a suitabl
 | `http-and-javalin/http-methods-status-codes-and-json` | core | R | R | - | R | V | - |
 | `http-and-javalin/routes-and-handlers-in-javalin` | core | R | R | - | R | V | - |
 | `http-and-javalin/lambdas-as-handlers` | core | R | R | - | R | V | - |
+| `http-and-javalin/an-in-memory-repository-behind-an-interface` | lab-brief | R | R | - | - | - | T |
+| `http-and-javalin/wiring-routes-service-and-repository-end-to-end` | lab-brief | R | R | - | - | - | T |
+| `http-and-javalin/error-responses-and-status-codes` | lab-brief | R | R | - | - | - | T |
 | `testing-and-java-review/junit-test-first` | core | R | R | - | R | V | - |
 | `testing-and-java-review/test-doubles-fakes-and-stubs` | core | R | R | - | R | V | - |
 | `testing-and-java-review/mocking-with-mockito` | core | R | R | - | R | V | - |
@@ -294,7 +347,9 @@ All labs follow `docs/lab-contract.md`: no Docker, Podman, Compose, Testcontaine
 
 ### Other modules
 
-No other lab is planned at intake. Those topics record `lab: none` with a reason. The Foundation calendar sets `requiredLab: false` for every F4-F18 day, and each day's coding-lab blocks run on the platform. A module PR may propose a module lab; it then uses the same test command, `mvn -q -o test`, and needs educational-critic confirmation. Candidates: `methods-and-recursion` (F7 Practice day exercise ladder), `http-and-javalin` (Javalin handlers tested in-process) and `testing-and-java-review` (learners write JUnit tests and Mockito mocks).
+Besides the pilot and the six project-brief topic labs (see Project briefs), no other lab is planned at intake. Those topics record `lab: none` with a reason. The Foundation calendar sets `requiredLab: false` for every F4-F18 day, the frozen matrix gives Java no lab overlay, and each day's coding-lab blocks run on the platform. A module PR may propose a module lab; it then uses the same test command, `mvn -q -o test`, and needs educational-critic confirmation. Candidates: `methods-and-recursion` (F7 Practice day exercise ladder) and `testing-and-java-review` (learners write JUnit tests and Mockito mocks).
+
+`http-and-javalin/routes-and-handlers-in-javalin` adds no lab (reconciliation education-03). Its objectives are narrowed to what the page activity, simulator and quiz can evidence: tracing which route and handler a request reaches, selecting the Context call for a path parameter, query parameter or JSON body, and predicting the status and JSON a handler sends. The page offers an optional guided local-run step using the offline Maven command form from `docs/lab-contract.md`; it is not assessed.
 
 ## Minute budgets
 
@@ -303,7 +358,8 @@ Rule: the new-course rule in `docs/tools/validators.md` (merged B8 budget-formul
 Basis at intake: no `artifact.html` exists, so nothing can be measured. Each topic records `modeledP50` 0 and `modeledWorstPath` 0, meaning not measured, and a planning budget equal to its `aboutLabel`:
 
 - core and review: 10 minutes, the largest `ceil(max(P50, worst path))` measured on any course-1 page (`agile-scrum-user-stories`: P50 6.7, worst path 9.35);
-- Reading: 8 minutes, a shorter read.
+- Reading: 8 minutes, a shorter read;
+- project brief: 5 minutes, the 3-5 minute brief of plan section 5; build time is lab time in each `lab.json`, not topic budget.
 
 The module PR replaces each planning value with the measured estimator P50 and the modeled worst required path (two wrong graded attempts and wrong-first explores per interactive unit), then raises `budget` and `aboutLabel` to the rule's minimum. A planning budget is never used to cut an authored page. Gate T14 enforces the rule once `artifact.html` is present.
 
@@ -315,13 +371,13 @@ The module PR replaces each planning value with the measured estimator P50 and t
 | F7 | Practice | 5 | 50 | 120 |
 | F8 | Concept | 4 | 40 | 120 |
 | F9 | Concept | 4 | 40 | 120 |
-| F10 | Project | 0 | 0 | 120 |
+| F10 | Project | 3 | 15 | 120 |
 | F11 | Concept | 5 | 48 | 120 |
 | F12 | Concept | 4 | 40 | 120 |
 | F13 | Concept | 5 | 46 | 120 |
 | F14 | Concept | 5 | 48 | 120 |
 | F15 | Concept | 4 | 38 | 120 |
-| F16 | Project | 0 | 0 | 120 |
+| F16 | Project | 3 | 15 | 120 |
 | F17 | Concept | 4 | 38 | 120 |
 | F18 | Review | 2 | 20 | 120 |
 
@@ -334,10 +390,10 @@ Every day fits its 120-minute total. Pacing observation (not a gate): on Concept
 - Calendar identity copied verbatim from the snapshot F18 `assessment`: `kind` `moduleCheck`, `formats` `MCQ` and `coding`, `passMark` 70. The calendar gives no weights or cut scores, so `weights` is empty.
 - Duration: the F18 Review day's "Module check" block (MCQ + coding assessment, 45 minutes), so `durationMinutes` is 45.
 - Proposed item counts within that block: MCQ 15 items, about 1 minute each (15 minutes); coding 2 short tasks, about 15 minutes each (30 minutes). The calendar gives the block total only; this split is an intake proposal for criticism.
-- Objectives covered: a representative set across all 8 modules that the 17 items can elicit. `objectiveFormats` maps each objective to the format that checks it. The review pages add no new objectives and are not listed. The six project rows have no objectives.
+- Objectives covered: a representative set across the 8 instructional modules that the 17 items can elicit. `objectiveFormats` maps each objective to the format that checks it. The review pages add no new objectives and are not listed. The project-brief objectives are checked by their own public tests and are not sampled.
+- Reconciliation education-06: one MCQ objective (`java-basics/arithmetic-comparison-and-logical-operators#o3`) was replaced by the Javalin route and handler trace objective `http-and-javalin/routes-and-handlers-in-javalin#o1`, so the F18 review scope "HTTP with Javalin" is sampled. The coding part keeps only the objectives its two tasks directly elicit within 30 minutes: task 1 completes a small class whose setter or method rejects invalid input by throwing a custom exception; task 2 writes a JUnit test that checks that rejection with `assertThrows`. Item authors validate this cluster against the 30-minute budget.
 
   - `java-foundations/java-basics/primitive-types-and-variables#o2` (MCQ)
-  - `java-foundations/java-basics/arithmetic-comparison-and-logical-operators#o3` (MCQ)
   - `java-foundations/java-basics/if-else-and-switch#o3` (MCQ)
   - `java-foundations/methods-and-recursion/method-overloading#o2` (MCQ)
   - `java-foundations/methods-and-recursion/pass-by-value#o3` (MCQ)
@@ -350,9 +406,8 @@ Every day fits its 120-minute total. Pacing observation (not a gate): on Concept
   - `java-foundations/inheritance-and-design/interfaces-and-default-methods#o2` (MCQ)
   - `java-foundations/exceptions-and-logging/try-catch-finally-and-try-with-resources#o2` (MCQ)
   - `java-foundations/http-and-javalin/http-methods-status-codes-and-json#o2` (MCQ)
+  - `java-foundations/http-and-javalin/routes-and-handlers-in-javalin#o1` (MCQ)
   - `java-foundations/testing-and-java-review/mocking-with-mockito#o3` (MCQ)
-  - `java-foundations/java-basics/for-while-and-do-while-loops#o1` (coding)
-  - `java-foundations/methods-and-recursion/writing-methods#o1` (coding)
   - `java-foundations/classes-and-objects/encapsulation-with-getters-and-setters#o2` (coding)
   - `java-foundations/exceptions-and-logging/custom-exceptions#o2` (coding)
   - `java-foundations/testing-and-java-review/junit-test-first#o3` (coding)
@@ -366,7 +421,7 @@ Every day fits its 120-minute total. Pacing observation (not a gate): on Concept
 Closes matrix record `source-gap-java-foundations-official-evidence`. Every source below was fetched live on 2026-10-12. `evidence/java-foundations/source-snapshot.json` records each URL with its retrieval time, the sha256 of the fetched bytes and the sections each topic uses. Raw fetched pages are not committed.
 
 - Version baseline: Java SE 25 (LTS; JDK 27 is the newest feature release but is not LTS), Java Language Specification SE 25, Java SE 25 API documentation, Maven 3.9 or later, JUnit 6 (the user guide resolved to 6.1.3), Javalin 7 (the documentation shows 7.2.3), and Mockito, JaCoCo and SLF4J current documentation.
-- 121 URLs, all HTTP 200.
+- 125 URLs, all HTTP 200.
 - Redirects: `docs.junit.org/current/user-guide/` resolves to the versioned 6.1.3 guide; `maven.apache.org/ref/current/maven-embedder/cli.html` resolves to the 3.10.0 reference; the two GitHub Copilot pages resolve to their current paths. The snapshot keeps the stable entry URL and hashes the resolved bytes.
 - Dev.java restructuring: the first fetch showed that dev.java moved its tutorials under `/learn/language/`, `/learn/first-steps/` and `/learn/api/`. The old leaf URLs return HTTP 404 or a script redirect stub, so the snapshot records only the current URLs.
 - Gaps, listed unverified in each topic's `freshness.unverifiedItems`: no first-party source defines the two-pointer technique, composition over inheritance, the SOLID principles, the singleton and factory patterns, or the terms fake and stub. Those pages teach them as design guidance or course vocabulary and never badge them as verified language rules. DNS detail for `how-a-request-travels` is outside the frozen sources.
@@ -383,10 +438,10 @@ Closes matrix record `source-gap-java-foundations-official-evidence`. Every sour
 | `writing-methods` | https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html<br>https://dev.java/learn/language/oop/classes-objects/defining-methods/ |
 | `method-overloading` | https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html<br>https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html<br>https://dev.java/learn/language/oop/classes-objects/defining-methods/ |
 | `static-members-and-methods` | https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html<br>https://dev.java/learn/language/oop/classes-objects/more-on-classes/<br>https://dev.java/learn/first-steps/first-java-code/getting-started/ |
-| `pass-by-value` | https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html<br>https://docs.oracle.com/javase/specs/jls/se25/html/jls-4.html<br>https://dev.java/learn/language/oop/classes-objects/calling-methods-constructors/ |
+| `pass-by-value` | https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html<br>https://docs.oracle.com/javase/specs/jls/se25/html/jls-4.html<br>https://dev.java/learn/language/oop/classes-objects/calling-methods-constructors/ |
 | `method-practice` | https://dev.java/learn/language/oop/classes-objects/defining-methods/<br>https://dev.java/learn/language/oop/classes-objects/calling-methods-constructors/<br>https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html |
 | `recursion-and-the-call-stack` | https://docs.oracle.com/javase/specs/jvms/se25/html/jvms-2.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/StackOverflowError.html<br>https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html |
-| `two-pointers-reversing-and-counting` | https://docs.oracle.com/javase/specs/jls/se25/html/jls-10.html<br>https://dev.java/learn/language/constructs/basics/arrays/<br>https://dev.java/learn/language/constructs/numbers-strings/string-builders/ |
+| `two-pointers-reversing-and-counting` | https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html<br>https://dev.java/learn/language/constructs/numbers-strings/strings/<br>https://dev.java/learn/language/constructs/numbers-strings/string-builders/ |
 | `debugging-with-breakpoints` | https://www.jetbrains.com/help/idea/debugging-code.html<br>https://www.jetbrains.com/help/idea/using-breakpoints.html<br>https://code.visualstudio.com/docs/java/java-debugging |
 | `ai-assistants-explain-not-answer` | https://docs.github.com/en/copilot/get-started/best-practices<br>https://docs.github.com/en/copilot/how-tos/chat-with-copilot/chat-in-ide<br>https://docs.github.com/en/copilot/responsible-use/chat-in-your-ide |
 | `declaring-and-looping-over-arrays` | https://docs.oracle.com/javase/specs/jls/se25/html/jls-10.html<br>https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html<br>https://dev.java/learn/language/constructs/basics/arrays/ |
@@ -397,6 +452,9 @@ Closes matrix record `source-gap-java-foundations-official-evidence`. Every sour
 | `constructors` | https://dev.java/learn/language/oop/classes-objects/defining-constructors/<br>https://dev.java/learn/language/oop/classes-objects/more-on-classes/<br>https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html |
 | `access-modifiers` | https://docs.oracle.com/javase/specs/jls/se25/html/jls-6.html<br>https://dev.java/learn/language/oop/classes-objects/more-on-classes/ |
 | `encapsulation-with-getters-and-setters` | https://dev.java/learn/language/oop/classes-objects/more-on-classes/<br>https://dev.java/learn/language/oop/classes-objects/design-best-practices/<br>https://docs.oracle.com/javase/specs/jls/se25/html/jls-6.html |
+| `modeling-real-world-objects-as-classes` | https://dev.java/learn/language/oop/classes-objects/creating-classes/<br>https://dev.java/learn/language/oop/classes-objects/design-best-practices/<br>https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html |
+| `null-and-nullpointerexception` | https://docs.oracle.com/javase/specs/jls/se25/html/jls-4.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/NullPointerException.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Objects.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html |
+| `maven-builds-and-dependencies` | https://maven.apache.org/guides/introduction/introduction-to-the-pom.html<br>https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html<br>https://maven.apache.org/plugins/maven-dependency-plugin/go-offline-mojo.html<br>https://maven.apache.org/ref/current/maven-embedder/cli.html<br>https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html<br>https://maven.apache.org/surefire/maven-surefire-plugin/ |
 | `stack-vs-heap-and-object-references` | https://docs.oracle.com/javase/specs/jvms/se25/html/jvms-2.html<br>https://docs.oracle.com/javase/specs/jls/se25/html/jls-4.html<br>https://docs.oracle.com/javase/specs/jls/se25/html/jls-12.html |
 | `string-immutability` | https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/StringBuilder.html<br>https://dev.java/learn/language/constructs/numbers-strings/string-builders/ |
 | `double-equals-vs-equals` | https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html |
@@ -420,12 +478,15 @@ Closes matrix record `source-gap-java-foundations-official-evidence`. Every sour
 | `http-methods-status-codes-and-json` | https://www.rfc-editor.org/rfc/rfc9110.html<br>https://www.rfc-editor.org/rfc/rfc8259.html |
 | `routes-and-handlers-in-javalin` | https://javalin.io/documentation |
 | `lambdas-as-handlers` | https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html<br>https://dev.java/learn/language/fp/lambdas/first-lambdas/<br>https://dev.java/learn/language/fp/lambdas/method-references/<br>https://javalin.io/documentation |
+| `an-in-memory-repository-behind-an-interface` | https://dev.java/learn/language/oop/interfaces/interfaces-as-a-type/<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/HashMap.html<br>https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html |
+| `wiring-routes-service-and-repository-end-to-end` | https://javalin.io/documentation<br>https://javalin.io/tutorials/testing<br>https://dev.java/learn/language/oop/classes-objects/defining-constructors/ |
+| `error-responses-and-status-codes` | https://javalin.io/documentation<br>https://www.rfc-editor.org/rfc/rfc9110.html<br>https://dev.java/learn/language/annotations-exceptions/exceptions/throwing/ |
 | `junit-test-first` | https://docs.junit.org/current/user-guide/<br>https://junit.org/<br>https://maven.apache.org/surefire/maven-surefire-plugin/examples/junit-platform.html |
 | `test-doubles-fakes-and-stubs` | https://docs.junit.org/current/user-guide/<br>https://dev.java/learn/language/oop/interfaces/interfaces-as-a-type/ |
-| `mocking-with-mockito` | https://site.mockito.org/<br>https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html |
+| `mocking-with-mockito` | https://site.mockito.org/<br>https://site.mockito.org/javadoc/current/org/mockito/Mockito.html |
 | `code-coverage` | https://www.jacoco.org/jacoco/trunk/doc/<br>https://www.jacoco.org/jacoco/trunk/doc/counters.html<br>https://www.jacoco.org/jacoco/trunk/doc/maven.html |
-| `java-review` | https://docs.oracle.com/javase/specs/jls/se25/html/index.html<br>https://javalin.io/documentation<br>https://docs.junit.org/current/user-guide/<br>https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html |
-| `reading-older-java-code` | https://dev.java/learn/first-steps/evolution/<br>https://openjdk.org/jeps/126<br>https://openjdk.org/jeps/286<br>https://openjdk.org/jeps/361<br>https://openjdk.org/jeps/378<br>https://openjdk.org/jeps/394<br>https://openjdk.org/jeps/395<br>https://openjdk.org/jeps/441<br>https://openjdk.org/jeps/512 |
+| `java-review` | https://docs.oracle.com/javase/specs/jls/se25/html/index.html<br>https://javalin.io/documentation<br>https://docs.junit.org/current/user-guide/<br>https://site.mockito.org/javadoc/current/org/mockito/Mockito.html |
+| `reading-older-java-code` | https://dev.java/learn/first-steps/evolution/<br>https://openjdk.org/jeps/126<br>https://openjdk.org/jeps/286<br>https://openjdk.org/jeps/361<br>https://openjdk.org/jeps/378<br>https://openjdk.org/jeps/394<br>https://openjdk.org/jeps/395<br>https://openjdk.org/jeps/441<br>https://openjdk.org/jeps/512<br>https://docs.oracle.com/en/java/javase/25/migrate/preparing-migration.html<br>https://docs.oracle.com/en/java/javase/25/migrate/removed-tools-and-components.html |
 
 Lab plan sources: https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html, https://maven.apache.org/guides/introduction/introduction-to-the-pom.html, https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html, https://maven.apache.org/ref/current/maven-embedder/cli.html, https://maven.apache.org/plugins/maven-dependency-plugin/go-offline-mojo.html, https://maven.apache.org/surefire/maven-surefire-plugin/, https://maven.apache.org/surefire/maven-surefire-plugin/examples/junit-platform.html, https://docs.junit.org/current/user-guide/.
 
@@ -433,12 +494,17 @@ Calendar references for the `java` technology: [Dev.java: Learn Java](https://de
 
 Freshness: every `topic.json` records `unverified` with no `checkedAt`, because no page is authored yet. The module PR SME critic verifies the authored bytes.
 
-## Open intake questions for criticism
-
-- F10 project rows "null and NullPointerException" and "Maven builds and dependencies" have no topic page under the matrix scope. Only partial coverage comes before them (see Project rows). The critics should judge whether this needs a captain decision; this intake does not add syllabus.
-- Blueprint item split (15 MCQ, 2 coding) inside the 45-minute block.
-- Planning budgets of 10 and 8 minutes before measurement.
-
 ## Intake criticism
 
-Fresh independent educational and technology-SME critics review the committed manifests, objectives, blueprint and this intake; the author does not approve its own first output. Their reports and the non-author reconciliation are committed as `intake-critic-education.json`, `intake-critic-sme.json` and `intake-reconciliation.json` next to this file. Until then gate T25 reports the blueprint's missing critic coverage, which is the only failing check at handoff.
+Fresh independent educational and technology-SME critics reviewed the first intake commit (manifests, objectives, blueprint, this intake and the source snapshot); the author did not approve its own first output. Their reports and the non-author reconciliation are committed unchanged as `intake-critic-education.json`, `intake-critic-sme.json` and `intake-reconciliation.json` next to this file.
+
+Outcome: all 11 findings accepted and applied in one correction loop. education-01 and java-sme-001 (one item) were first escalated, then accepted on captain decision pep-project-rows, option A; the reconciliation file records the final decisions.
+
+- education-01 and java-sme-001: the six F10 and F16 rows became project-brief topics with topic coding labs; null/NullPointerException and Maven POM dependencies are taught by explicit in-brief instruction and checked by public tests (see Project briefs). The F10 briefs form the new module `classes-in-practice`; the F16 briefs join `http-and-javalin`.
+- education-02 and java-sme-004: `two-pointers-reversing-and-counting` (F7) now uses only Strings and indexes (build a reversed String, count matching characters or pairs, choose the stopping condition) and never calls String reversal in place; in-place array reversal moved to `declaring-and-looping-over-arrays` o3 (F8).
+- education-03: `routes-and-handlers-in-javalin` objectives narrowed to trace, select and predict, with no new lab (see Lab plan).
+- education-04: `pass-by-value` (F6) stays on primitive copying and reassigning a String parameter; shared mutable-object transfer with arrays is left to F8 authoring.
+- education-05 and java-sme-002: `reading-older-java-code` o3 asks learners to predict whether an older example compiles on JDK 25 and name the feature or migration issue; older source often, not always, stays compatible. Two JDK 25 migration-guide sources were added.
+- java-sme-003: `strings-and-string-methods` o3 states String immutability without promising a newly allocated object.
+- education-06: blueprint objectives updated (see F18 assessment blueprint).
+- java-sme-005: the third-party javadoc.io Mockito record was replaced by the first-party `site.mockito.org` API documentation with a fresh receipt.
