@@ -8,7 +8,7 @@ Every topic artifact is recorded absent: applicable companions with the reason "
 
 - Curriculum snapshot: `curriculum/snapshot/pep-curriculum.json` (sha256 `9520f1fde24630604a82ecc1188726339ee02233d0274c622f4dda9c8c0204f8`) and `curriculum/snapshot/pep-calendar.json` (sha256 `634da8de5c6034e269b56347b2009fa24eb74eb9bd94f6bd8d5f65f54459ce00`), curriculum version `2026-10-01` per `curriculum/curriculum.lock.json`. Topic pointers point into `pep-curriculum.json`.
 - Confirmed coverage matrix v3 (read-only, frozen): `matrix-v3.json` (sha256 `4e936d703e64dba4f7973458b57aed0e921fad0d5afecca319cf7cec7806c4cd`) and `discrepancies-v3.json` (sha256 `ba6580b06af9d94d6f4ed53cf82986cdbd3db357fee09d2b268511505b2b9c3a`): the `react` rows are the topic-string inventory and expected-artifact scope.
-- Contracts: `docs/workflow.md`, `docs/html-artifact-contract.md`, `docs/lab-contract.md`, `docs/tools/validators.md` (new-course budget rule) and the approved PEP technology-content plan sections 2.3, 3, 4, 5, 6, 7.1 and 11.
+- Contracts: `authoring/docs/workflow.md`, `authoring/docs/html-artifact-contract.md`, `authoring/docs/lab-contract.md`, `authoring/docs/tools/validators.md` (new-course budget rule) and the approved PEP technology-content plan sections 2.3, 3, 4, 5, 6, 7.1 and 11.
 - Canonical terminal foundation: the repaired course-1 Evolv package `git-linux-ai-foundations-20261007-evolv-terminal-repair`, as extracted into `components/terminal@1` (form-free direct Run-button and Enter-key dispatch). The captain confirmed it working in Evolv; that is platform success, not a captured DOM or console trace.
 
 ## Course slice
@@ -102,7 +102,7 @@ In-course prerequisites are full `react/<module>/<topic>` references. Cross-cour
 
 ## Artifact applicability
 
-Rules: `docs/html-artifact-contract.md` section 12 and plan section 5, matched to the matrix v3 expected artifacts. Core topics require HTML, the derived Markdown and a formative GIFT practice quiz, with a curated video only when a documented search qualifies one. Review pages carry HTML and Markdown only. No topic is a `Reading:` topic or declares a print handout, so no PDF applies.
+Rules: `authoring/docs/html-artifact-contract.md` section 12 and plan section 5, matched to the matrix v3 expected artifacts. Core topics require HTML, the derived Markdown and a formative GIFT practice quiz, with a curated video only when a documented search qualifies one. Review pages carry HTML and Markdown only. No topic is a `Reading:` topic or declares a print handout, so no PDF applies.
 
 Legend: **R** required, authored in the module PR; **V** present only if a documented search qualifies a live, public, embeddable video within the topic budget, otherwise absent with the search record; **M** covered by the planned module lab; **-** not applicable, with the reason in `topic.json`.
 
@@ -139,7 +139,7 @@ The matrix's `simulator` expectation is part of each HTML page (embedded interac
 
 ## Lab plan
 
-Labs follow `docs/lab-contract.md`: no Docker, Podman, Compose, Testcontainers or any other learner-side container engine; one language-native test command per lab; public tests only, with reference solutions and hidden tests only in uncommitted private staging. The Standard track adds coding labs through its lab overlay; the Fast track skips them and moves to direct project implementation. FT19 is presented as Project implementation, never a coding lab (discrepancy `conflict-ft19-lab-label`, resolved by the approved track model). Each lab is authored in its module PR.
+Labs follow `authoring/docs/lab-contract.md`: no Docker, Podman, Compose, Testcontainers or any other learner-side container engine; one language-native test command per lab; public tests only, with reference solutions and hidden tests only in uncommitted private staging. The Standard track adds coding labs through its lab overlay; the Fast track skips them and moves to direct project implementation. FT19 is presented as Project implementation, never a coding lab (discrepancy `conflict-ft19-lab-label`, resolved by the approved track model). Each lab is authored in its module PR.
 
 | Planned lab | Standard day | Calendar requiredLab | Covers | Test command (after one-time `npm ci`) | Fast track |
 |---|---|---|---|---|---|
@@ -264,12 +264,12 @@ P5 outcome and evidence (both tracks): the learner writes at least one test that
 - Entry paths receive the same starter bytes; no checkpoint is committed. Fast starts at P1 and switches on P1, P2, P3 and P4, P6, then P5 in `parts.json` on FT16, FT17, FT18, FT19 and FT20. Standard S33 switches on P3, P4 and P5 only. Because each part is tested in isolation, Standard never receives a completed P1 or P2, so no later-entry starting state contains a solution to graded earlier work.
 - One test command: `npm test` (Vitest, React Testing Library and user-event in jsdom, Node.js 24 LTS) after a one-time `npm ci`. The Vitest configuration includes only the tests of the parts listed in `parts.json`; the starter fails the newly active part's named tests with stable messages until it is complete. No back end, database or container is needed for any test.
 - Verification before merge: each entry path (Fast P1 to P6 in Fast order; Standard P3 to P5) is run with `npm test` against the uncommitted private solution and recorded as "solved at <commit> by run <id>" per path; the starter run per path is checked against `expected/`.
-- Authoring: course-scope files cannot ride a module PR (`docs/workflow.md` section 4), so `react/coding-lab/` is authored in one course-level PR after all four module PRs merge, with its own education and SME criticism. It enters `course.json` `courseLabs` only once authored.
+- Authoring: course-scope files cannot ride a module PR (`authoring/docs/workflow.md` section 4), so `react/coding-lab/` is authored in one course-level PR after all four module PRs merge, with its own education and SME criticism. It enters `course.json` `courseLabs` only once authored.
 - Topic manifests: topics applied in a part record `lab: "course:react"`, unless a Standard module lab covers them (`lab: "module:<module>"`); every core topic's lab reason names its part, or says it is not applied.
 
 ## Minute budgets
 
-Rule (`docs/tools/validators.md`, new-course budget rule): each integer topic budget is at least `ceil(max(estimator P50, modeledWorstPath))`, capped at 15 minutes; day pools are never divided into weighted shares to lower a budget; T14 sums budgets per calendar day against the day type's 120-minute block total and never compresses.
+Rule (`authoring/docs/tools/validators.md`, new-course budget rule): each integer topic budget is at least `ceil(max(estimator P50, modeledWorstPath))`, capped at 15 minutes; day pools are never divided into weighted shares to lower a budget; T14 sums budgets per calendar day against the day type's 120-minute block total and never compresses.
 
 Basis at intake: no page exists, so the estimator cannot run. Each topic records planning targets: `modeledP50` 8 and `modeledWorstPath` 10 (two wrong graded attempts and wrong-first explores per interactive unit), set just above the measured course-1 range (estimator P50 4.78-7.95, worst path 6-9.35). By the rule, `budget` = ceil(max(8, 10)) = 10 and `aboutLabel` = 10 covers the worst path. The module PR replaces both modelled values with the estimator's P50 on the page bytes and the authored worst-path model, and re-derives `budget` and `aboutLabel` by the same rule.
 
@@ -331,7 +331,7 @@ No React day maps more than 7 topics, and 7 × 15 = 105 ≤ 120, so the honest-m
 
 ## Official sources per topic
 
-Every source below was fetched live on 2026-10-12; `evidence/react/source-snapshot.json` records each of the 78 URLs with retrieval time, sha256 of the fetched bytes and the topic sections used. All returned HTTP 200. Raw fetched pages are not committed. Version-specific baseline: React 19.3 (react.dev versions page), React Router 8.4.0 docs at reactrouter.com (declarative mode), Vite 8.3.4, Vitest 5.0.4, Testing Library docs, Node.js 24 LTS, Spring Boot and Spring Security reference docs (current).
+Every source below was fetched live on 2026-10-12; `authoring/evidence/react/source-snapshot.json` records each of the 78 URLs with retrieval time, sha256 of the fetched bytes and the topic sections used. All returned HTTP 200. Raw fetched pages are not committed. Version-specific baseline: React 19.3 (react.dev versions page), React Router 8.4.0 docs at reactrouter.com (declarative mode), Vite 8.3.4, Vitest 5.0.4, Testing Library docs, Node.js 24 LTS, Spring Boot and Spring Security reference docs (current).
 
 Freshness: every `topic.json` records `unverified` with no `checkedAt`, because no page is authored yet; the module PR's SME critic verifies each claim against these frozen sources.
 
@@ -374,7 +374,7 @@ Calendar references for the `react` technology: [react.dev: Learn React](https:/
 ## Discrepancy closure
 
 - `source-gap-react-modules` (category A, sequenced to this intake): closed by the second-mate grouping decision in Module map, subject to intake criticism and merge approval.
-- `source-gap-react-official-evidence` (category A, sequenced to this intake): closed by the live first-party source freeze with hashes in `evidence/react/source-snapshot.json`.
+- `source-gap-react-official-evidence` (category A, sequenced to this intake): closed by the live first-party source freeze with hashes in `authoring/evidence/react/source-snapshot.json`.
 - `conflict-ft19-lab-label` (category A, resolved): applied as recorded; the snapshot is unchanged and FT19 carries no coding lab.
 - Category-B production omissions for `react` (missing pages, quizzes, simulators and text alternatives) stay production backlog for the module PRs.
 
