@@ -76,7 +76,8 @@ The gates in `docs/workflow.md` check it mechanically wherever a rule is machine
 ## 10. Timing
 
 - Minutes come from the frozen reading-time estimator; its cost table is never changed to make a page pass.
-- The "About N minutes" label covers the worst required path, not the average.
+- The estimator P50 must fit the topic budget. Its P90 is informational, not a substitute for a modeled learner route.
+- The "About N minutes" label covers the worst required path: two wrong graded attempts and wrong-first explores before settling, modeled per interactive unit and recorded with its evidence.
 - 15 minutes is a ceiling for one topic page.
 - The topic budget comes from its curriculum day block, recorded in `topic.json`.
 
