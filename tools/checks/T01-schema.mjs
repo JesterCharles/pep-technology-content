@@ -17,14 +17,72 @@ const mapping = [
   [/\/blueprint\.json$/, "assessment-blueprint"],
   [/\/tracks\/[^/]+\.json$/, "track"],
   [/\/source-snapshot\.json$/, "source-snapshot"],
-  [/\/critic-(?:education|sme)\.json$/, "critic-report"],
-  [/\/reconciliation\.json$/, "reconciliation"],
+  [
+    /\/(?:[a-z0-9]+(?:-[a-z0-9]+)*-)?critic-(?:education|sme)(?:-recheck)?\.json$/,
+    "critic-report",
+  ],
+  [/\/(?:[a-z0-9]+(?:-[a-z0-9]+)*-)?reconciliation\.json$/, "reconciliation"],
   [/\/qa-receipt\.json$/, "qa-receipt"],
   [/\/qa-paths\.json$/, "qa-paths"],
   [/\/curriculum\.lock\.json$/, "curriculum-lock"],
   [/\/evidence\/legacy\/course-1-packages\.json$/, "legacy-course-packages"],
   [/\/evidence\/legacy\/tournament\.json$/, "legacy-tournament"],
 ];
+async function checkBlueprintReferences(ctx, file, data) {
+  const errors = [];
+  let courseRoot = path.dirname(file);
+  while (courseRoot.startsWith(ctx.root)) {
+    try {
+      await readJson(path.join(courseRoot, "course.json"));
+      break;
+    } catch {
+      if (courseRoot === ctx.root) return errors;
+      courseRoot = path.dirname(courseRoot);
+    }
+  }
+
+  const objectives = Array.isArray(data.objectives) ? data.objectives : [];
+  for (const reference of objectives) {
+    if (typeof reference !== "string") continue;
+    const match = reference.match(
+      /^([a-z0-9]+(?:-[a-z0-9]+)*)\/([a-z0-9]+(?:-[a-z0-9]+)*)\/([a-z0-9]+(?:-[a-z0-9]+)*)#(o[1-9][0-9]*)$/,
+    );
+    if (!match || match[1] !== path.basename(courseRoot)) {
+      errors.push(error(id, ctx.display(file), `objective ${reference} does not resolve`));
+      continue;
+    }
+    const topicFile = path.join(courseRoot, match[2], match[3], "topic.json");
+    let topic;
+    try {
+      topic = await readJson(topicFile);
+    } catch {
+      errors.push(error(id, ctx.display(file), `objective ${reference} does not resolve`));
+      continue;
+    }
+    if (!(topic.objectives ?? []).some((objective) => objective.id === match[4]))
+      errors.push(error(id, ctx.display(file), `objective ${reference} does not resolve`));
+  }
+
+  if (data.objectiveFormats && typeof data.objectiveFormats === "object") {
+    for (const [reference, formats] of Object.entries(data.objectiveFormats)) {
+      if (!objectives.includes(reference)) {
+        errors.push(
+          error(id, ctx.display(file), `objectiveFormats key ${reference} is not in objectives`),
+        );
+      }
+      if (Array.isArray(formats)) {
+        for (const format of formats) {
+          if (!(data.formats ?? []).includes(format))
+            errors.push(
+              error(id, ctx.display(file), `objectiveFormats value ${format} is not in formats`),
+            );
+        }
+      }
+    }
+  }
+  return errors;
+}
+
 function parseFrontmatter(text) {
   if (!text.startsWith("---\n")) throw new Error("missing opening ---");
   const end = text.indexOf("\n---\n", 4);
@@ -94,6 +152,8 @@ export async function run(ctx) {
       if (["lab", "assessment-blueprint"].includes(pair[1]))
         for (const key of findForbiddenKeys(data))
           errors.push(error(id, ctx.display(file), `forbidden key ${key}`));
+      if (pair[1] === "assessment-blueprint")
+        errors.push(...(await checkBlueprintReferences(ctx, file, data)));
       if (pair[1] === "reconciliation" && data.author === data.decidedBy)
         errors.push(error(id, ctx.display(file), "decidedBy must differ from author"));
     }

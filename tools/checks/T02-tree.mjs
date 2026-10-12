@@ -3,6 +3,15 @@ import { error, findCourseRoots, readJson, walk, SLUG_RE } from "../lib/common.m
 export const id = "T02";
 export const gate = 2;
 export const description = "canonical course/module/topic tree";
+const topicReviewName =
+  /^(?:critic-(?:education|sme)(?:-recheck)?|reconciliation)\.json$/;
+const scopedReviewName =
+  /^(?:[a-z0-9]+(?:-[a-z0-9]+)*-)?(?:critic-(?:education|sme)(?:-recheck)?|reconciliation)\.json$/;
+
+function looksLikeReviewEvidence(name) {
+  return name.includes("critic-") || name.includes("reconciliation");
+}
+
 export async function run(ctx) {
   const out = [];
   for (const root of ctx.scanRoots) {
@@ -22,6 +31,35 @@ export async function run(ctx) {
       out.push(
         error(id, ctx.display(path.join(cr, "course.json")), "course directory must equal id"),
       );
+
+    const evidenceRoot = path.join(ctx.root, "evidence", c.id);
+    const moduleIds = new Set(c.moduleOrder ?? []);
+    const topicIds = new Map();
+    for (const mid of c.moduleOrder ?? []) {
+      try {
+        const module = await readJson(path.join(cr, mid, "module.json"));
+        topicIds.set(mid, new Set(module.topicOrder ?? []));
+      } catch {
+        topicIds.set(mid, new Set());
+      }
+    }
+    for (const file of (await walk(evidenceRoot)).files) {
+      const parts = path.relative(evidenceRoot, file).split(path.sep);
+      const name = parts.at(-1);
+      if (!looksLikeReviewEvidence(name)) continue;
+      const topicLevel =
+        parts.length === 3 &&
+        moduleIds.has(parts[0]) &&
+        topicIds.get(parts[0])?.has(parts[1]);
+      const scopedLevel =
+        parts.length === 1 || (parts.length === 2 && moduleIds.has(parts[0]));
+      const valid =
+        (topicLevel && topicReviewName.test(name)) ||
+        (scopedLevel && scopedReviewName.test(name));
+      if (!valid)
+        out.push(error(id, ctx.display(file), "invalid review evidence filename or location"));
+    }
+
     for (const mid of c.moduleOrder ?? []) {
       const mr = path.join(cr, mid);
       let m;

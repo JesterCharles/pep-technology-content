@@ -50,7 +50,7 @@ Every gate runs locally and in CI except the lab solved-run gate (part of gate 1
 
 1. Schema: every manifest, lab, blueprint and evidence file validates.
 2. Tree: no `topics/` directory; allowed filenames only; no empty or placeholder files; manifests and files match; absences carry reasons.
-3. Lock: `module.lock.json` and `course.lock.json` are current, and every evidence binding equals the current bytes.
+3. Lock: `module.lock.json` and `course.lock.json` are byte-identical to regeneration. Each evidence binding records whether its reviewed hash is current; stale critic coverage is rejected by gate 18.
 4. Forbidden content: no keys, rubrics, solutions, hidden tests or scoring secrets outside the formative GIFT and MCQ exception; secret scan; no remote fonts; no form-submission dependency.
 5. Standalone and offline: loads from `file://` with network blocked and zero console errors.
 6. Platform sandbox: every behavioral path completes in an iframe with `sandbox="allow-scripts"` only, tolerating storage failures.
@@ -63,16 +63,19 @@ Every gate runs locally and in CI except the lab solved-run gate (part of gate 1
 13. Video: live, public, embeddable and within budget.
 14. Markdown and PDF: heading and objective parity, static alternatives present, PDF renders with extractable text.
 15. Lab: the gates in `docs/lab-contract.md`; the solved-run gate is local-only with recorded evidence that CI checks.
-16. Diagrams and licensing: inline SVG with title, description and text alternative; every third-party item has a license record.
-17. Critic gate: both critic reports or rechecks cover the final bytes, zero open critical or high findings, and reconciliation by a non-author.
+16. Diagrams: inline SVG with title, description and text alternative.
+17. Licensing: every third-party item has a license record.
+18. Critic gate: both critic reports or rechecks cover the final bytes, zero open critical or high findings, and reconciliation by a non-author.
 
 The tooling under `tools/` implements these gates behind `npm run check`.
 
 ### 2.6 Evidence
 
-- Evidence for a topic lives under `evidence/<course>/<module>/<topic>/`: critic reports, reconciliation, QA receipt, timing and sources.
-- Every evidence record names the sha256 of the artifact bytes it judged.
-- `tools/pep lock` generates the locks, and a gate fails when any binding refers to old bytes:
+- Topic evidence lives under `evidence/<course>/<module>/<topic>/`. Course evidence lives directly under `evidence/<course>/`; module assessment and lab evidence may live directly under `evidence/<course>/<module>/`.
+- Topic critic filenames are `critic-education.json`, `critic-sme.json`, `critic-education-recheck.json`, `critic-sme-recheck.json` and `reconciliation.json`. Course- and module-level records prefix those names with the reviewed unit, for example `intake-critic-sme.json` and `intake-reconciliation.json`.
+- A critic report's optional `reviewedPath` names its repo-relative review target. A recheck names its original same-role report in `recheck.of`; each rechecked item records its finding id, `resolved` or `open` status, repo-relative file, current reviewed sha256 and a note. A recheck may have no new `findings`.
+- For each `reviewedSha256` or `artifactSha256`, the binding target is the containing object's `reviewedPath`, then its `file`, then its `location.file`, then the nearest ancestor `reviewedPath`. Topic evidence otherwise defaults to that topic's `artifact.html`; evidence at other levels must name a target. `artifactHashes` retains its map-key-relative behavior.
+- `tools/pep lock` records the evidence hash, resolved target and `current: true|false`. Stale hashes are retained rather than preventing regeneration; a missing target still fails. T06 requires every lock to exist and be byte-identical to regeneration, while T25 rejects stale critic coverage.
   - `<course>/<module>/module.lock.json` covers that module's files and `evidence/<course>/<module>/`.
   - `<course>/course.lock.json` covers only course-level files: `course.json`, course assessments, course labs and course-level evidence.
 - The per-module lock exists so parallel module PRs never edit one shared manifest.
