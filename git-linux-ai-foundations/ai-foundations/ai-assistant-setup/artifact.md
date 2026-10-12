@@ -14,11 +14,11 @@ You ask an AI assistant: “Add a line to start.sh that prints the port the app 
 
 Every prompt, file and answer here is a synthetic example written for this lesson. Nothing calls a real AI model.
 
-### Three inputs, nothing else
+### Three inputs you control
 
-An assistant builds its answer from three inputs: standing instructions (a project rules file it reads with every request; the file name and support vary by tool), shared context (the files or snippets it can see) and your prompt.
+In this lesson you control three inputs: standing instructions (a project rules file it reads with every request; the file name and support vary by tool), shared context (the files or snippets it can see) and your prompt.
 
-It has no other view of your project. A missing input gets filled with something plausible. Whatever comes back is a proposal until you check it.
+Tools may also add layers you do not set here, such as conversation history, system or organization instructions, memory and tool results. None of them shows the assistant project files you did not share. A missing input gets filled with something plausible. Whatever comes back is a proposal until you check it.
 
 ### Setup decides what it can see
 
@@ -54,7 +54,7 @@ Hidden until you make your prediction.
 
 ## Recap
 
-- An assistant works from three inputs: standing instructions, shared context and your prompt.
+- You control three inputs: standing instructions, shared context and your prompt. Tools may add others, such as conversation history and memory.
 - When an input is missing, it fills the gap with a plausible guess.
 - Set up with an approved tool, a workspace at the project folder and a rules file in the project.
 - Every answer is a proposal until you check it.

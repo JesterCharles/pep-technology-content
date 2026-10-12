@@ -58,7 +58,7 @@ run_test check_prints_port- run_test check_default_port
 - Run the acceptance criteria; only a matching run is a verified result.
 - Approve or request changes by citing specific evidence, whoever wrote the change.
 
-Next topic: Foundations course check
+Next topic: Practice: Foundations course review
 
 ## Cheat sheet
 

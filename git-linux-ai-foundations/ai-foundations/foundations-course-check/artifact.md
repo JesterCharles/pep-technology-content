@@ -1,4 +1,4 @@
-# Foundations course check
+# Practice: Foundations course review
 
 ## Objectives
 
@@ -10,17 +10,23 @@
 
 ### Warm up from memory
 
-This check covers the shell, Git and AI topics of the course. Every scenario is a benign simulation in the fictional home folder /home/ana; nothing runs on your computer. The warm-up is never marked wrong.
+This low-stakes practice reviews the shell, Git and AI topics of the course; it is not the Tooling module check assessment. Answer each check from memory first: a short refresher appears after your first answer. Every scenario is a benign simulation in the fictional home folder /home/ana; nothing runs on your computer. The warm-up is never marked wrong.
 
 ### Shell: make a script runnable
+
+Answer from memory first. The refresher appears here after your first answer.
 
 ls -l shows permissions for owner, group and others: r read, w write, x execute. Numeric modes add read 4, write 2 and execute 1 per group: 7 is rwx, 6 is rw-, 4 is r--. Running ./start.sh needs x.
 
 ### Git: keep secrets out of commits
 
+Answer from memory first. The refresher appears here after your first answer.
+
 Keep secrets such as a token in a .env file and read them as environment variables, never in code. List .env in .gitignore, one pattern per line, before your first commit: Git then leaves that untracked file out of git add. Ignoring a file Git already tracks does not remove it from history.
 
 ### AI: claims versus evidence
+
+Answer from memory first. The refresher appears here after your first answer.
 
 An assistant's answer is a proposal, and its summary is a set of claims. A verified result is one you checked yourself: you read the diff line by line and ran the acceptance criteria with the expected output.
 

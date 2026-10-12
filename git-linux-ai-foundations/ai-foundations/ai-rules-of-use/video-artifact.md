@@ -14,7 +14,7 @@ gaps: []
   - Tokens, passwords and private keys, the page's main examples, are not named
   - Nothing on owning AI-proposed code you submit or on using only approved tools
 cautions: []
-  - Tension with the page: the video puts proprietary (company) code in the do-not-share list, while the page's share lane allows project code and docs with no secrets or personal data, under an approved tool; learners should follow the page and their program's approved-tool policy
+  - Tension with the page: the video puts proprietary (company) code in the do-not-share list, while the page's share lane allows only material the program or employer permits for that approved tool and account, with no secrets, personal data or confidential business details; learners should follow the page and their program's approved-tool policy
   - Made by a secure-coding training vendor, and the closing line promotes self-hosting models; the content itself is general guidance, not a product demo
   - Its claim that uploaded data could be used to train other models varies by provider and plan, which the page also notes was not checked per provider
 alternates: []

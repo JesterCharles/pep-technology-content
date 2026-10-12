@@ -15,7 +15,7 @@ All files, values and messages here are synthetic and fake. Nothing calls a real
 
 ### Three lanes at the prompt boundary
 
-Before anything goes into a prompt, put it in a lane. Share: code and docs with no secrets or personal data. Redact first: useful material with a secret or personal detail inside. Never share: material that is secret or personal as a whole, such as private keys or customer records.
+Before anything goes into a prompt, put it in a lane. Share: material your program or employer permits for that approved tool and account, with no secrets, personal data or confidential business details. Redact first: useful material with a secret or personal detail inside. Never share: material that is secret or personal as a whole, such as private keys or customer records.
 
 Treat anything you paste as having left your control.
 
@@ -67,7 +67,7 @@ Next topic: How Agile teams work: Scrum and user stories
 
 |  |  |
 | --- | --- |
-| Share | project code and docs with no secrets or personal data |
+| Share | material your program or employer permits for the approved tool: no secrets, personal data or confidential business details |
 | Redact first | errors and logs with a token, password or email inside |
 | Never share | private keys, password files, customer or personal records |
 | Placeholder | NAME=<NAME>: keep the name, replace the value |
@@ -89,7 +89,7 @@ Prediction (not scored). An error message you want help with contains an access 
 
 ### drag
 
-Sort six items into three lanes. Share: start.sh (project script with no secrets) and README.md (how to run the project). Redact first: the error output (useful, but contains a token) and a test log (useful, but contains a teammate's email address). Never share: ~/.ssh/id_ed25519 (a private SSH key, secret as a whole) and customers.csv (real customer names and emails; write made-up sample rows instead).
+Sort six items into three lanes. Share: start.sh (your course practice script, which your program permits you to share with its approved tool, with no secrets) and README.md (its run instructions, same permission). Redact first: the error output (useful, but contains a token) and a test log (useful, but contains a teammate's email address). Never share: ~/.ssh/id_ed25519 (a private SSH key, secret as a whole) and customers.csv (real customer names and emails; write made-up sample rows instead).
 
 ### explore
 
