@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<meta name="pep:budget-minutes" content="8">
+<meta name="pep:course" content="Git/Linux/AI Foundations">
+<meta name="pep:module" content="Linux Foundations">
+<meta name="pep:topic" content="Navigating files and folders in the shell">
+<meta name="pep:source" content="pep-curriculum.json#/tracks/0/weeks/0/days/0/topics/0">
+<title>Navigating files and folders in the shell · Linux Foundations</title>
+<style>
+:root{
+  --bg:#eef2f0;--surface:#f8faf9;--ink:#1b2320;--muted:#47524e;--rule:#6b7873;--line:#c9d2ce;
+  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
+  --on-teal:#ffffff;--term:#e2e8e5;--focus:#1f4fbf;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121816;--surface:#1a2220;--ink:#e3ebe7;--muted:#a8b6b0;--rule:#71827c;--line:#2f3b37;
+  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
+  --on-teal:#0b1311;--term:#0c1110;--focus:#8fb4ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+::selection{background:var(--teal);color:var(--on-teal)}
+code,kbd,.mono{font-family:var(--mono);font-size:.94em}
+a{color:var(--teal);text-underline-offset:3px}
+main{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
+.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title tools";column-gap:var(--s6);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
+.top .crumbs{grid-area:crumbs}.top h1{grid-area:title}.top .meta{grid-area:meta}.top .tools{grid-area:tools}
+.crumbs{margin:0 0 var(--s1);font-size:15px;color:var(--muted)}
+.crumbs ol{display:flex;flex-wrap:wrap;gap:0 var(--s2);margin:0;padding:0;list-style:none}
+.crumbs li+li::before{content:"/";margin-right:var(--s2);color:var(--rule)}
+.crumbs [aria-current]{color:var(--ink);font-weight:600}
+h1{margin:0;font-size:24px;line-height:30px;letter-spacing:-.01em}
+.meta{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s2) 0 0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
+.meta li:first-child{font-weight:700;color:var(--ink)}
+.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
+.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2);flex:0 0 auto}
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:var(--amber-soft);border:2px dashed var(--amber)}
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s3);align-items:start}
+.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
+.teach p{margin:0 0 var(--s2);max-width:62ch}
+.teach ul{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
+.teach li{margin-bottom:var(--s1)}
+.teach code,.task code{white-space:nowrap}
+.task{padding:var(--s3) var(--s4);border-top:2px solid var(--teal);background:var(--surface)}
+.task p{margin:0;font-weight:600}
+.task p+p{margin-top:var(--s2)}
+.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
+.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
+.goals li:first-child{border-top:0}
+.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
+.goals li.done .st{color:var(--teal)}
+.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
+.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:var(--s2)}
+.model code{font-size:1em}
+.control{min-width:0}
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:6px var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);background:var(--teal-soft)}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);background:var(--red-soft);box-shadow:inset 4px 0 0 var(--red)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.confrow{margin-top:var(--s2)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
+.term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
+.term-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px var(--s3);margin:0;padding:var(--s1) var(--s3);border-bottom:1px solid var(--rule);font-size:15px;color:var(--muted)}
+.term-top span:first-child{font-weight:700}
+.log{height:220px;overflow-y:auto;padding:var(--s2) var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.log .c{font-weight:700}
+.log .c::before{content:attr(data-p) " ";color:var(--teal);font-weight:700}
+.log .e{color:var(--red)}
+.log .h{color:var(--muted);font-family:var(--sans)}
+.cmdline{display:flex;gap:var(--s2);align-items:center;padding:0 var(--s1) 0 var(--s3);border-top:1px solid var(--rule)}
+.cmdline label{flex:0 1 auto;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 16px var(--mono);color:var(--teal)}
+.cmdline{padding:var(--s2) var(--s2) var(--s2) var(--s3)}
+.cmdline input{flex:1 1 auto;min-width:0;min-height:44px;padding:var(--s2) 0;font:16px var(--mono);color:var(--ink);background:transparent;border:0;caret-color:var(--teal)}
+.cmdline input::placeholder{color:var(--muted);opacity:1}
+.cmdline input:focus,.cmdline input:focus-visible{outline:none}
+.cmdline .runbtn{flex:0 0 auto;min-height:36px;padding:var(--s1) var(--s3);background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:600}
+.cmdline .runbtn:hover{border-color:var(--ink)}
+.simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s2);align-items:flex-start}
+.feedback{width:100%;min-width:0;line-height:1.4;font-size:15px;line-height:1.45}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin-bottom:2px}
+.verdict{font-weight:700}
+.feedback .on{font-weight:600}
+.badge{display:inline-block;margin:0 var(--s1) 0 0;padding:0 6px;border:2px solid currentColor;border-radius:3px;font:700 15px/1.4 var(--sans);vertical-align:baseline}
+.badge.ok{color:var(--teal)}.badge.no{color:var(--red)}.badge.me{color:var(--ink)}
+.opt .badges{display:block;margin-top:2px}
+.explain{list-style:none;padding:0;margin:var(--s1) 0 0}
+.explain li{margin:0;padding:var(--s1) 0 var(--s1) var(--s3);border-left:2px solid var(--line)}
+.explain li+li{margin-top:var(--s1)}
+.explain li.mine{border-left-color:var(--teal)}
+.explain .on,.explain .ex{display:block}
+.explain .ex::first-letter{text-transform:uppercase}
+.teach ul.chunks{list-style:none;padding:0}
+.teach ul.chunks li{margin-bottom:var(--s2)}
+.opt .why{display:block;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
+.opt .why code{font-size:.94em}
+.verdict.ok{color:var(--teal)}
+.verdict.no{color:var(--red)}
+.verdict.set{color:var(--amber)}
+.conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+.recap ul{padding-left:20px}
+.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
+.feedback details{margin:var(--s1) 0}
+.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
+.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
+.next-topic{font-weight:700}
+.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
+[hidden]{display:none!important}
+@media (min-width:861px) and (max-height:720px){
+  main{padding-top:var(--s2)}
+  .stage{padding-top:var(--s2)}
+  .col{gap:var(--s2)}
+  .model{padding:var(--s2) var(--s4)}
+  .model figcaption{margin-bottom:var(--s1)}
+  .meta{margin-top:var(--s1)}
+  .opts{gap:6px}
+  legend{margin-bottom:var(--s1)}
+  .row{margin-top:var(--s2)}
+  .teach h2{margin-bottom:var(--s1)}
+}
+@media (max-width:860px){
+  main{padding:var(--s3) var(--s4) var(--s4)}
+  .top{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "tools";row-gap:var(--s2)}
+  .tools{justify-content:flex-start;flex-wrap:wrap}
+  .stage{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3)}
+  .col{display:contents}
+  #current-teaching{order:1}#current-task{order:2}#live-model{order:3}#current-control{order:4}.fbrow{order:5}
+  .fbrow{flex-direction:column}
+}
+@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}
+  .cmdline{flex-wrap:wrap;row-gap:var(--s1)}
+  .cmdline label{flex:1 0 100%;max-width:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+.stage[data-step="5"] .tree li.file{display:none}
+.navmodel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--s4);align-items:start}
+.tree{list-style:none;margin:0;padding:0;font:500 15px/1.2 var(--mono)}
+.tree li{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);padding:1px var(--s2) 1px calc(var(--s2) + var(--d)*16px);border:2px solid transparent;border-radius:3px}
+.tree li.file .nm{color:var(--muted)}
+.tree li.hid .nm{font-style:italic}
+.tree li.via{border-color:var(--amber)}
+.tree li.goal{border:2px dashed var(--amber)}
+.tree li.here{background:var(--teal);border-color:var(--teal)}
+.tree li.here .nm,.tree li.here .tag{color:var(--on-teal)}
+.tag{font:600 15px/1 var(--sans);color:var(--muted);white-space:nowrap}
+.where .wl{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.readout{margin:0 0 var(--s3);font:700 18px/1.3 var(--mono);overflow-wrap:anywhere}
+.route{display:flex;flex-wrap:wrap;gap:var(--s2);margin:var(--s1) 0 var(--s3);padding:0;list-style:none;font:500 15px/1.2 var(--mono)}
+.route li{padding:4px var(--s2);border:2px solid var(--amber);border-radius:3px}
+.route li.fail{border-style:dashed;border-color:var(--red);color:var(--red);background:var(--red-soft)}
+.route li.plain{border:0;padding-left:0;font-family:var(--sans);color:var(--muted)}
+.legend{margin:0;font-size:15px;color:var(--muted);line-height:1.8}
+.lg{display:inline-block;padding:0 6px;margin-right:2px;border:2px solid var(--rule);border-radius:3px;font-size:15px}
+.here-k{background:var(--teal);border-color:var(--teal);color:var(--on-teal)}
+.via-k{border-color:var(--amber)}
+.hid-k{font-style:italic;border-color:transparent}
+@media (max-width:480px){.navmodel{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<noscript><p class="nojs">This topic needs JavaScript for its practice activities and checks. Turn JavaScript on to take part.</p></noscript>
+<main id="lesson">
+  <header class="top">
+    <h1>Navigating files and folders in the shell</h1>
+    <div class="tools">
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 5</span><span class="pips" aria-hidden="true"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></span></div>
+      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+    </div>
+  </header>
+  <div class="stage" id="stage" data-step="1">
+    <div class="col">
+      <section id="current-teaching" class="teach" aria-label="Current teaching">
+<div data-step="1">
+  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+  <p>Practice prediction, not scored.</p>
+</div>
+<div data-step="2">
+  <h2 id="teach-2-h" tabindex="-1">Where am I, and what is here?</h2>
+  <p>The filled row is your current folder, the working directory.</p>
+  <p><code>pwd</code> prints it as a full path. <code>ls</code> lists what it holds but skips hidden names, which start with a dot. <code>ls -a</code> shows them too, plus <code>.</code> (this folder) and <code>..</code> (its parent).</p>
+</div>
+<div data-step="3">
+  <h2 id="teach-3-h" tabindex="-1">Four ways a path can start</h2>
+  <ul>
+    <li>Relative, like <code>projects/pep</code>: read from your current folder.</li>
+    <li>Absolute, like <code>/tmp</code>: read from the root.</li>
+    <li><code>~</code>, like <code>~/notes</code>: starts at home, <code>/home/ana</code> here.</li>
+    <li><code>..</code>: the parent folder, one level up.</li>
+  </ul>
+  <p><code>ls</code> plus a path lists that folder without moving you.</p>
+</div>
+<div data-step="4">
+  <h2 id="teach-4-h" tabindex="-1">Move with cd</h2>
+  <p><code>cd</code> plus a path moves you there; <code>cd ~</code> or plain <code>cd</code> goes home.</p>
+  <p>Spaces split words: <code>cd class notes</code> passes two words and fails. Keep the name whole with <code>cd "class notes"</code> or <code>cd class\ notes</code>.</p>
+  <p>Every part of a path must be an existing folder; a failed <code>cd</code> prints an error and you stay put.</p>
+</div>
+<div data-step="5">
+  <h2 id="teach-5-h" tabindex="-1">Apply it somewhere new</h2>
+  <p>Same rules, new starting point.</p>
+</div>
+<div data-step="6" hidden data-pep-recap class="recap">
+  <h2 id="teach-6-h" tabindex="-1">Recap</h2>
+  <ul><li><code>pwd</code> shows where you are; <code>ls -a</code> adds hidden names.</li><li><code>/</code> starts at the root, a relative path where you are, <code>~</code> at home; <code>..</code> is up one.</li><li>Quote or escape spaces; a failed <code>cd</code> leaves you in place.</li></ul>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <table><tr><td><code>pwd</code></td><td>print the current folder</td></tr><tr><td><code>ls</code> / <code>ls -a</code></td><td>list entries / include hidden ones</td></tr><tr><td><code>ls path</code></td><td>list another folder without moving</td></tr><tr><td><code>cd path</code></td><td>move to a folder</td></tr><tr><td><code>cd ..</code></td><td>up one level</td></tr><tr><td><code>cd ~</code> or <code>cd</code></td><td>home</td></tr><tr><td><code>cd "class notes"</code></td><td>a name with a space</td></tr></table>
+    <p>Error wording, ls ordering and quoting of spaced names vary between shells and systems; the rules above do not.</p>
+  </details>
+  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Partly verified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.</p><ul><li><a href="https://man7.org/linux/man-pages/man1/bash.1.html#SHELL_BUILTIN_COMMANDS" rel="noopener">GNU Bash 5.3 manual page: cd and other builtins</a></li><li><a href="https://man7.org/linux/man-pages/man1/bash.1.html#QUOTING" rel="noopener">GNU Bash 5.3 manual page: quoting</a></li><li><a href="https://man7.org/linux/man-pages/man1/bash.1.html#EXPANSION" rel="noopener">GNU Bash 5.3 manual page: tilde and other expansions</a></li><li><a href="https://man7.org/linux/man-pages/man1/ls.1.html#DESCRIPTION" rel="noopener">GNU coreutils 9.11: ls(1)</a></li><li><a href="https://man7.org/linux/man-pages/man1/pwd.1.html#DESCRIPTION" rel="noopener">GNU coreutils 9.11: pwd(1)</a></li></ul><p>Not confirmed by these sources: the exact wording of the "too many arguments" error, GNU ls quoting a spaced name by default on a terminal, and which folder a new terminal opens in. The page labels these as varying.</p></details>
+  <p class="next-topic">Next topic: <a href="02-pipes-and-grep.html">Pipes and grep</a></p>
+</div>
+      </section>
+      <section id="current-task" class="task" aria-label="Current task">
+<div data-step="1"><p id="task-1">A new terminal opens and you type <code>pwd</code>. What does it print?</p></div>
+<div data-step="2"><p id="task-2">Run <code>pwd</code>, then <code>ls -a</code>.</p>
+  <ul class="goals"><li data-goal="pwd"><span>Run <code>pwd</code></span><span class="st"></span></li><li data-goal="lsa"><span>Run <code>ls -a</code></span><span class="st"></span></li></ul></div>
+<div data-step="3"><p id="task-3">From <code>/home/ana</code>, list <code>pep</code> twice: with a relative path, then with a <code>~</code> path.</p>
+  <ul class="goals"><li data-goal="rel"><span>Relative path to pep</span><span class="st"></span></li><li data-goal="home"><span><code>~</code> path to pep</span><span class="st"></span></li></ul></div>
+<div data-step="4"><p id="task-4">Make these three moves in any order.</p>
+  <ul class="goals"><li data-goal="space"><span>Into <code>class notes</code>, space quoted or escaped</span><span class="st"></span></li><li data-goal="up"><span>Up one level with <code>..</code></span><span class="st"></span></li><li data-goal="tmp"><span>To <code>/tmp</code> with an absolute path</span><span class="st"></span></li></ul></div>
+<div data-step="5"><p id="task-apply">You are in <code>/home/ana/projects/pep</code>. Which command takes you to <code>/home/ana/notes</code>?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same goal as routes. Which route reaches <code>notes</code> from <code>pep</code>?</p></div>
+<div data-step="6"><p>All activities finished.</p><p id="complete-msg" class="complete"></p></div>
+
+      </section>
+      <div class="fbrow">
+        <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-explore-feedback></div>
+<div data-step="5" data-pep-apply-feedback></div>
+<div data-step="6" ></div>
+        </div>
+        <button type="button" class="primary" id="next" hidden>Continue</button>
+      </div>
+    </div>
+    <div class="col">
+<figure id="live-model" class="model" aria-labelledby="model-cap">
+  <figcaption id="model-cap">Ana's fictional folders. The terminal is a simulation.</figcaption>
+  <div class="navmodel">
+    <ul class="tree" id="tree" aria-label="Folder tree"><li data-path="/" class="dir" style="--d:0"><span class="nm">/</span><span class="tag"></span></li><li data-path="/home" class="dir" style="--d:1"><span class="nm">home/</span><span class="tag"></span></li><li data-path="/home/ana" class="dir" style="--d:2"><span class="nm">ana/</span><span class="tag"></span></li><li data-path="/home/ana/.profile" class="file hid" style="--d:3"><span class="nm">.profile</span><span class="tag"></span></li><li data-path="/home/ana/class notes" class="dir" style="--d:3"><span class="nm">class notes/</span><span class="tag"></span></li><li data-path="/home/ana/class notes/lesson.txt" class="file" style="--d:4"><span class="nm">lesson.txt</span><span class="tag"></span></li><li data-path="/home/ana/notes" class="dir" style="--d:3"><span class="nm">notes/</span><span class="tag"></span></li><li data-path="/home/ana/notes/today.md" class="file" style="--d:4"><span class="nm">today.md</span><span class="tag"></span></li><li data-path="/home/ana/projects" class="dir" style="--d:3"><span class="nm">projects/</span><span class="tag"></span></li><li data-path="/home/ana/projects/pep" class="dir" style="--d:4"><span class="nm">pep/</span><span class="tag"></span></li><li data-path="/home/ana/projects/pep/README.md" class="file" style="--d:5"><span class="nm">README.md</span><span class="tag"></span></li><li data-path="/tmp" class="dir" style="--d:1"><span class="nm">tmp/</span><span class="tag"></span></li></ul>
+    <div class="where">
+      <p class="wl">Current folder</p>
+      <p class="readout" id="cwd-read">/home/ana</p>
+      <p class="wl">Last path read</p>
+      <ol class="route" id="route"><li class="plain">None yet.</li></ol>
+      <p class="legend"><span class="lg here-k">filled</span> you are here <span class="lg via-k">outlined</span> path read</p>
+    </div>
+  </div>
+</figure>
+      <section id="current-control" class="control" aria-label="Your turn">
+<div data-step="1">
+  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1">
+    <legend>Prediction</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="predict" value="a"> <span>/home/ana</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span>~</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span>/</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span>ana</span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
+    <legend id="pconf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="pconf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+  </div>
+</div><div data-step="2" hidden>
+  <div class="term" data-interaction="terminal" data-steps="2">
+    <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-2">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
+    <div class="log" id="log-2" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
+    <div class="cmdline" data-term="2">
+      <label for="cmd-2"><span class="pr">$</span><span class="vh"> command</span></label>
+      <input type="text" id="cmd-2" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-2 keys-2">
+      <button type="button" class="runbtn">Run</button>
+    </div>
+  </div>
+</div><div data-step="3" hidden>
+  <div class="term" data-interaction="terminal" data-steps="2">
+    <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-3">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
+    <div class="log" id="log-3" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
+    <div class="cmdline" data-term="3">
+      <label for="cmd-3"><span class="pr">$</span><span class="vh"> command</span></label>
+      <input type="text" id="cmd-3" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-3 keys-3">
+      <button type="button" class="runbtn">Run</button>
+    </div>
+  </div>
+</div><div data-step="4" hidden>
+  <div class="term" data-interaction="terminal" data-steps="3">
+    <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-4">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
+    <div class="log" id="log-4" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
+    <div class="cmdline" data-term="4">
+      <label for="cmd-4"><span class="pr">$</span><span class="vh"> command</span></label>
+      <input type="text" id="cmd-4" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-4 keys-4">
+      <button type="button" class="runbtn">Run</button>
+    </div>
+  </div>
+</div><div data-step="5">
+  <div data-first>
+  <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply">
+    <legend>Choose a command</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="apply-a" value="a"> <span>cd ../notes</span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span>cd notes</span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span>cd ../../notes</span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span>cd /notes</span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
+    <legend id="conf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="conf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="conf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="conf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
+  </div>
+  </div>
+  <div data-retry hidden>
+    <fieldset id="apply-b" aria-describedby="task-apply-b">
+      <legend>Choose a route</legend>
+      <div class="opts"><label class="opt"><input type="radio" name="apply-b" value="a"> <span>pep → projects → notes</span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span>pep → projects → ana → notes</span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span>pep → notes</span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span>/ → notes</span></label></div>
+    </fieldset>
+    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+  </div>
+</div><div data-step="6"></div>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+var TOPIC={
+steps:6,acts:['predict','look','paths','moves','apply'],
+prompt:function(S){var c=S.t.cwd;return 'ana@pep:'+(c==='/home/ana'?'~':(c.indexOf('/home/ana/')===0?'~'+c.slice(9):c))+'$';},
+complete:function(v,S){var DIRS={'/':['home','tmp'],'/home':['ana'],'/home/ana':['.profile','class notes','notes','projects'],'/home/ana/class notes':['lesson.txt'],'/home/ana/notes':['today.md'],'/home/ana/projects':['pep'],'/home/ana/projects/pep':['README.md'],'/tmp':[]};
+ var HOME='/home/ana',cwd=S.t.cwd;if(/["']/.test(v)){return null;}
+ var m=v.match(/^(\s*)(\S*)$/);
+ if(m){var c=['pwd','ls','cd'].filter(function(x){return x.indexOf(m[2])===0&&x!==m[2];});return c.length===1?m[1]+c[0]+' ':null;}
+ var i=v.length;while(i>0&&!(v.charAt(i-1)===' '&&v.charAt(i-2)!=='\\')){i--;}
+ var word=v.slice(i),pre=v.slice(0,i),cmd=v.trim().split(/\s+/)[0];
+ var unq=word.replace(/\\(.)/g,'$1'),sl=unq.lastIndexOf('/'),dirPart=sl>=0?unq.slice(0,sl+1):'',base=sl>=0?unq.slice(sl+1):unq,dir=cwd;
+ if(dirPart){var r=dirPart.replace(/^~(?=\/)/,HOME);if(r.charAt(0)!=='/'){r=cwd+'/'+r;}var st=[];r.split('/').forEach(function(p){if(!p||p==='.'){return;}if(p==='..'){st.pop();}else{st.push(p);}});dir='/'+st.join('/');}
+ if(!DIRS[dir]){return null;}
+ function join(a,b){return a==='/'?'/'+b:a+'/'+b;}
+ var names=DIRS[dir].filter(function(n){if(n.indexOf(base)!==0){return false;}if(n.charAt(0)==='.'&&base.charAt(0)!=='.'){return false;}return cmd==='cd'?!!DIRS[join(dir,n)]:true;});
+ if(!names.length){return null;}
+ function esc(s){return s.replace(/ /g,'\\ ');}
+ var fill;if(names.length===1){fill=names[0]+(DIRS[join(dir,names[0])]?'/':' ');}
+ else{var p=names.reduce(function(a,b){var k=0;while(k<a.length&&a[k]===b[k]){k++;}return a.slice(0,k);});if(p.length<=base.length){return null;}fill=p;}
+ return pre+esc(dirPart)+esc(fill.replace(/ $/,''))+(/ $/.test(fill)?' ':'');},
+
+init:function(){return {cwd:'/home/ana',g:{},route:null};},
+predict:{correct:'a',why:{
+ a:'what it prints here: a new terminal usually starts at home, and pwd prints the full path.',
+ b:'~ is a shortcut you can type for home, but pwd prints the full path instead.',
+ c:'/ is the root, the top of the tree; a new terminal usually starts lower, at home.',
+ d:'pwd prints the whole path from the root, not only the last folder name.'}},
+apply:{A:{fs:'apply-a',correct:'c',okNote:'<p>Two <code>..</code> steps climb from pep to ana, which holds notes.</p>',
+  why:{a:'one .. reaches projects, and there is no notes inside projects.',b:'a relative path starts in pep, and pep has no notes folder.',c:'climbs pep → projects → ana, then enters notes.',d:'a leading / starts at the root, and there is no /notes.'},
+  miss:{a:'One <code>..</code> from pep only reaches projects, and projects has no notes folder.',b:'A relative path starts where you are. pep has no notes folder inside it.',d:'A leading <code>/</code> starts at the root. There is no <code>/notes</code>; notes lives in <code>/home/ana</code>.'},
+  hint:'Count the levels: how many steps up from pep reach the folder that holds notes?'},
+ B:{fs:'apply-b',correct:'b',reveal:'The working route is pep → projects → ana → notes, which is <code>cd ../../notes</code>.',
+  why:{a:'stops one level short: notes is not inside projects.',b:'two climbs reach ana, which holds notes.',c:'pep does not contain notes.',d:'the root does not contain notes; this is what cd /notes would try.'}}},
+run:function(line,term,S,api){
+ var t=S.t,HOME='/home/ana',out=[],msg='',before=t.cwd,step=+term;
+ var DIRS={'/':['home','tmp'],'/home':['ana'],'/home/ana':['.profile','class notes','notes','projects'],'/home/ana/class notes':['lesson.txt'],'/home/ana/notes':['today.md'],'/home/ana/projects':['pep'],'/home/ana/projects/pep':['README.md'],'/tmp':[]};
+ var FILES={'/home/ana/.profile':1,'/home/ana/class notes/lesson.txt':1,'/home/ana/notes/today.md':1,'/home/ana/projects/pep/README.md':1};
+ function o(c,s){out.push([c,s]);}
+ function join(a,b){return a==='/'?'/'+b:a+'/'+b;}
+ function up(a){if(a==='/'){return '/';}var i=a.lastIndexOf('/');return i<=0?'/':a.slice(0,i);}
+ function parse(s){var w=[],cur=null,q=null;
+  for(var i=0;i<s.length;i++){var c=s.charAt(i);
+   if(q){if(c===q){q=null;}else{cur.v+=c;}continue;}
+   if(c==='"'||c==="'"){if(!cur){cur={v:''};}q=c;continue;}
+   if(c==='\\'){if(i+1<s.length){if(!cur){cur={v:''};}cur.v+=s.charAt(++i);}continue;}
+   if(c===' '||c==='\t'){if(cur){w.push(cur);cur=null;}continue;}
+   if('$*?[]{}`;&|<>!#()='.indexOf(c)>=0){return {err:'"'+c+'" is not available in this practice terminal (no expansions, operators or variables here).'};}
+   if(c==='~'&&!cur){var n=s.charAt(i+1);if(n&&n!=='/'&&n!==' '){return {err:'~name is not available in this practice terminal.'};}cur={v:'~',tilde:true};continue;}
+   if(!cur){cur={v:''};}cur.v+=c;}
+  if(q){return {err:'Unclosed quote: add the matching '+q+' and run it again.'};}
+  if(cur){w.push(cur);}return {words:w};}
+ function resolve(wd){var raw=wd.v,type,cur,rest;
+  if(wd.tilde){type='home';cur=HOME;rest=raw.slice(1);}
+  else if(raw.charAt(0)==='/'){type='absolute';cur='/';rest=raw;}
+  else{type=(raw.split('/')[0]==='..')?'parent':'relative';cur=before;rest=raw;}
+  var parts=rest.split('/').filter(function(x){return x!==''&&x!=='.';}),trail=[];
+  for(var i=0;i<parts.length;i++){var n=parts[i];
+   if(n==='..'){cur=up(cur);trail.push({n:'..',to:cur});continue;}
+   var nx=join(cur,n);
+   if(DIRS[nx]){cur=nx;trail.push({n:n,to:cur});continue;}
+   if(FILES[nx]){if(i<parts.length-1||/\/$/.test(rest)){return {ok:false,kind:'notdir',at:n,dir:cur,trail:trail.concat([{n:n,to:nx,fail:true}]),type:type};}
+    return {ok:true,file:true,dest:nx,trail:trail.concat([{n:n,to:nx}]),type:type};}
+   return {ok:false,kind:'missing',at:n,dir:cur,trail:trail.concat([{n:n,fail:true}]),type:type};}
+  return {ok:true,dest:cur,trail:trail,type:type};}
+ function shown(wd){return wd.tilde?HOME+wd.v.slice(1):wd.v;}
+ function stopHint(r){return r.kind==='missing'?'Stopped at "'+r.at+'": there is nothing with that name in '+r.dir+'.':'Stopped at "'+r.at+'": it is a file, so a path cannot continue inside it.';}
+ function lsName(n){return n.indexOf(' ')>=0?"'"+n+"'":n;}
+ o('c',line);
+ var p=parse(line),res=null,kind='';
+ if(p.err){o('e',p.err);msg='That was not run, and earns no credit.';}
+ else if(!p.words.length){o('h','(nothing to run)');}
+ else{var cmd=p.words[0].v,args=p.words.slice(1);
+  if(cmd==='pwd'){if(args.length){o('e','pwd: options and arguments are not available in this practice terminal');}else{o('o',t.cwd);kind='pwd';}}
+  else if(cmd==='ls'){var all=false,paths=[],bad=null;
+   args.forEach(function(a){if(a.v.charAt(0)==='-'&&!a.tilde){if(a.v==='-a'){all=true;}else{bad=a.v;}}else{paths.push(a);}});
+   if(bad){o('e','ls: option '+bad+' is not available in this practice terminal (only -a is).');}
+   else if(paths.length>1){o('e','ls: listing several paths at once is not available in this practice terminal.');}
+   else{var target=paths.length?resolve(paths[0]):{ok:true,dest:before,trail:[],type:'none'};res=paths.length?target:null;
+    if(!target.ok){o('e',"ls: cannot access '"+shown(paths[0])+"': "+(target.kind==='missing'?'No such file or directory':'Not a directory'));o('h',stopHint(target));}
+    else if(target.file){o('o',shown(paths[0]));}
+    else{var names=DIRS[target.dest].filter(function(n){return all||n.charAt(0)!=='.';});if(all){names=['.','..'].concat(names);}
+     o('o',names.length?names.map(lsName).join('  '):'');if(!names.length){o('h','(empty folder: ls prints nothing)');}
+     kind=all?'lsa':'ls';}}}
+  else if(cmd==='cd'){
+   if(args.length>1){o('e','bash: cd: too many arguments');o('h','The space split the name into separate words. Keep it whole with quotes or a backslash. (Older bash versions word this error differently.)');}
+   else if(args.length&&args[0].v.charAt(0)==='-'){o('e','cd '+args[0].v+' is not available in this practice terminal.');}
+   else{var r=args.length?resolve(args[0]):{ok:true,dest:HOME,trail:[{n:'~',to:HOME}],type:'home'};res=r;
+    if(!r.ok){o('e','bash: cd: '+shown(args[0])+': '+(r.kind==='missing'?'No such file or directory':'Not a directory'));o('h',stopHint(r)+' You stay in '+before+'.');}
+    else if(r.file){o('e','bash: cd: '+shown(args[0])+': Not a directory');o('h','"'+r.trail[r.trail.length-1].n+'" is a file; cd only enters folders. You stay in '+before+'.');res.ok=false;}
+    else{t.cwd=r.dest;kind='cd';}}}
+  else{o('e',cmd+': not available in this practice terminal');msg='Only pwd, ls and cd work here. No credit for that line.';}
+ }
+ if(res){t.route={from:(res.type==='absolute'?'/':res.type==='home'?'~':before),trail:res.trail};}
+ var log=api.$('log-'+term);out.forEach(function(x){var dv=document.createElement('div');dv.className=x[0];dv.textContent=x[1];log.appendChild(dv);});log.scrollTop=log.scrollHeight;
+ var g=t.g,TYPE={relative:'a relative path',parent:'a relative path that starts with ..',absolute:'an absolute path',home:'a ~ path',none:'no path'};
+ if(step===2){if(kind==='pwd'){g.pwd=1;msg='pwd printed '+t.cwd+', the full path of your current folder.';}
+  if(kind==='lsa'){g.lsa=1;msg='ls -a showed the hidden .profile, plus . (this folder) and .. (the folder above).';}
+  if(kind==='ls'){msg='Plain ls skips hidden names. Add -a to see them.';}}
+ if(step===3&&res&&res.ok&&!res.file&&kind!=='cd'){var pep=res.dest==='/home/ana/projects/pep';
+  if(!pep){msg='That listed '+res.dest+', not pep.';}
+  else if(res.type==='relative'||res.type==='parent'){g.rel=1;msg='Listed pep with '+TYPE[res.type]+'. Relative goal met.';}
+  else if(res.type==='home'){g.home=1;msg='Listed pep with a ~ path. Home goal met.';}
+  else{msg='That reached pep with '+TYPE[res.type]+'. It works, but neither goal asks for that type.';}}
+ if(step===4&&kind==='cd'){
+  if(t.cwd==='/home/ana/class notes'){g.space=1;msg='You are in class notes. The quotes or backslash kept the name whole.';}
+  else if(t.cwd==='/tmp'){if(res.type==='absolute'){g.tmp=1;msg='/tmp reached with an absolute path.';}else{msg='You reached /tmp, but with '+TYPE[res.type]+'. The goal asks for an absolute path, so it stays open.';}}
+  else if(res.type==='parent'){if(t.cwd===up(before)&&before!=='/'){g.up=1;msg='One .. climbed from '+before+' to '+t.cwd+'.';}else{msg='That used .. but did not climb exactly one level from '+before+'. The up goal is still open.';}}
+  else{msg='Moved to '+t.cwd+'.';}}
+ var need={2:['pwd','lsa'],3:['rel','home'],4:['space','up','tmp']}[step]||[],left=need.filter(function(k){return !g[k];}).length;
+ if(!msg&&out.length&&out[out.length-1][0]==='e'){msg='That command did not work, so nothing changed and no goal moved.';}
+ var html='<p>'+api.esc(msg||'Command run.')+'</p><p>'+(left?left+' of '+need.length+' goals still open.':'<strong>All goals met.</strong> Continue when ready.')+'</p>';
+ api.say(html);
+ if(!left&&need.length&&!S.done[{2:'look',3:'paths',4:'moves'}[step]]){api.complete({2:'look',3:'paths',4:'moves'}[step]);}
+ this.render(S,api);
+},
+render:function(S,api){var t=S.t,here=S.step===1?null:(S.step===5?'/home/ana/projects/pep':t.cwd);
+ var via={};if(t.route&&S.step!==5&&S.step!==1){t.route.trail.forEach(function(x){if(x.to){via[x.to]=1;}});}
+ api.qa('#tree li').forEach(function(li){var p=li.getAttribute('data-path');li.classList.toggle('here',p===here);li.classList.toggle('via',!!via[p]&&p!==here);
+  li.classList.toggle('goal',S.step===5&&p==='/home/ana/notes');
+  var tag=li.querySelector('.tag');tag.textContent=p===here?'you are here':(S.step===5&&p==='/home/ana/notes'?'goal':(p==='/home/ana'&&S.step>1?'~ home':''));});
+ api.$('cwd-read').textContent=here||'not shown yet';
+ var r=api.$('route');while(r.firstChild){r.removeChild(r.firstChild);}
+ function chip(txt,cls){var li=document.createElement('li');li.textContent=txt;if(cls){li.className=cls;}r.appendChild(li);}
+ if(S.step===5){chip('Imagined position for this check only','plain');}
+ else if(!t.route||S.step===1){chip('None yet.','plain');}
+ else{chip('start '+t.route.from,'plain');t.route.trail.forEach(function(x){chip(x.n+(x.fail?' (stops here)':''),x.fail?'fail':'');});if(!t.route.trail.length){chip('(no path parts)','plain');}}
+ var g=t.g;api.qa('.goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!g[k]);li.querySelector('.st').textContent=g[k]?'done':'open';});
+}
+};
+
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
+var SNAP={};
+function clone(o){return JSON.parse(JSON.stringify(o));}
+var LAST=TOPIC.steps,S;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init()};}
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,get S(){return S;}};
+function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
+function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}}
+function progress(){
+  var acts=TOPIC.acts,n=0,set=0;
+  acts.forEach(function(a,i){var p=qa('.pip',$('progress'))[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
+    p.className='pip'+(on?(S.settled[a]?' settled':' on'):'');});
+  $('prog-text').textContent='Activities done: '+n+' of '+acts.length+(set?' ('+set+' answered, not marked correct)':'');
+}
+function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
+function show(step,focus){
+  S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
+  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
+  if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
+    SNAP[step]={html:h,t:clone(S.t)};}
+  var rb=$('reset');rb.disabled=(step===LAST);
+  $('next').hidden=true;
+  if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
+    c.textContent='All '+TOPIC.acts.length+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: review its explanation above before moving on.':'.');}}
+  else{main.removeAttribute('data-pep-complete');}
+  TOPIC.render(S,api);progress();
+  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+}
+function optLabel(inp){return inp.closest('label');}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function explainList(set,chosen,mark){
+  var html='<ul>';
+  Object.keys(set.why).forEach(function(k){
+    var txt=qa('input[value="'+k+'"]',$(set.fs))[0];var lab=txt?optLabel(txt).textContent.trim():k;
+    var tag=(k===set.correct)?'<strong>Correct: </strong>':'<strong>Not this: </strong>';
+    html+='<li>'+(mark?tag:'')+'<span class="on">'+esc(lab)+'</span>: '+set.why[k]+(k===chosen?' <em>(your choice)</em>':'')+'</li>';
+  });
+  return html+'</ul>';
+}
+function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===set.correct&&(chosen===set.correct)){l.classList.add('right');}
+  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
+function firstDetails(){return '<details><summary>First question: every option explained</summary>'+explainList(TOPIC.apply.A,null,true)+'</details>';}
+function badges(ok,mine,who){return '<span class="badges">'+(mine?'<span class="badge me">'+who+'</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
+function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
+  w.innerHTML=badges(i.value===set.correct,i.value===chosen,'Your answer')+set.why[i.value];sp.appendChild(w);});}
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
+function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
+  var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
+  var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function checkApply(which){
+  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  if(which==='a'){
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
+    if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText());complete('apply');TOPIC.render(S,api);focusVerdict();return;}
+    S.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
+    say('<p class="verdict no">Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <span class="on">'+esc(S.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
+    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});TOPIC.render(S,api);
+    var t=$('task-apply-b');if(t){t.focus();}
+  } else {
+    var c2=checked('apply-b');if(!c2){return;}
+    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
+    if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+firstDetails()+confText());}
+    else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
+      say('<p class="verdict set">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+firstDetails()+confText());}
+    complete('apply');TOPIC.render(S,api);focusVerdict();
+  }
+}
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
+  if(!ch||!pc){return;}
+  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
+    if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
+  var html='<p class="verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+' Each option, explained:</p><ul class="explain">';
+  Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
+    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
+  say(html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||''),1);complete('predict');
+}
+function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
+function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
+  Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
+  qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
+  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  show(step,false);syncPrompt();var h=$('teach-'+step+'-h');if(h){h.focus();}}
+d.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b){return;}
+  if(b.id==='reset'){restart();return;}
+  if(b.id==='next'){show(S.step+1);return;}
+  if(b.id==='predict-check'){checkPredict();return;}
+  if(b.id==='apply-check'){checkApply('a');return;}
+  if(b.id==='apply-check-b'){checkApply('b');return;}
+  if(b.classList.contains('runbtn')){runTerminal(b.closest('.cmdline'));return;}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+});
+d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
+var HIST={};
+function prompt(){return TOPIC.prompt?TOPIC.prompt(S):'$';}
+function syncPrompt(){qa('.cmdline .pr').forEach(function(n){n.textContent=prompt();});}
+function runTerminal(box){
+  if(!box){return;}var inp=box.querySelector('input[type="text"]');if(!inp||inp.disabled){return;}
+  var line=inp.value,H=HIST[inp.id]||(HIST[inp.id]={l:[],i:0});if(line.trim()){H.l.push(line);}H.i=H.l.length;
+  var p=prompt();inp.value='';TOPIC.run(line,box.getAttribute('data-term'),S,api);
+  qa('.log .c:not([data-p])').forEach(function(n){n.setAttribute('data-p',p);});syncPrompt();inp.focus();}
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closest('.cmdline')||t.tagName!=='INPUT'){return;}
+  var H=HIST[t.id]||(HIST[t.id]={l:[],i:0});
+  if(e.key==='Enter'&&!e.isComposing){e.preventDefault();runTerminal(t.closest('.cmdline'));}
+  else if(e.key==='ArrowUp'){if(!H.l.length){return;}e.preventDefault();H.i=Math.max(0,H.i-1);t.value=H.l[H.i];}
+  else if(e.key==='ArrowDown'){if(!H.l.length){return;}e.preventDefault();H.i=Math.min(H.l.length,H.i+1);t.value=H.l[H.i]||'';}
+  else if(e.key==='Tab'&&!e.shiftKey&&!e.altKey&&!e.ctrlKey&&!e.metaKey){
+    // capture Tab only when a completion actually changes the line, so Tab never traps focus
+    var v=t.value.trim()&&TOPIC.complete?TOPIC.complete(t.value,S):null;if(v&&v!==t.value){e.preventDefault();t.value=v;}}
+  else if(e.key==='Escape'){var tk=$('task-'+S.step);if(tk){e.preventDefault();tk.setAttribute('tabindex','-1');tk.focus();}}
+});
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+setTheme(mq&&mq.matches?'dark':'light');
+if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+fresh();show(1,false);syncPrompt();
+})();
+
+</script>
+</body>
+</html>

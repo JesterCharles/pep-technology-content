@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<meta name="pep:budget-minutes" content="7">
+<meta name="pep:course" content="Git/Linux/AI Foundations">
+<meta name="pep:module" content="Linux Foundations">
+<meta name="pep:topic" content="File permissions">
+<meta name="pep:source" content="pep-curriculum.json#/tracks/0/weeks/0/days/0/topics/1">
+<title>File permissions · Linux Foundations</title>
+<style>
+:root{
+  --bg:#eef2f0;--surface:#f8faf9;--ink:#1b2320;--muted:#47524e;--rule:#6b7873;--line:#c9d2ce;
+  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
+  --on-teal:#ffffff;--term:#e2e8e5;--focus:#1f4fbf;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121816;--surface:#1a2220;--ink:#e3ebe7;--muted:#a8b6b0;--rule:#71827c;--line:#2f3b37;
+  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
+  --on-teal:#0b1311;--term:#0c1110;--focus:#8fb4ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+::selection{background:var(--teal);color:var(--on-teal)}
+code,kbd,.mono{font-family:var(--mono);font-size:.94em}
+a{color:var(--teal);text-underline-offset:3px}
+main{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
+.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title tools";column-gap:var(--s6);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
+.top .crumbs{grid-area:crumbs}.top h1{grid-area:title}.top .meta{grid-area:meta}.top .tools{grid-area:tools}
+.crumbs{margin:0 0 var(--s1);font-size:15px;color:var(--muted)}
+.crumbs ol{display:flex;flex-wrap:wrap;gap:0 var(--s2);margin:0;padding:0;list-style:none}
+.crumbs li+li::before{content:"/";margin-right:var(--s2);color:var(--rule)}
+.crumbs [aria-current]{color:var(--ink);font-weight:600}
+h1{margin:0;font-size:24px;line-height:30px;letter-spacing:-.01em}
+.meta{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s2) 0 0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
+.meta li:first-child{font-weight:700;color:var(--ink)}
+.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
+.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2);flex:0 0 auto}
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:var(--amber-soft);border:2px dashed var(--amber)}
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s3);align-items:start}
+.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
+.teach p{margin:0 0 var(--s2);max-width:62ch}
+.teach ul{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
+.teach li{margin-bottom:var(--s1)}
+.teach code,.task code{white-space:nowrap}
+.task{padding:var(--s3) var(--s4);border-top:2px solid var(--teal);background:var(--surface)}
+.task p{margin:0;font-weight:600}
+.task p+p{margin-top:var(--s2)}
+.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
+.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
+.goals li:first-child{border-top:0}
+.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
+.goals li.done .st{color:var(--teal)}
+.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
+.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:var(--s2)}
+.model code{font-size:1em}
+.control{min-width:0}
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:6px var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);background:var(--teal-soft)}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);background:var(--red-soft);box-shadow:inset 4px 0 0 var(--red)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.confrow{margin-top:var(--s2)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
+.term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
+.term-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px var(--s3);margin:0;padding:var(--s1) var(--s3);border-bottom:1px solid var(--rule);font-size:15px;color:var(--muted)}
+.term-top span:first-child{font-weight:700}
+.log{height:220px;overflow-y:auto;padding:var(--s2) var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.log .c{font-weight:700}
+.log .c::before{content:attr(data-p) " ";color:var(--teal);font-weight:700}
+.log .e{color:var(--red)}
+.log .h{color:var(--muted);font-family:var(--sans)}
+.cmdline{display:flex;gap:var(--s2);align-items:center;padding:0 var(--s1) 0 var(--s3);border-top:1px solid var(--rule)}
+.cmdline label{flex:0 1 auto;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 16px var(--mono);color:var(--teal)}
+.cmdline{padding:var(--s2) var(--s2) var(--s2) var(--s3)}
+.cmdline input{flex:1 1 auto;min-width:0;min-height:44px;padding:var(--s2) 0;font:16px var(--mono);color:var(--ink);background:transparent;border:0;caret-color:var(--teal)}
+.cmdline input::placeholder{color:var(--muted);opacity:1}
+.cmdline input:focus,.cmdline input:focus-visible{outline:none}
+.cmdline .runbtn{flex:0 0 auto;min-height:36px;padding:var(--s1) var(--s3);background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:600}
+.cmdline .runbtn:hover{border-color:var(--ink)}
+.simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s2);align-items:flex-start}
+.feedback{width:100%;min-width:0;line-height:1.4;font-size:15px;line-height:1.45}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin-bottom:2px}
+.verdict{font-weight:700}
+.feedback .on{font-weight:600}
+.badge{display:inline-block;margin:0 var(--s1) 0 0;padding:0 6px;border:2px solid currentColor;border-radius:3px;font:700 15px/1.4 var(--sans);vertical-align:baseline}
+.badge.ok{color:var(--teal)}.badge.no{color:var(--red)}.badge.me{color:var(--ink)}
+.opt .badges{display:block;margin-top:2px}
+.explain{list-style:none;padding:0;margin:var(--s1) 0 0}
+.explain li{margin:0;padding:var(--s1) 0 var(--s1) var(--s3);border-left:2px solid var(--line)}
+.explain li+li{margin-top:var(--s1)}
+.explain li.mine{border-left-color:var(--teal)}
+.explain .on,.explain .ex{display:block}
+.explain .ex::first-letter{text-transform:uppercase}
+.teach ul.chunks{list-style:none;padding:0}
+.teach ul.chunks li{margin-bottom:var(--s2)}
+.opt .why{display:block;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
+.opt .why code{font-size:.94em}
+.verdict.ok{color:var(--teal)}
+.verdict.no{color:var(--red)}
+.verdict.set{color:var(--amber)}
+.conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+.recap ul{padding-left:20px}
+.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
+.feedback details{margin:var(--s1) 0}
+.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
+.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
+.next-topic{font-weight:700}
+.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
+[hidden]{display:none!important}
+@media (min-width:861px) and (max-height:720px){
+  main{padding-top:var(--s2)}
+  .stage{padding-top:var(--s2)}
+  .col{gap:var(--s2)}
+  .model{padding:var(--s2) var(--s4)}
+  .model figcaption{margin-bottom:var(--s1)}
+  .meta{margin-top:var(--s1)}
+  .opts{gap:6px}
+  legend{margin-bottom:var(--s1)}
+  .row{margin-top:var(--s2)}
+  .teach h2{margin-bottom:var(--s1)}
+}
+@media (max-width:860px){
+  main{padding:var(--s3) var(--s4) var(--s4)}
+  .top{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "tools";row-gap:var(--s2)}
+  .tools{justify-content:flex-start;flex-wrap:wrap}
+  .stage{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3)}
+  .col{display:contents}
+  #current-teaching{order:1}#current-task{order:2}#live-model{order:3}#current-control{order:4}.fbrow{order:5}
+  .fbrow{flex-direction:column}
+}
+@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}
+  .cmdline{flex-wrap:wrap;row-gap:var(--s1)}
+  .cmdline label{flex:1 0 100%;max-width:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+.stage:not([data-step="2"]) .lsl{display:none}
+.lsl{list-style:none;margin:0 0 var(--s3);padding:0}
+.frow{display:grid;grid-template-columns:auto auto auto minmax(0,1fr);gap:var(--s3);align-items:center;width:100%;min-height:36px;padding:2px var(--s2);text-align:left;background:transparent;color:var(--ink);border:2px solid transparent;border-radius:3px;font-size:15px}
+.frow:hover:not(:disabled){border-color:var(--rule)}
+.frow[aria-pressed="true"]{border-color:var(--teal);background:var(--teal-soft)}
+.frow:disabled{border:2px solid transparent;color:var(--ink);cursor:default}
+.frow .perm{font-weight:700;font-size:16px}
+.frow .own,.frow .sz{color:var(--muted)}
+.frow .sz{min-width:4ch;text-align:right}
+.frow .fn{font-weight:700;font-size:16px}
+.pg{display:grid;gap:var(--s2)}
+.gl{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.gl code{color:var(--ink)}
+#gnote{font-weight:600;color:var(--amber)}
+.pgrid{border-collapse:collapse;font-size:15px}
+.pgrid th{padding:var(--s1) var(--s3) var(--s1) 0;text-align:left;font-weight:700}
+.pgrid thead th{color:var(--muted)}
+.pgrid .v,.pgrid .who{font-weight:500;color:var(--muted)}
+.pgrid td{padding:2px var(--s2) 2px 0}
+.bit{min-width:48px;min-height:44px;padding:0;font:700 18px var(--mono);background:var(--surface);color:var(--muted);border:2px solid var(--rule)}
+.bit[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:var(--on-teal)}
+.bit:disabled{cursor:default;border-style:solid;background:var(--surface);color:var(--muted);font-weight:700}
+.bit:disabled[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:var(--on-teal)}
+.dig{font:700 20px var(--mono);padding-left:var(--s3)!important}
+.pstr{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.pstr code{font-size:18px;color:var(--ink);margin:0 var(--s3) 0 var(--s1)}
+@media (max-width:480px){.frow{grid-template-columns:auto minmax(0,1fr)}.frow .own,.frow .sz{display:none}}
+</style>
+</head>
+<body>
+<noscript><p class="nojs">This topic needs JavaScript for its practice activities and checks. Turn JavaScript on to take part.</p></noscript>
+<main id="lesson">
+  <header class="top">
+    <h1>File permissions</h1>
+    <div class="tools">
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 5</span><span class="pips" aria-hidden="true"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></span></div>
+      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+    </div>
+  </header>
+  <div class="stage" id="stage" data-step="1">
+    <div class="col">
+      <section id="current-teaching" class="teach" aria-label="Current teaching">
+<div data-step="1">
+  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+  <p>Look at <code>deploy.sh</code> on the right, then guess. Practice prediction, not scored.</p>
+</div>
+<div data-step="2">
+  <h2 id="teach-2-h" tabindex="-1">Read a permission string</h2>
+  <p><code>ls -l</code> starts each line with a permission string. The first character is the type: <code>-</code> for a file, <code>d</code> for a directory.</p>
+  <p>The next nine are three groups of <code>rwx</code>: the owner (ana), the group (dev), then everyone else. <code>r</code> is read, <code>w</code> is write, <code>x</code> is execute: run a file, or enter a directory. A <code>-</code> means that permission is off.</p>
+</div>
+<div data-step="3">
+  <h2 id="teach-3-h" tabindex="-1">Permissions as numbers</h2>
+  <p>Each permission has a value: <code>r</code> = 4, <code>w</code> = 2, <code>x</code> = 1. Add the values in a group to get one digit, then write the digits for owner, group and others.</p>
+  <p><code>rwx</code> = 7, <code>r-x</code> = 5, <code>r--</code> = 4, <code>---</code> = 0. So <code>rwxr-x---</code> is <code>750</code>.</p>
+</div>
+<div data-step="4">
+  <h2 id="teach-4-h" tabindex="-1">Apply a mode with chmod</h2>
+  <p><code>chmod MODE FILE</code> changes a file's permissions, for example <code>chmod 750 deploy.sh</code>.</p>
+  <p>To run a script in the current folder, type <code>./deploy.sh</code>; the <code>./</code> says it is right here. Without <code>x</code>, the shell answers <code>Permission denied</code>.</p>
+</div>
+<div data-step="5">
+  <h2 id="teach-5-h" tabindex="-1">Apply it to a new file</h2>
+  <p>Same rules, a file holding secrets. Decide each group's letters first, then the digits.</p>
+</div>
+<div data-step="6" hidden data-pep-recap class="recap">
+  <h2 id="teach-6-h" tabindex="-1">Recap</h2>
+  <ul><li><code>ls -l</code> shows the type, then three <code>rwx</code> groups: owner, group, others.</li><li><code>r</code> = 4, <code>w</code> = 2, <code>x</code> = 1; add them per group, so <code>rwxr-x---</code> is <code>750</code>.</li><li><code>chmod MODE FILE</code> applies a mode; you need <code>r</code> and <code>x</code> to run a script with <code>./</code>.</li><li>Give others nothing on secret files, and avoid <code>777</code>.</li></ul>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <table><tr><td><code>ls -l</code></td><td>show permissions</td></tr><tr><td><code>chmod 750 f</code></td><td>rwxr-x---</td></tr><tr><td><code>chmod 644 f</code></td><td>rw-r--r--</td></tr><tr><td><code>chmod 600 f</code></td><td>rw-------</td></tr><tr><td><code>./script.sh</code></td><td>run a script here</td></tr></table>
+    <p>chmod also has a letter form, such as chmod u+x deploy.sh; this topic practises the numeric form. A script also needs r because the shell reads it.</p>
+  </details>
+  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Verified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.</p><ul><li><a href="https://man7.org/linux/man-pages/man1/chmod.1.html#DESCRIPTION" rel="noopener">GNU coreutils 9.11: chmod(1) numeric and symbolic modes</a></li><li><a href="https://pubs.opengroup.org/onlinepubs/9799919799/utilities/ls.html#tag_20_73_10" rel="noopener">POSIX.1-2024: ls long format permissions</a></li><li><a href="https://man7.org/linux/man-pages/man2/execve.2.html#ERRORS" rel="noopener">Linux man-pages 6.19: execve(2) errors and interpreter scripts</a></li><li><a href="https://man7.org/linux/man-pages/man1/bash.1.html#COMMAND_EXECUTION" rel="noopener">GNU Bash 5.3 manual page: command execution</a></li></ul></details>
+  <p class="next-topic">Next topic: <a href="04-environment-variables-and-secrets.html">Environment variables and keeping secrets out of code</a></p>
+</div>
+      </section>
+      <section id="current-task" class="task" aria-label="Current task">
+<div data-step="1"><p id="task-1"><code>deploy.sh</code> is <code>-rw-r--r--</code>. You type <code>./deploy.sh</code>. What happens?</p></div>
+<div data-step="2"><p id="task-2">Select the file that only its owner can read.</p></div>
+<div data-step="3"><p id="task-3">Use the grid to plan mode <code>750</code> for <code>deploy.sh</code>: you can do everything, the group can read and run, others get nothing.</p></div>
+<div data-step="4"><p id="task-4">Give <code>deploy.sh</code> mode <code>750</code> with <code>chmod</code>, then run it.</p></div>
+<div data-step="5"><p id="task-apply"><code>secrets.env</code> must be readable and writable by you, readable by the group, and closed to others. Which command?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same requirement as a permission string. Which one matches?</p></div>
+<div data-step="6"><p>All activities finished.</p><p id="complete-msg" class="complete"></p></div>
+
+      </section>
+      <div class="fbrow">
+        <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-explore-feedback></div>
+<div data-step="5" data-pep-apply-feedback></div>
+<div data-step="6" ></div>
+        </div>
+        <button type="button" class="primary" id="next" hidden>Continue</button>
+      </div>
+    </div>
+    <div class="col">
+<figure id="live-model" class="model" aria-labelledby="model-cap">
+  <figcaption id="model-cap"><code>ls -l</code> in Ana's fictional <code>pep</code> folder. The terminal is a simulation.</figcaption>
+  <ul class="lsl" aria-label="Files" data-interaction="explore" data-pep-explore><li><button type="button" class="frow" data-act="pick" data-f="README.md" aria-pressed="false" aria-describedby="task-2 pick-help"><code class="perm" data-perm="README.md">-rw-r--r--</code><span class="own">ana dev</span><code class="sz">812</code><code class="fn">README.md</code></button></li><li><button type="button" class="frow" data-act="pick" data-f="deploy.sh" aria-pressed="false" aria-describedby="task-2 pick-help"><code class="perm" data-perm="deploy.sh">-rw-r--r--</code><span class="own">ana dev</span><code class="sz">164</code><code class="fn">deploy.sh</code></button></li><li><button type="button" class="frow" data-act="pick" data-f="secrets.env" aria-pressed="false" aria-describedby="task-2 pick-help"><code class="perm" data-perm="secrets.env">-rw-------</code><span class="own">ana dev</span><code class="sz">48</code><code class="fn">secrets.env</code></button></li><li><button type="button" class="frow" data-act="pick" data-f="src" aria-pressed="false" aria-describedby="task-2 pick-help"><code class="perm" data-perm="src">drwxr-xr-x</code><span class="own">ana dev</span><code class="sz">4096</code><code class="fn">src</code></button></li></ul>
+  <div class="pg">
+    <p class="gl" id="gcap">Permissions of <code id="gfile">deploy.sh</code> <span id="gnote"></span></p>
+    <table class="pgrid" aria-labelledby="gcap" data-interaction="explore" data-pep-explore>
+      <thead><tr><th scope="col">Who</th><th scope="col">r <span class="v">4</span></th><th scope="col">w <span class="v">2</span></th><th scope="col">x <span class="v">1</span></th><th scope="col">Digit</th></tr></thead>
+      <tbody><tr><th scope="row">Owner <span class="who">ana</span></th><td><button type="button" class="bit" data-act="bit" data-b="0" aria-pressed="false" aria-label="Owner read" aria-describedby="task-3 grid-help" disabled>-</button></td><td><button type="button" class="bit" data-act="bit" data-b="1" aria-pressed="false" aria-label="Owner write" aria-describedby="task-3 grid-help" disabled>-</button></td><td><button type="button" class="bit" data-act="bit" data-b="2" aria-pressed="false" aria-label="Owner execute" aria-describedby="task-3 grid-help" disabled>-</button></td><td class="dig" data-dig="0">0</td></tr><tr><th scope="row">Group <span class="who">dev</span></th><td><button type="button" class="bit" data-act="bit" data-b="3" aria-pressed="false" aria-label="Group read" aria-describedby="task-3 grid-help" disabled>-</button></td><td><button type="button" class="bit" data-act="bit" data-b="4" aria-pressed="false" aria-label="Group write" aria-describedby="task-3 grid-help" disabled>-</button></td><td><button type="button" class="bit" data-act="bit" data-b="5" aria-pressed="false" aria-label="Group execute" aria-describedby="task-3 grid-help" disabled>-</button></td><td class="dig" data-dig="1">0</td></tr><tr><th scope="row">Others <span class="who">everyone else</span></th><td><button type="button" class="bit" data-act="bit" data-b="6" aria-pressed="false" aria-label="Others read" aria-describedby="task-3 grid-help" disabled>-</button></td><td><button type="button" class="bit" data-act="bit" data-b="7" aria-pressed="false" aria-label="Others write" aria-describedby="task-3 grid-help" disabled>-</button></td><td><button type="button" class="bit" data-act="bit" data-b="8" aria-pressed="false" aria-label="Others execute" aria-describedby="task-3 grid-help" disabled>-</button></td><td class="dig" data-dig="2">0</td></tr></tbody>
+    </table>
+    <p class="pstr">String <code id="pstr">-rw-r--r--</code> Mode <code id="pnum">644</code></p>
+  </div>
+</figure>
+      <section id="current-control" class="control" aria-label="Your turn">
+<div data-step="1">
+  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1">
+    <legend>Prediction</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="predict" value="a"> <span>Permission denied</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span>It runs, because you own it</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span>It runs, because the name ends in .sh</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span>It asks for your password</span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
+    <legend id="pconf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="pconf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+  </div>
+</div><div data-step="2" hidden><p class="simnote" id="pick-help">Select a row in the listing; each choice explains what it allows.</p></div>
+<div data-step="3" hidden><p class="simnote" id="grid-help">Press the letter buttons in the grid to switch each permission on or off. The plan changes nothing until chmod applies it.</p></div><div data-step="4" hidden>
+  <div class="term" data-interaction="terminal" data-steps="2">
+    <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-4">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
+    <div class="log" id="log-4" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
+    <div class="cmdline" data-term="4">
+      <label for="cmd-4"><span class="pr">$</span><span class="vh"> command</span></label>
+      <input type="text" id="cmd-4" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-4 keys-4">
+      <button type="button" class="runbtn">Run</button>
+    </div>
+  </div>
+</div><div data-step="5">
+  <div data-first>
+  <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply">
+    <legend>Choose a command</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="apply-a" value="a"> <span>chmod 644 secrets.env</span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span>chmod 640 secrets.env</span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span>chmod 460 secrets.env</span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span>chmod 750 secrets.env</span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
+    <legend id="conf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="conf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="conf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="conf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
+  </div>
+  </div>
+  <div data-retry hidden>
+    <fieldset id="apply-b" aria-describedby="task-apply-b">
+      <legend>Choose a string</legend>
+      <div class="opts"><label class="opt"><input type="radio" name="apply-b" value="a"> <span><code>-rw-r--r--</code></span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span><code>-r--rw----</code></span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span><code>-rwxr-x---</code></span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span><code>-rw-r-----</code></span></label></div>
+    </fieldset>
+    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+  </div>
+</div><div data-step="6"></div>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+var TOPIC={
+steps:6,acts:['predict','read','plan','chmod','apply'],
+prompt:function(){return 'ana@pep:~/projects/pep$';},
+complete:function(v){var i=v.length;while(i>0&&v.charAt(i-1)!==' '){i--;}var w=v.slice(i),pre=v.slice(0,i);if(!w){return null;}var F=['README.md','deploy.sh','secrets.env','src'];
+ var opts=pre.trim()?F:['ls','chmod'].concat(F.map(function(f){return './'+f;}));
+ var c=opts.filter(function(x){return x.indexOf(w)===0&&x!==w;});return c.length===1?pre+c[0]+' ':null;},
+
+init:function(){return {mode:{'README.md':'644','deploy.sh':'644','secrets.env':'600','src':'755'},sel:null,draft:null};},
+predict:{correct:'a',why:{
+ a:'this is what happens: no x appears anywhere, so nobody may run it as a program.',
+ b:'owning a file lets you change its permissions, but running it still needs x.',
+ c:'.sh is only part of the name; Linux checks permissions, not file extensions.',
+ d:'running a file does not ask for a password; without x it is simply refused.'}},
+apply:{A:{fs:'apply-a',correct:'b',okNote:'<p>rw- is 6, r-- is 4, --- is 0: <code>640</code>.</p>',
+  why:{a:'644 also gives others r, so anyone could read the secrets.',b:'rw- = 6 for you, r-- = 4 for the group, --- = 0 for others.',c:'digits go owner, group, others: 460 gives you read only and the group read and write.',d:'7 and 5 add x for you and the group; a secrets file should not be runnable.'},
+  miss:{a:'644 gives others <code>r</code> (the last 4), so everyone could read the secrets.',c:'Digits go owner, group, others. 460 gives you read only and gives the group read and write.',d:'7 and 5 include <code>x</code>; a secrets file should not be runnable.'},
+  hint:'Write each group as letters first (you rw-, group r--, others ---), then add r = 4, w = 2, x = 1.'},
+ B:{fs:'apply-b',correct:'d',reveal:'The match is <code>-rw-r-----</code>, which is mode 640.',
+  why:{a:'others keep r.',b:'owner and group are swapped: you could not write.',c:'adds x for you and the group.',d:'rw- for you, r-- for the group, nothing for others.'}}},
+str:function(m,dir){var L='rwx',s=dir?'d':'-';for(var i=0;i<3;i++){var v=+m.charAt(i);s+=(v&4?'r':'-')+(v&2?'w':'-')+(v&1?'x':'-');}return s;},
+act:function(a,b,S,api){var t=S.t;
+ if(a==='pick'&&S.step===2){t.sel=b.getAttribute('data-f');var why={'README.md':'README.md is rw-r--r--: the group and others can read it too.','deploy.sh':'deploy.sh is rw-r--r--: the group and others can read it too.','src':'src is a directory (d) with rwxr-xr-x: everyone can read and enter it.','secrets.env':'secrets.env is rw-------: only ana, the owner, can read or write it.'}[t.sel];
+  var ok=t.sel==='secrets.env';api.say('<p>'+api.esc(why)+'</p>'+(ok?'<p><strong>Goal met.</strong> Continue when ready.</p>':'<p>Goal still open: find the file whose group and others parts are all <code>-</code>.</p>'));if(ok&&!S.done.read){api.complete('read');}}
+ if(a==='bit'&&S.step===3){var i=+b.getAttribute('data-b');t.draft[i]=!t.draft[i];var m=this.fromBits(t.draft);
+  var ok=m==='750';api.say('<p>Plan is now <code>'+this.str(m,false)+'</code>, mode <code>'+m+'</code>.</p>'+(ok?'<p><strong>Goal met:</strong> rwx = 7, r-x = 5, --- = 0. Continue when ready.</p>':'<p>Goal still open: aim for 7, 5, 0.</p>'));
+  if(ok&&!S.done.plan){api.complete('plan');}}
+ this.render(S,api);},
+fromBits:function(b){var s='';for(var g=0;g<3;g++){s+=String((b[g*3]?4:0)+(b[g*3+1]?2:0)+(b[g*3+2]?1:0));}return s;},
+run:function(line,term,S,api){var t=S.t,out=[],msg='',self=this;function o(c,s){out.push([c,s]);}
+ o('c',line);var w=line.trim().split(/\s+/).filter(Boolean),done=false;
+ if(!w.length){o('h','(nothing to run)');}
+ else if(/[;&|<>$`*"'\\]/.test(line)){o('e','Quotes, pipes and other operators are not available in this practice terminal.');}
+ else if(w[0]==='ls'&&w.length===2&&w[1]==='-l'){['README.md','deploy.sh','secrets.env','src'].forEach(function(f){o('o',self.str(t.mode[f],f==='src')+' 1 ana dev '+f);});}
+ else if(w[0]==='chmod'){
+  if(w.length!==3){o('e','chmod: use it as chmod MODE FILE, for example chmod 750 deploy.sh');}
+  else if(!/^[0-7]{3}$/.test(w[1])){o('e','chmod '+w[1]+': only three-digit numeric modes are available in this practice terminal.');}
+  else if(!t.mode[w[2]]){o('e',"chmod: cannot access '"+w[2]+"': No such file or directory");}
+  else{t.mode[w[2]]=w[1];if(w[2]==='deploy.sh'){t.applied=w[1];
+    if(w[1]==='750'){msg='deploy.sh is now '+self.str('750')+'. Now run it.';}
+    else if(/^7[0-7]7$|^[0-7][0-7][2367]$/.test(w[1])){msg='That gives others write access ('+self.str(w[1])+'). Anyone could change the script. The task asks for 750.';}
+    else{msg='deploy.sh is now '+self.str(w[1])+'. The task asks for 750.';}}
+   else{msg=w[2]+' is now '+self.str(w[1],w[2]==='src')+'. The task is about deploy.sh.';}}}
+ else if(/^\.\//.test(w[0])){var f=w[0].slice(2);
+  if(!t.mode[f]){o('e','bash: '+w[0]+': No such file or directory');}
+  else if(f==='src'){o('e','bash: ./src: Is a directory');}
+  else{var own=+t.mode[f].charAt(0);
+   if(!(own&1)){o('e','bash: '+w[0]+': Permission denied');msg='No x for the owner, so the shell refuses to run '+f+'.';}
+   else if(!(own&4)){o('e','bash: '+w[0]+': Permission denied');msg='x alone is not enough for a script: the shell must also read it (r).';}
+   else if(f!=='deploy.sh'){o('o','(simulated) '+f+' is not a script, so running it would fail.');}
+   else{o('o','deploy: checks passed (simulated output)');if(t.mode['deploy.sh']==='750'){done=true;msg='deploy.sh has mode 750 and ran.';}else{msg='It ran, but the task asks for mode 750.';}}}}
+ else{o('e',w[0]+': not available in this practice terminal');msg='Here you can use ls -l, chmod and ./deploy.sh. No credit for that line.';}
+ var log=api.$('log-'+term);out.forEach(function(x){var dv=document.createElement('div');dv.className=x[0];dv.textContent=x[1];log.appendChild(dv);});log.scrollTop=log.scrollHeight;
+ api.say('<p>'+api.esc(msg||'Command run.')+'</p>'+(S.done.chmod?'<p>Goal already met. Continue when ready.</p>':(done?'<p><strong>Goal met.</strong> Continue when ready.</p>':'<p>Goal still open.</p>')));
+ if(done&&!S.done.chmod){api.complete('chmod');}
+ this.render(S,api);},
+render:function(S,api){var t=S.t,self=this,step=S.step;
+ var f=step===2?t.sel:(step===5?'secrets.env':'deploy.sh');
+ if(step===3&&!t.draft){t.draft=[];var m=t.mode['deploy.sh'];for(var g=0;g<3;g++){var v=+m.charAt(g);t.draft.push(!!(v&4),!!(v&2),!!(v&1));}}
+ var mode=f?(step===3?self.fromBits(t.draft):t.mode[f]):null;
+ api.qa('.frow').forEach(function(b){var n=b.getAttribute('data-f');b.disabled=step!==2;b.setAttribute('aria-pressed',n===f&&step!==1?'true':'false');
+  b.querySelector('.perm').textContent=self.str(t.mode[n],n==='src');});
+ api.$('gfile').textContent=f||'(select a file)';
+ api.$('gnote').textContent=step===3?'plan only, not applied':'';
+ api.qa('.bit').forEach(function(b){var i=+b.getAttribute('data-b'),g=Math.floor(i/3),v=mode?+mode.charAt(g):0,on=!!(v&[4,2,1][i%3]);
+  b.disabled=step!==3;b.setAttribute('aria-pressed',on?'true':'false');b.textContent=on?'rwx'.charAt(i%3):'-';});
+ api.qa('.dig').forEach(function(d){var g=+d.getAttribute('data-dig');d.textContent=mode?mode.charAt(g):'-';});
+ api.$('pstr').textContent=mode?self.str(mode,f==='src'):'----------';api.$('pnum').textContent=mode||'---';
+}
+};
+
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
+var SNAP={};
+function clone(o){return JSON.parse(JSON.stringify(o));}
+var LAST=TOPIC.steps,S;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init()};}
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,get S(){return S;}};
+function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
+function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}}
+function progress(){
+  var acts=TOPIC.acts,n=0,set=0;
+  acts.forEach(function(a,i){var p=qa('.pip',$('progress'))[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
+    p.className='pip'+(on?(S.settled[a]?' settled':' on'):'');});
+  $('prog-text').textContent='Activities done: '+n+' of '+acts.length+(set?' ('+set+' answered, not marked correct)':'');
+}
+function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
+function show(step,focus){
+  S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
+  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
+  if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
+    SNAP[step]={html:h,t:clone(S.t)};}
+  var rb=$('reset');rb.disabled=(step===LAST);
+  $('next').hidden=true;
+  if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
+    c.textContent='All '+TOPIC.acts.length+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: review its explanation above before moving on.':'.');}}
+  else{main.removeAttribute('data-pep-complete');}
+  TOPIC.render(S,api);progress();
+  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+}
+function optLabel(inp){return inp.closest('label');}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function explainList(set,chosen,mark){
+  var html='<ul>';
+  Object.keys(set.why).forEach(function(k){
+    var txt=qa('input[value="'+k+'"]',$(set.fs))[0];var lab=txt?optLabel(txt).textContent.trim():k;
+    var tag=(k===set.correct)?'<strong>Correct: </strong>':'<strong>Not this: </strong>';
+    html+='<li>'+(mark?tag:'')+'<span class="on">'+esc(lab)+'</span>: '+set.why[k]+(k===chosen?' <em>(your choice)</em>':'')+'</li>';
+  });
+  return html+'</ul>';
+}
+function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===set.correct&&(chosen===set.correct)){l.classList.add('right');}
+  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
+function firstDetails(){return '<details><summary>First question: every option explained</summary>'+explainList(TOPIC.apply.A,null,true)+'</details>';}
+function badges(ok,mine,who){return '<span class="badges">'+(mine?'<span class="badge me">'+who+'</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
+function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
+  w.innerHTML=badges(i.value===set.correct,i.value===chosen,'Your answer')+set.why[i.value];sp.appendChild(w);});}
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
+function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
+  var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
+  var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function checkApply(which){
+  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  if(which==='a'){
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
+    if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText());complete('apply');TOPIC.render(S,api);focusVerdict();return;}
+    S.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
+    say('<p class="verdict no">Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <span class="on">'+esc(S.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
+    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});TOPIC.render(S,api);
+    var t=$('task-apply-b');if(t){t.focus();}
+  } else {
+    var c2=checked('apply-b');if(!c2){return;}
+    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
+    if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+firstDetails()+confText());}
+    else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
+      say('<p class="verdict set">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+firstDetails()+confText());}
+    complete('apply');TOPIC.render(S,api);focusVerdict();
+  }
+}
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
+  if(!ch||!pc){return;}
+  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
+    if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
+  var html='<p class="verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+' Each option, explained:</p><ul class="explain">';
+  Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
+    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
+  say(html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||''),1);complete('predict');
+}
+function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
+function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
+  Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
+  qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
+  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  show(step,false);syncPrompt();var h=$('teach-'+step+'-h');if(h){h.focus();}}
+d.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b){return;}
+  if(b.id==='reset'){restart();return;}
+  if(b.id==='next'){show(S.step+1);return;}
+  if(b.id==='predict-check'){checkPredict();return;}
+  if(b.id==='apply-check'){checkApply('a');return;}
+  if(b.id==='apply-check-b'){checkApply('b');return;}
+  if(b.classList.contains('runbtn')){runTerminal(b.closest('.cmdline'));return;}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+});
+d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
+var HIST={};
+function prompt(){return TOPIC.prompt?TOPIC.prompt(S):'$';}
+function syncPrompt(){qa('.cmdline .pr').forEach(function(n){n.textContent=prompt();});}
+function runTerminal(box){
+  if(!box){return;}var inp=box.querySelector('input[type="text"]');if(!inp||inp.disabled){return;}
+  var line=inp.value,H=HIST[inp.id]||(HIST[inp.id]={l:[],i:0});if(line.trim()){H.l.push(line);}H.i=H.l.length;
+  var p=prompt();inp.value='';TOPIC.run(line,box.getAttribute('data-term'),S,api);
+  qa('.log .c:not([data-p])').forEach(function(n){n.setAttribute('data-p',p);});syncPrompt();inp.focus();}
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closest('.cmdline')||t.tagName!=='INPUT'){return;}
+  var H=HIST[t.id]||(HIST[t.id]={l:[],i:0});
+  if(e.key==='Enter'&&!e.isComposing){e.preventDefault();runTerminal(t.closest('.cmdline'));}
+  else if(e.key==='ArrowUp'){if(!H.l.length){return;}e.preventDefault();H.i=Math.max(0,H.i-1);t.value=H.l[H.i];}
+  else if(e.key==='ArrowDown'){if(!H.l.length){return;}e.preventDefault();H.i=Math.min(H.l.length,H.i+1);t.value=H.l[H.i]||'';}
+  else if(e.key==='Tab'&&!e.shiftKey&&!e.altKey&&!e.ctrlKey&&!e.metaKey){
+    // capture Tab only when a completion actually changes the line, so Tab never traps focus
+    var v=t.value.trim()&&TOPIC.complete?TOPIC.complete(t.value,S):null;if(v&&v!==t.value){e.preventDefault();t.value=v;}}
+  else if(e.key==='Escape'){var tk=$('task-'+S.step);if(tk){e.preventDefault();tk.setAttribute('tabindex','-1');tk.focus();}}
+});
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+setTheme(mq&&mq.matches?'dark':'light');
+if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+fresh();show(1,false);syncPrompt();
+})();
+
+</script>
+</body>
+</html>
