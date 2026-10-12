@@ -9,7 +9,7 @@ Rule applied per topic: a first-party video (official project, vendor or univers
 - YouTube public search result pages (no sign-in) for queries listed below, reading video id, channel, title and length.
 - Each candidate's watch page and YouTube oEmbed fetched without sign-in: oEmbed status, title, author, `lengthSeconds`, playability status, `playableInEmbed`, `isUnlisted`, publish date, view count.
 - Fit judged from video descriptions and chapter markers (first-party picks) or the 2026-10-07 legacy storyboard-frame review (legacy picks). No video was watched end to end and no transcript was read.
-- Receipts written by `node tools/net/check-video.mjs` to `evidence/git-linux-ai-foundations/linux-foundations/<topic>/video.json`.
+- Receipts written by `node tools/net/check-video.mjs` to `authoring/evidence/git-linux-ai-foundations/linux-foundations/<topic>/video.json`.
 
 ## YouTube queries run
 
