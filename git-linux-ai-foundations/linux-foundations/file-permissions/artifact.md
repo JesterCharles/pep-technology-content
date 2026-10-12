@@ -49,7 +49,7 @@ Recap
     ls -lshow permissionschmod 750 frwxr-x---chmod 644 frw-r--r--chmod 600 frw-------./script.shrun a script here
     chmod also has a letter form, such as chmod u+x deploy.sh; this topic practises the numeric form. A script also needs r because the shell reads it.
 
-  Sources and review dateVerified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU coreutils 9.11: chmod(1) numeric and symbolic modesPOSIX.1-2024: ls long format permissionsLinux man-pages 6.19: execve(2) errors and interpreter scriptsGNU Bash 5.3 manual page: command execution
+  Sources and review dateChecked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Coreutils manual: chmod invocationGNU Coreutils manual: numeric modesPOSIX.1-2024: ls long format permissionsLinux man-pages 6.19: execve(2) errors and interpreter scriptsGNU Bash 5.3 Reference Manual: command search and execution
   Next topic: Environment variables and keeping secrets out of code
 
 ## Cheat sheet
@@ -58,11 +58,11 @@ Cheat sheet
     ls -lshow permissionschmod 750 frwxr-x---chmod 644 frw-r--r--chmod 600 frw-------./script.shrun a script here
     chmod also has a letter form, such as chmod u+x deploy.sh; this topic practises the numeric form. A script also needs r because the shell reads it.
 
-Sources and review dateVerified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU coreutils 9.11: chmod(1) numeric and symbolic modesPOSIX.1-2024: ls long format permissionsLinux man-pages 6.19: execve(2) errors and interpreter scriptsGNU Bash 5.3 manual page: command execution
+Sources and review dateChecked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Coreutils manual: chmod invocationGNU Coreutils manual: numeric modesPOSIX.1-2024: ls long format permissionsLinux man-pages 6.19: execve(2) errors and interpreter scriptsGNU Bash 5.3 Reference Manual: command search and execution
 
 ## Sources
 
-Sources and review dateVerified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU coreutils 9.11: chmod(1) numeric and symbolic modesPOSIX.1-2024: ls long format permissionsLinux man-pages 6.19: execve(2) errors and interpreter scriptsGNU Bash 5.3 manual page: command execution
+Sources and review dateChecked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Coreutils manual: chmod invocationGNU Coreutils manual: numeric modesPOSIX.1-2024: ls long format permissionsLinux man-pages 6.19: execve(2) errors and interpreter scriptsGNU Bash 5.3 Reference Manual: command search and execution
 
 ## Static interaction alternatives
 

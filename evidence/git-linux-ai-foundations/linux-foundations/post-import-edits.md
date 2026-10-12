@@ -32,3 +32,12 @@ Every change to imported page bytes after the byte-faithful import (commit 664f7
 - Evidence: frozen `tools/timing/estimate_reading.py` (sha256 `0deca96bf5e367aeae51a82abdbd4b6ce0d0289ecc9868c9eff3701016edf96f`) P50 before the objectives list (commit 478f4b4 bytes) and after it: navigating-the-shell 7.95 to 8.12, pipes-and-grep 5.89 to 6.03. The added list alone accounts for the difference (removing only the list restores 7.95).
 - Change: aboutLabel, budget and modeledWorstPath raised 8 to 9 (navigating-the-shell) and 6 to 7 (pipes-and-grep); the `pep:budget-minutes` meta follows `topic.json`. T14 passes and the F1 day total still fits.
 - Decision: approved by Firstmate on 2026-10-12 (option a).
+
+## Correction loop 1 (module critics, reconciliation module-reconciliation.json)
+
+- sme-01 (pipes-and-grep): teaching step 2, recap and cheat sheet now say a pipe sends standard output (stdout) to the next command's standard input (stdin) and that stderr is not passed by a plain `|`; the o1 GIFT item says the same. Estimator P50 5.89 -> 6.16 after all edits, within the 7-minute budget.
+- sme-03 (environment-variables-and-secrets): teaching, recap, cheat sheet, the simulator's unsupported-command guidance and the terminal static alternative show `echo "$NAME"` / `echo "$API_KEY"`; the simulator's accepted commands are unchanged (it already accepts the quoted form).
+- sme-02 (navigating-the-shell, pipes-and-grep, file-permissions, environment-variables-and-secrets): man7.org mirror citations for GNU Bash, grep and Coreutils replaced in the learner source disclosures and `sources.json` by gnu.org manual pages, live-fetched with retrieval time and sha256. Linux man-pages (execve, bind, connect), POSIX, Git, GitHub and RFC Editor sources are kept. The disclosure date line now reads "Checked" / "Partly checked against these live sources on 2026-10-12".
+- sme-04: each `video.json` names its `video-artifact.md` in `reviewedPath`, so the module lock binds it to the reviewed file.
+- education-02: every topic's lab-absence reason now states the final rationale (embedded practice covers the objectives; F1 has no required lab; the approved course-level lab is planned for course assembly).
+- education-01: waits for the Markdown-derivation tooling fix (pep-b13-md-derivation); `artifact.md` here is regenerated with the current tool only to track the HTML edits, never hand-edited.

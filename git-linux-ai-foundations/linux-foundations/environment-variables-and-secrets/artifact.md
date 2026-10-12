@@ -13,7 +13,7 @@ Start with a guess
 Practice prediction, not scored. ./app is a small program that prints the API_KEY it receives.
 
 Shell variables and exported ones
-  NAME=value sets a variable in your shell; no spaces around =. echo $NAME prints it.
+  NAME=value sets a variable in your shell; no spaces around =. echo "$NAME" prints it.
   A program you start gets a copy of the environment, which holds only exported variables. export NAME marks an existing variable; export NAME=value sets and exports in one step.
 
 Keep secrets out of code
@@ -50,26 +50,26 @@ app.sh
 ## Recap
 
 Recap
-  NAME=value sets a shell variable; echo $NAME prints it.Programs you start only receive exported variables: export NAME=value.Code reads secrets from the environment; the real values sit in a .env listed in .gitignore.A secret that was committed stays in history, so change it.
+  NAME=value sets a shell variable; echo "$NAME" prints it.Programs you start only receive exported variables: export NAME=value.Code reads secrets from the environment; the real values sit in a .env listed in .gitignore.A secret that was committed stays in history, so change it.
 
     Cheat sheet
-    NAME=valueshell variableexport NAME=valuepassed to programs you startecho $NAMEprint a valueenvlist exported variables.gitignore with .envgit ignores the file
+    NAME=valueshell variableexport NAME=valuepassed to programs you startecho "$NAME"print a valueenvlist exported variables.gitignore with .envgit ignores the file
     A .env file is not read by the shell automatically; your tools or framework load it. .gitignore only affects files git is not already tracking.
 
-  Sources and review datePartly verified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 manual page: parameters and assignmentGNU Bash 5.3 manual page: export and environmentGNU coreutils 9.11: env(1)Git documentation: gitignoreGitHub Docs: removing sensitive data from a repositoryThe .env and .env.example files are a common convention, not a feature of bash or git; no official source defines them.
+  Sources and review datePartly checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: shell parameters and assignmentGNU Bash 5.3 Reference Manual: environment and exportGNU Coreutils manual: env invocationGit documentation: gitignoreGitHub Docs: removing sensitive data from a repositoryThe .env and .env.example files are a common convention, not a feature of bash or git; no official source defines them.
   Next topic: Localhost and ports
 
 ## Cheat sheet
 
 Cheat sheet
-    NAME=valueshell variableexport NAME=valuepassed to programs you startecho $NAMEprint a valueenvlist exported variables.gitignore with .envgit ignores the file
+    NAME=valueshell variableexport NAME=valuepassed to programs you startecho "$NAME"print a valueenvlist exported variables.gitignore with .envgit ignores the file
     A .env file is not read by the shell automatically; your tools or framework load it. .gitignore only affects files git is not already tracking.
 
-Sources and review datePartly verified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 manual page: parameters and assignmentGNU Bash 5.3 manual page: export and environmentGNU coreutils 9.11: env(1)Git documentation: gitignoreGitHub Docs: removing sensitive data from a repositoryThe .env and .env.example files are a common convention, not a feature of bash or git; no official source defines them.
+Sources and review datePartly checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: shell parameters and assignmentGNU Bash 5.3 Reference Manual: environment and exportGNU Coreutils manual: env invocationGit documentation: gitignoreGitHub Docs: removing sensitive data from a repositoryThe .env and .env.example files are a common convention, not a feature of bash or git; no official source defines them.
 
 ## Sources
 
-Sources and review datePartly verified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 manual page: parameters and assignmentGNU Bash 5.3 manual page: export and environmentGNU coreutils 9.11: env(1)Git documentation: gitignoreGitHub Docs: removing sensitive data from a repositoryThe .env and .env.example files are a common convention, not a feature of bash or git; no official source defines them.
+Sources and review datePartly checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: shell parameters and assignmentGNU Bash 5.3 Reference Manual: environment and exportGNU Coreutils manual: env invocationGit documentation: gitignoreGitHub Docs: removing sensitive data from a repositoryThe .env and .env.example files are a common convention, not a feature of bash or git; no official source defines them.
 
 ## Static interaction alternatives
 
@@ -83,7 +83,7 @@ Prediction (practice, not scored): you type API_KEY=demo-123, then ./app. Option
 
 ### terminal
 
-Terminal activity: API_KEY is set but not exported. Export it, then run ./app. Worked example: export API_KEY, then ./app prints app: using API_KEY=demo-123. echo $API_KEY reads the value in the shell itself.
+Terminal activity: API_KEY is set but not exported. Export it, then run ./app. Worked example: export API_KEY, then ./app prints app: using API_KEY=demo-123. echo "$API_KEY" reads the value in the shell itself.
 
 ### explore
 

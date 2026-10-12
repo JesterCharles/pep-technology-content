@@ -68,7 +68,7 @@ Recap
     pwdprint the current folderls / ls -alist entries / include hidden onesls pathlist another folder without movingcd pathmove to a foldercd ..up one levelcd ~ or cdhomecd "class notes"a name with a space
     Error wording, ls ordering and quoting of spaced names vary between shells and systems; the rules above do not.
 
-  Sources and review datePartly verified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 manual page: cd and other builtinsGNU Bash 5.3 manual page: quotingGNU Bash 5.3 manual page: tilde and other expansionsGNU coreutils 9.11: ls(1)GNU coreutils 9.11: pwd(1)Not confirmed by these sources: the exact wording of the "too many arguments" error, GNU ls quoting a spaced name by default on a terminal, and which folder a new terminal opens in. The page labels these as varying.
+  Sources and review datePartly checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: cd and other builtinsGNU Bash 5.3 Reference Manual: quotingGNU Bash 5.3 Reference Manual: tilde expansionGNU Coreutils manual: ls invocationGNU Coreutils manual: pwd invocationNot confirmed by these sources: the exact wording of the "too many arguments" error, GNU ls quoting a spaced name by default on a terminal, and which folder a new terminal opens in. The page labels these as varying.
   Next topic: Pipes and grep
 
 ## Cheat sheet
@@ -77,11 +77,11 @@ Cheat sheet
     pwdprint the current folderls / ls -alist entries / include hidden onesls pathlist another folder without movingcd pathmove to a foldercd ..up one levelcd ~ or cdhomecd "class notes"a name with a space
     Error wording, ls ordering and quoting of spaced names vary between shells and systems; the rules above do not.
 
-Sources and review datePartly verified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 manual page: cd and other builtinsGNU Bash 5.3 manual page: quotingGNU Bash 5.3 manual page: tilde and other expansionsGNU coreutils 9.11: ls(1)GNU coreutils 9.11: pwd(1)Not confirmed by these sources: the exact wording of the "too many arguments" error, GNU ls quoting a spaced name by default on a terminal, and which folder a new terminal opens in. The page labels these as varying.
+Sources and review datePartly checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: cd and other builtinsGNU Bash 5.3 Reference Manual: quotingGNU Bash 5.3 Reference Manual: tilde expansionGNU Coreutils manual: ls invocationGNU Coreutils manual: pwd invocationNot confirmed by these sources: the exact wording of the "too many arguments" error, GNU ls quoting a spaced name by default on a terminal, and which folder a new terminal opens in. The page labels these as varying.
 
 ## Sources
 
-Sources and review datePartly verified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 manual page: cd and other builtinsGNU Bash 5.3 manual page: quotingGNU Bash 5.3 manual page: tilde and other expansionsGNU coreutils 9.11: ls(1)GNU coreutils 9.11: pwd(1)Not confirmed by these sources: the exact wording of the "too many arguments" error, GNU ls quoting a spaced name by default on a terminal, and which folder a new terminal opens in. The page labels these as varying.
+Sources and review datePartly checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: cd and other builtinsGNU Bash 5.3 Reference Manual: quotingGNU Bash 5.3 Reference Manual: tilde expansionGNU Coreutils manual: ls invocationGNU Coreutils manual: pwd invocationNot confirmed by these sources: the exact wording of the "too many arguments" error, GNU ls quoting a spaced name by default on a terminal, and which folder a new terminal opens in. The page labels these as varying.
 
 ## Static interaction alternatives
 

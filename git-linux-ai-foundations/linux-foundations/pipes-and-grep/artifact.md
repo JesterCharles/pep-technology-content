@@ -14,7 +14,7 @@ Read the log on the right, then guess. Practice prediction, not scored.
 
 Filter lines with grep, join commands with |
   grep PATTERN FILE prints only the lines that contain the pattern. It matches exact case, so ERROR and error differ.
-  A pipe, |, sends one command's output into the next command's input. In cat app.log | grep ERROR, cat prints the file and grep filters what flows in.
+  A pipe, |, sends one command's standard output (stdout) into the next command's standard input (stdin). Error messages go to standard error (stderr), which a plain | does not pass. In cat app.log | grep ERROR, cat prints the file and grep filters what flows in.
 
 Two useful options: -i and -v
 
@@ -49,26 +49,26 @@ app.log
 ## Recap
 
 Recap
-  grep keeps lines that contain a pattern; it is case-sensitive unless you add -i.-v keeps the lines that do not match.A pipe | sends one command's output into the next, left to right.wc -l counts lines, so filter first, then count.
+  grep keeps lines that contain a pattern; it is case-sensitive unless you add -i.-v keeps the lines that do not match.A pipe | sends one command's standard output into the next command's standard input, left to right; stderr is not passed.wc -l counts lines, so filter first, then count.
 
     Cheat sheet
-    grep PAT filelines containing PATgrep -i PATignore casegrep -v PATlines not containing PATa | ba's output becomes b's inputwc -lcount lines
+    grep PAT filelines containing PATgrep -i PATignore casegrep -v PATlines not containing PATa | ba's stdout becomes b's stdinwc -lcount lines
     grep patterns are regular expressions; plain words like the ones here match literally.
 
-  Sources and review dateVerified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 manual page: pipelinesGNU grep 3.12: grep(1)GNU grep 3.12: options -i and -vGNU coreutils 9.11: wc(1)
+  Sources and review dateChecked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: pipelinesGNU grep manual: introductionGNU grep manual: matching control, -i and -vGNU Coreutils manual: wc invocation
   Next topic: File permissions
 
 ## Cheat sheet
 
 Cheat sheet
-    grep PAT filelines containing PATgrep -i PATignore casegrep -v PATlines not containing PATa | ba's output becomes b's inputwc -lcount lines
+    grep PAT filelines containing PATgrep -i PATignore casegrep -v PATlines not containing PATa | ba's stdout becomes b's stdinwc -lcount lines
     grep patterns are regular expressions; plain words like the ones here match literally.
 
-Sources and review dateVerified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 manual page: pipelinesGNU grep 3.12: grep(1)GNU grep 3.12: options -i and -vGNU coreutils 9.11: wc(1)
+Sources and review dateChecked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: pipelinesGNU grep manual: introductionGNU grep manual: matching control, -i and -vGNU Coreutils manual: wc invocation
 
 ## Sources
 
-Sources and review dateVerified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 manual page: pipelinesGNU grep 3.12: grep(1)GNU grep 3.12: options -i and -vGNU coreutils 9.11: wc(1)
+Sources and review dateChecked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.GNU Bash 5.3 Reference Manual: pipelinesGNU grep manual: introductionGNU grep manual: matching control, -i and -vGNU Coreutils manual: wc invocation
 
 ## Static interaction alternatives
 
