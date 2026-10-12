@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<meta name="pep:budget-minutes" content="10">
+<meta name="pep:course" content="Git/Linux/AI Foundations">
+<meta name="pep:module" content="AI Foundations">
+<meta name="pep:topic" content="How Agile teams work: Scrum and user stories">
+<meta name="pep:topic-id" content="agile-scrum-user-stories">
+<meta name="pep:position" content="3 of 5">
+<title>How Agile teams work: Scrum and user stories · AI Foundations</title>
+<style>
+:root{
+  --bg:#eef1f4;--surface:#f9fafb;--ink:#1b2129;--muted:#4a5462;--rule:#6c7787;--line:#cbd2db;
+  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
+  --on-teal:#ffffff;--focus:#1f4fbf;--code-bg:#e3e8ee;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#13171c;--surface:#1b2128;--ink:#e4e9ef;--muted:#a9b4c1;--rule:#7a8696;--line:#323b46;
+  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
+  --on-teal:#0b1311;--focus:#8fb4ff;--code-bg:#262e38;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+::selection{background:var(--teal);color:var(--on-teal)}
+code,kbd,.mono{font-family:var(--mono);font-size:.94em}
+code{background:var(--code-bg);padding:0 var(--s1);border-radius:3px}
+a{color:var(--ink);text-underline-offset:3px}
+main{max-width:1280px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
+.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--s2) var(--s6);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
+h1{margin:var(--s1) 0 0;font-size:22px;line-height:28px;letter-spacing:-.01em;text-wrap:balance}
+.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2)}
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:repeating-linear-gradient(135deg,var(--amber) 0 3px,transparent 3px 6px);border-color:var(--amber)}
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s3) var(--s6);padding-top:var(--s2);align-items:start}
+.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
+.teach p{margin:0 0 var(--s2);max-width:62ch}
+.teach p:last-child{margin-bottom:0}
+.teach ul,.teach ol{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
+.teach li{margin-bottom:var(--s1)}
+.synth{display:inline-block;margin:0 0 var(--s2);padding:2px var(--s2);border:1px dashed var(--amber);border-radius:3px;font-size:14px;font-weight:600;color:var(--amber)}
+.task{padding:var(--s3) var(--s4);border-left:4px solid var(--teal);background:var(--surface)}
+.task p{margin:0;font-weight:600}
+.task p+p{margin-top:var(--s2)}
+.task .sub{font-weight:400;color:var(--muted);font-size:15px}
+.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface);min-width:0}
+.model code{font-size:1em}
+.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin:0 0 var(--s2)}
+.control{min-width:0}
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start}
+.feedback{width:100%;min-width:0;font-size:15px;line-height:1.35}
+.feedback:empty{display:none}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin:0}
+.feedback .verdict{font-weight:700}
+.feedback .ok{color:var(--teal)}
+.feedback .no{color:var(--red)}
+.feedback .set{color:var(--amber)}
+.feedback .info{color:var(--ink)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+.recap ul{padding-left:20px}
+.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.recap summary{cursor:pointer;font-weight:700;min-height:28px}
+.sources ul{margin:var(--s2) 0;padding-left:20px;font-size:15px}
+.sources li{margin-bottom:var(--s1);overflow-wrap:anywhere}
+.sources p{font-size:15px;color:var(--muted)}
+.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
+.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
+.next-topic{font-weight:700}
+.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
+.complete.settled{border-color:var(--amber);background:var(--amber-soft)}
+[hidden]{display:none!important}
+.loop{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s3);margin:0;padding:0;list-style:none;counter-reset:none}
+.ev{position:relative;display:flex;flex-direction:column;gap:2px;min-height:76px;padding:var(--s2);border:2px dashed var(--rule);border-radius:4px;background:var(--bg)}
+.ev+.ev::before{content:"";position:absolute;left:-14px;top:50%;width:12px;height:2px;background:var(--rule)}
+.ev.on{border:2px solid var(--teal)}
+.ev.cur{border:2px dashed var(--focus)}
+.evn{font-size:15px;font-weight:700;color:var(--muted)}
+.evv{font-size:15px;font-weight:700;line-height:1.25}
+.evx{font-size:15px;color:var(--muted)}
+.again{margin:var(--s2) 0;font-size:15px;color:var(--muted);padding-top:var(--s1);border-top:2px solid var(--line)}
+.roles{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:0;padding:0;list-style:none;font-size:15px}
+.stage[data-at="3"] .roles,.stage[data-at="4"] .roles,.stage[data-at="5"] .roles,.stage[data-at="3"] .again,.stage[data-at="4"] .again,.stage[data-at="5"] .again{display:none}
+.stage[data-at="3"] .ev,.stage[data-at="4"] .ev,.stage[data-at="5"] .ev{min-height:0;padding:var(--s1) var(--s2)}
+.stage[data-at="3"] .evx,.stage[data-at="4"] .evx,.stage[data-at="5"] .evx{display:none}
+.story{margin-top:var(--s2);padding:var(--s2) var(--s3);border:2px solid var(--amber);border-radius:4px;background:var(--amber-soft)}
+.lk{margin:0 0 var(--s1);font-size:15px;font-weight:700;color:var(--amber)}
+.sline{margin:0 0 2px;font-size:15px;display:grid;grid-template-columns:96px minmax(0,1fr);gap:var(--s2)}
+.sline.ac{grid-template-columns:minmax(0,1fr);gap:0;margin-top:var(--s1);padding-top:var(--s1);border-top:1px solid var(--rule)}
+.sk{font-weight:700}
+.sv.bad{color:var(--red);text-decoration:underline wavy;text-underline-offset:3px}
+.dnd-help{margin:0 0 var(--s2);font-size:15px;color:var(--muted)}
+.bank{display:flex;flex-wrap:wrap;gap:var(--s2);min-height:44px;padding:6px;border:2px dashed var(--rule);border-radius:4px;margin-bottom:var(--s2)}
+.card{position:relative;cursor:grab;padding-left:24px !important;box-shadow:0 1px 3px rgba(0,0,0,.14);min-height:40px;padding:var(--s1) var(--s2);font-size:15px;line-height:1.3;text-align:left;background:var(--surface);color:var(--ink);border:2px solid var(--rule);border-radius:4px;touch-action:none;user-select:none;-webkit-user-select:none;max-width:100%}
+.card:hover{border-color:var(--ink)}
+.card::before{content:"";position:absolute;left:8px;top:50%;width:8px;height:16px;transform:translateY(-50%);background-image:radial-gradient(circle,var(--muted) 1.4px,transparent 1.7px);background-size:4px 5.3px}
+.card:active{cursor:grabbing}
+.lines.holding .drop:not(.filled){border-color:var(--teal);background:var(--teal-soft);color:var(--ink)}
+.card[aria-pressed="true"]{border-color:var(--focus);box-shadow:inset 4px 0 0 var(--focus)}
+.card.dragging{position:relative;z-index:5;box-shadow:0 10px 24px rgba(0,0,0,.3);cursor:grabbing}
+.lines{display:none;gap:var(--s2)}
+.stage[data-at="3"] .lines{display:grid}
+.stage[data-at="3"] .loop,.stage[data-at="3"] .story{display:none}
+@media (min-width:861px) and (max-height:740px){.card{min-height:36px;padding:2px var(--s2)}.drop{min-height:36px}.bank{padding:var(--s1);gap:var(--s1)}.lines{gap:var(--s1)}}
+@media (min-width:861px) and (max-height:800px){.stage[data-at="3"] .card{min-height:36px;padding-top:2px;padding-bottom:2px}.stage[data-at="3"] .bank{padding:var(--s1);gap:var(--s1);margin-bottom:var(--s1)}.stage[data-at="3"] .drop{min-height:40px}.stage[data-at="3"] .lines{gap:var(--s1)}.stage[data-at="3"] .dnd-help{margin-bottom:var(--s1)}}
+.line{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:var(--s2);align-items:center;position:relative}
+.lk2{font-size:15px;font-weight:700}
+.drop{min-height:44px;text-align:left;font-size:15px;line-height:1.3;background:var(--bg);color:var(--muted);border:2px dashed var(--rule);border-radius:4px;padding:var(--s1) var(--s3)}
+.drop.filled{color:var(--ink);border-style:solid;background:var(--surface)}
+.drop.over{border-style:solid;border-color:var(--focus);background:var(--teal-soft);color:var(--ink)}
+.drop:hover{border-color:var(--focus)}
+.drop.bad{border-color:var(--red);border-style:dashed;box-shadow:inset 4px 0 0 var(--red)}
+.hintb{min-height:40px;padding:var(--s1) var(--s3);background:transparent;color:var(--ink);border:1px solid var(--rule);font-size:15px}
+.pop{grid-column:1/-1;padding:var(--s2) var(--s3);border:2px solid var(--amber);border-radius:4px;background:var(--amber-soft);font-size:15px}
+.pop p{margin:0 0 var(--s1)}
+.pop button{min-height:36px;padding:2px var(--s3);font-size:15px;background:transparent;color:var(--ink);border:1px solid var(--rule)}
+@media (max-width:600px){.line{grid-template-columns:minmax(0,1fr) auto}.line .lk2{grid-column:1/-1}}
+.evbtns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.evbtns button{background:var(--surface);color:var(--ink);border:2px solid var(--rule);text-align:left}
+.evbtns button:hover{border-color:var(--ink)}
+.evbtns button:disabled{border:2px solid var(--teal);color:var(--muted);font-weight:400}
+.sels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2) var(--s3)}
+.sel{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;font-size:15px}
+.sel label{font-weight:700}
+.sel select{min-height:44px;font:inherit;font-size:15px;padding:var(--s1) var(--s2);color:var(--ink);background:var(--surface);border:2px solid var(--rule);border-radius:4px;min-width:0;width:100%}
+@media (max-width:600px){.loop{grid-template-columns:repeat(2,minmax(0,1fr))}.ev+.ev::before{display:none}.sels{grid-template-columns:minmax(0,1fr)}.evbtns{grid-template-columns:minmax(0,1fr)}}
+@media (min-width:861px) and (max-height:740px){
+  main{padding-top:var(--s2)}
+  .top{padding-bottom:var(--s1);row-gap:var(--s1)}
+  .stage{padding-top:var(--s1);row-gap:var(--s2)}
+  .col{gap:var(--s2)}
+  .task{padding:var(--s2) var(--s3)}
+  .opt{min-height:40px;padding:var(--s1) var(--s3)}
+  .row{margin-top:var(--s2)}
+  .teach h2{margin-bottom:var(--s1);font-size:19px;line-height:26px}
+  button{min-height:40px}
+}
+@media (max-width:860px){
+  main{padding:var(--s3) var(--s4) var(--s4)}
+  .top{grid-template-columns:minmax(0,1fr)}
+  .tools{justify-content:flex-start;flex-wrap:wrap}
+      .stage{grid-template-columns:minmax(0,1fr);gap:var(--s4)}
+  .fbrow{flex-direction:column}
+}
+@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<noscript><p class="nojs">This topic needs JavaScript for its practice model and checks. Turn JavaScript on to take part; nothing is sent anywhere.</p></noscript>
+<main id="lesson" data-pep-complete="false">
+  <header class="top">
+    <div class="hd">
+      <h1>How Agile teams work: Scrum and user stories</h1>
+    </div>
+    <div class="tools">
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 4</span><span class="pips" aria-hidden="true"><span class="pip" data-k="predict"></span><span class="pip" data-k="x1"></span><span class="pip" data-k="x2"></span><span class="pip" data-k="apply"></span></span></div>
+      <button type="button" class="ghost" id="reset" data-pep-reset>Restart this activity</button>
+    </div>
+  </header>
+
+  <div class="stage" id="stage" data-at="1">
+    <div class="col">
+      <section id="current-teaching" class="teach" aria-label="Current teaching">
+        <div data-step="1">
+          <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+          <p>A team works in two-week sprints. On the first day, the team meets to decide what to work on.</p>
+        </div>
+        <div data-step="2" hidden>
+          <h2 id="teach-2-h" tabindex="-1">One sprint, four events</h2>
+          <p>Scrum works in <strong>sprints</strong>: fixed periods of one month or less. <strong>Sprint Planning</strong> starts each sprint by choosing work from the ordered product backlog. During the sprint, Developers meet for a 15-minute <strong>Daily Scrum</strong> to adjust their plan. At the end, the <strong>Sprint Review</strong> inspects the result with stakeholders, then the <strong>Sprint Retrospective</strong> improves how the team works.</p>
+          <p>Three accountabilities: the Product Owner orders the backlog, the Scrum Master helps the team use Scrum, and Developers build the work.</p>
+        </div>
+        <div data-step="3" hidden>
+          <h2 id="teach-3-h" tabindex="-1">User stories and acceptance criteria</h2>
+          <p>Many Scrum teams write backlog items as <strong>user stories</strong>, a common practice the Scrum Guide does not require. Form: <strong>As a</strong> user role, <strong>I want</strong> something they can do, <strong>so that</strong> a benefit. Leave out how it will be built.</p>
+          <p>Each story gets <strong>acceptance criteria</strong>: checks with a clear yes or no. A testable criterion names a situation, an action and an observable result, often as Given, When, Then. “Works well” or “fast” cannot be checked.</p>
+        </div>
+        <div data-step="4" hidden>
+          <h2 id="teach-4-h" tabindex="-1">Apply it to a new story</h2>
+          <p>Testable criteria are also what you will check AI-made changes against in the next topic.</p>
+        </div>
+        <div data-step="5" hidden data-pep-recap class="recap">
+          <h2 id="teach-5-h" tabindex="-1">Recap</h2>
+          <ul>
+            <li>A sprint runs Sprint Planning, Daily Scrums, the Sprint Review, then the Sprint Retrospective.</li>
+            <li>The Product Owner orders the backlog, the Scrum Master helps the team use Scrum, Developers build.</li>
+            <li>A user story: As a role, I want a capability, so that a benefit.</li>
+            <li>Acceptance criteria are yes-or-no checks: a situation, an action, an observable result.</li>
+          </ul>
+          <details data-section-skip>
+            <summary>Cheat sheet</summary>
+            <table>
+              <tr><td>Sprint</td><td>fixed period, one month or less</td></tr>
+              <tr><td>Sprint Planning</td><td>choose work from the ordered product backlog</td></tr>
+              <tr><td>Daily Scrum</td><td>15 minutes, Developers adjust the plan</td></tr>
+              <tr><td>Sprint Review</td><td>inspect the result with stakeholders</td></tr>
+              <tr><td>Sprint Retrospective</td><td>improve how the team works</td></tr>
+              <tr><td>Acceptance criterion</td><td>Given a situation, When an action, Then an observable result</td></tr>
+            </table>
+            <p>Accountabilities and events follow the 2020 Scrum Guide; user stories and Given, When, Then are common team practices, not Scrum requirements.</p>
+          </details>
+          <details data-section-skip class="sources">
+            <summary>Sources and review date</summary>
+            <p>Claims on this page were checked against the live official pages below on 6 October 2026 (UTC). Links open outside this lesson.</p>
+            <ul>
+              <li><a href="https://scrumguides.org/scrum-guide.html">The 2020 Scrum Guide</a>: The Sprint; Sprint Planning; Daily Scrum; Sprint Review; Sprint Retrospective; Product Owner; Scrum Master. November 2020 edition, the current official guide as published on scrumguides.org; it does not mention user stories.</li>
+              <li><a href="https://cucumber.io/docs/gherkin/reference/">Gherkin Reference (Cucumber)</a>: Given and Then steps. Given, When, Then is a common way to write acceptance criteria, not a Scrum requirement.</li>
+            </ul>
+            <p>Not tied to one source: how widely teams use user stories is not measured here.</p>
+          </details>
+          <p id="complete" class="complete" data-pep-completion></p>
+          <p class="next-topic">Next topic: Checking AI-made changes before merging</p>
+        </div>
+      </section>
+      <section id="current-task" class="task" aria-label="Current task">
+        <div data-step="1"><p id="task-1">What do you think happens at the end of the sprint?</p></div>
+        <div data-step="2" hidden><p id="task-2">Fill the sprint loop: choose the event that comes next, four times.</p></div>
+        <div data-step="3" hidden><p id="task-3">Build a story for a course progress feature: place one card on each line, choose your confidence, then verify the whole story.</p></div>
+        <div data-step="4" hidden>
+          <p id="task-4">Story: “As a learner, I want to start a practice topic over, so that I can try it again.” Which acceptance criterion is testable?</p>
+          <p id="task-4b" tabindex="-1" hidden>Same story, written as Given, When, Then. Which one could a tester answer with yes or no?</p>
+        </div>
+        <div data-step="5" hidden><p id="task-5">All activities finished.</p></div>
+      </section>
+      <div class="fbrow">
+        <div id="current-feedback" class="feedback" role="status" aria-live="polite" tabindex="-1" data-pep-predict-feedback data-pep-explore-feedback data-pep-apply-feedback></div>
+        <button type="button" class="primary" id="next" hidden>Continue</button>
+      </div>
+    </div>
+    <div class="col">
+      <figure id="live-model" class="model" aria-labelledby="m-cap">
+        <figcaption id="m-cap">One sprint</figcaption>
+        <ol class="loop" id="loop" aria-label="Sprint events in order">
+          <li class="ev" id="ev-0"><span class="evn">1</span><span class="evv">?</span></li>
+          <li class="ev" id="ev-1"><span class="evn">2</span><span class="evv">?</span><span class="evx">every day</span></li>
+          <li class="ev" id="ev-2"><span class="evn">3</span><span class="evv">?</span></li>
+          <li class="ev" id="ev-3"><span class="evn">4</span><span class="evv">?</span></li>
+        </ol>
+        <p class="again">Then the next sprint starts with planning again.</p>
+        <ul class="roles" aria-label="Scrum accountabilities">
+          <li><strong>Product Owner</strong> orders the backlog</li>
+          <li><strong>Scrum Master</strong> helps the team use Scrum</li>
+          <li><strong>Developers</strong> build the work</li>
+        </ul>
+        <div class="lines" id="lines">
+              <div class="line" data-slot="who"><span class="lk2" id="ln-who">As a</span><button type="button" class="drop" id="drop-who" aria-describedby="ln-who dnd-help">Drop a card here</button><button type="button" class="hintb" id="hint-who" aria-expanded="false" aria-controls="pop-who" hidden>Hint</button><div class="pop" id="pop-who" role="note" hidden></div></div>
+              <div class="line" data-slot="want"><span class="lk2" id="ln-want">I want</span><button type="button" class="drop" id="drop-want" aria-describedby="ln-want dnd-help">Drop a card here</button><button type="button" class="hintb" id="hint-want" aria-expanded="false" aria-controls="pop-want" hidden>Hint</button><div class="pop" id="pop-want" role="note" hidden></div></div>
+              <div class="line" data-slot="why"><span class="lk2" id="ln-why">so that</span><button type="button" class="drop" id="drop-why" aria-describedby="ln-why dnd-help">Drop a card here</button><button type="button" class="hintb" id="hint-why" aria-expanded="false" aria-controls="pop-why" hidden>Hint</button><div class="pop" id="pop-why" role="note" hidden></div></div>
+              <div class="line" data-slot="ac"><span class="lk2" id="ln-ac">Acceptance criterion</span><button type="button" class="drop" id="drop-ac" aria-describedby="ln-ac dnd-help">Drop a card here</button><button type="button" class="hintb" id="hint-ac" aria-expanded="false" aria-controls="pop-ac" hidden>Hint</button><div class="pop" id="pop-ac" role="note" hidden></div></div>
+            </div>
+        <div class="story" id="story" hidden>
+          <p class="lk" id="story-k">Story card</p>
+          <p class="sline"><span class="sk">As a</span> <span class="sv" id="sv-who">…</span></p>
+          <p class="sline"><span class="sk">I want</span> <span class="sv" id="sv-want">…</span></p>
+          <p class="sline"><span class="sk">so that</span> <span class="sv" id="sv-why">…</span></p>
+          <p class="sline ac"><span class="sk">Acceptance criterion</span> <span class="sv" id="sv-ac">…</span></p>
+        </div>
+      </figure>
+      <div id="current-control" class="control">
+        <div data-step="1">
+          <fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict>
+            <legend>Your prediction</legend>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="predict" id="p-review" value="review" aria-describedby="task-1"><span class="ot">The team shows what it built, then reflects on how it worked</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-release" value="release" aria-describedby="task-1"><span class="ot">The whole product must be released to customers</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-nothing" value="nothing" aria-describedby="task-1"><span class="ot">Nothing special: the next sprint just starts</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-assign" value="assign" aria-describedby="task-1"><span class="ot">A manager assigns the next sprint's tasks</span></label>
+            </div>
+            <div class="row"><fieldset class="conf" id="conf0" data-pep-confidence aria-describedby="conf0-instr"><legend id="conf0-instr">How sure are you?</legend><label class="opt"><input type="radio" name="conf0" id="conf0-low" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-medium" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-high" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check aria-describedby="conf0-instr" disabled>Check prediction</button></div>
+          </fieldset>
+        </div>
+        <div data-step="2" hidden>
+          <fieldset id="x1" data-interaction="drag" data-pep-explore aria-describedby="task-2">
+            <legend id="x1-leg">Next event in the loop</legend>
+            <div class="evbtns" id="evbtns"></div>
+          </fieldset>
+        </div>
+        <div data-step="3" hidden>
+          <fieldset id="x2" data-interaction="drag" data-confidence data-pep-explore>
+            <legend id="x2-leg" class="vh">Story cards</legend>
+            <p class="dnd-help" id="dnd-help"><strong>Drag each card onto a line in the story card.</strong> No mouse? Press a card, then a line; Escape drops a picked card.</p>
+            <div class="bank" id="bank" role="group" aria-label="Cards not placed"></div>
+            <div class="row">
+              <fieldset class="conf" id="conf3" data-pep-confidence aria-describedby="conf3-instr">
+                <legend id="conf3-instr">How sure are you?</legend>
+                <label class="opt"><input type="radio" name="conf3" id="conf3-low" value="low"><span class="ot">Low</span></label>
+                <label class="opt"><input type="radio" name="conf3" id="conf3-medium" value="medium"><span class="ot">Medium</span></label>
+                <label class="opt"><input type="radio" name="conf3" id="conf3-high" value="high"><span class="ot">High</span></label>
+              </fieldset>
+              <button type="button" class="primary" id="x2-verify" aria-describedby="task-3 conf3-instr" disabled>Verify story</button>
+            </div>
+          </fieldset>
+        </div>
+        <div data-step="4" hidden>
+          <fieldset id="apply" data-interaction="mcq" data-confidence data-pep-apply>
+            <legend>Testable criterion</legend>
+            <div class="opts" id="a1">
+              <label class="opt"><input type="radio" name="a1" id="a1-well" value="well" aria-describedby="task-4"><span class="ot">Start over works well</span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-modern" value="modern" aria-describedby="task-4"><span class="ot">Start over has a clean, modern look</span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-gwt" value="gwt" aria-describedby="task-4"><span class="ot">After I press Start over, every answer is cleared and progress shows 0 of 4</span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-impl" value="impl" aria-describedby="task-4"><span class="ot">Start over is built with a single JavaScript function</span></label>
+            </div>
+            <div class="opts" id="a2" hidden>
+              <label class="opt"><input type="radio" name="a2" id="a2-smooth" value="smooth" aria-describedby="task-4b"><span class="ot">Given the page is open, when I use it, then it feels smooth</span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-clean" value="clean" aria-describedby="task-4b"><span class="ot">Given the code is clean, when it is reviewed, then reviewers are happy</span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-fast" value="fast" aria-describedby="task-4b"><span class="ot">Given I press Start over, when it runs, then it is fast</span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-gwt" value="gwt" aria-describedby="task-4b"><span class="ot">Given I have answered two activities, when I press Start over, then progress shows 0 of 4</span></label>
+            </div>
+          </fieldset>
+        </div>
+        <div data-step="4" hidden>
+          <div class="row">
+            <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-instr">
+              <legend id="conf-instr">How sure are you?</legend>
+              <label class="opt"><input type="radio" name="conf" id="conf-low" value="low"><span class="ot">Low</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-medium" value="medium"><span class="ot">Medium</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-high" value="high"><span class="ot">High</span></label>
+            </fieldset>
+            <button type="button" class="primary" id="apply-check" data-pep-apply-check aria-describedby="conf-instr" disabled>Check answer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+<script>
+var PAGE = {};
+(function(){
+var EV=[{k:'plan',n:'Sprint Planning',p:'starts the sprint by choosing work from the product backlog'},
+        {k:'daily',n:'Daily Scrum',p:'happens every day during the sprint so Developers can adjust their plan'},
+        {k:'review',n:'Sprint Review',p:'comes at the end to inspect the result with stakeholders'},
+        {k:'retro',n:'Sprint Retrospective',p:'closes the sprint by improving how the team works'}];
+var SHOW=[2,0,3,1];
+var PARTS={who:{learner:'learner',db:'the database',bar:'progress bar'},want:{see:'to see which topics I have finished',table:'a progress table with four columns',fast:'the code to be fast'},
+  why:{next:'I know what to study next',ticket:'the ticket can be closed',framework:'we use the new framework'},
+  ac:{gwt:'Given I finished topic 1, when I open the course page, then topic 1 shows as finished',well:'Progress works well',storage:'Progress is saved with localStorage'}};
+var GOOD={who:'learner',want:'see',why:'next',ac:'gwt'};
+var WHY={who:{db:'A database is not a user; a story speaks for a person who uses the product.',bar:'The progress bar is part of the screen, not a user.'},
+  want:{table:'A four-column table is a design decision about how to build it, not something the user wants to do.',fast:'“Fast” is about the code, and it cannot be checked as written.'},
+  why:{ticket:'Closing a ticket is team process, not a benefit to the learner.',framework:'Using a framework is a build choice, not a user benefit.'},
+  ac:{well:'“Works well” has no observable result to check.',storage:'localStorage is how it might be built, not what the learner can observe.'}};
+var E,$,$$,pos=0;
+function renderLoop(){EV.forEach(function(e,i){var li=$('#ev-'+i);li.className='ev'+(i<pos?' on':'')+(i===pos?' cur':'');li.querySelector('.evv').textContent=i<pos?e.n:'?';});}
+var placed={who:null,want:null,why:null,ac:null},picked=null,drag=null,suppressClick=false;
+var CARDS=[['ac','storage'],['who','db'],['want','see'],['why','ticket'],['ac','gwt'],['want','table'],['who','learner'],['why','framework'],['want','fast'],['who','bar'],['why','next'],['ac','well']];
+function cardEl(k,v){return document.getElementById('ch-'+k+'-'+v);}
+function renderStory(){['who','want','why','ac'].forEach(function(k){var c=placed[k];var s=$('#sv-'+k);s.textContent=c?PARTS[c[0]][c[1]]:'…';s.classList.remove('bad');});}
+function readyVerify(){var full=['who','want','why','ac'].every(function(k){return placed[k];});$('#x2-verify').disabled=!full||!$('input[name="conf3"]:checked')||!!E.state().done.x2;}
+function closePops(){$$('.pop').forEach(function(p){p.hidden=true;});$$('.hintb').forEach(function(b){b.setAttribute('aria-expanded','false');});}
+function clearMarks(k){var d=$('#drop-'+k);d.classList.remove('bad');$('#hint-'+k).hidden=true;$('#pop-'+k).hidden=true;$('#hint-'+k).setAttribute('aria-expanded','false');}
+function renderSlots(){['who','want','why','ac'].forEach(function(k){var d=$('#drop-'+k),c=placed[k];d.textContent=c?PARTS[c[0]][c[1]]:'Drop a card here';d.classList.toggle('filled',!!c);});
+  CARDS.forEach(function(c){var el=cardEl(c[0],c[1]);var inUse=['who','want','why','ac'].some(function(k){return placed[k]&&placed[k][0]===c[0]&&placed[k][1]===c[1];});el.hidden=inUse;});
+  renderStory();readyVerify();}
+function holding(on){$('#lines').classList.toggle('holding',!!on);}
+function pick(el){if(picked&&picked!==el)picked.setAttribute('aria-pressed','false');var on=el.getAttribute('aria-pressed')!=='true';el.setAttribute('aria-pressed',on?'true':'false');picked=on?el:null;holding(on);
+  if(on)E.say([{c:'verdict info',s:'Picked “'+el.textContent+'”. Now choose a line.'}]);}
+function place(k,el){var c=[el.getAttribute('data-k'),el.getAttribute('data-v')];placed[k]=c;el.setAttribute('aria-pressed','false');picked=null;holding(false);clearMarks(k);renderSlots();
+  E.say([{c:'verdict info',s:'Placed on “'+$('#ln-'+k).textContent+'”. Verify when every line has a card.'}]);}
+function unplace(k){if(!placed[k])return;var c=placed[k];placed[k]=null;clearMarks(k);renderSlots();var el=cardEl(c[0],c[1]);E.say([{c:'verdict info',s:'Moved “'+el.textContent+'” back to the cards.'}]);el.focus();}
+function initCards(){var bank=$('#bank');
+  CARDS.forEach(function(c){var b=document.createElement('button');b.type='button';b.className='card';b.id='ch-'+c[0]+'-'+c[1];b.setAttribute('data-k',c[0]);b.setAttribute('data-v',c[1]);b.setAttribute('aria-pressed','false');b.setAttribute('aria-describedby','dnd-help');b.setAttribute('aria-roledescription','draggable card');b.textContent=PARTS[c[0]][c[1]];
+    b.addEventListener('click',function(){if(suppressClick){suppressClick=false;return;}if(E.state().done.x2)return;pick(b);});
+    b.addEventListener('keydown',function(e){if(e.key==='Escape'&&picked){picked.setAttribute('aria-pressed','false');picked=null;holding(false);E.say([{c:'verdict info',s:'Pick dropped.'}]);}});
+    b.addEventListener('pointerdown',function(e){if(E.state().done.x2||e.button>0)return;drag={el:b,x:e.clientX,y:e.clientY,moved:false,id:e.pointerId};});
+    bank.appendChild(b);});
+  document.addEventListener('pointermove',function(e){if(!drag||e.pointerId!==drag.id)return;var dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+    if(!drag.moved&&Math.abs(dx)+Math.abs(dy)>6){drag.moved=true;drag.el.classList.add('dragging');holding(true);try{drag.el.setPointerCapture(e.pointerId);}catch(_){}}
+    if(drag.moved){drag.el.style.transform='translate('+dx+'px,'+dy+'px)';drag.el.style.pointerEvents='none';var t=document.elementFromPoint(e.clientX,e.clientY);$$('.drop').forEach(function(d){d.classList.toggle('over',!!t&&d.contains(t));});drag.el.style.pointerEvents='';}});
+  function endDrag(e){if(!drag||e.pointerId!==drag.id)return;var d=drag;drag=null;if(!d.moved)return;suppressClick=true;setTimeout(function(){suppressClick=false;},0);
+    d.el.style.pointerEvents='none';var t=document.elementFromPoint(e.clientX,e.clientY);d.el.style.pointerEvents='';d.el.style.transform='';d.el.classList.remove('dragging');if(!picked)holding(false);$$('.drop').forEach(function(x){x.classList.remove('over');});
+    var drop=t&&t.closest?t.closest('.drop'):null;if(drop&&e.type==='pointerup'){place(drop.id.slice(5),d.el);}else E.say([{c:'verdict info',s:'Not placed: drop the card on a line.'}]);}
+  document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
+  ['who','want','why','ac'].forEach(function(k){$('#drop-'+k).addEventListener('click',function(){if(E.state().done.x2)return;if(picked)place(k,picked);else if(placed[k])unplace(k);else E.say([{c:'verdict info',s:'Pick a card first, then choose this line.'}]);});
+    var hb=$('#hint-'+k),pop=$('#pop-'+k);
+    hb.addEventListener('click',function(){var open=pop.hidden;closePops();pop.hidden=!open;hb.setAttribute('aria-expanded',open?'true':'false');if(open){pop.querySelector('button').focus();}});
+    pop.addEventListener('keydown',function(e){if(e.key==='Escape'){pop.hidden=true;hb.setAttribute('aria-expanded','false');hb.focus();}});});
+  $('#conf3').addEventListener('change',readyVerify);
+  $('#x2-verify').addEventListener('click',function(){var cv=$('input[name="conf3"]:checked');if(!cv)return;var wrong=[];
+    ['who','want','why','ac'].forEach(function(k){if(placed[k][1]!==GOOD[k])wrong.push(k);});
+    var confLine='Your confidence: '+cv.value+'. Reported, never scored.';
+    if(!wrong.length){E.say([{c:'verdict ok',s:'Verified: a complete story.'},{c:'conf-report',s:confLine},{list:[['As a learner:','a real user role.'],['I want to see which topics I have finished:','something the learner can do, with no build details.'],['so that I know what to study next:','the benefit to the learner.'],['Given I finished topic 1, when I open the course page, then topic 1 shows as finished:','a criterion a tester can answer with yes or no.']]}],true);
+      if(!E.state().done.x2)E.complete('x2');$$('#x2 button, #x2 input').forEach(function(b){b.disabled=true;});return;}
+    wrong.forEach(function(k){$('#drop-'+k).classList.add('bad');$('#sv-'+k).classList.add('bad');var c=placed[k],pop=$('#pop-'+k);pop.textContent='';var p=document.createElement('p');p.textContent=WHY[k][c[1]];pop.appendChild(p);
+      var cb=document.createElement('button');cb.type='button';cb.textContent='Close hint';cb.addEventListener('click',function(){pop.hidden=true;$('#hint-'+k).setAttribute('aria-expanded','false');$('#hint-'+k).focus();});pop.appendChild(cb);$('#hint-'+k).hidden=false;});
+    $$('input[name="conf3"]').forEach(function(i){i.checked=false;});readyVerify();
+    E.say([{c:'verdict no',s:'Not yet: '+wrong.length+(wrong.length>1?' lines need':' line needs')+' a different card ('+wrong.map(function(k){return '“'+$('#ln-'+k).textContent+'”';}).join(', ')+'). Move cards, choose your confidence again, then verify.'},{c:'conf-report',s:confLine},{s:'Optional: press Hint beside a marked line to see why that card does not fit.'}],true);});
+  renderSlots();}
+PAGE.predict={ok:'review',lead:'A sprint is a loop of events, and its end has two of them. The model on the right is that loop, still empty.',expl:{
+  review:'Matches Scrum: the Sprint Review inspects what was built, then the Sprint Retrospective looks at how the team worked.',
+  release:'Not required. The sprint must produce a usable result, but releasing it to customers is a separate decision.',
+  nothing:'Scrum ends every sprint with two events, the review and the retrospective, before the next one starts.',
+  assign:'In Scrum, the Developers plan their own sprint work in Sprint Planning, with the Product Owner; no manager assigns it.'}};
+PAGE.apply={
+ r1:{ok:'gwt',expl:{
+   well:'No observable result: two testers could disagree about “well”.',
+   modern:'A matter of taste, not a yes-or-no check.',
+   gwt:'Names the action and two results anyone can check: answers cleared and progress at 0 of 4.',
+   impl:'Describes how it is built, not what the learner sees.'},
+   mis:{well:'“Works well” gives a tester nothing observable to check.',modern:'Taste words cannot be checked with yes or no.',impl:'How it is built is not what the user can observe.'}},
+ r2:{ok:'gwt',answer:'Given I have answered two activities, when I press Start over, then progress shows 0 of 4.',expl:{
+   smooth:'“Feels smooth” is an opinion, not an observable result.',
+   clean:'About the code and the reviewers\' feelings, not what the user can do.',
+   fast:'“Fast” has no threshold, so there is nothing to check against.',
+   gwt:'A clear situation, action and observable result: a tester can say yes or no.'},
+   mis:{smooth:'An opinion cannot be checked yes or no.',clean:'Criteria describe what the user observes, not how reviewers feel.',fast:'Without a threshold, “fast” cannot be checked.'}}
+};
+PAGE.init=function(eng){E=eng;$=eng.$;$$=eng.$$;
+  var wrap=$('#evbtns');SHOW.forEach(function(i){var b=document.createElement('button');b.type='button';b.id='evb-'+EV[i].k;b.textContent=EV[i].n;b.setAttribute('aria-describedby','task-2');
+    b.addEventListener('click',function(){if(pos>=4)return;var want=EV[pos];
+      if(i===pos){b.disabled=true;pos++;renderLoop();
+        if(pos>=4){E.say([{c:'verdict ok',s:'Loop complete.'},{s:'Planning, a Daily Scrum every day, the Review, then the Retrospective. The next sprint starts with planning again.'}],true);E.complete('x1');}
+        else E.say([{c:'verdict ok',s:EV[i].n+' is step '+pos+'.'},{s:'It '+EV[i].p+'.'}]);}
+      else E.say([{c:'verdict no',s:'Not yet: '+EV[i].n+' '+EV[i].p+'.'},{s:'Step '+(pos+1)+' needs the event that '+want.p+'.'}]);});wrap.appendChild(b);});
+  initCards();
+  renderLoop();};
+PAGE.onStep=function(step){$('#story').hidden=step<3;$('#m-cap').textContent=step===3?'Story card: course progress':'One sprint';
+  if(step===3){$('#story-k').textContent='Story card: course progress';renderStory();}
+  if(step>=4){$('#story-k').textContent='Story card: start over';$('#sv-who').textContent='learner';$('#sv-want').textContent='to start a practice topic over';$('#sv-why').textContent='I can try it again';$('#sv-ac').textContent='?';$$('.sv').forEach(function(s){s.classList.remove('bad');});}};
+PAGE.onCheck=function(k){if(k==='apply')$('#sv-ac').textContent='Given I have answered two activities, when I press Start over, then progress shows 0 of 4';};
+PAGE.resetStep=function(st){if(st===2){pos=0;$$('#evbtns button').forEach(function(b){b.disabled=false;});renderLoop();}if(st===3){placed={who:null,want:null,why:null,ac:null};picked=null;drag=null;holding(false);$$('.card').forEach(function(c){c.setAttribute('aria-pressed','false');c.style.transform='';c.classList.remove('dragging');});$$('#x2 button, #x2 input').forEach(function(b){b.disabled=false;});['who','want','why','ac'].forEach(clearMarks);closePops();renderSlots();}if(st===4)PAGE.onStep(4);};
+PAGE.reset=function(){pos=0;$$('#evbtns button').forEach(function(b){b.disabled=false;});placed={who:null,want:null,why:null,ac:null};picked=null;drag=null;holding(false);$$('.card').forEach(function(c){c.setAttribute('aria-pressed','false');c.style.transform='';c.classList.remove('dragging');});$$('#x2 button, #x2 input').forEach(function(b){b.disabled=false;});['who','want','why','ac'].forEach(clearMarks);renderLoop();renderSlots();};
+})();
+</script>
+<script>
+(function(){
+'use strict';
+var D=document,R=D.documentElement;
+function $(s,r){return (r||D).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||D).querySelectorAll(s));}
+function md(s){var f=D.createDocumentFragment(),re=/(`[^`]+`|\*\*[^*]+\*\*)/g,last=0,m;s=String(s);
+  while((m=re.exec(s))){if(m.index>last)f.appendChild(D.createTextNode(s.slice(last,m.index)));
+    var t=m[0],e=D.createElement(t.charAt(0)==='`'?'code':'strong');e.textContent=t.charAt(0)==='`'?t.slice(1,-1):t.slice(2,-2);f.appendChild(e);last=re.lastIndex;}
+  if(last<s.length)f.appendChild(D.createTextNode(s.slice(last)));return f;}
+function el(tag,cls,txt){var e=D.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.appendChild(typeof txt==='string'?md(txt):txt);return e;}
+var main=$('#lesson'),stage=$('#stage'),fb=$('#current-feedback'),next=$('#next'),P=window.PAGE;
+var KEYS=['predict','x1','x2','apply'],S;
+function fresh(){S={step:1,done:{},results:{}};}
+fresh();
+function say(parts,focus){fb.textContent='';(parts||[]).forEach(function(p){
+  if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li',it[2]||'');li.appendChild(el('strong',null,it[0]));li.appendChild(D.createTextNode(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
+  else{var q=el('p',p.c||'',p.s);if(p.attr)q.setAttribute(p.attr,'');fb.appendChild(q);}});
+  if(focus)fb.focus();}
+function optText(i){var l=i.closest('label');return l?l.textContent.replace(/\s+/g,' ').trim():i.value;}
+function progress(){var n=0,set=0;KEYS.forEach(function(k){var pip=$('.pip[data-k="'+k+'"]');pip.className='pip';if(S.done[k]){n++;if(S.results[k]==='settled')set++;pip.className='pip '+(S.results[k]==='settled'?'settled':'on');}});
+  $('#prog-text').textContent='Activities done: '+n+' of 4'+(set?' ('+set+(set>1?' checks':' check')+' settled, not correct)':'');}
+var WORD={'correct':'correct on the first try','correct-retry':'correct on the second try','settled':'answered and settled, not marked correct'};
+function complete(k,label){S.done[k]=true;progress();next.textContent=label||'Continue';next.hidden=false;}
+function show(step){S.step=step;stage.setAttribute('data-at',String(step));
+  $$('[data-step]',stage).forEach(function(e){e.hidden=e.getAttribute('data-step').split(' ').indexOf(String(step))<0;});
+  if(step===5){main.setAttribute('data-pep-complete','true');var c=$('#complete'),labels=P.checkLabels||{apply:'Final check'},parts=[],anySet=false;
+    KEYS.forEach(function(k){if(S.results[k]){parts.push(labels[k]+': '+WORD[S.results[k]]+'.');if(S.results[k]==='settled')anySet=true;}});
+    c.className='complete'+(anySet?' settled':'');c.textContent='Topic complete. '+parts.join(' ')+(anySet?' Review the explanations, or press Start over to try again.':'');}
+  $('#reset').hidden=step>=5;
+  if(P.onStep)P.onStep(step,S);}
+/* keep DOM order equal to visual order: feedback sits under the task on desktop, after the control in one column */
+var fbrow=$('.fbrow'),mq=window.matchMedia?window.matchMedia('(max-width:860px)'):null;
+function place(){if(mq&&mq.matches)$('#current-control').after(fbrow);else $('#current-task').after(fbrow);}
+place();if(mq){if(mq.addEventListener)mq.addEventListener('change',place);else if(mq.addListener)mq.addListener(place);}
+next.addEventListener('click',function(){next.hidden=true;fb.textContent='';show(S.step+1);var h=$('#teach-'+S.step+'-h');if(h)h.focus();});
+/* theme */
+var mqDark=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+function applyTheme(){R.setAttribute('data-theme',mqDark&&mqDark.matches?'dark':'light');}
+applyTheme();if(mqDark){if(mqDark.addEventListener)mqDark.addEventListener('change',applyTheme);else if(mqDark.addListener)mqDark.addListener(applyTheme);}
+/* predict */
+var pf=$('#predict'),pc=$('#predict-check');
+function pReady(){pc.disabled=!!S.done.predict||!($('input[name="predict"]:checked')&&$('input[name="conf0"]:checked'));}
+pf.addEventListener('change',pReady);
+function badges(l,arr){var b=l.querySelector('.badges');if(!b){b=el('span','badges');l.appendChild(b);}arr.forEach(function(x){b.appendChild(el('span','badge '+x[1],x[0]));});}
+pc.addEventListener('click',function(){var c=$('input[name="predict"]:checked'),cv=$('input[name="conf0"]:checked');if(!c||!cv)return;var okv=P.predict.ok,match=c.value===okv;
+  $$('input',pf).forEach(function(i){i.disabled=true;});pc.disabled=true;
+  $$('input[name="predict"]',pf).forEach(function(i){var l=i.closest('label');if(i===c){l.classList.add('mine');badges(l,[['Your prediction','mine-b'],[match?'Correct':'Not correct',match?'ok-b':'no-b']]);}else if(i.value===okv){badges(l,[[P.predict.okLabel||'Correct answer','ok-b']]);}if(i.value===okv)l.classList.add('right');l.appendChild(el('span','oexp',P.predict.expl[i.value]));});
+  pf.querySelector('.opts').classList.add('explained');pc.hidden=true;$('#conf0').closest('.row').hidden=true;
+  if(P.onPredict)P.onPredict();
+  say([{c:'verdict info',s:'Practice prediction, not scored. '+(match?'Your prediction matches the answer.':'Your prediction differs from the answer; nothing is lost.')},{c:'conf-report',s:'Your confidence: '+cv.value+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:P.predict.lead},{s:'Each option now shows its label and why, directly under it.'}],true);
+  complete('predict');});
+/* graded checks: confidence first, retry in a second representation, settle after two misses */
+var checks={};
+function check(o){var st={att:0,conf:[],result:null,step:{x1:2,x2:3,apply:4}[o.key]},btn=$(o.btn),cf=$(o.conf),fs=$(o.fs),cn=o.confName||'conf';checks[o.key]=st;
+  function grp(){return st.att===0?o.g1:o.g2;}
+  function ready(){btn.disabled=!!st.result||!($('input[name="'+grp()+'"]:checked')&&$('input[name="'+cn+'"]:checked'));}
+  function lockConf(){$$('input[name="'+cn+'"]').forEach(function(i){i.disabled=true;});btn.disabled=true;}
+  function done(){S.results[o.key]=st.result;if(P.onCheck)P.onCheck(o.key,st.result);complete(o.key,o.label);}
+  fs.addEventListener('change',ready);cf.addEventListener('change',ready);
+  btn.addEventListener('click',function(){var g=grp(),r=st.att===0?o.data.r1:o.data.r2,c=$('input[name="'+g+'"]:checked'),cv=$('input[name="'+cn+'"]:checked');
+    if(!c||!cv||st.result)return;var ok=c.value===r.ok;st.conf.push(cv.value);
+    var confLine='Your confidence: '+cv.value+'. Confidence is your own read on how sure you were; it is reported, never scored.';
+    var expl=$$('input[name="'+g+'"]').map(function(i){return [optText(i)+(i===c?' (your answer):':':'),r.expl[i.value]];});
+    $$('input[name="'+g+'"]').forEach(function(i){i.disabled=true;});c.closest('label').classList.add(ok?'right':'wrong');badges(c.closest('label'),[['Your answer','mine-b'],[ok?'Correct':'Not correct',ok?'ok-b':'no-b']]);
+    if(ok){st.result=st.att===0?'correct':'correct-retry';lockConf();
+      say([{c:'verdict ok',s:st.att===0?'Correct.':'Correct on your second try.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}],true);done();}
+    else if(st.att===0){st.att=1;$('#'+o.g1).hidden=true;$('#'+o.g2).hidden=false;$(o.t1).hidden=true;$(o.t2).hidden=false;$$('input[name="'+cn+'"]').forEach(function(i){i.checked=false;});
+      say([{c:'verdict no',s:'Not yet. '+r.mis[c.value]+' Try again below: same idea, different form, with your confidence again.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}]);
+      ready();$(o.t2).focus();}
+    else{st.result='settled';lockConf();$$('input[name="'+o.g2+'"]').forEach(function(i){if(i.value===r.ok){i.closest('label').classList.add('right');badges(i.closest('label'),[['Correct answer','ok-b']]);}});
+      say([{c:'verdict set',s:'Answered and settled: this check is not marked correct. '+r.mis[c.value]},{c:'conf-report',s:'Confidence on each try: '+st.conf.join(', then ')+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:'The answer: '+r.answer},{list:expl}],true);done();}});
+  st.reset=function(){st.att=0;st.conf=[];st.result=null;$('#'+o.g1).hidden=false;$('#'+o.g2).hidden=true;$(o.t1).hidden=false;$(o.t2).hidden=true;btn.disabled=true;};
+  return st;}
+/* restart the current activity only: earlier activities keep their results */
+var STEPKEY={1:'predict',2:'x1',3:'x2',4:'apply'};
+function restartStep(){var stp=S.step;if(stp>=5)return;var k=STEPKEY[stp];
+  $$('#current-control [data-step], #current-task [data-step]').forEach(function(p){if(p.getAttribute('data-step').split(' ').indexOf(String(stp))<0)return;
+    $$('input',p).forEach(function(i){i.checked=false;i.disabled=false;});$$('.opt',p).forEach(function(o){o.classList.remove('right','wrong','mine');});
+    $$('.oexp,.badges',p).forEach(function(e){e.remove();});$$('.opts.explained',p).forEach(function(o){o.classList.remove('explained');});});
+  if(stp===1){pc.hidden=false;pc.disabled=true;$('#conf0').closest('.row').hidden=false;}
+  Object.keys(checks).forEach(function(ck){if(checks[ck].step===stp)checks[ck].reset();});
+  delete S.done[k];delete S.results[k];next.hidden=true;fb.textContent='';
+  if(P.resetStep)P.resetStep(stp);
+  progress();say([{c:'verdict info',s:'Activity restarted. Earlier activities keep their results.'}]);var h=$('#teach-'+stp+'-h');if(h)h.focus();}
+$('#reset').addEventListener('click',restartStep);
+window.ENG={say:say,complete:complete,check:check,md:md,el:el,$:$,$$:$$,state:function(){return S;}};
+if(P.init)P.init(window.ENG);
+check({key:'apply',fs:'#apply',g1:'a1',g2:'a2',t1:'#task-4',t2:'#task-4b',conf:'#conf',confName:'conf',btn:'#apply-check',data:P.apply,label:'Continue to recap'});
+progress();show(1);
+})();
+</script>
+</body>
+</html>
