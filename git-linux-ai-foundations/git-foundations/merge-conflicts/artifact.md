@@ -32,7 +32,7 @@ Welcome to PEP Shop
 
 ## Recap
 
-RecapA conflict happens when both branches changed the same lines; Git stops and asks you.Between <<<<<<< HEAD and ======= is your current branch; after it, the incoming branch.Resolve by editing to the final text and deleting all markers, then git add and git commit.Git lets you commit leftover markers, so check the file first. git merge --abort starts over.Cheat sheetgit merge <branch>merge <branch> into the current branchgit statuslists unmerged (conflicted) filesgit add <file>mark a conflict resolvedgit commitfinish the mergegit merge --abortcancel and restore the pre-merge stateSources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.git-merge: how conflicts are presentedgit-merge: how to resolve conflictsgit-merge: merge strategiesNext topic: Merge vs rebase
+RecapA common conflict happens when both branches change the same area and Git cannot combine the changes automatically; Git stops and asks you.Between <<<<<<< HEAD and ======= is your current branch; after it, the incoming branch.Resolve by editing to the final text and deleting all markers, then git add and git commit.Git lets you commit leftover markers, so check the file first. git merge --abort starts over.Cheat sheetgit merge <branch>merge <branch> into the current branchgit statuslists unmerged (conflicted) filesgit add <file>mark a conflict resolvedgit commitfinish the mergegit merge --abortcancel and restore the pre-merge stateSources and review dateTeaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.git-merge: how conflicts are presentedgit-merge: how to resolve conflictsgit-merge: merge strategiesNext topic: Merge vs rebase
 
 ## Cheat sheet
 
@@ -52,7 +52,7 @@ Prediction (not scored). You and a teammate changed the same line of index.html 
 
 ### terminal
 
-Practice terminal (simulated; nothing runs on your computer). Task: You are on main. Merge feature/title. The team chose the heading from feature/title. Goals: Start the merge and meet the conflict; Heading is the team\; Mark it resolved and finish the merge. One sequence that meets every goal: git merge feature/title, then Edit: keep feature/title line only, then git add index.html, then git commit -m "Merge feature/title".
+Practice terminal (simulated; nothing runs on your computer). Task: You are on main. Merge feature/title. The team chose the heading from feature/title. Goals: Start the merge and meet the conflict; Heading is the team's choice, with no markers; Mark it resolved and finish the merge. One sequence that meets every goal: git merge feature/title, then Edit: keep feature/title line only, then git add index.html, then git commit -m "Merge feature/title".
 
 ### mcq
 

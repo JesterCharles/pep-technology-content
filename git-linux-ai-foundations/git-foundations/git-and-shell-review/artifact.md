@@ -3,14 +3,14 @@
 ## Objectives
 
 - Retrieve where a change lives and which command moves it
-- Choose the right Git command for a described situation
+- Choose the commands that take one change from the repository folder to a pushed branch
 - Connect shell navigation to working inside a repository
 
 ## Teaching
 
 Warm up: recall first
 
-This topic is review: nothing new, just the module's ideas working together with the shell. Recall before you look anything up.
+This topic is review: nothing new. You practise one change from the shell to GitHub; the recap lists the module's other ideas for reference. Recall before you look anything up.
 
 ## Model
 

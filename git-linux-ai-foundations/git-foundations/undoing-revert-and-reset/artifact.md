@@ -49,11 +49,11 @@ Prediction (not scored). C3 broke the price calculation, and you already pushed 
 
 ### terminal
 
-Practice terminal (simulated; nothing runs on your computer). Task: C3 is pushed and broke prices. Undo it safely and share the fix. Goals: Undo C3\; Share the fix so origin/main has it. One sequence that meets every goal: git revert C3, then git push.
+Practice terminal (simulated; nothing runs on your computer). Task: C3 is pushed and broke prices. Undo it safely and share the fix. Goals: Undo C3's change with a new commit; Share the fix so origin/main has it. One sequence that meets every goal: git revert C3, then git push.
 
 ### terminal
 
-Practice terminal (simulated; nothing runs on your computer). Task: C4 is local only and you forgot a file in it. Undo C4 but keep its changes staged so you can recommit. Goals: main back at R1, with C4 off the branch; C4\. One sequence that meets every goal: git reset --soft HEAD~1.
+Practice terminal (simulated; nothing runs on your computer). Task: C4 is local only and you forgot a file in it. Undo C4 but keep its changes staged so you can recommit. Goals: main back at R1, with C4 off the branch; C4's change kept in the staging area. One sequence that meets every goal: git reset --soft HEAD~1.
 
 ### mcq
 

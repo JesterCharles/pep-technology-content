@@ -50,7 +50,7 @@ Prediction (not scored). You saved an edit to app.js. You run git commit -m "Fix
 
 ### terminal
 
-Practice terminal (simulated; nothing runs on your computer). Task: Make a focused commit of the cart fix only. Your notes and the .env secrets file must not go in. Goals: Stage **only** app.js; Check it with git diff --staged before committing; Commit it; notes.txt stays changed in the working copy. One sequence that meets every goal: git add app.js, then git diff --staged, then git commit -m "Fix cart total".
+Practice terminal (simulated; nothing runs on your computer). Task: Make a focused commit of the cart fix only. Your notes and the .env secrets file must not go in. Goals: Stage only app.js; Check it with git diff --staged before committing; Commit it; notes.txt stays changed in the working copy. One sequence that meets every goal: git add app.js, then git diff --staged, then git commit -m "Fix cart total".
 
 ### terminal
 
