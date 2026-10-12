@@ -26,3 +26,9 @@ Every change to imported page bytes after the byte-faithful import (commit 664f7
 - Change: `.ports li` border colour `var(--line)` became `var(--rule)` (light `#6b7873`, dark `#71827c`).
 - Reason: T12 measured the port-card border at 1.47:1 in the light theme, below the 3:1 minimum for meaningful borders.
 - Decision: approved by Firstmate on 2026-10-12 as a one-line CSS edit; no other style or content change.
+
+## Timing: navigating-the-shell and pipes-and-grep labels raised
+
+- Evidence: frozen `tools/timing/estimate_reading.py` (sha256 `0deca96bf5e367aeae51a82abdbd4b6ce0d0289ecc9868c9eff3701016edf96f`) P50 before the objectives list (commit 478f4b4 bytes) and after it: navigating-the-shell 7.95 to 8.12, pipes-and-grep 5.89 to 6.03. The added list alone accounts for the difference (removing only the list restores 7.95).
+- Change: aboutLabel, budget and modeledWorstPath raised 8 to 9 (navigating-the-shell) and 6 to 7 (pipes-and-grep); the `pep:budget-minutes` meta follows `topic.json`. T14 passes and the F1 day total still fits.
+- Decision: approved by Firstmate on 2026-10-12 (option a).
