@@ -217,7 +217,7 @@ These are already-authorized matrix items (the matrix's S27 project-row expectat
 | Field | Plan |
 |---|---|
 | Artifact | `html-css-js/coding-lab`, scope `course` (a cumulative build across all four modules), following the `docs/lab-contract.md` layout: `lab.json`, `README.md` (the learner-facing brief), `starter/`, `tests/`, `fixtures/`, `expected/`. The course-level lab id is valid under `schemas/lab.schema.json` on `main` (merged "Allow course-level coding lab IDs"); this branch picks it up when it is rebased. |
-| Calendar row and reuse | Standard S27 Project day, Build block (50 minutes after the topic pages, section Minute budgets); reused unchanged as the Fast Track FT15 Project block (70 minutes). Neither overlay copies it. |
+| Calendar row and reuse | One canonical brief with a fixed step sequence (below). Standard S27 Project day, Build block: the 50 minutes of build steps after the topic pages (section Minute budgets), skipping the embedded teach steps. Fast Track FT15 Project block: the same brief with its 20 minutes of embedded teach steps plus the 50 minutes of build steps, 70 minutes in all (reconciliation 2, sme-recheck-01). Neither overlay copies it. |
 | Outcomes | A Vite browser client for the learner's own Spring Boot API: it lists and creates records with `fetch`, reads the API base URL from a `VITE_`-prefixed variable through `import.meta.env`, renders API data with `textContent` rather than HTML strings, shows the `title` and `detail` of `application/problem+json` error responses, reaches the API through a Vite dev proxy or a Spring CORS configuration, and includes one learner-written Vitest test of a plain formatting function. |
 | First step | In a scratch directory outside the lab, scaffold a throwaway Vite vanilla project with `npm create vite`, start its dev server and confirm the local URL: the authentic performance of `project-setup-with-npm-and-vite` o1 (reconciliation education-02). `lab.json` declares that scratch path and the cleanup step removes it. Then `npm ci` and `npm run dev` in `starter/`. |
 | Starter scaffold | A Vite vanilla project with `vite` and `vitest` pinned and `package-lock.json` committed; `index.html`, `src/main.js`, `src/api.js` and `src/format.js` with clearly marked TODOs; runnable as shipped (`npm run dev` serves the unfinished page). |
@@ -237,10 +237,29 @@ Prerequisite alignment (every concept the brief applies, and where it is taught 
 | npm and Vite project setup | `project-setup-with-npm-and-vite` | S24 | FT13 |
 | DOM, events, safe rendering | `selecting-and-changing-the-dom`, `events-and-event-bubbling`, `preventing-cross-site-scripting` | S24 | FT14 |
 | Promises, async and await | `promises`, `async-and-await` | S25 | FT14 |
-| Fetch, HTTP errors and ProblemDetail, CORS, token storage | `fetching-data`, `handling-http-errors-and-problemdetail-responses`, `fixing-cors-spring-security-config-vs-vite-dev-proxy`, `cookies-vs-localstorage-where-tokens-should-live` | S26 | FT15 |
-| Calling the Spring Boot API, API address from the environment, Vitest | the three S27-row topics | S27 (same day) | FT15 (same day) |
+| Fetch, HTTP errors and ProblemDetail, CORS, token storage | `fetching-data`, `handling-http-errors-and-problemdetail-responses`, `fixing-cors-spring-security-config-vs-vite-dev-proxy`, `cookies-vs-localstorage-where-tokens-should-live` | S26 | FT15 (fetch, ProblemDetail and CORS: embedded teach step first) |
+| Calling the Spring Boot API, API address from the environment, Vitest | the three S27-row topics | S27 (same day, page read earlier in Build) | FT15 (same day, embedded teach step first) |
 
-Alignment gap, recorded honestly: the calendar places the three S27 rows on the project day itself (and FT15 combines S26 and S27), so those three concepts are taught on the day the project runs, not before it. The brief orders its steps so each one follows the matching topic page in that day's Build block (Standard) or after that day's pages (Fast). Every other applied concept is taught on an earlier day. Moving these rows would be a syllabus change, which is out of scope; this needs a decision from the reconciler or captain if same-day teaching does not satisfy "taught before the project day".
+Step sequence (reconciliation 2, sme-recheck-01). Each build step that applies a concept first taught on the project day is preceded by a just-in-time teach step for exactly that concept. A teach step is a short section of the brief's `README.md`: the rule, one worked snippet and the matching page section to read in full later. Teach steps are prerequisite instruction, not assessment; they do not replace or shorten the canonical topic pages, and they are marked "Fast Track: do this step; Standard: skip, taught by the page you read earlier in Build". The sizes are intake planning allowances, measured when the brief is authored.
+
+| # | Step | Applies | Teach-first source | Fast FT15 minutes | Standard S27 minutes |
+|---|---|---|---|---|---|
+| 1 | Scaffold a throwaway Vite project in a scratch directory and start its dev server; then `npm ci` and `npm run dev` in `starter/` | `project-setup-with-npm-and-vite` o1 | taught FT13 / S24 | 5 | 5 |
+| T2 | Teach: `VITE_` variables, `.env` and `import.meta.env`; why client-exposed values are public | `environment-settings-for-the-api-address` o1, o2 | embedded | 3 | skip |
+| 2 | Set the API base URL in `.env` and read it in `src/api.js` | `environment-settings-for-the-api-address` o1, o2 | T2 | 5 | 5 |
+| T3 | Teach: GET with `fetch`, `await response.json()`, rendering each record with `textContent` | `calling-your-spring-boot-api-from-the-browser` o1 (GET), o2; `fetching-data` | embedded | 4 | skip |
+| 3 | List records from the API and render them safely | as T3 | T3 | 10 | 10 |
+| T4 | Teach: POST with a JSON body and a `Content-Type: application/json` header | `calling-your-spring-boot-api-from-the-browser` o1 (POST) | embedded | 2 | skip |
+| 4 | Create a record from the form and refresh the list | as T4 | T4 | 8 | 8 |
+| T5 | Teach: `response.ok` and reading `title` and `detail` from `application/problem+json` | `handling-http-errors-and-problemdetail-responses`; `calling-your-spring-boot-api-from-the-browser` o2 | embedded | 3 | skip |
+| 5 | Show API error responses in the page | as T5 | T5 | 7 | 7 |
+| T6 | Teach: why the browser blocks the cross-origin read, and the two fixes (Vite dev proxy, Spring CORS configuration) | `fixing-cors-spring-security-config-vs-vite-dev-proxy` | embedded | 3 | skip |
+| 6 | Reach the real API through one fix and complete the README's manual browser checks | as T6 | T6 | 7 | 7 |
+| T7 | Teach: `test` and `expect`, `npm test`, reading a failing assertion, `toBe` versus `toEqual` | `testing-a-plain-function-with-vitest` o1-o3 | embedded | 5 | skip |
+| 7 | Write one Vitest test for `src/format.js`, run `npm test` and make it pass | as T7 | T7 | 8 | 8 |
+| | Total | | | 70 (teach 20 + build 50) | 50 |
+
+Prerequisite alignment result: on Standard, the three S27 concepts are taught by their pages earlier in the same Build block, and every other applied concept is taught on an earlier day. On Fast FT15, each concept first taught that day (the three S27-row concepts and the S26-row fetch, ProblemDetail and CORS concepts the brief applies) is taught by its embedded teach step immediately before the step that applies it, inside the 70-minute Project block; FT15's full topic pages are not needed to start a step and are not claimed as FT15 time. The cookies and token-storage Reading is not applied by the brief. The calendar rows stay where they are; no syllabus changes.
 
 ## Minute budgets
 
@@ -265,10 +284,10 @@ Every fixed block of each day's frozen template (`pep-calendar.json` `dayTypes`)
 | FT12 | Fast: Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5 | 9 pages, 90 | Warm-up 5: platform. Skim 10: first 10 page minutes. Diagnostic 15, Project 70, Timed 15, Reflection 5: platform (Fast direct project; no lab). The other 80 page minutes have no block. | 200 | **overflow 80** |
 | FT13 | Fast: as FT12 | 6 pages, 60 | As FT12. The other 50 page minutes have no block. | 170 | **overflow 50** |
 | FT14 | Fast: as FT12 | 7 pages, 70 | As FT12. The other 60 page minutes have no block. | 180 | **overflow 60** |
-| FT15 | Fast: as FT12 | 7 pages, 68 | As FT12, except Project 70: the S27 project brief (`html-css-js/coding-lab`), reused unchanged, whose first step scaffolds a Vite project and starts its dev server (`project-setup-with-npm-and-vite` o1). The other 58 page minutes have no block. | 178 | **overflow 58** |
+| FT15 | Fast: as FT12 | 7 pages, 68 | As FT12, except Project 70: the S27 project brief (`html-css-js/coding-lab`), one canonical brief, run with its embedded teach steps (20) before the build steps they serve (50), per the step sequence in section Project brief (S27); its first step scaffolds a Vite project and starts its dev server (`project-setup-with-npm-and-vite` o1). Warm-up 5 + Skim 10 + Diagnostic 15 + Project 70 + Timed 15 + Reflection 5 = 120 in template. The other 58 page minutes are not claimed as FT15 time and have no block. | 178 | **overflow 58** |
 
 Standard days fit their templates with the planned allowances; if measured page budgets rise in a module PR, the lab or build share on S21, S26 and S27, or the platform exercise share on Concept and Practice days, shrinks by the same minutes, and a day whose page minutes exceed its assignable blocks is reported as overflow, never compressed.
-Fast days overflow: the Fast template gives canonical pages only the 10-minute Skim block, and the ` (skim)` rows do not shorten the shared pages. No topic or block is dropped. This needs an explicit Fast pacing decision outside the gate (plan section 2.4 treats Fast page totals as a platform pacing matter and escalates gross overflow).
+Fast days overflow: the Fast template gives canonical pages only the 10-minute Skim block, and the ` (skim)` rows do not shorten the shared pages. No topic or block is dropped. FT15's project does not depend on that overflow: its embedded teach steps fit inside the Project block. The FT12-FT15 overflow stays reported for the Fast overlay (`pep-t1-track-overlays`), not hidden, and needs an explicit Fast pacing decision outside the gate (plan section 2.4 treats Fast page totals as a platform pacing matter and escalates gross overflow).
 
 For reference, gate T14 sums only the planned topic budgets per day against the 120-minute day total and passes: S20, S22, S24 and S25 40; S21, S23 and S27 30; S26 38; FT12 90; FT13 60; FT14 70; FT15 68.
 
@@ -332,3 +351,5 @@ Outcome: all 8 findings accepted and applied in one correction loop:
 - sme-05: `forms-and-html5-validation` o1 requires a visible label for each visible user-input control and accessible names for other controls.
 
 Captain decision `pep-project-rows` (option A), folded into this correction loop: the S27 project brief plan (section Project brief (S27)), with `environment-settings-for-the-api-address` and `testing-a-plain-function-with-vitest` set to `lab: course:html-css-js`, and the education-02 Fast mapping moved from FT13 to FT15, where the reused brief runs.
+
+Second reconciliation: the education recheck (`intake-critic-education-recheck.json`) raised no finding; the SME recheck (`intake-critic-sme-recheck.json`) confirmed sme-01 to sme-05 resolved and raised sme-recheck-01 (FT15 applied S27 concepts before teaching them within the fixed template). `intake-2-reconciliation.json` accepted it, and this loop applied it as the just-in-time step sequence in section Project brief (S27) and the FT15 row of section Minute budgets: one canonical brief, the frozen syllabus, FT15 within its 120-minute template, and the Fast page overflow still reported.
