@@ -1,7 +1,7 @@
 # Course review: `git-linux-ai-foundations` assembly
 
 Plan step R6 assembles Course 1 after its three modules merged (`linux-foundations`, `git-foundations`, `ai-foundations`).
-This course branch adds the approved course-level lab "Ship a safe change" (R5 decision: lab yes), lists it in `course.json` `courseLabs` as `ship-safe-change`, and regenerates `course.lock.json` with `authoring/tools/pep lock git-linux-ai-foundations`.
+This course branch adds the approved course-level lab "Ship a safe change" (R5 decision: lab yes), lists it in `course.json` `courseLabs` by its lab id `git-linux-ai-foundations/coding-lab`, and regenerates `course.lock.json` with `authoring/tools/pep lock git-linux-ai-foundations`.
 No module content, topic manifest or module lock changed; regenerating the locks left all three `module.lock.json` files byte-identical.
 
 ## Lab as built

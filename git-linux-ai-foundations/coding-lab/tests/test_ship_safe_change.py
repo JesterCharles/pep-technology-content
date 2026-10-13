@@ -7,7 +7,9 @@ Each check reads repository state with machine-oriented Git commands, never deco
 import importlib.util
 import os
 import sys
+import tempfile
 import unittest
+from pathlib import Path
 from unittest import mock
 
 from lab_support import FEATURE, FOCUSED_PATHS, MAIN, REPO, TEAMMATE, git
@@ -41,6 +43,18 @@ def rev(name):
 
 def is_ancestor(older, newer):
     return git("merge-base", "--is-ancestor", older, newer, check=False).returncode == 0
+
+
+def committed_rules_ignore(path):
+    """True when the .gitignore committed at HEAD, matched by Git itself, ignores path."""
+    committed_rules = git("show", "HEAD:.gitignore", check=False).stdout
+    with tempfile.TemporaryDirectory() as folder:
+        rules = Path(folder) / "committed-gitignore"
+        rules.write_text(committed_rules, encoding="utf-8")
+        matched = git(
+            "ls-files", "--others", "--ignored", f"--exclude-from={rules}", "--", path, check=False
+        ).stdout.splitlines()
+    return path in matched
 
 
 class ShipSafeChange(unittest.TestCase):
@@ -92,10 +106,9 @@ class ShipSafeChange(unittest.TestCase):
             "",
             ".env is staged. Unstage it with `git restore --staged .env`.",
         )
-        committed_rules = git("show", "HEAD:.gitignore", check=False).stdout
         self.assertTrue(
-            any(line.strip() in (".env", "/.env") for line in committed_rules.splitlines()),
-            "The committed .gitignore has no .env line. Commit the .gitignore change.",
+            committed_rules_ignore(".env"),
+            "The .gitignore at HEAD does not ignore .env. Commit your .gitignore change.",
         )
 
     def test_expected_feature_branch_is_checked_out(self):
