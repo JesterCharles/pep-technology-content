@@ -60,6 +60,8 @@ Correction-loop pass on the final bytes (after the critic records and fixes were
 
 No other gate reported any error for any module, the lab, `course.json` or `course.lock.json`.
 
+After the rechecks were committed, `npm ci`, `npm test` (122 of 122) and `npm run check` (all gates, T25 included) pass on the final bytes.
+
 Lab gates (lab contract section 10) are recorded in [`coding-lab-solved-run.md`](coding-lab-solved-run.md): solved at `f01c065` by run `solved-1791915814`, bound to the lab bytes; it supersedes the first record at `28b25f9`.
 
 ## Export check
@@ -93,7 +95,7 @@ All six findings were accepted and applied in one correction loop; the author di
 | sme-reset-preserves-and-commits-extra-files | high | accept | Whole-starter reset and cleanup with containment checks; regression check with a nested learner file |
 | sme-global-ignore-breaks-start-state | medium | accept | Repository-local empty `core.excludesFile`; regression check with an isolated global excludes file ignoring `.env` |
 
-The two high findings stay open in T25 until each critic rechecks them against the corrected bytes; the original reports also bind the pre-correction bytes, so T25 reports missing current coverage until those rechecks are recorded.
+Both critics rechecked the corrected bytes at `3588889`: `course-critic-education-recheck.json` resolves all four education findings and `course-critic-sme-recheck.json` resolves both SME findings, with no new findings. Both rechecks are committed unchanged, and T25 passes on the final bytes.
 
 ## Remaining unverified items
 
