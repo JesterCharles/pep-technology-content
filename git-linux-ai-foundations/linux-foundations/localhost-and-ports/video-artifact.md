@@ -16,8 +16,17 @@ cautions:
   - Third-party channel, not an official source
   - Fit comes from the 2026-10-07 legacy storyboard-frame review; not watched end to end and no transcript was read
   - Also covers domain names, IP addresses and DNS, beyond the page
-alternates: []
-rejected: []
+alternates:
+  - title: What is localhost? Simple guide (2026) (Hostinger Academy)
+    url: https://www.youtube.com/watch?v=m98GX51T5dI
+    reason: 3:30 in search results. Third-party; focuses on local website development; ports not seen (legacy review)
+rejected:
+  - title: Localhost, Port, Host & Server Explained for Beginners | Web Basics (Duo Blocks Edx)
+    url: https://www.youtube.com/watch?v=ojObljINkY0
+    reason: 6:33 (393 s) exceeds the 6-minute budget
+  - title: Network Ports Explained (PowerCert Animated Videos)
+    url: https://www.youtube.com/watch?v=g2fT-g9PX9o
+    reason: 10:33 exceeds the budget
 ---
 
 # Video: localhost and 127.0.0.1

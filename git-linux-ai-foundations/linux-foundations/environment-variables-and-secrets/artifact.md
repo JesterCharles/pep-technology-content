@@ -37,7 +37,7 @@ Where values live. Fictional project; the terminal and git are simulated.
 
 Your shell
 
-- API_KEY=demo-123shell only
+- API_KEY=demo-123 shell only
 
 Program started from it: ./app
 
@@ -45,13 +45,13 @@ Not run yet.
 
 Repository: what gets committed
 
-- app.shNot decided
+- app.sh Not decided
 echo "calling weather API with $API_KEY"
-- .envNot decided
+- .env Not decided
 API_KEY=not-real-42
-- .env.exampleNot decided
+- .env.example Not decided
 API_KEY=replace-me
-- .gitignoreNot decided
+- .gitignore Not decided
 .env
 
 ## Recap

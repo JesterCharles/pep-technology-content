@@ -16,8 +16,17 @@ cautions:
   - Third-party channel, not an official source (Boot.dev, a commercial learning platform)
   - Fit comes from the 2026-10-07 legacy storyboard-frame review; not watched end to end and no transcript was read
   - Covers objective o1 only
-alternates: []
-rejected: []
+alternates:
+  - title: "How to use the chmod command: 2-Minute Linux Tips (TECHtalk)"
+    url: https://www.youtube.com/watch?v=XZLBJfQ6jTc
+    reason: 2:02 (122 s). Third-party; description says it covers chmod and both notations (o2), fit not confirmed from frames
+rejected:
+  - title: Linux file permissions and chmod explained | RHEL Field Guide (Red Hat)
+    url: https://www.youtube.com/watch?v=cBeHlHlIf5c
+    reason: first-party and the best topical fit (ls -l string, octal 644 and 777), but 12:35 (755 s) exceeds the 7-minute budget
+  - title: How to Modify File Permissions in Bash [12 of 20] | Bash for Beginners (Microsoft Developer)
+    url: https://www.youtube.com/watch?v=lOX2iKTMWWA
+    reason: first-party, but 9:41 (581 s) exceeds the budget
 ---
 
 # Video: Linux File Permissions

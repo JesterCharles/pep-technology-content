@@ -15,8 +15,20 @@ gaps:
 cautions:
   - First-party source, the Microsoft Developer channel, part 10 of the 20-part Bash for Beginners series (published 2023-02-15)
   - Fit was judged from the video description and chapter markers; the video was not watched end to end and no transcript was read
-alternates: []
-rejected: []
+alternates:
+  - title: Introduction to secret leaks and getting started with GitHub Secret Protection (GitHub)
+    url: https://www.youtube.com/watch?v=vMhDkt5JNN0
+    reason: 3:11 (191 s). First-party; about mitigating leaked secrets and stopping leaks, which touches o3, but it is a GitHub product walkthrough rather than the .env / .gitignore habit
+  - title: "Variable Exporting on Bash - You Suck at Programming #009 (You Suck at Programming)"
+    url: https://www.youtube.com/watch?v=D0BaEYxhdUE
+    reason: 1:42 (102 s). Legacy pick (2026-10-07); clearly demonstrates o1 and o2 (an unexported variable is invisible to a started script). Third-party channel, not an official source
+  - title: How I hide my API keys in 2 minutes (Technophile)
+    url: https://www.youtube.com/watch?v=kGH6ISIDGdQ
+    reason: 2:28 (148 s). Third-party; .env plus .gitignore with JavaScript dotenv; no export
+rejected:
+  - title: 3.4 Hiding API Keys with Environment Variables (dotenv) and Pushing Code to GitHub (The Coding Train)
+    url: https://www.youtube.com/watch?v=17UVejOw3zA
+    reason: 11:51 exceeds the 6-minute budget
 ---
 
 # Video: What are Environment variables?

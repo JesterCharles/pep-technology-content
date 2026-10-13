@@ -38,10 +38,10 @@ Same rules, a file holding secrets. Decide each group's letters first, then the 
 
 ls -l in Ana's fictional pep folder. The terminal is a simulation.
 
-- -rw-r--r--ana dev812README.md
-- -rw-r--r--ana dev164deploy.sh
-- -rw-------ana dev48secrets.env
-- drwxr-xr-xana dev4096src
+- -rw-r--r-- ana dev 812 README.md
+- -rw-r--r-- ana dev 164 deploy.sh
+- -rw------- ana dev 48 secrets.env
+- drwxr-xr-x ana dev 4096 src
 
 Permissions of deploy.sh
 

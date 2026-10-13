@@ -1,5 +1,5 @@
 ---
-title: Linux Pipes & Grep: Standard Streams Explained
+title: "Linux Pipes & Grep: Standard Streams Explained"
 channel: TechTooniya
 url: https://www.youtube.com/watch?v=lUd_rxHCiNI
 runtimeMinutes: 2.8
@@ -17,8 +17,17 @@ cautions:
   - Very new, low-audience channel (published 2026-06-08; 16 views at check time)
   - Fit comes from the 2026-10-07 legacy storyboard-frame and description review; not watched end to end and no transcript was read
   - Also covers stdin, stdout and stderr and head, beyond the page
-alternates: []
-rejected: []
+alternates:
+  - title: "Pipes, Grep, Sort Commands: Linux Tutorial 9 (Guru99)"
+    url: https://www.youtube.com/watch?v=VgbnndezHbw
+    reason: 5:58 in search results. Third-party; under budget; not reviewed for fit
+rejected:
+  - title: How to Use Redirection and Pipelines in Bash [11 of 20] | Bash for Beginners (Microsoft Developer)
+    url: https://www.youtube.com/watch?v=l2kodNMKroQ
+    reason: first-party, but 9:50 (590 s) exceeds the 6-minute budget, and pipelines start only at 7:10
+  - title: Using grep, sed, and awk in the real world | Into the Terminal 200 (Red Hat Enterprise Linux)
+    url: https://www.youtube.com/watch?v=pWJq5vyMSaI
+    reason: first-party, but 1:08:09 exceeds the budget
 ---
 
 # Video: Linux Pipes & Grep

@@ -17,8 +17,23 @@ cautions:
   - From 3:35 it covers pushd and popd and from 2:25 a stack, which the page does not teach; learners can stop at 2:25
   - Fit was judged from the video description and chapter markers; the video was not watched end to end and no transcript was read
   - Recorded in GitHub Codespaces; prompt and colours differ from a plain Linux terminal
-alternates: []
-rejected: []
+alternates:
+  - title: How to List Content in the Terminal with Bash [6 of 20] | Bash for Beginners (Microsoft Developer)
+    url: https://www.youtube.com/watch?v=68s9xiC2EkQ
+    reason: 3:40 (220 s). First-party; covers ls and file per its description; pairs with the chosen episode for o1
+  - title: "Linux File System: Root, pwd, ls, cd & Absolute vs Relative Paths (AIDDers)"
+    url: https://www.youtube.com/watch?v=vBSvCwO8VuM
+    reason: 3:49 (229 s). Legacy pick (2026-10-07); covers pwd, ls -a, cd, absolute and relative paths. Third-party channel, not an official source; very new channel (39 views at check time)
+  - title: Absolute and Relative Paths (Udacity)
+    url: https://www.youtube.com/watch?v=ephId3mYu9o
+    reason: 2:16 (136 s). Covers o2 only; no pwd, ls or cd
+rejected:
+  - title: "Lecture 1: Course Overview + Introduction to the Shell (MIT Missing Semester)"
+    url: https://www.youtube.com/watch?v=MSgoeuMqUmU
+    reason: university course channel, but 1:14:44 exceeds the 8-minute budget
+  - title: Command Line - CS50 Shorts (CS50)
+    url: https://www.youtube.com/watch?v=BnJ013X02b8
+    reason: university course channel, but 17:52 exceeds the 8-minute budget
 ---
 
 # Video: How to Navigate the Terminal with Bash

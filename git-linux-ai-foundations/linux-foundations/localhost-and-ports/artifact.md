@@ -35,13 +35,13 @@ Programs and ports. A simulation: no real network requests are made.
 
 Your laptop localhost = 127.0.0.1
 
-- 3000web app, listening
-- 5000nothing listening
-- 8080api, listening
+- 3000 web app, listening
+- 5000 nothing listening
+- 8080 api, listening
 
 Ben's laptop another computer
 
-- 8080api, listening
+- 8080 api, listening
 
 A request to localhost never reaches this machine.
 
