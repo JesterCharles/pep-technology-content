@@ -153,9 +153,12 @@ node authoring/tools/qa/pdf-from-md.mjs path/artifact.md path/artifact.pdf
 
 Markdown derivation includes the H1 title, objectives, teaching, model, recap, cheat sheet, sources, and every
 `data-interaction` element's author-written `data-static-alt` value or descendant block. It preserves semantic block
-boundaries, list markers, and table rows. Nested section markers have structural ownership, so a recap containing a
-cheat sheet and sources emits each section once; repeated text in distinct sections is not deduplicated. Missing
-objectives or static alternatives fail rather than being invented. PDF rendering uses
+boundaries, list markers, table rows, definition-list and labelled key-value rows, and inline code. Preformatted code
+and line-oriented code or diff renderings become fenced blocks without losing source-line prefixes or boundaries.
+Use `<pre>`, block `<code>`, `.diff`, `[data-diff]` or `[data-code-block]` for line-oriented content; use `<dl>` or
+label/value child classes or attributes for labelled rows. Nested section markers have structural ownership, so a
+recap containing a cheat sheet and sources emits each section once; repeated text in distinct sections is not
+deduplicated. Missing objectives or static alternatives fail rather than being invented. PDF rendering uses
 `authoring/tools/qa/print-template.html` version 1 and pinned Playwright Chromium.
 
 ## Provenance

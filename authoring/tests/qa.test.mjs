@@ -327,6 +327,16 @@ test("Markdown derivation preserves list items, table cells, and block boundarie
   assert.match(markdown, /Static alternative remains present\./);
 });
 
+test("Markdown derivation preserves code lines and semantic rows", { timeout: 60000 }, async () => {
+  const markdown = await markdownFromHtml(path.join(fixtures, "md-code-rows.html"));
+  assert.match(markdown, /Run `npm test` before you continue\./);
+  assert.doesNotMatch(markdown, /```(?:\w+)?\n(?:[^`]*\n)?npm test/u);
+  assert.match(markdown, /```\n#!\/bin\/sh\n PORT="\$\{PORT:-8080\}"\n- PORT=8080\n\+ PORT=3000\n```/u);
+  assert.match(markdown, /```diff\n #!\/bin\/sh\n- PORT="\$\{PORT:-8080\}"\n\+ PORT=3000\n```/u);
+  assert.match(markdown, /- \*\*claim\*\*: Tested, works\.\n- \*\*evidence\*\*: No run yet\./u);
+  assert.match(markdown, /- \*\*Workspace\*\*: course files\n- \*\*Status\*\*: not verified/u);
+});
+
 test("Markdown derivation separates flex siblings but preserves inline text runs", { timeout: 60000 }, async () => {
   const markdown = await markdownFromHtml(path.join(fixtures, "md-structure.html"));
   assert.match(markdown, /- API_KEY=demo-123 shell only/);

@@ -5,7 +5,24 @@ import { pathToFileURL } from "node:url";
 import { launchChromium } from "./harness.mjs";
 
 function clean(value) {
-  return value.replace(/\r/g, "").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim();
+  const output = [];
+  let fence;
+  let blank = 0;
+  for (const sourceLine of value.replace(/\r/g, "").split("\n")) {
+    const line = fence ? sourceLine : sourceLine.replace(/[ \t]+$/g, "");
+    const marker = line.match(/^[ \t]*(`{3,}|~{3,})/u)?.[1];
+    if (marker && (!fence || marker[0] === fence[0] && marker.length >= fence.length)) {
+      fence = fence ? undefined : marker;
+    }
+    if (!fence && !line) {
+      blank += 1;
+      if (blank > 1) continue;
+    } else {
+      blank = 0;
+    }
+    output.push(line);
+  }
+  return output.join("\n").trim();
 }
 
 function escapeMarkdown(value) {
@@ -80,23 +97,31 @@ export async function deriveMarkdown(page) {
     }
 
     function separateAdjacentElements(parent, previous, child) {
-      if (previous?.nodeType !== Node.ELEMENT_NODE || child.nodeType !== Node.ELEMENT_NODE) {
-        return false;
-      }
+      if (!previous || child.nodeType !== Node.ELEMENT_NODE) return false;
       const parentDisplay = getComputedStyle(parent).display;
       const parentLaysOutItems = ["flex", "inline-flex", "grid", "inline-grid"].includes(parentDisplay);
-      return parentLaysOutItems || blockDisplays.has(getComputedStyle(previous).display) ||
-        blockDisplays.has(getComputedStyle(child).display);
+      const childIsBlock = blockDisplays.has(getComputedStyle(child).display);
+      if (previous.nodeType !== Node.ELEMENT_NODE) return childIsBlock;
+      return parentLaysOutItems || blockDisplays.has(getComputedStyle(previous).display) || childIsBlock;
     }
 
-    function inlineText(node, owner, root) {
+    function inlineCode(value) {
+      const text = normalizeInline(value);
+      const longestRun = Math.max(0, ...[...text.matchAll(/`+/gu)].map((match) => match[0].length));
+      const fence = "`".repeat(longestRun + 1);
+      const padding = text.startsWith("`") || text.endsWith("`") ? " " : "";
+      return `${fence}${padding}${text}${padding}${fence}`;
+    }
+
+    function inlineText(node, owner, root, markdown = true) {
       if (node.nodeType === Node.TEXT_NODE) return node.nodeValue ?? "";
       if (node.nodeType !== Node.ELEMENT_NODE) return "";
       if (ignoredTags.has(node.tagName) || shouldSkip(node, owner, root)) return "";
       if (node.tagName === "BR") return "\n";
+      if (markdown && node.tagName === "CODE") return inlineCode(node.textContent ?? "");
       const children = [...node.childNodes];
       return children.map((child, index) =>
-        `${separateAdjacentElements(node, children[index - 1], child) ? " " : ""}${inlineText(child, owner, root)}`
+        `${separateAdjacentElements(node, children[index - 1], child) ? " " : ""}${inlineText(child, owner, root, markdown)}`
       ).join("");
     }
 
@@ -141,31 +166,154 @@ export async function deriveMarkdown(page) {
       return output.join("\n");
     }
 
+    function labeledRow(label, value) {
+      const safeLabel = normalizeInline(label).replace(/([\\*_[\]])/gu, "\\$1");
+      const lines = cleanBlock(value).split("\n");
+      if (!lines[0]) return safeLabel ? `- **${safeLabel}**` : "";
+      if (/^(`{3,}|~{3,}|\||[-+*] |\d+\. |#{1,6} )/u.test(lines[0])) {
+        return `- **${safeLabel}**:\n\n${lines.map((line) => `  ${line}`).join("\n")}`;
+      }
+      return `- **${safeLabel}**: ${lines[0]}${lines.slice(1).map((line) => `\n  ${line}`).join("")}`;
+    }
+
+    function renderDefinitionList(list, owner, root) {
+      const rows = [];
+      let pendingTerms = [];
+      let activeTerms = [];
+      for (const child of list.children) {
+        if (child.tagName === "DT") {
+          pendingTerms.push(normalizeInline(inlineText(child, owner, root)));
+        } else if (child.tagName === "DD") {
+          if (pendingTerms.length) {
+            activeTerms = pendingTerms;
+            pendingTerms = [];
+          }
+          if (activeTerms.length) {
+            rows.push(labeledRow(activeTerms.join(", "), renderChildren(child, owner, root)));
+          }
+        }
+      }
+      for (const term of pendingTerms) rows.push(labeledRow(term, ""));
+      return rows.filter(Boolean).join("\n");
+    }
+
+    const keyClass = /(?:^|[-_])(key|label|term|name|k)$/u;
+    const valueClass = /(?:^|[-_])(value|val|description|v)$/u;
+    const rowClass = /^(key-value|kv|labelled|labeled)(?:[-_]row)?$/u;
+    const hasMatchingClass = (element, expression) =>
+      [...element.classList].some((className) => expression.test(className));
+
+    function keyValueParts(element, owner, root) {
+      const children = [...element.children].filter(
+        (child) => !ignoredTags.has(child.tagName) && !shouldSkip(child, owner, root),
+      );
+      if (children.length !== 2) return undefined;
+      const explicitRow = element.hasAttribute("data-key-value") || hasMatchingClass(element, rowClass);
+      const semanticPair =
+        (children[0].hasAttribute("data-key") || hasMatchingClass(children[0], keyClass)) &&
+        (children[1].hasAttribute("data-value") || hasMatchingClass(children[1], valueClass));
+      return explicitRow || semanticPair ? children : undefined;
+    }
+
+    function renderKeyValueRow(element, owner, root) {
+      const [key, value] = keyValueParts(element, owner, root) ?? [];
+      if (!key) return "";
+      return labeledRow(
+        inlineText(key, owner, root),
+        renderElement(value, owner, root, 0),
+      );
+    }
+
+    function renderKeyValueGroup(element, owner, root) {
+      const children = [...element.children].filter(
+        (child) => !ignoredTags.has(child.tagName) && !shouldSkip(child, owner, root),
+      );
+      if (!children.length || !children.every((child) => keyValueParts(child, owner, root))) return "";
+      return children.map((child) => renderKeyValueRow(child, owner, root)).filter(Boolean).join("\n");
+    }
+
+    function codeBlockKind(element) {
+      if (element.tagName === "PRE") return "code";
+      if (element.tagName === "CODE" && (
+        element.textContent?.includes("\n") || blockDisplays.has(getComputedStyle(element).display)
+      )) return "code";
+      const tokens = [element.id, ...element.classList].filter(Boolean);
+      if (element.hasAttribute("data-diff") || tokens.some((token) => token === "diff" || token === "diff-block")) {
+        return "diff";
+      }
+      if (element.hasAttribute("data-code-block") || tokens.some((token) =>
+        ["code-block", "codeblock", "source-code"].includes(token)
+      )) return "code";
+      return undefined;
+    }
+
+    function fencedCode(text, language = "") {
+      const content = text.replace(/\r/g, "").replace(/^\n|\n$/gu, "");
+      if (!content) return "";
+      const longestRun = Math.max(0, ...[...content.matchAll(/`+/gu)].map((match) => match[0].length));
+      const fence = "`".repeat(Math.max(3, longestRun + 1));
+      return `${fence}${language}\n${content}\n${fence}`;
+    }
+
+    function renderCodeBlock(element, kind, owner, root) {
+      if (element.tagName === "PRE" || element.tagName === "CODE") {
+        const language = element.querySelector?.("code[class*='language-']")?.className
+          .match(/(?:^|\s)language-([^\s]+)/u)?.[1] ?? "";
+        return fencedCode(element.textContent ?? "", language);
+      }
+      const children = [...element.childNodes].filter((child) =>
+        child.nodeType === Node.ELEMENT_NODE
+          ? !ignoredTags.has(child.tagName) && !shouldSkip(child, owner, root)
+          : child.nodeType === Node.TEXT_NODE && child.nodeValue?.trim(),
+      );
+      const lines = children.flatMap((child) => {
+        const text = (child.textContent ?? "").replace(/\r/g, "").replace(/^\n|\n$/gu, "");
+        return text.split("\n");
+      });
+      return fencedCode(lines.join("\n"), kind === "diff" ? "diff" : "");
+    }
+
     function renderElement(element, owner, root, depth) {
       if (ignoredTags.has(element.tagName) || shouldSkip(element, owner, root)) return "";
+      const codeKind = codeBlockKind(element);
+      if (codeKind) return renderCodeBlock(element, codeKind, owner, root);
       if (element.tagName === "UL" || element.tagName === "OL") {
         return renderList(element, owner, root, depth);
       }
+      if (element.tagName === "DL") return renderDefinitionList(element, owner, root);
       if (element.tagName === "TABLE") return renderTable(element, owner, root);
+      const keyValueGroup = renderKeyValueGroup(element, owner, root);
+      if (keyValueGroup) return keyValueGroup;
+      const keyValueRow = renderKeyValueRow(element, owner, root);
+      if (keyValueRow) return keyValueRow;
       if (/^H[1-6]$/.test(element.tagName)) {
         const text = normalizeInline(inlineText(element, owner, root));
         return text ? `### ${text}` : "";
       }
       if (element.tagName === "HR") return "---";
-      if (element.tagName === "PRE") {
-        const text = (element.textContent ?? "").replace(/^\n|\n$/g, "");
-        return text ? `\`\`\`\n${text}\n\`\`\`` : "";
-      }
       if (blockTags.has(element.tagName)) return renderChildren(element, owner, root, depth);
       return normalizeInline(inlineText(element, owner, root));
     }
 
     function cleanBlock(value) {
-      return value
-        .replace(/[ \t]+\n/g, "\n")
-        .replace(/\n[ \t]+/g, "\n")
-        .replace(/\n{3,}/g, "\n\n")
-        .trim();
+      const output = [];
+      let fence;
+      let blank = 0;
+      for (const sourceLine of value.replace(/\r/g, "").split("\n")) {
+        const line = fence ? sourceLine : sourceLine.replace(/[ \t]+$/g, "");
+        const marker = line.match(/^[ \t]*(`{3,}|~{3,})/u)?.[1];
+        if (marker && (!fence || marker[0] === fence[0] && marker.length >= fence.length)) {
+          fence = fence ? undefined : marker;
+        }
+        if (!fence && !line) {
+          blank += 1;
+          if (blank > 1) continue;
+        } else {
+          blank = 0;
+        }
+        output.push(line);
+      }
+      return output.join("\n").trim();
     }
 
     function renderChildren(parent, owner, root, depth = 0) {
@@ -184,7 +332,7 @@ export async function deriveMarkdown(page) {
         }
         if (child.nodeType !== Node.ELEMENT_NODE) continue;
         if (ignoredTags.has(child.tagName) || shouldSkip(child, owner, root)) continue;
-        if (blockTags.has(child.tagName)) {
+        if (blockTags.has(child.tagName) || codeBlockKind(child)) {
           flushInline();
           const rendered = renderElement(child, owner, root, depth);
           if (rendered) parts.push(rendered);
@@ -198,7 +346,7 @@ export async function deriveMarkdown(page) {
     }
 
     const renderRoot = (element, owner) => cleanBlock(renderElement(element, owner, element, 0));
-    const plainText = (element) => normalizeInline(inlineText(element, undefined, element));
+    const plainText = (element) => normalizeInline(inlineText(element, undefined, element, false));
     const title = plainText(document.querySelector("h1") ?? document.querySelector("title"));
     const objectiveRoot = document.querySelector("[data-pep-objectives], .objectives");
     const objectives = objectiveRoot
