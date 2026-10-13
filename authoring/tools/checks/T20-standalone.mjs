@@ -150,8 +150,9 @@ function scanCss(out, ctx, file, css, offset, whole, baseLine = 1) {
 
 function scriptResourceAllowed(value, property) {
   const trimmed = value.trim();
-  if (trimmed === "" || /^(?:data:|blob:|#|about:blank$)/i.test(trimmed)) return true;
-  return property === "href" && !SCRIPT_RESOURCE_EXT.test(trimmed.split(/[?#]/)[0]);
+  if (trimmed === "" || /\s/.test(trimmed) || /^(?:data:|blob:|#|about:blank$)/i.test(trimmed)) return true;
+  if (SCRIPT_RESOURCE_EXT.test(trimmed.split(/[?#]/)[0])) return false;
+  return property === "href" || !/^(?:[a-z][a-z+.-]*:|\/\/)|\//i.test(trimmed);
 }
 
 function scanJavaScript(out, ctx, file, source, offset, whole, baseLine = 1) {
@@ -209,6 +210,12 @@ function scanJavaScript(out, ctx, file, source, offset, whole, baseLine = 1) {
       if ("([{".includes(character)) depth += 1;
       else if (")]}".includes(character) && --depth < 0) break;
       else if (character === ";" && depth === 0) break;
+      else if (character === "\n" && depth === 0) {
+        const codeEnd = start + code.slice(start, end).trimEnd().length;
+        const stringEnd = Math.max(start, ...strings.filter((token) => token.start >= start && token.end <= end).map((token) => token.end));
+        const continued = codeEnd > stringEnd && /[+\-*/%=&|^<>?:,.!~]$/.test(code.slice(start, codeEnd));
+        if (Math.max(codeEnd, stringEnd) > start && !continued && !/^\s*[+\-*/%&|^<>?:.,]/.test(code.slice(end))) break;
+      }
     }
     const markup = strings.filter((token) => token.start >= start && token.start < end).map((token) => token.value).join("");
     if (markup) scanHtmlText(out, ctx, file, markup, { baseLine: displayLine(offset + match.index) });

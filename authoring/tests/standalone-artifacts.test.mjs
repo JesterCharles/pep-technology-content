@@ -75,6 +75,8 @@ const negatives = [
   ["js-insert-adjacent-html", /<audio> src must be embedded, not "clip\.mp3"/],
   ["js-document-write", /<link> href must be embedded, not "theme\.css"/],
   ["js-comment-in-template", /global fetch\(\) is forbidden/],
+  ["js-assign-src-path", /script sets src to a non-embedded resource "images\/diagram"/],
+  ["js-asi-continued", /<img> src must be embedded, not "diagram\.png"/],
 ];
 
 for (const [name, diagnostic] of negatives) {
