@@ -1,6 +1,6 @@
 # Post-import edits to imported learner pages
 
-Every change to imported page bytes after the byte-faithful import (commit 664f7ec) is listed here for the critics.
+Every change to imported page bytes after the byte-faithful import commit (subject: feat(linux-foundations): import learner pages byte-faithfully from course-1 package) is listed here for the critics.
 
 ## Normalization (no learner-content change)
 
@@ -29,7 +29,7 @@ Every change to imported page bytes after the byte-faithful import (commit 664f7
 
 ## Timing: navigating-the-shell and pipes-and-grep labels raised
 
-- Evidence: frozen `tools/timing/estimate_reading.py` (sha256 `0deca96bf5e367aeae51a82abdbd4b6ce0d0289ecc9868c9eff3701016edf96f`) P50 before the objectives list (commit 478f4b4 bytes) and after it: navigating-the-shell 7.95 to 8.12, pipes-and-grep 5.89 to 6.03. The added list alone accounts for the difference (removing only the list restores 7.95).
+- Evidence: frozen `tools/timing/estimate_reading.py` (sha256 `0deca96bf5e367aeae51a82abdbd4b6ce0d0289ecc9868c9eff3701016edf96f`) P50 before the objectives list (bytes from the next-topic link normalization commit, subject: chore(linux-foundations): rewrite next-topic links to canonical topic paths) and after it: navigating-the-shell 7.95 to 8.12, pipes-and-grep 5.89 to 6.03. The added list alone accounts for the difference (removing only the list restores 7.95).
 - Change: aboutLabel, budget and modeledWorstPath raised 8 to 9 (navigating-the-shell) and 6 to 7 (pipes-and-grep); the `pep:budget-minutes` meta follows `topic.json`. T14 passes and the F1 day total still fits.
 - Decision: approved by Firstmate on 2026-10-12 (option a).
 
