@@ -247,6 +247,40 @@ test("migrate-catalog preflights dangling-symlink collisions", async () => {
   await assert.rejects(readFile(path.join(tmp, "authoring/catalog/demo-course/course.json")), { code: "ENOENT" });
 });
 
+test("migrate-catalog preflights symlinked destination parents", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pep-migrate-symlink-parent-"));
+  await mkdir(path.join(tmp, "demo-course/demo-module"), { recursive: true });
+  await mkdir(path.join(tmp, "authoring/catalog/demo-course"), { recursive: true });
+  await mkdir(path.join(tmp, "sink"), { recursive: true });
+  await writeFile(path.join(tmp, "demo-course/course.json"), '{"id":"demo-course","moduleOrder":["demo-module"]}\n');
+  await writeFile(path.join(tmp, "demo-course/demo-module/module.json"), '{"id":"demo-module"}\n');
+  await writeFile(path.join(tmp, "sink/.keep"), "tracked sink\n");
+  const parent = path.join(tmp, "authoring/catalog/demo-course/demo-module");
+  await symlink("../../../sink", parent);
+  assert.equal(spawnSync("git", ["init", "-b", "main"], { cwd: tmp }).status, 0);
+  assert.equal(spawnSync("git", ["add", "."], { cwd: tmp }).status, 0);
+  assert.equal(
+    spawnSync(
+      "git",
+      ["-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "fixture"],
+      { cwd: tmp },
+    ).status,
+    0,
+  );
+  const beforeIndex = spawnSync("git", ["ls-files", "--stage"], { cwd: tmp, encoding: "utf8" }).stdout;
+  assert.equal(spawnSync("git", ["status", "--porcelain=v1"], { cwd: tmp, encoding: "utf8" }).stdout, "");
+  const result = run(["migrate-catalog"], tmp);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /destination parent is not a real directory/);
+  assert.equal(spawnSync("git", ["status", "--porcelain=v1"], { cwd: tmp, encoding: "utf8" }).stdout, "");
+  assert.equal(spawnSync("git", ["ls-files", "--stage"], { cwd: tmp, encoding: "utf8" }).stdout, beforeIndex);
+  assert.equal(await readFile(path.join(tmp, "demo-course/course.json"), "utf8"), '{"id":"demo-course","moduleOrder":["demo-module"]}\n');
+  assert.equal(await readFile(path.join(tmp, "demo-course/demo-module/module.json"), "utf8"), '{"id":"demo-module"}\n');
+  assert.equal((await lstat(parent)).isSymbolicLink(), true);
+  await assert.rejects(readFile(path.join(tmp, "authoring/catalog/demo-course/course.json")), { code: "ENOENT" });
+  await assert.rejects(readFile(path.join(tmp, "sink/module.json")), { code: "ENOENT" });
+});
+
 test("every subcommand has help", () => {
   for (const command of ["check", "lock", "export", "export-lab", "new-topic", "migrate-catalog"]) {
     const result = run([command, "--help"]);

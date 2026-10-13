@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { error, findCourses, readJson, walk } from "../lib/common.mjs";
+import { error, exists, findCourses, loadCourse, readJson, walk } from "../lib/common.mjs";
 
 export const id = "T24";
 export const gate = 24;
@@ -50,13 +50,37 @@ async function loadCanonical(ctx, name, kind) {
 
 export async function run(ctx) {
   const out = [];
-  const seenFiles = new Set();
+  const artifactFiles = new Set();
   const courses = await findCourses(ctx);
   for (const target of ctx.scanRoots) {
     const walked = await walk(target, { skip: ctx.skip });
-    for (const file of walked.files) {
-      if (path.basename(file) !== "artifact.html" || seenFiles.has(file)) continue;
-      seenFiles.add(file);
+    for (const file of walked.files)
+      if (path.basename(file) === "artifact.html") artifactFiles.add(file);
+  }
+  if (ctx.explicit) {
+    const selectionRoots = ctx.targets.map((target) =>
+      ["course.json", "module.json", "topic.json"].includes(path.basename(target))
+        ? path.dirname(target)
+        : target,
+    );
+    for (const descriptor of courses) {
+      const course = await loadCourse(descriptor);
+      for (const module of course.modules) {
+        for (const topicId of module.manifest.topicOrder ?? []) {
+          const catalogRoot = path.join(module.catalogRoot, topicId);
+          if (
+            !selectionRoots.some(
+              (target) =>
+                catalogRoot === target || catalogRoot.startsWith(`${target}${path.sep}`),
+            )
+          ) continue;
+          const artifact = path.join(module.contentRoot, topicId, "artifact.html");
+          if (await exists(artifact)) artifactFiles.add(artifact);
+        }
+      }
+    }
+  }
+  for (const file of [...artifactFiles].sort()) {
       const display = ctx.display(file);
       const text = await readFile(file, "utf8");
       const blocks = parseBlocks(text);
@@ -135,7 +159,6 @@ export async function run(ctx) {
           out.push(error(id, display, `declared component ${name}@${declared[name]} has no marker`));
         }
       }
-    }
   }
   return out;
 }

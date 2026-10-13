@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { readdir, readFile, rm, mkdir, writeFile, copyFile, rmdir } from "node:fs/promises";
+import { copyFile, lstat, mkdir, readFile, readdir, rm, rmdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
@@ -11,7 +11,6 @@ import {
   exists,
   findCourses,
   formatError,
-  isDirectory,
   posix,
   readJson,
   relative,
@@ -340,8 +339,13 @@ async function migrateCatalog() {
     if (await entryExists(destination))
       die(`migrate-catalog: collision: ${relative(root, source)} and ${relative(root, destination)}`);
     for (let parent = path.dirname(destination); parent !== root; parent = path.dirname(parent)) {
-      if ((await entryExists(parent)) && !(await isDirectory(parent)))
-        die(`migrate-catalog: destination parent is not a directory: ${relative(root, parent)}`);
+      try {
+        const info = await lstat(parent);
+        if (!info.isDirectory())
+          die(`migrate-catalog: destination parent is not a real directory: ${relative(root, parent)}`);
+      } catch (cause) {
+        if (cause.code !== "ENOENT") throw cause;
+      }
     }
     try {
       execFileSync("git", ["ls-files", "--error-unmatch", "--", relative(root, source)], {

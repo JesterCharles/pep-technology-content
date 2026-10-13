@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -44,6 +44,47 @@ for (const [name, message] of [
     assert.match(result.stderr, new RegExp(message.replaceAll(".", "\\.")));
   });
 }
+
+test("T24 joins explicit catalog scopes to learner artifacts", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-components-catalog-"));
+  const catalog = path.join(root, "authoring/catalog/demo-course");
+  const courseFile = path.join(catalog, "course.json");
+  const moduleFile = path.join(catalog, "demo-module/module.json");
+  const topicFile = path.join(catalog, "demo-module/demo-topic/topic.json");
+  await mkdir(path.dirname(topicFile), { recursive: true });
+  await writeFile(courseFile, '{"id":"demo-course","moduleOrder":["demo-module"]}\n');
+  await writeFile(moduleFile, '{"id":"demo-module","topicOrder":["demo-topic"]}\n');
+  await writeFile(topicFile, '{"id":"demo-topic","components":{"progress":"1"}}\n');
+  const artifact = path.join(root, "demo-course/demo-module/demo-topic/artifact.html");
+  await mkdir(path.dirname(artifact), { recursive: true });
+  await cp(path.join(repo, "authoring/tests/fixtures/components/matching/artifact.html"), artifact);
+  await cp(path.join(repo, "components/progress"), path.join(root, "components/progress"), {
+    recursive: true,
+  });
+
+  const targets = [courseFile, moduleFile, topicFile].map((target) => path.relative(root, target));
+  for (const target of targets) {
+    const result = runNode(pep, ["check", "--only", "T24", target], root);
+    assert.equal(result.status, 0, result.stderr);
+  }
+
+  runGit(root, ["init", "-b", "main"]);
+  runGit(root, ["config", "user.email", "tests@pep.local"]);
+  runGit(root, ["config", "user.name", "PEP Tests"]);
+  runGit(root, ["add", "."]);
+  runGit(root, ["commit", "-m", "fixture"]);
+  runGit(root, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+  await writeFile(topicFile, '{"id":"demo-topic","components":{"progress":"999"}}\n');
+
+  for (const target of targets) {
+    const result = runNode(pep, ["check", "--only", "T24", target], root);
+    assert.notEqual(result.status, 0, `${target}\nstdout: ${result.stdout}\nstderr: ${result.stderr}`);
+    assert.match(result.stderr, /marker version 1 does not match topic\.json version 999/);
+  }
+  const changed = runNode(pep, ["check", "--changed", "--only", "T24"], root);
+  assert.notEqual(changed.status, 0);
+  assert.match(changed.stderr, /marker version 1 does not match topic\.json version 999/);
+});
 
 test("legacy course package schema rejects an invalid index", () => {
   const fixture = path.join(repo, "authoring", "tests", "fixtures", "legacy-schema-course");
