@@ -47,3 +47,9 @@ Every change to imported page bytes after the byte-faithful import (commit 664f7
 
 - education-recheck-01 (navigating-the-shell): each folder-tree item now carries a visually hidden full path, for example `home/` plus "(full path /home)", so the hierarchy no longer depends on CSS indentation alone. The visual design is unchanged; screen readers and the derived `artifact.md` now get the explicit path. Companion regenerated with `md-from-html.mjs`. Estimator P50 8.12 -> 8.3, within the 9-minute budget.
 - sme-02 stays open: gnu.org is unreachable from this host, so the four gnu.org source receipts are not yet refreshed; no other host is substituted.
+
+## sme-02 source receipts (captain decision: official GNU release host)
+
+- www.gnu.org timed out from this host for more than two hours. By captain decision (option B) the GNU Bash 5.3, grep 3.12 and Coreutils 9.12 documentation was read from the official release tarballs on ftp.gnu.org; tarball URLs, sha256, the doc files used (bashref.texi, grep.texi, coreutils.texi, perm.texi) with their sha256, and the node and claim behind each learner citation are in `gnu-release-sources.json`.
+- The four affected `sources.json` receipts now list the tarball URLs (live-fetched, HTTP 200, sha256 matching the recorded release bytes) alongside the kept non-GNU sources; no man7.org GNU mirror receipts remain. Learner disclosures keep the canonical www.gnu.org manual URLs.
+- navigating-the-shell: the GNU ls default quoting of names with spaces on a terminal (shell-escape) is now substantiated by coreutils.texi "Formatting the file names", so it left that topic's unverified list. file-permissions: the bash-reads-a-script-argument claim is grounded in bashref.texi "Shell Scripts".
