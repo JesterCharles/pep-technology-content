@@ -73,18 +73,41 @@ macOS
    The first makes the folder, the second extracts Maven into it, and the third adds Maven's `bin` folder to `PATH` in `~/.zshrc`.
 4. Open a new Terminal window and run the three checks below. If `java -version` shows an older Java, add `export JAVA_HOME=$(/usr/libexec/java_home -v 25)` to `~/.zshrc` and open a new window.
 
-Linux (Debian or Ubuntu)
+Linux (Debian, Ubuntu, Fedora or RHEL)
 
-1. Open the Adoptium Linux installer packages page (linked under Sources). Run its commands to add the Adoptium apt repository; they need `sudo`.
-2. Run `sudo apt install temurin-25-jdk`. On Fedora or RHEL, add the Adoptium RPM repository from the same page and run `sudo dnf install temurin-25-jdk`.
-3. Download the Maven binary `.tar.gz` archive from the Apache Maven download page; this assumes your browser saved it in `~/Downloads`. In a terminal, run these three lines, with your Maven version in place of `<version>` each time:
+1. Open a terminal and install JDK 25 with the commands for your system. Type your password when `sudo` asks (nothing shows as you type) and answer `y` to every prompt, including the Adoptium key import.
+   Debian or Ubuntu:
+   ```
+   sudo apt install -y wget apt-transport-https gpg
+   wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null
+   echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | sudo tee /etc/apt/sources.list.d/adoptium.list
+   sudo apt update
+   sudo apt install temurin-25-jdk
+   ```
+   Fedora or RHEL:
+   ```
+   sudo tee /etc/yum.repos.d/adoptium.repo > /dev/null <<EOF
+   [Adoptium]
+   name=Adoptium
+   baseurl=https://packages.adoptium.net/artifactory/rpm/$(. /etc/os-release; echo $ID)/\$releasever/\$basearch
+   enabled=1
+   gpgcheck=1
+   gpgkey=https://packages.adoptium.net/artifactory/api/gpg/key/public
+   EOF
+   sudo dnf install temurin-25-jdk
+   ```
+   It is done when the prompt returns with no error; `dnf` also prints `Complete!`.
+2. Download the Maven binary `.tar.gz` archive from the Apache Maven download page; this assumes your browser saved it in `~/Downloads`. Run these three lines, with your Maven version in place of `<version>`. They extract Maven into `~/tools` and add its `bin` folder to `PATH`:
    ```
    mkdir -p ~/tools
    tar -xzf ~/Downloads/apache-maven-<version>-bin.tar.gz -C ~/tools
    echo 'export PATH="$HOME/tools/apache-maven-<version>/bin:$PATH"' >> ~/.bashrc
    ```
-   The first makes the folder, the second extracts Maven into it, and the third adds Maven's `bin` folder to `PATH` in `~/.bashrc`.
-4. Open a new terminal and run the three checks below. If `java -version` shows an older Java, put the JDK 25 `bin` folder under `/usr/lib/jvm` first on `PATH`, as in the practice.
+3. Open a new terminal and run the three checks below. If `java -version` or `javac -version` shows an older Java, run these and type the number of the `temurin-25` line:
+   ```
+   sudo update-alternatives --config java
+   sudo update-alternatives --config javac
+   ```
 
 Windows
 
