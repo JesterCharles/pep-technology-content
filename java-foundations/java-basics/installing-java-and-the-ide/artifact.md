@@ -58,7 +58,7 @@ JAVA_HOME
 
 ### Now install on your own computer
 
-The practice terminal used example folders. Do it for real now, on the computer you will use for the coding lab. Open the steps for your system.
+Now do it for real, on the computer you will use for the coding lab.
 
 macOS
 
@@ -75,7 +75,7 @@ macOS
 
 Linux (Debian, Ubuntu, Fedora or RHEL)
 
-1. Open a terminal and install JDK 25 with the commands for your system. Type your password when `sudo` asks (nothing shows as you type) and answer `y` to every prompt, including the Adoptium key import.
+1. Open a terminal and run the commands for your system. Type your password when `sudo` asks (nothing shows as you type). Answer `y` to the package install confirmation and to the key import prompt that names Adoptium. Stop and ask for help if you see any other prompt.
    Debian or Ubuntu:
    ```
    sudo apt install -y wget apt-transport-https gpg
@@ -96,17 +96,22 @@ Linux (Debian, Ubuntu, Fedora or RHEL)
    EOF
    sudo dnf install temurin-25-jdk
    ```
-   It is done when the prompt returns with no error; `dnf` also prints `Complete!`.
-2. Download the Maven binary `.tar.gz` archive from the Apache Maven download page; this assumes your browser saved it in `~/Downloads`. Run these three lines, with your Maven version in place of `<version>`. They extract Maven into `~/tools` and add its `bin` folder to `PATH`:
+   It is done when the prompt returns with no error.
+2. Download the Maven binary `.tar.gz` from the Apache Maven download page into `~/Downloads`. Run these lines, with your Maven version in place of `<version>`:
    ```
    mkdir -p ~/tools
    tar -xzf ~/Downloads/apache-maven-<version>-bin.tar.gz -C ~/tools
    echo 'export PATH="$HOME/tools/apache-maven-<version>/bin:$PATH"' >> ~/.bashrc
    ```
-3. Open a new terminal and run the three checks below. If `java -version` or `javac -version` shows an older Java, run these and type the number of the `temurin-25` line:
+3. Open a new terminal and run the three checks below. If either Java check shows an older version, run these and type the number of the `temurin-25` line. Debian or Ubuntu:
    ```
    sudo update-alternatives --config java
    sudo update-alternatives --config javac
+   ```
+   Fedora or RHEL:
+   ```
+   sudo alternatives --config java
+   sudo alternatives --config javac
    ```
 
 Windows
@@ -116,7 +121,7 @@ Windows
 3. Download the Maven binary `.zip` archive and extract it into a folder such as `C:\tools`. Open System Properties | Environment Variables, edit `Path`, and add the `bin` folder inside the Maven folder.
 4. Open a new Command Prompt or PowerShell window and run the three checks below.
 
-You are ready when, in a new terminal, all three checks show 25. Your exact version numbers will be newer or different:
+You are ready when, in a new terminal, all three checks show 25. Your numbers may differ:
 
 ```
 java -version
@@ -128,7 +133,7 @@ mvn -v
   Java version: 25.0.x ...
 ```
 
-Last, install IntelliJ IDEA with the JetBrains installation guide, open the coding lab's `starter/pom.xml` as a project, and set JDK 25 as the project SDK, as in the practice. It is set when File | Project Structure | Project shows 25.
+Last, install IntelliJ IDEA with the JetBrains installation guide, open the coding lab's `starter/pom.xml` as a project, and set JDK 25 as the project SDK. It is set when File | Project Structure | Project shows 25.
 
 Next topic: Running a first program
 
