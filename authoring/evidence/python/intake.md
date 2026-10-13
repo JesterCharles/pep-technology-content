@@ -1,0 +1,471 @@
+# Course intake: Python
+
+Course intake for `python` (calendar technology `python`, Standard days S14-S19, Fast Track days FT9-FT11).
+This intake ships the course, module and topic manifests, the S19/FT11 module-check blueprint and evidence only; it authors no learner artifact.
+Every topic artifact is recorded absent: applicable companions with the reason "authored in the <module> module PR", inapplicable ones with their applicability reason.
+
+## Inputs
+
+- Curriculum snapshot: `curriculum/snapshot/pep-curriculum.json` (sha256 `9520f1fde24630604a82ecc1188726339ee02233d0274c622f4dda9c8c0204f8`) and `curriculum/snapshot/pep-calendar.json` (sha256 `634da8de5c6034e269b56347b2009fa24eb74eb9bd94f6bd8d5f65f54459ce00`), curriculum version `2026-10-01` per `curriculum/curriculum.lock.json`.
+- Confirmed coverage matrix v3 (read-only, frozen): `matrix-v3.json` (sha256 `4e936d703e64dba4f7973458b57aed0e921fad0d5afecca319cf7cec7806c4cd`) and `discrepancies-v3.json` (sha256 `ba6580b06af9d94d6f4ed53cf82986cdbd3db357fee09d2b268511505b2b9c3a`). Its 41 `python` topic-string rows (22 Standard, 19 Fast) are the authoritative topic inventory and expected-artifact scope.
+- Repository contracts on `main`: `AGENTS.md`, `authoring/docs/workflow.md`, `authoring/docs/html-artifact-contract.md`, `authoring/docs/lab-contract.md`, `authoring/docs/tools/*.md`, `authoring/schemas/`, and the new-course budget rule in `authoring/docs/tools/validators.md`.
+- Plan: approved PEP technology-content plan sections 2.3, 3, 4, 5, 6, 7.1 and 11.
+- Terminal foundation: `components/terminal` version 1 (from the repaired course-1 Evolv package `git-linux-ai-foundations-20261007-evolv-terminal-repair`): form-free direct Run-button and Enter-key dispatch, captain-confirmed working in Evolv (platform success, not a captured trace). Reused as is, not re-derived.
+
+## Course slice
+
+| Day | Track | Calendar title | Day type | Snapshot pointer | Calendar rows |
+|---|---|---|---|---|---|
+| S14 | Standard | Python for Java devs | Concept | `/tracks/1/weeks/2/days/3` | 0. Python syntax for Java developers; 1. Functions and arguments; 2. Lists, dicts, sets and tuples; 3. Slicing and comprehensions |
+| S15 | Standard | Modules, scripts and pytest | Concept | `/tracks/1/weeks/2/days/4` | 0. Mutability and aliasing; 1. Modules, imports and virtual environments; 2. Exceptions and logging; 3. Writing and running script files; 4. Testing with pytest |
+| S16 | Standard | Extract and load | Lab | `/tracks/1/weeks/3/days/0` | 0. Reading CSV and JSON files with generators; 1. Connecting to Postgres from Python with psycopg; 2. Loading into a staging table with upserts; 3. ELT: transforming in SQL after loading |
+| S17 | Standard | Transform with AI enrichment | Lab | `/tracks/1/weeks/3/days/1` | 0. Cleaning and validating records with Pydantic and type hints; 1. Deduplicating: in SQL vs in Python; 2. AI enrichment with validated outputs; 3. Reading: keeping sensitive data out of prompts |
+| S18 | Standard | FastAPI and service calls | Concept | `/tracks/1/weeks/3/days/2` | 0. FastAPI routes; 1. Serving pipeline results as an API; 2. Calling the Spring Boot API from FastAPI: service URL, token and timeouts |
+| S19 | Standard | Python review and check | Review | `/tracks/1/weeks/3/days/3` | 0. Python review; 1. Python module check |
+| FT9 | Fast | Python for Java devs + Modules, scripts and pytest | Fast (from S14-S15) | `/tracks/2/weeks/1/days/3` | 0-5. the S14 rows plus modules/venv and pytest; 6-8. mutability, exceptions and logging, script files, each "(skim)" |
+| FT10 | Fast | Extract and load + Transform with AI enrichment | Fast (from S16-S17) | `/tracks/2/weeks/1/days/4` | 0. Reading CSV and JSON files with generators; 1. Loading into a staging table with psycopg and upserts; 2. Cleaning and validating records with Pydantic and type hints; 3. ELT (skim); 4. Deduplicating (skim) |
+| FT11 | Fast | FastAPI and service calls + Python review and check | Fast (from S18-S19) | `/tracks/2/weeks/2/days/0` | 0. AI enrichment with validated outputs; 1. FastAPI routes that serve pipeline results; 2. Calling the Spring Boot API from FastAPI: service URL, token and timeouts; 3. Keeping sensitive data out of prompts (skim); 4. Python module check |
+
+S19 and FT11 both carry the calendar assessment `moduleCheck` (formats `MCQ` and `coding`, pass mark 70); both map to the one course-level blueprint below. No day in the slice sets `requiredLab: true`.
+
+## Module map (second-mate grouping decision)
+
+The snapshot gives `python` no module grouping or count (discrepancy `source-gap-python-modules`, category A, sequenced to this intake). This intake records the following grouping as a **second-mate grouping decision, not syllabus**: modules follow calendar day sequence, two Standard days per module, each the batch unit for one module PR. It changes no topic, day or order in the calendar, and the decision is visible for approval at merge.
+
+| Module | Title | Standard days | Fast days | Topics |
+|---|---|---|---|---|
+| `python-fundamentals` | Python Fundamentals for Java Developers | S14-S15 | FT9 | 9 |
+| `data-pipelines` | Data Pipelines: Extract, Load and Transform | S16-S17 | FT10, FT11 rows 0 and 3 | 8 |
+| `fastapi-services` | FastAPI Services | S18-S19 | FT11 rows 1-2 | 4 |
+
+Total: 21 canonical topics (20 instructional rows, 19 core plus 1 Reading, and 1 review row), matching plan section 2.3 (19 core, 1 reading, 2 review/other).
+Why this grouping: S14-S15 are language fundamentals that FT9 packs into one day; S16-S17 are the two Lab days that build one extract-validate-enrich-load pipeline and share one module lab; S18-S19 serve that pipeline over HTTP and review the course. Alternatives rejected: one module per day (S19 would hold a single review topic, and S16/S17 would split the shared lab), and one course-wide module (21 topics, too large a batch for one author context and one PR).
+
+## Topic list with relations
+
+One canonical topic per instructional calendar row (core and Reading). Topic ids are the matrix v3 proposed slugs. Relations: `exact` maps a row to one topic; `split` maps one row to several topics that each cover part of it. The `(skim)` suffix on Fast rows is track emphasis metadata, not a separate page, so those rows map `exact`.
+
+| # | Topic | Module | Kind | Mappings (day, pointer, relation, calendar row) |
+|---|---|---|---|---|
+| 1 | `python-syntax-for-java-developers` | `python-fundamentals` | core | S14 `/tracks/1/weeks/2/days/3/topics/0` exact: Python syntax for Java developers<br>FT9 `/tracks/2/weeks/1/days/3/topics/0` exact: Python syntax for Java developers |
+| 2 | `functions-and-arguments` | `python-fundamentals` | core | S14 `/tracks/1/weeks/2/days/3/topics/1` exact: Functions and arguments<br>FT9 `/tracks/2/weeks/1/days/3/topics/1` exact: Functions and arguments |
+| 3 | `lists-dicts-sets-and-tuples` | `python-fundamentals` | core | S14 `/tracks/1/weeks/2/days/3/topics/2` exact: Lists, dicts, sets and tuples<br>FT9 `/tracks/2/weeks/1/days/3/topics/2` exact: Lists, dicts, sets and tuples |
+| 4 | `slicing-and-comprehensions` | `python-fundamentals` | core | S14 `/tracks/1/weeks/2/days/3/topics/3` exact: Slicing and comprehensions<br>FT9 `/tracks/2/weeks/1/days/3/topics/3` exact: Slicing and comprehensions |
+| 5 | `mutability-and-aliasing` | `python-fundamentals` | core | S15 `/tracks/1/weeks/2/days/4/topics/0` exact: Mutability and aliasing<br>FT9 `/tracks/2/weeks/1/days/3/topics/6` exact: Mutability and aliasing (skim) |
+| 6 | `modules-imports-and-virtual-environments` | `python-fundamentals` | core | S15 `/tracks/1/weeks/2/days/4/topics/1` exact: Modules, imports and virtual environments<br>FT9 `/tracks/2/weeks/1/days/3/topics/4` exact: Modules, imports and virtual environments |
+| 7 | `exceptions-and-logging` | `python-fundamentals` | core | S15 `/tracks/1/weeks/2/days/4/topics/2` exact: Exceptions and logging<br>FT9 `/tracks/2/weeks/1/days/3/topics/7` exact: Exceptions and logging (skim) |
+| 8 | `writing-and-running-script-files` | `python-fundamentals` | core | S15 `/tracks/1/weeks/2/days/4/topics/3` exact: Writing and running script files<br>FT9 `/tracks/2/weeks/1/days/3/topics/8` exact: Writing and running script files (skim) |
+| 9 | `testing-with-pytest` | `python-fundamentals` | core | S15 `/tracks/1/weeks/2/days/4/topics/4` exact: Testing with pytest<br>FT9 `/tracks/2/weeks/1/days/3/topics/5` exact: Testing with pytest |
+| 10 | `reading-csv-and-json-files-with-generators` | `data-pipelines` | core | S16 `/tracks/1/weeks/3/days/0/topics/0` exact: Reading CSV and JSON files with generators<br>FT10 `/tracks/2/weeks/1/days/4/topics/0` exact: Reading CSV and JSON files with generators |
+| 11 | `connecting-to-postgres-from-python-with-psycopg` | `data-pipelines` | core | S16 `/tracks/1/weeks/3/days/0/topics/1` exact: Connecting to Postgres from Python with psycopg |
+| 12 | `loading-into-a-staging-table-with-upserts` | `data-pipelines` | core | S16 `/tracks/1/weeks/3/days/0/topics/2` exact: Loading into a staging table with upserts<br>FT10 `/tracks/2/weeks/1/days/4/topics/1` exact: Loading into a staging table with psycopg and upserts |
+| 13 | `elt-transforming-in-sql-after-loading` | `data-pipelines` | core | S16 `/tracks/1/weeks/3/days/0/topics/3` exact: ELT: transforming in SQL after loading<br>FT10 `/tracks/2/weeks/1/days/4/topics/3` exact: ELT: transforming in SQL after loading (skim) |
+| 14 | `cleaning-and-validating-records-with-pydantic-and-type-hints` | `data-pipelines` | core | S17 `/tracks/1/weeks/3/days/1/topics/0` exact: Cleaning and validating records with Pydantic and type hints<br>FT10 `/tracks/2/weeks/1/days/4/topics/2` exact: Cleaning and validating records with Pydantic and type hints |
+| 15 | `deduplicating-in-sql-vs-in-python` | `data-pipelines` | core | S17 `/tracks/1/weeks/3/days/1/topics/1` exact: Deduplicating: in SQL vs in Python<br>FT10 `/tracks/2/weeks/1/days/4/topics/4` exact: Deduplicating: in SQL vs in Python (skim) |
+| 16 | `ai-enrichment-with-validated-outputs` | `data-pipelines` | core | S17 `/tracks/1/weeks/3/days/1/topics/2` exact: AI enrichment with validated outputs<br>FT11 `/tracks/2/weeks/2/days/0/topics/0` exact: AI enrichment with validated outputs |
+| 17 | `keeping-sensitive-data-out-of-prompts` | `data-pipelines` | reading | S17 `/tracks/1/weeks/3/days/1/topics/3` exact: Reading: keeping sensitive data out of prompts<br>FT11 `/tracks/2/weeks/2/days/0/topics/3` exact: Keeping sensitive data out of prompts (skim) |
+| 18 | `fastapi-routes` | `fastapi-services` | core | S18 `/tracks/1/weeks/3/days/2/topics/0` exact: FastAPI routes<br>FT11 `/tracks/2/weeks/2/days/0/topics/1` split: FastAPI routes that serve pipeline results |
+| 19 | `serving-pipeline-results-as-an-api` | `fastapi-services` | core | S18 `/tracks/1/weeks/3/days/2/topics/1` exact: Serving pipeline results as an API<br>FT11 `/tracks/2/weeks/2/days/0/topics/1` split: FastAPI routes that serve pipeline results |
+| 20 | `calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts` | `fastapi-services` | core | S18 `/tracks/1/weeks/3/days/2/topics/2` exact: Calling the Spring Boot API from FastAPI: service URL, token and timeouts<br>FT11 `/tracks/2/weeks/2/days/0/topics/2` exact: Calling the Spring Boot API from FastAPI: service URL, token and timeouts |
+| 21 | `python-review` | `fastapi-services` | review | S19 `/tracks/1/weeks/3/days/3/topics/0` exact: Python review |
+
+Rows that are not learner topics:
+
+- S19 row 1 and FT11 row 4 "Python module check": the course-level blueprint `python/assessments/python-module-check` (never a learner topic).
+- S19 row 0 "Python review": review page `fastapi-services/python-review` (kind `review`, no new syllabus). It is Standard-only; Fast has no review row.
+
+Coverage: all 41 matrix v3 topic-string rows map — 39 to canonical topics (FT11 row 1 to two, per the confirmed matrix) and 2 to the blueprint. No topic was added, merged or renamed beyond the calendar.
+
+Relation notes:
+
+- FT11 row 1 "FastAPI routes that serve pipeline results" combines S18 rows 0 and 1; per the confirmed matrix it is `split` across `fastapi-routes` and `serving-pipeline-results-as-an-api`.
+- FT10 row 1 "Loading into a staging table with psycopg and upserts" is a wording variant of S16 row 2 and maps `exact` to `loading-into-a-staging-table-with-upserts`, as the matrix does. S16 row 1 (`connecting-to-postgres-from-python-with-psycopg`) has no Fast row, so the loading page is self-contained on the Fast route (reconciliation python-intake-edu-003): its o1 teaches the minimum psycopg connection and `with`-block setup just in time, and its `prerequisites` omit the Standard-only connection topic. On the Standard route the connection topic still precedes it in `topicOrder` and deepens parameters and transactions. The `data-pipelines` module PR checks the Fast route starting without the connection page.
+- FT11 row 0 (AI enrichment) and row 3 (sensitive data, skim) are Fast's placement of S17 rows 2 and 3; they keep their `data-pipelines` home.
+
+Prerequisites: in-course prerequisites use full `python/<module>/<topic>` ids. Cross-course prerequisites name course ids only (`git-linux-ai-foundations`, `java-foundations`, `sql-jdbc-foundations`, `spring-boot`) until those courses' topic ids exist; `java-foundations`, `sql-jdbc-foundations` and `spring-boot` are planned intake ids.
+
+### Objectives
+
+Two or three observable objectives per topic, with exact ids (also in each `topic.json`):
+
+- `python-fundamentals/python-syntax-for-java-developers`
+  - o1: Rewrite a short Java method body that uses variables, if/elif/else and for and while loops as Python, using indentation instead of braces and no type declarations
+  - o2: Predict the output of short Python snippets that depend on dynamic typing, truthiness and true division (/) versus floor division (//)
+  - o3: Compare values with == and test for None with `is None`, and explain how this differs from Java's equals(), == and null
+- `python-fundamentals/functions-and-arguments`
+  - o1: Define a function with positional and default parameters and call it with keyword arguments in any order
+  - o2: Write a function that accepts *args and **kwargs, and unpack a list or dict into a call with * and **
+  - o3: Add type hints to parameters and the return value, and explain that Python does not enforce them at run time
+- `python-fundamentals/lists-dicts-sets-and-tuples`
+  - o1: Choose a list, dict, set or tuple for a described data need and justify the choice by ordering, uniqueness, mutability and lookup by key
+  - o2: Add, look up, update and remove entries in a list and a dict, using dict.get to handle a missing key without a KeyError
+  - o3: Iterate over a dict with items() and unpack each key-value pair into two variables
+- `python-fundamentals/slicing-and-comprehensions`
+  - o1: Predict the result of slices with start, stop, negative indices and a step on lists and strings
+  - o2: Rewrite a for loop that filters and transforms a list as a list comprehension, and build a dict or set with a comprehension
+  - o3: Decide between a comprehension and an explicit loop for a given task, rejecting a comprehension used only for its side effects
+- `python-fundamentals/mutability-and-aliasing`
+  - o1: Predict when two names refer to the same object after assignment, list append and passing a list to a function, and confirm it with `is`
+  - o2: Classify list, dict and set as mutable and int, str and tuple as immutable by predicting whether an operation changes the original object
+  - o3: Fix an aliasing bug by copying (slice, list(), dict.copy() or copy.deepcopy) or by replacing a mutable default argument with None
+- `python-fundamentals/modules-imports-and-virtual-environments`
+  - o1: Import from the standard library and from your own module with import and from ... import, and explain how Python finds the module
+  - o2: Create and activate a virtual environment with python -m venv on macOS, Linux and Windows, and install a pinned package into it with python -m pip
+  - o3: Record and reinstall dependencies with a requirements file, and explain why the virtual environment folder is git-ignored rather than committed
+- `python-fundamentals/exceptions-and-logging`
+  - o1: Handle an expected error with try, except, else and finally, catching a specific exception instead of using a bare except
+  - o2: Raise an exception with a clear message, including a custom exception class, and explain how Python exceptions differ from Java's checked exceptions
+  - o3: Use the logging module instead of print: get a module logger, choose a level and log a caught exception with its traceback
+- `python-fundamentals/writing-and-running-script-files`
+  - o1: Write a .py script and run it from the terminal with python (or py on Windows), then read its exit status
+  - o2: Guard top-level code with if __name__ == "__main__": so the same file can be imported and run
+  - o3: Read command-line arguments with sys.argv and exit with a non-zero status when an argument is missing
+- `python-fundamentals/testing-with-pytest`
+  - o1: Write test functions with plain assert statements in a test_*.py file and run them with python -m pytest
+  - o2: Read a pytest failure report to locate the failing assertion and the values it compared
+  - o3: Use pytest.raises, a fixture and @pytest.mark.parametrize to test error cases and several inputs without repeating code
+- `data-pipelines/reading-csv-and-json-files-with-generators`
+  - o1: Read rows from a CSV file with csv.DictReader and records from a JSON Lines file (json.loads on each line) or a small JSON document (json.load), opening each file in a with statement with an explicit encoding
+  - o2: Write a generator function with yield that streams parsed records one at a time, and explain that memory stays bounded only when the source is also read record by record (csv rows or JSON Lines), not when json.load has already read the whole document
+  - o3: Chain generators into an extract step (read, parse, filter) and predict what happens when a generator is iterated a second time
+- `data-pipelines/connecting-to-postgres-from-python-with-psycopg`
+  - o1: Connect to a learner-local PostgreSQL database with psycopg.connect, reading the connection string from an environment variable instead of hard-coding it
+  - o2: Run a parameterized query with %s placeholders and fetch its rows, and explain why formatting values into the SQL string invites SQL injection
+  - o3: Manage the connection and transaction with with blocks, predicting when psycopg commits and when it rolls back
+- `data-pipelines/loading-into-a-staging-table-with-upserts`
+  - o1: Open a psycopg connection from an environment-variable connection string in a with block, then load parsed records into a staging table in batches with executemany or COPY instead of one statement per row
+  - o2: Write an INSERT ... ON CONFLICT ... DO UPDATE upsert keyed on a unique constraint and predict the table after the same load runs twice
+  - o3: Explain why the load is made idempotent so a failed or repeated run leaves no duplicate rows
+- `data-pipelines/elt-transforming-in-sql-after-loading`
+  - o1: Distinguish ETL from ELT and explain why this pipeline loads raw rows first and transforms them inside PostgreSQL
+  - o2: Write an INSERT ... SELECT or CREATE TABLE AS statement with a common table expression that cleans and reshapes staging rows into a target table
+  - o3: Run the SQL transform from Python inside one transaction so that a failure leaves the target table unchanged
+- `data-pipelines/cleaning-and-validating-records-with-pydantic-and-type-hints`
+  - o1: Define a Pydantic model with type-hinted required, optional and defaulted fields for one input record
+  - o2: Validate raw records, separating accepted rows from rejected rows by catching ValidationError and recording its error details
+  - o3: Normalize a field with a field validator and predict which raw inputs Pydantic converts and which it rejects
+- `data-pipelines/deduplicating-in-sql-vs-in-python`
+  - o1: Remove duplicates in Python with a set or a dict keyed on a chosen natural key, keeping either the first or the latest record
+  - o2: Remove duplicates in SQL with DISTINCT ON or ROW_NUMBER() over a partition
+  - o3: Choose where to deduplicate, in Python before loading or in SQL after loading, for a described data size and pipeline step, and justify the choice
+- `data-pipelines/ai-enrichment-with-validated-outputs`
+  - o1: Explain why model output is untrusted input, and design an enrichment step that requests JSON matching a declared schema
+  - o2: Validate each model response against a Pydantic model and send invalid or failed responses to a retry or reject path instead of loading them
+  - o3: Test the enrichment step offline with a fake model client that returns fixed valid and invalid responses
+- `data-pipelines/keeping-sensitive-data-out-of-prompts`
+  - o1: Identify the personal and secret fields in a record that must not be sent to an external AI service
+  - o2: Minimize a record before it goes into a prompt by dropping, masking or pseudonymizing those fields
+  - o3: Keep secrets and personal data out of the logs and error messages that the enrichment step writes
+- `fastapi-services/fastapi-routes`
+  - o1: Define GET and POST routes with path and query parameters and a Pydantic request body, and run the app locally
+  - o2: Predict the status code and error body FastAPI returns when a path parameter, query parameter or request body fails validation
+  - o3: Test routes with FastAPI's TestClient and pytest
+- `fastapi-services/serving-pipeline-results-as-an-api`
+  - o1: Expose loaded pipeline results through read-only endpoints with a response model that limits the fields returned
+  - o2: Return 404 with HTTPException for a missing record, and page results with limit and offset query parameters
+  - o3: Provide the database connection to routes as a dependency, and replace it in tests with a dependency override
+- `fastapi-services/calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts`
+  - o1: Call the Spring Boot API from a FastAPI route with httpx, reading the service base URL and bearer token from settings loaded from environment variables
+  - o2: Set explicit timeouts and turn a timeout, connection error or non-2xx upstream response into a clear error response from your own API
+  - o3: Test the outbound call without a running Spring Boot service by using an httpx mock transport
+- `fastapi-services/python-review`
+  - o1: Retrieve and apply Python syntax, collections, mutability, exceptions and pytest on mixed practice tasks without new material
+  - o2: Trace a small extract, validate, load and serve flow end to end and locate where a described defect (aliasing, missing validation or missing timeout) would surface
+
+## Cross-track model
+
+Standard and Fast Track share this one canonical tree; there are no per-track copies. Standard adds the coding lab through its lab overlay; Fast skips coding labs and moves to direct project implementation. Fast's emphasis (`skim`) and day packing are track-overlay metadata, written when the track overlays are built, not in this course tree.
+
+### Fast route roles (input to the Fast overlay)
+
+Reconciliation python-intake-edu-001: the Fast day is the frozen route of six fixed blocks — Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70 (direct project implementation, no coding lab), Timed without AI 15, Reflection 5 = 120 minutes. The required Fast route is those blocks, not the sum of every mapped page, so pages take one of these roles on it:
+
+- **diagnostic entry**: the try-first diagnostic probes this page's objectives first;
+- **conditional remediation**: the learner opens the full page only when the diagnostic shows a gap, inside the Project block;
+- **skim/reference**: a `(skim)` row, read in the 10-minute Skim block and kept as reference;
+- **project support**: consulted while building during the 70-minute Project block.
+
+| Fast day | Page | Calendar row | Roles on the Fast route |
+|---|---|---|---|
+| FT9 | `python-syntax-for-java-developers` | 0 | diagnostic entry; conditional remediation |
+| FT9 | `functions-and-arguments` | 1 | diagnostic entry; conditional remediation |
+| FT9 | `lists-dicts-sets-and-tuples` | 2 | diagnostic entry; conditional remediation |
+| FT9 | `slicing-and-comprehensions` | 3 | diagnostic entry; conditional remediation |
+| FT9 | `modules-imports-and-virtual-environments` | 4 | diagnostic entry; project support (venv and installs) |
+| FT9 | `testing-with-pytest` | 5 | diagnostic entry; project support (running the project's tests) |
+| FT9 | `mutability-and-aliasing` | 6 (skim) | skim/reference |
+| FT9 | `exceptions-and-logging` | 7 (skim) | skim/reference |
+| FT9 | `writing-and-running-script-files` | 8 (skim) | skim/reference; project support |
+| FT10 | `reading-csv-and-json-files-with-generators` | 0 | diagnostic entry; project support |
+| FT10 | `loading-into-a-staging-table-with-upserts` | 1 | diagnostic entry; project support (self-contained psycopg setup) |
+| FT10 | `cleaning-and-validating-records-with-pydantic-and-type-hints` | 2 | diagnostic entry; project support |
+| FT10 | `elt-transforming-in-sql-after-loading` | 3 (skim) | skim/reference |
+| FT10 | `deduplicating-in-sql-vs-in-python` | 4 (skim) | skim/reference |
+| FT11 | `ai-enrichment-with-validated-outputs` | 0 | diagnostic entry; project support |
+| FT11 | `fastapi-routes` | 1 (split) | diagnostic entry; project support |
+| FT11 | `serving-pipeline-results-as-an-api` | 1 (split) | conditional remediation; project support |
+| FT11 | `calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts` | 2 | diagnostic entry; project support |
+| FT11 | `keeping-sensitive-data-out-of-prompts` | 3 (skim) | skim/reference |
+
+These roles are proposals for the Fast overlay (`pep-t1-track-overlays`), which validates the required Fast route against the six blocks; this intake neither compresses page budgets nor adds or removes topics. T14's per-day sum of page budgets remains a separate repository gate (see Minute budgets).
+
+### Fast project: one cumulative Python project in three increments
+
+Reconciliation python-intake-edu-recheck-001 (captain decision `pep-fast-project-block`, option A): the FT9, FT10 and FT11 Project blocks are three successive increments of one reusable learner-facing project brief, the **registrations pipeline project**. Learners build one small Python repository that grows each day: a script that summarizes workshop registration records (FT9), a pipeline that streams, validates and upserts them into PostgreSQL (FT10), and an enrichment step plus a FastAPI service that serves the results and calls the Spring Boot API (FT11). Learners see it as a project increment, never as a coding lab; Fast skips the Standard `data-pipelines` coding lab.
+
+Program Fast pattern applied to every increment:
+
+- Each increment fits the 70-minute Project block, so each Fast day stays inside its frozen 120-minute template (Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5). If a pilot shows an increment overrunning, the author narrows the increment (drops its last step to the topic page), never the other blocks.
+- Every concept the increment applies gets a short, minuted, embedded **teach-then-check** step before its first use: a teach segment, then a check (a predict-the-result question or one named public test that must turn from failing to passing) before the learner applies it. The Skim block and the topic pages are reference only; no step assumes the learner opened a page.
+- Claimed versus practised (reconciliation intake-4): a requirement fragment is **claimed** only when the increment has a named pre-application check of that fragment (inside the step's existing check minutes) and a named public test that observes it. Every other fragment the project uses is **practised, not claimed**, and stays owned by its topic page and practice quiz. A claimed fragment is **whole** only when its objective has no other requirement; otherwise it is **partial**, with the remainder owned by the topic page. The project makes no blanket full-coverage claim.
+- Each increment ships a starter scaffold (FT9) or an extension (FT10, FT11) with new stub modules, fixtures and public tests only; no extension ships an earlier increment's completed code. Public tests live in one directory per increment (`tests/increment_1`, `tests/increment_2`, `tests/increment_3`), and both commands below use the one language-native runner, offline after the one-time setup:
+  - while working on increment N: `python -m pytest -q tests/increment_N`, which runs only increment N's public tests;
+  - to complete increment N: `python -m pytest -q`, the cumulative command, which runs increments 1 to N (only the increments shipped so far exist in the repository).
+- A learner with an unfinished earlier increment does not get a passing cumulative run; the project promises none. Late entry and the solved-run check are verified against uncommitted private checkpoints in which increments 1 to N-1 are complete, kept in private staging like solutions and never committed.
+- No Docker or other learner-side container engine. The FT10 database steps use the learner-local PostgreSQL server from the SQL course, reached through a connection string in an environment variable; the tests create and drop their own schema. FT11 needs no network, API key or running Spring Boot service: a fake model client and an httpx mock transport stand in.
+- No solution, completed increment, hidden test or private checkpoint enters the repository; the solved-run check runs against uncommitted private staging, as for labs (`authoring/docs/lab-contract.md` section 8).
+- Reuse: FT10 and FT11 reuse the Standard `data-pipelines` lab fixtures, the fake model client and the public tests whose skills match (streaming, validation, upsert, enrichment), presented inside the project brief.
+- One canonical brief: the Standard and Fast overlays both reference this brief. Fast requires it in the Project blocks. Standard may offer it as optional consolidation, and the Standard `data-pipelines` lab remains Standard's required practice.
+
+FT9 increment 1, project skeleton and summary script (70 minutes):
+
+| Step | Minutes (teach + check + apply) | Teach-then-check | Learner outcome (observable) |
+|---|---|---|---|
+| Orient and set up | 8 (3 + 1 + 4) | Create and activate a venv with `python -m venv .venv`, install the pinned `requirements.txt` with `python -m pip`; check: `python -m pip --version` reports the `.venv` path | `python -m pytest -q` runs and fails the named increment-1 tests |
+| Functions over records | 17 (4 + 2 + 11) | Python syntax for Java developers (indentation, truthiness, `/` versus `//`), then `def` with defaults, keyword calls and type hints; check: predict three outputs (a truthiness test, `7 / 2` versus `7 // 2`, and a `normalize_registration` call that passes `default_session` by keyword) | `normalize_registration(row, *, default_session="general")` and `seats_left(capacity, taken)` pass their public tests |
+| Collections and comprehensions | 17 (4 + 2 + 11) | list/dict/set choice, `dict.get`, `items()` unpacking, list/dict/set comprehensions; check: the `count_by_session` test passes after a one-line fix | `count_by_session` builds a dict with `dict.get`; `unique_emails` returns a set built with a set comprehension; `open_sessions` iterates a capacity dict with `items()` and returns a filtered list comprehension |
+| Module and script entry | 14 (3 + 1 + 10) | `import` from your own package, `if __name__ == "__main__":`, `sys.argv`, non-zero exit; check: predict whether importing the module runs `main()` | `python -m registrations.cli general` prints the summary for that session from the starter's bundled in-code sample records (file reading waits for FT10); a missing argument exits with status 2 |
+| Your own tests | 10 (3 + 1 + 6) | plain `assert` tests in `test_*.py`, reading a pytest failure report; check: locate the failing assertion in a given report | the learner adds one passing test for `seats_left`; `python -m pytest -q tests/increment_1` passes |
+| Wrap | 4 | none (no new concept) | the cumulative `python -m pytest -q` passes (increment 1); the learner commits the increment with Git |
+
+FT10 increment 2, extract, validate and load (70 minutes):
+
+| Step | Minutes (teach + check + apply) | Teach-then-check | Learner outcome (observable) |
+|---|---|---|---|
+| Orient | 5 | none (no new concept): add the extension files, set `DATABASE_URL` to the learner-local PostgreSQL database | `python -m pytest -q tests/increment_2` fails the named increment-2 tests |
+| Stream records | 18 (5 + 2 + 11) | `with open(..., encoding="utf-8")`, `csv.DictReader`, JSON Lines with `json.loads` per line, `yield`; check: predict what a second iteration of an exhausted generator yields | `read_registrations_csv` and `read_registrations_jsonl` yield one dict per record |
+| Validate records | 20 (5 + 2 + 13) | a Pydantic model with required, optional and defaulted typed fields; catching `ValidationError`; check: predict which of three raw rows are rejected | `validate_all` returns accepted models and rejected rows with their error details |
+| Load with an upsert | 22 (6 + 2 + 14) | `psycopg.connect` from the environment variable in a `with` block, `executemany` into a staging table, `INSERT ... ON CONFLICT ... DO UPDATE`; check: predict the row count after the same load runs twice | `load_staging` loads the fixture; the public test runs it twice and finds no duplicate rows |
+| Wrap | 5 | none (no new concept) | `python -m pytest -q tests/increment_2` passes, then the cumulative `python -m pytest -q` passes increments 1 and 2 when increment 1 is complete; commit |
+
+FT11 increment 3, enrich, serve and call the Spring Boot API (70 minutes):
+
+| Step | Minutes (teach + check + apply) | Teach-then-check | Learner outcome (observable) |
+|---|---|---|---|
+| Orient | 5 | none (no new concept): add the extension files | `python -m pytest -q tests/increment_3` fails the named increment-3 tests |
+| Minimize, then enrich | 20 (7 + 2 + 11) | minimizing a record before a prompt (drop, mask or pseudonymize), model output as untrusted input, validating it with Pydantic and routing failures to a reject path; check: predict the record `minimize_for_prompt` returns for a fixture record (which fields remain) | `minimize_for_prompt` drops the email and phone fields; `enrich` validates the fake client's responses and sends invalid ones to the reject list |
+| Serve results | 20 (6 + 2 + 12) | a FastAPI GET route with a path parameter, `limit` and `offset` query parameters, a response model, `HTTPException(404)` and a repository provided through `Depends`; check: predict the status code for `?limit=abc` | `GET /registrations/{id}` and `GET /registrations` pass the public TestClient tests, which override the repository dependency with fixture data |
+| Call the Spring Boot API | 20 (6 + 2 + 12) | `httpx` with a base URL and bearer token from settings loaded from environment variables, an explicit timeout, mapping a timeout, connection error or non-2xx response to a clear error from your API; check: predict the response when the upstream times out | `GET /registrations/{id}/attendee` passes the public tests that use an httpx mock transport for success, timeout, connection error and 500 cases |
+| Wrap | 5 | none (no new concept) | `python -m pytest -q tests/increment_3` passes, then the cumulative `python -m pytest -q` passes increments 1 to 3 when increments 1 and 2 are complete; commit |
+
+FT11's `moduleCheck` timing and placement stay the open pacing item in the module check blueprint section; the project increment does not use the Timed or Reflection blocks.
+
+Coverage claimed by the project (reconciliations intake-3 and intake-4: python-intake-edu-recheck-001 and python-intake-sme-recheck-001-objective-coverage-overclaim). Each claimed row names its pre-application check (the check inside the named step's minutes, before the learner applies the fragment) and the public test that observes it. Public test names are binding names for the brief's author.
+
+| Increment | Objective | Fragment claimed | Pre-application check (step) | Public test | Coverage |
+|---|---|---|---|---|---|
+| FT9 | `functions-and-arguments#o1` | call a function that has a defaulted keyword parameter, passing that parameter by keyword | predict the result of a `normalize_registration` call that passes `default_session` by keyword (Functions over records) | `tests/increment_1/test_records.py::test_normalize_registration_keyword_session` | partial [defining positional and default parameters; keyword arguments in any order] |
+| FT9 | `lists-dicts-sets-and-tuples#o2` | look up and update dict entries, using `dict.get` for a missing key without a `KeyError` | the `count_by_session` one-line `dict.get` fix turns its test from failing to passing (Collections) | `tests/increment_1/test_collections.py::test_count_by_session_missing_key` | partial [list operations; adding and removing entries] |
+| FT9 | `writing-and-running-script-files#o2` | guard top-level code with `if __name__ == "__main__":` so the module imports without running | predict whether importing `registrations.cli` runs `main()` (Module and script entry) | `tests/increment_1/test_cli.py::test_import_does_not_run_main` | whole |
+| FT10 | `reading-csv-and-json-files-with-generators#o3` | predict what happens when a generator is iterated a second time | predict what a second iteration of an exhausted generator yields (Stream records) | `tests/increment_2/test_extract.py::test_second_iteration_is_empty` | partial [chaining generators into a read, parse and filter extract step] |
+| FT10 | `cleaning-and-validating-records-with-pydantic-and-type-hints#o2` | split raw rows into accepted and rejected rows | predict which of three raw rows are rejected (Validate records) | `tests/increment_2/test_validate.py::test_validate_all_splits_accepted_and_rejected` | partial [catching `ValidationError`; recording its error details] |
+| FT10 | `loading-into-a-staging-table-with-upserts#o2` | a repeated load leaves no duplicate rows | predict the row count after the same load runs twice (Load with an upsert) | `tests/increment_2/test_load.py::test_load_twice_leaves_no_duplicates` | partial [writing `INSERT ... ON CONFLICT ... DO UPDATE`; keying the conflict target on a unique constraint] |
+| FT11 | `keeping-sensitive-data-out-of-prompts#o2` | drop the personal fields of a record before it reaches a prompt | predict the record `minimize_for_prompt` returns for a fixture record, naming which fields remain (Minimize, then enrich) | `tests/increment_3/test_enrich.py::test_minimize_drops_personal_fields` | partial [masking; pseudonymizing] |
+| FT11 | `fastapi-routes#o2` | predict the 422 status for an invalid query parameter | predict the status code for `?limit=abc` (Serve results) | `tests/increment_3/test_api.py::test_invalid_limit_returns_422` | partial [path-parameter and request-body validation; reading the error body] |
+| FT11 | `calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts#o2` | turn an upstream timeout into a clear error response from your API | predict the response when the upstream times out (Call the Spring Boot API) | `tests/increment_3/test_upstream.py::test_upstream_timeout_maps_to_error` | partial [setting explicit timeouts; connection errors; non-2xx responses] |
+
+Practised, not claimed. These fragments are used in the steps above, but each lacks a pre-application check of its own, a public test that observes it, or both; each stays owned by its topic page and practice quiz:
+
+- FT9: creating and activating a venv and installing pinned packages with `python -m pip` (`modules-imports-and-virtual-environments#o2`); truthiness and true versus floor division (`python-syntax-for-java-developers#o2`, checked but not observable by a public test); defining positional and default parameters and type hints (`functions-and-arguments#o1`, `#o3`); `items()` unpacking (`lists-dicts-sets-and-tuples#o3`); list and set comprehensions (`slicing-and-comprehensions#o2`); importing from the learner's own package (`modules-imports-and-virtual-environments#o1`); `sys.argv` and a non-zero exit status (`writing-and-running-script-files#o3`); writing a plain-`assert` test and reading a failure report (`testing-with-pytest#o1`, `#o2`).
+- FT10: `csv.DictReader`, JSON Lines with `json.loads`, and `with` plus an explicit encoding (`reading-csv-and-json-files-with-generators#o1`); generator functions with `yield` (`#o2`); the Pydantic model's required, optional and defaulted fields (`cleaning-and-validating-records-with-pydantic-and-type-hints#o1`); catching `ValidationError` and recording its error details (`cleaning-and-validating-records-with-pydantic-and-type-hints#o2`); the psycopg connection from an environment variable and the `executemany` batch load (`loading-into-a-staging-table-with-upserts#o1`); writing `INSERT ... ON CONFLICT ... DO UPDATE` keyed on a unique constraint (`#o2`).
+- FT11: validating model responses and the reject path (`ai-enrichment-with-validated-outputs#o2`); GET routes with path and query parameters (`fastapi-routes#o1`); the response model, 404, `limit` and `offset` paging and `Depends` (`serving-pipeline-results-as-an-api#o1`, `#o2`, `#o3`); the `httpx` call with settings from environment variables, connection-error and non-2xx mapping (`calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts#o1`, `#o2`).
+
+Not applied by the project: the `(skim)` rows `mutability-and-aliasing`, `exceptions-and-logging`, `elt-transforming-in-sql-after-loading` and `deduplicating-in-sql-vs-in-python` (Skim block and topic pages only, except where a step above teaches a named part), and the Standard-only `connecting-to-postgres-from-python-with-psycopg`.
+
+Open for the Fast overlay (`pep-t1-track-overlays`), not decided here: no repository contract yet defines a project artifact or its manifest slot. This intake proposes storing the brief, the starter, the two extensions, fixtures and public tests in one course-level package that follows the lab contract layout and determinism rules (it spans all three modules, so it is covered by `course.lock.json`) and is presented to learners as a project. `course.json` `courseLabs` stays empty until that package is authored and its slot agreed. Every increment must be piloted against its 70 minutes before release.
+
+## Artifact applicability
+
+Rules (plan section 5 and the confirmed matrix v3 expected-artifact scope): core topics require HTML (with embedded simulator practice), derived Markdown and a practice GIFT quiz, with a video only when a suitable verified one qualifies; the Reading topic also carries a printable PDF (matrix `print-handout`); the review topic carries HTML (with simulator) and Markdown only; absent companions record a reason.
+
+Legend: **R** required, authored in the module PR; **V** conditional video, authored only if a live, public, embeddable video qualifies within budget, otherwise absent with the search record; **M** practised in the planned `data-pipelines` module lab (Standard lab overlay), with the topic-level `coding-lab/` absent; **-** not applicable, with the reason in `topic.json`.
+
+| Topic | Kind | html | md | pdf | gift | video | lab |
+|---|---|---|---|---|---|---|---|
+| `python-fundamentals/python-syntax-for-java-developers` | core | R | R | - | R | V | - |
+| `python-fundamentals/functions-and-arguments` | core | R | R | - | R | V | - |
+| `python-fundamentals/lists-dicts-sets-and-tuples` | core | R | R | - | R | V | - |
+| `python-fundamentals/slicing-and-comprehensions` | core | R | R | - | R | V | - |
+| `python-fundamentals/mutability-and-aliasing` | core | R | R | - | R | V | - |
+| `python-fundamentals/modules-imports-and-virtual-environments` | core | R | R | - | R | V | - |
+| `python-fundamentals/exceptions-and-logging` | core | R | R | - | R | V | - |
+| `python-fundamentals/writing-and-running-script-files` | core | R | R | - | R | V | - |
+| `python-fundamentals/testing-with-pytest` | core | R | R | - | R | V | - |
+| `data-pipelines/reading-csv-and-json-files-with-generators` | core | R | R | - | R | V | M |
+| `data-pipelines/connecting-to-postgres-from-python-with-psycopg` | core | R | R | - | R | V | M |
+| `data-pipelines/loading-into-a-staging-table-with-upserts` | core | R | R | - | R | V | M |
+| `data-pipelines/elt-transforming-in-sql-after-loading` | core | R | R | - | R | V | M |
+| `data-pipelines/cleaning-and-validating-records-with-pydantic-and-type-hints` | core | R | R | - | R | V | M |
+| `data-pipelines/deduplicating-in-sql-vs-in-python` | core | R | R | - | R | V | M |
+| `data-pipelines/ai-enrichment-with-validated-outputs` | core | R | R | - | R | V | M |
+| `data-pipelines/keeping-sensitive-data-out-of-prompts` | reading | R | R | R | R | V | M |
+| `fastapi-services/fastapi-routes` | core | R | R | - | R | V | - |
+| `fastapi-services/serving-pipeline-results-as-an-api` | core | R | R | - | R | V | - |
+| `fastapi-services/calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts` | core | R | R | - | R | V | - |
+| `fastapi-services/python-review` | review | R | R | - | - | - | - |
+
+Terminal interaction: pages whose simulators show terminal commands (`modules-imports-and-virtual-environments`, `writing-and-running-script-files`, `testing-with-pytest`, and running the app in `fastapi-routes`) reuse `components/terminal` version 1 unchanged and declare `"components": {"terminal": "1"}` in their module PR (T24 drift check). Its form-free direct Run/Enter dispatch is the canonical terminal foundation for every track; it is not redesigned here. Intake `components` stay empty because no page exists yet.
+
+## Lab plan
+
+No lab uses Docker, Podman, Compose, Testcontainers or any other learner-side container engine. Each lab has exactly one language-native test command, runnable on macOS, Linux and Windows.
+
+| Lab | Scope | Covers | Test command | Track | Status |
+|---|---|---|---|---|---|
+| `python/data-pipelines/coding-lab` | module | all 8 `data-pipelines` topics (S16-S17 Lab days) | `python -m pytest -q` | Standard lab overlay; Fast skips it | planned, authored in the `data-pipelines` module PR |
+
+Planned `data-pipelines` lab design, for the module author and critics:
+
+- Setup (one time, online): create a virtual environment with `python -m venv .venv`, then `python -m pip install -r requirements.txt` with pinned versions and a committed lock of exact versions. Version pins start from the PyPI releases frozen at intake (pytest 9.1.1, psycopg 3.3.6, pydantic 2.14.1); the author pins the stable releases current at authoring and records them in `lab.json`.
+- Database: a learner-local PostgreSQL server installed natively (the platform's PostgreSQL from the SQL course), never a container. The lab creates and drops its own database or schema, read from an environment variable connection string, and `lab.json` declares it for cleanup.
+- AI enrichment: tests use a deterministic fake model client with fixed valid and invalid responses; no network, API key or vendor account. The redaction step for `keeping-sensitive-data-out-of-prompts` is tested on fixture records.
+- Determinism: fixed fixtures, no wall clock, network or locale dependence; the starter fails named public tests with stable messages.
+- No reference solution, hidden test or key is committed; the solved-run gate runs locally against uncommitted private staging (`authoring/docs/lab-contract.md` section 8).
+
+No lab, with reason:
+
+- `python-fundamentals` (S14-S15) and `fastapi-services` (S18): the confirmed expected-artifact scope gives these Concept-day topics no lab overlay. Page simulators carry the practice, and the `data-pipelines` lab exercises venv, script and pytest skills on the real toolchain. `fastapi-services` practice of TestClient and the httpx mock transport stays in-page. The educational critic confirms each omission.
+- `python-review`: the S19 Review day's "Practice without AI" platform block covers hands-on practice.
+- No course lab; `course.json` `courseLabs` is empty. The Fast registrations pipeline project (see Cross-track model) is planned as a project, not a lab; its package slot is an open item for the Fast overlay.
+
+## Minute budgets
+
+Rule: the revised new-course budget rule merged on `main` (`authoring/docs/tools/validators.md`, Reading time): each integer topic budget is at least `ceil(max(estimator P50, modeledWorstPath))`, at most 15, never a weighted share of a day pool, and the topic budgets mapped to a calendar day must fit that day type's complete block total (120 minutes for Concept, Lab, Review and Fast days).
+
+Basis at intake: no `artifact.html` exists, so the estimator cannot run. Each topic records an intake planning model in `minutes.basis`: `modeledP50` is the target page time (core 9, Reading 6, review 9 minutes), `modeledWorstPath` adds 2.5 minutes for the worst required route (two wrong graded attempts and wrong-first explores per interactive unit; course-1 measured gaps of 2.41-2.65 minutes above P50), and `budget = aboutLabel = ceil(max(modeledP50, modeledWorstPath))`. The module PR replaces `modeledP50` with the frozen estimator P50 on the authored bytes, re-models the worst path and keeps the budget at or above the rule's minimum; T14 then checks day totals.
+
+| Topic | Days | modeledP50 | modeledWorstPath | budget = aboutLabel |
+|---|---|---|---|---|
+| `python-syntax-for-java-developers` | S14, FT9 | 9 | 11.5 | 12 |
+| `functions-and-arguments` | S14, FT9 | 9 | 11.5 | 12 |
+| `lists-dicts-sets-and-tuples` | S14, FT9 | 9 | 11.5 | 12 |
+| `slicing-and-comprehensions` | S14, FT9 | 9 | 11.5 | 12 |
+| `mutability-and-aliasing` | S15, FT9 | 9 | 11.5 | 12 |
+| `modules-imports-and-virtual-environments` | S15, FT9 | 9 | 11.5 | 12 |
+| `exceptions-and-logging` | S15, FT9 | 9 | 11.5 | 12 |
+| `writing-and-running-script-files` | S15, FT9 | 9 | 11.5 | 12 |
+| `testing-with-pytest` | S15, FT9 | 9 | 11.5 | 12 |
+| `reading-csv-and-json-files-with-generators` | S16, FT10 | 9 | 11.5 | 12 |
+| `connecting-to-postgres-from-python-with-psycopg` | S16 | 9 | 11.5 | 12 |
+| `loading-into-a-staging-table-with-upserts` | S16, FT10 | 9 | 11.5 | 12 |
+| `elt-transforming-in-sql-after-loading` | S16, FT10 | 9 | 11.5 | 12 |
+| `cleaning-and-validating-records-with-pydantic-and-type-hints` | S17, FT10 | 9 | 11.5 | 12 |
+| `deduplicating-in-sql-vs-in-python` | S17, FT10 | 9 | 11.5 | 12 |
+| `ai-enrichment-with-validated-outputs` | S17, FT11 | 9 | 11.5 | 12 |
+| `keeping-sensitive-data-out-of-prompts` | S17, FT11 | 6 | 8.5 | 9 |
+| `fastapi-routes` | S18, FT11 | 9 | 11.5 | 12 |
+| `serving-pipeline-results-as-an-api` | S18, FT11 | 9 | 11.5 | 12 |
+| `calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts` | S18, FT11 | 9 | 11.5 | 12 |
+| `python-review` | S19 | 9 | 11.5 | 12 |
+
+Day totals of planned budgets against the 120-minute day: S14 48, S15 60, S16 48, S17 45, S18 36, S19 12, FT9 108, FT10 60, FT11 57.
+FT9 carries all nine `python-fundamentals` pages and is T14's binding constraint: 12 minutes of headroom, so the module's measured budgets must total at most 120 minutes on FT9 (an average of 13.3 minutes per page). If honest minimums overflow, T14 reports it and the overflow needs an explicit pacing decision outside the gate; budgets are never compressed. T14's page-budget sum is not the Fast learner's route: the required Fast route is the six fixed blocks, with page roles as in Fast route roles above.
+
+## Python module check blueprint
+
+`python/assessments/python-module-check/blueprint.json`, one course-level blueprint whose identity and objective pool are shared by Standard S19 and Fast FT11, and whose timing is scoped to S19 (reconciliation python-intake-edu-002 and python-sme-001-fast-duration-unbound):
+
+- Calendar identity copied verbatim from the snapshot `assessment` of both S19 and FT11 (identical): `kind` `moduleCheck`, `formats` `MCQ` and `coding`, `passMark` 70. The calendar gives no weights or cut scores, so `weights` is empty. `dayId` is `S19`, the Standard Review day whose "Module check" block sets the duration; the schema holds one day id. The learner instructions state the timed parts for S19 only and tell Fast learners that the platform shows FT11's timing.
+- Duration and item counts (S19 only) from the S19 Review day "Module check" block (MCQ + coding assessment, 45 minutes): MCQ 15 items in 15 minutes (about 1 minute per scenario item) and coding 2 short tasks in 30 minutes (about 15 minutes each); `durationMinutes` 45. The MCQ/coding split inside the 45 minutes is this intake's proposal; the calendar gives only the block total. No FT11 duration or split is stated.
+- Objectives: 19 exact `python/<module>/<topic>#<objective-id>` references with `objectiveFormats`, one per topic that both tracks study. `connecting-to-postgres-from-python-with-psycopg` (Standard-only; its connection setup is assessed through no item because Fast learners meet only the minimum inside the loading page) and `python-review` (review, no new objectives) are excluded. MCQ checks one objective per item; the coding tasks check the hands-on objectives that need only Python, pytest and Pydantic (no database server, network or AI service).
+
+  Topic-to-assessment coverage (reconciliation python-intake-edu-004):
+
+  | Module | Topic | Objective | Format |
+  |---|---|---|---|
+  | python-fundamentals | `python-syntax-for-java-developers` | o2 | MCQ |
+  | python-fundamentals | `functions-and-arguments` | o1 | MCQ |
+  | python-fundamentals | `lists-dicts-sets-and-tuples` | o1 | MCQ |
+  | python-fundamentals | `slicing-and-comprehensions` | o1 | MCQ |
+  | python-fundamentals | `mutability-and-aliasing` | o1 | MCQ |
+  | python-fundamentals | `modules-imports-and-virtual-environments` | o1 | MCQ |
+  | python-fundamentals | `exceptions-and-logging` | o2 | MCQ |
+  | python-fundamentals | `writing-and-running-script-files` | o2 | MCQ |
+  | python-fundamentals | `testing-with-pytest` | o3 | coding (task 2) |
+  | data-pipelines | `reading-csv-and-json-files-with-generators` | o2 | coding (task 1) |
+  | data-pipelines | `connecting-to-postgres-from-python-with-psycopg` | — | not assessed: Standard-only topic |
+  | data-pipelines | `loading-into-a-staging-table-with-upserts` | o2 | MCQ |
+  | data-pipelines | `elt-transforming-in-sql-after-loading` | o1 | MCQ |
+  | data-pipelines | `cleaning-and-validating-records-with-pydantic-and-type-hints` | o2 | coding (task 1) |
+  | data-pipelines | `deduplicating-in-sql-vs-in-python` | o1 | coding (task 2) |
+  | data-pipelines | `ai-enrichment-with-validated-outputs` | o1 | MCQ |
+  | data-pipelines | `keeping-sensitive-data-out-of-prompts` | o1 | MCQ |
+  | fastapi-services | `fastapi-routes` | o2 | MCQ |
+  | fastapi-services | `serving-pipeline-results-as-an-api` | o2 | MCQ |
+  | fastapi-services | `calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts` | o2 | MCQ |
+  | fastapi-services | `python-review` | — | not assessed: review page, no new objectives |
+
+  Changes from the first draft: `writing-and-running-script-files#o2` and `serving-pipeline-results-as-an-api#o2` replace duplicate coverage (`testing-with-pytest#o2` and `reading-csv-and-json-files-with-generators#o3` as MCQ, now covered by the coding tasks), so each shared topic contributes exactly one objective.
+
+- Coding tasks (reconciliation python-intake-edu-005), two tasks of about 15 minutes each within the 30-minute coding part:
+  - Task 1, stream and validate records: `reading-csv-and-json-files-with-generators#o2` and `cleaning-and-validating-records-with-pydantic-and-type-hints#o2`. Observable evidence: a generator function yields records from a CSV fixture one at a time; rows that fail a given Pydantic model are collected with their `ValidationError` details instead of stopping the run; the public pytest file for the task passes.
+  - Task 2, deduplicate and test: `deduplicating-in-sql-vs-in-python#o1` and `testing-with-pytest#o3`. Observable evidence: a function deduplicates records on a stated natural key keeping the latest record; the learner's own test uses `@pytest.mark.parametrize` over several inputs and `pytest.raises` for one error case, and `python -m pytest` passes.
+  - Timing rationale: per task about 3 minutes to read the starter and fixture, 8 minutes to implement and 4 minutes to run pytest and fix one failure; two objectives per task keeps the required path inside 15 minutes. The first draft's six coding objectives were narrowed to these four highest-value observable skills; `slicing-and-comprehensions#o2` and `exceptions-and-logging#o1` were moved out, and those topics stay covered by their MCQ objectives. The assessment owner pilots the authored tasks against the 30 minutes; no task is authored in this repository.
+- Allowed resources: the frozen calendar states no resource rule for the S19 "Module check" block, so any rule is set and shown by the platform assessment owner; the repository invents no assessment policy. The coding part needs a Python 3 environment with pytest and Pydantic provided or named by the platform owner.
+- Open pacing item for the Fast overlay and the platform assessment owner (not decided here): the Fast day type has no 45-minute "Module check" block (its blocks are Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5, already 120 minutes), yet FT11 carries the same `moduleCheck`. FT11 delivery timing and placement are unresolved; this intake states no Fast schedule and invents no assessment policy.
+- The blueprint holds no items, keys, correct answers, rubrics, scoring guides, hidden tests, reference solutions or score secrets; gates T01 and T07 check its key names.
+
+## Official sources per topic
+
+Closes `source-gap-python-official-evidence` (category A, sequenced to this intake). On 2026-10-12 this intake fetched 81 live first-party sources: the Python documentation (docs.python.org, serving Python 3.15.0), the Python Packaging User Guide, pytest, psycopg 3, PostgreSQL 18, Pydantic, Claude Platform and OpenAI API structured-output guides, Claude Code data usage, OWASP GenAI LLM02:2025, FastAPI, HTTPX, RFC 6750, RFC 9110, Spring Boot reference, and PyPI release metadata for the lab pins. `authoring/evidence/python/source-snapshot.json` records each final URL (after redirects), retrieval time, sha256 of the fetched bytes and the topics and sections it supports. All 81 returned HTTP 200; no source was unreachable, so there are no source gaps. Raw fetched pages are not committed.
+
+Notes for authors and SME critics:
+
+- Redirects recorded at their final URL: `docs.python.org/3/library/stdtypes.html` and `library/exceptions.html` now serve from `docs.python.org/3/builtins/`; `docs.pydantic.dev/latest/...` serves from `pydantic.dev/docs/validation/latest/...`; Claude structured outputs from `platform.claude.com`; OpenAI structured outputs from `developers.openai.com`; `docs.pytest.org/` from `/en/stable/`.
+- psycopg's documentation served the development build 3.3.7.dev1 while PyPI's latest release was 3.3.6; the module PR checks claims against the pinned stable release.
+- Freshness: every `topic.json` records `unverified` with no `checkedAt`, because no page is authored yet; module PR SME criticism verifies the authored bytes against live sources and refreshes per-topic `sources.json` receipts.
+
+| Topic | Official first-party sources (frozen in source-snapshot.json) |
+|---|---|
+| `python-syntax-for-java-developers` | https://docs.python.org/3/tutorial/<br>https://docs.python.org/3/tutorial/introduction.html<br>https://docs.python.org/3/tutorial/controlflow.html<br>https://docs.python.org/3/reference/lexical_analysis.html |
+| `functions-and-arguments` | https://docs.python.org/3/tutorial/controlflow.html<br>https://docs.python.org/3/reference/compound_stmts.html<br>https://docs.python.org/3/library/typing.html |
+| `lists-dicts-sets-and-tuples` | https://docs.python.org/3/tutorial/datastructures.html<br>https://docs.python.org/3/builtins/stdtypes.html |
+| `slicing-and-comprehensions` | https://docs.python.org/3/tutorial/introduction.html<br>https://docs.python.org/3/tutorial/datastructures.html<br>https://docs.python.org/3/reference/expressions.html |
+| `mutability-and-aliasing` | https://docs.python.org/3/tutorial/controlflow.html<br>https://docs.python.org/3/reference/datamodel.html<br>https://docs.python.org/3/library/copy.html<br>https://docs.python.org/3/faq/programming.html |
+| `modules-imports-and-virtual-environments` | https://docs.python.org/3/tutorial/modules.html<br>https://docs.python.org/3/tutorial/venv.html<br>https://docs.python.org/3/library/venv.html<br>https://docs.python.org/3/reference/import.html<br>https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/ |
+| `exceptions-and-logging` | https://docs.python.org/3/tutorial/errors.html<br>https://docs.python.org/3/builtins/exceptions.html<br>https://docs.python.org/3/howto/logging.html<br>https://docs.python.org/3/library/logging.html |
+| `writing-and-running-script-files` | https://docs.python.org/3/tutorial/modules.html<br>https://docs.python.org/3/tutorial/interpreter.html<br>https://docs.python.org/3/using/cmdline.html<br>https://docs.python.org/3/library/__main__.html<br>https://docs.python.org/3/using/windows.html |
+| `testing-with-pytest` | https://docs.pytest.org/en/stable/<br>https://docs.pytest.org/en/stable/getting-started.html<br>https://docs.pytest.org/en/stable/how-to/assert.html<br>https://docs.pytest.org/en/stable/how-to/fixtures.html<br>https://docs.pytest.org/en/stable/how-to/parametrize.html<br>https://docs.pytest.org/en/stable/how-to/usage.html |
+| `reading-csv-and-json-files-with-generators` | https://docs.python.org/3/library/csv.html<br>https://docs.python.org/3/library/json.html<br>https://docs.python.org/3/howto/functional.html<br>https://docs.python.org/3/tutorial/classes.html |
+| `connecting-to-postgres-from-python-with-psycopg` | https://www.psycopg.org/psycopg3/docs/basic/install.html<br>https://www.psycopg.org/psycopg3/docs/basic/usage.html<br>https://www.psycopg.org/psycopg3/docs/basic/params.html<br>https://www.psycopg.org/psycopg3/docs/basic/transactions.html<br>https://www.psycopg.org/psycopg3/docs/api/connections.html<br>https://www.postgresql.org/docs/current/libpq-connect.html |
+| `loading-into-a-staging-table-with-upserts` | https://www.psycopg.org/psycopg3/docs/basic/install.html<br>https://www.psycopg.org/psycopg3/docs/basic/usage.html<br>https://www.psycopg.org/psycopg3/docs/basic/params.html<br>https://www.psycopg.org/psycopg3/docs/api/cursors.html<br>https://www.psycopg.org/psycopg3/docs/basic/copy.html<br>https://www.postgresql.org/docs/current/sql-insert.html |
+| `elt-transforming-in-sql-after-loading` | https://www.psycopg.org/psycopg3/docs/basic/transactions.html<br>https://www.postgresql.org/docs/current/sql-insert.html<br>https://www.postgresql.org/docs/current/queries-with.html<br>https://www.postgresql.org/docs/current/sql-createtableas.html |
+| `cleaning-and-validating-records-with-pydantic-and-type-hints` | https://pydantic.dev/docs/validation/latest/concepts/models/<br>https://pydantic.dev/docs/validation/latest/concepts/validators/<br>https://pydantic.dev/docs/validation/latest/errors/validation_errors/<br>https://docs.python.org/3/library/typing.html |
+| `deduplicating-in-sql-vs-in-python` | https://docs.python.org/3/builtins/stdtypes.html<br>https://www.postgresql.org/docs/current/sql-select.html<br>https://www.postgresql.org/docs/current/functions-window.html<br>https://www.postgresql.org/docs/current/tutorial-window.html |
+| `ai-enrichment-with-validated-outputs` | https://pydantic.dev/docs/validation/latest/concepts/json_schema/<br>https://platform.claude.com/docs/en/build-with-claude/structured-outputs<br>https://developers.openai.com/api/docs/guides/structured-outputs<br>https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/ |
+| `keeping-sensitive-data-out-of-prompts` | https://docs.python.org/3/library/logging.html<br>https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/<br>https://code.claude.com/docs/en/data-usage |
+| `fastapi-routes` | https://fastapi.tiangolo.com/<br>https://fastapi.tiangolo.com/tutorial/first-steps/<br>https://fastapi.tiangolo.com/tutorial/path-params/<br>https://fastapi.tiangolo.com/tutorial/query-params/<br>https://fastapi.tiangolo.com/tutorial/body/<br>https://fastapi.tiangolo.com/tutorial/testing/ |
+| `serving-pipeline-results-as-an-api` | https://www.psycopg.org/psycopg3/docs/api/connections.html<br>https://fastapi.tiangolo.com/tutorial/testing/<br>https://fastapi.tiangolo.com/tutorial/response-model/<br>https://fastapi.tiangolo.com/tutorial/handling-errors/<br>https://fastapi.tiangolo.com/tutorial/dependencies/ |
+| `calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts` | https://fastapi.tiangolo.com/advanced/settings/<br>https://fastapi.tiangolo.com/async/<br>https://www.python-httpx.org/quickstart/<br>https://www.python-httpx.org/advanced/timeouts/<br>https://www.python-httpx.org/advanced/authentication/<br>https://www.python-httpx.org/advanced/transports/<br>https://www.python-httpx.org/exceptions/<br>https://www.rfc-editor.org/rfc/rfc6750.html<br>https://www.rfc-editor.org/rfc/rfc9110.html<br>https://docs.spring.io/spring-boot/reference/web/servlet.html |
+| `python-review` | https://docs.python.org/3/tutorial/datastructures.html<br>https://docs.python.org/3/reference/datamodel.html<br>https://docs.python.org/3/tutorial/errors.html<br>https://docs.pytest.org/en/stable/how-to/assert.html<br>https://docs.python.org/3/library/json.html<br>https://www.postgresql.org/docs/current/sql-insert.html<br>https://pydantic.dev/docs/validation/latest/concepts/validators/<br>https://fastapi.tiangolo.com/tutorial/testing/<br>https://www.python-httpx.org/advanced/timeouts/ |
+
+Calendar references for the `python` technology: [Python tutorial](https://docs.python.org/3/tutorial/), [pytest](https://docs.pytest.org/), [FastAPI](https://fastapi.tiangolo.com/) — all three are in the snapshot.
+
+## Category-A records closed by this intake
+
+| Record | Resolution |
+|---|---|
+| `source-gap-python-modules` | Module grouping chosen and recorded above as a second-mate grouping decision, not syllabus: three modules by calendar day sequence. Pending approval at merge. |
+| `source-gap-python-official-evidence` | 81 live first-party sources fetched and frozen with sha256 and retrieval times in `authoring/evidence/python/source-snapshot.json`; no gaps. |
+
+## Intake criticism
+
+Fresh independent educational and technology-SME critics reviewed the first intake commit (`ed8ef66`). Their reports and the non-author reconciliation are committed unchanged as `intake-critic-education.json`, `intake-critic-sme.json` and `intake-reconciliation.json`, except that the reconciliation's decisions gain `file` and `fixedInSha256` for the corrected bytes. Outcome: all 8 findings accepted (3 high, 4 medium, 1 low) and applied in one correction loop: Fast route roles (edu-001), S19-scoped blueprint timing with FT11 timing left open (edu-002, sme-001), a self-contained Fast loading page (edu-003), a topic-to-assessment coverage table (edu-004), coding task bundles with a timing rationale (edu-005), corrected matrix row counts (edu-006) and a qualified generator-memory objective (sme-002). The high findings await the critics' rechecks on the corrected bytes.
+
+Focused rechecks on the corrected bytes are committed unchanged as `intake-critic-education-recheck.json` and `intake-critic-sme-recheck.json`. SME resolved both of its findings and raised none. Education resolved all six of its findings and raised one high finding, `python-intake-edu-recheck-001`: the Fast Project blocks had no project brief, outcomes, prerequisite map, scaffold or tests. The non-author reconciliation `intake-2-reconciliation.json` accepted it under captain decision `pep-fast-project-block`, option A; its decision gains `file` and `fixedInSha256` for the corrected bytes. Correction: the cumulative registrations pipeline project with FT9-FT11 increments under the program Fast pattern (Cross-track model, Fast project). It awaits a focused recheck.
+
+Second focused rechecks are committed unchanged as `intake-2-critic-education-recheck.json` and `intake-2-critic-sme-recheck.json`. All earlier findings stay resolved except over-claimed compound-objective coverage: education kept `python-intake-edu-recheck-001` open, and SME raised `python-intake-sme-recheck-001-objective-coverage-overclaim` (high) and `python-intake-sme-recheck-002-cumulative-pytest-entry` (medium). The non-author reconciliation `intake-3-reconciliation.json` accepted all three; its decisions gain `file` and `fixedInSha256` for the corrected bytes. Corrections, with no syllabus, calendar or minute changes: the project coverage table now claims requirement fragments with whole or partial status; each increment has its own test directory and command plus a cumulative completion command; and late entry is verified against uncommitted private checkpoints, with no promise of a passing cumulative run for an unfinished learner. They await a focused recheck.
+
+Third focused rechecks are committed unchanged as `intake-3-critic-education-recheck.json` and `intake-3-critic-sme-recheck.json`. Everything else stayed resolved; `python-intake-edu-recheck-001` and `python-intake-sme-recheck-001-objective-coverage-overclaim` stayed open because claims were stronger than the plan delivered. The non-author reconciliation `intake-4-reconciliation.json` accepted both; its decisions gain `file` and `fixedInSha256` for the corrected bytes. Correction, with the calendar, syllabus and 70-minute increments unchanged: a fragment is claimed only with a named pre-application check and a named public test, everything else is listed as practised, not claimed, and the upsert row is partial with the unique-constraint remainder. One existing check was reworded within its 2 minutes to cover the keyword call. It awaits a focused recheck.
+
+Fourth focused rechecks are committed unchanged as `intake-4-critic-education-recheck.json` and `intake-4-critic-sme-recheck.json`. Everything was resolved except three over-strong claims under `python-intake-edu-recheck-001` and `python-intake-sme-recheck-001-objective-coverage-overclaim`. The non-author reconciliation `intake-5-reconciliation.json` accepted both; its decisions gain `file` and `fixedInSha256` for the corrected bytes. Correction, with no time, syllabus or container change: the Pydantic row claims only splitting rows into accepted and rejected (partial; catching `ValidationError` and recording error details are practised); the upsert row claims only that a repeated load leaves no duplicate rows (partial; writing `ON CONFLICT ... DO UPDATE` and keying on the unique constraint are practised); and the minimization check now predicts the projected output record. It awaits a focused recheck.
