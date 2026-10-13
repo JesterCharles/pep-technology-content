@@ -20,6 +20,8 @@ coding-lab/
 - `README.md` covers the goal, prerequisites with a version check, setup, task steps, how to test, expected output, the offline note, cleanup and troubleshooting.
 - No other files or directories belong in a lab.
 
+A coding lab or course project is the only learner-artifact form that may require multiple files. The bundle root is the dependency boundary. `README.md` is the learner entrypoint and must name the setup and test commands. Every regular file shipped below `coding-lab/` is a required bundle file unless `lab.json` marks it as generated; exported bundles include `LAB_BUNDLE.sha256`, which inventories every other shipped file. No symlink, absolute path, `..` traversal, import, command, or file reference may require material outside the bundle. Language/runtime tools are allowed only when declared under `prerequisites`; core setup and tests follow the bundle's declared network policy.
+
 ## 2. Scope
 
 - A lab is scoped to a topic, a module or a course, or is honestly omitted.
