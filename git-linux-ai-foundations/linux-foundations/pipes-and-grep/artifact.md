@@ -40,9 +40,9 @@ Same log, new goal. Think in stages: what survives the filter, and what turns li
 The pipeline, stage by stage. `app.log` is a fictional file; the terminal is a simulation.
 
 1. ```
-  app.log
-  ```
-  10 lines
+   app.log
+   ```
+   10 lines
 
 1. 09:00 INFO server started on port 8080
 2. 09:01 INFO user ana signed in
