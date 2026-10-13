@@ -64,6 +64,18 @@ class LabScripts(unittest.TestCase):
             text=True,
         )
 
+    def expected_starter(self):
+        """Shipped starter bytes, built from fixtures/ rather than the (possibly edited) copy."""
+        fixtures = self.lab / "fixtures"
+        files = {
+            path.name: path.read_bytes().replace(b"\r\n", b"\n")
+            for path in (fixtures / "initial").iterdir()
+        }
+        files["status_message.py"] = (
+            (fixtures / "proposal" / "status_message.py").read_bytes().replace(b"\r\n", b"\n")
+        )
+        return dict(sorted(files.items()))
+
     def shipped_files(self):
         return {
             path.relative_to(self.repo).as_posix(): path.read_bytes()
@@ -83,7 +95,6 @@ class LabScripts(unittest.TestCase):
         self.assertIn(" M status_message.py", status)
 
     def test_reset_and_cleanup_remove_learner_added_files(self):
-        shipped = self.shipped_files()
         self.run_script("setup_lab.py")
         extra = self.repo / "notes" / "learner-notes.txt"
         extra.parent.mkdir()
@@ -99,7 +110,9 @@ class LabScripts(unittest.TestCase):
         extra.write_text("private learner note\n", encoding="utf-8")
         self.run_script("cleanup_lab.py")
         self.assertFalse(extra.parent.exists(), "cleanup kept a learner-added folder")
-        self.assertEqual(self.shipped_files(), shipped, "cleanup did not restore shipped bytes")
+        self.assertEqual(
+            self.shipped_files(), self.expected_starter(), "cleanup did not restore shipped bytes"
+        )
 
 
 if __name__ == "__main__":
