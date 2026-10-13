@@ -1,7 +1,7 @@
 # git-foundations: post-normalization content changes
 
 Every byte change to an imported learner page after normalization is listed here for the critics.
-Import fidelity: `import-fidelity.txt` (commit c9ea980). Normalization (pep: meta tags, data: favicon link removed): commit f84ce28.
+Import fidelity: `import-fidelity.txt` (import commit 778f340). Normalization (pep: meta tags, data: favicon link removed): commit b170671.
 
 ## 1. Fake secret value shortened (firstmate decision 002, item 1)
 
