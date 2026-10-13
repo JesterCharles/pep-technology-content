@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:budget-minutes" content="7">
+<meta name="pep:course" content="git-linux-ai-foundations">
+<meta name="pep:module" content="git-foundations">
+<meta name="pep:topic" content="Stash: setting work aside">
+<meta name="pep:topic-id" content="stash">
+<meta name="pep:source" content="authoring/evidence/git-linux-ai-foundations/git-foundations/stash/sources.json">
+<meta name="pep:topic-position" content="4 of 9">
+<title>Stash: setting work aside · Git Foundations</title>
+<style>
+:root{
+  --bg:#eef1f3;--surface:#f9fafb;--ink:#1a2128;--muted:#46525d;--rule:#68747f;--line:#c8d0d6;
+  --teal:#0b6656;--teal-soft:#d5ebe5;--amber:#86470b;--amber-soft:#f6e7d5;--red:#a32218;--red-soft:#f8e0dc;
+  --blue:#1d4f9e;--blue-soft:#dde7f7;--violet:#5b3a99;--violet-soft:#ebe4f7;
+  --on-teal:#ffffff;--term:#e3e8ec;--focus:#1f4fbf;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#12171b;--surface:#1a2127;--ink:#e3e9ee;--muted:#a9b6c0;--rule:#74828d;--line:#2e3943;
+  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
+  --blue:#8fb4f2;--blue-soft:#1b2a44;--violet:#bea6f0;--violet-soft:#2b2340;
+  --on-teal:#0b1311;--term:#0d1215;--focus:#8fb4ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+::selection{background:var(--blue-soft);color:var(--ink)}
+code,kbd,.mono{font-family:var(--mono);font-size:.94em}
+a{color:var(--blue);text-underline-offset:3px}
+main{max-width:1280px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
+.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"crumbs tools" "title tools" "meta meta";column-gap:var(--s6);align-items:start;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
+.top .crumbs{grid-area:crumbs}.top h1{grid-area:title}.top .tools{grid-area:tools}.top .meta{grid-area:meta}
+.crumbs{margin:0 0 var(--s1);font-size:15px;color:var(--muted)}
+.crumbs ol{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s2);margin:0;padding:0;list-style:none}
+.crumbs li+li::before{content:"/";margin-right:var(--s2);color:var(--rule)}
+.crumbs [aria-current]{color:var(--ink);font-weight:600}
+h1{margin:0;font-size:26px;line-height:32px;letter-spacing:-.01em}
+.meta{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s1) 0 0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
+.meta li:first-child{font-weight:700;color:var(--ink)}
+.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
+.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2)}
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:repeating-linear-gradient(135deg,var(--amber) 0 3px,transparent 3px 6px);border-color:var(--amber)}
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s;color:var(--ink)}
+.ghost{background:transparent;border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s2);align-items:start}
+.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
+.teach p{margin:0 0 var(--s2);max-width:62ch}
+.teach ul{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
+.teach li{margin-bottom:var(--s1)}
+.teach code,.task code,.goals code{white-space:nowrap}
+.task{padding:var(--s3) var(--s4);border:1px solid var(--rule);border-top:4px solid var(--teal);border-radius:4px;background:var(--surface)}
+.task p{margin:0;font-weight:600}
+.task p+p{margin-top:var(--s2)}
+.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
+.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
+.goals li:first-child{border-top:0}
+.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
+.goals li.done .st{color:var(--teal)}
+.goals li.done .gt::before{content:"";display:inline-block;width:10px;height:6px;margin-right:var(--s2);border-left:3px solid var(--teal);border-bottom:3px solid var(--teal);transform:rotate(-45deg) translateY(-3px)}
+.simnote{font-size:14px;color:var(--muted);margin:0}
+/* model */
+.model{margin:0;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);min-width:0}
+.model figcaption{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--s1) var(--s3);margin:0 0 var(--s1);font-size:15px;font-weight:700;color:var(--muted)}
+.model figcaption .sim-tag{font-weight:600}
+.zones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s2)}
+.zones.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.zone{min-width:0;padding:var(--s2);border:2px solid var(--rule);border-radius:4px;background:var(--bg)}
+.zone h3{margin:0 0 var(--s1);font-size:15px;line-height:20px}
+.zone h3 small{display:block;font-weight:500;color:var(--muted);font-size:14px}
+.zone.wc{border-color:var(--amber)}
+.zone.ix{border-color:var(--blue)}
+.zone.hist{border-color:var(--teal)}
+.zone.stash{border-color:var(--violet);border-style:dashed}
+.zone ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--s1)}
+.chip{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--s2);padding:4px var(--s2);border:2px solid var(--rule);border-radius:3px;background:var(--surface);font:600 15px/1.35 var(--mono);overflow-wrap:anywhere}
+.chip small{font:500 14px/1.3 var(--sans);color:var(--muted)}
+.chip.new{box-shadow:inset 0 -4px 0 var(--amber)}
+.chip.ign{border-style:dashed;color:var(--muted)}
+.chip.secret{border-color:var(--red)}
+.empty{font-size:14px;color:var(--muted);font-style:italic}
+.graphs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
+.graphs.one{grid-template-columns:minmax(0,1fr)}
+.gbox{min-width:0;padding:var(--s2);border:2px solid var(--rule);border-radius:4px;background:var(--bg)}
+.gbox.remote{border-style:dashed}
+.gbox h3{margin:0 0 var(--s1);font-size:15px;line-height:20px}
+.gbox h3 small{display:block;font-weight:500;color:var(--muted);font-size:14px}
+.graph{list-style:none;margin:0;padding:0}
+.grow{display:grid;grid-template-columns:var(--gw,56px) minmax(0,1fr);min-height:36px;align-items:stretch}
+.glane{position:relative}
+.glane svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.glane svg line{stroke:var(--rule);stroke-width:3;vector-effect:non-scaling-stroke}
+.node{position:absolute;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--teal);border:3px solid var(--teal)}
+.node.ghost{background:var(--bg);border:3px dashed var(--rule)}
+.node.merge{background:var(--surface)}
+.gtext{display:flex;flex-wrap:wrap;align-items:center;gap:2px var(--s2);padding:2px 0;min-width:0;font-size:15px}
+.gtext .cid{font:700 15px/1.2 var(--mono)}
+.gtext .msg{color:var(--ink)}
+.gtext.ghost .msg::after{content:" (no branch points here)";color:var(--muted)}
+.ref{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border:2px solid var(--teal);border-radius:3px;font:600 15px/1.25 var(--mono);color:var(--ink);background:var(--surface)}
+.ref.head{background:var(--teal);color:var(--on-teal)}
+.ref.rt{border-style:dashed;border-color:var(--blue)}
+.ref.tag-new{box-shadow:inset 0 -4px 0 var(--amber)}
+.filebox{margin:0;border:2px solid var(--rule);border-radius:4px;background:var(--term);font:15px/1.5 var(--mono);overflow-wrap:anywhere;white-space:pre-wrap;padding:var(--s2) var(--s3)}
+.filebox .ln{display:block}
+.filebox .mk{font-weight:700;color:var(--red)}
+.filebox .ours{background:var(--teal-soft)}
+.filebox .theirs{background:var(--blue-soft)}
+.filebox .add{background:var(--teal-soft)}
+.filebox .add::before{content:"+ ";font-weight:700}
+.filebox .del{background:var(--red-soft)}
+.filebox .del::before{content:"- ";font-weight:700}
+.filebox .ctx::before{content:"  "}
+.legend{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);margin:var(--s2) 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.statusline{margin:var(--s2) 0 0;font-size:15px}
+.statusline b{font-family:var(--mono)}
+.gbox .statusline{margin-top:2px}
+/* controls */
+.control{min-width:0}
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s1) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.opt > span:not(.why){flex:1 1 0;min-width:0}
+.opt .badges{flex:1 0 100%;display:flex;flex-wrap:wrap;gap:6px;padding-left:28px;margin-top:var(--s1)}
+.badge{display:inline-block;padding:2px 8px;border:2px solid;border-radius:3px;font:700 15px/1.3 var(--sans)}
+.badge.ok{color:var(--teal);border-color:var(--teal)}
+.badge.no{color:var(--red);border-color:var(--red);border-style:dashed}
+.opt .why{flex:1 0 100%;padding:var(--s1) 0 2px 28px;font-size:15px;line-height:1.4;color:var(--ink);border-top:1px solid var(--line);margin-top:var(--s1)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s2)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:88px}
+.cmds{display:flex;flex-wrap:wrap;gap:var(--s2)}
+.actions .ghost{min-height:40px;padding:var(--s1) var(--s3);font-size:15px;margin-left:auto}
+.cmd{min-height:40px;padding:var(--s1) var(--s3);background:var(--surface);border:2px solid var(--rule);font:600 15px/1.3 var(--mono);text-align:left}
+.cmd:hover{border-color:var(--ink)}
+.cmd:disabled{border-style:dashed}
+.cmd.plain{font-family:var(--sans)}
+.term:focus-within{outline:3px solid var(--focus);outline-offset:2px}
+.term{margin-top:var(--s1);border:2px solid var(--rule);border-radius:4px;background:var(--term)}
+.log{height:208px;overflow-y:auto;padding:6px var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.term-in{display:flex;align-items:center;gap:6px;padding:0 var(--s3);border-top:1px solid var(--rule)}
+.term-in label{font:700 15px/1.3 var(--mono);color:var(--teal);white-space:nowrap;max-width:55%;overflow:hidden;text-overflow:ellipsis}
+.term-in input{flex:1 1 auto;min-width:0;min-height:40px;padding:4px var(--s2);border:2px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink);font:15px/1.3 var(--mono);caret-color:var(--teal)}
+.term-in{padding:var(--s2) var(--s3)}
+.term-in .run{flex:0 0 auto;min-height:40px;padding:var(--s1) var(--s4);background:transparent;border:2px solid var(--teal);color:var(--ink);font-weight:700}
+.term-in .run:disabled{border-style:dashed;border-color:var(--rule)}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin-top:var(--s2)}
+.actions:empty{display:none}
+.term-in{flex-wrap:wrap}
+.term-in input{flex-basis:160px}
+.term-in .ghost{flex:0 0 auto;min-height:40px;padding:var(--s1) var(--s3);font-size:15px}
+.actions .cmd.plain{border-color:var(--blue);background:var(--surface)}
+.cmdref{margin-top:var(--s2);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.cmdref summary{cursor:pointer;min-height:40px;padding:var(--s2) var(--s3);font-size:15px;font-weight:600;color:var(--muted)}
+.cmdref[open] summary{color:var(--ink)}
+.cmdref .refnote{margin:0;padding:0 var(--s3) var(--s2);font-size:15px;color:var(--muted)}
+.cmdref .cmds{padding:0 var(--s3) var(--s3)}
+.teach .lead{color:var(--ink)}
+.teach .lead-only{margin-bottom:var(--s1)}
+.term-in input:focus{outline:none;border-color:var(--focus)}
+.term-in input::placeholder{color:var(--muted)}
+.term-in input:disabled{cursor:not-allowed}
+.log .c{font-weight:700}
+.log .c::before{content:"$ ";color:var(--teal)}
+.log .e{color:var(--red)}
+.log .hint{color:var(--muted);font-family:var(--sans)}
+.simbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:var(--s2);padding:var(--s1) var(--s2);border-top:1px solid var(--rule);font-size:14px;color:var(--muted)}
+.simbar button{min-height:40px;padding:var(--s1) var(--s3);font-size:15px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;gap:var(--s4);align-items:flex-start;justify-content:space-between}
+.feedback{flex:1 1 auto;min-width:0;min-height:44px;font-size:15px;line-height:1.45}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin-bottom:2px}
+.feedback .verdict{font-weight:700}
+.feedback .verdict.ok{color:var(--teal)}
+.feedback .verdict.no{color:var(--red)}
+.feedback .verdict.set{color:var(--amber)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+.recap ul{padding-left:20px}
+.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.recap summary{cursor:pointer;font-weight:700;min-height:28px}
+.recap .sources p,.recap .sources li{font-size:15px}
+.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
+.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
+.next-topic{font-weight:700}
+.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
+.complete p{margin:0}
+.complete p+p{margin-top:var(--s1)}
+[hidden]{display:none!important}
+@media (max-width:860px){
+  main{padding:var(--s3) var(--s4) var(--s4)}
+  .top{grid-template-columns:minmax(0,1fr);grid-template-areas:"crumbs" "title" "meta" "tools";row-gap:var(--s1)}
+  .tools{justify-content:flex-start;flex-wrap:wrap}
+  .stage{grid-template-columns:minmax(0,1fr)}
+  .fbrow{flex-direction:column}
+  .cmd{min-height:44px}
+  .term-in input{min-height:44px}
+  .graphs{grid-template-columns:minmax(0,1fr)}
+  .zones.four{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (min-width:861px) and (max-height:720px){.log{height:176px}.term-in input{min-height:32px}.cmds{gap:6px}.term-in{padding:4px var(--s3)}.term-in .run,.term-in .ghost{min-height:32px}.cmd,.cmds .ghost{min-height:36px}.grow{min-height:32px}}
+@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}.zones{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<noscript><p class="nojs">This topic needs JavaScript for its practice repository and checks. The teaching text below still reads without it.</p></noscript>
+<main id="lesson">
+  <header class="top">
+    <h1 id="lesson-title" tabindex="-1">Stash: setting work aside</h1>
+    <ul class="meta" data-pep-objectives aria-label="Objectives"><li>Explain what git stash saves and what it leaves behind by default</li><li>Use git stash, git stash list and git stash pop to switch tasks and come back</li></ul>
+    <div class="tools">
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 3</span><span class="pips" id="pips" aria-hidden="true"></span></div>
+      <button type="button" class="ghost" id="restart" data-pep-reset>Restart this activity</button>
+    </div>
+  </header>
+  <div class="stage" id="stage" data-step="1">
+    <div class="col" id="col-a">
+      <section id="current-teaching" class="teach" aria-label="Teaching"><div data-step="1"><h2 id="teach-1-h" tabindex="-1">Start with a guess</h2><p>Sometimes you must drop what you are doing: an urgent bug needs you on another branch. Committing half-done work just to switch is messy. Git can set it aside instead.</p></div><div data-step="2" hidden><h2 id="teach-2-h" tabindex="-1">The stash is a shelf for unfinished work</h2><p><code>git stash</code> saves your changes to <strong>tracked</strong> files (staged or not) on a stack called the stash, and resets those files to the last commit. Now you can switch branches.</p><p>By default <strong>untracked</strong> files, never added, stay in the working copy; <code>git stash -u</code> includes them.</p><p><code>git stash list</code> shows entries; the newest is <code>stash@{0}</code>. <code>git stash pop</code> reapplies the newest entry to the branch you are on <em>now</em> and, once it applies cleanly, removes it from the stack, so switch back first. If applying it causes conflicts, the entry stays in the stash: resolve them, then remove it with <code>git stash drop</code>.</p></div><div data-step="3" hidden><h2 id="teach-3-h" tabindex="-1">Apply it to new files</h2><p>Same rule: plain <code>git stash</code> takes tracked changes only.</p></div><div data-step="4" hidden data-pep-recap class="recap"><h2 id="teach-4-h" tabindex="-1">Recap</h2><ul><li><code>git stash</code> sets aside changes to tracked files and returns them to the last commit, so you can switch.</li><li>Untracked files stay unless you use <code>git stash -u</code>.</li><li><code>git stash list</code> shows entries; <code>stash@{0}</code> is the newest.</li><li><code>git stash pop</code> reapplies the newest entry to the current branch and removes it once it applies cleanly (after a conflict the entry stays until you drop it), so switch back first.</li></ul><details data-section-skip><summary>Cheat sheet</summary><table><tr><td><code>git stash</code></td><td>set aside tracked changes</td></tr><tr><td><code>git stash -u</code></td><td>also set aside untracked files</td></tr><tr><td><code>git stash list</code></td><td>show saved entries</td></tr><tr><td><code>git stash pop</code></td><td>reapply newest entry here and remove it (kept if it conflicts)</td></tr></table></details><details data-section-skip class="sources"><summary>Sources and review date</summary><p>Teaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.</p><ul><li><a href="https://git-scm.com/docs/git-stash#_description">git-stash: description</a></li><li><a href="https://git-scm.com/docs/git-stash#_options">git-stash: options (--include-untracked)</a></li><li><a href="https://git-scm.com/docs/git-switch#_description">git-switch: description</a></li></ul></details><p class="next-topic">Next topic: <a href="05-remotes-clone-push-fetch-pull.html">Remotes: SSH keys, clone, push, fetch vs pull</a></p></div></section>
+      <section id="current-task" class="task" aria-label="Current task"><div data-step="1"><p id="task-1">You have an unfinished edit to <code>app.js</code> on <code>feature</code>. You run <code>git stash</code>. What happens to the edit?</p></div><div data-step="2" hidden><p id="task-2">Your <code>app.js</code> edit on <code>feature</code> is unfinished, and an urgent fix waits on <code>main</code>. Visit <code>main</code>, then return and resume.</p><ul class="goals" id="goals-2" aria-label="Goals for this practice"></ul></div><div data-step="3" hidden><p id="task-3">You have a modified tracked file <code>cart.js</code> and a new untracked file <code>todo.txt</code>. You run <code>git stash</code>. What does <code>git status</code> show next?</p><p id="task-3b" tabindex="-1" hidden>Second try, as places. The model shows <code>style.css</code> modified (tracked) and <code>notes.md</code> untracked. After plain <code>git stash</code>, where is each file's change?</p></div><div data-step="4" hidden><p id="task-4">All activities are finished. Read the recap, then move on.</p></div></section>
+    </div>
+    <div class="col" id="col-b">
+      <figure id="live-model" class="model"><figcaption><span id="model-cap">Practice repository &quot;shop&quot;: your changes and the stash</span><span class="sim-tag">Simulation: no real Git runs</span></figcaption><div id="model-body"></div></figure>
+      <div id="current-control" class="control"><div data-step="1"><fieldset id="predict-1" data-static-alt="Prediction (not scored). You have an unfinished edit to app.js on feature. You run git stash. What happens to the edit? Options: Saved on a stack; the file goes back to the last commit; Committed to feature; Deleted; Moved to main. Answer: Saved on a stack; the file goes back to the last commit. Saved on a stack; the file goes back to the last commit: git stash saves changes to tracked files on a stack called the stash and cleans them out of your working copy. Committed to feature: Attractive, but stash makes no commit on your branch; the branch history does not change. Deleted: Nothing is lost: the change is kept in the stash until you bring it back. Moved to main: Stash is not tied to switching; it just sets the change aside." data-interaction="predict" data-confidence data-pep-predict aria-describedby="task-1"><legend>Your prediction</legend><div class="opts"><label class="opt" for="pred-1-saved" data-opt="saved"><input type="radio" id="pred-1-saved" name="pred-1" value="saved"><span>Saved on a stack; the file goes back to the last commit</span></label><label class="opt" for="pred-1-commit" data-opt="commit"><input type="radio" id="pred-1-commit" name="pred-1" value="commit"><span>Committed to feature</span></label><label class="opt" for="pred-1-deleted" data-opt="deleted"><input type="radio" id="pred-1-deleted" name="pred-1" value="deleted"><span>Deleted</span></label><label class="opt" for="pred-1-moved" data-opt="moved"><input type="radio" id="pred-1-moved" name="pred-1" value="moved"><span>Moved to main</span></label></div></fieldset><div class="row"><fieldset class="conf" id="conf-P" data-pep-confidence><legend id="conf-P-legend">Your confidence</legend><label class="opt" for="conf-P-low"><input type="radio" id="conf-P-low" name="conf-P" value="low"><span>Low</span></label><label class="opt" for="conf-P-medium"><input type="radio" id="conf-P-medium" name="conf-P" value="medium"><span>Medium</span></label><label class="opt" for="conf-P-high"><input type="radio" id="conf-P-high" name="conf-P" value="high"><span>High</span></label></fieldset><button type="button" class="primary" id="predict-check-1" data-predict-check data-pep-predict-check disabled>Check prediction</button></div></div><div data-step="2" hidden><div id="sim-2" data-static-alt="Practice terminal (simulated; nothing runs on your computer). Task: Your app.js edit on feature is unfinished, and an urgent fix waits on main. Visit main, then return and resume. Goals: Set aside the app.js edit; Visit main; Back on feature, edit restored, stash empty. One sequence that meets every goal: git stash, then git switch main, then git switch feature, then git stash pop." data-interaction="terminal" data-steps="4" data-pep-explore><div class="term" id="sim-2-term"><div class="log" id="sim-2-log" role="log" aria-live="off" aria-label="Simulated output" tabindex="0"></div><div class="term-in"><label for="sim-2-input"><span id="sim-2-prompt" aria-hidden="true">$</span><span class="vh">Command</span></label><input id="sim-2-input" type="text" data-sim-input="2" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="term-help task-2" placeholder="Type a command, then press Enter"><button type="button" class="run" data-sim-run="2">Run</button><button type="button" class="ghost" data-sim-reset="2">Reset practice repo</button></div></div><div class="actions" id="sim-2-actions" role="group" aria-label="Other actions for this practice (not terminal commands)"></div><details class="cmdref" id="sim-2-ref"><summary>Stuck? Show every command this practice accepts (choosing one runs it)</summary><div class="cmds" id="sim-2-cmds" role="group" aria-label="Command list"></div></details></div></div><div data-step="3" hidden><div id="apply-A-wrap"><fieldset id="apply-A" data-static-alt="Check (one retry, then the answer is shown). You have a modified tracked file cart.js and a new untracked file todo.txt. You run git stash. What does git status show next? Options: Only todo.txt, as untracked; Nothing: working tree clean; cart.js modified; Both cart.js and todo.txt. Answer: Only todo.txt, as untracked. Only todo.txt, as untracked: Right: the cart.js change went into the stash; untracked todo.txt stays because plain git stash skips untracked files. Nothing: working tree clean: That needs git stash -u, which also takes untracked files. cart.js modified: The tracked change to cart.js is exactly what stash takes away. Both cart.js and todo.txt: Stash did remove the cart.js change; only todo.txt remains. Retry question: The model shows style.css modified (tracked) and notes.md untracked. After plain git stash, where is each file&#x27;s change? Options: Stash: style.css. Working copy: notes.md; Stash: style.css and notes.md; Stash: notes.md. Working copy: style.css; Neither; both are committed. Answer: Stash: style.css. Working copy: notes.md. Stash: style.css. Working copy: notes.md: Right: tracked change stashed, untracked file left behind. Stash: style.css and notes.md: Only git stash -u would take the untracked notes.md. Stash: notes.md. Working copy: style.css: Backwards: stash takes tracked changes, not untracked ones. Neither; both are committed: Stash never commits to your branch." data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-3"><legend>git status after git stash</legend><div class="opts"><label class="opt" for="ans-A-todo" data-opt="todo"><input type="radio" id="ans-A-todo" name="ans-A" value="todo"><span>Only todo.txt, as untracked</span></label><label class="opt" for="ans-A-clean" data-opt="clean"><input type="radio" id="ans-A-clean" name="ans-A" value="clean"><span>Nothing: working tree clean</span></label><label class="opt" for="ans-A-cart" data-opt="cart"><input type="radio" id="ans-A-cart" name="ans-A" value="cart"><span>cart.js modified</span></label><label class="opt" for="ans-A-both" data-opt="both"><input type="radio" id="ans-A-both" name="ans-A" value="both"><span>Both cart.js and todo.txt</span></label></div></fieldset><div class="row"><fieldset class="conf" id="conf-A" data-pep-confidence><legend id="conf-A-legend">Your confidence</legend><label class="opt" for="conf-A-low"><input type="radio" id="conf-A-low" name="conf-A" value="low"><span>Low</span></label><label class="opt" for="conf-A-medium"><input type="radio" id="conf-A-medium" name="conf-A" value="medium"><span>Medium</span></label><label class="opt" for="conf-A-high"><input type="radio" id="conf-A-high" name="conf-A" value="high"><span>High</span></label></fieldset><button type="button" class="primary" id="apply-check-A" data-apply-check="A" data-pep-apply-check disabled>Check answer</button></div></div><div id="apply-B-wrap" hidden data-pep-retry><fieldset id="apply-B" aria-describedby="task-3b"><legend>After git stash</legend><div class="opts"><label class="opt" for="ans-B-right" data-opt="right"><input type="radio" id="ans-B-right" name="ans-B" value="right"><span>Stash: style.css. Working copy: notes.md</span></label><label class="opt" for="ans-B-all" data-opt="all"><input type="radio" id="ans-B-all" name="ans-B" value="all"><span>Stash: style.css and notes.md</span></label><label class="opt" for="ans-B-swap" data-opt="swap"><input type="radio" id="ans-B-swap" name="ans-B" value="swap"><span>Stash: notes.md. Working copy: style.css</span></label><label class="opt" for="ans-B-commit" data-opt="commit"><input type="radio" id="ans-B-commit" name="ans-B" value="commit"><span>Neither; both are committed</span></label></div></fieldset><div class="row"><fieldset class="conf" id="conf-B" data-pep-confidence><legend id="conf-B-legend">Your confidence</legend><label class="opt" for="conf-B-low"><input type="radio" id="conf-B-low" name="conf-B" value="low"><span>Low</span></label><label class="opt" for="conf-B-medium"><input type="radio" id="conf-B-medium" name="conf-B" value="medium"><span>Medium</span></label><label class="opt" for="conf-B-high"><input type="radio" id="conf-B-high" name="conf-B" value="high"><span>High</span></label></fieldset><button type="button" class="primary" id="apply-check-B" data-apply-check="B" disabled>Check second answer</button></div></div></div><div data-step="4" hidden><div id="completion" class="complete" hidden></div></div></div>
+      <div class="fbrow"><div id="current-feedback" class="feedback" role="status" aria-live="polite" tabindex="-1" data-pep-predict-feedback data-pep-explore-feedback data-pep-apply-feedback></div><button type="button" class="primary" id="next" disabled>Continue</button></div>
+    </div>
+  </div>
+</main>
+<p class="vh" id="term-help">Simulated Git terminal: nothing runs on your computer. Press Enter to run. Up and Down recall your commands. Tab completes a command. Escape leaves the input.</p>
+<script>
+window.__CFG = {"steps": [{"kind": "predict", "options": [{"id": "saved", "label": "Saved on a stack; the file goes back to the last commit", "why": "`git stash` saves changes to tracked files on a stack called the stash and cleans them out of your working copy."}, {"id": "commit", "label": "Committed to feature", "why": "Attractive, but stash makes no commit on your branch; the branch history does not change."}, {"id": "deleted", "label": "Deleted", "why": "Nothing is lost: the change is kept in the stash until you bring it back."}, {"id": "moved", "label": "Moved to main", "why": "Stash is not tied to switching; it just sets the change aside."}], "answer": "saved"}, {"kind": "sim", "sim": "stash"}, {"kind": "apply", "A": {"options": [{"id": "todo", "label": "Only todo.txt, as untracked", "why": "Right: the cart.js change went into the stash; untracked todo.txt stays because plain `git stash` skips untracked files."}, {"id": "clean", "label": "Nothing: working tree clean", "why": "That needs `git stash -u`, which also takes untracked files."}, {"id": "cart", "label": "cart.js modified", "why": "The tracked change to cart.js is exactly what stash takes away."}, {"id": "both", "label": "Both cart.js and todo.txt", "why": "Stash did remove the cart.js change; only todo.txt remains."}], "answer": "todo"}, "B": {"options": [{"id": "right", "label": "Stash: style.css. Working copy: notes.md", "why": "Right: tracked change stashed, untracked file left behind."}, {"id": "all", "label": "Stash: style.css and notes.md", "why": "Only `git stash -u` would take the untracked notes.md."}, {"id": "swap", "label": "Stash: notes.md. Working copy: style.css", "why": "Backwards: stash takes tracked changes, not untracked ones."}, {"id": "commit", "label": "Neither; both are committed", "why": "Stash never commits to your branch."}], "answer": "right"}, "misconception": "Hint: \"tracked\" means Git already has a version of the file. Plain `git stash` sets aside changes to tracked files only; a brand-new untracked file stays put."}, {"kind": "recap"}]};
+
+window.__TOPIC = (function () {
+  function view(s, M, h) {
+    var wc = s.wc.map(function (f) { return { name: f, note: 'modified', cls: 'new' }; }).concat(s.un.map(function (f) { return { name: f, note: 'untracked' }; }));
+    var stash = s.stash.slice().reverse().map(function (e, i) { return { name: 'stash@{' + i + '}', note: e.files.join(', ') + ' (from ' + e.from + ')' }; });
+    return h('div', null, M.zones([
+      { cls: 'wc', title: 'Working copy', sub: 'on ' + s.head, files: wc, empty: 'clean' },
+      { cls: 'ix', title: 'Staging area', sub: 'next commit', files: [], empty: 'nothing staged' },
+      { cls: 'hist', title: 'Branches', sub: 'latest commit', files: Object.keys(s.b).map(function (n) { return { name: (n === s.head ? 'HEAD → ' : '') + n, note: s.b[n] }; }) },
+      { cls: 'stash', title: 'Stash', sub: 'newest first', files: stash, empty: 'empty' }]));
+  }
+  var sims = {
+    stash: {
+      init: function () { return { head: 'feature', b: { main: 'C3 Fix login', feature: 'C4 Add search' }, wc: ['app.js'], un: ['draft.md'], stash: [], visitedMain: false, restoredOn: null }; },
+      commands: [
+        { id: 'status', label: 'git status', run: function (s) { var o = ['On branch ' + s.head]; if (s.wc.length) o.push('Changes not staged for commit:', '    modified:   ' + s.wc.join(', ')); if (s.un.length) o.push('Untracked files:', '    ' + s.un.join(', ')); if (o.length === 1) o.push('nothing to commit, working tree clean'); return { out: o, fb: 'Status of the branch you are on.' }; } },
+        { id: 'stash', label: 'git stash', run: function (s) { if (!s.wc.length) return { out: ['No local changes to save'], fb: 'No tracked changes to set aside.' }; s.stash.push({ files: s.wc.slice(), from: s.head }); s.wc = []; return { out: ['Saved working directory and index state WIP on ' + s.head + ': ' + s.b[s.head]], fb: 'The `app.js` edit is on the stash shelf. `draft.md` is untracked, so it stayed in the working copy.', kind: 'ok' }; } },
+        { id: 'list', label: 'git stash list', run: function (s) { return { out: s.stash.length ? s.stash.slice().reverse().map(function (e, i) { return 'stash@{' + i + '}: WIP on ' + e.from; }) : ['(no output: the stash is empty)'], fb: 'Each entry remembers the branch it came from.' }; } },
+        { id: 'switch-main', label: 'git switch main', when: function (s) { return s.head !== 'main'; }, run: function (s) {
+          if (s.wc.length) return { err: true, out: ['error: Your local changes to the following files would be overwritten by checkout:', '\tapp.js', 'Please commit your changes or stash them before you switch branches.', 'Aborting'], fb: 'Git refused: `app.js` differs on `main`, so switching would overwrite your edit. Set it aside first.', kind: 'no' };
+          s.head = 'main'; s.visitedMain = true; return { out: ["Switched to branch 'main'"], fb: 'You are on `main` to make the urgent fix. The untracked `draft.md` came along: untracked files belong to no branch.' }; } },
+        { id: 'switch-feature', label: 'git switch feature', when: function (s) { return s.head !== 'feature'; }, run: function (s) {
+          if (s.wc.length) return { err: true, out: ['error: Your local changes to the following files would be overwritten by checkout:', '\tapp.js', 'Aborting'], fb: 'Git refused to switch because of uncommitted changes to `app.js`.', kind: 'no' };
+          s.head = 'feature'; return { out: ["Switched to branch 'feature'"], fb: 'Back on `feature`. The edit is still on the stash shelf.' }; } },
+        { id: 'pop', label: 'git stash pop', run: function (s) {
+          if (!s.stash.length) return { err: true, out: ['No stash entries found.'], fb: 'The stash is empty, so there is nothing to bring back.', kind: 'no' };
+          var e = s.stash.pop(); s.wc = s.wc.concat(e.files); s.restoredOn = s.head;
+          var out = ['On branch ' + s.head, 'Changes not staged for commit:', '    modified:   ' + e.files.join(', '), 'Dropped refs/stash@{0}'];
+          if (s.head !== e.from) return { out: out, fb: 'The edit from `' + e.from + '` was applied to `' + s.head + '` instead, because pop applies to the branch you are on. Use Reset practice repo and switch back first.', kind: 'no' };
+          return { out: out, fb: 'Your edit is back on `feature`, and the stash is empty again.', kind: 'ok' }; } }
+      ],
+      goals: [
+        { id: 'aside', text: 'Set aside the `app.js` edit', done: function (s) { return s.stash.some(function (e) { return e.from === 'feature'; }) || s.restoredOn === 'feature'; } },
+        { id: 'visit', text: 'Visit `main`', done: function (s) { return s.visitedMain; } },
+        { id: 'resume', text: 'Back on `feature`, edit restored, stash empty', done: function (s) { return s.visitedMain && s.head === 'feature' && s.restoredOn === 'feature' && s.wc.indexOf('app.js') >= 0 && !s.stash.length; } }
+      ],
+      doneText: 'All goals met: you switched away and came back without committing half-done work.'
+    }
+  };
+  return {
+    sims: sims,
+    model: function (n, s, st, M, h) {
+      if (s.kind === 'sim' || s.kind === 'recap') { var sim = st.sims[2]; return { node: view(sim.s, M, h), key: 'sim-' + sim.s.head + sim.s.stash.length + sim.s.wc.join() }; }
+      if (s.kind === 'predict') return { node: view(sims.stash.init(), M, h), key: 'predict' };
+      if (st.apply.attempt === 0) return { node: view({ head: 'feature', b: { feature: 'C6 Add cart' }, wc: ['cart.js'], un: ['todo.txt'], stash: [] }, M, h), key: 'apply-A', caption: 'New situation: before git stash' };
+      return { node: view({ head: 'feature', b: { feature: 'C8 Style page' }, wc: ['style.css'], un: ['notes.md'], stash: [] }, M, h), key: 'apply-B', caption: 'Second try: before git stash' };
+    }
+  };
+})();
+
+(function () {
+'use strict';
+var root = document.documentElement;
+var main = document.getElementById('lesson');
+var INITIAL = main.innerHTML;
+/* entry snapshot of every activity, used by "Restart this activity" */
+var SNAP = {};
+Array.prototype.slice.call(main.querySelectorAll('#current-teaching > [data-step], #current-task > [data-step], #current-control > [data-step]')).forEach(function (e) { SNAP[e.parentNode.id + ':' + e.getAttribute('data-step')] = e.innerHTML; });
+var CONF_NAMES = { low: 'low', medium: 'medium', high: 'high' };
+
+/* ---------- tiny DOM helpers (text only, never innerHTML with variable content) ---------- */
+function h(tag, attrs) {
+  var e = document.createElement(tag), k, v, i;
+  if (attrs) for (k in attrs) {
+    v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k === 'style') e.setAttribute('style', v);
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (i = 2; i < arguments.length; i++) add(e, arguments[i]);
+  return e;
+}
+function add(e, k) {
+  if (k == null || k === false) return;
+  if (Array.isArray(k)) { k.forEach(function (x) { add(e, x); }); return; }
+  e.append(k.nodeType ? k : document.createTextNode(String(k)));
+}
+/* rich text: `code` spans and **bold** */
+function rt(str) {
+  var f = document.createDocumentFragment();
+  String(str).split(/(`[^`]+`|\*\*[^*]+\*\*)/).forEach(function (part) {
+    if (!part) return;
+    if (part[0] === '`') f.append(h('code', { text: part.slice(1, -1) }));
+    else if (part.slice(0, 2) === '**') f.append(h('strong', { text: part.slice(2, -2) }));
+    else f.append(document.createTextNode(part));
+  });
+  return f;
+}
+function p(str, cls) { return h('p', { class: cls || null }, rt(str)); }
+function $(sel, ctx) { return (ctx || main).querySelector(sel); }
+function $$(sel, ctx) { return Array.prototype.slice.call((ctx || main).querySelectorAll(sel)); }
+function clear(e) { while (e.firstChild) e.removeChild(e.firstChild); return e; }
+
+/* ---------- shared Git models ---------- */
+var Model = {
+  /* zones: [{cls, title, sub, files:[{name, note, cls}]}] */
+  zones: function (zs, opts) {
+    var wrap = h('div', { class: 'zones' + (zs.length === 4 ? ' four' : '') });
+    zs.forEach(function (z) {
+      var list = h('ul');
+      if (!z.files.length) list.append(h('li', { class: 'empty', text: z.empty || 'nothing here' }));
+      z.files.forEach(function (f) {
+        list.append(h('li', { class: 'chip ' + (f.cls || '') }, f.name, f.note ? h('small', { text: f.note }) : null));
+      });
+      wrap.append(h('section', { class: 'zone ' + z.cls, 'aria-label': z.title },
+        h('h3', null, z.title, z.sub ? h('small', { text: z.sub }) : null), list));
+    });
+    return wrap;
+  },
+  /* graph: commits newest first [{id,msg,parents:[ids],lane,ghost,merge}], refs [{name,at,head,rt,fresh}] */
+  graph: function (g) {
+    var lanes = 1, rows = {}, ol = h('ol', { class: 'graph', 'aria-label': g.label || 'Commit history, newest first' });
+    g.commits.forEach(function (c, i) { rows[c.id] = i; lanes = Math.max(lanes, (c.lane || 0) + 1); });
+    var W = 28 * lanes + 8, X = function (l) { return 4 + 14 + 28 * (l || 0); };
+    var edges = [];
+    g.commits.forEach(function (c, i) {
+      (c.parents || []).forEach(function (pid) {
+        if (rows[pid] == null) return;
+        edges.push({ ci: i, pi: rows[pid], a: c.lane || 0, b: g.commits[rows[pid]].lane || 0 });
+      });
+    });
+    g.commits.forEach(function (c, r) {
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + W + ' 100');
+      svg.setAttribute('preserveAspectRatio', 'none');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.setAttribute('focusable', 'false');
+      var line = function (x1, y1, x2, y2) {
+        var l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+        svg.append(l);
+      };
+      edges.forEach(function (e) {
+        if (e.ci === r) line(X(e.a), 50, X(e.b), 100);
+        else if (e.ci < r && r < e.pi) line(X(e.b), 0, X(e.b), 100);
+        else if (e.pi === r) line(X(e.b), 0, X(e.b), 50);
+      });
+      var lane = h('div', { class: 'glane' }, svg, h('span', { class: 'node' + (c.ghost ? ' ghost' : '') + (c.merge ? ' merge' : ''), style: 'left:' + X(c.lane) + 'px' }));
+      var refs = (g.refs || []).filter(function (x) { return x.at === c.id; });
+      var text = h('div', { class: 'gtext' + (c.ghost ? ' ghost' : '') },
+        h('span', { class: 'cid', text: c.id }), h('span', { class: 'msg', text: c.msg }),
+        refs.map(function (x) {
+          return h('span', { class: 'ref' + (x.head ? ' head' : '') + (x.rt ? ' rt' : '') + (x.fresh ? ' tag-new' : '') },
+            x.head ? 'HEAD → ' + x.name : x.name);
+        }));
+      var desc = c.id + ' ' + c.msg + (c.parents && c.parents.length > 1 ? ', merge of ' + c.parents.join(' and ') : '') +
+        (refs.length ? '; ' + refs.map(function (x) { return (x.head ? 'HEAD on ' : '') + x.name; }).join(', ') + ' points here' : '') +
+        (c.ghost ? '; no branch points here' : '');
+      ol.append(h('li', { class: 'grow', style: '--gw:' + W + 'px', 'aria-label': desc }, lane, text));
+    });
+    return ol;
+  },
+  box: function (title, sub, inner, cls) {
+    return h('section', { class: 'gbox ' + (cls || ''), 'aria-label': title }, h('h3', null, title, sub ? h('small', { text: sub }) : null), inner);
+  },
+  /* file lines: [{t, cls}] */
+  file: function (lines, label) {
+    var pre = h('pre', { class: 'filebox', 'aria-label': label || 'File contents' });
+    lines.forEach(function (l) { pre.append(h('span', { class: 'ln ' + (l.cls || ''), text: l.t })); });
+    return pre;
+  }
+};
+
+/* ---------- lesson state ---------- */
+var TOPIC = window.__TOPIC, CFG = window.__CFG;
+var st;
+function boot() {
+  st = { step: 1, acts: {}, sims: {}, apply: { attempt: 0, conf: [], result: null, chosen: [] }, predict: null, prior: {}, restarts: 0 };
+  CFG.steps.forEach(function (s, i) { if (s.kind !== 'recap') st.acts[i + 1] = 'todo'; });
+  CFG.steps.forEach(function (s, i) { if (s.kind === 'sim') initSim(i + 1, s.sim); });
+  show(1, false);
+}
+function actCount() {
+  var n = 0, d = 0, se = 0, k;
+  for (k in st.acts) { n++; if (st.acts[k] === 'done') d++; if (st.acts[k] === 'settled') se++; }
+  return { n: n, done: d, settled: se };
+}
+function renderProgress() {
+  var c = actCount();
+  var txt = $('#prog-text'); txt.textContent = 'Activities done: ' + (c.done + c.settled) + ' of ' + c.n + (c.settled ? ' (' + c.settled + ' settled, not correct)' : '');
+  var pips = clear($('#pips')), k;
+  for (k in st.acts) pips.append(h('span', { class: 'pip' + (st.acts[k] === 'done' ? ' on' : st.acts[k] === 'settled' ? ' settled' : '') }));
+}
+function stepCfg(n) { return CFG.steps[n - 1]; }
+function show(n, focus) {
+  st.step = n;
+  $('#stage').setAttribute('data-step', String(n));
+  $$('[data-step]', $('#stage')).forEach(function (e) { if (e.id !== 'stage') e.hidden = e.getAttribute('data-step') !== String(n); });
+  clear($('#current-feedback'));
+  var s0 = stepCfg(n), fig = $('#live-model');
+  if (s0.kind === 'predict' || s0.kind === 'apply') $('#col-a').append(fig);
+  else $('#col-b').insertBefore(fig, $('#col-b').firstChild);
+  renderModel();
+  var s = stepCfg(n);
+  if (s.kind === 'sim') renderSim(n);
+  if (s.kind === 'recap') finish();
+  $('#restart').hidden = s.kind === 'recap';
+  updateNext();
+  renderProgress();
+  if (focus) { var hd = $('#teach-' + n + '-h'); if (hd) hd.focus(); }
+}
+function updateNext() {
+  var nx = $('#next'), s = stepCfg(st.step);
+  if (s.kind === 'recap') { nx.hidden = true; return; }
+  nx.hidden = false;
+  nx.disabled = st.acts[st.step] === 'todo';
+  nx.textContent = stepCfg(st.step + 1).kind === 'recap' ? 'Continue to recap' : 'Continue';
+}
+function renderModel() {
+  var fig = $('#live-model'), body = clear($('#model-body')), s = stepCfg(st.step);
+  var out = TOPIC.model(st.step, s, st, Model, h);
+  if (out) add(body, out.node || out);
+  $('#model-cap').textContent = (out && out.caption) || TOPIC.caption || 'Practice repository';
+  fig.setAttribute('data-model-state', (out && out.key) || ('step-' + st.step));
+}
+function feedback(nodes, focus) {
+  var fb = clear($('#current-feedback'));
+  add(fb, nodes);
+  if (focus) fb.focus();
+}
+function settle(n, how) { if (st.acts[n] === 'todo') st.acts[n] = how; renderProgress(); updateNext(); }
+
+/* ---------- option explanations, shown inside each option ---------- */
+function explainInline(fs, options, answer, chosen, isPredict) {
+  var who = isPredict ? 'Your prediction' : 'Your choice';
+  options.forEach(function (o) {
+    var l = $('label[data-opt="' + o.id + '"]', fs);
+    if (!l || $('.why', l)) return;
+    var b = [];
+    if (o.id === chosen) b.push(h('span', { class: 'badge ' + (o.id === answer ? 'ok' : 'no'), text: who + ': ' + (o.id === answer ? 'correct' : 'not correct') }));
+    if (o.id === answer) b.push(h('span', { class: 'badge ok', text: 'Correct answer' }));
+    if (b.length) l.append(h('span', { class: 'badges' }, b));
+    l.append(h('span', { class: 'why' }, rt(o.why)));
+    if (o.id === answer) l.classList.add('right');
+    else if (o.id === chosen) l.classList.add('wrong');
+  });
+}
+/* ---------- predict ---------- */
+function checkPredict() {
+  var s = stepCfg(st.step), fs = $('#predict-' + st.step), sel = $('input:checked', fs), cf = $('#conf-P input:checked');
+  if (!sel || !cf) return;
+  var v = sel.value;
+  $$('input', fs).forEach(function (i) { i.disabled = true; });
+  $$('#conf-P input').forEach(function (i) { i.disabled = true; });
+  st.predictConf = cf.value;
+  $('#predict-check-' + st.step).disabled = true;
+  st.predict = v;
+  explainInline(fs, s.options, s.answer, v, true);
+  $('#predict-check-' + st.step).parentNode.hidden = true;
+  feedback([p('Practice prediction, not scored. Your prediction was ' + (v === s.answer ? '**correct**' : '**not correct**') + '; each option now shows what really happens.'), p('Your confidence: ' + CONF_NAMES[cf.value] + ' (reported as you chose it, not scored).', 'conf-report')], true);
+  settle(st.step, 'done');
+}
+
+/* ---------- sims ---------- */
+function initSim(n, id) {
+  var def = TOPIC.sims[id];
+  st.sims[n] = { id: id, s: def.init(), log: [], complete: false, hist: [], hi: 0 };
+}
+function renderSim(n) {
+  var sim = st.sims[n], def = TOPIC.sims[sim.id], wrap = clear($('#sim-' + n + '-cmds')), acts = clear($('#sim-' + n + '-actions'));
+  def.commands.forEach(function (c) {
+    if (c.when && !c.when(sim.s)) return;
+    (c.plain ? acts : wrap).append(h('button', { type: 'button', class: 'cmd' + (c.plain ? ' plain' : ''), 'data-cmd': c.id, 'data-step-n': String(n), disabled: sim.complete || null }, c.label));
+  });
+  var rs = $('[data-sim-reset="' + n + '"]'); if (rs) rs.disabled = sim.complete;
+  var rb = $('[data-sim-run="' + n + '"]'); if (rb) rb.disabled = sim.complete;
+  var inp = $('#sim-' + n + '-input');
+  if (inp) { inp.disabled = sim.complete; $('#sim-' + n + '-prompt').textContent = def.prompt ? def.prompt(sim.s) : (TOPIC.prompt || 'ana@pep:~/shop$'); }
+  var log = clear($('#sim-' + n + '-log'));
+  if (!sim.log.length) log.append(h('div', { class: 'hint', text: def.empty || 'Type a command below and press Enter. Output from the practice repository appears here.' }));
+  sim.log.forEach(function (l) { log.append(h('div', { class: l.k, text: l.t })); });
+  log.scrollTop = log.scrollHeight;
+  var goals = clear($('#goals-' + n));
+  def.goals.forEach(function (g) {
+    var ok = g.done(sim.s);
+    goals.append(h('li', { class: ok ? 'done' : '', 'data-goal': g.id }, h('span', { class: 'gt' }, rt(g.text)), h('span', { class: 'st', text: ok ? 'Done' : 'To do' })));
+  });
+}
+function runCmd(n, cid, typed, opts) {
+  var sim = st.sims[n], def = TOPIC.sims[sim.id];
+  if (sim.complete) return;
+  var c = def.commands.filter(function (x) { return x.id === cid; })[0];
+  if (!c || (c.when && !c.when(sim.s))) return;
+  var r = c.run(sim.s, opts) || {};
+  sim.log.push({ k: c.plain ? 'hint' : 'c', t: c.plain ? '[' + c.label + ']' : (typed && opts && opts.echo ? opts.echo : c.label) });
+  (r.out || []).forEach(function (t) { sim.log.push({ k: r.err ? 'e' : '', t: t }); });
+  var all = def.goals.every(function (g) { return g.done(sim.s); });
+  var nodes = [];
+  if (r.fb) nodes.push(p(r.fb, 'verdict ' + (r.kind || '')));
+  if (r.more) nodes.push(p(r.more));
+  if (all) { sim.complete = true; nodes.push(p(def.doneText || 'Every goal is met. Continue when ready.', 'verdict ok')); }
+  renderModel();
+  renderSim(n);
+  feedback(nodes, all);
+  if (all) settle(n, 'done');
+  else if (typed) $('#sim-' + n + '-input').focus();
+  else { var b = $('[data-cmd="' + cid + '"][data-step-n="' + n + '"]'); if (b) b.focus(); else { var f = $('#sim-' + n + '-cmds button'); if (f) f.focus(); } }
+}
+/* typed commands: same accepted commands as the buttons, nothing else */
+function norm(v) { return String(v).trim().replace(/\s+/g, ' ').replace(/'/g, '"'); }
+function typedCmds(n) { var sim = st.sims[n], def = TOPIC.sims[sim.id]; return def.commands.filter(function (c) { return !c.plain; }); }
+function runTyped(n, raw) {
+  var sim = st.sims[n], v = norm(raw);
+  if (!v || sim.complete) return;
+  var all = typedCmds(n), hit = all.filter(function (c) { return norm(c.label) === v; })[0];
+  /* any non-empty commit message is accepted, as real Git does, and is echoed and recorded as typed */
+  var echo = String(raw).trim().replace(/\s+/g, ' '), mm = /^git commit -m (["'])(.+)\1$/.exec(echo), opts = { echo: echo };
+  if (/^git commit -m /.test(v)) { if (!mm) mm = /^git commit -m "(.+)"$/.exec(v) && [null, null, /^git commit -m "(.+)"$/.exec(v)[1]]; if (mm && mm[2].trim()) { opts.msg = mm[2]; if (!hit) hit = all.filter(function (c) { return /^git commit -m /.test(c.label) && (!c.when || c.when(sim.s)); })[0]; } }
+  if (hit && (!hit.when || hit.when(sim.s))) { runCmd(n, hit.id, true, opts); return; }
+  sim.log.push({ k: 'c', t: String(raw).trim().replace(/\s+/g, ' ') });
+  sim.log.push({ k: 'e', t: hit ? 'That command does not apply at this point in the practice.' : v.split(' ')[0] + ': not available in this practice terminal' });
+  renderSim(n);
+  feedback([p(hit ? 'That command is recognised but does not apply right now. Choose from the commands shown.' : 'Not available in this practice terminal. Type one of the commands shown as buttons, or press Tab to complete one.', 'verdict no')], false);
+  $('#sim-' + n + '-input').focus();
+}
+function completeTyped(n, inp) {
+  if (inp.selectionStart !== inp.value.length) return false;
+  var v = inp.value.replace(/^\s+/, ''), sim = st.sims[n];
+  if (!v) return false;
+  var c = typedCmds(n).filter(function (x) { return (!x.when || x.when(sim.s)) && x.label.indexOf(v) === 0; }).map(function (x) { return x.label; });
+  if (!c.length) return false;
+  var pre = c.reduce(function (a, b) { var i = 0; while (i < a.length && a[i] === b[i]) i++; return a.slice(0, i); });
+  if (pre.length <= v.length) return false;
+  inp.value = pre;
+  return true;
+}
+function resetSim(n) {
+  if (st.sims[n].complete) return;
+  initSim(n, st.sims[n].id);
+  renderModel(); renderSim(n);
+  feedback([p('Practice repository restored to its starting state.')], false);
+  var fb1 = $('#sim-' + n + '-cmds button'); if (fb1) fb1.focus();
+}
+
+/* ---------- apply with one retry ---------- */
+function applyReady() {
+  var a = st.apply, v = a.attempt === 0 ? 'A' : 'B';
+  var ok = $('#apply-' + v + ' input:checked') && $('#conf-' + v + ' input:checked');
+  $('#apply-check-' + v).disabled = !ok || st.acts[st.step] !== 'todo';
+}
+function checkApply(v) {
+  var s = stepCfg(st.step), q = s[v], a = st.apply;
+  var sel = $('#apply-' + v + ' input:checked'), cf = $('#conf-' + v + ' input:checked');
+  if (!sel || !cf) return;
+  var chosen = sel.value, conf = cf.value, right = chosen === q.answer;
+  a.conf.push(conf); a.chosen.push(chosen);
+  $$('#apply-' + v + ' input, #conf-' + v + ' input').forEach(function (i) { i.disabled = true; });
+  $('#apply-check-' + v).disabled = true;
+  var lab = function (o) { var l = $('#apply-' + v + ' label[data-opt="' + o + '"]'); return l; };
+  var explainAll = function () {
+    explainInline($('#apply-' + v), q.options, q.answer, chosen, false);
+    $('#conf-' + v).hidden = true;
+    $('#apply-check-' + v).hidden = true;
+    if (v === 'B') { var a0 = s.A.options.filter(function (o) { return o.id === s.A.answer; })[0]; return p('First version, for comparison: the answer was **' + a0.label + '**.'); }
+    return null;
+  };
+  var confLine = function () {
+    return p('Your confidence: ' + a.conf.map(function (c, i) { return (a.conf.length > 1 ? (i === 0 ? 'first try ' : 'second try ') : '') + CONF_NAMES[c]; }).join(', ') + ' (reported as you chose it, not scored).', 'conf-report');
+  };
+  if (right) {
+    lab(chosen).classList.add('right');
+    a.result = a.attempt === 0 ? 'correct' : 'correct-second';
+    feedback([p(a.attempt === 0 ? 'Correct. Each option now shows why.' : 'Correct on the second try. Each option now shows why.', 'verdict ok'), explainAll(), confLine()], true);
+    $('#current-feedback').setAttribute('data-pep-result', a.result);
+    settle(st.step, 'done');
+    return;
+  }
+  lab(chosen).classList.add('wrong');
+  if (a.attempt === 0) {
+    a.attempt = 1;
+    var why = q.options.filter(function (o) { return o.id === chosen; })[0].why;
+    feedback([p('Not yet. ' + why, 'verdict no'), p(s.misconception), confLine()], false);
+    $('#apply-A-wrap').hidden = true;
+    $('#current-feedback').setAttribute('data-pep-result', 'retry');
+    $('#apply-B-wrap').hidden = false;
+    $('#task-' + st.step + 'b').hidden = false;
+    renderModel();
+    $('#task-' + st.step + 'b').focus();
+    return;
+  }
+  a.result = 'settled';
+  var ans = q.options.filter(function (o) { return o.id === q.answer; })[0];
+  lab(q.answer).classList.add('right');
+  feedback([p('Answered and settled, not marked correct. The answer is: ' + ans.label + '. You can still finish the topic.', 'verdict set'), explainAll(), confLine()], true);
+  $('#current-feedback').setAttribute('data-pep-result', 'settled');
+  settle(st.step, 'settled');
+}
+
+/* ---------- restart only the current activity; earlier activities keep their results ---------- */
+function restartActivity() {
+  var n = st.step, s = stepCfg(n);
+  if (s.kind === 'recap') return;
+  ['current-teaching', 'current-task', 'current-control'].forEach(function (id) {
+    var el = $('#' + id + ' > [data-step="' + n + '"]');
+    if (el && SNAP[id + ':' + n] != null) el.innerHTML = SNAP[id + ':' + n];
+  });
+  if (st.acts[n] !== 'todo') (st.prior[n] = st.prior[n] || []).push(s.kind === 'apply' ? (st.apply.result || st.acts[n]) : st.acts[n]);
+  st.acts[n] = 'todo';
+  if (s.kind === 'predict') { st.predict = null; st.predictConf = null; }
+  if (s.kind === 'apply') st.apply = { attempt: 0, conf: [], result: null, chosen: [] };
+  if (s.kind === 'sim') initSim(n, s.sim);
+  st.restarts++;
+  show(n, true);
+  feedback([p('This activity restarted from its beginning. Earlier activities keep their results.')], false);
+}
+
+/* ---------- finish ---------- */
+function finish() {
+  var c = actCount(), box = clear($('#completion'));
+  var all = c.done + c.settled === c.n;
+  box.hidden = false;
+  box.append(p(all ? 'Topic complete: ' + (c.done + c.settled) + ' of ' + c.n + ' activities done' + (c.settled ? ', ' + c.settled + ' settled rather than correct.' : '.') : 'Some activities are not finished yet.'));
+  if (st.apply.conf.length) box.append(p('Your check: ' + (st.apply.result === 'correct' ? 'correct on the first try' : st.apply.result === 'correct-second' ? 'correct on the second try' : 'answered and settled, not correct') + '; confidence chosen: ' + st.apply.conf.map(function (x) { return CONF_NAMES[x]; }).join(' then ') + '.', 'conf-report'));
+  var ap = []; Object.keys(st.prior).forEach(function (k) { ap = ap.concat(st.prior[k]); });
+  if (st.restarts) box.append(p('Activities restarted: ' + st.restarts + (ap.indexOf('settled') >= 0 ? ' (an earlier check attempt was settled before you restarted it).' : '.'), 'conf-report'));
+  box.setAttribute('data-pep-confidence-report', st.apply.conf.join(','));
+  main.setAttribute('data-pep-complete', all ? 'true' : 'false');
+}
+
+/* ---------- theme ---------- */
+function setTheme(t) {
+  root.setAttribute('data-theme', t);
+  var b = document.getElementById('theme');
+  if (b) b.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+}
+
+/* ---------- events (delegated so reset can rebuild the DOM) ---------- */
+document.addEventListener('click', function (ev) {
+  var t = ev.target.closest('button');
+  if (!t || !main.contains(t)) return;
+  if (t.id === 'restart') { restartActivity(); return; }
+  if (t.id === 'next') { if (!t.disabled) show(st.step + 1, true); return; }
+  if (t.hasAttribute('data-predict-check')) { checkPredict(); return; }
+  if (t.hasAttribute('data-cmd')) { runCmd(Number(t.getAttribute('data-step-n')), t.getAttribute('data-cmd')); return; }
+  if (t.hasAttribute('data-sim-run')) { var ri = $('#sim-' + t.getAttribute('data-sim-run') + '-input'), rn = Number(t.getAttribute('data-sim-run')), rv = ri.value; if (rv.trim()) { st.sims[rn].hist.push(rv); st.sims[rn].hi = st.sims[rn].hist.length; } ri.value = ''; runTyped(rn, rv); return; }
+  if (t.hasAttribute('data-sim-reset')) { resetSim(Number(t.getAttribute('data-sim-reset'))); return; }
+  if (t.hasAttribute('data-apply-check')) { checkApply(t.getAttribute('data-apply-check')); return; }
+});
+document.addEventListener('keydown', function (ev) {
+  var t = ev.target;
+  if (!t || !t.hasAttribute || !t.hasAttribute('data-sim-input') || !main.contains(t)) return;
+  var n = Number(t.getAttribute('data-sim-input')), sim = st.sims[n];
+  if (ev.key === 'Enter') {
+    ev.preventDefault();
+    var v = t.value;
+    if (v.trim()) sim.hist.push(v);
+    sim.hi = sim.hist.length;
+    t.value = '';
+    runTyped(n, v);
+  } else if (ev.key === 'ArrowUp') {
+    if (!sim.hist.length) return;
+    ev.preventDefault(); sim.hi = Math.max(0, sim.hi - 1); t.value = sim.hist[sim.hi];
+  } else if (ev.key === 'ArrowDown') {
+    if (!sim.hist.length) return;
+    ev.preventDefault(); sim.hi = Math.min(sim.hist.length, sim.hi + 1); t.value = sim.hist[sim.hi] || '';
+  } else if (ev.key === 'Tab' && !ev.shiftKey && !ev.altKey && !ev.ctrlKey && !ev.metaKey) {
+    if (t.value.trim() && completeTyped(n, t)) ev.preventDefault();
+  } else if (ev.key === 'Escape') {
+    ev.preventDefault();
+    $('#sim-' + n + '-log').focus();
+  }
+});
+document.addEventListener('change', function (ev) {
+  var t = ev.target;
+  if (!main.contains(t)) return;
+  if (t.name && (t.name.indexOf('pred-') === 0 || t.name === 'conf-P')) { var pc = $('#predict-check-' + st.step); if (pc) pc.disabled = !($('#predict-' + st.step + ' input:checked') && $('#conf-P input:checked')); }
+  if (t.name && (t.name.indexOf('ans-') === 0 || t.name === 'conf-A' || t.name === 'conf-B')) applyReady();
+});
+
+var pref = 'light';
+try { if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) pref = 'dark'; } catch (e) {}
+setTheme(pref);
+/* automatic light/dark from the system setting; there is no manual toggle */
+try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (ev) { setTheme(ev.matches ? 'dark' : 'light'); }); } catch (e) {}
+window.__pepModel = Model;
+boot();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:budget-minutes" content="8">
+<meta name="pep:course" content="git-linux-ai-foundations">
+<meta name="pep:module" content="git-foundations">
+<meta name="pep:topic" content="Remotes: SSH keys, clone, push, fetch vs pull">
+<meta name="pep:topic-id" content="remotes-clone-push-fetch-pull">
+<meta name="pep:source" content="authoring/evidence/git-linux-ai-foundations/git-foundations/remotes-clone-push-fetch-pull/sources.json">
+<meta name="pep:topic-position" content="5 of 9">
+<title>Remotes: SSH keys, clone, push, fetch vs pull · Git Foundations</title>
+<style>
+:root{
+  --bg:#eef1f3;--surface:#f9fafb;--ink:#1a2128;--muted:#46525d;--rule:#68747f;--line:#c8d0d6;
+  --teal:#0b6656;--teal-soft:#d5ebe5;--amber:#86470b;--amber-soft:#f6e7d5;--red:#a32218;--red-soft:#f8e0dc;
+  --blue:#1d4f9e;--blue-soft:#dde7f7;--violet:#5b3a99;--violet-soft:#ebe4f7;
+  --on-teal:#ffffff;--term:#e3e8ec;--focus:#1f4fbf;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#12171b;--surface:#1a2127;--ink:#e3e9ee;--muted:#a9b6c0;--rule:#74828d;--line:#2e3943;
+  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
+  --blue:#8fb4f2;--blue-soft:#1b2a44;--violet:#bea6f0;--violet-soft:#2b2340;
+  --on-teal:#0b1311;--term:#0d1215;--focus:#8fb4ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+::selection{background:var(--blue-soft);color:var(--ink)}
+code,kbd,.mono{font-family:var(--mono);font-size:.94em}
+a{color:var(--blue);text-underline-offset:3px}
+main{max-width:1280px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
+.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"crumbs tools" "title tools" "meta meta";column-gap:var(--s6);align-items:start;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
+.top .crumbs{grid-area:crumbs}.top h1{grid-area:title}.top .tools{grid-area:tools}.top .meta{grid-area:meta}
+.crumbs{margin:0 0 var(--s1);font-size:15px;color:var(--muted)}
+.crumbs ol{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s2);margin:0;padding:0;list-style:none}
+.crumbs li+li::before{content:"/";margin-right:var(--s2);color:var(--rule)}
+.crumbs [aria-current]{color:var(--ink);font-weight:600}
+h1{margin:0;font-size:26px;line-height:32px;letter-spacing:-.01em}
+.meta{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s1) 0 0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
+.meta li:first-child{font-weight:700;color:var(--ink)}
+.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
+.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2)}
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:repeating-linear-gradient(135deg,var(--amber) 0 3px,transparent 3px 6px);border-color:var(--amber)}
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s;color:var(--ink)}
+.ghost{background:transparent;border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s2);align-items:start}
+.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
+.teach p{margin:0 0 var(--s2);max-width:62ch}
+.teach ul{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
+.teach li{margin-bottom:var(--s1)}
+.teach code,.task code,.goals code{white-space:nowrap}
+.task{padding:var(--s3) var(--s4);border:1px solid var(--rule);border-top:4px solid var(--teal);border-radius:4px;background:var(--surface)}
+.task p{margin:0;font-weight:600}
+.task p+p{margin-top:var(--s2)}
+.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
+.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
+.goals li:first-child{border-top:0}
+.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
+.goals li.done .st{color:var(--teal)}
+.goals li.done .gt::before{content:"";display:inline-block;width:10px;height:6px;margin-right:var(--s2);border-left:3px solid var(--teal);border-bottom:3px solid var(--teal);transform:rotate(-45deg) translateY(-3px)}
+.simnote{font-size:14px;color:var(--muted);margin:0}
+/* model */
+.model{margin:0;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);min-width:0}
+.model figcaption{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--s1) var(--s3);margin:0 0 var(--s1);font-size:15px;font-weight:700;color:var(--muted)}
+.model figcaption .sim-tag{font-weight:600}
+.zones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s2)}
+.zones.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.zone{min-width:0;padding:var(--s2);border:2px solid var(--rule);border-radius:4px;background:var(--bg)}
+.zone h3{margin:0 0 var(--s1);font-size:15px;line-height:20px}
+.zone h3 small{display:block;font-weight:500;color:var(--muted);font-size:14px}
+.zone.wc{border-color:var(--amber)}
+.zone.ix{border-color:var(--blue)}
+.zone.hist{border-color:var(--teal)}
+.zone.stash{border-color:var(--violet);border-style:dashed}
+.zone ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--s1)}
+.chip{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--s2);padding:4px var(--s2);border:2px solid var(--rule);border-radius:3px;background:var(--surface);font:600 15px/1.35 var(--mono);overflow-wrap:anywhere}
+.chip small{font:500 14px/1.3 var(--sans);color:var(--muted)}
+.chip.new{box-shadow:inset 0 -4px 0 var(--amber)}
+.chip.ign{border-style:dashed;color:var(--muted)}
+.chip.secret{border-color:var(--red)}
+.empty{font-size:14px;color:var(--muted);font-style:italic}
+.graphs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
+.graphs.one{grid-template-columns:minmax(0,1fr)}
+.gbox{min-width:0;padding:var(--s2);border:2px solid var(--rule);border-radius:4px;background:var(--bg)}
+.gbox.remote{border-style:dashed}
+.gbox h3{margin:0 0 var(--s1);font-size:15px;line-height:20px}
+.gbox h3 small{display:block;font-weight:500;color:var(--muted);font-size:14px}
+.graph{list-style:none;margin:0;padding:0}
+.grow{display:grid;grid-template-columns:var(--gw,56px) minmax(0,1fr);min-height:36px;align-items:stretch}
+.glane{position:relative}
+.glane svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.glane svg line{stroke:var(--rule);stroke-width:3;vector-effect:non-scaling-stroke}
+.node{position:absolute;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--teal);border:3px solid var(--teal)}
+.node.ghost{background:var(--bg);border:3px dashed var(--rule)}
+.node.merge{background:var(--surface)}
+.gtext{display:flex;flex-wrap:wrap;align-items:center;gap:2px var(--s2);padding:2px 0;min-width:0;font-size:15px}
+.gtext .cid{font:700 15px/1.2 var(--mono)}
+.gtext .msg{color:var(--ink)}
+.gtext.ghost .msg::after{content:" (no branch points here)";color:var(--muted)}
+.ref{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border:2px solid var(--teal);border-radius:3px;font:600 15px/1.25 var(--mono);color:var(--ink);background:var(--surface)}
+.ref.head{background:var(--teal);color:var(--on-teal)}
+.ref.rt{border-style:dashed;border-color:var(--blue)}
+.ref.tag-new{box-shadow:inset 0 -4px 0 var(--amber)}
+.filebox{margin:0;border:2px solid var(--rule);border-radius:4px;background:var(--term);font:15px/1.5 var(--mono);overflow-wrap:anywhere;white-space:pre-wrap;padding:var(--s2) var(--s3)}
+.filebox .ln{display:block}
+.filebox .mk{font-weight:700;color:var(--red)}
+.filebox .ours{background:var(--teal-soft)}
+.filebox .theirs{background:var(--blue-soft)}
+.filebox .add{background:var(--teal-soft)}
+.filebox .add::before{content:"+ ";font-weight:700}
+.filebox .del{background:var(--red-soft)}
+.filebox .del::before{content:"- ";font-weight:700}
+.filebox .ctx::before{content:"  "}
+.legend{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);margin:var(--s2) 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
+.statusline{margin:var(--s2) 0 0;font-size:15px}
+.statusline b{font-family:var(--mono)}
+.gbox .statusline{margin-top:2px}
+/* controls */
+.control{min-width:0}
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s1) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.opt > span:not(.why){flex:1 1 0;min-width:0}
+.opt .badges{flex:1 0 100%;display:flex;flex-wrap:wrap;gap:6px;padding-left:28px;margin-top:var(--s1)}
+.badge{display:inline-block;padding:2px 8px;border:2px solid;border-radius:3px;font:700 15px/1.3 var(--sans)}
+.badge.ok{color:var(--teal);border-color:var(--teal)}
+.badge.no{color:var(--red);border-color:var(--red);border-style:dashed}
+.opt .why{flex:1 0 100%;padding:var(--s1) 0 2px 28px;font-size:15px;line-height:1.4;color:var(--ink);border-top:1px solid var(--line);margin-top:var(--s1)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s2)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:88px}
+.cmds{display:flex;flex-wrap:wrap;gap:var(--s2)}
+.actions .ghost{min-height:40px;padding:var(--s1) var(--s3);font-size:15px;margin-left:auto}
+.cmd{min-height:40px;padding:var(--s1) var(--s3);background:var(--surface);border:2px solid var(--rule);font:600 15px/1.3 var(--mono);text-align:left}
+.cmd:hover{border-color:var(--ink)}
+.cmd:disabled{border-style:dashed}
+.cmd.plain{font-family:var(--sans)}
+.term:focus-within{outline:3px solid var(--focus);outline-offset:2px}
+.term{margin-top:var(--s1);border:2px solid var(--rule);border-radius:4px;background:var(--term)}
+.log{height:208px;overflow-y:auto;padding:6px var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.term-in{display:flex;align-items:center;gap:6px;padding:0 var(--s3);border-top:1px solid var(--rule)}
+.term-in label{font:700 15px/1.3 var(--mono);color:var(--teal);white-space:nowrap;max-width:55%;overflow:hidden;text-overflow:ellipsis}
+.term-in input{flex:1 1 auto;min-width:0;min-height:40px;padding:4px var(--s2);border:2px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink);font:15px/1.3 var(--mono);caret-color:var(--teal)}
+.term-in{padding:var(--s2) var(--s3)}
+.term-in .run{flex:0 0 auto;min-height:40px;padding:var(--s1) var(--s4);background:transparent;border:2px solid var(--teal);color:var(--ink);font-weight:700}
+.term-in .run:disabled{border-style:dashed;border-color:var(--rule)}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin-top:var(--s2)}
+.actions:empty{display:none}
+.term-in{flex-wrap:wrap}
+.term-in input{flex-basis:160px}
+.term-in .ghost{flex:0 0 auto;min-height:40px;padding:var(--s1) var(--s3);font-size:15px}
+.actions .cmd.plain{border-color:var(--blue);background:var(--surface)}
+.cmdref{margin-top:var(--s2);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.cmdref summary{cursor:pointer;min-height:40px;padding:var(--s2) var(--s3);font-size:15px;font-weight:600;color:var(--muted)}
+.cmdref[open] summary{color:var(--ink)}
+.cmdref .refnote{margin:0;padding:0 var(--s3) var(--s2);font-size:15px;color:var(--muted)}
+.cmdref .cmds{padding:0 var(--s3) var(--s3)}
+.teach .lead{color:var(--ink)}
+.teach .lead-only{margin-bottom:var(--s1)}
+.term-in input:focus{outline:none;border-color:var(--focus)}
+.term-in input::placeholder{color:var(--muted)}
+.term-in input:disabled{cursor:not-allowed}
+.log .c{font-weight:700}
+.log .c::before{content:"$ ";color:var(--teal)}
+.log .e{color:var(--red)}
+.log .hint{color:var(--muted);font-family:var(--sans)}
+.simbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:var(--s2);padding:var(--s1) var(--s2);border-top:1px solid var(--rule);font-size:14px;color:var(--muted)}
+.simbar button{min-height:40px;padding:var(--s1) var(--s3);font-size:15px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;gap:var(--s4);align-items:flex-start;justify-content:space-between}
+.feedback{flex:1 1 auto;min-width:0;min-height:44px;font-size:15px;line-height:1.45}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin-bottom:2px}
+.feedback .verdict{font-weight:700}
+.feedback .verdict.ok{color:var(--teal)}
+.feedback .verdict.no{color:var(--red)}
+.feedback .verdict.set{color:var(--amber)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+.recap ul{padding-left:20px}
+.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.recap summary{cursor:pointer;font-weight:700;min-height:28px}
+.recap .sources p,.recap .sources li{font-size:15px}
+.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
+.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
+.next-topic{font-weight:700}
+.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
+.complete p{margin:0}
+.complete p+p{margin-top:var(--s1)}
+[hidden]{display:none!important}
+@media (max-width:860px){
+  main{padding:var(--s3) var(--s4) var(--s4)}
+  .top{grid-template-columns:minmax(0,1fr);grid-template-areas:"crumbs" "title" "meta" "tools";row-gap:var(--s1)}
+  .tools{justify-content:flex-start;flex-wrap:wrap}
+  .stage{grid-template-columns:minmax(0,1fr)}
+  .fbrow{flex-direction:column}
+  .cmd{min-height:44px}
+  .term-in input{min-height:44px}
+  .graphs{grid-template-columns:minmax(0,1fr)}
+  .zones.four{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (min-width:861px) and (max-height:720px){.log{height:176px}.term-in input{min-height:32px}.cmds{gap:6px}.term-in{padding:4px var(--s3)}.term-in .run,.term-in .ghost{min-height:32px}.cmd,.cmds .ghost{min-height:36px}.grow{min-height:32px}}
+@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}.zones{grid-template-columns:minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<noscript><p class="nojs">This topic needs JavaScript for its practice repository and checks. The teaching text below still reads without it.</p></noscript>
+<main id="lesson">
+  <header class="top">
+    <h1 id="lesson-title" tabindex="-1">Remotes: SSH keys, clone, push, fetch vs pull</h1>
+    <ul class="meta" data-pep-objectives aria-label="Objectives"><li>Explain which half of an SSH key pair you share and which you never share</li><li>Tell your local main apart from the remote-tracking ref origin/main</li><li>Predict what clone, fetch, pull and push change on each side</li></ul>
+    <div class="tools">
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 4</span><span class="pips" id="pips" aria-hidden="true"></span></div>
+      <button type="button" class="ghost" id="restart" data-pep-reset>Restart this activity</button>
+    </div>
+  </header>
+  <div class="stage" id="stage" data-step="1">
+    <div class="col" id="col-a">
+      <section id="current-teaching" class="teach" aria-label="Teaching"><div data-step="1"><h2 id="teach-1-h" tabindex="-1">Start with a guess</h2><p>Your team shares one copy of the repository on GitHub. The model shows your computer on the left and GitHub on the right; the dashed <code>origin/main</code> label is your computer's note of GitHub's <code>main</code>.</p></div><div data-step="2" hidden><h2 id="teach-2-h" tabindex="-1">Prove who you are, then clone</h2><p>A <strong>remote</strong> is another copy of the repository, usually on GitHub, named <code>origin</code>.</p><p>Over SSH you prove who you are with a key pair. <code>id_ed25519</code> is the <strong>private</strong> key: it never leaves your computer. <code>id_ed25519.pub</code> is the <strong>public</strong> key: you paste it into GitHub's SSH keys settings.</p><p><code>git clone git@github.com:pep/shop.git</code> then copies the whole history and sets up <code>origin</code>.</p></div><div data-step="3" hidden><h2 id="teach-3-h" tabindex="-1">fetch, pull and push</h2><p>Your clone has your own <code>main</code> plus <code>origin/main</code>, a note of where GitHub's <code>main</code> was when you last talked to it.</p><ul><li><code>git fetch</code> downloads new commits and moves only <code>origin/main</code>.</li><li><code>git pull</code> fetches, then moves your branch forward to match. With no pull setting configured, it stops if both sides gained new commits. Options or configuration can choose a different integration strategy; <code>git pull --no-rebase</code> merges instead.</li><li><code>git push</code> uploads your commits and moves GitHub's <code>main</code>, but only if your branch already contains everything GitHub has.</li></ul></div><div data-step="4" hidden><h2 id="teach-4-h" tabindex="-1">Apply it to a rejected push</h2><p>Same rule: push only adds to GitHub's history; it never drops a teammate's commit.</p></div><div data-step="5" hidden data-pep-recap class="recap"><h2 id="teach-5-h" tabindex="-1">Recap</h2><ul><li>Share only the public key (<code>.pub</code>); the private key never leaves your computer.</li><li><code>git clone</code> copies the history and sets up <code>origin</code>.</li><li><code>git fetch</code> moves <code>origin/main</code> only; <code>git pull</code> also updates your branch, and stops if both sides changed unless a pull strategy is configured.</li><li><code>git push</code> is accepted only when your branch already contains everything on GitHub.</li></ul><details data-section-skip><summary>Cheat sheet</summary><table><tr><td><code>git clone &lt;url&gt;</code></td><td>copy a remote repository</td></tr><tr><td><code>git fetch</code></td><td>download; update origin/main only</td></tr><tr><td><code>git pull</code></td><td>fetch, then fast-forward your branch</td></tr><tr><td><code>git pull --no-rebase</code></td><td>fetch and merge when both sides changed</td></tr><tr><td><code>git push</code></td><td>upload your commits</td></tr><tr><td><code>~/.ssh/id_ed25519.pub</code></td><td>public key: safe to paste into GitHub</td></tr></table></details><details data-section-skip class="sources"><summary>Sources and review date</summary><p>Teaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28), and GitHub Docs (the pages show no version or update date). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.</p><ul><li><a href="https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent">GitHub: generating a new SSH key</a></li><li><a href="https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account">GitHub: adding a new SSH key to your account</a></li><li><a href="https://docs.github.com/en/authentication/troubleshooting-ssh/error-permission-denied-publickey">GitHub: Error: Permission denied (publickey)</a></li><li><a href="https://git-scm.com/docs/git-clone#_description">git-clone: description</a></li><li><a href="https://git-scm.com/docs/git-fetch#_description">git-fetch: description</a></li><li><a href="https://git-scm.com/docs/git-pull#_description">git-pull: description and merge options (--ff-only default)</a></li><li><a href="https://git-scm.com/docs/git-push#_note_about_fast_forwards">git-push: note about fast-forwards</a></li></ul></details><p class="next-topic">Next topic: <a href="06-merge-conflicts.html">Merge conflicts</a></p></div></section>
+      <section id="current-task" class="task" aria-label="Current task"><div data-step="1"><p id="task-1">Sam pushed a new commit to GitHub. You run <code>git fetch</code>. What changes on your computer?</p></div><div data-step="2" hidden><p id="task-2">Your key pair already exists in <code>~/.ssh</code>. Let GitHub recognise you, then clone the shop.</p><ul class="goals" id="goals-2" aria-label="Goals for this practice"></ul></div><div data-step="3" hidden><p id="task-3">Sam pushed C3. Look at it first, take it into your <code>main</code>, then share a commit of your own.</p><ul class="goals" id="goals-3" aria-label="Goals for this practice"></ul></div><div data-step="4" hidden><p id="task-4">Your <code>main</code> is at C5. GitHub's <code>main</code> has C6 from a teammate. You commit C7 on C5 and run <code>git push</code>. What happens?</p><p id="task-4b" tabindex="-1" hidden>Second try, as a picture. The model shows your C7 and GitHub's C6, both built on C5. Which steps get C7 onto GitHub safely?</p></div><div data-step="5" hidden><p id="task-5">All activities are finished. Read the recap, then move on.</p></div></section>
+    </div>
+    <div class="col" id="col-b">
+      <figure id="live-model" class="model"><figcaption><span id="model-cap">Your computer and GitHub (origin)</span><span class="sim-tag">Simulation: no real Git runs</span></figcaption><div id="model-body"></div></figure>
+      <div id="current-control" class="control"><div data-step="1"><fieldset id="predict-1" data-static-alt="Prediction (not scored). Sam pushed a new commit to GitHub. You run git fetch. What changes on your computer? Options: origin/main moves to Sam&#x27;s commit; your main and files stay; Your main and files update to Sam&#x27;s commit; Nothing until you push; GitHub receives your commits. Answer: origin/main moves to Sam&#x27;s commit; your main and files stay. origin/main moves to Sam&#x27;s commit; your main and files stay: git fetch downloads commits and updates origin/main only. Your branch and files do not change. Your main and files update to Sam&#x27;s commit: Attractive, but updating your branch is what git pull adds after fetching. Nothing until you push: Fetch does download: you get Sam&#x27;s commit and an updated origin/main. GitHub receives your commits: Fetch only downloads. Uploading is git push." data-interaction="predict" data-confidence data-pep-predict aria-describedby="task-1"><legend>Your prediction</legend><div class="opts"><label class="opt" for="pred-1-rt" data-opt="rt"><input type="radio" id="pred-1-rt" name="pred-1" value="rt"><span>origin/main moves to Sam&#x27;s commit; your main and files stay</span></label><label class="opt" for="pred-1-main" data-opt="main"><input type="radio" id="pred-1-main" name="pred-1" value="main"><span>Your main and files update to Sam&#x27;s commit</span></label><label class="opt" for="pred-1-nothing" data-opt="nothing"><input type="radio" id="pred-1-nothing" name="pred-1" value="nothing"><span>Nothing until you push</span></label><label class="opt" for="pred-1-upload" data-opt="upload"><input type="radio" id="pred-1-upload" name="pred-1" value="upload"><span>GitHub receives your commits</span></label></div></fieldset><div class="row"><fieldset class="conf" id="conf-P" data-pep-confidence><legend id="conf-P-legend">Your confidence</legend><label class="opt" for="conf-P-low"><input type="radio" id="conf-P-low" name="conf-P" value="low"><span>Low</span></label><label class="opt" for="conf-P-medium"><input type="radio" id="conf-P-medium" name="conf-P" value="medium"><span>Medium</span></label><label class="opt" for="conf-P-high"><input type="radio" id="conf-P-high" name="conf-P" value="high"><span>High</span></label></fieldset><button type="button" class="primary" id="predict-check-1" data-predict-check data-pep-predict-check disabled>Check prediction</button></div></div><div data-step="2" hidden><div id="sim-2" data-static-alt="Practice terminal (simulated; nothing runs on your computer). Task: Your key pair already exists in ~/.ssh. Let GitHub recognise you, then clone the shop. Goals: GitHub has your public key; the private key stays private; Clone the repository. One sequence that meets every goal: Paste id_ed25519.pub into GitHub SSH keys, then git clone git@github.com:pep/shop.git." data-interaction="terminal" data-steps="2" data-pep-explore><div class="term" id="sim-2-term"><div class="log" id="sim-2-log" role="log" aria-live="off" aria-label="Simulated output" tabindex="0"></div><div class="term-in"><label for="sim-2-input"><span id="sim-2-prompt" aria-hidden="true">$</span><span class="vh">Command</span></label><input id="sim-2-input" type="text" data-sim-input="2" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="term-help task-2" placeholder="Type a command, then press Enter"><button type="button" class="run" data-sim-run="2">Run</button><button type="button" class="ghost" data-sim-reset="2">Reset practice repo</button></div></div><div class="actions" id="sim-2-actions" role="group" aria-label="Other actions for this practice (not terminal commands)"></div><details class="cmdref" id="sim-2-ref"><summary>Stuck? Show every command this practice accepts (choosing one runs it)</summary><div class="cmds" id="sim-2-cmds" role="group" aria-label="Command list"></div></details></div></div><div data-step="3" hidden><div id="sim-3" data-static-alt="Practice terminal (simulated; nothing runs on your computer). Task: Sam pushed C3. Look at it first, take it into your main, then share a commit of your own. Goals: Download C3 without changing your main; Bring C3 into your main; Commit and push a change of your own. One sequence that meets every goal: git fetch, then git pull, then git commit -m &quot;Add footer&quot;, then git push." data-interaction="terminal" data-steps="4" data-pep-explore><div class="term" id="sim-3-term"><div class="log" id="sim-3-log" role="log" aria-live="off" aria-label="Simulated output" tabindex="0"></div><div class="term-in"><label for="sim-3-input"><span id="sim-3-prompt" aria-hidden="true">$</span><span class="vh">Command</span></label><input id="sim-3-input" type="text" data-sim-input="3" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="term-help task-3" placeholder="Type a command, then press Enter"><button type="button" class="run" data-sim-run="3">Run</button><button type="button" class="ghost" data-sim-reset="3">Reset practice repo</button></div></div><div class="actions" id="sim-3-actions" role="group" aria-label="Other actions for this practice (not terminal commands)"></div><details class="cmdref" id="sim-3-ref"><summary>Stuck? Show every command this practice accepts (choosing one runs it)</summary><div class="cmds" id="sim-3-cmds" role="group" aria-label="Command list"></div></details></div></div><div data-step="4" hidden><div id="apply-A-wrap"><fieldset id="apply-A" data-static-alt="Check (one retry, then the answer is shown). Your main is at C5. GitHub&#x27;s main has C6 from a teammate. You commit C7 on C5 and run git push. What happens? Options: Rejected: bring in C6 first, then push; Accepted; C7 replaces C6; GitHub merges C6 and C7 for you; C7 goes onto a new branch next to C6. Answer: Rejected: bring in C6 first, then push. Rejected: bring in C6 first, then push: Right: GitHub&#x27;s main has C6, which your branch lacks, so Git rejects the push until you integrate it. Accepted; C7 replaces C6: A normal push never discards someone else&#x27;s commit. GitHub merges C6 and C7 for you: GitHub does not merge on push; you integrate C6 locally first. C7 goes onto a new branch next to C6: Push updates the branch you name; it does not invent a new branch. Retry question: The model shows your C7 and GitHub&#x27;s C6, both built on C5. Which steps get C7 onto GitHub safely? Options: git pull --no-rebase, then git push; git push again; git fetch only; git clone again. Answer: git pull --no-rebase, then git push. git pull --no-rebase, then git push: Right: both sides have new commits, so with no pull setting configured, plain git pull stops; --no-rebase merges C6 in, and then push is accepted. git push again: Nothing changed, so it is rejected again. git fetch only: Fetch shows you C6 but leaves your main without it, and nothing is uploaded. git clone again: A fresh clone would not contain your C7 at all." data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-4"><legend>Result of git push</legend><div class="opts"><label class="opt" for="ans-A-reject" data-opt="reject"><input type="radio" id="ans-A-reject" name="ans-A" value="reject"><span>Rejected: bring in C6 first, then push</span></label><label class="opt" for="ans-A-replace" data-opt="replace"><input type="radio" id="ans-A-replace" name="ans-A" value="replace"><span>Accepted; C7 replaces C6</span></label><label class="opt" for="ans-A-auto" data-opt="auto"><input type="radio" id="ans-A-auto" name="ans-A" value="auto"><span>GitHub merges C6 and C7 for you</span></label><label class="opt" for="ans-A-branch" data-opt="branch"><input type="radio" id="ans-A-branch" name="ans-A" value="branch"><span>C7 goes onto a new branch next to C6</span></label></div></fieldset><div class="row"><fieldset class="conf" id="conf-A" data-pep-confidence><legend id="conf-A-legend">Your confidence</legend><label class="opt" for="conf-A-low"><input type="radio" id="conf-A-low" name="conf-A" value="low"><span>Low</span></label><label class="opt" for="conf-A-medium"><input type="radio" id="conf-A-medium" name="conf-A" value="medium"><span>Medium</span></label><label class="opt" for="conf-A-high"><input type="radio" id="conf-A-high" name="conf-A" value="high"><span>High</span></label></fieldset><button type="button" class="primary" id="apply-check-A" data-apply-check="A" data-pep-apply-check disabled>Check answer</button></div></div><div id="apply-B-wrap" hidden data-pep-retry><fieldset id="apply-B" aria-describedby="task-4b"><legend>Safe steps</legend><div class="opts"><label class="opt" for="ans-B-pullpush" data-opt="pullpush"><input type="radio" id="ans-B-pullpush" name="ans-B" value="pullpush"><span>git pull --no-rebase, then git push</span></label><label class="opt" for="ans-B-push" data-opt="push"><input type="radio" id="ans-B-push" name="ans-B" value="push"><span>git push again</span></label><label class="opt" for="ans-B-fetch" data-opt="fetch"><input type="radio" id="ans-B-fetch" name="ans-B" value="fetch"><span>git fetch only</span></label><label class="opt" for="ans-B-clone" data-opt="clone"><input type="radio" id="ans-B-clone" name="ans-B" value="clone"><span>git clone again</span></label></div></fieldset><div class="row"><fieldset class="conf" id="conf-B" data-pep-confidence><legend id="conf-B-legend">Your confidence</legend><label class="opt" for="conf-B-low"><input type="radio" id="conf-B-low" name="conf-B" value="low"><span>Low</span></label><label class="opt" for="conf-B-medium"><input type="radio" id="conf-B-medium" name="conf-B" value="medium"><span>Medium</span></label><label class="opt" for="conf-B-high"><input type="radio" id="conf-B-high" name="conf-B" value="high"><span>High</span></label></fieldset><button type="button" class="primary" id="apply-check-B" data-apply-check="B" disabled>Check second answer</button></div></div></div><div data-step="5" hidden><div id="completion" class="complete" hidden></div></div></div>
+      <div class="fbrow"><div id="current-feedback" class="feedback" role="status" aria-live="polite" tabindex="-1" data-pep-predict-feedback data-pep-explore-feedback data-pep-apply-feedback></div><button type="button" class="primary" id="next" disabled>Continue</button></div>
+    </div>
+  </div>
+</main>
+<p class="vh" id="term-help">Simulated Git terminal: nothing runs on your computer. Press Enter to run. Up and Down recall your commands. Tab completes a command. Escape leaves the input.</p>
+<script>
+window.__CFG = {"steps": [{"kind": "predict", "options": [{"id": "rt", "label": "origin/main moves to Sam's commit; your main and files stay", "why": "`git fetch` downloads commits and updates `origin/main` only. Your branch and files do not change."}, {"id": "main", "label": "Your main and files update to Sam's commit", "why": "Attractive, but updating your branch is what `git pull` adds after fetching."}, {"id": "nothing", "label": "Nothing until you push", "why": "Fetch does download: you get Sam's commit and an updated `origin/main`."}, {"id": "upload", "label": "GitHub receives your commits", "why": "Fetch only downloads. Uploading is `git push`."}], "answer": "rt"}, {"kind": "sim", "sim": "clone"}, {"kind": "sim", "sim": "sync"}, {"kind": "apply", "A": {"options": [{"id": "reject", "label": "Rejected: bring in C6 first, then push", "why": "Right: GitHub's main has C6, which your branch lacks, so Git rejects the push until you integrate it."}, {"id": "replace", "label": "Accepted; C7 replaces C6", "why": "A normal push never discards someone else's commit."}, {"id": "auto", "label": "GitHub merges C6 and C7 for you", "why": "GitHub does not merge on push; you integrate C6 locally first."}, {"id": "branch", "label": "C7 goes onto a new branch next to C6", "why": "Push updates the branch you name; it does not invent a new branch."}], "answer": "reject"}, "B": {"options": [{"id": "pullpush", "label": "git pull --no-rebase, then git push", "why": "Right: both sides have new commits, so with no pull setting configured, plain `git pull` stops; `--no-rebase` merges C6 in, and then push is accepted."}, {"id": "push", "label": "git push again", "why": "Nothing changed, so it is rejected again."}, {"id": "fetch", "label": "git fetch only", "why": "Fetch shows you C6 but leaves your main without it, and nothing is uploaded."}, {"id": "clone", "label": "git clone again", "why": "A fresh clone would not contain your C7 at all."}], "answer": "pullpush"}, "misconception": "Hint: GitHub accepts a push only if your branch already contains every commit GitHub has. Missing a teammate's commit means integrate first."}, {"kind": "recap"}]};
+
+window.__TOPIC = (function () {
+  var MSG = { C1: 'Start shop', C2: 'Add cart', C3: 'Sam: add search', C4: 'You: add footer' };
+  function anc(cs, a, b) { if (!b) return false; if (a === b) return true; return (cs[b].p || []).some(function (x) { return anc(cs, a, x); }); }
+  function graphFrom(cs, tips, refs, M) {
+    var reach = {}, lane0 = {};
+    tips.forEach(function walk(t) { if (!t || reach[t]) return; reach[t] = true; (cs[t].p || []).forEach(walk); });
+    var c = tips[0]; while (c) { lane0[c] = true; c = (cs[c].p || [])[0]; }
+    var ids = Object.keys(reach).sort(function (a, b) { return cs[b].t - cs[a].t; });
+    return M.graph({ commits: ids.map(function (id) { return { id: id, msg: cs[id].msg, parents: cs[id].p, lane: lane0[id] ? 0 : 1, merge: cs[id].p.length > 1 }; }), refs: refs });
+  }
+  function view(s, M, h) {
+    var local = s.cloned ? graphFrom(s.c, [s.main, s.om], [{ name: 'main', at: s.main, head: true }, { name: 'origin/main', at: s.om, rt: true }], M) : h('p', { class: 'empty', text: 'No copy yet: clone to get one.' });
+    var remote = graphFrom(s.c, [s.rm], [{ name: 'main', at: s.rm }], M);
+    return h('div', null, h('div', { class: 'graphs' },
+      M.box('Your computer', s.cloned ? 'local repository' : '~/.ssh has id_ed25519 and id_ed25519.pub', local),
+      M.box('GitHub (origin)', 'remote repository', remote, 'remote')),
+      h('p', { class: 'statusline' }, 'GitHub SSH keys: ', h('b', { text: s.key === 'pub' ? 'id_ed25519.pub (public)' : s.key === 'priv' ? 'id_ed25519 (PRIVATE, exposed)' : 'none yet' })));
+  }
+  function base() { return { c: { C1: { msg: MSG.C1, p: [], t: 1 }, C2: { msg: MSG.C2, p: ['C1'], t: 2 } }, rm: 'C2', main: null, om: null, cloned: false, key: null, exposed: false, t: 3 }; }
+  function synced() { var s = base(); s.cloned = true; s.key = 'pub'; s.main = 'C2'; s.om = 'C2'; s.c.C3 = { msg: MSG.C3, p: ['C2'], t: 3 }; s.rm = 'C3'; s.t = 4; s.lookedFirst = false; return s; }
+  function fetch(s) { var was = s.om; s.om = s.rm; return was !== s.om; }
+  var sims = {
+    clone: {
+      init: base,
+      prompt: function (s) { return s.cloned ? 'ana@pep:~/shop$' : 'ana@pep:~$'; },
+      commands: [
+        { id: 'pub', plain: true, label: 'Paste id_ed25519.pub into GitHub SSH keys', when: function (s) { return !s.key; }, run: function (s) { s.key = 'pub'; return { out: [], fb: 'GitHub stores your public key. When you connect, your computer proves it holds the matching private key, without ever sending it.', kind: 'ok' }; } },
+        { id: 'priv', plain: true, label: 'Paste id_ed25519 into GitHub SSH keys', when: function (s) { return !s.key; }, run: function (s) { s.key = 'priv'; s.exposed = true; return { out: [], fb: 'That is the private key, and it must never be shared. In real life you would delete it and make a new pair. Use Reset practice repo.', kind: 'no' }; } },
+        { id: 'clone', label: 'git clone git@github.com:pep/shop.git', when: function (s) { return !s.cloned; }, run: function (s) {
+          if (s.key !== 'pub') return { err: true, out: ['git@github.com: Permission denied (publickey).', 'fatal: Could not read from remote repository.'], fb: 'GitHub could not match a public key to you, so the SSH clone was refused.', kind: 'no' };
+          s.cloned = true; s.main = s.rm; s.om = s.rm; return { out: ["Cloning into 'shop'...", 'Receiving objects: 100% (6/6), done.'], fb: 'You now have the full history, your own `main`, and `origin/main` noting GitHub\'s `main`.', kind: 'ok' }; } }
+      ],
+      goals: [
+        { id: 'key', text: 'GitHub has your public key; the private key stays private', done: function (s) { return s.key === 'pub' && !s.exposed; } },
+        { id: 'cloned', text: 'Clone the repository', done: function (s) { return s.cloned && s.key === 'pub' && !s.exposed; } }
+      ],
+      doneText: 'Both goals met: GitHub recognises you, and you have your own copy.'
+    },
+    sync: {
+      init: synced,
+      commands: [
+        { id: 'fetch', label: 'git fetch', run: function (s) { var moved = fetch(s); if (moved && !anc(s.c, 'C3', s.main)) s.lookedFirst = true; return { out: moved ? ['From github.com:pep/shop', '   ' + 'C2..' + s.om + '  main -> origin/main'] : [], fb: moved ? '`origin/main` moved to ' + s.om + '. Your `main` and your files did not change.' : 'Nothing new on GitHub.', kind: moved ? 'ok' : '' }; } },
+        { id: 'pull', label: 'git pull', run: function (s) {
+          var was = s.om, moved = fetch(s), fl = moved ? ['From github.com:pep/shop', '   ' + was + '..' + s.om + '  main -> origin/main'] : [];
+          var note = s.lookedFirst ? '' : ' Pull fetched and merged in one go, so you never looked first; goal 1 needs `git fetch` before merging. Use Reset practice repo.';
+          if (anc(s.c, s.om, s.main)) return { out: fl.concat(['Already up to date.']), fb: 'Your `main` already contains `origin/main`.' + note, kind: note ? 'no' : '' };
+          if (anc(s.c, s.main, s.om)) { s.main = s.om; return { out: fl.concat(['Updating C2..' + s.om, 'Fast-forward']), fb: 'Your `main` moved forward to ' + s.om + ', and your files now include Sam\'s change.' + note, kind: note ? 'no' : 'ok' }; }
+          return { err: true, out: fl.concat(['(practice output) pull stopped: main and origin/main have diverged']), fb: 'Your commit and Sam\'s both built on C2. The fetch step still updated `origin/main`, but with no pull setting configured `git pull` only fast-forwards, so it stopped without changing `main`; a configured pull strategy would merge or rebase instead. Use Reset practice repo and pull before committing.', kind: 'no' }; } },
+        { id: 'commit', label: 'git commit -m "Add footer"', when: function (s) { return !s.c.C4; }, run: function (s, o) { var m = o && o.msg; s.c.C4 = { msg: m ? 'You: ' + m : MSG.C4, p: [s.main], t: s.t++ }; s.main = 'C4'; return { out: ['[main C4] ' + (m || 'Add footer')], fb: 'C4 is on your `main` only. GitHub does not have it yet.' }; } },
+        { id: 'push', label: 'git push', run: function (s) {
+          if (s.main === s.rm) return { out: ['Everything up-to-date'], fb: 'GitHub already has everything on your `main`.' };
+          if (anc(s.c, s.rm, s.main)) { s.rm = s.main; s.om = s.main; return { out: ['To github.com:pep/shop.git', '   main -> main'], fb: 'GitHub\'s `main` moved to ' + s.rm + ', and `origin/main` follows.', kind: 'ok' }; }
+          return { err: true, out: [' ! [rejected]        main -> main (' + (s.om === s.rm ? 'non-fast-forward' : 'fetch first') + ')', 'error: failed to push some refs'], fb: 'Rejected: GitHub has ' + s.rm + ', which your `main` does not contain yet. Bring it in first.', kind: 'no' }; } }
+      ],
+      goals: [
+        { id: 'look', text: 'Download C3 without changing your `main`', done: function (s) { return s.lookedFirst; } },
+        { id: 'merge', text: 'Bring C3 into your `main`', done: function (s) { return s.lookedFirst && anc(s.c, 'C3', s.main); } },
+        { id: 'push', text: 'Commit and push a change of your own', done: function (s) { return s.lookedFirst && !!s.c.C4 && anc(s.c, 'C4', s.rm) && anc(s.c, 'C3', s.rm); } }
+      ],
+      doneText: 'All goals met: you looked before merging, integrated Sam\'s work, then shared yours.'
+    }
+  };
+  return {
+    sims: sims,
+    model: function (n, s, st, M, h) {
+      if (s.kind === 'sim') { var sim = st.sims[n]; return { node: view(sim.s, M, h), key: s.sim + [sim.s.main, sim.s.om, sim.s.rm, sim.s.key].join() }; }
+      if (s.kind === 'recap') return { node: view(st.sims[3].s, M, h), key: 'recap' };
+      if (s.kind === 'predict') { var p = synced(); return { node: view(p, M, h), key: 'predict' }; }
+      var x = { c: { C5: { msg: 'Add tax', p: [], t: 1 }, C6: { msg: 'Teammate: fix tax', p: ['C5'], t: 2 }, C7: { msg: 'You: add receipt', p: ['C5'], t: 3 } }, rm: 'C6', main: 'C7', om: 'C5', cloned: true, key: 'pub' };
+      if (st.apply.attempt === 0) { x = { c: { C5: { msg: 'Add tax', p: [], t: 1 }, C6: { msg: 'Teammate: fix tax', p: ['C5'], t: 2 } }, rm: 'C6', main: 'C5', om: 'C5', cloned: true, key: 'pub' }; }
+      return { node: view(x, M, h), key: st.apply.attempt === 0 ? 'apply-A' : 'apply-B', caption: st.apply.attempt === 0 ? 'New situation: before you commit C7' : 'Second try: your C7 and GitHub\'s C6' };
+    }
+  };
+})();
+
+(function () {
+'use strict';
+var root = document.documentElement;
+var main = document.getElementById('lesson');
+var INITIAL = main.innerHTML;
+/* entry snapshot of every activity, used by "Restart this activity" */
+var SNAP = {};
+Array.prototype.slice.call(main.querySelectorAll('#current-teaching > [data-step], #current-task > [data-step], #current-control > [data-step]')).forEach(function (e) { SNAP[e.parentNode.id + ':' + e.getAttribute('data-step')] = e.innerHTML; });
+var CONF_NAMES = { low: 'low', medium: 'medium', high: 'high' };
+
+/* ---------- tiny DOM helpers (text only, never innerHTML with variable content) ---------- */
+function h(tag, attrs) {
+  var e = document.createElement(tag), k, v, i;
+  if (attrs) for (k in attrs) {
+    v = attrs[k];
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k === 'style') e.setAttribute('style', v);
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (i = 2; i < arguments.length; i++) add(e, arguments[i]);
+  return e;
+}
+function add(e, k) {
+  if (k == null || k === false) return;
+  if (Array.isArray(k)) { k.forEach(function (x) { add(e, x); }); return; }
+  e.append(k.nodeType ? k : document.createTextNode(String(k)));
+}
+/* rich text: `code` spans and **bold** */
+function rt(str) {
+  var f = document.createDocumentFragment();
+  String(str).split(/(`[^`]+`|\*\*[^*]+\*\*)/).forEach(function (part) {
+    if (!part) return;
+    if (part[0] === '`') f.append(h('code', { text: part.slice(1, -1) }));
+    else if (part.slice(0, 2) === '**') f.append(h('strong', { text: part.slice(2, -2) }));
+    else f.append(document.createTextNode(part));
+  });
+  return f;
+}
+function p(str, cls) { return h('p', { class: cls || null }, rt(str)); }
+function $(sel, ctx) { return (ctx || main).querySelector(sel); }
+function $$(sel, ctx) { return Array.prototype.slice.call((ctx || main).querySelectorAll(sel)); }
+function clear(e) { while (e.firstChild) e.removeChild(e.firstChild); return e; }
+
+/* ---------- shared Git models ---------- */
+var Model = {
+  /* zones: [{cls, title, sub, files:[{name, note, cls}]}] */
+  zones: function (zs, opts) {
+    var wrap = h('div', { class: 'zones' + (zs.length === 4 ? ' four' : '') });
+    zs.forEach(function (z) {
+      var list = h('ul');
+      if (!z.files.length) list.append(h('li', { class: 'empty', text: z.empty || 'nothing here' }));
+      z.files.forEach(function (f) {
+        list.append(h('li', { class: 'chip ' + (f.cls || '') }, f.name, f.note ? h('small', { text: f.note }) : null));
+      });
+      wrap.append(h('section', { class: 'zone ' + z.cls, 'aria-label': z.title },
+        h('h3', null, z.title, z.sub ? h('small', { text: z.sub }) : null), list));
+    });
+    return wrap;
+  },
+  /* graph: commits newest first [{id,msg,parents:[ids],lane,ghost,merge}], refs [{name,at,head,rt,fresh}] */
+  graph: function (g) {
+    var lanes = 1, rows = {}, ol = h('ol', { class: 'graph', 'aria-label': g.label || 'Commit history, newest first' });
+    g.commits.forEach(function (c, i) { rows[c.id] = i; lanes = Math.max(lanes, (c.lane || 0) + 1); });
+    var W = 28 * lanes + 8, X = function (l) { return 4 + 14 + 28 * (l || 0); };
+    var edges = [];
+    g.commits.forEach(function (c, i) {
+      (c.parents || []).forEach(function (pid) {
+        if (rows[pid] == null) return;
+        edges.push({ ci: i, pi: rows[pid], a: c.lane || 0, b: g.commits[rows[pid]].lane || 0 });
+      });
+    });
+    g.commits.forEach(function (c, r) {
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + W + ' 100');
+      svg.setAttribute('preserveAspectRatio', 'none');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.setAttribute('focusable', 'false');
+      var line = function (x1, y1, x2, y2) {
+        var l = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        l.setAttribute('x1', x1); l.setAttribute('y1', y1); l.setAttribute('x2', x2); l.setAttribute('y2', y2);
+        svg.append(l);
+      };
+      edges.forEach(function (e) {
+        if (e.ci === r) line(X(e.a), 50, X(e.b), 100);
+        else if (e.ci < r && r < e.pi) line(X(e.b), 0, X(e.b), 100);
+        else if (e.pi === r) line(X(e.b), 0, X(e.b), 50);
+      });
+      var lane = h('div', { class: 'glane' }, svg, h('span', { class: 'node' + (c.ghost ? ' ghost' : '') + (c.merge ? ' merge' : ''), style: 'left:' + X(c.lane) + 'px' }));
+      var refs = (g.refs || []).filter(function (x) { return x.at === c.id; });
+      var text = h('div', { class: 'gtext' + (c.ghost ? ' ghost' : '') },
+        h('span', { class: 'cid', text: c.id }), h('span', { class: 'msg', text: c.msg }),
+        refs.map(function (x) {
+          return h('span', { class: 'ref' + (x.head ? ' head' : '') + (x.rt ? ' rt' : '') + (x.fresh ? ' tag-new' : '') },
+            x.head ? 'HEAD → ' + x.name : x.name);
+        }));
+      var desc = c.id + ' ' + c.msg + (c.parents && c.parents.length > 1 ? ', merge of ' + c.parents.join(' and ') : '') +
+        (refs.length ? '; ' + refs.map(function (x) { return (x.head ? 'HEAD on ' : '') + x.name; }).join(', ') + ' points here' : '') +
+        (c.ghost ? '; no branch points here' : '');
+      ol.append(h('li', { class: 'grow', style: '--gw:' + W + 'px', 'aria-label': desc }, lane, text));
+    });
+    return ol;
+  },
+  box: function (title, sub, inner, cls) {
+    return h('section', { class: 'gbox ' + (cls || ''), 'aria-label': title }, h('h3', null, title, sub ? h('small', { text: sub }) : null), inner);
+  },
+  /* file lines: [{t, cls}] */
+  file: function (lines, label) {
+    var pre = h('pre', { class: 'filebox', 'aria-label': label || 'File contents' });
+    lines.forEach(function (l) { pre.append(h('span', { class: 'ln ' + (l.cls || ''), text: l.t })); });
+    return pre;
+  }
+};
+
+/* ---------- lesson state ---------- */
+var TOPIC = window.__TOPIC, CFG = window.__CFG;
+var st;
+function boot() {
+  st = { step: 1, acts: {}, sims: {}, apply: { attempt: 0, conf: [], result: null, chosen: [] }, predict: null, prior: {}, restarts: 0 };
+  CFG.steps.forEach(function (s, i) { if (s.kind !== 'recap') st.acts[i + 1] = 'todo'; });
+  CFG.steps.forEach(function (s, i) { if (s.kind === 'sim') initSim(i + 1, s.sim); });
+  show(1, false);
+}
+function actCount() {
+  var n = 0, d = 0, se = 0, k;
+  for (k in st.acts) { n++; if (st.acts[k] === 'done') d++; if (st.acts[k] === 'settled') se++; }
+  return { n: n, done: d, settled: se };
+}
+function renderProgress() {
+  var c = actCount();
+  var txt = $('#prog-text'); txt.textContent = 'Activities done: ' + (c.done + c.settled) + ' of ' + c.n + (c.settled ? ' (' + c.settled + ' settled, not correct)' : '');
+  var pips = clear($('#pips')), k;
+  for (k in st.acts) pips.append(h('span', { class: 'pip' + (st.acts[k] === 'done' ? ' on' : st.acts[k] === 'settled' ? ' settled' : '') }));
+}
+function stepCfg(n) { return CFG.steps[n - 1]; }
+function show(n, focus) {
+  st.step = n;
+  $('#stage').setAttribute('data-step', String(n));
+  $$('[data-step]', $('#stage')).forEach(function (e) { if (e.id !== 'stage') e.hidden = e.getAttribute('data-step') !== String(n); });
+  clear($('#current-feedback'));
+  var s0 = stepCfg(n), fig = $('#live-model');
+  if (s0.kind === 'predict' || s0.kind === 'apply') $('#col-a').append(fig);
+  else $('#col-b').insertBefore(fig, $('#col-b').firstChild);
+  renderModel();
+  var s = stepCfg(n);
+  if (s.kind === 'sim') renderSim(n);
+  if (s.kind === 'recap') finish();
+  $('#restart').hidden = s.kind === 'recap';
+  updateNext();
+  renderProgress();
+  if (focus) { var hd = $('#teach-' + n + '-h'); if (hd) hd.focus(); }
+}
+function updateNext() {
+  var nx = $('#next'), s = stepCfg(st.step);
+  if (s.kind === 'recap') { nx.hidden = true; return; }
+  nx.hidden = false;
+  nx.disabled = st.acts[st.step] === 'todo';
+  nx.textContent = stepCfg(st.step + 1).kind === 'recap' ? 'Continue to recap' : 'Continue';
+}
+function renderModel() {
+  var fig = $('#live-model'), body = clear($('#model-body')), s = stepCfg(st.step);
+  var out = TOPIC.model(st.step, s, st, Model, h);
+  if (out) add(body, out.node || out);
+  $('#model-cap').textContent = (out && out.caption) || TOPIC.caption || 'Practice repository';
+  fig.setAttribute('data-model-state', (out && out.key) || ('step-' + st.step));
+}
+function feedback(nodes, focus) {
+  var fb = clear($('#current-feedback'));
+  add(fb, nodes);
+  if (focus) fb.focus();
+}
+function settle(n, how) { if (st.acts[n] === 'todo') st.acts[n] = how; renderProgress(); updateNext(); }
+
+/* ---------- option explanations, shown inside each option ---------- */
+function explainInline(fs, options, answer, chosen, isPredict) {
+  var who = isPredict ? 'Your prediction' : 'Your choice';
+  options.forEach(function (o) {
+    var l = $('label[data-opt="' + o.id + '"]', fs);
+    if (!l || $('.why', l)) return;
+    var b = [];
+    if (o.id === chosen) b.push(h('span', { class: 'badge ' + (o.id === answer ? 'ok' : 'no'), text: who + ': ' + (o.id === answer ? 'correct' : 'not correct') }));
+    if (o.id === answer) b.push(h('span', { class: 'badge ok', text: 'Correct answer' }));
+    if (b.length) l.append(h('span', { class: 'badges' }, b));
+    l.append(h('span', { class: 'why' }, rt(o.why)));
+    if (o.id === answer) l.classList.add('right');
+    else if (o.id === chosen) l.classList.add('wrong');
+  });
+}
+/* ---------- predict ---------- */
+function checkPredict() {
+  var s = stepCfg(st.step), fs = $('#predict-' + st.step), sel = $('input:checked', fs), cf = $('#conf-P input:checked');
+  if (!sel || !cf) return;
+  var v = sel.value;
+  $$('input', fs).forEach(function (i) { i.disabled = true; });
+  $$('#conf-P input').forEach(function (i) { i.disabled = true; });
+  st.predictConf = cf.value;
+  $('#predict-check-' + st.step).disabled = true;
+  st.predict = v;
+  explainInline(fs, s.options, s.answer, v, true);
+  $('#predict-check-' + st.step).parentNode.hidden = true;
+  feedback([p('Practice prediction, not scored. Your prediction was ' + (v === s.answer ? '**correct**' : '**not correct**') + '; each option now shows what really happens.'), p('Your confidence: ' + CONF_NAMES[cf.value] + ' (reported as you chose it, not scored).', 'conf-report')], true);
+  settle(st.step, 'done');
+}
+
+/* ---------- sims ---------- */
+function initSim(n, id) {
+  var def = TOPIC.sims[id];
+  st.sims[n] = { id: id, s: def.init(), log: [], complete: false, hist: [], hi: 0 };
+}
+function renderSim(n) {
+  var sim = st.sims[n], def = TOPIC.sims[sim.id], wrap = clear($('#sim-' + n + '-cmds')), acts = clear($('#sim-' + n + '-actions'));
+  def.commands.forEach(function (c) {
+    if (c.when && !c.when(sim.s)) return;
+    (c.plain ? acts : wrap).append(h('button', { type: 'button', class: 'cmd' + (c.plain ? ' plain' : ''), 'data-cmd': c.id, 'data-step-n': String(n), disabled: sim.complete || null }, c.label));
+  });
+  var rs = $('[data-sim-reset="' + n + '"]'); if (rs) rs.disabled = sim.complete;
+  var rb = $('[data-sim-run="' + n + '"]'); if (rb) rb.disabled = sim.complete;
+  var inp = $('#sim-' + n + '-input');
+  if (inp) { inp.disabled = sim.complete; $('#sim-' + n + '-prompt').textContent = def.prompt ? def.prompt(sim.s) : (TOPIC.prompt || 'ana@pep:~/shop$'); }
+  var log = clear($('#sim-' + n + '-log'));
+  if (!sim.log.length) log.append(h('div', { class: 'hint', text: def.empty || 'Type a command below and press Enter. Output from the practice repository appears here.' }));
+  sim.log.forEach(function (l) { log.append(h('div', { class: l.k, text: l.t })); });
+  log.scrollTop = log.scrollHeight;
+  var goals = clear($('#goals-' + n));
+  def.goals.forEach(function (g) {
+    var ok = g.done(sim.s);
+    goals.append(h('li', { class: ok ? 'done' : '', 'data-goal': g.id }, h('span', { class: 'gt' }, rt(g.text)), h('span', { class: 'st', text: ok ? 'Done' : 'To do' })));
+  });
+}
+function runCmd(n, cid, typed, opts) {
+  var sim = st.sims[n], def = TOPIC.sims[sim.id];
+  if (sim.complete) return;
+  var c = def.commands.filter(function (x) { return x.id === cid; })[0];
+  if (!c || (c.when && !c.when(sim.s))) return;
+  var r = c.run(sim.s, opts) || {};
+  sim.log.push({ k: c.plain ? 'hint' : 'c', t: c.plain ? '[' + c.label + ']' : (typed && opts && opts.echo ? opts.echo : c.label) });
+  (r.out || []).forEach(function (t) { sim.log.push({ k: r.err ? 'e' : '', t: t }); });
+  var all = def.goals.every(function (g) { return g.done(sim.s); });
+  var nodes = [];
+  if (r.fb) nodes.push(p(r.fb, 'verdict ' + (r.kind || '')));
+  if (r.more) nodes.push(p(r.more));
+  if (all) { sim.complete = true; nodes.push(p(def.doneText || 'Every goal is met. Continue when ready.', 'verdict ok')); }
+  renderModel();
+  renderSim(n);
+  feedback(nodes, all);
+  if (all) settle(n, 'done');
+  else if (typed) $('#sim-' + n + '-input').focus();
+  else { var b = $('[data-cmd="' + cid + '"][data-step-n="' + n + '"]'); if (b) b.focus(); else { var f = $('#sim-' + n + '-cmds button'); if (f) f.focus(); } }
+}
+/* typed commands: same accepted commands as the buttons, nothing else */
+function norm(v) { return String(v).trim().replace(/\s+/g, ' ').replace(/'/g, '"'); }
+function typedCmds(n) { var sim = st.sims[n], def = TOPIC.sims[sim.id]; return def.commands.filter(function (c) { return !c.plain; }); }
+function runTyped(n, raw) {
+  var sim = st.sims[n], v = norm(raw);
+  if (!v || sim.complete) return;
+  var all = typedCmds(n), hit = all.filter(function (c) { return norm(c.label) === v; })[0];
+  /* any non-empty commit message is accepted, as real Git does, and is echoed and recorded as typed */
+  var echo = String(raw).trim().replace(/\s+/g, ' '), mm = /^git commit -m (["'])(.+)\1$/.exec(echo), opts = { echo: echo };
+  if (/^git commit -m /.test(v)) { if (!mm) mm = /^git commit -m "(.+)"$/.exec(v) && [null, null, /^git commit -m "(.+)"$/.exec(v)[1]]; if (mm && mm[2].trim()) { opts.msg = mm[2]; if (!hit) hit = all.filter(function (c) { return /^git commit -m /.test(c.label) && (!c.when || c.when(sim.s)); })[0]; } }
+  if (hit && (!hit.when || hit.when(sim.s))) { runCmd(n, hit.id, true, opts); return; }
+  sim.log.push({ k: 'c', t: String(raw).trim().replace(/\s+/g, ' ') });
+  sim.log.push({ k: 'e', t: hit ? 'That command does not apply at this point in the practice.' : v.split(' ')[0] + ': not available in this practice terminal' });
+  renderSim(n);
+  feedback([p(hit ? 'That command is recognised but does not apply right now. Choose from the commands shown.' : 'Not available in this practice terminal. Type one of the commands shown as buttons, or press Tab to complete one.', 'verdict no')], false);
+  $('#sim-' + n + '-input').focus();
+}
+function completeTyped(n, inp) {
+  if (inp.selectionStart !== inp.value.length) return false;
+  var v = inp.value.replace(/^\s+/, ''), sim = st.sims[n];
+  if (!v) return false;
+  var c = typedCmds(n).filter(function (x) { return (!x.when || x.when(sim.s)) && x.label.indexOf(v) === 0; }).map(function (x) { return x.label; });
+  if (!c.length) return false;
+  var pre = c.reduce(function (a, b) { var i = 0; while (i < a.length && a[i] === b[i]) i++; return a.slice(0, i); });
+  if (pre.length <= v.length) return false;
+  inp.value = pre;
+  return true;
+}
+function resetSim(n) {
+  if (st.sims[n].complete) return;
+  initSim(n, st.sims[n].id);
+  renderModel(); renderSim(n);
+  feedback([p('Practice repository restored to its starting state.')], false);
+  var fb1 = $('#sim-' + n + '-cmds button'); if (fb1) fb1.focus();
+}
+
+/* ---------- apply with one retry ---------- */
+function applyReady() {
+  var a = st.apply, v = a.attempt === 0 ? 'A' : 'B';
+  var ok = $('#apply-' + v + ' input:checked') && $('#conf-' + v + ' input:checked');
+  $('#apply-check-' + v).disabled = !ok || st.acts[st.step] !== 'todo';
+}
+function checkApply(v) {
+  var s = stepCfg(st.step), q = s[v], a = st.apply;
+  var sel = $('#apply-' + v + ' input:checked'), cf = $('#conf-' + v + ' input:checked');
+  if (!sel || !cf) return;
+  var chosen = sel.value, conf = cf.value, right = chosen === q.answer;
+  a.conf.push(conf); a.chosen.push(chosen);
+  $$('#apply-' + v + ' input, #conf-' + v + ' input').forEach(function (i) { i.disabled = true; });
+  $('#apply-check-' + v).disabled = true;
+  var lab = function (o) { var l = $('#apply-' + v + ' label[data-opt="' + o + '"]'); return l; };
+  var explainAll = function () {
+    explainInline($('#apply-' + v), q.options, q.answer, chosen, false);
+    $('#conf-' + v).hidden = true;
+    $('#apply-check-' + v).hidden = true;
+    if (v === 'B') { var a0 = s.A.options.filter(function (o) { return o.id === s.A.answer; })[0]; return p('First version, for comparison: the answer was **' + a0.label + '**.'); }
+    return null;
+  };
+  var confLine = function () {
+    return p('Your confidence: ' + a.conf.map(function (c, i) { return (a.conf.length > 1 ? (i === 0 ? 'first try ' : 'second try ') : '') + CONF_NAMES[c]; }).join(', ') + ' (reported as you chose it, not scored).', 'conf-report');
+  };
+  if (right) {
+    lab(chosen).classList.add('right');
+    a.result = a.attempt === 0 ? 'correct' : 'correct-second';
+    feedback([p(a.attempt === 0 ? 'Correct. Each option now shows why.' : 'Correct on the second try. Each option now shows why.', 'verdict ok'), explainAll(), confLine()], true);
+    $('#current-feedback').setAttribute('data-pep-result', a.result);
+    settle(st.step, 'done');
+    return;
+  }
+  lab(chosen).classList.add('wrong');
+  if (a.attempt === 0) {
+    a.attempt = 1;
+    var why = q.options.filter(function (o) { return o.id === chosen; })[0].why;
+    feedback([p('Not yet. ' + why, 'verdict no'), p(s.misconception), confLine()], false);
+    $('#apply-A-wrap').hidden = true;
+    $('#current-feedback').setAttribute('data-pep-result', 'retry');
+    $('#apply-B-wrap').hidden = false;
+    $('#task-' + st.step + 'b').hidden = false;
+    renderModel();
+    $('#task-' + st.step + 'b').focus();
+    return;
+  }
+  a.result = 'settled';
+  var ans = q.options.filter(function (o) { return o.id === q.answer; })[0];
+  lab(q.answer).classList.add('right');
+  feedback([p('Answered and settled, not marked correct. The answer is: ' + ans.label + '. You can still finish the topic.', 'verdict set'), explainAll(), confLine()], true);
+  $('#current-feedback').setAttribute('data-pep-result', 'settled');
+  settle(st.step, 'settled');
+}
+
+/* ---------- restart only the current activity; earlier activities keep their results ---------- */
+function restartActivity() {
+  var n = st.step, s = stepCfg(n);
+  if (s.kind === 'recap') return;
+  ['current-teaching', 'current-task', 'current-control'].forEach(function (id) {
+    var el = $('#' + id + ' > [data-step="' + n + '"]');
+    if (el && SNAP[id + ':' + n] != null) el.innerHTML = SNAP[id + ':' + n];
+  });
+  if (st.acts[n] !== 'todo') (st.prior[n] = st.prior[n] || []).push(s.kind === 'apply' ? (st.apply.result || st.acts[n]) : st.acts[n]);
+  st.acts[n] = 'todo';
+  if (s.kind === 'predict') { st.predict = null; st.predictConf = null; }
+  if (s.kind === 'apply') st.apply = { attempt: 0, conf: [], result: null, chosen: [] };
+  if (s.kind === 'sim') initSim(n, s.sim);
+  st.restarts++;
+  show(n, true);
+  feedback([p('This activity restarted from its beginning. Earlier activities keep their results.')], false);
+}
+
+/* ---------- finish ---------- */
+function finish() {
+  var c = actCount(), box = clear($('#completion'));
+  var all = c.done + c.settled === c.n;
+  box.hidden = false;
+  box.append(p(all ? 'Topic complete: ' + (c.done + c.settled) + ' of ' + c.n + ' activities done' + (c.settled ? ', ' + c.settled + ' settled rather than correct.' : '.') : 'Some activities are not finished yet.'));
+  if (st.apply.conf.length) box.append(p('Your check: ' + (st.apply.result === 'correct' ? 'correct on the first try' : st.apply.result === 'correct-second' ? 'correct on the second try' : 'answered and settled, not correct') + '; confidence chosen: ' + st.apply.conf.map(function (x) { return CONF_NAMES[x]; }).join(' then ') + '.', 'conf-report'));
+  var ap = []; Object.keys(st.prior).forEach(function (k) { ap = ap.concat(st.prior[k]); });
+  if (st.restarts) box.append(p('Activities restarted: ' + st.restarts + (ap.indexOf('settled') >= 0 ? ' (an earlier check attempt was settled before you restarted it).' : '.'), 'conf-report'));
+  box.setAttribute('data-pep-confidence-report', st.apply.conf.join(','));
+  main.setAttribute('data-pep-complete', all ? 'true' : 'false');
+}
+
+/* ---------- theme ---------- */
+function setTheme(t) {
+  root.setAttribute('data-theme', t);
+  var b = document.getElementById('theme');
+  if (b) b.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+}
+
+/* ---------- events (delegated so reset can rebuild the DOM) ---------- */
+document.addEventListener('click', function (ev) {
+  var t = ev.target.closest('button');
+  if (!t || !main.contains(t)) return;
+  if (t.id === 'restart') { restartActivity(); return; }
+  if (t.id === 'next') { if (!t.disabled) show(st.step + 1, true); return; }
+  if (t.hasAttribute('data-predict-check')) { checkPredict(); return; }
+  if (t.hasAttribute('data-cmd')) { runCmd(Number(t.getAttribute('data-step-n')), t.getAttribute('data-cmd')); return; }
+  if (t.hasAttribute('data-sim-run')) { var ri = $('#sim-' + t.getAttribute('data-sim-run') + '-input'), rn = Number(t.getAttribute('data-sim-run')), rv = ri.value; if (rv.trim()) { st.sims[rn].hist.push(rv); st.sims[rn].hi = st.sims[rn].hist.length; } ri.value = ''; runTyped(rn, rv); return; }
+  if (t.hasAttribute('data-sim-reset')) { resetSim(Number(t.getAttribute('data-sim-reset'))); return; }
+  if (t.hasAttribute('data-apply-check')) { checkApply(t.getAttribute('data-apply-check')); return; }
+});
+document.addEventListener('keydown', function (ev) {
+  var t = ev.target;
+  if (!t || !t.hasAttribute || !t.hasAttribute('data-sim-input') || !main.contains(t)) return;
+  var n = Number(t.getAttribute('data-sim-input')), sim = st.sims[n];
+  if (ev.key === 'Enter') {
+    ev.preventDefault();
+    var v = t.value;
+    if (v.trim()) sim.hist.push(v);
+    sim.hi = sim.hist.length;
+    t.value = '';
+    runTyped(n, v);
+  } else if (ev.key === 'ArrowUp') {
+    if (!sim.hist.length) return;
+    ev.preventDefault(); sim.hi = Math.max(0, sim.hi - 1); t.value = sim.hist[sim.hi];
+  } else if (ev.key === 'ArrowDown') {
+    if (!sim.hist.length) return;
+    ev.preventDefault(); sim.hi = Math.min(sim.hist.length, sim.hi + 1); t.value = sim.hist[sim.hi] || '';
+  } else if (ev.key === 'Tab' && !ev.shiftKey && !ev.altKey && !ev.ctrlKey && !ev.metaKey) {
+    if (t.value.trim() && completeTyped(n, t)) ev.preventDefault();
+  } else if (ev.key === 'Escape') {
+    ev.preventDefault();
+    $('#sim-' + n + '-log').focus();
+  }
+});
+document.addEventListener('change', function (ev) {
+  var t = ev.target;
+  if (!main.contains(t)) return;
+  if (t.name && (t.name.indexOf('pred-') === 0 || t.name === 'conf-P')) { var pc = $('#predict-check-' + st.step); if (pc) pc.disabled = !($('#predict-' + st.step + ' input:checked') && $('#conf-P input:checked')); }
+  if (t.name && (t.name.indexOf('ans-') === 0 || t.name === 'conf-A' || t.name === 'conf-B')) applyReady();
+});
+
+var pref = 'light';
+try { if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) pref = 'dark'; } catch (e) {}
+setTheme(pref);
+/* automatic light/dark from the system setting; there is no manual toggle */
+try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (ev) { setTheme(ev.matches ? 'dark' : 'light'); }); } catch (e) {}
+window.__pepModel = Model;
+boot();
+})();
+</script>
+</body>
+</html>
