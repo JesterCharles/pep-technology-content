@@ -415,6 +415,29 @@ test("Markdown derivation keeps legitimate repeated text in distinct sections", 
   assert.equal(markdown.split("Legitimate repeated sentence.").length - 1, 2, markdown);
 });
 
+test("T18 accepts objective parity from a closed details disclosure", { timeout: 60000 }, async () => {
+  const repository = await makeRepository("good.html", {
+    transformHtml: (html) => html.replace(
+      `<section class="objectives" data-pep-objectives>
+      <h2>Objectives</h2>
+      <ul><li>Complete a safe interaction.</li></ul>
+    </section>`,
+      `<details class="objectives" data-pep-objectives>
+      <summary>Objectives</summary>
+      <ul><li>Complete a safe interaction.</li></ul>
+    </details>`,
+    ),
+  });
+  try {
+    const html = path.join(repository.topicRoot, "artifact.html");
+    const markdown = path.join(repository.topicRoot, "artifact.md");
+    await writeFile(markdown, await markdownFromHtml(html));
+    assert.deepEqual(await runT18(context(repository.root)), []);
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+  }
+});
+
 test("T18 accepts deterministic Markdown", { timeout: 60000 }, async () => {
   const repository = await makeRepository("good.html");
   try {

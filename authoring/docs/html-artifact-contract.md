@@ -29,7 +29,7 @@ The gates in `authoring/docs/workflow.md` check it mechanically wherever a rule 
 
 ## 4. Interactive learning shape
 
-- A header shows the learner's position, an honest "About N minutes" label and 2-3 observable objectives.
+- A header shows the learner's position and an honest "About N minutes" label, and offers 2-3 observable objectives in a collapsed, accessible `<details>` disclosure (inside `[data-pep-objectives]`).
 - The learner predicts before any teaching.
 - The page builds one mental model.
 - Teach then do, 2-3 times, with at most 120 words per teach step and nothing used before it is taught.
