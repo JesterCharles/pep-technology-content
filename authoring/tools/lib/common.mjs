@@ -158,10 +158,16 @@ export async function findCatalogScopes(ctx) {
     } catch {
       continue;
     }
+    let containingScope;
     for (let ancestor = start; ancestor.startsWith(ctx.root); ancestor = path.dirname(ancestor)) {
-      if (await isDirectory(catalogPath(ancestor))) scopes.add(ancestor);
+      if (await isDirectory(catalogPath(ancestor))) {
+        containingScope = ancestor;
+        scopes.add(ancestor);
+        break;
+      }
       if (ancestor === ctx.root) break;
     }
+    if (containingScope) continue;
     for (const file of (await walk(start)).files) {
       const normalized = posix(file);
       const marker = `/${AUTHORING_ROOT}/${CATALOG_ROOT}/`;

@@ -228,6 +228,47 @@ test("T01 resolves cross-course objectives within a nested catalog scope", async
   assert.equal(result.status, 0, result.stderr);
 });
 
+test("T01 nested path scans cannot resolve objectives from an enclosing catalog", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-nearest-catalog-"));
+  await cp(
+    path.join(repo, "authoring", "schemas"),
+    path.join(root, "authoring", "schemas"),
+    { recursive: true },
+  );
+  await addObjectiveCourse(root, "outer-course");
+  const nested = path.join(root, "nested");
+  await addObjectiveCourse(nested, "demo-course");
+  const outerOnly = "outer-course/demo-module/demo-topic#o1";
+  const blueprintFile = path.join(nested, "demo-course/assessments/intake/blueprint.json");
+  await writeJson(
+    blueprintFile,
+    blueprint({ objectives: [outerOnly], objectiveFormats: { [outerOnly]: ["mcq"] } }),
+  );
+  const result = check(root, "T01", [path.relative(root, blueprintFile)]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /objective outer-course\/demo-module\/demo-topic#o1 does not resolve/);
+});
+
+test("T01 nested path scans ignore a same-id course in an enclosing catalog", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-nearest-same-id-"));
+  await cp(
+    path.join(repo, "authoring", "schemas"),
+    path.join(root, "authoring", "schemas"),
+    { recursive: true },
+  );
+  await addObjectiveCourse(root, "shared-course");
+  const nested = path.join(root, "nested");
+  await addObjectiveCourse(nested, "shared-course");
+  const local = "shared-course/demo-module/demo-topic#o1";
+  const blueprintFile = path.join(nested, "shared-course/assessments/intake/blueprint.json");
+  await writeJson(
+    blueprintFile,
+    blueprint({ objectives: [local], objectiveFormats: { [local]: ["mcq"] } }),
+  );
+  const result = check(root, "T01", [path.relative(root, blueprintFile)]);
+  assert.equal(result.status, 0, result.stderr);
+});
+
 test("T01 rejects an unresolved blueprint objective", async () => {
   const root = await schemaFixture();
   const invalid = "demo-course/demo-module/demo-topic#o2";
