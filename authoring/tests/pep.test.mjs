@@ -1,6 +1,16 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { cp, mkdtemp, readFile, writeFile, mkdir, readdir } from "node:fs/promises";
+import {
+  cp,
+  lstat,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  symlink,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -54,6 +64,46 @@ test("T07 rejects solution filenames and allows formative GIFT", () => {
 test("default check excludes negative fixtures", () => {
   const result = run(["check"]);
   assert.equal(result.status, 0, result.stderr);
+});
+
+test("check --changed gates deletion-only and mixed changes", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pep-changed-deletion-"));
+  const topicRoot = path.join(tmp, "authoring/catalog/demo-course/demo-module/demo-topic");
+  await mkdir(topicRoot, { recursive: true });
+  await mkdir(path.join(tmp, "demo-course/demo-module/demo-topic"), { recursive: true });
+  await writeFile(
+    path.join(tmp, "authoring/catalog/demo-course/course.json"),
+    '{"id":"demo-course","moduleOrder":["demo-module"]}\n',
+  );
+  await writeFile(
+    path.join(tmp, "authoring/catalog/demo-course/demo-module/module.json"),
+    '{"id":"demo-module","topicOrder":["demo-topic"]}\n',
+  );
+  await writeFile(
+    path.join(topicRoot, "topic.json"),
+    '{"id":"demo-topic","artifacts":{"html":{"status":"present"}}}\n',
+  );
+  const artifact = path.join(tmp, "demo-course/demo-module/demo-topic/artifact.html");
+  await writeFile(artifact, "learner content\n");
+  assert.equal(spawnSync("git", ["init", "-b", "main"], { cwd: tmp }).status, 0);
+  assert.equal(spawnSync("git", ["add", "."], { cwd: tmp }).status, 0);
+  assert.equal(
+    spawnSync(
+      "git",
+      ["-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "fixture"],
+      { cwd: tmp },
+    ).status,
+    0,
+  );
+  assert.equal(spawnSync("git", ["update-ref", "refs/remotes/origin/main", "HEAD"], { cwd: tmp }).status, 0);
+  await unlink(artifact);
+  let result = run(["check", "--changed", "--only", "T05"], tmp);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /declared present but missing/);
+  await writeFile(path.join(tmp, "README.md"), "mixed surviving change\n");
+  result = run(["check", "--changed", "--only", "T05"], tmp);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /declared present but missing/);
 });
 
 async function copyPositive(root) {
@@ -165,6 +215,35 @@ test("migrate-catalog collision preflight leaves the whole worktree unchanged", 
   assert.equal(await readFile(path.join(tmp, "demo-course/course.json"), "utf8"), '{"id":"demo-course","moduleOrder":["demo-module"]}\n');
   assert.equal(await readFile(path.join(tmp, "demo-course/demo-module/module.json"), "utf8"), '{"id":"legacy-module"}\n');
   assert.deepEqual(await readFile(destination), beforeDestination);
+  await assert.rejects(readFile(path.join(tmp, "authoring/catalog/demo-course/course.json")), { code: "ENOENT" });
+});
+
+test("migrate-catalog preflights dangling-symlink collisions", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pep-migrate-symlink-collision-"));
+  await mkdir(path.join(tmp, "demo-course/demo-module"), { recursive: true });
+  await mkdir(path.join(tmp, "authoring/catalog/demo-course/demo-module"), { recursive: true });
+  await writeFile(path.join(tmp, "demo-course/course.json"), '{"id":"demo-course","moduleOrder":["demo-module"]}\n');
+  await writeFile(path.join(tmp, "demo-course/demo-module/module.json"), '{"id":"demo-module"}\n');
+  const destination = path.join(tmp, "authoring/catalog/demo-course/demo-module/module.json");
+  await symlink("missing-module.json", destination);
+  assert.equal(spawnSync("git", ["init", "-b", "main"], { cwd: tmp }).status, 0);
+  assert.equal(spawnSync("git", ["add", "."], { cwd: tmp }).status, 0);
+  assert.equal(
+    spawnSync(
+      "git",
+      ["-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-m", "fixture"],
+      { cwd: tmp },
+    ).status,
+    0,
+  );
+  assert.equal(spawnSync("git", ["status", "--porcelain=v1"], { cwd: tmp, encoding: "utf8" }).stdout, "");
+  const result = run(["migrate-catalog"], tmp);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /collision/);
+  assert.equal(spawnSync("git", ["status", "--porcelain=v1"], { cwd: tmp, encoding: "utf8" }).stdout, "");
+  assert.equal(await readFile(path.join(tmp, "demo-course/course.json"), "utf8"), '{"id":"demo-course","moduleOrder":["demo-module"]}\n');
+  assert.equal(await readFile(path.join(tmp, "demo-course/demo-module/module.json"), "utf8"), '{"id":"demo-module"}\n');
+  assert.equal((await lstat(destination)).isSymbolicLink(), true);
   await assert.rejects(readFile(path.join(tmp, "authoring/catalog/demo-course/course.json")), { code: "ENOENT" });
 });
 

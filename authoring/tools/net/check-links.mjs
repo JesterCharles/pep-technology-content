@@ -2,11 +2,21 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { defaultSkip, findCourses, loadCourse, resolveRepositoryPath } from "../lib/common.mjs";
+import {
+  defaultSkip,
+  exists,
+  findCourses,
+  loadCourse,
+  resolveRepositoryPath,
+} from "../lib/common.mjs";
 import { artifactSha256, fetchBytes, sha256 } from "./receipts.mjs";
 
-async function topics(root, inputs) {
+export async function selectTopics(root, inputs) {
   const targets = (inputs.length ? inputs : [root]).map((input) => path.resolve(root, input));
+  for (const target of targets) {
+    if (!(await exists(target)))
+      throw new Error(`path does not exist: ${path.relative(root, target)}`);
+  }
   const ctx = {
     root,
     explicit: inputs.length > 0,
@@ -25,6 +35,8 @@ async function topics(root, inputs) {
           ctx.explicit &&
           !targets.some(
             (target) =>
+              target === course.manifestFile ||
+              target === module.manifestFile ||
               target === manifestFile ||
               target === contentRoot ||
               target.startsWith(`${contentRoot}${path.sep}`) ||
@@ -36,6 +48,8 @@ async function topics(root, inputs) {
       }
     }
   }
+  if (ctx.explicit && found.length === 0)
+    throw new Error("explicit inputs select no catalog topics");
   return found;
 }
 
@@ -49,7 +63,7 @@ async function main() {
   }
   const root = process.cwd();
   let failed = false;
-  for (const entry of await topics(root, inputs)) {
+  for (const entry of await selectTopics(root, inputs)) {
     const topicFile = entry.manifestFile;
     const topic = JSON.parse(await readFile(topicFile, "utf8"));
     if (topic.artifacts?.html?.status !== "present") {

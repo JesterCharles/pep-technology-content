@@ -44,6 +44,14 @@ export async function exists(file) {
     return false;
   }
 }
+export async function entryExists(file) {
+  try {
+    await lstat(file);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export function authoringPath(root, ...parts) {
   return path.join(root, AUTHORING_ROOT, ...parts);
@@ -174,7 +182,7 @@ function pathsIntersect(first, second) {
   );
 }
 
-export async function findCourseCandidates(ctx) {
+export async function findCourseCandidates(ctx, { allInScopes = false } = {}) {
   const found = [];
   for (const repoRoot of await findCatalogScopes(ctx)) {
     const root = catalogPath(repoRoot);
@@ -187,6 +195,7 @@ export async function findCourseCandidates(ctx) {
       const evidenceRoot = evidencePath(repoRoot, entry.name);
       if (
         ctx.explicit &&
+        !allInScopes &&
         !ctx.targets.some(
           (target) =>
             target === repoRoot ||

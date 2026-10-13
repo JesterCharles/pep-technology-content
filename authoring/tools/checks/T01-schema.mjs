@@ -150,7 +150,7 @@ export async function run(ctx) {
     validators[name] = ajv.compile(
       await readJson(authoringPath(ctx.root, "schemas", `${name}.schema.json`)),
     );
-  const courses = await findCourseCandidates({ ...ctx, explicit: false });
+  const courses = await findCourseCandidates(ctx, { allInScopes: true });
   const errors = [];
   for (const target of ctx.scanRoots) {
     const w = await walk(target, { skip: ctx.skip });

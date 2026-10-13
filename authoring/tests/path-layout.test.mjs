@@ -6,6 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { resolveRepositoryPath } from "../tools/lib/common.mjs";
 import { lockedFilePath } from "../tools/checks/T19-curriculum.mjs";
+import { selectTopics } from "../tools/net/check-links.mjs";
 
 const repo = path.resolve(import.meta.dirname, "../..");
 const pep = path.join(repo, "authoring/tools/pep");
@@ -166,6 +167,37 @@ test("moved metadata references resolve narrowly to the catalog", async () => {
     await resolveRepositoryPath(root, "course/module/topic/artifact.html"),
     path.join(root, "course/module/topic/artifact.html"),
   );
+});
+
+test("source-link selection validates inputs and supports catalog manifest scopes", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-link-selection-"));
+  const catalog = path.join(root, "authoring/catalog/demo-course");
+  await put(
+    path.join(catalog, "course.json"),
+    '{"id":"demo-course","moduleOrder":["module-one","module-two"]}\n',
+  );
+  await put(
+    path.join(catalog, "module-one/module.json"),
+    '{"id":"module-one","topicOrder":["topic-one","topic-two"]}\n',
+  );
+  await put(path.join(catalog, "module-one/topic-one/topic.json"), '{"id":"topic-one"}\n');
+  await put(path.join(catalog, "module-one/topic-two/topic.json"), '{"id":"topic-two"}\n');
+  await put(
+    path.join(catalog, "module-two/module.json"),
+    '{"id":"module-two","topicOrder":["topic-three"]}\n',
+  );
+  await put(path.join(catalog, "module-two/topic-three/topic.json"), '{"id":"topic-three"}\n');
+
+  assert.equal((await selectTopics(root, [path.join(catalog, "course.json")])).length, 3);
+  assert.equal((await selectTopics(root, [path.join(catalog, "module-one/module.json")])).length, 2);
+  assert.equal(
+    (await selectTopics(root, [path.join(catalog, "module-one/topic-one/topic.json")])).length,
+    1,
+  );
+  await assert.rejects(selectTopics(root, [path.join(root, "does-not-exist")]), /path does not exist/);
+  const unrelated = path.join(root, "demo-course/README.md");
+  await put(unrelated, "course notes\n");
+  await assert.rejects(selectTopics(root, [unrelated]), /select no catalog topics/);
 });
 
 test("an existing learner metadata path takes precedence over the catalog alias", async () => {

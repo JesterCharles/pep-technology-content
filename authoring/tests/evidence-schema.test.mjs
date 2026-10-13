@@ -66,8 +66,8 @@ function blueprint(overrides = {}) {
   };
 }
 
-function check(root, gate = "T01") {
-  return spawnSync(process.execPath, [pep, "check", "--only", gate], {
+function check(root, gate = "T01", targets = []) {
+  return spawnSync(process.execPath, [pep, "check", "--only", gate, ...targets], {
     cwd: root,
     encoding: "utf8",
   });
@@ -183,6 +183,49 @@ test("T01 rejects an ambiguous cross-course blueprint objective", async () => {
   assert.match(result.stderr, /objective .*#o1 is ambiguous across courses/);
   assert.match(result.stderr, /first-copy/);
   assert.match(result.stderr, /second-copy/);
+});
+
+test("T01 resolves objectives for an exact blueprint path in a nested catalog scope", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-nested-schema-"));
+  await cp(
+    path.join(repo, "authoring", "schemas"),
+    path.join(root, "authoring", "schemas"),
+    { recursive: true },
+  );
+  const nested = path.join(root, "nested");
+  await addObjectiveCourse(nested, "demo-course");
+  const invalid = "demo-course/demo-module/demo-topic#o99";
+  const blueprintFile = path.join(nested, "demo-course/assessments/intake/blueprint.json");
+  await writeJson(
+    blueprintFile,
+    blueprint({ objectives: [invalid], objectiveFormats: { [invalid]: ["mcq"] } }),
+  );
+  const result = check(root, "T01", [path.relative(root, blueprintFile)]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /objective .*#o99 does not resolve/);
+});
+
+test("T01 resolves cross-course objectives within a nested catalog scope", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-nested-cross-course-"));
+  await cp(
+    path.join(repo, "authoring", "schemas"),
+    path.join(root, "authoring", "schemas"),
+    { recursive: true },
+  );
+  const nested = path.join(root, "nested");
+  await addObjectiveCourse(nested, "demo-course");
+  await addObjectiveCourse(nested, "other-course");
+  const crossCourse = "other-course/demo-module/demo-topic#o1";
+  const blueprintFile = path.join(nested, "demo-course/assessments/intake/blueprint.json");
+  await writeJson(
+    blueprintFile,
+    blueprint({
+      objectives: [crossCourse],
+      objectiveFormats: { [crossCourse]: ["mcq"] },
+    }),
+  );
+  const result = check(root, "T01", [path.relative(root, blueprintFile)]);
+  assert.equal(result.status, 0, result.stderr);
 });
 
 test("T01 rejects an unresolved blueprint objective", async () => {

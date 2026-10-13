@@ -6,6 +6,7 @@ import { execFileSync } from "node:child_process";
 import {
   catalogPath,
   defaultSkip,
+  entryExists,
   error,
   exists,
   findCourses,
@@ -63,6 +64,7 @@ async function check() {
   if (changed && paths.length) die("check: --changed cannot be combined with paths");
   if (changed) {
     let base;
+    let deletions = [];
     try {
       base = execFileSync("git", ["merge-base", "HEAD", "origin/main"], {
         encoding: "utf8",
@@ -71,15 +73,27 @@ async function check() {
         .trim()
         .split("\n")
         .filter(Boolean);
+      deletions = execFileSync(
+        "git",
+        ["diff", "--no-renames", "--diff-filter=D", "--name-only", base, "--"],
+        { encoding: "utf8" },
+      )
+        .trim()
+        .split("\n")
+        .filter(Boolean);
     } catch (e) {
       die(`check: unable to compare with origin/main: ${e.message}`);
     }
-    paths = (await Promise.all(
-      paths.map(async (item) => ((await exists(path.resolve(root, item))) ? item : null)),
-    )).filter(Boolean);
-    if (!paths.length) {
-      console.log("check: no changed files remain in the worktree");
-      return;
+    if (deletions.length) {
+      paths = [];
+    } else {
+      paths = (await Promise.all(
+        paths.map(async (item) => ((await exists(path.resolve(root, item))) ? item : null)),
+      )).filter(Boolean);
+      if (!paths.length) {
+        console.log("check: no changed files remain in the worktree");
+        return;
+      }
     }
   }
   const explicit = paths.length > 0,
@@ -323,10 +337,10 @@ async function migrateCatalog() {
     if (destinations.has(destination))
       die(`migrate-catalog: duplicate destination: ${relative(root, destination)}`);
     destinations.add(destination);
-    if (await exists(destination))
+    if (await entryExists(destination))
       die(`migrate-catalog: collision: ${relative(root, source)} and ${relative(root, destination)}`);
     for (let parent = path.dirname(destination); parent !== root; parent = path.dirname(parent)) {
-      if ((await exists(parent)) && !(await isDirectory(parent)))
+      if ((await entryExists(parent)) && !(await isDirectory(parent)))
         die(`migrate-catalog: destination parent is not a directory: ${relative(root, parent)}`);
     }
     try {
