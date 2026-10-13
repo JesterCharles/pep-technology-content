@@ -12,7 +12,7 @@ Searched and checked on 2026-10-12 between 21:14Z and 21:20Z (UTC).
 - Every candidate below was checked live: YouTube oEmbed (`https://www.youtube.com/oembed?format=json&url=...`) for public availability and channel name, and the public watch page's player metadata for `lengthSeconds`, publish date, view count and playability.
 - Fit was judged from each video's caption track (fetched from YouTube's public player caption list; mostly auto-generated English), its description and its chapters where present. Frames were not inspected in this pass. No video was downloaded.
 - "First-party" here means the official channel of a Git host or editor vendor (GitHub, GitLab, Atlassian, Microsoft/VS Code/Visual Studio, JetBrains). GitKraken is recorded as a Git-client vendor.
-- Final receipts were written by `node tools/net/check-video.mjs` to `evidence/git-linux-ai-foundations/git-foundations/<topic>/video.json`; every run exited 0 with oEmbed HTTP 200.
+- Final receipts were written by `node tools/net/check-video.mjs` to `authoring/evidence/git-linux-ai-foundations/git-foundations/<topic>/video.json`; every run exited 0 with oEmbed HTTP 200.
 
 ## Queries run (UTC)
 
