@@ -28,7 +28,7 @@ Same rule: approval, passing checks and resolved comments, all three.
 
 ## Model
 
-Practice repositorySimulation: no real Git runs
+Practice repository Simulation: no real Git runs
 
 ### Pull request #12branch feature/cart-total
 

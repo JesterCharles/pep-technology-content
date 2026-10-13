@@ -28,13 +28,13 @@ Same markers, different file.
 
 ## Model
 
-Practice repositorySimulation: no real Git runs
+Practice repository Simulation: no real Git runs
 
 ### Historynewest first
 
-1. C4Store titlefeature/title
-2. C3Shop titleHEAD → main
-3. C2Add cart
+1. C4 Store title feature/title
+2. C3 Shop title HEAD → main
+3. C2 Add cart
 
 ### index.html, heading lineindex.html on main
 

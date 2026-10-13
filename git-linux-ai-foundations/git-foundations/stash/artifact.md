@@ -25,7 +25,7 @@ Same rule: plain git stash takes tracked changes only.
 
 ## Model
 
-Practice repositorySimulation: no real Git runs
+Practice repository Simulation: no real Git runs
 
 ### Working copyon feature
 

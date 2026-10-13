@@ -34,18 +34,18 @@ Same rule: push only adds to GitHub's history; it never drops a teammate's commi
 
 ## Model
 
-Practice repositorySimulation: no real Git runs
+Practice repository Simulation: no real Git runs
 
 ### Your computerlocal repository
 
-1. C2Add cartHEAD → mainorigin/main
-2. C1Start shop
+1. C2 Add cart HEAD → main origin/main
+2. C1 Start shop
 
 ### GitHub (origin)remote repository
 
-1. C3Sam: add searchmain
-2. C2Add cart
-3. C1Start shop
+1. C3 Sam: add search main
+2. C2 Add cart
+3. C1 Start shop
 
 GitHub SSH keys: id_ed25519.pub (public)
 

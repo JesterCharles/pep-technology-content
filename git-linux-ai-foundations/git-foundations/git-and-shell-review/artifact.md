@@ -28,7 +28,7 @@ Review check: where you are in the shell decides which repository Git sees.
 
 ## Model
 
-Practice repositorySimulation: no real Git runs
+Practice repository Simulation: no real Git runs
 
 Shell location: /home/ana/projects/shop
 

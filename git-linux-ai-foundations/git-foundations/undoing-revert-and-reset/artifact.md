@@ -34,11 +34,11 @@ Decide by one question: does anyone else already have the commit?
 
 ## Model
 
-Practice repositorySimulation: no real Git runs
+Practice repository Simulation: no real Git runs
 
-1. C3Change price calcHEAD → mainorigin/main
-2. C2Add cart
-3. C1Start shop
+1. C3 Change price calc HEAD → main origin/main
+2. C2 Add cart
+3. C1 Start shop
 
 Staging area: empty. Working copy changes: none.
 

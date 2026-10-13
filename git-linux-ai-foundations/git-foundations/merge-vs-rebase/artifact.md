@@ -28,11 +28,11 @@ Same two tools; now a teammate depends on your commits.
 
 ## Model
 
-Practice repositorySimulation: no real Git runs
+Practice repository Simulation: no real Git runs
 
-1. C4Fix taxmain
-2. C3Add searchHEAD → feature
-3. C2Add cart
+1. C4 Fix tax main
+2. C3 Add search HEAD → feature
+3. C2 Add cart
 
 ## Recap
 

@@ -30,10 +30,10 @@ Same rule, new names: a commit moves only the branch HEAD is on.
 
 ## Model
 
-Practice repositorySimulation: no real Git runs
+Practice repository Simulation: no real Git runs
 
-1. C2Add cartHEAD → main
-2. C1Start shop
+1. C2 Add cart HEAD → main
+2. C1 Start shop
 
 HEAD is on main. Working copy files: app.js, cart.js
 

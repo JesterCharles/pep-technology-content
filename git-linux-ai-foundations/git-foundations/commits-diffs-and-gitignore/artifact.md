@@ -32,7 +32,7 @@ Same three places, new situation. Use the model: the staging area is a snapshot 
 
 ## Model
 
-Practice repositorySimulation: no real Git runs
+Practice repository Simulation: no real Git runs
 
 ### Working copyfiles you edit
 
