@@ -64,14 +64,26 @@ macOS
 
 1. Open the Eclipse Temurin releases page (linked under Sources). Choose macOS, your chip (aarch64 for Apple silicon, x64 for Intel) and JDK 25 - LTS, then download the `.pkg` file.
 2. Open the `.pkg` file. Select Continue, accept the license, then Install. The JDK goes into `/Library/Java/JavaVirtualMachines/`.
-3. Download the Maven binary `.tar.gz` archive from the Apache Maven download page. In Terminal, make a folder such as `~/tools`, extract the archive there with `tar xzvf`, and add a line like `export PATH="$HOME/tools/apache-maven-<version>/bin:$PATH"` to `~/.zshrc`, with your Maven folder name.
+3. Download the Maven binary `.tar.gz` archive from the Apache Maven download page; this assumes your browser saved it in `~/Downloads`. In a terminal, run these three lines, with your Maven version in place of `<version>` each time:
+   ```
+   mkdir -p ~/tools
+   tar -xzf ~/Downloads/apache-maven-<version>-bin.tar.gz -C ~/tools
+   echo 'export PATH="$HOME/tools/apache-maven-<version>/bin:$PATH"' >> ~/.zshrc
+   ```
+   The first makes the folder, the second extracts Maven into it, and the third adds Maven's `bin` folder to `PATH` in `~/.zshrc`.
 4. Open a new Terminal window and run the three checks below. If `java -version` shows an older Java, add `export JAVA_HOME=$(/usr/libexec/java_home -v 25)` to `~/.zshrc` and open a new window.
 
 Linux (Debian or Ubuntu)
 
 1. Open the Adoptium Linux installer packages page (linked under Sources). Run its commands to add the Adoptium apt repository; they need `sudo`.
 2. Run `sudo apt install temurin-25-jdk`. On Fedora or RHEL, add the Adoptium RPM repository from the same page and run `sudo dnf install temurin-25-jdk`.
-3. Download the Maven binary `.tar.gz` archive, extract it into a folder such as `~/tools` with `tar xzvf`, and add `export PATH="$HOME/tools/apache-maven-<version>/bin:$PATH"` to `~/.bashrc`, with your Maven folder name.
+3. Download the Maven binary `.tar.gz` archive from the Apache Maven download page; this assumes your browser saved it in `~/Downloads`. In a terminal, run these three lines, with your Maven version in place of `<version>` each time:
+   ```
+   mkdir -p ~/tools
+   tar -xzf ~/Downloads/apache-maven-<version>-bin.tar.gz -C ~/tools
+   echo 'export PATH="$HOME/tools/apache-maven-<version>/bin:$PATH"' >> ~/.bashrc
+   ```
+   The first makes the folder, the second extracts Maven into it, and the third adds Maven's `bin` folder to `PATH` in `~/.bashrc`.
 4. Open a new terminal and run the three checks below. If `java -version` shows an older Java, put the JDK 25 `bin` folder under `/usr/lib/jvm` first on `PATH`, as in the practice.
 
 Windows

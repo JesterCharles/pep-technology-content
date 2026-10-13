@@ -42,7 +42,7 @@ After this step, everything else in the lab runs offline.
 
 Open the `starter` folder as a project in your IDE (choose `starter/pom.xml`, then **Open as Project**), and open `src/main/java/basics/Basics.java`.
 Each task is one method with a `TODO` comment; its comment says what the method must return.
-Work each result out from the method's parameters: the tests call every method with several inputs, including edge cases, so a typed-in answer for one input will fail.
+Work each result out from the method's parameters, using the idea the task names. The tests call every method with several inputs, including edge cases, and check only the results; they cannot see how you computed them, so the practice comes from writing the general code yourself.
 
 After each task, run the one test command from the `starter` folder:
 
@@ -70,7 +70,7 @@ Every failure line starts with its task number, so you can work through the task
 
 1. Find the method `isEven(int n)`.
 2. Return whether `n` is even, using the remainder operator `%`. Check your idea against negative numbers too.
-3. While it is wrong, you see lines such as `Task 3: isEven(7)`. If the results are right but `%` is missing from this method, you see `Task 3: isEven must use the remainder operator %`.
+3. While it is wrong, you see lines such as `Task 3: isEven(7)`.
 4. Done when no line starting with `Task 3` appears.
 
 ### Task 4: grade
@@ -84,14 +84,14 @@ Every failure line starts with its task number, so you can work through the task
 
 1. Find the method `dayType(int day)`.
 2. Return the result of a switch expression with arrow labels (`->`), covering the values in the method's comment and every other value.
-3. While it is wrong, you see lines such as `Task 5: dayType(8)`. If the results are right but the method has no switch with `->`, you see `Task 5: dayType must use a switch with arrow labels (->)`.
+3. While it is wrong, you see lines such as `Task 5: dayType(8)`.
 4. Done when no line starting with `Task 5` appears.
 
 ### Task 6: countdown
 
 1. Find the method `countdown(int n)`.
 2. Build the text with a `for` loop, from `n` down to 1, with single spaces between the numbers and none at the ends. Check what your loop does when `n` is 0.
-3. While it is wrong, you see lines such as `Task 6: countdown(3) ==> expected: <3 2 1> but was: <>`. If the results are right but the method has no `for` loop, you see `Task 6: countdown must use a for loop`.
+3. While it is wrong, you see lines such as `Task 6: countdown(3) ==> expected: <3 2 1> but was: <>`.
 4. Done when no line starting with `Task 6` appears.
 
 ## Test
@@ -104,8 +104,7 @@ mvn -q -o test
 
 - Before you start, all six tests fail, and Maven ends with `Tests run: 6, Failures: 6`.
 - Each test calls its method with several inputs and lists every input that gave a wrong result.
-  Tasks 3, 5 and 6 also read that method's own code, ignoring comments and text in quotes, to check for `%`, a switch with `->`, or a `for` loop.
-  The tests cannot tell whether task 4 uses `else if`; use the chain anyway, because that is what the task practises.
+  A passing run shows that each method returns the right results for those inputs. It does not check which Java constructs your code uses, so compare your code with each task's steps yourself.
 - If your code does not compile, Maven prints `COMPILATION ERROR` with the file, then `[line,column]`, then the compiler's message.
   Fix that line and run the test again.
 
@@ -142,4 +141,3 @@ The JUnit and plugin downloads stay in your local Maven repository (`~/.m2/repos
 - **`mvn -v` shows a Java version other than 25.** Maven uses the JDK named by `JAVA_HOME` when it is set, otherwise the `java` on your `PATH`. Set `JAVA_HOME` to your JDK 25 folder, or unset it, then open a new terminal.
 - **`release version 25 not supported`.** Maven is running on an older JDK. Fix it as in the previous item.
 - **`Cannot access central in offline mode`, or a missing artifact.** The setup step has not completed. Run `mvn -q dependency:go-offline` once while online.
-- **A test says a method "must use" something.** Its results are right, but that method's own code lacks the idea the task names (`%`, a `switch` with `->`, a `for` loop). Text inside quotes or comments does not count. Rewrite the method with that idea.
