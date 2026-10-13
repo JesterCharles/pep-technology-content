@@ -57,7 +57,7 @@ test("T24 joins explicit catalog scopes to learner artifacts", async () => {
   await writeFile(topicFile, '{"id":"demo-topic","components":{"progress":"1"}}\n');
   const artifact = path.join(root, "demo-course/demo-module/demo-topic/artifact.html");
   await mkdir(path.dirname(artifact), { recursive: true });
-  await cp(path.join(repo, "authoring/tests/fixtures/components/matching/artifact.html"), artifact);
+  await cp(path.join(repo, "authoring/tests/fixtures/components/matching/demo-course/demo-module/demo-topic/artifact.html"), artifact);
   await cp(path.join(repo, "components/progress"), path.join(root, "components/progress"), {
     recursive: true,
   });
@@ -84,6 +84,33 @@ test("T24 joins explicit catalog scopes to learner artifacts", async () => {
   const changed = runNode(pep, ["check", "--changed", "--only", "T24"], root);
   assert.notEqual(changed.status, 0);
   assert.match(changed.stderr, /marker version 1 does not match topic\.json version 999/);
+});
+
+test("T24 does not join an artifact to a catalog topic at a different path", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-components-orphan-"));
+  const catalog = path.join(root, "authoring/catalog/demo-course");
+  const topicFile = path.join(catalog, "demo-module/demo-topic/topic.json");
+  await mkdir(path.dirname(topicFile), { recursive: true });
+  await writeFile(path.join(catalog, "course.json"), '{"id":"demo-course","moduleOrder":["demo-module"]}\n');
+  await writeFile(path.join(catalog, "demo-module/module.json"), '{"id":"demo-module","topicOrder":["demo-topic"]}\n');
+  await writeFile(topicFile, '{"id":"demo-topic","components":{"progress":"1"}}\n');
+  const artifact = path.join(root, "orphan/artifact.html");
+  await mkdir(path.dirname(artifact), { recursive: true });
+  await cp(
+    path.join(repo, "authoring/tests/fixtures/components/matching/demo-course/demo-module/demo-topic/artifact.html"),
+    artifact,
+  );
+  await cp(path.join(repo, "components/progress"), path.join(root, "components/progress"), {
+    recursive: true,
+  });
+
+  const result = runNode(
+    pep,
+    ["check", "--only", "T24", "orphan/artifact.html", "authoring/catalog/demo-course/demo-module/demo-topic/topic.json"],
+    root,
+  );
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /^T24 orphan\/artifact\.html: cannot read topic\.json: artifact is not joined to a catalog topic/m);
 });
 
 test("legacy course package schema rejects an invalid index", () => {

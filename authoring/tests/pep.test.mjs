@@ -166,13 +166,45 @@ test("new-topic writes only an absent-artifact catalog manifest", async () => {
 test("export copies the content-only learner tree and omits catalog metadata", async () => {
   const tmp = await mkdtemp(path.join(os.tmpdir(), "pep-export-"));
   await copyPositive(tmp);
-  await mkdir(path.join(tmp, "demo-course/assessments/check"), { recursive: true });
-  await writeFile(path.join(tmp, "demo-course/assessments/check/blueprint.json"), "{}\n");
+  const learner = {
+    "demo-course/assessments/check/blueprint.json": "{}\n",
+    "demo-course/coding-lab/lab.json": "{}\n",
+    "demo-course/demo-module/coding-lab/README.md": "module lab\n",
+    "demo-course/demo-module/demo-topic/coding-lab/README.md": "topic lab\n",
+  };
+  const excluded = {
+    "demo-course/course.json": '{"id":"demo-course"}\n',
+    "demo-course/demo-module/demo-topic/notes.txt": "tracked but not learner-facing\n",
+    "demo-course/demo-module/demo-topic/platform-only/answer-key.md": "B\n",
+    "demo-course/demo-module/demo-topic/.DS_Store": "finder\n",
+    "demo-course/_work/draft.md": "ignored draft\n",
+    "demo-course/demo-module/demo-topic/coding-lab/.env": "SECRET=1\n",
+  };
+  for (const [file, text] of Object.entries({ ...learner, ...excluded })) {
+    await mkdir(path.dirname(path.join(tmp, file)), { recursive: true });
+    await writeFile(path.join(tmp, file), text);
+  }
+  await writeFile(path.join(tmp, ".gitignore"), "_work/\n.env\n");
+  assert.equal(spawnSync("git", ["init", "-b", "main"], { cwd: tmp }).status, 0);
+  const tracked = [
+    ".gitignore",
+    "authoring",
+    "demo-course/demo-module/demo-topic",
+    ...Object.keys(learner),
+    "demo-course/course.json",
+  ];
+  assert.equal(spawnSync("git", ["add", "--", ...tracked], { cwd: tmp }).status, 0);
+  assert.equal(
+    spawnSync("git", ["rm", "--cached", "-q", "--", "demo-course/demo-module/demo-topic/platform-only/answer-key.md", "demo-course/demo-module/demo-topic/.DS_Store"], { cwd: tmp }).status,
+    0,
+  );
   const result = run(["export", "demo-course"], tmp);
   assert.equal(result.status, 0, result.stderr);
   await readFile(path.join(tmp, "build/export/demo-course/demo-module/demo-topic/artifact.html"));
-  await readFile(path.join(tmp, "build/export/demo-course/assessments/check/blueprint.json"));
-  await assert.rejects(readFile(path.join(tmp, "build/export/demo-course/course.json")), { code: "ENOENT" });
+  for (const [file, text] of Object.entries(learner))
+    assert.equal(await readFile(path.join(tmp, "build/export", file), "utf8"), text);
+  for (const file of Object.keys(excluded))
+    await assert.rejects(readFile(path.join(tmp, "build/export", file)), { code: "ENOENT" }, file);
 });
 
 test("migrate-catalog uses git moves and is idempotent", async () => {

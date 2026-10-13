@@ -89,22 +89,10 @@ export async function run(ctx) {
         const course = courses.find(
           (candidate) => file.startsWith(`${candidate.contentRoot}${path.sep}`),
         );
-        if (course) {
-          const parts = path.relative(course.contentRoot, file).split(path.sep);
-          topic = await readJson(path.join(course.catalogRoot, parts[0], parts[1], "topic.json"));
-        } else {
-          const candidates = [];
-          for (const root of ctx.scanRoots) {
-            for (const candidate of (await walk(root, { skip: ctx.skip })).files) {
-              if (
-                path.basename(candidate) === "topic.json" &&
-                candidate.includes(`${path.sep}authoring${path.sep}catalog${path.sep}`)
-              ) candidates.push(candidate);
-            }
-          }
-          if (candidates.length !== 1) throw new Error("artifact is not joined to one catalog topic");
-          topic = await readJson(candidates[0]);
-        }
+        if (!course) throw new Error("artifact is not joined to a catalog topic");
+        const parts = path.relative(course.contentRoot, file).split(path.sep);
+        if (parts.length !== 3) throw new Error("artifact is not joined to a catalog topic");
+        topic = await readJson(path.join(course.catalogRoot, parts[0], parts[1], "topic.json"));
       } catch (cause) {
         if (blocks.length) out.push(error(id, display, `cannot read topic.json: ${cause.message}`));
         continue;

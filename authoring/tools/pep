@@ -169,6 +169,28 @@ async function lock() {
   }
   if (target && !wrote) die(`lock: target not found: ${target}`);
 }
+const LEARNER_EXPORT_RE =
+  /^(?:[^/]+\/[^/]+\/(?:artifact\.(?:html|md|pdf|gift)|video-artifact\.md)|(?:[^/]+\/){0,2}coding-lab\/.+|(?:[^/]+\/)?assessments\/[^/]+\/blueprint\.json)$/;
+async function exportableFiles(contentRoot) {
+  if (!(await exists(contentRoot))) return [];
+  let listed;
+  try {
+    listed = execFileSync("git", ["ls-files", "-z", "--cached", "--", "."], {
+      cwd: contentRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  } catch {
+    die(`export: cannot list tracked files in ${relative(root, contentRoot)}`);
+  }
+  const files = [];
+  for (const rel of listed.split("\0").filter(Boolean).sort()) {
+    if (!LEARNER_EXPORT_RE.test(rel)) continue;
+    const file = path.join(contentRoot, ...rel.split("/"));
+    if ((await lstat(file).catch(() => null))?.isFile()) files.push(file);
+  }
+  return files;
+}
 async function exportCourse() {
   if (args[0] === "--help") return help("export");
   if (args.length > 1) die("export: expected at most one course");
@@ -190,7 +212,7 @@ async function exportCourse() {
     const c = course.manifest;
     if (cid && c.id !== cid) continue;
     matched = true;
-    for (const f of (await walk(course.contentRoot)).files) {
+    for (const f of await exportableFiles(course.contentRoot)) {
       const rel = path.relative(course.contentRoot, f);
       const d = path.join(base, c.id, rel);
       await mkdir(path.dirname(d), { recursive: true });
