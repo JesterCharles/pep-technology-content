@@ -10,19 +10,19 @@
 
 ### Warm up from memory
 
-This low-stakes practice reviews the shell, Git and AI topics of the course; it is not the Tooling module check assessment. Answer each check from memory first: a short refresher appears after your first answer. Every scenario is a benign simulation in the fictional home folder /home/ana; nothing runs on your computer. The warm-up is never marked wrong.
+This low-stakes practice reviews the shell, Git and AI topics of the course; it is not the Tooling module check assessment. Answer each check from memory first: a short refresher appears after your first answer. Every scenario is a benign simulation in the fictional home folder `/home/ana`; nothing runs on your computer. The warm-up is never marked wrong.
 
 ### Shell: make a script runnable
 
 Answer from memory first. The refresher appears here after your first answer.
 
-ls -l shows permissions for owner, group and others: r read, w write, x execute. Numeric modes add read 4, write 2 and execute 1 per group: 7 is rwx, 6 is rw-, 4 is r--. Running ./start.sh needs x.
+`ls -l` shows permissions for owner, group and others: `r` read, `w` write, `x` execute. Numeric modes add read 4, write 2 and execute 1 per group: `7` is `rwx`, `6` is `rw-`, `4` is `r--`. Running `./start.sh` needs `x`.
 
 ### Git: keep secrets out of commits
 
 Answer from memory first. The refresher appears here after your first answer.
 
-Keep secrets such as a token in a .env file and read them as environment variables, never in code. List .env in .gitignore, one pattern per line, before your first commit: Git then leaves that untracked file out of git add. Ignoring a file Git already tracks does not remove it from history.
+Keep secrets such as a token in a `.env` file and read them as environment variables, never in code. List `.env` in `.gitignore`, one pattern per line, before your first commit: Git then leaves that untracked file out of `git add`. Ignoring a file Git already tracks does not remove it from history.
 
 ### AI: claims versus evidence
 
@@ -36,20 +36,23 @@ One local project, three lenses (simulated)
 
 ### Shell
 
-pwd /tmp start.sh -rw-r--r--
+- **pwd**: /tmp
+- **start.sh**: -rw-r--r--
 
 ### Git
 
-.gitignore (empty) untracked .env (holds a token)
+- **.gitignore**: (empty)
+- **untracked**: .env (holds a token)
 
 ### AI change
 
-claim “Tested, works.” evidence none yet
+- **claim**: “Tested, works.”
+- **evidence**: none yet
 
 ## Recap
 
-- Relative paths start where you are; a script needs x to run, as in chmod 744.
-- List .env in .gitignore before the first commit; a later delete leaves secrets in history.
+- Relative paths start where you are; a script needs `x` to run, as in `chmod 744`.
+- List `.env` in `.gitignore` before the first commit; a later delete leaves secrets in history.
 - An assistant's summary is claims; your own run against the acceptance criteria is evidence.
 - Redact secrets before they reach a prompt, and check every proposal before it is merged.
 
@@ -59,9 +62,9 @@ Next: this was the final AI Foundations topic. Return to the course page.
 
 |  |  |
 | --- | --- |
-| chmod 744 file | owner rwx; group and others read only |
-| .gitignore line .env | Git skips the untracked file .env |
-| # .env / !.env | a comment / re-include, not ignore |
+| `chmod 744 file` | owner rwx; group and others read only |
+| `.gitignore` line `.env` | Git skips the untracked file .env |
+| `# .env` / `!.env` | a comment / re-include, not ignore |
 | Verified result | your run matched the acceptance criterion |
 
 ## Sources

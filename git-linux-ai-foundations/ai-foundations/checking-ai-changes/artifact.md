@@ -24,8 +24,8 @@ Read every changed line, removed lines included. Removals hide the biggest surpr
 
 A supported claim is still unverified. Run the story's acceptance criteria and compare the output with the expected result. Only a matching run turns a proposal into a verified result.
 
-- AC1: given PORT=5000, running sh start.sh prints Using port 5000.
-- AC2: given no PORT, it prints Using port 8080.
+- AC1: given `PORT=5000`, running `sh start.sh` prints `Using port 5000`.
+- AC2: given no PORT, it prints `Using port 8080`.
 
 ### Decide with evidence
 
@@ -43,13 +43,17 @@ Summary claims
 
 Diff
 
+```diff
 start.sh
-
-#!/bin/sh - PORT="${PORT:-8080}" + PORT=3000 + echo "Using port $PORT" echo "Starting app"
-
+  #!/bin/sh
+- PORT="${PORT:-8080}"
++ PORT=3000
++ echo "Using port $PORT"
+  echo "Starting app"
 tests/test_start.sh
-
-run_test check_prints_port - run_test check_default_port
+  run_test check_prints_port
+- run_test check_default_port
+```
 
 ## Recap
 

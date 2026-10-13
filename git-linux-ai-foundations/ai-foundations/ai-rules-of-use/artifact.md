@@ -21,7 +21,7 @@ Treat anything you paste as having left your control.
 
 ### Redact, don't discard
 
-Redacting keeps what helps and replaces what harms with a placeholder such as <TOKEN>. Error codes and file and line numbers usually help; tokens, passwords and personal details do not.
+Redacting keeps what helps and replaces what harms with a placeholder such as `<TOKEN>`. Error codes and file and line numbers usually help; tokens, passwords and personal details do not.
 
 You also own the result. Submit code an assistant proposed, and you answer for it as if you wrote it. Use only tools your program or employer approves.
 
@@ -57,7 +57,7 @@ What would be pasted
 ## Recap
 
 - Sort before you paste: share, redact first, or never share.
-- Redact the secret, keep the useful part: replace values with placeholders such as <TOKEN>.
+- Redact the secret, keep the useful part: replace values with placeholders such as `<TOKEN>`.
 - Treat anything you paste as out of your control.
 - You answer for AI-proposed code you submit, and you use only approved tools.
 
@@ -70,7 +70,7 @@ Next topic: How Agile teams work: Scrum and user stories
 | Share | material your program or employer permits for the approved tool: no secrets, personal data or confidential business details |
 | Redact first | errors and logs with a token, password or email inside |
 | Never share | private keys, password files, customer or personal records |
-| Placeholder | NAME=<NAME>: keep the name, replace the value |
+| Placeholder | `NAME=<NAME>`: keep the name, replace the value |
 
 ## Sources
 

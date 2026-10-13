@@ -10,7 +10,7 @@
 
 ### Start with a guess
 
-You ask an AI assistant: “Add a line to start.sh that prints the port the app uses.” You did not share start.sh or any project rules.
+You ask an AI assistant: “Add a line to start.sh that prints the port the app uses.” You did not share `start.sh` or any project rules.
 
 Every prompt, file and answer here is a synthetic example written for this lesson. Nothing calls a real AI model.
 
@@ -34,15 +34,13 @@ A teammate, Jo, has a proposal that looks finished. Use the three inputs to deci
 
 What the assistant receives
 
-Standing instructionsnot shared AI-RULES.md
+- **Standing instructions not shared**: `AI-RULES.md`
+- **Shared context not shared**:
 
-Shared contextnot shared
-
-```
-start.sh
-```
-
-Your promptsent Add a line to start.sh that prints the port the app uses.
+  ```
+  start.sh
+  ```
+- **Your prompt sent**: Add a line to start.sh that prints the port the app uses.
 
 Proposal, not verified (synthetic)
 
