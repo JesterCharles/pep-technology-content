@@ -12,9 +12,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 /** Public tests for the Java Basics lab: they run Basics.main and read what it prints. */
+@TestMethodOrder(MethodOrderer.MethodName.class)
 class BasicsTest {
     private static List<String> lines;
     private static String code;
