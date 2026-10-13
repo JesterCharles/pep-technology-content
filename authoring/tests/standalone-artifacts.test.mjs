@@ -61,6 +61,20 @@ const negatives = [
   ["lab-missing-file", /names a missing file/],
   ["lab-symlink-escape", /must not contain symlinks/],
   ["lab-outside-import", /import escapes the coding-lab bundle/],
+  ["lab-readme-missing-command", /README\.md must name the test command "true --verbose"/],
+  ["html-track", /<track> src must be embedded/],
+  ["js-assign-src", /script sets src to a non-embedded resource "diagram\.png"/],
+  ["js-new-image-src", /script sets src to a non-embedded resource "x\.png"/],
+  ["js-new-audio", /script sets src to a non-embedded resource "clip\.mp3"/],
+  ["js-assign-href", /script sets href to a non-embedded resource "theme\.css"/],
+  ["js-assign-data", /script sets data to a non-embedded resource "chart\.svg"/],
+  ["js-assign-poster", /script sets poster to a non-embedded resource "poster\.jpg"/],
+  ["js-assign-srcset", /script sets srcset to a non-embedded resource/],
+  ["js-set-attribute", /script sets src to a non-embedded resource "diagram\.png"/],
+  ["js-inner-html", /<img> src must be embedded, not "x\.png"/],
+  ["js-insert-adjacent-html", /<audio> src must be embedded, not "clip\.mp3"/],
+  ["js-document-write", /<link> href must be embedded, not "theme\.css"/],
+  ["js-comment-in-template", /global fetch\(\) is forbidden/],
 ];
 
 for (const [name, diagnostic] of negatives) {
@@ -72,7 +86,7 @@ for (const [name, diagnostic] of negatives) {
   });
 }
 
-test("T20 permits citations, optional navigation, video URLs, embedded resources, and shadowed fetch", () => {
+test("T20 permits citations, optional navigation, video URLs, embedded resources, embedded media, and shadowed fetch", () => {
   const result = check(path.join(fixtures, "positive"));
   assert.equal(result.status, 0, result.stderr);
 });

@@ -83,10 +83,15 @@ function attachDiagnostics(page, log) {
   page.on("pageerror", (error) => log.push(`page error: ${error.message}`));
 }
 
-async function blockNetwork(page, log) {
+async function blockNetwork(page, log, pageUrl) {
   await page.route("**/*", async (route) => {
     const url = route.request().url();
-    if (/^(file:|data:|about:|blob:)/.test(url)) return route.continue();
+    if (/^(data:|about:|blob:)/.test(url)) return route.continue();
+    if (url.startsWith("file:")) {
+      if (pageUrl && url.split(/[?#]/)[0] === pageUrl) return route.continue();
+      log.push(`sibling file request: ${url}`);
+      return route.abort("blockedbyclient");
+    }
     log.push(`network request: ${url}`);
     return route.abort("blockedbyclient");
   });
@@ -251,11 +256,12 @@ async function withPage(browser, topic, options, callback) {
   const diagnostics = [];
   const label = (options.label ?? "page").replace(/[^a-z0-9-]+/gi, "-");
   attachDiagnostics(page, diagnostics);
-  if (options.offline !== false) await blockNetwork(page, diagnostics);
+  const pageUrl = pathToFileURL(topic.html).href;
+  if (options.offline !== false) await blockNetwork(page, diagnostics, pageUrl);
   await context.tracing.start({ screenshots: true, snapshots: true });
   let failed = false;
   try {
-    await page.goto(pathToFileURL(topic.html).href, { waitUntil: "load" });
+    await page.goto(pageUrl, { waitUntil: "load" });
     await callback(page, diagnostics, context);
     if (diagnostics.length) throw new Error(diagnostics.join("; "));
   } catch (error) {

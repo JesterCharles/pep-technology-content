@@ -16,6 +16,7 @@ const ARTIFACT_NAMES = new Set([
   "artifact.gift",
   "video-artifact.md",
 ]);
+const SCRIPT_RESOURCE_EXT = /\.(?:css|m?js|json|xml|csv|tsv|txt|vtt|srt|wasm|woff2?|ttf|otf|eot|avif|bmp|gif|jpe?g|png|svg|webp|ico|mp3|m4a|ogg|wav|mp4|m4v|mov|webm|pdf)$/i;
 const MEDIA_EXT = /\.(?:avif|bmp|gif|jpe?g|png|svg|webp|ico|mp3|m4a|ogg|wav|mp4|m4v|mov|webm)(?:\b|$)/i;
 const md = new MarkdownIt({ html: true, linkify: false, typographer: false });
 
@@ -27,35 +28,96 @@ function add(out, ctx, file, line, message) {
   out.push(error(id, `${ctx.display(file)}:${line}`, message));
 }
 
-function stripComments(text) {
-  return text
-    .replace(/<!--([\s\S]*?)-->/g, (match) => match.replace(/[^\n]/g, " "))
-    .replace(/\/\*[\s\S]*?\*\//g, (match) => match.replace(/[^\n]/g, " "))
-    .replace(/(^|[^:])\/\/[^\n]*/g, (match, prefix) => `${prefix}${" ".repeat(match.length - prefix.length)}`);
-}
+const REGEX_PREFIX = /(?:^|[(,=:[!&|?{};+\-*%<>~^]|\b(?:return|typeof|case|do|else|in|of|void|yield|await))\s*$/;
+const ESCAPES = { n: "\n", r: "\r", t: "\t", b: "\b", f: "\f", v: "\v", 0: "\0" };
 
-function stripStrings(text) {
-  let quote;
-  let escaped = false;
-  return [...text].map((character) => {
-    if (!quote && ["'", '"', "`"].includes(character)) {
-      quote = character;
-      return " ";
+function lexJavaScript(source) {
+  const code = source.split("");
+  const strings = [];
+  const braces = [];
+  const blank = (start, end) => {
+    for (let index = start; index < end; index += 1) if (code[index] !== "\n") code[index] = " ";
+  };
+  const readTemplate = (start) => {
+    let index = start;
+    let value = "";
+    while (index < source.length) {
+      const character = source[index];
+      if (character === "\\") {
+        value += ESCAPES[source[index + 1]] ?? source[index + 1] ?? "";
+        index += 2;
+      } else if (character === "`") {
+        strings.push({ start: start - 1, end: index + 1, value });
+        blank(start - 1, index + 1);
+        return index + 1;
+      } else if (character === "$" && source[index + 1] === "{") {
+        strings.push({ start: start - 1, end: index + 2, value });
+        blank(start - 1, index + 2);
+        braces.push("${");
+        return index + 2;
+      } else {
+        value += character;
+        index += 1;
+      }
     }
-    if (!quote) return character;
-    if (character === "\n") {
-      if (quote !== "`") quote = undefined;
-      escaped = false;
-      return "\n";
+    strings.push({ start: start - 1, end: index, value });
+    blank(start - 1, index);
+    return index;
+  };
+  let index = 0;
+  while (index < source.length) {
+    const character = source[index];
+    const next = source[index + 1];
+    if (character === "/" && next === "/") {
+      const end = source.indexOf("\n", index);
+      const stop = end < 0 ? source.length : end;
+      blank(index, stop);
+      index = stop;
+    } else if (character === "/" && next === "*") {
+      const end = source.indexOf("*/", index + 2);
+      const stop = end < 0 ? source.length : end + 2;
+      blank(index, stop);
+      index = stop;
+    } else if (character === "'" || character === '"') {
+      let cursor = index + 1;
+      let value = "";
+      while (cursor < source.length && source[cursor] !== character && source[cursor] !== "\n") {
+        if (source[cursor] === "\\") {
+          value += ESCAPES[source[cursor + 1]] ?? source[cursor + 1] ?? "";
+          cursor += 2;
+        } else {
+          value += source[cursor];
+          cursor += 1;
+        }
+      }
+      const stop = source[cursor] === character ? cursor + 1 : cursor;
+      strings.push({ start: index, end: stop, value });
+      blank(index, stop);
+      index = stop;
+    } else if (character === "`") {
+      index = readTemplate(index + 1);
+    } else if (character === "{") {
+      braces.push("{");
+      index += 1;
+    } else if (character === "}") {
+      index = braces.pop() === "${" ? readTemplate(index + 1) : index + 1;
+    } else if (character === "/" && REGEX_PREFIX.test(code.slice(Math.max(0, index - 16), index).join(""))) {
+      let cursor = index + 1;
+      let inClass = false;
+      while (cursor < source.length && source[cursor] !== "\n") {
+        if (source[cursor] === "\\") cursor += 1;
+        else if (source[cursor] === "[") inClass = true;
+        else if (source[cursor] === "]") inClass = false;
+        else if (source[cursor] === "/" && !inClass) break;
+        cursor += 1;
+      }
+      blank(index, cursor + 1);
+      index = cursor + 1;
+    } else {
+      index += 1;
     }
-    if (!escaped && character === quote) {
-      quote = undefined;
-      return " ";
-    }
-    if (!escaped && character === "\\") escaped = true;
-    else escaped = false;
-    return " ";
-  }).join("");
+  }
+  return { code: code.join(""), strings };
 }
 
 function attributes(source) {
@@ -68,9 +130,10 @@ function attributes(source) {
   return out;
 }
 
-function isEmbedded(value, { fragment = false, image = false } = {}) {
+function isEmbedded(value, { fragment = false, data = [] } = {}) {
   const trimmed = value.trim();
-  return (fragment && trimmed.startsWith("#")) || (image && /^data:image\//i.test(trimmed));
+  const type = trimmed.match(/^data:([a-z]+)\//i)?.[1].toLowerCase();
+  return (fragment && trimmed.startsWith("#")) || (type !== undefined && data.includes(type));
 }
 
 function scanCss(out, ctx, file, css, offset, whole, baseLine = 1) {
@@ -80,15 +143,26 @@ function scanCss(out, ctx, file, css, offset, whole, baseLine = 1) {
   for (const match of css.matchAll(/@font-face\b/gi))
     add(out, ctx, file, displayLine(offset + match.index), "web fonts are not standalone");
   for (const match of css.matchAll(/url\(\s*(["']?)(.*?)\1\s*\)/gi)) {
-    if (!isEmbedded(match[2], { fragment: true, image: true }))
+    if (!isEmbedded(match[2], { fragment: true, data: ["image"] }))
       add(out, ctx, file, displayLine(offset + match.index), `CSS url() must be embedded, not ${JSON.stringify(match[2])}`);
   }
 }
 
+function scriptResourceAllowed(value, property) {
+  const trimmed = value.trim();
+  if (trimmed === "" || /^(?:data:|blob:|#|about:blank$)/i.test(trimmed)) return true;
+  return property === "href" && !SCRIPT_RESOURCE_EXT.test(trimmed.split(/[?#]/)[0]);
+}
+
 function scanJavaScript(out, ctx, file, source, offset, whole, baseLine = 1) {
   const displayLine = (index) => baseLine + lineAt(whole, index) - 1;
-  const commentsRemoved = stripComments(source);
-  const code = stripStrings(commentsRemoved);
+  const { code, strings } = lexJavaScript(source);
+  const stringsByStart = new Map(strings.map((token) => [token.start, token]));
+  const stringAt = (position) => {
+    const start = position + (source.slice(position).match(/^\s*/)?.[0].length ?? 0);
+    return stringsByStart.get(start);
+  };
+  const report = (index, message) => add(out, ctx, file, displayLine(offset + index), message);
   const fetchIsLocal = /\bfunction\s+fetch\s*\(|\b(?:const|let|var|class)\s+fetch\b/.test(code);
   const rules = [
     [/\b(?:globalThis|window|self)\s*\.\s*fetch\s*\(/g, "global fetch() is forbidden"],
@@ -101,10 +175,44 @@ function scanJavaScript(out, ctx, file, source, offset, whole, baseLine = 1) {
   ];
   if (!fetchIsLocal) rules.push([/(^|[^.\w$])fetch\s*\(/g, "global fetch() is forbidden"]);
   for (const [pattern, message] of rules)
-    for (const match of code.matchAll(pattern))
-      add(out, ctx, file, displayLine(offset + match.index), message);
-  for (const match of commentsRemoved.matchAll(/\bimport\s+(?:[^;\n]*?\s+from\s+)?["'][^"']+["']/g))
-    add(out, ctx, file, displayLine(offset + match.index), "external module imports are forbidden");
+    for (const match of code.matchAll(pattern)) report(match.index, message);
+  for (const match of code.matchAll(/\bimport\b(?!\s*[(.])(?:[^;\n]*?\bfrom\b)?/g))
+    if (stringAt(match.index + match[0].length)) report(match.index, "external module imports are forbidden");
+  const checkResource = (index, property, token) => {
+    if (!token) return;
+    const values = property === "srcset" ? token.value.split(",").map((item) => item.trim().split(/\s+/)[0]) : [token.value];
+    if (values.some((value) => !scriptResourceAllowed(value, property)))
+      report(index, `script sets ${property} to a non-embedded resource ${JSON.stringify(token.value)}`);
+  };
+  for (const match of code.matchAll(/\.\s*(src|href|data|poster|srcset)\s*=(?!=)/g))
+    checkResource(match.index, match[1], stringAt(match.index + match[0].length));
+  for (const match of code.matchAll(/\.\s*setAttribute(?:NS)?\s*\(/g)) {
+    let position = match.index + match[0].length;
+    let name = stringAt(position);
+    if (name && !/^(?:src|href|data|poster|srcset|xlink:href)$/i.test(name.value)) {
+      const namespace = name;
+      position = namespace.end + (code.slice(namespace.end).match(/^\s*,/)?.[0].length ?? 0);
+      name = stringAt(position);
+    }
+    if (!name || !/^(?:src|href|data|poster|srcset|xlink:href)$/i.test(name.value)) continue;
+    const comma = code.slice(name.end).match(/^\s*,/);
+    if (comma) checkResource(match.index, name.value.toLowerCase().replace(/^xlink:/, ""), stringAt(name.end + comma[0].length));
+  }
+  for (const match of code.matchAll(/\bnew\s+Audio\s*\(/g))
+    checkResource(match.index, "src", stringAt(match.index + match[0].length));
+  for (const match of code.matchAll(/\.\s*(?:innerHTML|outerHTML)\s*=(?!=)|\.\s*insertAdjacentHTML\s*\(|\bdocument\s*\.\s*write(?:ln)?\s*\(/g)) {
+    const start = match.index + match[0].length;
+    let depth = 0;
+    let end = start;
+    for (; end < code.length; end += 1) {
+      const character = code[end];
+      if ("([{".includes(character)) depth += 1;
+      else if (")]}".includes(character) && --depth < 0) break;
+      else if (character === ";" && depth === 0) break;
+    }
+    const markup = strings.filter((token) => token.start >= start && token.start < end).map((token) => token.value).join("");
+    if (markup) scanHtmlText(out, ctx, file, markup, { baseLine: displayLine(offset + match.index) });
+  }
 }
 
 function scanHtmlText(out, ctx, file, html, options = {}) {
@@ -134,18 +242,21 @@ function scanHtmlText(out, ctx, file, html, options = {}) {
     if (tag === "link" && /(?:^|\s)(?:stylesheet|preload|modulepreload)(?:\s|$)/i.test(attrs.get("rel") ?? ""))
       reject("href");
     if (tag === "script") reject("src");
-    if (["img", "source", "video", "audio", "iframe", "embed", "input"].includes(tag))
-      reject("src", { image: ["img", "source", "input"].includes(tag) });
+    if (["img", "input"].includes(tag)) reject("src", { data: ["image"] });
+    if (tag === "source") reject("src", { data: ["image", "audio", "video"] });
+    if (["video", "audio"].includes(tag)) reject("src", { data: ["audio", "video"] });
+    if (tag === "track") reject("src", { data: ["text"] });
+    if (["iframe", "embed"].includes(tag)) reject("src");
     if (tag === "object") reject("data");
-    if (tag === "video") reject("poster", { image: true });
+    if (tag === "video") reject("poster", { data: ["image"] });
     if (attrs.has("srcset")) {
       const candidates = attrs.get("srcset").split(",").map((item) => item.trim().split(/\s+/)[0]);
-      if (candidates.some((item) => !resourceAllowed(item, { image: true })))
+      if (candidates.some((item) => !resourceAllowed(item, { data: ["image"] })))
         add(out, ctx, file, line, `<${tag}> srcset contains a non-embedded resource`);
     }
     if (["image", "use"].includes(tag)) {
       for (const name of ["href", "xlink:href"])
-        reject(name, { fragment: true, image: tag === "image" });
+        reject(name, { fragment: true, data: tag === "image" ? ["image"] : [] });
     }
     if (attrs.has("style")) scanCss(out, ctx, file, attrs.get("style"), match.index, html, baseLine);
   }
@@ -239,9 +350,8 @@ async function scanPdf(out, ctx, file) {
     add(out, ctx, file, 1, `cannot inspect PDF fonts: ${fonts.error?.message ?? fonts.stderr.trim()}`);
     return;
   }
-  const lines = fonts.stdout.split("\n");
-  const embeddedColumn = lines[0]?.indexOf("emb") ?? -1;
-  if (embeddedColumn >= 0 && lines.slice(2).some((line) => line.trim() && line.slice(embeddedColumn, embeddedColumn + 3) !== "yes"))
+  const rows = fonts.stdout.split("\n").slice(2).filter((line) => line.trim());
+  if (rows.some((line) => line.trim().split(/\s+/).at(-5) !== "yes"))
     add(out, ctx, file, 1, "PDF contains an unembedded font");
 }
 
@@ -283,6 +393,12 @@ async function scanLab(out, ctx, root) {
   } catch (issue) {
     add(out, ctx, manifestFile, 1, `invalid lab manifest: ${issue.message}`);
     return;
+  }
+  if (await exists(readme)) {
+    const text = await readFile(readme, "utf8");
+    for (const [label, block] of [["setup command", manifest.setup], ["test command", manifest.test]])
+      if (typeof block?.command === "string" && !text.includes(block.command))
+        add(out, ctx, readme, 1, `README.md must name the ${label} ${JSON.stringify(block.command)}`);
   }
   for (const [label, value, kind, mustExist] of manifestReferences(manifest)) {
     const resolved = path.resolve(root, value);
