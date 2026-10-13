@@ -209,6 +209,66 @@ Reconciliation python-intake-edu-001: the Fast day is the frozen route of six fi
 
 These roles are proposals for the Fast overlay (`pep-t1-track-overlays`), which validates the required Fast route against the six blocks; this intake neither compresses page budgets nor adds or removes topics. T14's per-day sum of page budgets remains a separate repository gate (see Minute budgets).
 
+### Fast project: one cumulative Python project in three increments
+
+Reconciliation python-intake-edu-recheck-001 (captain decision `pep-fast-project-block`, option A): the FT9, FT10 and FT11 Project blocks are three successive increments of one reusable learner-facing project brief, the **registrations pipeline project**. Learners build one small Python repository that grows each day: a script that summarizes workshop registration records (FT9), a pipeline that streams, validates and upserts them into PostgreSQL (FT10), and an enrichment step plus a FastAPI service that serves the results and calls the Spring Boot API (FT11). Learners see it as a project increment, never as a coding lab; Fast skips the Standard `data-pipelines` coding lab.
+
+Program Fast pattern applied to every increment:
+
+- Each increment fits the 70-minute Project block, so each Fast day stays inside its frozen 120-minute template (Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5). If a pilot shows an increment overrunning, the author narrows the increment (drops its last step to the topic page), never the other blocks.
+- Every concept the increment applies gets a short, minuted, embedded **teach-then-check** step before its first use: a teach segment, then a check (a predict-the-result question or one named public test that must turn from failing to passing) before the learner applies it. The Skim block and the topic pages are reference only; no step assumes the learner opened a page.
+- Coverage is claimed per requirement: the tables below list only the objectives an increment fully exercises. Compound objectives that an increment covers only in part stay owned by their topic pages.
+- Each increment ships a starter scaffold (FT9) or an extension (FT10, FT11) with new stub modules, fixtures and public tests only. One language-native command runs them all: `python -m pytest -q`, offline after the one-time setup. Each increment's public tests import only that increment's new modules and fixtures, so a learner who did not finish an earlier increment can still start the next one, and no extension ships an earlier increment's completed code.
+- No Docker or other learner-side container engine. The FT10 database steps use the learner-local PostgreSQL server from the SQL course, reached through a connection string in an environment variable; the tests create and drop their own schema. FT11 needs no network, API key or running Spring Boot service: a fake model client and an httpx mock transport stand in.
+- No solution, completed increment, hidden test or private checkpoint enters the repository; the solved-run check runs against uncommitted private staging, as for labs (`authoring/docs/lab-contract.md` section 8).
+- Reuse: FT10 and FT11 reuse the Standard `data-pipelines` lab fixtures, the fake model client and the public tests whose skills match (streaming, validation, upsert, enrichment), presented inside the project brief.
+- One canonical brief: the Standard and Fast overlays both reference this brief. Fast requires it in the Project blocks. Standard may offer it as optional consolidation, and the Standard `data-pipelines` lab remains Standard's required practice.
+
+FT9 increment 1, project skeleton and summary script (70 minutes):
+
+| Step | Minutes (teach + check + apply) | Teach-then-check | Learner outcome (observable) |
+|---|---|---|---|
+| Orient and set up | 8 (3 + 1 + 4) | Create and activate a venv with `python -m venv .venv`, install the pinned `requirements.txt` with `python -m pip`; check: `python -m pip --version` reports the `.venv` path | `python -m pytest -q` runs and fails the named increment-1 tests |
+| Functions over records | 17 (4 + 2 + 11) | Python syntax for Java developers (indentation, truthiness, `/` versus `//`), then `def` with defaults, keyword calls and type hints; check: predict three snippet outputs | `normalize_registration(row, *, default_session="general")` and `seats_left(capacity, taken)` pass their public tests |
+| Collections and comprehensions | 17 (4 + 2 + 11) | list/dict/set choice, `dict.get`, `items()` unpacking, list/dict/set comprehensions; check: the `count_by_session` test passes after a one-line fix | `count_by_session` returns a dict, `unique_emails` a set, `open_sessions` a filtered list via a comprehension |
+| Module and script entry | 14 (3 + 1 + 10) | `import` from your own package, `if __name__ == "__main__":`, `sys.argv`, non-zero exit; check: predict whether importing the module runs `main()` | `python -m registrations.cli general` prints the summary for that session from the starter's bundled in-code sample records (file reading waits for FT10); a missing argument exits with status 2 |
+| Your own tests | 10 (3 + 1 + 6) | plain `assert` tests in `test_*.py`, reading a pytest failure report; check: locate the failing assertion in a given report | the learner adds one passing test for `seats_left`; the full command passes |
+| Wrap | 4 | none (no new concept) | `python -m pytest -q` passes; the learner commits the increment with Git |
+
+FT10 increment 2, extract, validate and load (70 minutes):
+
+| Step | Minutes (teach + check + apply) | Teach-then-check | Learner outcome (observable) |
+|---|---|---|---|
+| Orient | 5 | none (no new concept): add the extension files, set `DATABASE_URL` to the learner-local PostgreSQL database | the named increment-2 tests fail |
+| Stream records | 18 (5 + 2 + 11) | `with open(..., encoding="utf-8")`, `csv.DictReader`, JSON Lines with `json.loads` per line, `yield`; check: predict what a second iteration of an exhausted generator yields | `read_registrations_csv` and `read_registrations_jsonl` yield one dict per record |
+| Validate records | 20 (5 + 2 + 13) | a Pydantic model with required, optional and defaulted typed fields; catching `ValidationError`; check: predict which of three raw rows are rejected | `validate_all` returns accepted models and rejected rows with their error details |
+| Load with an upsert | 22 (6 + 2 + 14) | `psycopg.connect` from the environment variable in a `with` block, `executemany` into a staging table, `INSERT ... ON CONFLICT ... DO UPDATE`; check: predict the row count after the same load runs twice | `load_staging` loads the fixture; the public test runs it twice and finds no duplicate rows |
+| Wrap | 5 | none (no new concept) | `python -m pytest -q` passes; commit |
+
+FT11 increment 3, enrich, serve and call the Spring Boot API (70 minutes):
+
+| Step | Minutes (teach + check + apply) | Teach-then-check | Learner outcome (observable) |
+|---|---|---|---|
+| Orient | 5 | none (no new concept): add the extension files | the named increment-3 tests fail |
+| Minimize, then enrich | 20 (7 + 2 + 11) | minimizing a record before a prompt (drop, mask or pseudonymize), model output as untrusted input, validating it with Pydantic and routing failures to a reject path; check: name the fields in a fixture record that must not leave the pipeline | `minimize_for_prompt` drops the email and phone fields; `enrich` validates the fake client's responses and sends invalid ones to the reject list |
+| Serve results | 20 (6 + 2 + 12) | a FastAPI GET route with a path parameter, `limit` and `offset` query parameters, a response model, `HTTPException(404)` and a repository provided through `Depends`; check: predict the status code for `?limit=abc` | `GET /registrations/{id}` and `GET /registrations` pass the public TestClient tests, which override the repository dependency with fixture data |
+| Call the Spring Boot API | 20 (6 + 2 + 12) | `httpx` with a base URL and bearer token from settings loaded from environment variables, an explicit timeout, mapping a timeout, connection error or non-2xx response to a clear error from your API; check: predict the response when the upstream times out | `GET /registrations/{id}/attendee` passes the public tests that use an httpx mock transport for success, timeout and 500 cases |
+| Wrap | 5 | none (no new concept) | `python -m pytest -q` passes; commit |
+
+FT11's `moduleCheck` timing and placement stay the open pacing item in the module check blueprint section; the project increment does not use the Timed or Reflection blocks.
+
+Per-requirement coverage claimed by the project. Objectives not listed are partly covered or not applied by the project and stay owned by their topic pages:
+
+| Increment | Objectives claimed |
+|---|---|
+| FT9 | `python-syntax-for-java-developers#o2`, `functions-and-arguments#o1`, `lists-dicts-sets-and-tuples#o2`, `lists-dicts-sets-and-tuples#o3`, `slicing-and-comprehensions#o2`, `modules-imports-and-virtual-environments#o1`, `modules-imports-and-virtual-environments#o2`, `writing-and-running-script-files#o2`, `writing-and-running-script-files#o3`, `testing-with-pytest#o1`, `testing-with-pytest#o2` |
+| FT10 | `reading-csv-and-json-files-with-generators#o1`, `reading-csv-and-json-files-with-generators#o2`, `cleaning-and-validating-records-with-pydantic-and-type-hints#o1`, `cleaning-and-validating-records-with-pydantic-and-type-hints#o2`, `loading-into-a-staging-table-with-upserts#o1`, `loading-into-a-staging-table-with-upserts#o2` |
+| FT11 | `keeping-sensitive-data-out-of-prompts#o2`, `ai-enrichment-with-validated-outputs#o2`, `fastapi-routes#o2`, `serving-pipeline-results-as-an-api#o1`, `serving-pipeline-results-as-an-api#o2`, `calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts#o1`, `calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts#o2` |
+
+Not applied by the project: the `(skim)` rows `mutability-and-aliasing`, `exceptions-and-logging`, `elt-transforming-in-sql-after-loading` and `deduplicating-in-sql-vs-in-python` (Skim block and topic pages only, except where a step above teaches a named part), and the Standard-only `connecting-to-postgres-from-python-with-psycopg`.
+
+Open for the Fast overlay (`pep-t1-track-overlays`), not decided here: no repository contract yet defines a project artifact or its manifest slot. This intake proposes storing the brief, the starter, the two extensions, fixtures and public tests in one course-level package that follows the lab contract layout and determinism rules (it spans all three modules, so it is covered by `course.lock.json`) and is presented to learners as a project. `course.json` `courseLabs` stays empty until that package is authored and its slot agreed. Every increment must be piloted against its 70 minutes before release.
+
 ## Artifact applicability
 
 Rules (plan section 5 and the confirmed matrix v3 expected-artifact scope): core topics require HTML (with embedded simulator practice), derived Markdown and a practice GIFT quiz, with a video only when a suitable verified one qualifies; the Reading topic also carries a printable PDF (matrix `print-handout`); the review topic carries HTML (with simulator) and Markdown only; absent companions record a reason.
@@ -261,7 +321,7 @@ No lab, with reason:
 
 - `python-fundamentals` (S14-S15) and `fastapi-services` (S18): the confirmed expected-artifact scope gives these Concept-day topics no lab overlay. Page simulators carry the practice, and the `data-pipelines` lab exercises venv, script and pytest skills on the real toolchain. `fastapi-services` practice of TestClient and the httpx mock transport stays in-page. The educational critic confirms each omission.
 - `python-review`: the S19 Review day's "Practice without AI" platform block covers hands-on practice.
-- No course lab; `course.json` `courseLabs` is empty.
+- No course lab; `course.json` `courseLabs` is empty. The Fast registrations pipeline project (see Cross-track model) is planned as a project, not a lab; its package slot is an open item for the Fast overlay.
 
 ## Minute budgets
 
@@ -386,3 +446,5 @@ Calendar references for the `python` technology: [Python tutorial](https://docs.
 ## Intake criticism
 
 Fresh independent educational and technology-SME critics reviewed the first intake commit (`ed8ef66`). Their reports and the non-author reconciliation are committed unchanged as `intake-critic-education.json`, `intake-critic-sme.json` and `intake-reconciliation.json`, except that the reconciliation's decisions gain `file` and `fixedInSha256` for the corrected bytes. Outcome: all 8 findings accepted (3 high, 4 medium, 1 low) and applied in one correction loop: Fast route roles (edu-001), S19-scoped blueprint timing with FT11 timing left open (edu-002, sme-001), a self-contained Fast loading page (edu-003), a topic-to-assessment coverage table (edu-004), coding task bundles with a timing rationale (edu-005), corrected matrix row counts (edu-006) and a qualified generator-memory objective (sme-002). The high findings await the critics' rechecks on the corrected bytes.
+
+Focused rechecks on the corrected bytes are committed unchanged as `intake-critic-education-recheck.json` and `intake-critic-sme-recheck.json`. SME resolved both of its findings and raised none. Education resolved all six of its findings and raised one high finding, `python-intake-edu-recheck-001`: the Fast Project blocks had no project brief, outcomes, prerequisite map, scaffold or tests. The non-author reconciliation `intake-2-reconciliation.json` accepted it under captain decision `pep-fast-project-block`, option A; its decision gains `file` and `fixedInSha256` for the corrected bytes. Correction: the cumulative registrations pipeline project with FT9-FT11 increments under the program Fast pattern (Cross-track model, Fast project). It awaits a focused recheck.
