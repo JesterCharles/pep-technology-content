@@ -143,6 +143,31 @@ test("migrate-catalog uses git moves and is idempotent", async () => {
   assert.match(result.stdout, /moved 0 file\(s\)/);
 });
 
+test("migrate-catalog collision preflight leaves the whole worktree unchanged", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pep-migrate-collision-"));
+  await mkdir(path.join(tmp, "demo-course/demo-module"), { recursive: true });
+  await mkdir(path.join(tmp, "authoring/catalog/demo-course/demo-module"), { recursive: true });
+  await writeFile(path.join(tmp, "demo-course/course.json"), '{"id":"demo-course","moduleOrder":["demo-module"]}\n');
+  await writeFile(path.join(tmp, "demo-course/demo-module/module.json"), '{"id":"legacy-module"}\n');
+  const destination = path.join(tmp, "authoring/catalog/demo-course/demo-module/module.json");
+  await writeFile(destination, '{"id":"catalog-module"}\n');
+  assert.equal(spawnSync("git", ["init", "-b", "main"], { cwd: tmp }).status, 0);
+  assert.equal(spawnSync("git", ["add", "."], { cwd: tmp }).status, 0);
+  const beforeStatus = spawnSync("git", ["status", "--porcelain=v1"], { cwd: tmp, encoding: "utf8" }).stdout;
+  const beforeDestination = await readFile(destination);
+  const result = run(["migrate-catalog"], tmp);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /collision/);
+  assert.equal(
+    spawnSync("git", ["status", "--porcelain=v1"], { cwd: tmp, encoding: "utf8" }).stdout,
+    beforeStatus,
+  );
+  assert.equal(await readFile(path.join(tmp, "demo-course/course.json"), "utf8"), '{"id":"demo-course","moduleOrder":["demo-module"]}\n');
+  assert.equal(await readFile(path.join(tmp, "demo-course/demo-module/module.json"), "utf8"), '{"id":"legacy-module"}\n');
+  assert.deepEqual(await readFile(destination), beforeDestination);
+  await assert.rejects(readFile(path.join(tmp, "authoring/catalog/demo-course/course.json")), { code: "ENOENT" });
+});
+
 test("every subcommand has help", () => {
   for (const command of ["check", "lock", "export", "export-lab", "new-topic", "migrate-catalog"]) {
     const result = run([command, "--help"]);

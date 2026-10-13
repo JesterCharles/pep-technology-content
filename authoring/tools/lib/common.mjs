@@ -140,7 +140,7 @@ export function defaultSkip(root) {
   };
 }
 
-async function catalogScopes(ctx) {
+export async function findCatalogScopes(ctx) {
   if (!ctx.explicit) return [ctx.root];
   const scopes = new Set();
   for (const target of ctx.targets) {
@@ -174,12 +174,12 @@ function pathsIntersect(first, second) {
   );
 }
 
-export async function findCourses(ctx) {
+export async function findCourseCandidates(ctx) {
   const found = [];
-  for (const repoRoot of await catalogScopes(ctx)) {
+  for (const repoRoot of await findCatalogScopes(ctx)) {
     const root = catalogPath(repoRoot);
     for (const entry of await readdir(root, { withFileTypes: true }).catch(() => [])) {
-      if (!entry.isDirectory() || !SLUG_RE.test(entry.name)) continue;
+      if (!entry.isDirectory()) continue;
       const catalogRoot = path.join(root, entry.name);
       const manifestFile = path.join(catalogRoot, "course.json");
       if (!(await exists(manifestFile))) continue;
@@ -201,11 +201,21 @@ export async function findCourses(ctx) {
         catalogRoot,
         contentRoot,
         manifestFile,
-        manifest: await readJson(manifestFile),
+        manifest: await readJson(manifestFile).catch(() => null),
       });
     }
   }
   return found.sort((a, b) => a.manifestFile.localeCompare(b.manifestFile));
+}
+
+export async function findCourses(ctx) {
+  return (await findCourseCandidates(ctx)).filter(
+    (course) =>
+      course.manifest &&
+      SLUG_RE.test(course.id) &&
+      !RESERVED_ROOTS.has(course.id) &&
+      course.manifest.id === course.id,
+  );
 }
 
 // Compatibility for callers that only need learner roots.

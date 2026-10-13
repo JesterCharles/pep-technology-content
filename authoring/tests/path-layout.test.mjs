@@ -84,7 +84,47 @@ test("default scans reject a course catalog below the repository catalog root", 
     encoding: "utf8",
   });
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /course catalog must be directly under authoring\/catalog/);
+  assert.match(result.stderr, /course\.json: authoring metadata is outside a canonical course catalog/);
+});
+
+test("default scans reject every metadata class in a nested catalog", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-nested-metadata-"));
+  const files = [
+    "v2/authoring/catalog/demo-course/course.json",
+    "v2/authoring/catalog/demo-course/course.lock.json",
+    "v2/authoring/catalog/demo-course/demo-module/module.json",
+    "v2/authoring/catalog/demo-course/demo-module/module.lock.json",
+    "v2/authoring/catalog/demo-course/demo-module/demo-topic/topic.json",
+  ];
+  for (const file of files) await put(path.join(root, file), "{}\n");
+  const result = spawnSync(process.execPath, [pep, "check", "--only", "T02"], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  assert.notEqual(result.status, 0);
+  for (const file of files) {
+    assert.match(result.stderr, new RegExp(`${file.replaceAll("/", "\\/")}: authoring metadata is outside`));
+  }
+});
+
+test("T02 rejects non-slug, reserved, and id-mismatched catalog courses", async () => {
+  for (const [directory, manifestId, message] of [
+    ["Bad-Directory", "Bad-Directory", "catalog course directory must be a slug"],
+    ["build", "build", "reserved root cannot be a catalog course"],
+    ["demo-course", "other-course", "catalog course directory must equal id"],
+  ]) {
+    const root = await mkdtemp(path.join(os.tmpdir(), "pep-invalid-catalog-course-"));
+    await put(
+      path.join(root, "authoring/catalog", directory, "course.json"),
+      `${JSON.stringify({ id: manifestId, moduleOrder: [] }, null, 2)}\n`,
+    );
+    const result = spawnSync(process.execPath, [pep, "check", "--only", "T02"], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, new RegExp(message));
+  }
 });
 
 test("T02 rejects authoring metadata in a learner directory", async () => {
@@ -100,7 +140,7 @@ test("T02 rejects authoring metadata in a learner directory", async () => {
     encoding: "utf8",
   });
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /demo-course\/course\.json: authoring metadata is forbidden outside the catalog/);
+  assert.match(result.stderr, /demo-course\/course\.json: authoring metadata is outside a canonical course catalog/);
 });
 
 test("explicit learner and catalog paths select the same course", () => {

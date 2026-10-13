@@ -1,10 +1,11 @@
 import path from "node:path";
 import {
-  catalogPath,
   error,
   evidencePath,
+  findCourseCandidates,
   findCourses,
   readJson,
+  RESERVED_ROOTS,
   walk,
   SLUG_RE,
 } from "../lib/common.mjs";
@@ -22,6 +23,23 @@ function looksLikeReviewEvidence(name) {
 
 export async function run(ctx) {
   const out = [];
+  const candidates = await findCourseCandidates(ctx);
+  for (const course of candidates) {
+    const name = path.basename(course.catalogRoot);
+    if (!SLUG_RE.test(name))
+      out.push(error(id, ctx.display(course.manifestFile), "catalog course directory must be a slug"));
+    if (RESERVED_ROOTS.has(name))
+      out.push(error(id, ctx.display(course.manifestFile), "reserved root cannot be a catalog course"));
+    if (course.manifest && course.manifest.id !== name)
+      out.push(error(id, ctx.display(course.manifestFile), "catalog course directory must equal id"));
+  }
+  const metadataNames = new Set([
+    "course.json",
+    "course.lock.json",
+    "module.json",
+    "module.lock.json",
+    "topic.json",
+  ]);
   for (const root of ctx.scanRoots) {
     const w = await walk(root, { skip: ctx.skip });
     for (const d of w.directories)
@@ -29,31 +47,22 @@ export async function run(ctx) {
         out.push(error(id, ctx.display(d), "topics/ directories are forbidden"));
     for (const file of w.files) {
       const name = path.basename(file);
-      const normalized = ctx.display(file);
-      if (
-        ["course.json", "course.lock.json", "module.json", "module.lock.json", "topic.json"].includes(name) &&
-        !normalized.startsWith("authoring/catalog/") &&
-        !normalized.includes("/authoring/catalog/")
-      ) out.push(error(id, normalized, "authoring metadata is forbidden outside the catalog"));
-    }
-    if (!ctx.explicit) {
-      for (const file of w.files) {
-        if (path.basename(file) !== "course.json") continue;
-        const parts = path.relative(ctx.root, file).split(path.sep);
-        const catalogIndex = parts.lastIndexOf("catalog");
-        if (catalogIndex < 1 || parts[catalogIndex - 1] !== "authoring") continue;
-        const courseId = parts[catalogIndex + 1];
-        if (file !== catalogPath(ctx.root, courseId, "course.json"))
-          out.push(error(id, ctx.display(file), "course catalog must be directly under authoring/catalog"));
-      }
+      if (!metadataNames.has(name)) continue;
+      const owner = candidates.find(
+        (course) => file === course.catalogRoot || file.startsWith(`${course.catalogRoot}${path.sep}`),
+      );
+      const parts = owner ? path.relative(owner.catalogRoot, file).split(path.sep) : [];
+      const valid =
+        owner &&
+        ((parts.length === 1 && ["course.json", "course.lock.json"].includes(name)) ||
+          (parts.length === 2 && ["module.json", "module.lock.json"].includes(name)) ||
+          (parts.length === 3 && name === "topic.json"));
+      if (!valid)
+        out.push(error(id, ctx.display(file), "authoring metadata is outside a canonical course catalog"));
     }
   }
   for (const course of await findCourses(ctx)) {
     const c = course.manifest;
-    const cr = course.contentRoot;
-    const courseFile = course.manifestFile;
-    if (path.basename(course.catalogRoot) !== c.id)
-      out.push(error(id, ctx.display(courseFile), "catalog course directory must equal id"));
     const evidenceRoot = evidencePath(course.repoRoot, c.id);
     const moduleIds = new Set(c.moduleOrder ?? []);
     const topicIds = new Map();

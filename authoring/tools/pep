@@ -10,6 +10,7 @@ import {
   exists,
   findCourses,
   formatError,
+  isDirectory,
   posix,
   readJson,
   relative,
@@ -317,11 +318,28 @@ async function migrateCatalog() {
     console.log("migrate-catalog: no legacy metadata files");
     return;
   }
+  const destinations = new Set();
+  for (const [source, destination] of moves) {
+    if (destinations.has(destination))
+      die(`migrate-catalog: duplicate destination: ${relative(root, destination)}`);
+    destinations.add(destination);
+    if (await exists(destination))
+      die(`migrate-catalog: collision: ${relative(root, source)} and ${relative(root, destination)}`);
+    for (let parent = path.dirname(destination); parent !== root; parent = path.dirname(parent)) {
+      if ((await exists(parent)) && !(await isDirectory(parent)))
+        die(`migrate-catalog: destination parent is not a directory: ${relative(root, parent)}`);
+    }
+    try {
+      execFileSync("git", ["ls-files", "--error-unmatch", "--", relative(root, source)], {
+        cwd: root,
+        stdio: "ignore",
+      });
+    } catch {
+      die(`migrate-catalog: source is not tracked: ${relative(root, source)}`);
+    }
+  }
   const oldDirectories = new Set();
   for (const [source, destination] of moves) {
-    if (await exists(destination)) {
-      die(`migrate-catalog: collision: ${relative(root, source)} and ${relative(root, destination)}`);
-    }
     await mkdir(path.dirname(destination), { recursive: true });
     execFileSync("git", ["mv", "--", source, destination], { cwd: root });
     for (let directory = path.dirname(source); directory !== root; directory = path.dirname(directory)) {
