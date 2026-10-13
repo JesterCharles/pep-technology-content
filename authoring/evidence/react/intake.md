@@ -296,9 +296,13 @@ No React day maps more than 7 topics, and 7 × 15 = 105 ≤ 120, so the honest-m
 `react/assessments/web-and-react-module-check/blueprint.json`:
 
 - Calendar identity copied verbatim from the snapshot S35 and FT20 `assessment` objects (identical): `kind` `moduleCheck`, `formats` `MCQ` and `coding`, `passMark` 70. `dayId` is `S35`; FT20 maps to the same blueprint. The calendar gives no weights or cut scores, so `weights` is empty.
-- Objectives covered: 21 exact `react/<module>/<topic>#oN` references, a representative set across all four modules that the items can directly elicit; `objectiveFormats` maps each to MCQ or coding. `what-makes-a-component-re-render#o1` is now non-exhaustive (react-intake-sme-03), so its MCQ expectation is the two triggers taught by S31/FT17.
-- **Known gap, coverage incomplete (react-edu-001, accepted and sequenced):** the check is named Web and React, but no `html-css-js` objective is listed yet; the Web half is represented only by `javascript-fundamentals-review` o1 and o2. The `html-css-js` intake lands first; this blueprint is then rebased to add a representative set of the merged `html-css-js` objective ids, mapped to the existing MCQ or coding formats within the 15-item, 2-task, 45-minute plan. No id is invented here. Until then the blueprint is not the finished Web and React coverage map. (The blueprint schema has no notes field, so this note lives here.)
+- Objectives covered: 25 exact `<course>/<module>/<topic>#oN` references, a representative set across all four modules that the items can directly elicit; `objectiveFormats` maps each to MCQ or coding. `what-makes-a-component-re-render#o1` is now non-exhaustive (react-intake-sme-03), so its MCQ expectation is the two triggers taught by S31/FT17.
+- Web coverage (react-edu-001, sequenced, now applied): after the `html-css-js` intake merged, the blueprint adds one representative MCQ objective from each of its four modules: `html-css-js/html-and-css/semantic-html-page-structure#o1`, `html-css-js/javascript-fundamentals/let-const-and-equals#o3`, `html-css-js/dom-tooling-and-async/the-event-loop#o1` and `html-css-js/fetch-and-browser-client/handling-http-errors-and-problemdetail-responses#o1`, alongside the `javascript-fundamentals-review` o1 and o2. Item counts and duration are unchanged (15 MCQ items, 2 coding tasks, 45 minutes), so the 19 MCQ objectives are sampled by the 15 MCQ items rather than one item each; the platform assessment owner selects the items. No id was invented.
 
+  - `html-css-js/html-and-css/semantic-html-page-structure#o1` (MCQ)
+  - `html-css-js/javascript-fundamentals/let-const-and-equals#o3` (MCQ)
+  - `html-css-js/dom-tooling-and-async/the-event-loop#o1` (MCQ)
+  - `html-css-js/fetch-and-browser-client/handling-http-errors-and-problemdetail-responses#o1` (MCQ)
   - `react/components-and-state/props#o3` (MCQ)
   - `react/components-and-state/conditional-display#o2` (MCQ)
   - `react/components-and-state/usestate#o3` (MCQ)
