@@ -10,25 +10,25 @@
 
 ### Start with a guess
 
-Look at deploy.sh on the right, then guess. Practice prediction, not scored.
+Look at `deploy.sh` on the right, then guess. Practice prediction, not scored.
 
 ### Read a permission string
 
-ls -l starts each line with a permission string. The first character is the type: - for a file, d for a directory.
+`ls -l` starts each line with a permission string. The first character is the type: `-` for a file, `d` for a directory.
 
-The next nine are three groups of rwx: the owner (ana), the group (dev), then everyone else. r is read, w is write, x is execute: run a file, or enter a directory. A - means that permission is off.
+The next nine are three groups of `rwx`: the owner (ana), the group (dev), then everyone else. `r` is read, `w` is write, `x` is execute: run a file, or enter a directory. A `-` means that permission is off.
 
 ### Permissions as numbers
 
-Each permission has a value: r = 4, w = 2, x = 1. Add the values in a group to get one digit, then write the digits for owner, group and others.
+Each permission has a value: `r` = 4, `w` = 2, `x` = 1. Add the values in a group to get one digit, then write the digits for owner, group and others.
 
-rwx = 7, r-x = 5, r-- = 4, --- = 0. So rwxr-x--- is 750.
+`rwx` = 7, `r-x` = 5, `r--` = 4, `---` = 0. So `rwxr-x---` is `750`.
 
 ### Apply a mode with chmod
 
-chmod MODE FILE changes a file's permissions, for example chmod 750 deploy.sh.
+`chmod MODE FILE` changes a file's permissions, for example `chmod 750 deploy.sh`.
 
-To run a script in the current folder, type ./deploy.sh; the ./ says it is right here. Without x, the shell answers Permission denied.
+To run a script in the current folder, type `./deploy.sh`; the `./` says it is right here. Without `x`, the shell answers `Permission denied`.
 
 ### Apply it to a new file
 
@@ -36,14 +36,14 @@ Same rules, a file holding secrets. Decide each group's letters first, then the 
 
 ## Model
 
-ls -l in Ana's fictional pep folder. The terminal is a simulation.
+`ls -l` in Ana's fictional `pep` folder. The terminal is a simulation.
 
-- -rw-r--r-- ana dev 812 README.md
-- -rw-r--r-- ana dev 164 deploy.sh
-- -rw------- ana dev 48 secrets.env
-- drwxr-xr-x ana dev 4096 src
+- `-rw-r--r--` ana dev `812` `README.md`
+- `-rw-r--r--` ana dev `164` `deploy.sh`
+- `-rw-------` ana dev `48` `secrets.env`
+- `drwxr-xr-x` ana dev `4096` `src`
 
-Permissions of deploy.sh
+Permissions of `deploy.sh`
 
 | Who | r 4 | w 2 | x 1 | Digit |
 | --- | --- | --- | --- | --- |
@@ -51,14 +51,14 @@ Permissions of deploy.sh
 | Group dev | r | - | - | 4 |
 | Others everyone else | r | - | - | 4 |
 
-String -rw-r--r-- Mode 644
+String `-rw-r--r--` Mode `644`
 
 ## Recap
 
-- ls -l shows the type, then three rwx groups: owner, group, others.
-- r = 4, w = 2, x = 1; add them per group, so rwxr-x--- is 750.
-- chmod MODE FILE applies a mode; you need r and x to run a script with ./.
-- Give others nothing on secret files, and avoid 777.
+- `ls -l` shows the type, then three `rwx` groups: owner, group, others.
+- `r` = 4, `w` = 2, `x` = 1; add them per group, so `rwxr-x---` is `750`.
+- `chmod MODE FILE` applies a mode; you need `r` and `x` to run a script with `./`.
+- Give others nothing on secret files, and avoid `777`.
 
 Next topic: Environment variables and keeping secrets out of code
 
@@ -66,11 +66,11 @@ Next topic: Environment variables and keeping secrets out of code
 
 |  |  |
 | --- | --- |
-| ls -l | show permissions |
-| chmod 750 f | rwxr-x--- |
-| chmod 644 f | rw-r--r-- |
-| chmod 600 f | rw------- |
-| ./script.sh | run a script here |
+| `ls -l` | show permissions |
+| `chmod 750 f` | rwxr-x--- |
+| `chmod 644 f` | rw-r--r-- |
+| `chmod 600 f` | rw------- |
+| `./script.sh` | run a script here |
 
 chmod also has a letter form, such as chmod u+x deploy.sh; this topic practises the numeric form. A script also needs r because the shell reads it.
 
