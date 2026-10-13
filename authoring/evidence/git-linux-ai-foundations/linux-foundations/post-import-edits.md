@@ -42,3 +42,8 @@ Every change to imported page bytes after the byte-faithful import (commit 664f7
 - education-02: every topic's lab-absence reason now states the final rationale (embedded practice covers the objectives; F1 has no required lab; the approved course-level lab is planned for course assembly).
 - education-01: after the derivation fix (PR #13, main b557705) every `artifact.md` and the localhost-and-ports `artifact.pdf` were regenerated with `tools/qa/md-from-html.mjs` and `tools/qa/pdf-from-md.mjs`; nothing hand-edited.
 - After tooling PR #15: every `artifact.md` and the localhost-and-ports PDF regenerated again (flex and grid siblings now separated, e.g. `API_KEY=demo-123 shell only`, `app.sh Not decided`); extracted PDF text checked for joined words. Video records now carry their alternates and rejected candidates as YAML lists of mappings (one rejected candidate without a known URL, Nir Lichtman's pipes video, stays in the body only), the receipts were re-run with `check-video.mjs`, and each `video.json` keeps its `reviewedPath`.
+
+## Correction loop 2 (module rechecks, module-recheck-reconciliation.json)
+
+- education-recheck-01 (navigating-the-shell): each folder-tree item now carries a visually hidden full path, for example `home/` plus "(full path /home)", so the hierarchy no longer depends on CSS indentation alone. The visual design is unchanged; screen readers and the derived `artifact.md` now get the explicit path. Companion regenerated with `md-from-html.mjs`. Estimator P50 8.12 -> 8.3, within the 9-minute budget.
+- sme-02 stays open: gnu.org is unreachable from this host, so the four gnu.org source receipts are not yet refreshed; no other host is substituted.

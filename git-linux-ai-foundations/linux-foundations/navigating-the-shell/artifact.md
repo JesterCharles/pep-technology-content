@@ -43,18 +43,18 @@ Same rules, new starting point.
 
 Ana's fictional folders. The terminal is a simulation.
 
-- /
-- home/
-- ana/
-- .profile
-- class notes/
-- lesson.txt
-- notes/
-- today.md
-- projects/
-- pep/
-- README.md
-- tmp/
+- / (full path /)
+- home/ (full path /home)
+- ana/ (full path /home/ana)
+- .profile (full path /home/ana/.profile)
+- class notes/ (full path /home/ana/class notes)
+- lesson.txt (full path /home/ana/class notes/lesson.txt)
+- notes/ (full path /home/ana/notes)
+- today.md (full path /home/ana/notes/today.md)
+- projects/ (full path /home/ana/projects)
+- pep/ (full path /home/ana/projects/pep)
+- README.md (full path /home/ana/projects/pep/README.md)
+- tmp/ (full path /tmp)
 
 Current folder
 
