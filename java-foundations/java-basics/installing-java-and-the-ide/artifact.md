@@ -10,7 +10,7 @@
 
 ### Start with a guess
 
-Practice prediction, not scored. You will see why in the next step.
+Practice prediction, not scored.
 
 ### The JDK, and how the shell finds it
 
@@ -52,13 +52,13 @@ JAVA_HOME
 
 ## Recap
 
-- Install a full JDK 25: it has `javac` and `java`. A runtime alone cannot compile.
+- Install a full JDK 25: it has `javac` and `java`.
 - The shell runs the first match it finds in `PATH`, left to right; put the JDK's and Maven's `bin` folders there, then confirm with `java -version`, `javac -version` and `mvn -v` in a new terminal.
 - In the IDE, open the project's `pom.xml` as a project and select JDK 25 as the project SDK.
 
 ### Now install on your own computer
 
-Now do it for real, on the computer you will use for the coding lab.
+Now do it for real, on your coding lab computer.
 
 macOS
 
@@ -103,6 +103,7 @@ Linux (Debian, Ubuntu, Fedora or RHEL)
    tar -xzf ~/Downloads/apache-maven-<version>-bin.tar.gz -C ~/tools
    echo 'export PATH="$HOME/tools/apache-maven-<version>/bin:$PATH"' >> ~/.bashrc
    ```
+   Expect no output; it is done when the prompt returns with no error.
 3. Open a new terminal and run the three checks below. If either Java check shows an older version, run these and type the number of the `temurin-25` line. Debian or Ubuntu:
    ```
    sudo update-alternatives --config java
