@@ -22,6 +22,8 @@ Characters are numbered from 0, so the last index is `length() - 1`. `charAt(i)`
 
 A `String` object is immutable. `length()`, `charAt` and `indexOf` return a number or a character. `toUpperCase()` and `strip()`, which removes spaces at both ends, return a `String` value and leave the original as it was.
 
+Accuracy note: in plain English text like these examples, one `char` is one letter. Strictly, `length()` and the indexes count UTF-16 `char` values, and some Unicode characters, such as many emoji, take two. Code-point methods such as `codePointCount` handle general Unicode text.
+
 To keep the result, store it: `s = s.toUpperCase();`. Calling `s.toUpperCase();` on its own changes nothing.
 
 ### Apply it to new code
@@ -64,8 +66,8 @@ Next topic: Arithmetic, comparison and logical operators
 
 |  |  |
 | --- | --- |
-| `s.length()` | number of characters |
-| `s.charAt(0)` | first character, a char |
+| `s.length()` | number of `char` values (letters, in plain English text) |
+| `s.charAt(0)` | first `char` |
 | `s.substring(7)` | from index 7 to the end |
 | `s.substring(0, 5)` | indexes 0 to 4 |
 | `s.indexOf("Java")` | first index, or -1 |

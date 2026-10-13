@@ -56,6 +56,45 @@ JAVA_HOME
 - The shell runs the first match it finds in `PATH`, left to right; put the JDK's and Maven's `bin` folders there, then confirm with `java -version`, `javac -version` and `mvn -v` in a new terminal.
 - In the IDE, open the project's `pom.xml` as a project and select JDK 25 as the project SDK.
 
+### Now install on your own computer
+
+The practice terminal used example folders. Do it for real now, on the computer you will use for the coding lab. Open the steps for your system.
+
+macOS
+
+1. Open the Eclipse Temurin releases page (linked under Sources). Choose macOS, your chip (aarch64 for Apple silicon, x64 for Intel) and JDK 25 - LTS, then download the `.pkg` file.
+2. Open the `.pkg` file. Select Continue, accept the license, then Install. The JDK goes into `/Library/Java/JavaVirtualMachines/`.
+3. Download the Maven binary `.tar.gz` archive from the Apache Maven download page. In Terminal, make a folder such as `~/tools`, extract the archive there with `tar xzvf`, and add a line like `export PATH="$HOME/tools/apache-maven-<version>/bin:$PATH"` to `~/.zshrc`, with your Maven folder name.
+4. Open a new Terminal window and run the three checks below. If `java -version` shows an older Java, add `export JAVA_HOME=$(/usr/libexec/java_home -v 25)` to `~/.zshrc` and open a new window.
+
+Linux (Debian or Ubuntu)
+
+1. Open the Adoptium Linux installer packages page (linked under Sources). Run its commands to add the Adoptium apt repository; they need `sudo`.
+2. Run `sudo apt install temurin-25-jdk`. On Fedora or RHEL, add the Adoptium RPM repository from the same page and run `sudo dnf install temurin-25-jdk`.
+3. Download the Maven binary `.tar.gz` archive, extract it into a folder such as `~/tools` with `tar xzvf`, and add `export PATH="$HOME/tools/apache-maven-<version>/bin:$PATH"` to `~/.bashrc`, with your Maven folder name.
+4. Open a new terminal and run the three checks below. If `java -version` shows an older Java, put the JDK 25 `bin` folder under `/usr/lib/jvm` first on `PATH`, as in the practice.
+
+Windows
+
+1. Open the Eclipse Temurin releases page, choose Windows, x64 and JDK 25 - LTS, and download the `.msi` file. Alternatively, run `winget install EclipseAdoptium.Temurin.25.JDK` in a terminal.
+2. Open the `.msi` file and accept the license. On the Custom Setup screen, keep the feature that adds Temurin to `PATH` and also turn on the feature that sets `JAVA_HOME`, then select Install.
+3. Download the Maven binary `.zip` archive and extract it into a folder such as `C:\tools`. Open System Properties | Environment Variables, edit `Path`, and add the `bin` folder inside the Maven folder.
+4. Open a new Command Prompt or PowerShell window and run the three checks below.
+
+You are ready when, in a new terminal, all three checks show 25. Your exact version numbers will be newer or different:
+
+```
+java -version
+  openjdk version "25.0.x" ...
+javac -version
+  javac 25.0.x
+mvn -v
+  Apache Maven 3.9 or later ...
+  Java version: 25.0.x ...
+```
+
+Last, install IntelliJ IDEA with the JetBrains installation guide, open the coding lab's `starter/pom.xml` as a project, and set JDK 25 as the project SDK, as in the practice. It is set when File | Project Structure | Project shows 25.
+
 Next topic: Running a first program
 
 ## Cheat sheet
@@ -79,6 +118,11 @@ Checked against these live official sources on 2026-10-13.
 - OpenJDK: JDK 25
 - JDK 25 Installation Guide: overview
 - Eclipse Temurin releases
+- Adoptium: Installation overview (winget)
+- Adoptium: macOS PKG installer packages
+- Adoptium: Linux installer packages
+- Adoptium: Windows MSI installer packages
+- JDK 25 Installation Guide: macOS (default JDK, java_home)
 - Dev.java: Getting started with Java (JDK, JRE and PATH)
 - Apache Maven: Installing Apache Maven
 - Apache Maven: Download

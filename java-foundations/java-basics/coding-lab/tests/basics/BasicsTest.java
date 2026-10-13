@@ -1,80 +1,140 @@
 package basics;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import org.junit.jupiter.api.BeforeAll;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-/** Public tests for the Java Basics lab: they run Basics.main and read what it prints. */
+/**
+ * Public tests for the Java Basics lab. Each test calls one method with several
+ * inputs, including edge cases. Tasks 3, 5 and 6 also read that one method's own
+ * code, with comments and string literals removed, to check the construct the task names.
+ */
 @TestMethodOrder(MethodOrderer.MethodName.class)
 class BasicsTest {
-    private static List<String> lines;
-    private static String code;
-
-    @BeforeAll
-    static void runProgram() throws IOException {
-        PrintStream original = System.out;
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(buffer, true, StandardCharsets.UTF_8));
-        try {
-            Basics.main(new String[0]);
-        } finally {
-            System.setOut(original);
-        }
-        lines = buffer.toString(StandardCharsets.UTF_8).lines().toList();
-        String source = Files.readString(Path.of("src/main/java/basics/Basics.java"), StandardCharsets.UTF_8);
-        // Ignore comments, so the TODO hints do not count as code.
-        code = source.replaceAll("(?s)/\\*.*?\\*/", "").replaceAll("//[^\\n]*", "");
-    }
-
-    private static String line(String label) {
-        return lines.stream().filter(l -> l.startsWith(label + ":")).findFirst().orElse("(no line starting with " + label + ":)");
-    }
 
     @Test
     void task1Average() {
-        assertEquals("Average: 87.5", line("Average"), "Task 1: the average of 90 and 85 keeps its fraction");
-        assertFalse(code.contains("87.5"), "Task 1: compute the average from scoreA and scoreB instead of typing 87.5");
+        assertAll(
+                () -> assertEquals(87.5, Basics.average(90, 85), "Task 1: average(90, 85)"),
+                () -> assertEquals(1.5, Basics.average(1, 2), "Task 1: average(1, 2)"),
+                () -> assertEquals(0.0, Basics.average(0, 0), "Task 1: average(0, 0)"),
+                () -> assertEquals(-2.5, Basics.average(-3, -2), "Task 1: average(-3, -2)"),
+                () -> assertEquals(2.0E9, Basics.average(2_000_000_000, 2_000_000_000),
+                        "Task 1: average(2000000000, 2000000000), where a + b does not fit in an int"));
     }
 
     @Test
     void task2Initials() {
-        assertEquals("Initials: AL", line("Initials"), "Task 2: initials of ada lovelace in upper case");
-        assertFalse(code.contains("\"AL\""), "Task 2: build the initials from first and last instead of typing \"AL\"");
+        assertAll(
+                () -> assertEquals("AL", Basics.initials("ada", "lovelace"), "Task 2: initials(\"ada\", \"lovelace\")"),
+                () -> assertEquals("GH", Basics.initials("Grace", "hopper"), "Task 2: initials(\"Grace\", \"hopper\")"),
+                () -> assertEquals("XY", Basics.initials("x", "y"), "Task 2: initials(\"x\", \"y\")"));
     }
 
     @Test
-    void task3Even() {
-        assertEquals("Even: true", line("Even"), "Task 3: 42 is even");
-        assertTrue(code.contains("%"), "Task 3: use the remainder operator %");
+    void task3Even() throws IOException {
+        assertAll(
+                () -> assertEquals(true, Basics.isEven(42), "Task 3: isEven(42)"),
+                () -> assertEquals(false, Basics.isEven(7), "Task 3: isEven(7)"),
+                () -> assertEquals(true, Basics.isEven(0), "Task 3: isEven(0)"),
+                () -> assertEquals(true, Basics.isEven(-4), "Task 3: isEven(-4)"),
+                () -> assertEquals(false, Basics.isEven(-3), "Task 3: isEven(-3)"));
+        assertTrue(methodCode("isEven").contains("%"), "Task 3: isEven must use the remainder operator %");
     }
 
     @Test
     void task4Grade() {
-        assertEquals("Grade: B", line("Grade"), "Task 4: a score of 85 is a B");
-        assertTrue(code.contains("else if"), "Task 4: use an if / else if / else chain");
+        assertAll(
+                () -> assertEquals("A", Basics.grade(100), "Task 4: grade(100)"),
+                () -> assertEquals("A", Basics.grade(90), "Task 4: grade(90)"),
+                () -> assertEquals("B", Basics.grade(89), "Task 4: grade(89)"),
+                () -> assertEquals("B", Basics.grade(80), "Task 4: grade(80)"),
+                () -> assertEquals("C", Basics.grade(79), "Task 4: grade(79)"),
+                () -> assertEquals("C", Basics.grade(70), "Task 4: grade(70)"),
+                () -> assertEquals("F", Basics.grade(69), "Task 4: grade(69)"),
+                () -> assertEquals("F", Basics.grade(0), "Task 4: grade(0)"));
     }
 
     @Test
-    void task5Day() {
-        assertEquals("Day: weekend", line("Day"), "Task 5: day 6 is a weekend day");
-        assertTrue(code.contains("switch") && code.contains("->"), "Task 5: use a switch with arrow labels");
+    void task5Day() throws IOException {
+        assertAll(
+                () -> assertEquals("weekday", Basics.dayType(1), "Task 5: dayType(1)"),
+                () -> assertEquals("weekday", Basics.dayType(5), "Task 5: dayType(5)"),
+                () -> assertEquals("weekend", Basics.dayType(6), "Task 5: dayType(6)"),
+                () -> assertEquals("weekend", Basics.dayType(7), "Task 5: dayType(7)"),
+                () -> assertEquals("unknown", Basics.dayType(0), "Task 5: dayType(0)"),
+                () -> assertEquals("unknown", Basics.dayType(8), "Task 5: dayType(8)"));
+        String code = methodCode("dayType");
+        assertTrue(code.contains("switch") && code.contains("->"),
+                "Task 5: dayType must use a switch with arrow labels (->)");
     }
 
     @Test
-    void task6Countdown() {
-        assertEquals("Countdown: 5 4 3 2 1", line("Countdown"), "Task 6: count down from 5 to 1");
-        assertTrue(code.contains("for ("), "Task 6: use a for loop");
+    void task6Countdown() throws IOException {
+        assertAll(
+                () -> assertEquals("5 4 3 2 1", Basics.countdown(5), "Task 6: countdown(5)"),
+                () -> assertEquals("3 2 1", Basics.countdown(3), "Task 6: countdown(3)"),
+                () -> assertEquals("1", Basics.countdown(1), "Task 6: countdown(1)"),
+                () -> assertEquals("", Basics.countdown(0), "Task 6: countdown(0)"));
+        assertTrue(Pattern.compile("\\bfor\\s*\\(").matcher(methodCode("countdown")).find(),
+                "Task 6: countdown must use a for loop");
+    }
+
+    /** The body of one method declared in Basics.java, without comments or string and char literals. */
+    private static String methodCode(String name) throws IOException {
+        String source = Files.readString(Path.of("src/main/java/basics/Basics.java"), StandardCharsets.UTF_8);
+        String code = withoutCommentsAndLiterals(source);
+        Matcher declaration = Pattern.compile("\\bstatic\\s+\\w+\\s+" + name + "\\s*\\([^)]*\\)\\s*\\{").matcher(code);
+        if (!declaration.find()) {
+            return "";
+        }
+        int open = declaration.end() - 1;
+        int depth = 0;
+        for (int i = open; i < code.length(); i++) {
+            char c = code.charAt(i);
+            if (c == '{') {
+                depth++;
+            } else if (c == '}' && --depth == 0) {
+                return code.substring(open, i + 1);
+            }
+        }
+        return "";
+    }
+
+    private static String withoutCommentsAndLiterals(String source) {
+        StringBuilder out = new StringBuilder();
+        int i = 0;
+        while (i < source.length()) {
+            char c = source.charAt(i);
+            if (source.startsWith("//", i)) {
+                while (i < source.length() && source.charAt(i) != '\n') {
+                    i++;
+                }
+            } else if (source.startsWith("/*", i)) {
+                int end = source.indexOf("*/", i + 2);
+                i = end < 0 ? source.length() : end + 2;
+            } else if (c == '"' || c == '\'') {
+                i++;
+                while (i < source.length() && source.charAt(i) != c) {
+                    i += source.charAt(i) == '\\' ? 2 : 1;
+                }
+                i++;
+                out.append(c).append(c);
+            } else {
+                out.append(c);
+                i++;
+            }
+        }
+        return out.toString();
     }
 }
