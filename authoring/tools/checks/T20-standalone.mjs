@@ -35,10 +35,11 @@ function lexJavaScript(source) {
   const code = source.split("");
   const strings = [];
   const braces = [];
+  let templates = 0;
   const blank = (start, end) => {
     for (let index = start; index < end; index += 1) if (code[index] !== "\n") code[index] = " ";
   };
-  const readTemplate = (start) => {
+  const readTemplate = (start, template) => {
     let index = start;
     let value = "";
     while (index < source.length) {
@@ -47,20 +48,20 @@ function lexJavaScript(source) {
         value += ESCAPES[source[index + 1]] ?? source[index + 1] ?? "";
         index += 2;
       } else if (character === "`") {
-        strings.push({ start: start - 1, end: index + 1, value });
+        strings.push({ start: start - 1, end: index + 1, value, template });
         blank(start - 1, index + 1);
         return index + 1;
       } else if (character === "$" && source[index + 1] === "{") {
-        strings.push({ start: start - 1, end: index + 2, value });
+        strings.push({ start: start - 1, end: index + 2, value, template });
         blank(start - 1, index + 2);
-        braces.push("${");
+        braces.push({ template });
         return index + 2;
       } else {
         value += character;
         index += 1;
       }
     }
-    strings.push({ start: start - 1, end: index, value });
+    strings.push({ start: start - 1, end: index, value, template });
     blank(start - 1, index);
     return index;
   };
@@ -95,12 +96,13 @@ function lexJavaScript(source) {
       blank(index, stop);
       index = stop;
     } else if (character === "`") {
-      index = readTemplate(index + 1);
+      index = readTemplate(index + 1, templates++);
     } else if (character === "{") {
       braces.push("{");
       index += 1;
     } else if (character === "}") {
-      index = braces.pop() === "${" ? readTemplate(index + 1) : index + 1;
+      const opener = braces.pop();
+      index = opener?.template === undefined ? index + 1 : readTemplate(index + 1, opener.template);
     } else if (character === "/" && REGEX_PREFIX.test(code.slice(Math.max(0, index - 16), index).join(""))) {
       let cursor = index + 1;
       let inClass = false;
@@ -117,7 +119,13 @@ function lexJavaScript(source) {
       index += 1;
     }
   }
-  return { code: code.join(""), strings };
+  const spans = new Map();
+  for (const token of strings) {
+    if (token.template === undefined) continue;
+    const span = spans.get(token.template);
+    spans.set(token.template, span ? [Math.min(span[0], token.start), Math.max(span[1], token.end)] : [token.start, token.end]);
+  }
+  return { code: code.join(""), strings, templateSpans: [...spans.values()] };
 }
 
 function attributes(source) {
@@ -150,14 +158,17 @@ function scanCss(out, ctx, file, css, offset, whole, baseLine = 1) {
 
 function scriptResourceAllowed(value, property) {
   const trimmed = value.trim();
-  if (trimmed === "" || /\s/.test(trimmed) || /^(?:data:|blob:|#|about:blank$)/i.test(trimmed)) return true;
-  if (SCRIPT_RESOURCE_EXT.test(trimmed.split(/[?#]/)[0])) return false;
-  return property === "href" || !/^(?:[a-z][a-z+.-]*:|\/\/)|\//i.test(trimmed);
+  if (trimmed === "" || /^(?:data:|blob:|#|about:blank$)/i.test(trimmed)) return true;
+  const resourcePath = trimmed.split(/[?#]/)[0];
+  if (SCRIPT_RESOURCE_EXT.test(resourcePath) && (!/\s/.test(resourcePath) || resourcePath.includes("/"))) return false;
+  if (property === "href" || /\s/.test(trimmed)) return true;
+  if (/^(?:(?:https?|file|ftp|wss?):|\/\/|\.{0,2}\/)/i.test(trimmed)) return false;
+  return property === "data" || !trimmed.includes("/");
 }
 
 function scanJavaScript(out, ctx, file, source, offset, whole, baseLine = 1) {
   const displayLine = (index) => baseLine + lineAt(whole, index) - 1;
-  const { code, strings } = lexJavaScript(source);
+  const { code, strings, templateSpans } = lexJavaScript(source);
   const stringsByStart = new Map(strings.map((token) => [token.start, token]));
   const stringAt = (position) => {
     const start = position + (source.slice(position).match(/^\s*/)?.[0].length ?? 0);
@@ -210,7 +221,7 @@ function scanJavaScript(out, ctx, file, source, offset, whole, baseLine = 1) {
       if ("([{".includes(character)) depth += 1;
       else if (")]}".includes(character) && --depth < 0) break;
       else if (character === ";" && depth === 0) break;
-      else if (character === "\n" && depth === 0) {
+      else if (character === "\n" && depth === 0 && !templateSpans.some(([from, to]) => from < end && to > end)) {
         const codeEnd = start + code.slice(start, end).trimEnd().length;
         const stringEnd = Math.max(start, ...strings.filter((token) => token.start >= start && token.end <= end).map((token) => token.end));
         const continued = codeEnd > stringEnd && /[+\-*/%=&|^<>?:,.!~]$/.test(code.slice(start, codeEnd));

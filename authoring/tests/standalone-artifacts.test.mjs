@@ -77,6 +77,8 @@ const negatives = [
   ["js-comment-in-template", /global fetch\(\) is forbidden/],
   ["js-assign-src-path", /script sets src to a non-embedded resource "images\/diagram"/],
   ["js-asi-continued", /<img> src must be embedded, not "diagram\.png"/],
+  ["js-template-multiline", /<img> src must be embedded, not "x\.png"/],
+  ["js-assign-src-space", /script sets src to a non-embedded resource "images\/my diagram\.png"/],
 ];
 
 for (const [name, diagnostic] of negatives) {
