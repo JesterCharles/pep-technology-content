@@ -8,9 +8,11 @@ never performs HTTP requests.
 Video artifact front matter supports scalar values and YAML block lists. Block-list keys such as `covers`, `gaps`,
 and `cautions` are validated as arrays by `authoring/schemas/video-artifact.frontmatter.schema.json`.
 
-Every blueprint objective is an exact `<course>/<module>/<topic>#<objective-id>` reference to an objective in that
-topic's `topic.json`. The optional `objectiveFormats` object maps those same references to non-empty, unique arrays
-of formats declared by the blueprint. T01 checks both the topic reference and the map's keys and values.
+Every blueprint objective is an exact, course-qualified `<course>/<module>/<topic>#<objective-id>` reference that
+must resolve to exactly one objective across all repository course manifests. A blueprint may reference another
+course's objective; unresolved and ambiguous references fail. The optional `objectiveFormats` object maps those same
+references to non-empty, unique arrays of formats declared by the blueprint. T01 checks both the topic reference and
+the map's keys and values.
 
 ## Curriculum snapshot (T19)
 

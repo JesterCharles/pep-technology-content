@@ -14,6 +14,23 @@ async function writeJson(file, value) {
   await writeFile(file, `${JSON.stringify(value, null, 2)}\n`);
 }
 
+async function addObjectiveCourse(root, directory, id = directory) {
+  const courseRoot = path.join(root, directory);
+  await cp(
+    path.join(repo, "authoring/tests/fixtures/positive/demo-course"),
+    courseRoot,
+    { recursive: true },
+  );
+  const courseFile = path.join(courseRoot, "course.json");
+  const course = JSON.parse(await readFile(courseFile, "utf8"));
+  course.id = id;
+  await writeJson(courseFile, course);
+  const topicFile = path.join(courseRoot, "demo-module/demo-topic/topic.json");
+  const topic = JSON.parse(await readFile(topicFile, "utf8"));
+  topic.objectives = [{ id: "o1", text: "Demonstrate the objective." }];
+  await writeJson(topicFile, topic);
+}
+
 async function schemaFixture() {
   const root = await mkdtemp(path.join(os.tmpdir(), "pep-schema-"));
   await cp(
@@ -21,15 +38,7 @@ async function schemaFixture() {
     path.join(root, "authoring", "schemas"),
     { recursive: true },
   );
-  await cp(
-    path.join(repo, "authoring/tests/fixtures/positive/demo-course"),
-    path.join(root, "demo-course"),
-    { recursive: true },
-  );
-  const topicFile = path.join(root, "demo-course/demo-module/demo-topic/topic.json");
-  const topic = JSON.parse(await readFile(topicFile, "utf8"));
-  topic.objectives = [{ id: "o1", text: "Demonstrate the objective." }];
-  await writeJson(topicFile, topic);
+  await addObjectiveCourse(root, "demo-course");
   return root;
 }
 
@@ -122,6 +131,53 @@ test("T02 rejects malformed review evidence filenames", async () => {
   const result = check(root, "T02");
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /invalid review evidence filename or location/);
+});
+
+test("T01 accepts a course-qualified cross-course objective", async () => {
+  const root = await schemaFixture();
+  await addObjectiveCourse(root, "other-course");
+  const crossCourse = "other-course/demo-module/demo-topic#o1";
+  await writeJson(
+    path.join(root, "demo-course/assessments/intake/blueprint.json"),
+    blueprint({
+      objectives: [crossCourse],
+      objectiveFormats: { [crossCourse]: ["mcq"] },
+    }),
+  );
+  const result = check(root);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("T01 rejects an unresolved cross-course blueprint objective", async () => {
+  const root = await schemaFixture();
+  await addObjectiveCourse(root, "other-course");
+  const invalid = "other-course/demo-module/demo-topic#o2";
+  await writeJson(
+    path.join(root, "demo-course/assessments/intake/blueprint.json"),
+    blueprint({ objectives: [invalid], objectiveFormats: { [invalid]: ["mcq"] } }),
+  );
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /objective .*#o2 does not resolve/);
+});
+
+test("T01 rejects an ambiguous cross-course blueprint objective", async () => {
+  const root = await schemaFixture();
+  await addObjectiveCourse(root, "first-copy", "shared-course");
+  await addObjectiveCourse(root, "second-copy", "shared-course");
+  const ambiguous = "shared-course/demo-module/demo-topic#o1";
+  await writeJson(
+    path.join(root, "demo-course/assessments/intake/blueprint.json"),
+    blueprint({
+      objectives: [ambiguous],
+      objectiveFormats: { [ambiguous]: ["mcq"] },
+    }),
+  );
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /objective .*#o1 is ambiguous across courses/);
+  assert.match(result.stderr, /first-copy/);
+  assert.match(result.stderr, /second-copy/);
 });
 
 test("T01 rejects an unresolved blueprint objective", async () => {
