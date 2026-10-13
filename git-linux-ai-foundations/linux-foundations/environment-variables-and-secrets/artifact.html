@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="git-linux-ai-foundations">
+<meta name="pep:module" content="linux-foundations">
+<meta name="pep:topic" content="Environment variables and keeping secrets out of code">
+<meta name="pep:topic-id" content="environment-variables-and-secrets">
+<meta name="pep:budget-minutes" content="6">
+<meta name="pep:source" content="authoring/evidence/git-linux-ai-foundations/linux-foundations/environment-variables-and-secrets/sources.json">
+<title>Environment variables and keeping secrets out of code · Linux Foundations</title>
+<style>
+:root{
+  --bg:#eef2f0;--surface:#f8faf9;--ink:#1b2320;--muted:#47524e;--rule:#6b7873;--line:#c9d2ce;
+  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
+  --on-teal:#ffffff;--term:#e2e8e5;--focus:#1f4fbf;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121816;--surface:#1a2220;--ink:#e3ebe7;--muted:#a8b6b0;--rule:#71827c;--line:#2f3b37;
+  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
+  --on-teal:#0b1311;--term:#0c1110;--focus:#8fb4ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+::selection{background:var(--teal);color:var(--on-teal)}
+code,kbd,.mono{font-family:var(--mono);font-size:.94em}
+a{color:var(--teal);text-underline-offset:3px}
+main{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
+.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title tools";column-gap:var(--s6);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
+.top .crumbs{grid-area:crumbs}.top h1{grid-area:title}.top .meta{grid-area:meta}.top .tools{grid-area:tools}
+.crumbs{margin:0 0 var(--s1);font-size:15px;color:var(--muted)}
+.crumbs ol{display:flex;flex-wrap:wrap;gap:0 var(--s2);margin:0;padding:0;list-style:none}
+.crumbs li+li::before{content:"/";margin-right:var(--s2);color:var(--rule)}
+.crumbs [aria-current]{color:var(--ink);font-weight:600}
+h1{margin:0;font-size:24px;line-height:30px;letter-spacing:-.01em}
+.meta{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s2) 0 0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
+.meta li:first-child{font-weight:700;color:var(--ink)}
+.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
+.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2);flex:0 0 auto}
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:var(--amber-soft);border:2px dashed var(--amber)}
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s3);align-items:start}
+.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
+.teach p{margin:0 0 var(--s2);max-width:62ch}
+.teach ul{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
+.teach li{margin-bottom:var(--s1)}
+.teach code,.task code{white-space:nowrap}
+.task{padding:var(--s3) var(--s4);border-top:2px solid var(--teal);background:var(--surface)}
+.task p{margin:0;font-weight:600}
+.task p+p{margin-top:var(--s2)}
+.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
+.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
+.goals li:first-child{border-top:0}
+.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
+.goals li.done .st{color:var(--teal)}
+.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
+.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:var(--s2)}
+.model code{font-size:1em}
+.control{min-width:0}
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:6px var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);background:var(--teal-soft)}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);background:var(--red-soft);box-shadow:inset 4px 0 0 var(--red)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.confrow{margin-top:var(--s2)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
+.term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
+.term-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px var(--s3);margin:0;padding:var(--s1) var(--s3);border-bottom:1px solid var(--rule);font-size:15px;color:var(--muted)}
+.term-top span:first-child{font-weight:700}
+.log{height:220px;overflow-y:auto;padding:var(--s2) var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.log .c{font-weight:700}
+.log .c::before{content:attr(data-p) " ";color:var(--teal);font-weight:700}
+.log .e{color:var(--red)}
+.log .h{color:var(--muted);font-family:var(--sans)}
+.cmdline{display:flex;gap:var(--s2);align-items:center;padding:0 var(--s1) 0 var(--s3);border-top:1px solid var(--rule)}
+.cmdline label{flex:0 1 auto;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 16px var(--mono);color:var(--teal)}
+.cmdline{padding:var(--s2) var(--s2) var(--s2) var(--s3)}
+.cmdline input{flex:1 1 auto;min-width:0;min-height:44px;padding:var(--s2) 0;font:16px var(--mono);color:var(--ink);background:transparent;border:0;caret-color:var(--teal)}
+.cmdline input::placeholder{color:var(--muted);opacity:1}
+.cmdline input:focus,.cmdline input:focus-visible{outline:none}
+.cmdline .runbtn{flex:0 0 auto;min-height:36px;padding:var(--s1) var(--s3);background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:600}
+.cmdline .runbtn:hover{border-color:var(--ink)}
+.simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s2);align-items:flex-start}
+.feedback{width:100%;min-width:0;line-height:1.4;font-size:15px;line-height:1.45}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin-bottom:2px}
+.verdict{font-weight:700}
+.feedback .on{font-weight:600}
+.badge{display:inline-block;margin:0 var(--s1) 0 0;padding:0 6px;border:2px solid currentColor;border-radius:3px;font:700 15px/1.4 var(--sans);vertical-align:baseline}
+.badge.ok{color:var(--teal)}.badge.no{color:var(--red)}.badge.me{color:var(--ink)}
+.opt .badges{display:block;margin-top:2px}
+.explain{list-style:none;padding:0;margin:var(--s1) 0 0}
+.explain li{margin:0;padding:var(--s1) 0 var(--s1) var(--s3);border-left:2px solid var(--line)}
+.explain li+li{margin-top:var(--s1)}
+.explain li.mine{border-left-color:var(--teal)}
+.explain .on,.explain .ex{display:block}
+.explain .ex::first-letter{text-transform:uppercase}
+.teach ul.chunks{list-style:none;padding:0}
+.teach ul.chunks li{margin-bottom:var(--s2)}
+.opt .why{display:block;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
+.opt .why code{font-size:.94em}
+.verdict.ok{color:var(--teal)}
+.verdict.no{color:var(--red)}
+.verdict.set{color:var(--amber)}
+.conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+.recap ul{padding-left:20px}
+.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
+.feedback details{margin:var(--s1) 0}
+.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
+.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
+.next-topic{font-weight:700}
+.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
+[hidden]{display:none!important}
+@media (min-width:861px) and (max-height:720px){
+  main{padding-top:var(--s2)}
+  .stage{padding-top:var(--s2)}
+  .col{gap:var(--s2)}
+  .model{padding:var(--s2) var(--s4)}
+  .model figcaption{margin-bottom:var(--s1)}
+  .meta{margin-top:var(--s1)}
+  .opts{gap:6px}
+  legend{margin-bottom:var(--s1)}
+  .row{margin-top:var(--s2)}
+  .teach h2{margin-bottom:var(--s1)}
+}
+@media (max-width:860px){
+  main{padding:var(--s3) var(--s4) var(--s4)}
+  .top{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "tools";row-gap:var(--s2)}
+  .tools{justify-content:flex-start;flex-wrap:wrap}
+  .stage{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3)}
+  .col{display:contents}
+  #current-teaching{order:1}#current-task{order:2}#live-model{order:3}#current-control{order:4}.fbrow{order:5}
+  .fbrow{flex-direction:column}
+}
+@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}
+  .cmdline{flex-wrap:wrap;row-gap:var(--s1)}
+  .cmdline label{flex:1 0 100%;max-width:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+.stage[data-step="4"] .repo{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.stage:not([data-step="3"]) .fbody,.stage:not([data-step="3"]) .dec{display:none}
+.stage:not([data-step="3"]) .repo li{padding:2px var(--s2)}
+.stage:not([data-step="3"]) .repo{gap:var(--s1)}
+.stage[data-step="4"] .envmodel>.box:first-child{display:none}
+.stage[data-step="4"] .envmodel{grid-template-columns:minmax(0,1fr)}
+.envmodel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--s4)}
+.box{min-width:0}
+.bl{margin:0 0 var(--s1);font-size:15px;font-weight:700;color:var(--muted)}
+.vars{list-style:none;margin:0 0 var(--s3);padding:0;display:grid;gap:var(--s1)}
+.vars li{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--s1) var(--s2);padding:var(--s1) var(--s2);border:2px solid var(--rule);border-radius:3px;font:500 15px/1.3 var(--mono)}
+.vars li.exp{border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.vars .vs{font:600 15px/1.3 var(--sans);color:var(--muted)}
+.vars li.exp .vs{color:var(--teal)}
+.child{margin:0;padding:var(--s2);border:2px dashed var(--rule);border-radius:3px;font:500 15px/1.3 var(--mono);overflow-wrap:anywhere}
+.child.got{border-style:solid;border-color:var(--teal)}
+.repo{list-style:none;margin:0;padding:0;display:grid;gap:var(--s2)}
+.repo li{padding:var(--s1) var(--s2);border:2px solid var(--rule);border-radius:3px}
+.repo li.out{border-style:dashed}
+.repo li.bad{border-color:var(--red);background:var(--red-soft)}
+.fh{display:flex;justify-content:space-between;align-items:center;gap:var(--s2)}
+.fname{font-weight:700;font-size:16px}
+.fbody{display:block;font-size:15px;color:var(--muted);overflow-wrap:anywhere}
+.dec{min-height:36px;padding:var(--s1) var(--s2);font-size:15px;background:transparent;color:var(--ink);border:2px solid var(--rule)}
+.dec[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:var(--on-teal);font-weight:700}
+.dec.kept{border-style:dashed;font-weight:700;background:var(--surface)}
+.dec:disabled{color:var(--muted);border-style:solid;cursor:default;font-weight:600}
+.dec:disabled[aria-pressed="true"]{background:var(--teal);color:var(--on-teal)}
+@media (max-width:480px){.envmodel{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<noscript><p class="nojs">This topic needs JavaScript for its practice activities and checks. Turn JavaScript on to take part.</p></noscript>
+<main id="lesson">
+  <header class="top">
+    <h1>Environment variables and keeping secrets out of code</h1>
+    <ul class="objectives" data-pep-objectives aria-label="Objectives" style="grid-column:1/-1;margin:0;padding-left:1.25em">
+      <li>Set, read and export an environment variable in the shell</li>
+      <li>Explain why an unexported variable is not seen by a program you start</li>
+      <li>Keep a secret out of commits by reading it from an environment variable and git-ignoring the .env file before it is ever added, and revoke or rotate any secret that was committed</li>
+    </ul>
+    <div class="tools">
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 4</span><span class="pips" aria-hidden="true"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></span></div>
+      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+    </div>
+  </header>
+  <div class="stage" id="stage" data-step="1">
+    <div class="col">
+      <section id="current-teaching" class="teach" aria-label="Current teaching">
+<div data-step="1">
+  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+  <p>Practice prediction, not scored. <code>./app</code> is a small program that prints the <code>API_KEY</code> it receives.</p>
+</div>
+<div data-step="2" data-pep-teaching>
+  <h2 id="teach-2-h" tabindex="-1">Shell variables and exported ones</h2>
+  <p><code>NAME=value</code> sets a variable in your shell; no spaces around <code>=</code>. <code>echo "$NAME"</code> prints it.</p>
+  <p>A program you start gets a copy of the environment, which holds only exported variables. <code>export NAME</code> marks an existing variable; <code>export NAME=value</code> sets and exports in one step.</p>
+</div>
+<div data-step="3" data-pep-teaching>
+  <h2 id="teach-3-h" tabindex="-1">Keep secrets out of code</h2>
+  <p><strong>The risk:</strong> a key typed into a source file gets committed; anyone with the repository can read it in the history, even after you delete the line.</p>
+  <ul class="chunks">
+    <li><strong>Code:</strong> reads <code>API_KEY</code> from the environment.</li>
+    <li><strong>Real value:</strong> in a local <code>.env</code> file, listed in <code>.gitignore</code> so git ignores it.</li>
+    <li><strong>Teammates:</strong> by convention, commit a <code>.env.example</code> with a placeholder.</li>
+    <li><strong>Ever committed?</strong> It counts as leaked: revoke or rotate it.</li>
+  </ul>
+</div>
+<div data-step="4" data-pep-teaching>
+  <h2 id="teach-4-h" tabindex="-1">Apply it to a new case</h2>
+  <p>A teammate's script, a different secret, the same rules.</p>
+</div>
+<div data-step="5" hidden data-pep-recap class="recap">
+  <h2 id="teach-5-h" tabindex="-1">Recap</h2>
+  <ul><li><code>NAME=value</code> sets a shell variable; <code>echo "$NAME"</code> prints it.</li><li>Programs you start only receive exported variables: <code>export NAME=value</code>.</li><li>Code reads secrets from the environment; the real values sit in a <code>.env</code> listed in <code>.gitignore</code>.</li><li>A secret that was committed stays in history, so change it.</li></ul>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <table><tr><td><code>NAME=value</code></td><td>shell variable</td></tr><tr><td><code>export NAME=value</code></td><td>passed to programs you start</td></tr><tr><td><code>echo "$NAME"</code></td><td>print a value</td></tr><tr><td><code>env</code></td><td>list exported variables</td></tr><tr><td><code>.gitignore</code> with <code>.env</code></td><td>git ignores the file</td></tr></table>
+    <p>A .env file is not read by the shell automatically; your tools or framework load it. .gitignore only affects files git is not already tracking.</p>
+  </details>
+  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Partly checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.</p><ul><li><a href="https://www.gnu.org/software/bash/manual/html_node/Shell-Parameters.html" rel="noopener">GNU Bash 5.3 Reference Manual: shell parameters and assignment</a></li><li><a href="https://www.gnu.org/software/bash/manual/html_node/Environment.html" rel="noopener">GNU Bash 5.3 Reference Manual: environment and export</a></li><li><a href="https://www.gnu.org/software/coreutils/manual/html_node/env-invocation.html" rel="noopener">GNU Coreutils manual: env invocation</a></li><li><a href="https://git-scm.com/docs/gitignore#_description" rel="noopener">Git documentation: gitignore</a></li><li><a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository" rel="noopener">GitHub Docs: removing sensitive data from a repository</a></li></ul><p>The .env and .env.example files are a common convention, not a feature of bash or git; no official source defines them.</p></details>
+  <p class="next-topic">Next topic: <a href="../localhost-and-ports/artifact.html">Localhost and ports</a></p>
+</div>
+      </section>
+      <section id="current-task" class="task" aria-label="Current task">
+<div data-step="1"><p id="task-1">You type <code>API_KEY=demo-123</code>, then <code>./app</code>. What does it print?</p></div>
+<div data-step="2"><p id="task-2"><code>API_KEY</code> is set but not exported. Export it, then run <code>./app</code> so it receives the value.</p></div>
+<div data-step="3"><p id="task-3">Set each file to Commit or Keep out, then check the commit.</p></div>
+<div data-step="4"><p id="task-apply">A teammate committed <code>db.sh</code> with <code>DB_PASSWORD=hunter2</code> written inside. What is the right fix?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same problem as a setup. Which one keeps the password out of git and still lets <code>db.sh</code> run?</p></div>
+<div data-step="5"><p>All activities finished.</p><p id="complete-msg" class="complete"></p></div>
+
+      </section>
+      <div class="fbrow">
+        <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-apply-feedback></div>
+<div data-step="5" ></div>
+        </div>
+        <button type="button" class="primary" id="next" hidden>Continue</button>
+      </div>
+    </div>
+    <div class="col">
+<figure id="live-model" class="model" aria-labelledby="model-cap">
+  <figcaption id="model-cap">Where values live. Fictional project; the terminal and git are simulated.</figcaption>
+  <div class="envmodel">
+    <div class="box">
+      <p class="bl">Your shell</p>
+      <ul class="vars" id="vars" aria-label="Shell variables"></ul>
+      <p class="bl">Program started from it: <code>./app</code></p>
+      <p class="child" id="child">Not run yet.</p>
+    </div>
+    <div class="box">
+      <p class="bl">Repository: what gets committed</p>
+      <ul class="repo" id="repo" aria-label="Repository files" data-interaction="explore" data-pep-explore data-static-alt="Repository activity: set each file to Commit or Keep out. Commit app.sh (it reads $API_KEY and holds no value), .env.example (placeholder value replace-me, shows teammates which variables to set) and .gitignore (it lists .env). Keep out .env, which holds the real value. Add .env to .gitignore before it is ever added; .gitignore does not untrack a file git already tracks."><li data-file="app.sh"><div class="fh"><code class="fname">app.sh</code><button type="button" class="dec" data-act="dec" data-f="app.sh" aria-pressed="false" aria-describedby="task-3" disabled>Not decided</button></div><code class="fbody">echo "calling weather API with $API_KEY"</code></li><li data-file=".env"><div class="fh"><code class="fname">.env</code><button type="button" class="dec" data-act="dec" data-f=".env" aria-pressed="false" aria-describedby="task-3" disabled>Not decided</button></div><code class="fbody">API_KEY=not-real-42</code></li><li data-file=".env.example"><div class="fh"><code class="fname">.env.example</code><button type="button" class="dec" data-act="dec" data-f=".env.example" aria-pressed="false" aria-describedby="task-3" disabled>Not decided</button></div><code class="fbody">API_KEY=replace-me</code></li><li data-file=".gitignore"><div class="fh"><code class="fname">.gitignore</code><button type="button" class="dec" data-act="dec" data-f=".gitignore" aria-pressed="false" aria-describedby="task-3" disabled>Not decided</button></div><code class="fbody">.env</code></li></ul>
+    </div>
+  </div>
+</figure>
+      <section id="current-control" class="control" aria-label="Your turn">
+<div data-step="1">
+  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): you type API_KEY=demo-123, then ./app. Options: app: API_KEY is not set (correct: the variable exists only in the shell; a program you start receives only exported variables); app: using API_KEY=demo-123 (would need export); the shell closes with an error (setting a variable is valid); it depends on the folder (export status, not the folder, decides).">
+    <legend>Prediction</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="predict" value="a"> <span>app: API_KEY is not set</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span>app: using API_KEY=demo-123</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span>The shell closes with an error</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span>It depends on the folder</span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
+    <legend id="pconf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="pconf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+  </div>
+</div><div data-step="2" hidden>
+  <div class="term" data-interaction="terminal" data-steps="2" data-static-alt="Terminal activity: API_KEY is set but not exported. Export it, then run ./app. Worked example: export API_KEY, then ./app prints app: using API_KEY=demo-123. echo &quot;$API_KEY&quot; reads the value in the shell itself.">
+    <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-2">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
+    <div class="log" id="log-2" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
+    <div class="cmdline" data-term="2">
+      <label for="cmd-2"><span class="pr">$</span><span class="vh"> command</span></label>
+      <input type="text" id="cmd-2" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-2 keys-2">
+      <button type="button" class="runbtn">Run</button>
+    </div>
+  </div>
+</div><div data-step="3" hidden>
+  <p class="simnote" id="dec-help">Each file's button switches between Commit and Keep out.</p>
+  <div class="row"><button type="button" class="primary" data-act="checkcommit" data-interaction="explore" aria-describedby="task-3 dec-help" data-static-alt="Commit check: checking the commit confirms the decision. Correct state: app.sh, .env.example and .gitignore are committed; .env is kept out because it holds the value.">Check this commit</button></div>
+</div><div data-step="4">
+  <div data-first>
+  <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: a teammate committed db.sh with DB_PASSWORD=hunter2 inside. The right fix: read it from the environment, keep the value in an ignored .env and change the password. Deleting the line in a new commit leaves the password in history; renaming the variable keeps the same password in code and history; adding db.sh to .gitignore does not affect a tracked file, and history keeps the password. Retry as setups: .env listed in .gitignore with db.sh reading $DB_PASSWORD is correct.">
+    <legend>Choose a fix</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="apply-a" value="a"> <span>Delete the line in a new commit</span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span>Rename the variable so it is harder to spot</span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span>Add db.sh to .gitignore now</span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span>Read it from the environment, keep the value in an ignored .env, change the password</span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
+    <legend id="conf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="conf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="conf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="conf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
+  </div>
+  </div>
+  <div data-retry hidden>
+    <fieldset id="apply-b" aria-describedby="task-apply-b">
+      <legend>Choose a setup</legend>
+      <div class="opts"><label class="opt"><input type="radio" name="apply-b" value="a"> <span>.env with the value is committed; db.sh reads $DB_PASSWORD</span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span>.env with the value is listed in .gitignore; db.sh reads $DB_PASSWORD</span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span>db.sh holds the value; .gitignore lists db.sh</span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span>.env.example holds the real value; .env is ignored</span></label></div>
+    </fieldset>
+    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+  </div>
+</div><div data-step="5"></div>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+var TOPIC={
+steps:5,acts:['predict','export','commit','apply'],
+prompt:function(){return 'ana@pep:~$';},
+complete:function(v,S){var i=v.length;while(i>0&&v.charAt(i-1)!==' '){i--;}var w=v.slice(i),pre=v.slice(0,i);if(!w){return null;}var vars=Object.keys(S.t.vars),first=!pre.trim();
+ var opts=first?['export','echo','env','unset','./app']:(w.charAt(0)==='$'?vars.map(function(k){return '$'+k;}):vars);
+ var c=opts.filter(function(x){return x.indexOf(w)===0&&x!==w;});return c.length===1?pre+c[0]+(first?' ':''):null;},
+
+init:function(){return {vars:{API_KEY:{v:'demo-123',exp:false}},child:null,dec:{},checked:false};},
+predict:{correct:'a',why:{
+ a:'this is what bash does: a plain NAME=value makes a shell variable, and programs you start do not receive it.',
+ b:'the shell knows the value, but it was not exported, so ./app does not get a copy.',
+ c:'setting a variable never closes the shell.',
+ d:'the folder does not matter; what matters is whether the variable was exported.'}},
+apply:{A:{fs:'apply-a',correct:'d',okNote:'<p>The value moves out of git, and the leaked password is replaced.</p>',
+  why:{a:'the old commit still holds the password in history.',b:'the same password is still in the code and history.',c:'.gitignore does not affect a file git already tracks, and history keeps the password.',d:'moves the value out of git and replaces the leaked password.'},
+  miss:{a:'The old commit still holds the password; anyone with the history can read it.',b:'A renamed variable still holds the same password in the code and in history.',c:'.gitignore only stops untracked files from being added. db.sh is already tracked, and the password is in history.'},
+  hint:'There are two problems: where the value should live from now on, and the copy already in history.'},
+ B:{fs:'apply-b',correct:'b',reveal:'Keep the value in an ignored <code>.env</code>, have <code>db.sh</code> read <code>$DB_PASSWORD</code>, and change any password that was already committed.',
+  why:{a:'committing .env puts the value back in git.',b:'the value stays in an ignored file and the script reads the environment.',c:'db.sh would no longer be shared, and the value is still in code.',d:'.env.example is committed, so the real value would be in git.'}}},
+run:function(line,term,S,api){var t=S.t,out=[],msg='',done=false;function o(c,s){out.push([c,s]);}
+ o('c',line);var s=line.trim(),m;
+ if(!s){o('h','(nothing to run)');}
+ else if(/[|;&<>`*\\]/.test(s)){o('e','Pipes and other operators are not available in this practice terminal.');}
+ else if((m=s.match(/^([A-Za-z_][A-Za-z0-9_]*)=(\S*)$/))){var old=t.vars[m[1]];t.vars[m[1]]={v:m[2].replace(/^["']|["']$/g,''),exp:old?old.exp:false};msg=m[1]+' is set in this shell'+(old&&old.exp?' and still exported.':', but not exported.');}
+ else if((m=s.match(/^([A-Za-z_][A-Za-z0-9_]*)\s+=/))){o('e','bash: '+m[1]+': command not found');msg='With spaces around =, bash treats '+m[1]+' as a command. Write NAME=value with no spaces.';}
+ else if((m=s.match(/^export\s+([A-Za-z_][A-Za-z0-9_]*)(=(\S*))?$/))){var nv=m[2]?m[3].replace(/^["']|["']$/g,''):(t.vars[m[1]]?t.vars[m[1]].v:'');t.vars[m[1]]={v:nv,exp:true};msg=m[1]+' is exported: programs started from now on receive it.';}
+ else if((m=s.match(/^echo\s+"?\$([A-Za-z_][A-Za-z0-9_]*)"?$/))){var x=t.vars[m[1]];o('o',x?x.v:'');if(!x){o('h','(empty: '+m[1]+' is not set)');}msg='echo shows the shell\'s own value, exported or not.';}
+ else if(s==='env'){o('o','HOME=/home/ana');Object.keys(t.vars).forEach(function(k){if(t.vars[k].exp){o('o',k+'='+t.vars[k].v);}});msg='env lists only exported variables.';}
+ else if((m=s.match(/^unset\s+([A-Za-z_][A-Za-z0-9_]*)$/))){delete t.vars[m[1]];msg=m[1]+' is removed from this shell.';}
+ else if(s==='./app'){var k=t.vars.API_KEY;if(k&&k.exp&&k.v){o('o','app: using API_KEY='+k.v);t.child=k.v;if(k.v==='demo-123'){done=true;msg='./app received the exported value.';}else{msg='./app received '+k.v+'. The task value is demo-123.';}}
+  else{o('o','app: API_KEY is not set');t.child='';msg=k&&!k.exp?'API_KEY exists in the shell, but it is not exported, so ./app got nothing.':'API_KEY is not set for ./app.';}}
+ else{o('e',s.split(/\s+/)[0]+': not available in this practice terminal');msg='Here you can use NAME=value, export, echo "$NAME", env, unset and ./app. No credit for that line.';}
+ var log=api.$('log-'+term);out.forEach(function(x){var dv=document.createElement('div');dv.className=x[0];dv.textContent=x[1];log.appendChild(dv);});log.scrollTop=log.scrollHeight;
+ api.say('<p>'+api.esc(msg||'Command run.')+'</p>'+(S.done.export?'<p>Goal already met. Continue when ready.</p>':(done?'<p><strong>Goal met.</strong> Continue when ready.</p>':'<p>Goal still open.</p>')));
+ if(done&&!S.done.export){api.complete('export');}
+ this.render(S,api);},
+act:function(a,b,S,api){var t=S.t;
+ if(a==='dec'&&S.step===3){var f=b.getAttribute('data-f');t.dec[f]=t.dec[f]==='commit'?'out':'commit';t.checked=false;}
+ if(a==='checkcommit'&&S.step===3){var want={'app.sh':'commit','.env':'out','.env.example':'commit','.gitignore':'commit'},why={
+   'app.sh':{commit:'app.sh only reads $API_KEY, so commit it.',out:'app.sh holds no secret, it only reads $API_KEY. Teammates need it: commit it.'},
+   '.env':{commit:'.env holds the real key. Committing it would leak it.',out:'.env holds the real key, so it stays out.'},
+   '.env.example':{commit:'.env.example holds only a placeholder name list.',out:'.env.example holds only a placeholder; commit it so teammates know which names to set.'},
+   '.gitignore':{commit:'committing .gitignore makes git ignore .env for everyone.',out:'Without committing .gitignore, teammates\' clones would not ignore .env.'}};
+  var miss=Object.keys(want).filter(function(f){return t.dec[f]!==want[f];});t.checked=true;t.miss=miss;
+  if(Object.keys(t.dec).length<4){api.say('<p>Decide all four files first: '+Object.keys(want).filter(function(f){return !t.dec[f];}).map(function(f){return '<code>'+f+'</code>';}).join(', ')+' still undecided.</p>');}
+  else{var html='<ul>'+Object.keys(want).map(function(f){return '<li>'+(t.dec[f]===want[f]?'<strong>Right:</strong> ':'<strong>Change:</strong> ')+why[f][t.dec[f]]+'</li>';}).join('')+'</ul>';
+   if(!miss.length){api.say('<p class="verdict ok">Safe commit: the code and placeholder go in, the real key stays out.</p>'+html+'<p>Continue when ready.</p>');if(!S.done.commit){api.complete('commit');}}
+   else{api.say('<p>Not safe yet. '+miss.length+' file'+(miss.length>1?'s need':' needs')+' a different decision.</p>'+html);}}}
+ this.render(S,api);},
+render:function(S,api){var t=S.t,ul=api.$('vars');while(ul.firstChild){ul.removeChild(ul.firstChild);}
+ var shown=S.step===1?{}:t.vars;if(S.step===1){shown={API_KEY:{v:'demo-123',exp:false}};}
+ Object.keys(shown).forEach(function(k){var li=document.createElement('li');li.className=shown[k].exp?'exp':'';var c=document.createElement('span');c.textContent=k+'='+shown[k].v;var st=document.createElement('span');st.className='vs';st.textContent=shown[k].exp?'exported':'shell only';li.appendChild(c);li.appendChild(st);ul.appendChild(li);});
+ if(!Object.keys(shown).length){var li=document.createElement('li');li.textContent='(no variables set)';ul.appendChild(li);}
+ var ch=api.$('child');ch.className='child'+(t.child?' got':'');ch.textContent=S.step===1||t.child===null?'Not run yet.':(t.child?'received API_KEY='+t.child:'received no API_KEY');
+ api.qa('.dec').forEach(function(b){var f=b.getAttribute('data-f'),d=t.dec[f];b.disabled=S.step!==3;b.setAttribute('aria-pressed',d==='commit'?'true':'false');
+  b.classList.toggle('kept',d==='out');b.textContent=d==='commit'?'Commit':(d==='out'?'Keep out':'Not decided');
+  var li=b.closest('li');li.classList.toggle('out',d==='out');li.classList.toggle('bad',!!t.checked&&(t.miss||[]).indexOf(f)>=0);});
+}
+};
+
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
+var SNAP={};
+function clone(o){return JSON.parse(JSON.stringify(o));}
+var LAST=TOPIC.steps,S;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init()};}
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,get S(){return S;}};
+function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
+function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}}
+function progress(){
+  var acts=TOPIC.acts,n=0,set=0;
+  acts.forEach(function(a,i){var p=qa('.pip',$('progress'))[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
+    p.className='pip'+(on?(S.settled[a]?' settled':' on'):'');});
+  $('prog-text').textContent='Activities done: '+n+' of '+acts.length+(set?' ('+set+' answered, not marked correct)':'');
+}
+function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
+function show(step,focus){
+  S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
+  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
+  if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
+    SNAP[step]={html:h,t:clone(S.t)};}
+  var rb=$('reset');rb.disabled=(step===LAST);
+  $('next').hidden=true;
+  if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
+    c.textContent='All '+TOPIC.acts.length+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: review its explanation above before moving on.':'.');}}
+  else{main.removeAttribute('data-pep-complete');}
+  TOPIC.render(S,api);progress();
+  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+}
+function optLabel(inp){return inp.closest('label');}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function explainList(set,chosen,mark){
+  var html='<ul>';
+  Object.keys(set.why).forEach(function(k){
+    var txt=qa('input[value="'+k+'"]',$(set.fs))[0];var lab=txt?optLabel(txt).textContent.trim():k;
+    var tag=(k===set.correct)?'<strong>Correct: </strong>':'<strong>Not this: </strong>';
+    html+='<li>'+(mark?tag:'')+'<span class="on">'+esc(lab)+'</span>: '+set.why[k]+(k===chosen?' <em>(your choice)</em>':'')+'</li>';
+  });
+  return html+'</ul>';
+}
+function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===set.correct&&(chosen===set.correct)){l.classList.add('right');}
+  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
+function firstDetails(){return '<details><summary>First question: every option explained</summary>'+explainList(TOPIC.apply.A,null,true)+'</details>';}
+function badges(ok,mine,who){return '<span class="badges">'+(mine?'<span class="badge me">'+who+'</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
+function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
+  w.innerHTML=badges(i.value===set.correct,i.value===chosen,'Your answer')+set.why[i.value];sp.appendChild(w);});}
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
+function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
+  var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
+  var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function checkApply(which){
+  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  if(which==='a'){
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
+    if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText());complete('apply');TOPIC.render(S,api);focusVerdict();return;}
+    S.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
+    say('<p class="verdict no">Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <span class="on">'+esc(S.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
+    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});TOPIC.render(S,api);
+    var t=$('task-apply-b');if(t){t.focus();}
+  } else {
+    var c2=checked('apply-b');if(!c2){return;}
+    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
+    if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+firstDetails()+confText());}
+    else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
+      say('<p class="verdict set">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+firstDetails()+confText());}
+    complete('apply');TOPIC.render(S,api);focusVerdict();
+  }
+}
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
+  if(!ch||!pc){return;}
+  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
+    if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
+  var html='<p class="verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+' Each option, explained:</p><ul class="explain">';
+  Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
+    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
+  say(html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||''),1);complete('predict');
+}
+function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
+function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
+  Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
+  qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
+  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  show(step,false);syncPrompt();var h=$('teach-'+step+'-h');if(h){h.focus();}}
+d.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b){return;}
+  if(b.id==='reset'){restart();return;}
+  if(b.id==='next'){show(S.step+1);return;}
+  if(b.id==='predict-check'){checkPredict();return;}
+  if(b.id==='apply-check'){checkApply('a');return;}
+  if(b.id==='apply-check-b'){checkApply('b');return;}
+  if(b.classList.contains('runbtn')){runTerminal(b.closest('.cmdline'));return;}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+});
+d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
+var HIST={};
+function prompt(){return TOPIC.prompt?TOPIC.prompt(S):'$';}
+function syncPrompt(){qa('.cmdline .pr').forEach(function(n){n.textContent=prompt();});}
+function runTerminal(box){
+  if(!box){return;}var inp=box.querySelector('input[type="text"]');if(!inp||inp.disabled){return;}
+  var line=inp.value,H=HIST[inp.id]||(HIST[inp.id]={l:[],i:0});if(line.trim()){H.l.push(line);}H.i=H.l.length;
+  var p=prompt();inp.value='';TOPIC.run(line,box.getAttribute('data-term'),S,api);
+  qa('.log .c:not([data-p])').forEach(function(n){n.setAttribute('data-p',p);});syncPrompt();inp.focus();}
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closest('.cmdline')||t.tagName!=='INPUT'){return;}
+  var H=HIST[t.id]||(HIST[t.id]={l:[],i:0});
+  if(e.key==='Enter'&&!e.isComposing){e.preventDefault();runTerminal(t.closest('.cmdline'));}
+  else if(e.key==='ArrowUp'){if(!H.l.length){return;}e.preventDefault();H.i=Math.max(0,H.i-1);t.value=H.l[H.i];}
+  else if(e.key==='ArrowDown'){if(!H.l.length){return;}e.preventDefault();H.i=Math.min(H.l.length,H.i+1);t.value=H.l[H.i]||'';}
+  else if(e.key==='Tab'&&!e.shiftKey&&!e.altKey&&!e.ctrlKey&&!e.metaKey){
+    // capture Tab only when a completion actually changes the line, so Tab never traps focus
+    var v=t.value.trim()&&TOPIC.complete?TOPIC.complete(t.value,S):null;if(v&&v!==t.value){e.preventDefault();t.value=v;}}
+  else if(e.key==='Escape'){var tk=$('task-'+S.step);if(tk){e.preventDefault();tk.setAttribute('tabindex','-1');tk.focus();}}
+});
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+setTheme(mq&&mq.matches?'dark':'light');
+if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+fresh();show(1,false);syncPrompt();
+})();
+
+</script>
+</body>
+</html>

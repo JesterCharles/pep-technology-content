@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="git-linux-ai-foundations">
+<meta name="pep:module" content="linux-foundations">
+<meta name="pep:topic" content="Localhost and ports">
+<meta name="pep:topic-id" content="localhost-and-ports">
+<meta name="pep:budget-minutes" content="6">
+<meta name="pep:source" content="authoring/evidence/git-linux-ai-foundations/linux-foundations/localhost-and-ports/sources.json">
+<title>Localhost and ports · Linux Foundations</title>
+<style>
+:root{
+  --bg:#eef2f0;--surface:#f8faf9;--ink:#1b2320;--muted:#47524e;--rule:#6b7873;--line:#c9d2ce;
+  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
+  --on-teal:#ffffff;--term:#e2e8e5;--focus:#1f4fbf;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121816;--surface:#1a2220;--ink:#e3ebe7;--muted:#a8b6b0;--rule:#71827c;--line:#2f3b37;
+  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
+  --on-teal:#0b1311;--term:#0c1110;--focus:#8fb4ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+::selection{background:var(--teal);color:var(--on-teal)}
+code,kbd,.mono{font-family:var(--mono);font-size:.94em}
+a{color:var(--teal);text-underline-offset:3px}
+main{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
+.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title tools";column-gap:var(--s6);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
+.top .crumbs{grid-area:crumbs}.top h1{grid-area:title}.top .meta{grid-area:meta}.top .tools{grid-area:tools}
+.crumbs{margin:0 0 var(--s1);font-size:15px;color:var(--muted)}
+.crumbs ol{display:flex;flex-wrap:wrap;gap:0 var(--s2);margin:0;padding:0;list-style:none}
+.crumbs li+li::before{content:"/";margin-right:var(--s2);color:var(--rule)}
+.crumbs [aria-current]{color:var(--ink);font-weight:600}
+h1{margin:0;font-size:24px;line-height:30px;letter-spacing:-.01em}
+.meta{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s2) 0 0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
+.meta li:first-child{font-weight:700;color:var(--ink)}
+.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
+.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2);flex:0 0 auto}
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:var(--amber-soft);border:2px dashed var(--amber)}
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s3);align-items:start}
+.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
+.teach p{margin:0 0 var(--s2);max-width:62ch}
+.teach ul{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
+.teach li{margin-bottom:var(--s1)}
+.teach code,.task code{white-space:nowrap}
+.task{padding:var(--s3) var(--s4);border-top:2px solid var(--teal);background:var(--surface)}
+.task p{margin:0;font-weight:600}
+.task p+p{margin-top:var(--s2)}
+.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
+.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
+.goals li:first-child{border-top:0}
+.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
+.goals li.done .st{color:var(--teal)}
+.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
+.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:var(--s2)}
+.model code{font-size:1em}
+.control{min-width:0}
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:6px var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);background:var(--teal-soft)}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);background:var(--red-soft);box-shadow:inset 4px 0 0 var(--red)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.confrow{margin-top:var(--s2)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
+.term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
+.term-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px var(--s3);margin:0;padding:var(--s1) var(--s3);border-bottom:1px solid var(--rule);font-size:15px;color:var(--muted)}
+.term-top span:first-child{font-weight:700}
+.log{height:220px;overflow-y:auto;padding:var(--s2) var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.log .c{font-weight:700}
+.log .c::before{content:attr(data-p) " ";color:var(--teal);font-weight:700}
+.log .e{color:var(--red)}
+.log .h{color:var(--muted);font-family:var(--sans)}
+.cmdline{display:flex;gap:var(--s2);align-items:center;padding:0 var(--s1) 0 var(--s3);border-top:1px solid var(--rule)}
+.cmdline label{flex:0 1 auto;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 16px var(--mono);color:var(--teal)}
+.cmdline{padding:var(--s2) var(--s2) var(--s2) var(--s3)}
+.cmdline input{flex:1 1 auto;min-width:0;min-height:44px;padding:var(--s2) 0;font:16px var(--mono);color:var(--ink);background:transparent;border:0;caret-color:var(--teal)}
+.cmdline input::placeholder{color:var(--muted);opacity:1}
+.cmdline input:focus,.cmdline input:focus-visible{outline:none}
+.cmdline .runbtn{flex:0 0 auto;min-height:36px;padding:var(--s1) var(--s3);background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:600}
+.cmdline .runbtn:hover{border-color:var(--ink)}
+.simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s2);align-items:flex-start}
+.feedback{width:100%;min-width:0;line-height:1.4;font-size:15px;line-height:1.45}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin-bottom:2px}
+.verdict{font-weight:700}
+.feedback .on{font-weight:600}
+.badge{display:inline-block;margin:0 var(--s1) 0 0;padding:0 6px;border:2px solid currentColor;border-radius:3px;font:700 15px/1.4 var(--sans);vertical-align:baseline}
+.badge.ok{color:var(--teal)}.badge.no{color:var(--red)}.badge.me{color:var(--ink)}
+.opt .badges{display:block;margin-top:2px}
+.explain{list-style:none;padding:0;margin:var(--s1) 0 0}
+.explain li{margin:0;padding:var(--s1) 0 var(--s1) var(--s3);border-left:2px solid var(--line)}
+.explain li+li{margin-top:var(--s1)}
+.explain li.mine{border-left-color:var(--teal)}
+.explain .on,.explain .ex{display:block}
+.explain .ex::first-letter{text-transform:uppercase}
+.teach ul.chunks{list-style:none;padding:0}
+.teach ul.chunks li{margin-bottom:var(--s2)}
+.opt .why{display:block;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
+.opt .why code{font-size:.94em}
+.verdict.ok{color:var(--teal)}
+.verdict.no{color:var(--red)}
+.verdict.set{color:var(--amber)}
+.conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+.recap ul{padding-left:20px}
+.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
+.feedback details{margin:var(--s1) 0}
+.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
+.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
+.next-topic{font-weight:700}
+.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
+[hidden]{display:none!important}
+@media (min-width:861px) and (max-height:720px){
+  main{padding-top:var(--s2)}
+  .stage{padding-top:var(--s2)}
+  .col{gap:var(--s2)}
+  .model{padding:var(--s2) var(--s4)}
+  .model figcaption{margin-bottom:var(--s1)}
+  .meta{margin-top:var(--s1)}
+  .opts{gap:6px}
+  legend{margin-bottom:var(--s1)}
+  .row{margin-top:var(--s2)}
+  .teach h2{margin-bottom:var(--s1)}
+}
+@media (max-width:860px){
+  main{padding:var(--s3) var(--s4) var(--s4)}
+  .top{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "tools";row-gap:var(--s2)}
+  .tools{justify-content:flex-start;flex-wrap:wrap}
+  .stage{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3)}
+  .col{display:contents}
+  #current-teaching{order:1}#current-task{order:2}#live-model{order:3}#current-control{order:4}.fbrow{order:5}
+  .fbrow{flex-direction:column}
+}
+@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}
+  .cmdline{flex-wrap:wrap;row-gap:var(--s1)}
+  .cmdline label{flex:1 0 100%;max-width:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+.stage[data-step="4"] .note{display:none}
+.netmodel{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:var(--s4)}
+.machine{min-width:0;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px}
+.machine.other{border-style:dashed}
+.mh{margin:0 0 var(--s2);font-weight:700}
+.addr{display:block;font:500 15px var(--mono);color:var(--muted)}
+.ports{list-style:none;margin:0;padding:0;display:grid;gap:var(--s1)}
+.ports li{display:flex;justify-content:space-between;gap:var(--s2);align-items:center;padding:var(--s1) var(--s2);border:2px solid var(--rule);border-radius:3px;font-size:15px}
+.ports li.listen{border-color:var(--rule)}
+.ports li.hit{border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal);background:var(--teal-soft)}
+.ports li.miss{border:2px dashed var(--red);background:var(--red-soft)}
+.ports li.new{border-color:var(--amber)}
+.pn{font-weight:700;font-size:16px}
+.ports li span{color:var(--muted)}
+.note{margin:var(--s2) 0 0;font-size:15px;color:var(--muted)}
+.req{margin:var(--s3) 0 0;padding:var(--s2) var(--s3);border-top:1px solid var(--rule);font:500 15px/1.4 var(--mono);overflow-wrap:anywhere}
+.urlrow{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s6)}
+.chips{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.chips legend{width:100%;margin-bottom:var(--s1)}
+.chips .opt{font:500 16px var(--mono)}
+.urlprev{margin:0;font:600 16px var(--mono);overflow-wrap:anywhere}
+@media (max-width:480px){.netmodel{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<noscript><p class="nojs">This topic needs JavaScript for its practice activities and checks. Turn JavaScript on to take part.</p></noscript>
+<main id="lesson">
+  <header class="top">
+    <h1>Localhost and ports</h1>
+    <ul class="objectives" data-pep-objectives aria-label="Objectives" style="grid-column:1/-1;margin:0;padding-left:1.25em">
+      <li>Explain what localhost (127.0.0.1) refers to</li>
+      <li>Read the host and port in a URL such as http://localhost:8080</li>
+      <li>Recognise "connection refused" and "address already in use" and what each means</li>
+    </ul>
+    <div class="tools">
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 4</span><span class="pips" aria-hidden="true"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></span></div>
+      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+    </div>
+  </header>
+  <div class="stage" id="stage" data-step="1">
+    <div class="col">
+      <section id="current-teaching" class="teach" aria-label="Current teaching">
+<div data-step="1">
+  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+  <p>Look at the programs on your laptop, then guess. Practice prediction, not scored.</p>
+</div>
+<div data-step="2" data-pep-teaching>
+  <h2 id="teach-2-h" tabindex="-1">localhost and ports</h2>
+  <ul class="chunks">
+    <li><strong>localhost</strong> is a name for this same computer: IPv4 <code>127.0.0.1</code>, IPv6 <code>::1</code>. A request to it never leaves your machine.</li>
+    <li><strong>Ports:</strong> one computer runs many programs that answer requests; each listens on its own port, a number up to 65535.</li>
+    <li><strong>Reading a URL:</strong> <code>http://localhost:8080/health</code> has host <code>localhost</code>, port <code>8080</code>, path <code>/health</code>.</li>
+    <li><strong>No port:</strong> http uses 80. <strong>Nothing listening:</strong> <code>connection refused</code>.</li>
+  </ul>
+</div>
+<div data-step="3" data-pep-teaching>
+  <h2 id="teach-3-h" tabindex="-1">One port, one listener</h2>
+  <p>Normally only one program at a time can listen on a port. Starting another on a busy port fails with an error such as <code>address already in use</code>; the exact wording depends on the tool.</p>
+  <p>Fix it by stopping the old program or by choosing a free port.</p>
+</div>
+<div data-step="4" data-pep-teaching>
+  <h2 id="teach-4-h" tabindex="-1">Apply it to a new case</h2>
+  <p>Two laptops this time. Ask which computer localhost names.</p>
+</div>
+<div data-step="5" hidden data-pep-recap class="recap">
+  <h2 id="teach-5-h" tabindex="-1">Recap</h2>
+  <ul><li><code>localhost</code> (<code>127.0.0.1</code>) always means the computer you are on.</li><li>The port picks which program gets the request: <code>http://localhost:8080</code> means port 8080.</li><li><code>connection refused</code>: nothing listens there. <code>address already in use</code>: something already does.</li><li>localhost never reaches another computer, such as a teammate's laptop.</li></ul>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <table><tr><td><code>localhost</code>, <code>127.0.0.1</code></td><td>this computer</td></tr><tr><td><code>http://host:port/path</code></td><td>parts of a URL</td></tr><tr><td>no port in an http URL</td><td>port 80</td></tr><tr><td>connection refused</td><td>nothing listening on that port</td></tr><tr><td>address already in use</td><td>port taken: stop the old program or pick another port</td></tr></table>
+    <p>Error wording differs between browsers, frameworks and operating systems; what each error means does not.</p>
+  </details>
+  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Verified against these live sources on 2026-10-06. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.</p><ul><li><a href="https://www.rfc-editor.org/rfc/rfc6761.html#section-6.3" rel="noopener">RFC 6761 section 6.3: localhost names</a></li><li><a href="https://www.rfc-editor.org/rfc/rfc6890.html#section-2.2.2" rel="noopener">RFC 6890 section 2.2.2: 127.0.0.0/8 loopback</a></li><li><a href="https://www.rfc-editor.org/rfc/rfc9110.html#section-4.2.1" rel="noopener">RFC 9110 section 4.2.1: http URIs and default port 80</a></li><li><a href="https://www.rfc-editor.org/rfc/rfc6335.html#section-6" rel="noopener">RFC 6335 section 6: port number ranges</a></li><li><a href="https://man7.org/linux/man-pages/man2/connect.2.html#ERRORS" rel="noopener">Linux man-pages 6.19: connect(2) ECONNREFUSED</a></li><li><a href="https://man7.org/linux/man-pages/man2/bind.2.html#ERRORS" rel="noopener">Linux man-pages 6.19: bind(2) EADDRINUSE</a></li></ul></details>
+  <p class="next-topic">Next: back to the course index for the next module</p>
+</div>
+      </section>
+      <section id="current-task" class="task" aria-label="Current task">
+<div data-step="1"><p id="task-1">Nothing listens on port 5000. You open <code>http://localhost:5000</code>. What happens?</p></div>
+<div data-step="2"><p id="task-2">Send one request that reaches the API, and one that is refused.</p>
+  <ul class="goals"><li data-goal="ok"><span>Reach the API</span><span class="st"></span></li><li data-goal="refused"><span>Get connection refused</span><span class="st"></span></li></ul></div>
+<div data-step="3"><p id="task-3">Start a second copy of the API so both copies run.</p></div>
+<div data-step="4"><p id="task-apply">Ben's API runs on his laptop, port 8080. Your laptop runs nothing on 8080. On your laptop you open <code>http://localhost:8080</code> and get connection refused. Why?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same situation as a route. Where did the request actually go?</p></div>
+<div data-step="5"><p>All activities finished.</p><p id="complete-msg" class="complete"></p></div>
+
+      </section>
+      <div class="fbrow">
+        <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-apply-feedback></div>
+<div data-step="5" ></div>
+        </div>
+        <button type="button" class="primary" id="next" hidden>Continue</button>
+      </div>
+    </div>
+    <div class="col">
+<figure id="live-model" class="model" aria-labelledby="model-cap">
+  <figcaption id="model-cap">Programs and ports. A simulation: no real network requests are made.</figcaption>
+  <div class="netmodel">
+    <div class="machine mine">
+      <p class="mh">Your laptop <span class="addr">localhost = 127.0.0.1</span></p>
+      <ul class="ports" id="ports" aria-label="Ports on your laptop"></ul>
+    </div>
+    <div class="machine other">
+      <p class="mh">Ben's laptop <span class="addr">another computer</span></p>
+      <ul class="ports"><li class="listen"><code class="pn">8080</code><span>api, listening</span></li></ul>
+      <p class="note">A request to localhost never reaches this machine.</p>
+    </div>
+  </div>
+  <p class="req" id="req">No request sent yet.</p>
+</figure>
+      <section id="current-control" class="control" aria-label="Your turn">
+<div data-step="1">
+  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): nothing listens on port 5000 and you open http://localhost:5000. Options: Connection refused (correct: localhost is your own computer, and no program listens on 5000); the API on 8080 answers anyway (a request goes only to the port in the URL); it reaches another computer named localhost (localhost always means this computer); a new program starts on port 5000 (a request never starts a program).">
+    <legend>Prediction</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="predict" value="a"> <span>Connection refused</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span>The API on 8080 answers anyway</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span>It reaches another computer named localhost</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span>A new program starts on port 5000</span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
+    <legend id="pconf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="pconf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+  </div>
+</div><div data-step="2" hidden>
+  <div class="urlrow" data-interaction="explore" data-pep-explore data-static-alt="URL builder: choose a host (localhost or 127.0.0.1, which name the same computer) and a port. On this laptop the web app listens on 3000 and the API on 8080. http://localhost:8080/health reaches the API. A port with no listener, such as 5000, or no port, which means the http default 80, gets connection refused.">
+    <fieldset class="chips" aria-describedby="task-2"><legend>Host</legend>
+      <label class="opt"><input type="radio" name="host" value="localhost" checked> <span>localhost</span></label>
+      <label class="opt"><input type="radio" name="host" value="127.0.0.1"> <span>127.0.0.1</span></label></fieldset>
+    <fieldset class="chips" aria-describedby="task-2"><legend>Port</legend>
+      <label class="opt"><input type="radio" name="port" value="" checked> <span>none</span></label>
+      <label class="opt"><input type="radio" name="port" value="3000"> <span>3000</span></label>
+      <label class="opt"><input type="radio" name="port" value="5000"> <span>5000</span></label>
+      <label class="opt"><input type="radio" name="port" value="8080"> <span>8080</span></label></fieldset>
+  </div>
+  <div class="row"><button type="button" class="primary" data-act="send" data-interaction="explore" aria-describedby="task-2 urlprev" data-static-alt="Send request: sends the request built in the URL builder and shows which program answered or that the connection was refused. Reach the API with port 8080; get connection refused with a port where nothing listens.">Send request</button><p class="urlprev" id="urlprev">http://localhost/health</p></div>
+</div>
+<div data-step="3" hidden>
+  <div class="urlrow" data-interaction="explore" data-pep-explore data-static-alt="Second API activity: start a second copy of the API on a free port. Port 8080 fails with address already in use, because the first API is already listening there. Port 3000 fails for the same reason, because the web app uses it. Port 8081 is free, so the second copy starts.">
+    <fieldset class="chips" aria-describedby="task-3"><legend>Port for the second API</legend>
+      <label class="opt"><input type="radio" name="newport" value="8080" checked> <span>8080</span></label>
+      <label class="opt"><input type="radio" name="newport" value="3000"> <span>3000</span></label>
+      <label class="opt"><input type="radio" name="newport" value="8081"> <span>8081</span></label></fieldset>
+  </div>
+  <div class="row"><button type="button" class="primary" data-act="start" aria-describedby="task-3">Start second API</button></div>
+</div><div data-step="4">
+  <div data-first>
+  <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: Ben&#x27;s API runs on his laptop on port 8080; your laptop runs nothing on 8080; you open http://localhost:8080 and get connection refused. Why? Port 8080 is blocked for everyone (no: the request simply went to your laptop); localhost only works with https (no: plain http works); localhost is your own laptop, where nothing listens on 8080 (correct); Ben must restart his API (no: the request never reached his laptop). To reach Ben&#x27;s API you need his machine&#x27;s address.">
+    <legend>Choose a reason</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="apply-a" value="a"> <span>Port 8080 is blocked for everyone</span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span>localhost only works with https</span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span>localhost is your own laptop, where nothing listens on 8080</span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span>Ben must restart his API</span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
+    <legend id="conf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="conf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="conf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="conf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
+  </div>
+  </div>
+  <div data-retry hidden>
+    <fieldset id="apply-b" aria-describedby="task-apply-b">
+      <legend>Choose a route</legend>
+      <div class="opts"><label class="opt"><input type="radio" name="apply-b" value="a"> <span>Your browser → Ben's laptop, port 8080</span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span>Your browser → your laptop, port 8080, where nothing listens</span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span>Your browser → your laptop, port 80</span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span>Your browser → the internet → a server named localhost</span></label></div>
+    </fieldset>
+    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+  </div>
+</div><div data-step="5"></div>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+var TOPIC={
+steps:5,acts:['predict','request','listen','apply'],
+init:function(){return {ports:[{p:'3000',w:'web app'},{p:'8080',w:'api'}],last:null,g:{},second:null};},
+predict:{correct:'a',why:{
+ a:'this is what happens: no program listens on 5000, so your own laptop refuses the connection.',
+ b:'a request goes to exactly the port in the URL; the API on 8080 never sees it.',
+ c:'localhost always means this computer, never another one.',
+ d:'sending a request never starts a program; something must already be listening.'}},
+apply:{A:{fs:'apply-a',correct:'c',okNote:'<p>localhost pointed at your own laptop, where nothing listens on 8080.</p>',
+  why:{a:'nothing here says 8080 is blocked; the request simply went to your laptop.',b:'plain http works on localhost; the scheme is not the problem.',c:'localhost names your laptop, and nothing listens on 8080 there.',d:'Ben\'s API is fine; your request never reached his laptop.'},
+  miss:{a:'Nothing is blocking 8080. Ask which computer the request went to.',b:'Plain http works with localhost. The problem is where the request went.',d:'Restarting would not help: the request never reached Ben\'s laptop.'},
+  hint:'localhost names one specific computer. Which one is it when you type it on your laptop?'},
+ B:{fs:'apply-b',correct:'b',reveal:'The request went to your own laptop, port 8080, where nothing listens. To reach Ben\'s API you need his machine\'s address.',
+  why:{a:'localhost never leaves your machine, so it cannot reach Ben\'s laptop.',b:'localhost is your laptop, and its port 8080 has no listener.',c:'the URL names port 8080, so port 80 is not used.',d:'localhost is not looked up on the internet; it is this computer.'}}},
+val:function(api,n){var r=api.qa('input[name="'+n+'"]:checked')[0];return r?r.value:'';},
+change:function(el,S,api){if(el.name==='host'||el.name==='port'){var p=this.val(api,'port');api.$('urlprev').textContent='http://'+this.val(api,'host')+(p?':'+p:'')+'/health';}},
+act:function(a,b,S,api){var t=S.t;
+ if(a==='send'&&S.step===2){var h=this.val(api,'host'),p=this.val(api,'port'),port=p||'80',url='http://'+h+(p?':'+p:'')+'/health';
+  var hit=t.ports.filter(function(x){return x.p===port;})[0],msg;
+  if(hit&&hit.w==='api'){t.g.ok=1;msg='Reached the API on port '+port+'. Simulated reply: 200 OK, {"status":"up"}.';}
+  else if(hit){msg='Port '+port+' answered, but that is the '+hit.w+', not the API. Simulated reply: a web page.';}
+  else{t.g.refused=1;msg='Connection refused: nothing listens on port '+port+(p?'':' (no port in the URL, so http used 80)')+'.';}
+  t.last={url:url,port:port,hit:!!hit,what:hit?hit.w:null};
+  var left=(t.g.ok?0:1)+(t.g.refused?0:1);
+  api.say('<p>'+api.esc(msg)+'</p><p>'+(left?left+' of 2 goals still open.':'<strong>Both goals met.</strong> Continue when ready.')+'</p>');
+  if(!left&&!S.done.request){api.complete('request');}}
+ if(a==='start'&&S.step===3){var np=this.val(api,'newport'),busy=t.ports.filter(function(x){return x.p===np;})[0];
+  if(busy){t.err=np;api.say('<p><code>Error: address already in use (port '+np+')</code></p><p>The '+api.esc(busy.w)+' already listens on '+np+'. Stop it, or choose a free port.</p><p>Goal still open.</p>');}
+  else if(!t.second){t.second=np;t.err=null;t.ports.push({p:np,w:'api copy',isNew:true});api.say('<p>The second API now listens on '+np+'. Both copies run, each on its own port.</p><p><strong>Goal met.</strong> Continue when ready.</p>');if(!S.done.listen){api.complete('listen');}}
+  else{api.say('<p>The second copy already runs on '+t.second+'.</p>');}}
+ this.render(S,api);},
+render:function(S,api){var t=S.t,ul=api.$('ports');while(ul.firstChild){ul.removeChild(ul.firstChild);}
+ var rows=t.ports.slice();if(S.step===4){rows=[];}
+ var showFree=S.step===4?['8080']:['5000'];
+ var all=rows.map(function(x){return {p:x.p,w:x.w+', listening',l:true,n:x.isNew};});
+ showFree.forEach(function(p){if(!all.filter(function(x){return x.p===p;}).length){all.push({p:p,w:'nothing listening',l:false});}});
+ if(S.step===2&&t.last&&!t.last.hit&&!all.filter(function(x){return x.p===t.last.port;}).length){all.push({p:t.last.port,w:'nothing listening',l:false});}
+ all.sort(function(a,b){return +a.p-+b.p;});
+ all.forEach(function(x){var li=document.createElement('li');var c=document.createElement('code');c.className='pn';c.textContent=x.p;var s=document.createElement('span');s.textContent=x.w;li.appendChild(c);li.appendChild(s);
+  var cls=x.l?'listen':'';if(x.n){cls+=' new';}
+  if(S.step===2&&t.last&&t.last.port===x.p){cls+=t.last.hit?' hit':' miss';}
+  if(S.step===3&&t.err===x.p){cls+=' miss';}
+  if(S.step===4&&x.p==='8080'){cls+=' miss';}
+  li.className=cls;ul.appendChild(li);});
+ var r=api.$('req');
+ if(S.step===2&&t.last){r.textContent=t.last.url+'  →  your laptop, port '+t.last.port+'  →  '+(t.last.hit?t.last.what+' answers':'refused');}
+ else if(S.step===4){r.textContent='http://localhost:8080  →  your laptop, port 8080  →  refused';}
+ else if(S.step===3&&t.err){r.textContent='second API on port '+t.err+'  →  address already in use';}
+ else{r.textContent='No request sent yet.';}
+ api.qa('.goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!t.g[k]);li.querySelector('.st').textContent=t.g[k]?'done':'open';});
+}
+};
+
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
+var SNAP={};
+function clone(o){return JSON.parse(JSON.stringify(o));}
+var LAST=TOPIC.steps,S;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init()};}
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,get S(){return S;}};
+function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
+function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}}
+function progress(){
+  var acts=TOPIC.acts,n=0,set=0;
+  acts.forEach(function(a,i){var p=qa('.pip',$('progress'))[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
+    p.className='pip'+(on?(S.settled[a]?' settled':' on'):'');});
+  $('prog-text').textContent='Activities done: '+n+' of '+acts.length+(set?' ('+set+' answered, not marked correct)':'');
+}
+function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
+function show(step,focus){
+  S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
+  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
+  if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
+    SNAP[step]={html:h,t:clone(S.t)};}
+  var rb=$('reset');rb.disabled=(step===LAST);
+  $('next').hidden=true;
+  if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
+    c.textContent='All '+TOPIC.acts.length+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: review its explanation above before moving on.':'.');}}
+  else{main.removeAttribute('data-pep-complete');}
+  TOPIC.render(S,api);progress();
+  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+}
+function optLabel(inp){return inp.closest('label');}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function explainList(set,chosen,mark){
+  var html='<ul>';
+  Object.keys(set.why).forEach(function(k){
+    var txt=qa('input[value="'+k+'"]',$(set.fs))[0];var lab=txt?optLabel(txt).textContent.trim():k;
+    var tag=(k===set.correct)?'<strong>Correct: </strong>':'<strong>Not this: </strong>';
+    html+='<li>'+(mark?tag:'')+'<span class="on">'+esc(lab)+'</span>: '+set.why[k]+(k===chosen?' <em>(your choice)</em>':'')+'</li>';
+  });
+  return html+'</ul>';
+}
+function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===set.correct&&(chosen===set.correct)){l.classList.add('right');}
+  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
+function firstDetails(){return '<details><summary>First question: every option explained</summary>'+explainList(TOPIC.apply.A,null,true)+'</details>';}
+function badges(ok,mine,who){return '<span class="badges">'+(mine?'<span class="badge me">'+who+'</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
+function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
+  w.innerHTML=badges(i.value===set.correct,i.value===chosen,'Your answer')+set.why[i.value];sp.appendChild(w);});}
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
+function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
+  var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
+  var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function checkApply(which){
+  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  if(which==='a'){
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
+    if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText());complete('apply');TOPIC.render(S,api);focusVerdict();return;}
+    S.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
+    say('<p class="verdict no">Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <span class="on">'+esc(S.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
+    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});TOPIC.render(S,api);
+    var t=$('task-apply-b');if(t){t.focus();}
+  } else {
+    var c2=checked('apply-b');if(!c2){return;}
+    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
+    if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+firstDetails()+confText());}
+    else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
+      say('<p class="verdict set">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+firstDetails()+confText());}
+    complete('apply');TOPIC.render(S,api);focusVerdict();
+  }
+}
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
+  if(!ch||!pc){return;}
+  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
+    if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
+  var html='<p class="verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+' Each option, explained:</p><ul class="explain">';
+  Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
+    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
+  say(html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||''),1);complete('predict');
+}
+function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
+function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
+  Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
+  qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
+  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  show(step,false);syncPrompt();var h=$('teach-'+step+'-h');if(h){h.focus();}}
+d.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b){return;}
+  if(b.id==='reset'){restart();return;}
+  if(b.id==='next'){show(S.step+1);return;}
+  if(b.id==='predict-check'){checkPredict();return;}
+  if(b.id==='apply-check'){checkApply('a');return;}
+  if(b.id==='apply-check-b'){checkApply('b');return;}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+});
+d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
+var HIST={};
+function prompt(){return TOPIC.prompt?TOPIC.prompt(S):'$';}
+function syncPrompt(){qa('.cmdline .pr').forEach(function(n){n.textContent=prompt();});}
+d.addEventListener('submit',function(e){var f=e.target;e.preventDefault();
+  var inp=f.querySelector('input[type="text"]');if(!inp||inp.disabled){return;}
+  var line=inp.value,H=HIST[inp.id]||(HIST[inp.id]={l:[],i:0});if(line.trim()){H.l.push(line);}H.i=H.l.length;
+  var p=prompt();inp.value='';TOPIC.run(line,f.getAttribute('data-term'),S,api);
+  qa('.log .c:not([data-p])').forEach(function(n){n.setAttribute('data-p',p);});syncPrompt();inp.focus();});
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closest('.cmdline')||t.tagName!=='INPUT'){return;}
+  var H=HIST[t.id]||(HIST[t.id]={l:[],i:0});
+  if(e.key==='ArrowUp'){if(!H.l.length){return;}e.preventDefault();H.i=Math.max(0,H.i-1);t.value=H.l[H.i];}
+  else if(e.key==='ArrowDown'){if(!H.l.length){return;}e.preventDefault();H.i=Math.min(H.l.length,H.i+1);t.value=H.l[H.i]||'';}
+  else if(e.key==='Tab'&&!e.shiftKey&&!e.altKey&&!e.ctrlKey&&!e.metaKey){
+    // capture Tab only when a completion actually changes the line, so Tab never traps focus
+    var v=t.value.trim()&&TOPIC.complete?TOPIC.complete(t.value,S):null;if(v&&v!==t.value){e.preventDefault();t.value=v;}}
+  else if(e.key==='Escape'){var tk=$('task-'+S.step);if(tk){e.preventDefault();tk.setAttribute('tabindex','-1');tk.focus();}}
+});
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+setTheme(mq&&mq.matches?'dark':'light');
+if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+fresh();show(1,false);syncPrompt();
+})();
+
+</script>
+</body>
+</html>

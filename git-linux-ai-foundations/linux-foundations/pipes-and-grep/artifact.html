@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="git-linux-ai-foundations">
+<meta name="pep:module" content="linux-foundations">
+<meta name="pep:topic" content="Pipes and grep">
+<meta name="pep:topic-id" content="pipes-and-grep">
+<meta name="pep:budget-minutes" content="7">
+<meta name="pep:source" content="authoring/evidence/git-linux-ai-foundations/linux-foundations/pipes-and-grep/sources.json">
+<title>Pipes and grep · Linux Foundations</title>
+<style>
+:root{
+  --bg:#eef2f0;--surface:#f8faf9;--ink:#1b2320;--muted:#47524e;--rule:#6b7873;--line:#c9d2ce;
+  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
+  --on-teal:#ffffff;--term:#e2e8e5;--focus:#1f4fbf;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121816;--surface:#1a2220;--ink:#e3ebe7;--muted:#a8b6b0;--rule:#71827c;--line:#2f3b37;
+  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
+  --on-teal:#0b1311;--term:#0c1110;--focus:#8fb4ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+::selection{background:var(--teal);color:var(--on-teal)}
+code,kbd,.mono{font-family:var(--mono);font-size:.94em}
+a{color:var(--teal);text-underline-offset:3px}
+main{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
+.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title tools";column-gap:var(--s6);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
+.top .crumbs{grid-area:crumbs}.top h1{grid-area:title}.top .meta{grid-area:meta}.top .tools{grid-area:tools}
+.crumbs{margin:0 0 var(--s1);font-size:15px;color:var(--muted)}
+.crumbs ol{display:flex;flex-wrap:wrap;gap:0 var(--s2);margin:0;padding:0;list-style:none}
+.crumbs li+li::before{content:"/";margin-right:var(--s2);color:var(--rule)}
+.crumbs [aria-current]{color:var(--ink);font-weight:600}
+h1{margin:0;font-size:24px;line-height:30px;letter-spacing:-.01em}
+.meta{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s2) 0 0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
+.meta li:first-child{font-weight:700;color:var(--ink)}
+.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
+.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2);flex:0 0 auto}
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:var(--amber-soft);border:2px dashed var(--amber)}
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s3);align-items:start}
+.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
+.teach p{margin:0 0 var(--s2);max-width:62ch}
+.teach ul{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
+.teach li{margin-bottom:var(--s1)}
+.teach code,.task code{white-space:nowrap}
+.task{padding:var(--s3) var(--s4);border-top:2px solid var(--teal);background:var(--surface)}
+.task p{margin:0;font-weight:600}
+.task p+p{margin-top:var(--s2)}
+.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
+.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
+.goals li:first-child{border-top:0}
+.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
+.goals li.done .st{color:var(--teal)}
+.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
+.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:var(--s2)}
+.model code{font-size:1em}
+.control{min-width:0}
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:6px var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);background:var(--teal-soft)}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);background:var(--red-soft);box-shadow:inset 4px 0 0 var(--red)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.confrow{margin-top:var(--s2)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
+.term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
+.term-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px var(--s3);margin:0;padding:var(--s1) var(--s3);border-bottom:1px solid var(--rule);font-size:15px;color:var(--muted)}
+.term-top span:first-child{font-weight:700}
+.log{height:220px;overflow-y:auto;padding:var(--s2) var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.log .c{font-weight:700}
+.log .c::before{content:attr(data-p) " ";color:var(--teal);font-weight:700}
+.log .e{color:var(--red)}
+.log .h{color:var(--muted);font-family:var(--sans)}
+.cmdline{display:flex;gap:var(--s2);align-items:center;padding:0 var(--s1) 0 var(--s3);border-top:1px solid var(--rule)}
+.cmdline label{flex:0 1 auto;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 16px var(--mono);color:var(--teal)}
+.cmdline{padding:var(--s2) var(--s2) var(--s2) var(--s3)}
+.cmdline input{flex:1 1 auto;min-width:0;min-height:44px;padding:var(--s2) 0;font:16px var(--mono);color:var(--ink);background:transparent;border:0;caret-color:var(--teal)}
+.cmdline input::placeholder{color:var(--muted);opacity:1}
+.cmdline input:focus,.cmdline input:focus-visible{outline:none}
+.cmdline .runbtn{flex:0 0 auto;min-height:36px;padding:var(--s1) var(--s3);background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:600}
+.cmdline .runbtn:hover{border-color:var(--ink)}
+.simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s2);align-items:flex-start}
+.feedback{width:100%;min-width:0;line-height:1.4;font-size:15px;line-height:1.45}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin-bottom:2px}
+.verdict{font-weight:700}
+.feedback .on{font-weight:600}
+.badge{display:inline-block;margin:0 var(--s1) 0 0;padding:0 6px;border:2px solid currentColor;border-radius:3px;font:700 15px/1.4 var(--sans);vertical-align:baseline}
+.badge.ok{color:var(--teal)}.badge.no{color:var(--red)}.badge.me{color:var(--ink)}
+.opt .badges{display:block;margin-top:2px}
+.explain{list-style:none;padding:0;margin:var(--s1) 0 0}
+.explain li{margin:0;padding:var(--s1) 0 var(--s1) var(--s3);border-left:2px solid var(--line)}
+.explain li+li{margin-top:var(--s1)}
+.explain li.mine{border-left-color:var(--teal)}
+.explain .on,.explain .ex{display:block}
+.explain .ex::first-letter{text-transform:uppercase}
+.teach ul.chunks{list-style:none;padding:0}
+.teach ul.chunks li{margin-bottom:var(--s2)}
+.opt .why{display:block;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
+.opt .why code{font-size:.94em}
+.verdict.ok{color:var(--teal)}
+.verdict.no{color:var(--red)}
+.verdict.set{color:var(--amber)}
+.conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+.recap ul{padding-left:20px}
+.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
+.feedback details{margin:var(--s1) 0}
+.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
+.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
+.next-topic{font-weight:700}
+.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
+[hidden]{display:none!important}
+@media (min-width:861px) and (max-height:720px){
+  main{padding-top:var(--s2)}
+  .stage{padding-top:var(--s2)}
+  .col{gap:var(--s2)}
+  .model{padding:var(--s2) var(--s4)}
+  .model figcaption{margin-bottom:var(--s1)}
+  .meta{margin-top:var(--s1)}
+  .opts{gap:6px}
+  legend{margin-bottom:var(--s1)}
+  .row{margin-top:var(--s2)}
+  .teach h2{margin-bottom:var(--s1)}
+}
+@media (max-width:860px){
+  main{padding:var(--s3) var(--s4) var(--s4)}
+  .top{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "tools";row-gap:var(--s2)}
+  .tools{justify-content:flex-start;flex-wrap:wrap}
+  .stage{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3)}
+  .col{display:contents}
+  #current-teaching{order:1}#current-task{order:2}#live-model{order:3}#current-control{order:4}.fbrow{order:5}
+  .fbrow{flex-direction:column}
+}
+@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}
+  .cmdline{flex-wrap:wrap;row-gap:var(--s1)}
+  .cmdline label{flex:1 0 100%;max-width:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+.stage[data-step="5"] .loglines li{padding:0 var(--s2)}
+.stage[data-step="5"] .flow{display:none}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:var(--s2) 0;margin:0 0 var(--s3);padding:0;list-style:none}
+.flow li{display:flex;flex-direction:column;justify-content:center;padding:var(--s1) var(--s3);border:2px solid var(--rule);border-radius:3px;background:var(--bg);font:600 15px/1.3 var(--mono)}
+.flow li+li{margin-left:36px;position:relative}
+.flow li+li::before{content:"|";position:absolute;left:-26px;top:50%;transform:translateY(-50%);font:700 18px var(--mono);color:var(--teal)}
+.flow li.first::before{content:"→"}
+.flow li.fin{border-color:var(--teal);box-shadow:inset 0 -4px 0 var(--teal)}
+.flow .cnt{font:600 15px/1.3 var(--sans);color:var(--muted)}
+.flow li.bad{border-style:dashed;border-color:var(--red);color:var(--red)}
+.loglines{margin:0;padding:0;list-style:none;font:500 15px/1.35 var(--mono)}
+.loglines li{display:flex;justify-content:space-between;gap:var(--s3);padding:1px var(--s2);border-left:4px solid transparent}
+.loglines li.kept{border-left-color:var(--teal);background:var(--teal-soft)}
+.loglines li.drop .ln{color:var(--muted);text-decoration:line-through;text-decoration-thickness:1px}
+.loglines .kt{flex:0 0 auto;font:600 15px/1.35 var(--sans);color:var(--muted)}
+.loglines li.kept .kt{color:var(--teal)}
+.countbox{font:700 18px var(--mono)}
+</style>
+</head>
+<body>
+<noscript><p class="nojs">This topic needs JavaScript for its practice activities and checks. Turn JavaScript on to take part.</p></noscript>
+<main id="lesson">
+  <header class="top">
+    <h1>Pipes and grep</h1>
+    <ul class="objectives" data-pep-objectives aria-label="Objectives" style="grid-column:1/-1;margin:0;padding-left:1.25em">
+      <li>Explain what a pipe (|) passes from one command to the next</li>
+      <li>Filter lines with grep, including -i and -v</li>
+      <li>Count matching lines by piping grep into wc -l</li>
+    </ul>
+    <div class="tools">
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 5</span><span class="pips" aria-hidden="true"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></span></div>
+      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+    </div>
+  </header>
+  <div class="stage" id="stage" data-step="1">
+    <div class="col">
+      <section id="current-teaching" class="teach" aria-label="Current teaching">
+<div data-step="1">
+  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+  <p>Read the log on the right, then guess. Practice prediction, not scored.</p>
+</div>
+<div data-step="2" data-pep-teaching>
+  <h2 id="teach-2-h" tabindex="-1">Filter lines with grep, join commands with |</h2>
+  <p><code>grep PATTERN FILE</code> prints only the lines that contain the pattern. It matches exact case, so <code>ERROR</code> and <code>error</code> differ.</p>
+  <p>A pipe, <code>|</code>, sends one command's standard output (stdout) into the next command's standard input (stdin). Error messages go to standard error (stderr), which a plain <code>|</code> does not pass. In <code>cat app.log | grep ERROR</code>, <code>cat</code> prints the file and <code>grep</code> filters what flows in.</p>
+</div>
+<div data-step="3" data-pep-teaching>
+  <h2 id="teach-3-h" tabindex="-1">Two useful options: -i and -v</h2>
+  <ul>
+    <li><code>-i</code> ignores case: <code>grep -i error</code> matches <code>ERROR</code> and <code>error</code>.</li>
+    <li><code>-v</code> inverts the match: it keeps the lines that do not contain the pattern.</li>
+  </ul>
+  <p>Options go before the pattern: <code>grep -v INFO app.log</code>.</p>
+</div>
+<div data-step="4" data-pep-teaching>
+  <h2 id="teach-4-h" tabindex="-1">Count with wc -l</h2>
+  <p><code>wc -l</code> counts the lines it receives. Pipe a filter into it to count matches: <code>grep ERROR app.log | wc -l</code> prints <code>3</code>.</p>
+  <p>Each extra <code>|</code> adds a stage, and the data flows left to right.</p>
+</div>
+<div data-step="5" data-pep-teaching>
+  <h2 id="teach-5-h" tabindex="-1">Apply it to a new question</h2>
+  <p>Same log, new goal. Think in stages: what survives the filter, and what turns lines into a number?</p>
+</div>
+<div data-step="6" hidden data-pep-recap class="recap">
+  <h2 id="teach-6-h" tabindex="-1">Recap</h2>
+  <ul><li><code>grep</code> keeps lines that contain a pattern; it is case-sensitive unless you add <code>-i</code>.</li><li><code>-v</code> keeps the lines that do not match.</li><li>A pipe <code>|</code> sends one command's standard output into the next command's standard input, left to right; stderr is not passed.</li><li><code>wc -l</code> counts lines, so filter first, then count.</li></ul>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <table><tr><td><code>grep PAT file</code></td><td>lines containing PAT</td></tr><tr><td><code>grep -i PAT</code></td><td>ignore case</td></tr><tr><td><code>grep -v PAT</code></td><td>lines not containing PAT</td></tr><tr><td><code>a | b</code></td><td>a's stdout becomes b's stdin</td></tr><tr><td><code>wc -l</code></td><td>count lines</td></tr></table>
+    <p>grep patterns are regular expressions; plain words like the ones here match literally.</p>
+  </details>
+  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.</p><ul><li><a href="https://www.gnu.org/software/bash/manual/html_node/Pipelines.html" rel="noopener">GNU Bash 5.3 Reference Manual: pipelines</a></li><li><a href="https://www.gnu.org/software/grep/manual/grep.html#Introduction" rel="noopener">GNU grep manual: introduction</a></li><li><a href="https://www.gnu.org/software/grep/manual/grep.html#Matching-Control" rel="noopener">GNU grep manual: matching control, -i and -v</a></li><li><a href="https://www.gnu.org/software/coreutils/manual/html_node/wc-invocation.html" rel="noopener">GNU Coreutils manual: wc invocation</a></li></ul></details>
+  <p class="next-topic">Next topic: <a href="../file-permissions/artifact.html">File permissions</a></p>
+</div>
+      </section>
+      <section id="current-task" class="task" aria-label="Current task">
+<div data-step="1"><p id="task-1">What does <code>grep error app.log</code> print?</p></div>
+<div data-step="2"><p id="task-2">Show only the uppercase <code>ERROR</code> lines, using a pipe: start with <code>cat app.log |</code>.</p></div>
+<div data-step="3"><p id="task-3">Show every line that is not an <code>INFO</code> line.</p></div>
+<div data-step="4"><p id="task-4">Count the error lines, whatever their case.</p></div>
+<div data-step="5"><p id="task-apply">Which command prints how many lines in <code>app.log</code> do not mention <code>user</code>?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same question as data flows. Which flow answers it?</p></div>
+<div data-step="6"><p>All activities finished.</p><p id="complete-msg" class="complete"></p></div>
+
+      </section>
+      <div class="fbrow">
+        <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-explore-feedback></div>
+<div data-step="5" data-pep-apply-feedback></div>
+<div data-step="6" ></div>
+        </div>
+        <button type="button" class="primary" id="next" hidden>Continue</button>
+      </div>
+    </div>
+    <div class="col">
+<figure id="live-model" class="model" aria-labelledby="model-cap">
+  <figcaption id="model-cap">The pipeline, stage by stage. <code>app.log</code> is a fictional file; the terminal is a simulation.</figcaption>
+  <ol class="flow" id="flow" aria-label="Pipeline stages"><li class="src"><code>app.log</code><span class="cnt">10 lines</span></li></ol>
+  <ol class="loglines" id="lines" aria-label="Lines of app.log after the filters"><li data-i="0"><span class="ln">09:00 INFO server started on port 8080</span><span class="kt"></span></li><li data-i="1"><span class="ln">09:01 INFO user ana signed in</span><span class="kt"></span></li><li data-i="2"><span class="ln">09:02 WARN slow response from /orders</span><span class="kt"></span></li><li data-i="3"><span class="ln">09:03 ERROR database timeout</span><span class="kt"></span></li><li data-i="4"><span class="ln">09:04 INFO user ben signed in</span><span class="kt"></span></li><li data-i="5"><span class="ln">09:05 error retry failed for job 7</span><span class="kt"></span></li><li data-i="6"><span class="ln">09:06 ERROR database timeout</span><span class="kt"></span></li><li data-i="7"><span class="ln">09:07 WARN disk 85% full</span><span class="kt"></span></li><li data-i="8"><span class="ln">09:08 INFO user ana signed out</span><span class="kt"></span></li><li data-i="9"><span class="ln">09:09 ERROR payment service unavailable</span><span class="kt"></span></li></ol>
+</figure>
+      <section id="current-control" class="control" aria-label="Your turn">
+<div data-step="1">
+  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): what does grep error app.log print? The log has three uppercase ERROR lines and one lowercase error line. Options: one line, 09:05 error retry failed for job 7 (correct: grep matches exact case by default); all four error lines (needs -i); the number 4 (grep prints lines, counting needs wc -l); nothing at all (one line does contain lowercase error).">
+    <legend>Prediction</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="predict" value="a"> <span>One line: 09:05 error retry failed for job 7</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span>All four error lines</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span>The number 4</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span>Nothing at all</span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
+    <legend id="pconf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="pconf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+  </div>
+</div><div data-step="2" hidden>
+  <div class="term" data-interaction="terminal" data-steps="1" data-static-alt="Terminal activity: show only the uppercase ERROR lines using a pipe. Worked example: cat app.log | grep ERROR prints the three ERROR lines (09:03, 09:06, 09:09). cat prints the file and grep keeps only matching lines.">
+    <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-2">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
+    <div class="log" id="log-2" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
+    <div class="cmdline" data-term="2">
+      <label for="cmd-2"><span class="pr">$</span><span class="vh"> command</span></label>
+      <input type="text" id="cmd-2" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-2 keys-2">
+      <button type="button" class="runbtn">Run</button>
+    </div>
+  </div>
+</div><div data-step="3" hidden>
+  <div class="term" data-interaction="terminal" data-steps="1" data-static-alt="Terminal activity: show every line that is not an INFO line. Worked example: grep -v INFO app.log prints the 6 WARN, ERROR and error lines. -v inverts the match.">
+    <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-3">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
+    <div class="log" id="log-3" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
+    <div class="cmdline" data-term="3">
+      <label for="cmd-3"><span class="pr">$</span><span class="vh"> command</span></label>
+      <input type="text" id="cmd-3" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-3 keys-3">
+      <button type="button" class="runbtn">Run</button>
+    </div>
+  </div>
+</div><div data-step="4" hidden>
+  <div class="term" data-interaction="terminal" data-steps="1" data-static-alt="Terminal activity: count the error lines, whatever their case. Worked example: grep -i error app.log | wc -l prints 4. -i ignores case, and wc -l counts the lines it receives.">
+    <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-4">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
+    <div class="log" id="log-4" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
+    <div class="cmdline" data-term="4">
+      <label for="cmd-4"><span class="pr">$</span><span class="vh"> command</span></label>
+      <input type="text" id="cmd-4" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-4 keys-4">
+      <button type="button" class="runbtn">Run</button>
+    </div>
+  </div>
+</div><div data-step="5">
+  <div data-first>
+  <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: which command prints how many lines in app.log do not mention user? Options: grep user app.log | wc -l (counts the 3 lines that do mention user); grep -v user app.log (prints the 7 lines but does not count them); wc -l app.log | grep -v user (wc -l runs first and outputs one line, 10 app.log); grep -v user app.log | wc -l (correct: drop the user lines, then count the 7 that remain).">
+    <legend>Choose a command</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="apply-a" value="a"> <span>grep user app.log | wc -l</span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span>grep -v user app.log</span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span>wc -l app.log | grep -v user</span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span>grep -v user app.log | wc -l</span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
+    <legend id="conf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="conf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="conf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="conf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
+  </div>
+  </div>
+  <div data-retry hidden>
+    <fieldset id="apply-b" aria-describedby="task-apply-b">
+      <legend>Choose a flow</legend>
+      <div class="opts"><label class="opt"><input type="radio" name="apply-b" value="a"> <span>app.log → keep lines with user → count → 3</span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span>app.log → count → keep lines without user → 10 app.log</span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span>app.log → keep lines without user → count → 7</span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span>app.log → keep lines without user → 7 lines printed</span></label></div>
+    </fieldset>
+    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+  </div>
+</div><div data-step="6"></div>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+var TOPIC={
+steps:6,acts:['predict','pipe','options','count','apply'],
+prompt:function(){return 'ana@pep:~$';},
+complete:function(v){var i=v.length;while(i>0&&v.charAt(i-1)!==' '&&v.charAt(i-1)!=='|'){i--;}var w=v.slice(i),pre=v.slice(0,i);if(!w){return null;}
+ var before=pre.replace(/\s+$/,''),first=!before||/\|$/.test(before);
+ var c=(first?['cat','grep','wc']:['app.log']).filter(function(x){return x.indexOf(w)===0&&x!==w;});return c.length===1?pre+c[0]+' ':null;},
+
+init:function(){return {res:null};},
+predict:{correct:'a',why:{
+ a:'this is what it prints. grep matches exact case by default, so only the lowercase line matches.',
+ b:'uppercase ERROR does not match lowercase error unless you add -i.',
+ c:'grep prints matching lines, not a count. Counting needs wc -l.',
+ d:'one line does contain lowercase error, so grep prints it.'}},
+apply:{A:{fs:'apply-a',correct:'d',okNote:'<p>-v drops the user lines, then wc -l counts the 7 that remain.</p>',
+  why:{a:'counts the lines that do mention user: 3.',b:'prints the 7 lines but does not count them.',c:'wc -l runs first and outputs one line, 10 app.log; grep then keeps it.',d:'drops lines with user, then counts the rest: 7.'},
+  miss:{a:'That counts the lines that do mention user. You need <code>-v</code> to keep the others.',b:'That prints the 7 lines instead of counting them. Pipe them into <code>wc -l</code>.',c:'Order matters: <code>wc -l</code> runs first and outputs a single line, so grep has nothing useful left to filter.'},
+  hint:'Think in stages: which lines should survive the filter, and which command turns lines into a number?'},
+ B:{fs:'apply-b',correct:'c',reveal:'Drop the user lines, then count what is left: <code>grep -v user app.log | wc -l</code> prints 7.',
+  why:{a:'keeps the user lines instead of dropping them.',b:'counts before filtering, so only the count line is left.',c:'filter out user, then count: 7.',d:'filters correctly but never counts.'}}},
+run:function(line,term,S,api){
+ var L=["09:00 INFO server started on port 8080", "09:01 INFO user ana signed in", "09:02 WARN slow response from /orders", "09:03 ERROR database timeout", "09:04 INFO user ben signed in", "09:05 error retry failed for job 7", "09:06 ERROR database timeout", "09:07 WARN disk 85% full", "09:08 INFO user ana signed out", "09:09 ERROR payment service unavailable"],out=[],msg='',step=+term,res=null;
+ function o(c,s){out.push([c,s]);}
+ function split(seg){var w=[],cur=null,q=null;for(var i=0;i<seg.length;i++){var c=seg.charAt(i);
+   if(q){if(c===q){q=null;}else{cur+=c;}continue;}
+   if(c==='"'||c==="'"){if(cur===null){cur='';}q=c;continue;}
+   if(c===' '||c==='\t'){if(cur!==null){w.push(cur);cur=null;}continue;}
+   if(cur===null){cur='';}cur+=c;}
+  if(q){return null;}if(cur!==null){w.push(cur);}return w;}
+ function run(){
+  if(/[;&<>$`*]/.test(line.replace(/'[^']*'|"[^"]*"/g,''))){return {err:'Only | pipes, cat, grep and wc -l are available in this practice terminal.'};}
+  var segs=line.split('|'),data=null,stages=[],note='',preCount=[];
+  for(var s=0;s<segs.length;s++){var w=split(segs[s].trim());
+   if(w===null){return {err:'Unclosed quote: add the matching quote and run it again.'};}
+   if(!w.length){return {err:'A pipe needs a command on both sides.'};}
+   var cmd=w[0],args=w.slice(1),file=null,opts=[],pos=[];
+   args.forEach(function(a){if(a.charAt(0)==='-'&&a.length>1){opts.push(a);}else{pos.push(a);}});
+   if(cmd==='cat'){if(opts.length||pos.length!==1){return {err:'cat: in this practice terminal, use it as cat app.log.'};}file=pos[0];}
+   else if(cmd==='grep'){var fl={i:false,v:false};
+    for(var k=0;k<opts.length;k++){var ok=/^-[iv]+$/.test(opts[k]);if(!ok){return {err:'grep '+opts[k]+': not available in this practice terminal (only -i and -v are).'};}if(opts[k].indexOf('i')>=0){fl.i=true;}if(opts[k].indexOf('v')>=0){fl.v=true;}}
+    if(!pos.length){return {err:'grep needs a pattern, like grep ERROR.'};}
+    var pat=pos[0];if(/[.^$\[\]\\*+?(){}|]/.test(pat)){return {err:'Patterns with special characters are not available in this practice terminal.'};}
+    if(pos.length>2){return {err:'Several files are not available in this practice terminal.'};}file=pos[1]||null;}
+   else if(cmd==='wc'){if(opts.length!==1||opts[0]!=='-l'){return {err:'wc: only wc -l is available in this practice terminal.'};}if(pos.length>1){return {err:'Several files are not available in this practice terminal.'};}file=pos[0]||null;}
+   else{return {err:cmd+': not available in this practice terminal'};}
+   var input;
+   if(file!==null){if(file!=='app.log'){return {err:cmd+': '+file+': No such file or directory'};}
+    if(s>0){note='Stage '+(s+1)+' named a file, so it read app.log and ignored the piped input.';}
+    input=L.map(function(t,i){return {i:i,t:t};});}
+    else if(s===0){return {err:cmd+' with no file and no pipe would wait for you to type input. Give it app.log or pipe into it.'};}
+   else{input=data;}
+   var outp;
+   if(cmd==='cat'){outp=input;}
+   else if(cmd==='grep'){outp=input.filter(function(x){var a=fl.i?x.t.toLowerCase():x.t,b=fl.i?pat.toLowerCase():pat;var m=a.indexOf(b)>=0;return fl.v?!m:m;});}
+   else{preCount=input.map(function(x){return x.i;});outp=[{i:-1,t:String(input.length)+(file!==null?' app.log':'')}];}
+   stages.push({label:segs[s].trim(),n:outp.length,cmd:cmd,flags:fl,pat:pat,count:cmd==='wc'});data=outp;}
+  return {stages:stages,out:data,note:note,preCount:preCount};}
+ o('c',line);
+ if(!line.trim()){o('h','(nothing to run)');}
+ else{res=run();
+  if(res.err){o('e',res.err);msg='That was not run, and earns no credit.';res=null;}
+  else{res.out.forEach(function(x){o('o',x.t);});if(!res.out.length){o('h','(no lines matched, so nothing was printed)');}if(res.note){o('h',res.note);}}}
+ S.t.res=res;
+ var log=api.$('log-'+term);out.forEach(function(x){var dv=document.createElement('div');dv.className=x[0];dv.textContent=x[1];log.appendChild(dv);});log.scrollTop=log.scrollHeight;
+ var done=false;
+ function lastGrep(){var g=null;if(res){res.stages.forEach(function(s){if(s.cmd==='grep'){g=s;}});}return g;}
+ function ids(){return res.out.map(function(x){return x.i;}).join(',');}
+ if(res){
+  if(step===2){var piped=res.stages.length>1&&res.stages[0].cmd==='cat'&&!res.note;
+   if(ids()==='3,6,9'&&piped){done=true;msg='cat sent all 10 lines through the pipe; grep ERROR kept the 3 uppercase ERROR lines.';}
+   else if(ids()==='3,6,9'){msg='Right lines, but this task practises the pipe: start with cat app.log | and filter after it.';}
+   else if(ids()==='5'){msg='That kept only the lowercase error line. grep matches exact case: use ERROR.';}
+   else{msg='That printed '+res.out.length+' line'+(res.out.length===1?'':'s')+'. The goal is the 3 lines that contain ERROR.';}}
+  if(step===3){var g=lastGrep();
+   if(ids()==='2,3,5,6,7,9'&&g&&g.flags.v){done=true;msg='-v INFO dropped the 4 INFO lines and kept the other 6.';}
+   else if(ids()==='0,1,4,8'){msg='Those are the INFO lines themselves. -v inverts the match to keep the rest.';}
+   else{msg='That printed '+res.out.length+' line'+(res.out.length===1?'':'s')+'. The goal is every line without INFO: 6 lines.';}}
+  if(step===4){var last=res.stages[res.stages.length-1],g2=lastGrep();
+   if(last.count&&res.out[0].t==='4'&&g2&&g2.flags.i&&!g2.flags.v&&g2.pat.toLowerCase()==='error'){done=true;msg='grep -i error kept all 4 error lines, and wc -l counted them: 4.';}
+   else if(last.count&&res.out[0].t==='3'){msg='That counted only uppercase ERROR: 3. Which option ignores case?';}
+   else if(last.count&&/^10/.test(res.out[0].t)){msg='wc -l counted every line in the file. Filter first, then pipe into wc -l.';}
+   else if(!last.count){msg='That printed lines, not a count. Pipe them into wc -l.';}
+   else{msg='That count is '+res.out[0].t+'. The goal is every error line, in any case.';}}}
+ var html='<p>'+api.esc(msg||'Command run.')+'</p>'+(done?'<p><strong>Goal met.</strong> Continue when ready.</p>':'<p>Goal still open.</p>');
+ var act={2:'pipe',3:'options',4:'count'}[step];
+ if(S.done[act]){html='<p>'+api.esc(msg||'Command run.')+'</p><p>Goal already met. Continue when ready.</p>';}
+ api.say(html);
+ if(done&&!S.done[act]){api.complete(act);}
+ this.render(S,api);
+},
+render:function(S,api){var r=(S.step>=2&&S.step<=4)?S.t.res:null;
+ var f=api.$('flow');while(f.children.length>1){f.removeChild(f.lastChild);}
+ var count=null;
+ if(r){r.stages.forEach(function(s,i){var li=document.createElement('li');var c=document.createElement('code');c.textContent=s.label;li.appendChild(c);
+   var n=document.createElement('span');n.className='cnt';n.textContent=s.count?('prints '+r.out[0].t):(s.n+' line'+(s.n===1?'':'s')+' out');li.appendChild(n);
+   li.className=(i===0?'first':'')+(i===r.stages.length-1?' fin':'');f.appendChild(li);});
+  if(r.stages[r.stages.length-1].count){count=r.out[0].t;}
+ }
+ var kept={};if(r){var o=r.out;if(count===null){o.forEach(function(x){kept[x.i]=1;});}else{(r.preCount||[]).forEach(function(i){kept[i]=1;});}}
+ api.qa('#lines li').forEach(function(li){var i=+li.getAttribute('data-i');var on=!!r&&!!kept[i];
+  li.classList.toggle('kept',on);li.classList.toggle('drop',!!r&&!on);li.querySelector('.kt').textContent=r?(on?(count!==null?'counted':'kept'):'dropped'):'';});
+}
+};
+
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
+var SNAP={};
+function clone(o){return JSON.parse(JSON.stringify(o));}
+var LAST=TOPIC.steps,S;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init()};}
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,get S(){return S;}};
+function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
+function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}}
+function progress(){
+  var acts=TOPIC.acts,n=0,set=0;
+  acts.forEach(function(a,i){var p=qa('.pip',$('progress'))[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
+    p.className='pip'+(on?(S.settled[a]?' settled':' on'):'');});
+  $('prog-text').textContent='Activities done: '+n+' of '+acts.length+(set?' ('+set+' answered, not marked correct)':'');
+}
+function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
+function show(step,focus){
+  S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
+  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
+  if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
+    SNAP[step]={html:h,t:clone(S.t)};}
+  var rb=$('reset');rb.disabled=(step===LAST);
+  $('next').hidden=true;
+  if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
+    c.textContent='All '+TOPIC.acts.length+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: review its explanation above before moving on.':'.');}}
+  else{main.removeAttribute('data-pep-complete');}
+  TOPIC.render(S,api);progress();
+  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+}
+function optLabel(inp){return inp.closest('label');}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function explainList(set,chosen,mark){
+  var html='<ul>';
+  Object.keys(set.why).forEach(function(k){
+    var txt=qa('input[value="'+k+'"]',$(set.fs))[0];var lab=txt?optLabel(txt).textContent.trim():k;
+    var tag=(k===set.correct)?'<strong>Correct: </strong>':'<strong>Not this: </strong>';
+    html+='<li>'+(mark?tag:'')+'<span class="on">'+esc(lab)+'</span>: '+set.why[k]+(k===chosen?' <em>(your choice)</em>':'')+'</li>';
+  });
+  return html+'</ul>';
+}
+function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===set.correct&&(chosen===set.correct)){l.classList.add('right');}
+  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
+function firstDetails(){return '<details><summary>First question: every option explained</summary>'+explainList(TOPIC.apply.A,null,true)+'</details>';}
+function badges(ok,mine,who){return '<span class="badges">'+(mine?'<span class="badge me">'+who+'</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
+function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
+  w.innerHTML=badges(i.value===set.correct,i.value===chosen,'Your answer')+set.why[i.value];sp.appendChild(w);});}
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
+function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
+  var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
+  var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function checkApply(which){
+  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  if(which==='a'){
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
+    if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText());complete('apply');TOPIC.render(S,api);focusVerdict();return;}
+    S.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
+    say('<p class="verdict no">Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <span class="on">'+esc(S.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
+    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});TOPIC.render(S,api);
+    var t=$('task-apply-b');if(t){t.focus();}
+  } else {
+    var c2=checked('apply-b');if(!c2){return;}
+    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
+    if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+firstDetails()+confText());}
+    else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
+      say('<p class="verdict set">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+firstDetails()+confText());}
+    complete('apply');TOPIC.render(S,api);focusVerdict();
+  }
+}
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
+  if(!ch||!pc){return;}
+  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
+    if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
+  var html='<p class="verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+' Each option, explained:</p><ul class="explain">';
+  Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
+    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
+  say(html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||''),1);complete('predict');
+}
+function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
+function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
+  Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
+  qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
+  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  show(step,false);syncPrompt();var h=$('teach-'+step+'-h');if(h){h.focus();}}
+d.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b){return;}
+  if(b.id==='reset'){restart();return;}
+  if(b.id==='next'){show(S.step+1);return;}
+  if(b.id==='predict-check'){checkPredict();return;}
+  if(b.id==='apply-check'){checkApply('a');return;}
+  if(b.id==='apply-check-b'){checkApply('b');return;}
+  if(b.classList.contains('runbtn')){runTerminal(b.closest('.cmdline'));return;}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+});
+d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
+var HIST={};
+function prompt(){return TOPIC.prompt?TOPIC.prompt(S):'$';}
+function syncPrompt(){qa('.cmdline .pr').forEach(function(n){n.textContent=prompt();});}
+function runTerminal(box){
+  if(!box){return;}var inp=box.querySelector('input[type="text"]');if(!inp||inp.disabled){return;}
+  var line=inp.value,H=HIST[inp.id]||(HIST[inp.id]={l:[],i:0});if(line.trim()){H.l.push(line);}H.i=H.l.length;
+  var p=prompt();inp.value='';TOPIC.run(line,box.getAttribute('data-term'),S,api);
+  qa('.log .c:not([data-p])').forEach(function(n){n.setAttribute('data-p',p);});syncPrompt();inp.focus();}
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closest('.cmdline')||t.tagName!=='INPUT'){return;}
+  var H=HIST[t.id]||(HIST[t.id]={l:[],i:0});
+  if(e.key==='Enter'&&!e.isComposing){e.preventDefault();runTerminal(t.closest('.cmdline'));}
+  else if(e.key==='ArrowUp'){if(!H.l.length){return;}e.preventDefault();H.i=Math.max(0,H.i-1);t.value=H.l[H.i];}
+  else if(e.key==='ArrowDown'){if(!H.l.length){return;}e.preventDefault();H.i=Math.min(H.l.length,H.i+1);t.value=H.l[H.i]||'';}
+  else if(e.key==='Tab'&&!e.shiftKey&&!e.altKey&&!e.ctrlKey&&!e.metaKey){
+    // capture Tab only when a completion actually changes the line, so Tab never traps focus
+    var v=t.value.trim()&&TOPIC.complete?TOPIC.complete(t.value,S):null;if(v&&v!==t.value){e.preventDefault();t.value=v;}}
+  else if(e.key==='Escape'){var tk=$('task-'+S.step);if(tk){e.preventDefault();tk.setAttribute('tabindex','-1');tk.focus();}}
+});
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+setTheme(mq&&mq.matches?'dark':'light');
+if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+fresh();show(1,false);syncPrompt();
+})();
+
+</script>
+</body>
+</html>
