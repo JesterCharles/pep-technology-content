@@ -5,6 +5,7 @@ import path from "node:path";
 import {
   authoringPath,
   error,
+  findCourseRoots,
   findForbiddenKeys,
   readJson,
   walk,
@@ -34,7 +35,18 @@ const mapping = [
   [/\/evidence\/legacy\/course-1-packages\.json$/, "legacy-course-packages"],
   [/\/evidence\/legacy\/tournament\.json$/, "legacy-tournament"],
 ];
-async function checkBlueprintReferences(ctx, file, data) {
+async function objectiveExists(courseRoot, match) {
+  try {
+    const topic = await readJson(
+      path.join(courseRoot, match[2], match[3], "topic.json"),
+    );
+    return (topic.objectives ?? []).some((objective) => objective.id === match[4]);
+  } catch {
+    return false;
+  }
+}
+
+async function checkBlueprintReferences(ctx, file, data, courses) {
   const errors = [];
   let courseRoot = path.dirname(file);
   while (courseRoot.startsWith(ctx.root)) {
@@ -53,20 +65,38 @@ async function checkBlueprintReferences(ctx, file, data) {
     const match = reference.match(
       /^([a-z0-9]+(?:-[a-z0-9]+)*)\/([a-z0-9]+(?:-[a-z0-9]+)*)\/([a-z0-9]+(?:-[a-z0-9]+)*)#(o[1-9][0-9]*)$/,
     );
-    if (!match || match[1] !== path.basename(courseRoot)) {
+    if (!match) {
       errors.push(error(id, ctx.display(file), `objective ${reference} does not resolve`));
       continue;
     }
-    const topicFile = path.join(courseRoot, match[2], match[3], "topic.json");
-    let topic;
-    try {
-      topic = await readJson(topicFile);
-    } catch {
-      errors.push(error(id, ctx.display(file), `objective ${reference} does not resolve`));
-      continue;
+
+    const matches = new Set();
+    if (
+      match[1] === path.basename(courseRoot) &&
+      (await objectiveExists(courseRoot, match))
+    )
+      matches.add(courseRoot);
+    for (const course of courses) {
+      if (
+        course.manifest?.id === match[1] &&
+        (await objectiveExists(course.root, match))
+      )
+        matches.add(course.root);
     }
-    if (!(topic.objectives ?? []).some((objective) => objective.id === match[4]))
+
+    if (matches.size === 0) {
       errors.push(error(id, ctx.display(file), `objective ${reference} does not resolve`));
+    } else if (matches.size > 1) {
+      errors.push(
+        error(
+          id,
+          ctx.display(file),
+          `objective ${reference} is ambiguous across courses: ${[...matches]
+            .map((root) => ctx.display(root))
+            .join(", ")}`,
+        ),
+      );
+    }
   }
 
   if (data.objectiveFormats && typeof data.objectiveFormats === "object") {
@@ -134,6 +164,15 @@ export async function run(ctx) {
     validators[name] = ajv.compile(
       await readJson(authoringPath(ctx.root, "schemas", `${name}.schema.json`)),
     );
+  const courseRoots = await findCourseRoots({ ...ctx, explicit: false });
+  const courses = [];
+  for (const root of courseRoots) {
+    try {
+      courses.push({ root, manifest: await readJson(path.join(root, "course.json")) });
+    } catch {
+      // Schema parsing below reports malformed course manifests.
+    }
+  }
   const errors = [];
   for (const target of ctx.scanRoots) {
     const w = await walk(target, { skip: ctx.skip });
@@ -177,7 +216,7 @@ export async function run(ctx) {
         for (const key of findForbiddenKeys(data))
           errors.push(error(id, ctx.display(file), `forbidden key ${key}`));
       if (pair[1] === "assessment-blueprint")
-        errors.push(...(await checkBlueprintReferences(ctx, file, data)));
+        errors.push(...(await checkBlueprintReferences(ctx, file, data, courses)));
       if (pair[1] === "reconciliation" && data.author === data.decidedBy)
         errors.push(error(id, ctx.display(file), "decidedBy must differ from author"));
     }
