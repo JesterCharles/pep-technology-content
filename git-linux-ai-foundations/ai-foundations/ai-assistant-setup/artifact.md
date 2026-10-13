@@ -2,7 +2,7 @@
 
 ## Objectives
 
-- Name the three inputs an assistant works from: standing instructions, shared context and your prompt
+- Name three inputs you control: standing instructions, shared context and your prompt
 - Predict how missing context changes an assistant's proposal
 - Choose a workspace scope that gives the assistant the project it needs and nothing beyond it
 
@@ -18,7 +18,7 @@ Every prompt, file and answer here is a synthetic example written for this lesso
 
 In this lesson you control three inputs: standing instructions (a project rules file it reads with every request; the file name and support vary by tool), shared context (the files or snippets it can see) and your prompt.
 
-Tools may also add layers you do not set here, such as conversation history, system or organization instructions, memory and tool results. None of them shows the assistant project files you did not share. A missing input gets filled with something plausible. Whatever comes back is a proposal until you check it.
+Tools may also add layers you do not set here, such as conversation history, system or organization instructions, memory and tool results. Depending on the tool, an assistant may also pick context itself or use permitted tools to read files in the workspace you opened, so workspace scope and exclusions are part of what you share. A missing input gets filled with something plausible. Whatever comes back is a proposal until you check it.
 
 ### Setup decides what it can see
 
@@ -76,6 +76,7 @@ Claims on this page were checked against the live official pages below on 6 Octo
 
 - Adding repository custom instructions for GitHub Copilot: .github/copilot-instructions.md is added to requests automatically. One tool's instructions file; names and support differ by tool.
 - How Claude remembers your project (Claude Code Docs): CLAUDE.md files. A second tool, a different file name.
+- How Claude Code works (Claude Code Docs): Tools; What Claude can access. An agentic assistant can search and read files in the opened project directory without you naming each file. Checked 12 October 2026.
 - Excluding content from GitHub Copilot: content exclusion settings. Which files a tool may read depends on the tool and its settings; an opened folder is not a guaranteed boundary.
 - Best practices for using GitHub Copilot: Check Copilot's work. It can make mistakes; validate what it suggests.
 - Shell Command Language: Parameter Expansion, Use Default Values. Explains ${PORT:-8080} in the sh fixture. POSIX.1-2024 (IEEE Std 1003.1-2024), the standard behind sh; GNU Bash and coreutils manuals could not be reached on 6 October 2026, so Bash- or GNU-specific details are not separately verified.
