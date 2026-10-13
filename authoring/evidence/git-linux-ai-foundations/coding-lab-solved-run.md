@@ -1,13 +1,13 @@
 # Solved-run record: `git-linux-ai-foundations/coding-lab`
 
-solved at f01c065babeaf34913f67d030cc9caf0ccccd3c1 by run solved-1791915814
+solved at c156278576ae21757f77b50ade0afe6548035d5e by run solved-1791921050
 
-- Lab bytes binding: sha256 `7b642b19e357e9dd955fffc81dc53c3460d2bf2e2bb1e5f8455db515e5e4e7d9` of the `LAB_BUNDLE.sha256` manifest written by `authoring/tools/pep export-lab git-linux-ai-foundations/coding-lab` at that commit (one `sha256  path` line per lab file, sorted).
+- Lab bytes binding: sha256 `031345c05d989ad1f9d1dce803569efe7f784b9dc771ad5a1a92d61b7468446b` of the `LAB_BUNDLE.sha256` manifest written by `authoring/tools/pep export-lab git-linux-ai-foundations/coding-lab` at that commit (one `sha256  path` line per lab file, sorted).
   Any change to a lab file changes this binding; the record is then stale and the run must be repeated.
 - Private material: the solved learner repository state was produced from uncommitted private staging outside the repository and is not recorded here, not even as a hash.
 - Environment: macOS 26.7.1, Git 2.55.0, Python 3.11 and Python 3.14; no network; no container engine.
   This host has no `python` executable, so the published commands were run in zsh after the README's macOS remediation `alias python=python3` (and `alias python=python3.11` for the 3.11 cleanup).
-- Supersedes the first record, `solved at 28b25f9 by run solved-1791913445`, whose lab bytes changed in the critic correction loop.
+- Supersedes the earlier records `solved at 28b25f9 by run solved-1791913445` and `solved at f01c065 by run solved-1791915814`, whose lab bytes changed in the critic correction loop and in the review fixes to the committed `.env` ignore check.
 
 ## What the run checked
 
@@ -33,6 +33,9 @@ Each route started from a fresh setup and failed only the checks named:
 | Merge resolved by keeping only the learner's side | `test_prepared_branch_is_merged` (teammate `help_message()` lost) |
 | Conflict markers staged and committed | `test_merge_is_resolved_without_markers`, plus the two import-based checks report "not valid Python" |
 | Feature commit made on `main` | `test_expected_feature_branch_is_checked_out`, `test_feature_commit_is_focused` |
+| `.env` deleted after a correct solved run | none: all seven pass, because the committed rule is checked without the file |
+| `.env*` committed instead of `.env` | none: all seven pass, because Git matches the committed rule |
+| `.env` ignored only in `.git/info/exclude`, `.gitignore` committed without it | `test_env_file_is_ignored_and_untracked` |
 
 ## Not yet recorded
 

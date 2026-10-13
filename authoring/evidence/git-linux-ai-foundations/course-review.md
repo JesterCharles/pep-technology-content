@@ -62,7 +62,7 @@ No other gate reported any error for any module, the lab, `course.json` or `cour
 
 After the rechecks were committed, `npm ci`, `npm test` (122 of 122) and `npm run check` (all gates, T25 included) pass on the final bytes.
 
-Lab gates (lab contract section 10) are recorded in [`coding-lab-solved-run.md`](coding-lab-solved-run.md): solved at `f01c065` by run `solved-1791915814`, bound to the lab bytes; it supersedes the first record at `28b25f9`.
+Lab gates (lab contract section 10) are recorded in [`coding-lab-solved-run.md`](coding-lab-solved-run.md): solved at `c156278` by run `solved-1791921050`, bound to the lab bytes; it supersedes the records at `28b25f9` and `f01c065`.
 
 ## Export check
 
