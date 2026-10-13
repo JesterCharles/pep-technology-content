@@ -6,13 +6,14 @@ Each check reads repository state with machine-oriented Git commands, never deco
 
 import importlib.util
 import os
+import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
 
-from lab_support import FEATURE, FOCUSED_PATHS, MAIN, REPO, TEAMMATE, git
+from lab_support import FEATURE, FOCUSED_PATHS, MAIN, REPO, TEAMMATE, git, git_env
 
 # Keep the learner's project folder free of bytecode caches.
 sys.dont_write_bytecode = True
@@ -46,15 +47,34 @@ def is_ancestor(older, newer):
 
 
 def committed_rules_ignore(path):
-    """True when the .gitignore committed at HEAD, matched by Git itself, ignores path."""
+    """True when the .gitignore committed at HEAD, matched by Git itself, ignores path.
+
+    The rules are checked in a throwaway repository, so the result does not depend on
+    whether path exists on disk or on any personal ignore settings.
+    """
     committed_rules = git("show", "HEAD:.gitignore", check=False).stdout
     with tempfile.TemporaryDirectory() as folder:
-        rules = Path(folder) / "committed-gitignore"
-        rules.write_text(committed_rules, encoding="utf-8")
-        matched = git(
-            "ls-files", "--others", "--ignored", f"--exclude-from={rules}", "--", path, check=False
-        ).stdout.splitlines()
-    return path in matched
+        scratch = Path(folder)
+        (scratch / ".gitignore").write_text(committed_rules, encoding="utf-8")
+        (scratch / "no-excludes").write_text("", encoding="utf-8")
+        env = git_env({"GIT_CEILING_DIRECTORIES": str(scratch.parent)})
+        subprocess.run(["git", "init", "--quiet", str(scratch)], env=env, check=True)
+        result = subprocess.run(
+            [
+                "git",
+                "-C",
+                str(scratch),
+                "-c",
+                f"core.excludesFile={scratch / 'no-excludes'}",
+                "check-ignore",
+                "--quiet",
+                "--no-index",
+                "--",
+                path,
+            ],
+            env=env,
+        )
+    return result.returncode == 0
 
 
 class ShipSafeChange(unittest.TestCase):
