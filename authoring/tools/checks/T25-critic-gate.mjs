@@ -278,10 +278,8 @@ async function checkScope(ctx, scope) {
           .map((item, index) => ({ item, current: currentItemBinding(report, index) }))
           .filter(({ item }) => item.findingId === finding.id),
       );
-    const hasOpenRecheck = recheckItems.some(({ item }) => item.status === "open");
-    const resolved =
-      !hasOpenRecheck &&
-      recheckItems.some(({ item, current }) => item.status === "resolved" && current);
+    const latestCurrentRecheck = recheckItems.find(({ current }) => current);
+    const resolved = latestCurrentRecheck?.item.status === "resolved";
     const accepted = findingDecisions.some((decision) => decision.decision === "accept");
     const closed = !escalated && (rejected || (accepted && resolved));
     if (!closed) {
