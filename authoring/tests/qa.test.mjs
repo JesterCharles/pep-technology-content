@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import MarkdownIt from "markdown-it";
 import { run as runT01 } from "../tools/checks/T01-schema.mjs";
 import { run as runT09 } from "../tools/checks/T09-offline.mjs";
 import { run as runT10 } from "../tools/checks/T10-sandbox.mjs";
@@ -351,6 +353,55 @@ test("Markdown derivation emits nested companion sections exactly once", { timeo
   }
   for (const text of ["Recap first point.", "localhost", "Official source one."]) {
     assert.equal(markdown.split(text).length - 1, 1, markdown);
+  }
+});
+
+test("Markdown derivation keeps block code inside ordered list items", { timeout: 60000 }, async () => {
+  const markdown = await markdownFromHtml(path.join(fixtures, "md-list-code.html"));
+  assert.match(markdown, /1\. ```\n   app\.log\n   ```\n   10 lines/u);
+  const tokens = new MarkdownIt().parse(markdown, {});
+  const headings = tokens
+    .filter((token, index) => token.type === "inline" && tokens[index - 1]?.type === "heading_open")
+    .map((token) => token.content);
+  assert.deepEqual(headings, [
+    "List code Markdown fixture",
+    "Objectives",
+    "Model",
+    "Pipeline model",
+    "Recap",
+    "Static interaction alternatives",
+    "pipeline",
+  ]);
+  const code = tokens.filter((token) => token.type === "fence").map((token) => token.content);
+  assert.deepEqual(code, ["app.log\n", "grep ERROR\n"]);
+});
+
+const pdftotext = spawnSync("pdftotext", ["-v"]).error ? undefined : "pdftotext";
+
+test("PDF text extraction keeps inline code in sentence and table-row order", {
+  timeout: 60000,
+  skip: pdftotext ? false : "pdftotext is not installed",
+}, async () => {
+  const directory = await mkdtemp(path.join(os.tmpdir(), "pep-pdf-order-"));
+  try {
+    const markdown = path.join(directory, "artifact.md");
+    const pdf = path.join(directory, "artifact.pdf");
+    await writeFile(markdown, [
+      "# Inline code order",
+      "",
+      "- `localhost` (`127.0.0.1`) always means the computer you are on.",
+      "",
+      "|  |  |",
+      "| --- | --- |",
+      "| `localhost`, `127.0.0.1` | this computer |",
+      "",
+    ].join("\n"));
+    await pdfFromMarkdown(markdown, pdf);
+    const text = spawnSync(pdftotext, [pdf, "-"], { encoding: "utf8" }).stdout.replace(/\s+/gu, " ");
+    assert.match(text, /localhost \(127\.0\.0\.1\) always means the computer you are on\./u, text);
+    assert.match(text, /localhost, 127\.0\.0\.1 this computer/u, text);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
   }
 });
 
