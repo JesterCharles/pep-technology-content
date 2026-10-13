@@ -5,17 +5,32 @@ url: https://www.youtube.com/watch?v=x5mKltAb2-8
 runtimeMinutes: 4.5
 embeddable: true
 checkedAt: 2026-10-12
-covers: []
+covers:
   - The events of one sprint in order: Sprint Planning pulling the highest-priority items from the product backlog, the Sprint of one to four weeks, a Daily Scrum of no more than 15 minutes, the Sprint Review with stakeholders, then the Sprint Retrospective (objective o1)
   - The three accountabilities: the Product Owner ordering the product backlog, the Scrum Master coaching the team and facilitating events, and the Developers
-gaps: []
+gaps:
   - Objectives o2 and o3 are not covered: no user stories, no As a ..., I want ..., so that ... form, and no acceptance criteria or Given, When, Then
-cautions: []
+cautions:
   - Beyond the page: the 3-5-3 mnemonic, which counts the Sprint itself as a fifth event, the three artifacts with their commitments, the Sprint backlog and the increment
   - Wording differs from the 2020 Scrum Guide in places: it says the whole Scrum Team gathers for the Daily Scrum, where the guide and the page say it is for the Developers, and it calls the backlog a prioritized wish list rather than ordered
   - Scrum Inc. is the training company of Scrum co-creator Jeff Sutherland and sells Scrum courses; the description links to them, though the video is an explainer animation
-alternates: []
-rejected: []
+alternates:
+  - title: "What Is a User Story in Agile? (Examples + Template) (Mountain Goat Software)"
+    url: https://www.youtube.com/watch?v=kkihaNjwRik
+    reason: "Alternate for the user-story half; does not cover Scrum events."
+  - title: "What is Scrum? (Scrum Alliance)"
+    url: https://www.youtube.com/watch?v=TRcReyRYIMg
+    reason: "Short and official but dated 2015 and thin on the sprint events."
+rejected:
+  - title: "What is Scrum: An Introduction to the Scrum Framework (Scrum.org)"
+    url: https://www.youtube.com/watch?v=-xudUyGsNfc
+    reason: "Official, but far over the 10-minute budget."
+  - title: "Scrum Essentials in Under 10 Minutes (Scrum Alliance)"
+    url: https://www.youtube.com/watch?v=RtQ3tpq-RuE
+    reason: "Just over the 10-minute budget."
+  - title: "How to write good User Stories in Agile (The Agile Shop)"
+    url: https://www.youtube.com/watch?v=7hoGqhb6qAs
+    reason: "Legacy alternate; see the Rejected section of this file."
 ---
 
 # Video: How Scrum Works | Introduction to Scrum [Updated]

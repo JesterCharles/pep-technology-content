@@ -34,7 +34,7 @@ A teammate, Jo, has a proposal that looks finished. Use the three inputs to deci
 
 What the assistant receives
 
-Standing instructionsnot sharedAI-RULES.md
+Standing instructionsnot shared AI-RULES.md
 
 Shared contextnot shared
 
@@ -42,7 +42,7 @@ Shared contextnot shared
 start.sh
 ```
 
-Your promptsentAdd a line to start.sh that prints the port the app uses.
+Your promptsent Add a line to start.sh that prints the port the app uses.
 
 Proposal, not verified (synthetic)
 

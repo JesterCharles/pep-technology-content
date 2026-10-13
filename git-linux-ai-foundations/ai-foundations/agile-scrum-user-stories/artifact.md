@@ -32,10 +32,10 @@ Testable criteria are also what you will check AI-made changes against in the ne
 
 One sprint
 
-1. 1?
-2. 2?every day
-3. 3?
-4. 4?
+1. 1 ?
+2. 2 ? every day
+3. 3 ?
+4. 4 ?
 
 Then the next sprint starts with planning again.
 
@@ -43,13 +43,13 @@ Then the next sprint starts with planning again.
 - Scrum Master helps the team use Scrum
 - Developers build the work
 
-As aDrop a card hereHint
+As a Drop a card here Hint
 
-I wantDrop a card hereHint
+I want Drop a card here Hint
 
-so thatDrop a card hereHint
+so that Drop a card here Hint
 
-Acceptance criterionDrop a card hereHint
+Acceptance criterion Drop a card here Hint
 
 Story card
 

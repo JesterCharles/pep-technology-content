@@ -5,21 +5,36 @@ url: https://www.youtube.com/watch?v=O0FGCxkHM-U
 runtimeMinutes: 3
 embeddable: true
 checkedAt: 2026-10-12
-covers: []
+covers:
   - Standing instructions: a project rules file (CLAUDE.md) that the tool reads automatically at the start of every session and appends to your prompt (objective o1)
   - What happens without standing instructions: the assistant re-explores the codebase and sometimes has to make assumptions, which makes it harder to steer (objective o2)
   - Shared context alongside the prompt: pointing the assistant at project docs with an @ file reference (objective o1)
   - Keeping the instructions file in version control so the whole team shares it, matching the page's rules file kept in the project
-gaps: []
+gaps:
   - Objective o3 is not covered: nothing on opening the workspace at the project folder, or on a scope that is too wide or too narrow
   - No tool-neutral framing of the three inputs; it shows one tool's file name, where the page says names and support vary by tool
   - Nothing on using an approved tool and account, or on treating every answer as a proposal until checked
-cautions: []
+cautions:
   - Tool-specific and vendor-made: an Anthropic product video for Claude Code; the page cites CLAUDE.md as one example beside GitHub Copilot's .github/copilot-instructions.md
   - Beyond the page: a user-level instructions file, the /init command and saving corrections to memory
   - Mild tension with the page: the video suggests starting a project without a CLAUDE.md and adding to it as corrections recur, while the page's setup keeps a standing instructions file in the project; both keep the file small and project-specific
-alternates: []
-rejected: []
+alternates:
+  - title: "Customizing GitHub Copilot in Visual Studio with Custom Instructions (Microsoft Visual Studio)"
+    url: https://www.youtube.com/watch?v=BdZWFlFiHHY
+    reason: "Legacy pick; shows an instructions file but does not link a missing input to a guess."
+  - title: "Smaller prompts, better answers with GitHub Copilot Custom Instructions (Visual Studio Code)"
+    url: https://www.youtube.com/watch?v=zwIlqbTHjac
+    reason: "First-party; instructions-file focused, longer, no workspace scope."
+  - title: "Context Management in Claude Code (Claude)"
+    url: https://www.youtube.com/watch?v=eW3oTyfeWZ0
+    reason: "First-party; about managing context in one tool rather than the three inputs."
+rejected:
+  - title: "How to teach GitHub Copilot about your codebase | Tutorial for Beginners (GitHub)"
+    url: https://www.youtube.com/watch?v=QGakvawJc2M
+    reason: "See the Rejected section of this file."
+  - title: "More Context == Better GitHub Copilot Responses in Visual Studio (Microsoft Visual Studio)"
+    url: https://www.youtube.com/watch?v=N62d9PgiqoY
+    reason: "See the Rejected section of this file."
 ---
 
 # Video: The CLAUDE.md file

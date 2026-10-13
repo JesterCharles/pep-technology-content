@@ -5,20 +5,32 @@ url: https://www.youtube.com/watch?v=cAJxt0rUOMY
 runtimeMinutes: 4.5
 embeddable: true
 checkedAt: 2026-10-12
-covers: []
+covers:
   - Why an AI-made change must be checked rather than trusted: the mistakes are now subtle wrong assumptions made on your behalf, not syntax errors
   - Comparing what was asked with what the agent decided on its own (defaults, access rules, business logic it was never told), the motive behind matching claims to evidence (objective o1)
   - Closing advice to review behaviour against what was meant: look at the tests the AI generated and exercise the application, not only the code (objective o2, in spirit)
-gaps: []
+gaps:
   - No claim-by-claim matching of an assistant's summary to diff lines (objective o1 as practised on the page)
   - No acceptance criteria run that turns a proposal into a verified result (objective o2)
   - No approve or request-changes decision citing specific evidence (objective o3)
-cautions: []
+cautions:
   - Commentary format: a developer reacting to a social-media post by Andrej Karpathy, less structured than a lesson
   - Beyond the page: a Laravel project, Claude Code and plan mode specifics, and personal coding-style preferences
   - It says AI tools now fix their own failing tests; the page treats a summary's all tests pass as a claim to check and a changed or deleted test as a weakened check
-alternates: []
-rejected: []
+alternates:
+  - title: "Building verification loops in Claude Code (Claude)"
+    url: https://www.youtube.com/watch?v=mQZB0l-rhxE
+    reason: "First-party, but it has the assistant verify its own work, against the page's lesson."
+  - title: "Before You Approve AI Code: Watch This (Phase Transitions)"
+    url: https://www.youtube.com/watch?v=mJAyNmecB9M
+    reason: "See the Alternates section of this file."
+rejected:
+  - title: "How the GitHub Copilot coding agent works | GitHub Checkout (GitHub)"
+    url: https://www.youtube.com/watch?v=1GVBRhDI5No
+    reason: "First-party, but about the agent workflow rather than checking its claims."
+  - title: "How to Read Code in the AI Era (6 Techniques) (KodeKloud)"
+    url: https://www.youtube.com/watch?v=4t8QcDdrL6Y
+    reason: "Legacy alternate; about reading an unfamiliar codebase, not checking an AI change's claims."
 ---
 
 # Video: We Need to Review AI-Written Code Differently Now

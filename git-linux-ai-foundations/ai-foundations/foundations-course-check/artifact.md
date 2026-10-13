@@ -36,15 +36,15 @@ One local project, three lenses (simulated)
 
 ### Shell
 
-pwd/tmpstart.sh-rw-r--r--
+pwd /tmp start.sh -rw-r--r--
 
 ### Git
 
-.gitignore(empty)untracked.env (holds a token)
+.gitignore (empty) untracked .env (holds a token)
 
 ### AI change
 
-claim“Tested, works.”evidencenone yet
+claim “Tested, works.” evidence none yet
 
 ## Recap
 

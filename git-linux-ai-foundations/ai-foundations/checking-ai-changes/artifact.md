@@ -37,19 +37,19 @@ Claims beside evidence (synthetic change)
 
 Summary claims
 
-1. Prints the port the app uses.Not checked yet
-2. Keeps the 8080 default.Not checked yet
-3. All tests pass.Not checked yet
+1. Prints the port the app uses. Not checked yet
+2. Keeps the 8080 default. Not checked yet
+3. All tests pass. Not checked yet
 
 Diff
 
 start.sh
 
-#!/bin/sh- PORT="${PORT:-8080}"+ PORT=3000+ echo "Using port $PORT" echo "Starting app"
+#!/bin/sh - PORT="${PORT:-8080}" + PORT=3000 + echo "Using port $PORT" echo "Starting app"
 
 tests/test_start.sh
 
-run_test check_prints_port- run_test check_default_port
+run_test check_prints_port - run_test check_default_port
 
 ## Recap
 

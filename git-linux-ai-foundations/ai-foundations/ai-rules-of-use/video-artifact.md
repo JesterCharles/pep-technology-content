@@ -5,20 +5,32 @@ url: https://www.youtube.com/watch?v=Z71DBzHrd-Q
 runtimeMinutes: 2.2
 embeddable: true
 checkedAt: 2026-10-12
-covers: []
+covers:
   - Material that should not go into a cloud-hosted assistant at all, in five categories: credit card statements, medical records, proprietary code, business plans and roadmaps, and legal documents (objective o1, the never-share lane)
-  - Why: anything uploaded can stay with the provider and may be used to train models, matching the page's rule to treat anything you paste as having left your control
-gaps: []
+  - The reason given is that anything uploaded can stay with the provider and may be used to train models, matching the page's rule to treat anything you paste as having left your control
+gaps:
   - No three-lane sort: there is no share lane and no redact-first lane, only things to keep out
   - Objective o2 is not covered: no redaction, placeholders or keeping the useful part of an error message
   - Tokens, passwords and private keys, the page's main examples, are not named
   - Nothing on owning AI-proposed code you submit or on using only approved tools
-cautions: []
+cautions:
   - Tension with the page: the video puts proprietary (company) code in the do-not-share list, while the page's share lane allows only material the program or employer permits for that approved tool and account, with no secrets, personal data or confidential business details; learners should follow the page and their program's approved-tool policy
   - Made by a secure-coding training vendor, and the closing line promotes self-hosting models; the content itself is general guidance, not a product demo
   - Its claim that uploaded data could be used to train other models varies by provider and plan, which the page also notes was not checked per provider
-alternates: []
-rejected: []
+alternates:
+  - title: "ChatGPT: How to use AI tools securely | Hacker Headlines (Infosec Institute)"
+    url: https://www.youtube.com/watch?v=PqjDPBBuqVE
+    reason: "Closer to the page's rules but overstates provider data use and is dated 2023."
+  - title: "Checklist on Guidelines for the Use of Generative AI by Employees Promotional Video (PCPD Hong Kong)"
+    url: https://www.youtube.com/watch?v=SAu0iobgwdA
+    reason: "Official regulator, but written for organisations drafting policy."
+rejected:
+  - title: "Protect data used in prompts with Copilot, ChatGPT, Gemini, and more | Microsoft Purview (Microsoft Mechanics)"
+    url: https://www.youtube.com/watch?v=dYzTyEcjHc0
+    reason: "Product demo of an enterprise data-loss-prevention tool, not learner guidance."
+  - title: "OWASP LLM02 explainer (VeriGenAI)"
+    url: https://www.youtube.com/watch?v=kS5ydwv26c4
+    reason: "About applications leaking data, not what a user pastes into a prompt."
 ---
 
 # Video: What NOT to Share with AI: 5 Things to Keep Private When Using LLMs
