@@ -150,7 +150,9 @@ export async function run(ctx) {
     validators[name] = ajv.compile(
       await readJson(authoringPath(ctx.root, "schemas", `${name}.schema.json`)),
     );
-  const courses = await findCourseCandidates(ctx, { allInScopes: true });
+  const defaultCourses = ctx.explicit
+    ? null
+    : await findCourseCandidates(ctx, { allInScopes: true });
   const errors = [];
   for (const target of ctx.scanRoots) {
     const w = await walk(target, { skip: ctx.skip });
@@ -193,8 +195,15 @@ export async function run(ctx) {
       if (["lab", "assessment-blueprint"].includes(pair[1]))
         for (const key of findForbiddenKeys(data))
           errors.push(error(id, ctx.display(file), `forbidden key ${key}`));
-      if (pair[1] === "assessment-blueprint")
+      if (pair[1] === "assessment-blueprint") {
+        const courses =
+          defaultCourses ??
+          (await findCourseCandidates(
+            { ...ctx, targets: [file], scanRoots: [file] },
+            { allInScopes: true },
+          ));
         errors.push(...(await checkBlueprintReferences(ctx, file, data, courses)));
+      }
       if (pair[1] === "reconciliation" && data.author === data.decidedBy)
         errors.push(error(id, ctx.display(file), "decidedBy must differ from author"));
     }

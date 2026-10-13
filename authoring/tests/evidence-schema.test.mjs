@@ -269,6 +269,32 @@ test("T01 nested path scans ignore a same-id course in an enclosing catalog", as
   assert.equal(result.status, 0, result.stderr);
 });
 
+test("T01 keeps objective lookup isolated across multiple explicit catalog scopes", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-multi-scope-"));
+  await cp(
+    path.join(repo, "authoring", "schemas"),
+    path.join(root, "authoring", "schemas"),
+    { recursive: true },
+  );
+  const first = path.join(root, "first-scope");
+  const second = path.join(root, "second-scope");
+  await addObjectiveCourse(first, "demo-course");
+  await addObjectiveCourse(second, "outer-course");
+  const crossScope = "outer-course/demo-module/demo-topic#o1";
+  const blueprintFile = path.join(first, "demo-course/assessments/intake/blueprint.json");
+  await writeJson(
+    blueprintFile,
+    blueprint({ objectives: [crossScope], objectiveFormats: { [crossScope]: ["mcq"] } }),
+  );
+  const outerManifest = path.join(second, "authoring/catalog/outer-course/course.json");
+  const result = check(root, "T01", [
+    path.relative(root, blueprintFile),
+    path.relative(root, outerManifest),
+  ]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /objective outer-course\/demo-module\/demo-topic#o1 does not resolve/);
+});
+
 test("T01 rejects an unresolved blueprint objective", async () => {
   const root = await schemaFixture();
   const invalid = "demo-course/demo-module/demo-topic#o2";
