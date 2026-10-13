@@ -1,15 +1,15 @@
 """Remove everything the lab created and restore the shipped starter files.
 
 Run from the lab folder:  python tests/cleanup_lab.py
-It deletes only the paths declared in lab.json cleanup.paths, after checking each stays inside the lab.
+It removes the whole starter/ship-safe-change/ folder (including any file you added there) and
+tests/__pycache__, after checking each path stays inside the lab, then rewrites the shipped files.
 """
 
-from lab_support import CREATED_PATHS, remove, restore_starter_files
+from lab_support import reset_starter, restore_starter_files
 
 
 def main():
-    for path in CREATED_PATHS:
-        remove(path)
+    reset_starter()
     restore_starter_files()
     print("Lab cleaned: starter/ship-safe-change/ is back to its shipped files.")
 

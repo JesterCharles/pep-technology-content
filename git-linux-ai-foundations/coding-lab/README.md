@@ -2,9 +2,10 @@
 
 A teammate asked an AI coding assistant to change a tiny deployment-status helper.
 The assistant's edit is waiting, uncommitted, in a real Git repository, next to a `PROPOSAL.md` that says what the edit does.
-Your job is to check those claims against the real diff, fix what is wrong, commit only the files you mean to, merge a teammate's branch that conflicts with yours, and prove the result with a test run before you call it ready for review.
+Your job is to decide, from the real diff, whether those claims are supported and record your review decision.
+Then you make the code meet the proposal's acceptance criteria, commit only the files you mean to, merge a teammate's branch that conflicts with yours, and prove the result with a test run.
 
-About 18 minutes; stop at 20 and use **Troubleshooting** if you are stuck.
+About 18 minutes (an estimate, not yet measured with learners); stop at 20 and use **Troubleshooting** if you are stuck.
 Everything runs on your own computer, offline: no account, no network, no container engine.
 You will not need an AI assistant.
 
@@ -20,8 +21,19 @@ python --version
 
 **Expect:** `git version 2.23` or newer, and `Python 3.11` or newer.
 
-If `python --version` fails on Windows but `py --version` works, make `python` available before you go on (for example, tick "Add python.exe to PATH" in the Python installer, then open a new terminal).
-The lab uses `python` in every command.
+Every lab command starts with `python`.
+If `python --version` fails, or prints a version older than 3.11, find the launcher that works in your terminal and make `python` mean it for this terminal window:
+
+| Your terminal | Check this works and shows 3.11 or newer | Then type this once |
+|---|---|---|
+| macOS or Linux (zsh or bash) | `python3 --version` | `alias python=python3` |
+| Windows PowerShell | `py -3 --version` | `Set-Alias python py` |
+| Windows cmd | `py -3 --version` | `doskey python=py -3 $*` |
+| Git Bash on Windows | `py -3 --version` | `alias python='py -3'` |
+
+Run `python --version` again; **expect** `Python 3.11` or newer.
+The alias lasts only for this terminal window: type it again if you open a new one.
+If no launcher works, install Python 3.11 or newer from python.org (on Windows, tick "Add python.exe to PATH"), open a new terminal and start this step again.
 
 ## 2. Create the lab repository
 
@@ -35,7 +47,7 @@ python tests/setup_lab.py
 
 Setup builds a small Git repository inside `starter/ship-safe-change/`.
 It sets a training name and email for that repository only; your own Git settings are not read or changed.
-Running setup again resets the lab and replaces every change inside `starter/ship-safe-change/`.
+Running setup again resets the lab: it deletes the whole `starter/ship-safe-change/` folder, including any file you added there, and rebuilds it.
 
 ## 3. Find out where you are and what changed
 
@@ -240,13 +252,14 @@ When you are finished, run this from the lab folder:
 python tests/cleanup_lab.py
 ```
 
-It removes the lab repository's `.git` folder, your local `.env` and Python cache folders, and restores the starter files to how they were shipped.
+It deletes the whole `starter/ship-safe-change/` folder (the lab repository's `.git` folder, your local `.env` and any file you added there) and the Python cache in `tests/`, then rewrites the starter files exactly as they were shipped.
 It touches nothing outside this lab folder.
 
 ## Troubleshooting
 
 | Symptom | What to do |
 |---|---|
+| `python: command not found`, or `python` opens the Microsoft Store | Go back to step 1 and make `python` mean your Python 3 launcher for this terminal. |
 | `The lab repository is missing` | Run `python tests/setup_lab.py` from the lab folder. |
 | `discover` says `Start directory is not importable` or finds no tests | You ran the test command inside `starter/ship-safe-change`. Go back to the lab folder first. |
 | `main has new commits` | You committed before switching branches. Rerun setup and start from step 3. |

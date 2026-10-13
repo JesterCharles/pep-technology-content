@@ -19,13 +19,16 @@ FEATURE = "feature/safe-status"
 TEAMMATE = "integration/copy-update"
 FOCUSED_PATHS = [".gitignore", "status_message.py"]
 
-# Paths the lab creates; cleanup removes exactly these.
+# Paths the lab creates. Reset and cleanup remove the whole starter repository
+# folder (which holds the first three) and rebuild it from fixtures/, so any other
+# file a learner added there is removed too.
 CREATED_PATHS = [
     REPO / ".git",
     REPO / ".env",
     REPO / "__pycache__",
     LAB_ROOT / "tests" / "__pycache__",
 ]
+EMPTY_EXCLUDES = ".git/info/no-global-excludes"
 
 # Repository-local settings only: the learner's global Git config is never read or changed by setup.
 LOCAL_CONFIG = [
@@ -35,6 +38,9 @@ LOCAL_CONFIG = [
     ("commit.gpgsign", "false"),
     ("merge.conflictStyle", "merge"),
     ("merge.ff", "false"),
+    # An empty repository-local excludes file replaces any global one, so a personal
+    # ignore rule for .env cannot hide the starting state. Relative to the repository top.
+    ("core.excludesFile", EMPTY_EXCLUDES),
 ]
 
 
@@ -70,6 +76,13 @@ def write_fixture(source, target):
     data = Path(source).read_bytes().replace(b"\r\n", b"\n")
     Path(target).parent.mkdir(parents=True, exist_ok=True)
     Path(target).write_bytes(data)
+
+
+def reset_starter():
+    """Remove the whole starter repository folder and every lab-created path."""
+    remove(REPO)
+    for path in CREATED_PATHS:
+        remove(path)
 
 
 def restore_starter_files():

@@ -9,14 +9,14 @@ import shutil
 import sys
 
 from lab_support import (
-    CREATED_PATHS,
+    EMPTY_EXCLUDES,
     FIXTURES,
     LOCAL_CONFIG,
     MAIN,
     REPO,
     TEAMMATE,
     git,
-    remove,
+    reset_starter,
     restore_starter_files,
     write_fixture,
 )
@@ -48,14 +48,15 @@ def main():
 
     if (REPO / ".git").exists():
         print("WARNING: resetting the lab. All work inside starter/ship-safe-change/ is replaced.")
-    for path in CREATED_PATHS:
-        remove(path)
+    reset_starter()
 
     # Initial project on main.
     for source in sorted((FIXTURES / "initial").iterdir()):
         write_fixture(source, REPO / source.name)
     git("init", "--quiet", env=FIXED)
     git("symbolic-ref", "HEAD", f"refs/heads/{MAIN}", env=FIXED)
+    (REPO / EMPTY_EXCLUDES).parent.mkdir(parents=True, exist_ok=True)
+    (REPO / EMPTY_EXCLUDES).write_bytes(b"")
     for key, value in LOCAL_CONFIG:
         git("config", "--local", key, value, env=FIXED)
     commit("Add deployment status helper", 1767261600)
