@@ -33,7 +33,8 @@ If `python --version` fails, or prints a version older than 3.11, find the launc
 
 Run `python --version` again; **expect** `Python 3.11` or newer.
 The alias lasts only for this terminal window: type it again if you open a new one.
-If no launcher works, install Python 3.11 or newer from python.org (on Windows, tick "Add python.exe to PATH"), open a new terminal and start this step again.
+If no launcher works, install Python 3.11 or newer from python.org/downloads (on Windows, the Python install manager gives every terminal a `python` command), open a new terminal and start this step again.
+On Windows, if `python` opens the Microsoft Store or says it is not found, open Start, search for **Manage app execution aliases**, turn on the **Python (default)** aliases and open a new terminal.
 
 ## 2. Create the lab repository
 
@@ -259,7 +260,7 @@ It touches nothing outside this lab folder.
 
 | Symptom | What to do |
 |---|---|
-| `python: command not found`, or `python` opens the Microsoft Store | Go back to step 1 and make `python` mean your Python 3 launcher for this terminal. |
+| `python: command not found`, or `python` opens the Microsoft Store | Go back to step 1: make `python` mean your Python 3 launcher for this terminal, or on Windows turn on the **Python (default)** app execution aliases. |
 | `The lab repository is missing` | Run `python tests/setup_lab.py` from the lab folder. |
 | `discover` says `Start directory is not importable` or finds no tests | You ran the test command inside `starter/ship-safe-change`. Go back to the lab folder first. |
 | `main has new commits` | You committed before switching branches. Rerun setup and start from step 3. |
