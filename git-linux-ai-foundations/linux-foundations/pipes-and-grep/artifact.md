@@ -14,22 +14,22 @@ Read the log on the right, then guess. Practice prediction, not scored.
 
 ### Filter lines with grep, join commands with |
 
-grep PATTERN FILE prints only the lines that contain the pattern. It matches exact case, so ERROR and error differ.
+`grep PATTERN FILE` prints only the lines that contain the pattern. It matches exact case, so `ERROR` and `error` differ.
 
-A pipe, |, sends one command's standard output (stdout) into the next command's standard input (stdin). Error messages go to standard error (stderr), which a plain | does not pass. In cat app.log | grep ERROR, cat prints the file and grep filters what flows in.
+A pipe, `|`, sends one command's standard output (stdout) into the next command's standard input (stdin). Error messages go to standard error (stderr), which a plain `|` does not pass. In `cat app.log | grep ERROR`, `cat` prints the file and `grep` filters what flows in.
 
 ### Two useful options: -i and -v
 
-- -i ignores case: grep -i error matches ERROR and error.
-- -v inverts the match: it keeps the lines that do not contain the pattern.
+- `-i` ignores case: `grep -i error` matches `ERROR` and `error`.
+- `-v` inverts the match: it keeps the lines that do not contain the pattern.
 
-Options go before the pattern: grep -v INFO app.log.
+Options go before the pattern: `grep -v INFO app.log`.
 
 ### Count with wc -l
 
-wc -l counts the lines it receives. Pipe a filter into it to count matches: grep ERROR app.log | wc -l prints 3.
+`wc -l` counts the lines it receives. Pipe a filter into it to count matches: `grep ERROR app.log | wc -l` prints `3`.
 
-Each extra | adds a stage, and the data flows left to right.
+Each extra `|` adds a stage, and the data flows left to right.
 
 ### Apply it to a new question
 
@@ -37,9 +37,12 @@ Same log, new goal. Think in stages: what survives the filter, and what turns li
 
 ## Model
 
-The pipeline, stage by stage. app.log is a fictional file; the terminal is a simulation.
+The pipeline, stage by stage. `app.log` is a fictional file; the terminal is a simulation.
 
-1. app.log 10 lines
+1. ```
+   app.log
+   ```
+   10 lines
 
 1. 09:00 INFO server started on port 8080
 2. 09:01 INFO user ana signed in
@@ -54,10 +57,10 @@ The pipeline, stage by stage. app.log is a fictional file; the terminal is a sim
 
 ## Recap
 
-- grep keeps lines that contain a pattern; it is case-sensitive unless you add -i.
-- -v keeps the lines that do not match.
-- A pipe | sends one command's standard output into the next command's standard input, left to right; stderr is not passed.
-- wc -l counts lines, so filter first, then count.
+- `grep` keeps lines that contain a pattern; it is case-sensitive unless you add `-i`.
+- `-v` keeps the lines that do not match.
+- A pipe `|` sends one command's standard output into the next command's standard input, left to right; stderr is not passed.
+- `wc -l` counts lines, so filter first, then count.
 
 Next topic: File permissions
 
@@ -65,11 +68,11 @@ Next topic: File permissions
 
 |  |  |
 | --- | --- |
-| grep PAT file | lines containing PAT |
-| grep -i PAT | ignore case |
-| grep -v PAT | lines not containing PAT |
-| a \| b | a's stdout becomes b's stdin |
-| wc -l | count lines |
+| `grep PAT file` | lines containing PAT |
+| `grep -i PAT` | ignore case |
+| `grep -v PAT` | lines not containing PAT |
+| `a \| b` | a's stdout becomes b's stdin |
+| `wc -l` | count lines |
 
 grep patterns are regular expressions; plain words like the ones here match literally.
 

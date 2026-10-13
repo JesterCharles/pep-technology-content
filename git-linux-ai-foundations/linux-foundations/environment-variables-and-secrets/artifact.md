@@ -10,21 +10,21 @@
 
 ### Start with a guess
 
-Practice prediction, not scored. ./app is a small program that prints the API_KEY it receives.
+Practice prediction, not scored. `./app` is a small program that prints the `API_KEY` it receives.
 
 ### Shell variables and exported ones
 
-NAME=value sets a variable in your shell; no spaces around =. echo "$NAME" prints it.
+`NAME=value` sets a variable in your shell; no spaces around `=`. `echo "$NAME"` prints it.
 
-A program you start gets a copy of the environment, which holds only exported variables. export NAME marks an existing variable; export NAME=value sets and exports in one step.
+A program you start gets a copy of the environment, which holds only exported variables. `export NAME` marks an existing variable; `export NAME=value` sets and exports in one step.
 
 ### Keep secrets out of code
 
 The risk: a key typed into a source file gets committed; anyone with the repository can read it in the history, even after you delete the line.
 
-- Code: reads API_KEY from the environment.
-- Real value: in a local .env file, listed in .gitignore so git ignores it.
-- Teammates: by convention, commit a .env.example with a placeholder.
+- Code: reads `API_KEY` from the environment.
+- Real value: in a local `.env` file, listed in `.gitignore` so git ignores it.
+- Teammates: by convention, commit a `.env.example` with a placeholder.
 - Ever committed? It counts as leaked: revoke or rotate it.
 
 ### Apply it to a new case
@@ -39,26 +39,38 @@ Your shell
 
 - API_KEY=demo-123 shell only
 
-Program started from it: ./app
+Program started from it: `./app`
 
 Not run yet.
 
 Repository: what gets committed
 
-- app.sh Not decided
-echo "calling weather API with $API_KEY"
-- .env Not decided
-API_KEY=not-real-42
-- .env.example Not decided
-API_KEY=replace-me
-- .gitignore Not decided
-.env
+- ```
+  app.sh
+  ```
+  Not decided
+  `echo "calling weather API with $API_KEY"`
+- ```
+  .env
+  ```
+  Not decided
+  `API_KEY=not-real-42`
+- ```
+  .env.example
+  ```
+  Not decided
+  `API_KEY=replace-me`
+- ```
+  .gitignore
+  ```
+  Not decided
+  `.env`
 
 ## Recap
 
-- NAME=value sets a shell variable; echo "$NAME" prints it.
-- Programs you start only receive exported variables: export NAME=value.
-- Code reads secrets from the environment; the real values sit in a .env listed in .gitignore.
+- `NAME=value` sets a shell variable; `echo "$NAME"` prints it.
+- Programs you start only receive exported variables: `export NAME=value`.
+- Code reads secrets from the environment; the real values sit in a `.env` listed in `.gitignore`.
 - A secret that was committed stays in history, so change it.
 
 Next topic: Localhost and ports
@@ -67,11 +79,11 @@ Next topic: Localhost and ports
 
 |  |  |
 | --- | --- |
-| NAME=value | shell variable |
-| export NAME=value | passed to programs you start |
-| echo "$NAME" | print a value |
-| env | list exported variables |
-| .gitignore with .env | git ignores the file |
+| `NAME=value` | shell variable |
+| `export NAME=value` | passed to programs you start |
+| `echo "$NAME"` | print a value |
+| `env` | list exported variables |
+| `.gitignore` with `.env` | git ignores the file |
 
 A .env file is not read by the shell automatically; your tools or framework load it. .gitignore only affects files git is not already tracking.
 

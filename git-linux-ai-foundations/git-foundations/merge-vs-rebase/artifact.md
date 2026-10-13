@@ -10,15 +10,15 @@
 
 ### Start with a guess
 
-While you worked on feature, main gained a commit. There are two ways to bring that work into your branch. The model shows the starting history.
+While you worked on `feature`, `main` gained a commit. There are two ways to bring that work into your branch. The model shows the starting history.
 
 ### Two ways to take in main
 
-Both commands bring main's new work into your branch.
+Both commands bring `main`'s new work into your branch.
 
-Merge: git merge main keeps every existing commit and adds a merge commit with two parents.
+Merge: `git merge main` keeps every existing commit and adds a merge commit with two parents.
 
-Rebase: git rebase main replays your commits on top of main's tip. Each replayed commit is new, with a new ID (C3 becomes C3′); the old ones are abandoned. History becomes a straight line.
+Rebase: `git rebase main` replays your commits on top of `main`'s tip. Each replayed commit is new, with a new ID (C3 becomes C3′); the old ones are abandoned. History becomes a straight line.
 
 The rule: Because rebase replaces commits, never rebase commits other people already have. Merging is always safe.
 
@@ -36,8 +36,8 @@ Practice repository Simulation: no real Git runs
 
 ## Recap
 
-- git merge main keeps all commits and adds a merge commit with two parents.
-- git rebase main replays your commits as new commits on main's tip, making a straight line.
+- `git merge main` keeps all commits and adds a merge commit with two parents.
+- `git rebase main` replays your commits as new commits on main's tip, making a straight line.
 - Rebased commits get new IDs; the old ones are abandoned.
 - Never rebase commits others already have. When in doubt, merge.
 
@@ -47,9 +47,9 @@ Next topic: Pull requests and review comments
 
 |  |  |
 | --- | --- |
-| git merge main | join main into your branch with a merge commit |
-| git rebase main | replay your commits on top of main |
-| C3 vs C3′ | same change, different commit after a rebase |
+| `git merge main` | join main into your branch with a merge commit |
+| `git rebase main` | replay your commits on top of main |
+| `C3 vs C3′` | same change, different commit after a rebase |
 
 ## Sources
 

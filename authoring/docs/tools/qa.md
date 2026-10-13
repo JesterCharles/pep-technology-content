@@ -159,7 +159,8 @@ Use `<pre>`, block `<code>`, `.diff`, `[data-diff]` or `[data-code-block]` for l
 label/value child classes or attributes for labelled rows. Nested section markers have structural ownership, so a
 recap containing a cheat sheet and sources emits each section once; repeated text in distinct sections is not
 deduplicated. Missing objectives or static alternatives fail rather than being invented. PDF rendering uses
-`authoring/tools/qa/print-template.html` version 1 and pinned Playwright Chromium.
+`authoring/tools/qa/print-template.html` at the `PRINT_TEMPLATE_VERSION` declared in `pdf-from-md.mjs` and pinned
+Playwright Chromium.
 
 ## Provenance
 

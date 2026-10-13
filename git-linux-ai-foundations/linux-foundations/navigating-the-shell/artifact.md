@@ -16,24 +16,24 @@ Practice prediction, not scored.
 
 The filled row is your current folder, the working directory.
 
-pwd prints it as a full path. ls lists what it holds but skips hidden names, which start with a dot. ls -a shows them too, plus . (this folder) and .. (its parent).
+`pwd` prints it as a full path. `ls` lists what it holds but skips hidden names, which start with a dot. `ls -a` shows them too, plus `.` (this folder) and `..` (its parent).
 
 ### Four ways a path can start
 
-- Relative, like projects/pep: read from your current folder.
-- Absolute, like /tmp: read from the root.
-- ~, like ~/notes: starts at home, /home/ana here.
-- ..: the parent folder, one level up.
+- Relative, like `projects/pep`: read from your current folder.
+- Absolute, like `/tmp`: read from the root.
+- `~`, like `~/notes`: starts at home, `/home/ana` here.
+- `..`: the parent folder, one level up.
 
-ls plus a path lists that folder without moving you.
+`ls` plus a path lists that folder without moving you.
 
 ### Move with cd
 
-cd plus a path moves you there; cd ~ or plain cd goes home.
+`cd` plus a path moves you there; `cd ~` or plain `cd` goes home.
 
-Spaces split words: cd class notes passes two words and fails. Keep the name whole with cd "class notes" or cd class\ notes.
+Spaces split words: `cd class notes` passes two words and fails. Keep the name whole with `cd "class notes"` or `cd class\ notes`.
 
-Every part of a path must be an existing folder; a failed cd prints an error and you stay put.
+Every part of a path must be an existing folder; a failed `cd` prints an error and you stay put.
 
 ### Apply it somewhere new
 
@@ -68,9 +68,9 @@ filled you are here outlined path read
 
 ## Recap
 
-- pwd shows where you are; ls -a adds hidden names.
-- / starts at the root, a relative path where you are, ~ at home; .. is up one.
-- Quote or escape spaces; a failed cd leaves you in place.
+- `pwd` shows where you are; `ls -a` adds hidden names.
+- `/` starts at the root, a relative path where you are, `~` at home; `..` is up one.
+- Quote or escape spaces; a failed `cd` leaves you in place.
 
 Next topic: Pipes and grep
 
@@ -78,13 +78,13 @@ Next topic: Pipes and grep
 
 |  |  |
 | --- | --- |
-| pwd | print the current folder |
-| ls / ls -a | list entries / include hidden ones |
-| ls path | list another folder without moving |
-| cd path | move to a folder |
-| cd .. | up one level |
-| cd ~ or cd | home |
-| cd "class notes" | a name with a space |
+| `pwd` | print the current folder |
+| `ls` / `ls -a` | list entries / include hidden ones |
+| `ls path` | list another folder without moving |
+| `cd path` | move to a folder |
+| `cd ..` | up one level |
+| `cd ~` or `cd` | home |
+| `cd "class notes"` | a name with a space |
 
 Error wording, ls ordering and quoting of spaced names vary between shells and systems; the rules above do not.
 

@@ -4,7 +4,7 @@ import path from "node:path";
 import MarkdownIt from "markdown-it";
 import { launchChromium } from "./harness.mjs";
 
-export const PRINT_TEMPLATE_VERSION = "1";
+export const PRINT_TEMPLATE_VERSION = "2";
 
 export async function pdfFromMarkdown(markdownFile, pdfFile) {
   const [markdown, template] = await Promise.all([

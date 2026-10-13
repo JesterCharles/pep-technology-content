@@ -10,7 +10,7 @@
 
 ### Start with a guess
 
-A branch lets you build something without disturbing main. The model shows history as commits, newest at the top, with labels for branch names.
+A branch lets you build something without disturbing `main`. The model shows history as commits, newest at the top, with labels for branch names.
 
 ### A branch is a movable name
 
@@ -18,9 +18,9 @@ A branch is a name that points at one commit. HEAD marks the branch you are on.
 
 When you commit, the new commit's parent is the commit you were on, and only the branch HEAD is on moves forward. Other branch names stay put.
 
-- git branch login creates login here but leaves you where you are.
-- git switch login moves HEAD to an existing branch.
-- git switch -c login creates it and switches in one step.
+- `git branch login` creates `login` here but leaves you where you are.
+- `git switch login` moves HEAD to an existing branch.
+- `git switch -c login` creates it and switches in one step.
 
 Switching also swaps your working-copy files to match that branch.
 
@@ -41,7 +41,7 @@ HEAD is on main. Working copy files: app.js, cart.js
 
 - A branch is a movable name that points at one commit; HEAD marks the branch you are on.
 - A commit moves only the branch HEAD is on. Other branches stay where they were.
-- git branch name creates; git switch name moves HEAD; git switch -c name does both.
+- `git branch name` creates; `git switch name` moves HEAD; `git switch -c name` does both.
 - Switching changes your working-copy files to match the branch you switch to.
 
 Next topic: Undoing mistakes: revert and reset
@@ -50,10 +50,10 @@ Next topic: Undoing mistakes: revert and reset
 
 |  |  |
 | --- | --- |
-| git branch | list branches; * marks the one you are on |
-| git branch <name> | create a branch here, stay where you are |
-| git switch <name> | move HEAD to an existing branch |
-| git switch -c <name> | create a branch and switch to it |
+| `git branch` | list branches; * marks the one you are on |
+| `git branch <name>` | create a branch here, stay where you are |
+| `git switch <name>` | move HEAD to an existing branch |
+| `git switch -c <name>` | create a branch and switch to it |
 
 ## Sources
 
