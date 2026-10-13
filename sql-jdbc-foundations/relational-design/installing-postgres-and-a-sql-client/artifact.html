@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="sql-jdbc-foundations">
+<meta name="pep:module" content="relational-design">
+<meta name="pep:topic" content="Reading: Installing Postgres and a SQL client">
+<meta name="pep:topic-id" content="installing-postgres-and-a-sql-client">
+<meta name="pep:budget-minutes" content="12">
+<meta name="pep:source" content="authoring/evidence/sql-jdbc-foundations/relational-design/installing-postgres-and-a-sql-client/sources.json">
+<title>Reading: Installing Postgres and a SQL client · Relational Design</title>
+<style>
+:root{
+  --bg:#eef2f0;--surface:#f8faf9;--ink:#1b2320;--muted:#47524e;--rule:#6b7873;--line:#c9d2ce;
+  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
+  --on-teal:#ffffff;--term:#e2e8e5;--focus:#1f4fbf;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121816;--surface:#1a2220;--ink:#e3ebe7;--muted:#a8b6b0;--rule:#71827c;--line:#2f3b37;
+  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
+  --on-teal:#0b1311;--term:#0c1110;--focus:#8fb4ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+::selection{background:var(--teal);color:var(--on-teal)}
+code,kbd,.mono{font-family:var(--mono);font-size:.94em}
+a{color:var(--teal);text-underline-offset:3px}
+main{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
+.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--s6);row-gap:var(--s2);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
+h1,h2{font-family:var(--serif)}
+h1{margin:0;font-size:26px;line-height:32px;letter-spacing:-.01em}
+.meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
+.meta li:first-child{font-weight:700;color:var(--ink)}
+.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
+.objectives{grid-column:1/-1;margin:0;padding-left:1.25em}
+.tools{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:var(--s2);grid-row:1;grid-column:2}
+.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s3);align-items:start}
+.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.teach h2{margin:0 0 var(--s2);font-size:21px;line-height:28px}
+.teach p{margin:0 0 var(--s2);max-width:62ch}
+.teach ul,.teach ol{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
+.teach li{margin-bottom:var(--s1)}
+.task{padding:var(--s3) var(--s4);border-top:2px solid var(--teal);background:var(--surface)}
+.task p{margin:0;font-weight:600}
+.task p+p{margin-top:var(--s2)}
+.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
+.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
+.goals li:first-child{border-top:0}
+.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
+.goals li.done .st{color:var(--teal)}
+.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface);min-width:0}
+.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:var(--s2)}
+.control{min-width:0}
+.sql{margin:0 0 var(--s2);padding:var(--s2) var(--s3);border-left:3px solid var(--teal);background:var(--bg);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.dtab{border-collapse:collapse;font:14px/1.35 var(--mono);margin:0 0 var(--s2)}
+.dtab caption{text-align:left;font:700 15px/1.4 var(--sans);padding-bottom:2px}
+.dtab th,.dtab td{border:1px solid var(--rule);padding:2px var(--s2);text-align:left;vertical-align:top}
+.dtab th{background:var(--bg)}
+.dtab tr.new td{border-style:double;border-width:3px}
+.dtab .key{font-weight:700}
+.tables{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s4);align-items:flex-start}
+.tables>*{min-width:0;max-width:100%;overflow-x:auto}
+.legend{margin:0;font-size:14px;color:var(--muted)}
+.sorter{display:flex;flex-direction:column;gap:var(--s2)}
+.sitem{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,auto);gap:var(--s1) var(--s3);align-items:center;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
+.sitem label{font-size:15px;line-height:1.35;overflow-wrap:anywhere}
+.sitem select{font:inherit;font-size:15px;min-height:40px;max-width:100%;padding:var(--s1) var(--s2);color:var(--ink);background:var(--bg);border:2px solid var(--rule);border-radius:4px}
+.sitem.right{border-color:var(--teal)}
+.sitem.wrong{border-style:dashed;border-color:var(--red)}
+.sitem .mark{grid-column:1/-1;font-size:14px;font-weight:700}
+.sitem.right .mark{color:var(--teal)}
+.sitem.wrong .mark{color:var(--red)}
+.stmts{display:flex;flex-direction:column;gap:var(--s2)}
+.stmts button{text-align:left;font:15px/1.4 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.out{min-height:72px;max-height:240px;overflow-y:auto;margin-top:var(--s2);padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--term);font:14px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.out .c{font-weight:700}
+.out .e{color:var(--red)}
+.out .h{color:var(--muted);font-family:var(--sans)}
+.verdict{font-weight:700}
+.verdict.ok{color:var(--teal)}
+.verdict.no{color:var(--red)}
+.verdict.set{color:var(--amber)}
+.explain{list-style:none;padding:0;margin:var(--s1) 0 0}
+.explain li{margin:0;padding:var(--s1) 0 var(--s1) var(--s3);border-left:2px solid var(--line)}
+.explain li+li{margin-top:var(--s1)}
+.explain li.mine{border-left-color:var(--teal)}
+.explain .on,.explain .ex{display:block}
+.on{font-weight:600}
+.opt .why{display:block;flex:1 0 100%;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
+.recap ul{padding-left:20px}
+.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
+.feedback details{margin:var(--s1) 0}
+.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
+.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
+.next-topic{font-weight:700}
+.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
+svg text{font-family:var(--sans)}
+[hidden]{display:none!important}
+@media (min-width:861px) and (max-height:720px){
+  main{padding-top:var(--s2)}
+  .stage{padding-top:var(--s2)}
+  .col{gap:var(--s2)}
+  .model{padding:var(--s2) var(--s4)}
+  .teach h2{margin-bottom:var(--s1)}
+}
+@media (max-width:860px){
+  main{padding:var(--s3) var(--s4) var(--s4)}
+  .top{grid-template-columns:minmax(0,1fr)}
+  .tools{grid-row:auto;grid-column:1;justify-content:flex-start}
+  .stage{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3)}
+  .col{display:contents}
+  #current-teaching{order:1}#current-task{order:2}#live-model{order:3}#current-control{order:4}.fbrow{order:5}
+}
+@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}
+  .sitem{grid-template-columns:minmax(0,1fr)}
+  .cmdline{flex-wrap:wrap;row-gap:var(--s1)}
+  .cmdline label{flex:1 0 100%;max-width:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+/* pep:component restart@1 css */
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* /pep:component restart css */
+/* pep:component progress@1 css */
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:repeating-linear-gradient(135deg,var(--amber) 0 3px,transparent 3px 6px);border-color:var(--amber)}
+/* /pep:component progress css */
+/* pep:component mcq-with-confidence@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start}
+.feedback{width:100%;min-width:0;font-size:15px;line-height:1.35}
+.feedback:empty{display:none}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin:0}
+.feedback .verdict{font-weight:700}
+.feedback .ok{color:var(--teal)}
+.feedback .no{color:var(--red)}
+.feedback .set{color:var(--amber)}
+.feedback .info{color:var(--ink)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+/* /pep:component mcq-with-confidence css */
+/* pep:component terminal@1 css */
+.term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
+.term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
+.term-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px var(--s3);margin:0;padding:var(--s1) var(--s3);border-bottom:1px solid var(--rule);font-size:15px;color:var(--muted)}
+.term-top span:first-child{font-weight:700}
+.log{height:220px;overflow-y:auto;padding:var(--s2) var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.log .c{font-weight:700}
+.log .c::before{content:attr(data-p) " ";color:var(--teal);font-weight:700}
+.log .e{color:var(--red)}
+.log .h{color:var(--muted);font-family:var(--sans)}
+.cmdline{display:flex;gap:var(--s2);align-items:center;padding:0 var(--s1) 0 var(--s3);border-top:1px solid var(--rule)}
+.cmdline label{flex:0 1 auto;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 16px var(--mono);color:var(--teal)}
+.cmdline{padding:var(--s2) var(--s2) var(--s2) var(--s3)}
+.cmdline input{flex:1 1 auto;min-width:0;min-height:44px;padding:var(--s2) 0;font:16px var(--mono);color:var(--ink);background:transparent;border:0;caret-color:var(--teal)}
+.cmdline input::placeholder{color:var(--muted);opacity:1}
+.cmdline input:focus,.cmdline input:focus-visible{outline:none}
+.cmdline .runbtn{flex:0 0 auto;min-height:36px;padding:var(--s1) var(--s3);background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:600}
+.cmdline .runbtn:hover{border-color:var(--ink)}
+.simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+/* /pep:component terminal css */
+</style>
+</head>
+<body>
+<noscript><p class="nojs">This topic needs JavaScript for its practice activities and checks. Turn JavaScript on to take part.</p></noscript>
+<main id="lesson">
+  <header class="top">
+    <h1>Reading: Installing Postgres and a SQL client</h1>
+    <div class="tools">
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 4</span><span class="pips" aria-hidden="true"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></span></div>
+      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart this activity</button>
+      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+    </div>
+    <ul class="meta"><li>Relational Design, topic 1 of 5</li><li>About 12 minutes</li><li>4 activities</li></ul>
+    <ul class="objectives" data-pep-objectives aria-label="Objectives">
+      <li>Identify the parts of a PostgreSQL setup: the database server, a database inside it, and a client such as psql that connects to it</li>
+      <li>Connect to a local database with psql and confirm the server version with SELECT version();</li>
+      <li>Use the psql meta-commands \l, \dt, \d and \q to list databases, list tables, describe a table and quit</li>
+    </ul>
+  </header>
+  <div class="stage" id="stage" data-step="1">
+    <div class="col">
+      <section id="current-teaching" class="teach" aria-label="Current teaching">
+<div data-step="1">
+  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+  <p>You installed PostgreSQL and opened a terminal. Before any teaching, guess where your SQL goes.</p>
+</div>
+<div data-step="2" data-pep-teaching>
+  <h2 id="teach-2-h" tabindex="-1">Server, database, client</h2>
+  <ul>
+    <li>The <strong>server</strong> is a program that keeps running in the background. One server manages many databases and listens for connections, usually on port 5432.</li>
+    <li>A <strong>database</strong> is a named set of tables inside that server, often one per project.</li>
+    <li>A <strong>client</strong> connects to one database. <code>psql</code> is PostgreSQL's terminal client: <code>psql practice</code> connects to the database named <code>practice</code>.</li>
+  </ul>
+  <p>The prompt <code>practice=&gt;</code> means psql is ready. A statement runs when you end it with a semicolon; without one, psql waits for more and shows <code>practice-&gt;</code>.</p>
+</div>
+<div data-step="3" data-pep-teaching>
+  <h2 id="teach-3-h" tabindex="-1">Backslash commands</h2>
+  <p>Commands that start with a backslash belong to psql itself, not to SQL, and need no semicolon.</p>
+  <ul>
+    <li><code>\l</code> lists the databases in the server.</li>
+    <li><code>\dt</code> lists the tables in the database you are connected to.</li>
+    <li><code>\d courses</code> describes one table: its columns, types and keys.</li>
+    <li><code>\q</code> quits psql and returns you to the shell.</li>
+  </ul>
+</div>
+<div data-step="4" data-pep-teaching>
+  <h2 id="teach-4-h" tabindex="-1">Apply it</h2>
+  <p>Pick the command for a new situation.</p>
+</div>
+<div data-step="5" hidden data-pep-recap class="recap">
+  <h2 id="teach-5-h" tabindex="-1">Recap</h2>
+  <ul>
+    <li>The server runs in the background and manages many databases; psql is a client that connects to one of them.</li>
+    <li><code>psql practice</code> connects; <code>SELECT version();</code> asks the server which version it runs. SQL runs at the semicolon.</li>
+    <li><code>\l</code> databases, <code>\dt</code> tables, <code>\d name</code> one table, <code>\q</code> quit.</li>
+  </ul>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <table>
+      <tr><td><code>psql --version</code></td><td>version of the psql client program</td></tr>
+      <tr><td><code>psql practice</code> or <code>psql -d practice</code></td><td>connect to the database practice</td></tr>
+      <tr><td><code>psql -h localhost -p 5432 -U ana -d practice</code></td><td>connect with host, port and user named</td></tr>
+      <tr><td><code>SELECT version();</code></td><td>version of the server you are connected to</td></tr>
+      <tr><td><code>\l</code> / <code>\dt</code> / <code>\d name</code> / <code>\q</code></td><td>databases / tables / describe one table / quit</td></tr>
+    </table>
+    <p>Installing: the PostgreSQL download page lists packages and installers for Linux, macOS, Windows and other systems. Follow the one for your system, then check that <code>psql --version</code> works in a new terminal. Without a database name, psql tries a database named after your user name.</p>
+  </details>
+  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live PostgreSQL pages on 2026-10-13 (documentation for PostgreSQL 18).</p><ul>
+    <li><a href="https://www.postgresql.org/download/" rel="noopener">PostgreSQL: Downloads</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/tutorial-install.html" rel="noopener">PostgreSQL 18 tutorial: 1.1 Installation</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/tutorial-createdb.html" rel="noopener">PostgreSQL 18 tutorial: 1.3 Creating a Database</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/tutorial-accessdb.html" rel="noopener">PostgreSQL 18 tutorial: 1.4 Accessing a Database</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/app-psql.html" rel="noopener">PostgreSQL 18 reference: psql</a></li>
+  </ul><p>The practice terminal is a simulation. Its version text copies the PostgreSQL tutorial's example; yours names your own version and platform. The <code>\l</code> locale columns depend on how your server was set up.</p></details>
+  <p class="next-topic">Next topic: <a href="../tables-keys-and-relationships/artifact.html" rel="noopener">Tables, keys and relationships</a></p>
+</div>
+      </section>
+      <section id="current-task" class="task" aria-label="Current task">
+<div data-step="1"><p id="task-1">You want to type SQL. Which part of a PostgreSQL setup do you type it into?</p></div>
+<div data-step="2"><p id="task-2">Connect psql to the database <code>practice</code>, then ask the server for its version.</p>
+  <ul class="goals"><li data-goal="conn"><span>Connect to <code>practice</code></span><span class="st"></span></li><li data-goal="ver"><span>Run <code>SELECT version();</code></span><span class="st"></span></li></ul></div>
+<div data-step="3"><p id="task-3">You are connected to <code>practice</code>. Look around, then leave psql.</p>
+  <ul class="goals"><li data-goal="l"><span>List the databases</span><span class="st"></span></li><li data-goal="dt"><span>List the tables</span><span class="st"></span></li><li data-goal="d"><span>Describe the table <code>courses</code></span><span class="st"></span></li><li data-goal="q"><span>Quit psql</span><span class="st"></span></li></ul></div>
+<div data-step="4"><p id="task-apply">Mo is connected to the database <code>shop</code> and needs the columns of the table <code>orders</code>, with which ones may be empty. What should Mo type?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Second try, other way round: which command printed the output shown below?</p></div>
+<div data-step="5"><p>All activities finished.</p><p id="complete-msg" class="complete"></p></div>
+      </section>
+      <div class="fbrow">
+        <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-apply-feedback></div>
+<div data-step="5"></div>
+        </div>
+        <button type="button" class="primary" id="next" hidden>Continue</button>
+      </div>
+    </div>
+    <div class="col">
+<figure id="live-model" class="model" aria-labelledby="model-cap" data-pep-model>
+  <figcaption id="model-cap">One PostgreSQL server, its databases, and the psql client. Fictional machine; the terminal is a simulation.</figcaption>
+  <svg id="pgsvg" viewBox="0 0 560 210" width="100%" role="img" aria-labelledby="pgsvg-t pgsvg-d">
+    <title id="pgsvg-t">psql, the server and its databases</title>
+    <desc id="pgsvg-d">On the left, the psql client. An arrow labelled localhost port 5432 goes to the PostgreSQL server on the right. Inside the server are four databases: postgres, practice, template0 and template1. The practice database holds one table, courses.</desc>
+    <rect x="6" y="70" width="128" height="74" rx="4" fill="none" stroke="currentColor" stroke-width="2" class="sv-client"/>
+    <text x="70" y="100" text-anchor="middle" font-size="17" font-weight="700" fill="currentColor">psql</text>
+    <text x="70" y="124" text-anchor="middle" font-size="13" fill="currentColor">client</text>
+    <line id="sv-link" x1="136" y1="107" x2="226" y2="107" stroke="currentColor" stroke-width="2" stroke-dasharray="6 5"/>
+    <polygon points="226,101 236,107 226,113" fill="currentColor"/>
+    <text x="186" y="96" text-anchor="middle" font-size="12" fill="currentColor">localhost</text>
+    <text x="186" y="128" text-anchor="middle" font-size="12" fill="currentColor">port 5432</text>
+    <rect x="240" y="6" width="314" height="198" rx="4" fill="none" stroke="currentColor" stroke-width="2"/>
+    <text x="254" y="28" font-size="15" font-weight="700" fill="currentColor">PostgreSQL server</text>
+    <g font-size="13" fill="currentColor">
+      <rect x="254" y="42" width="130" height="34" rx="3" fill="none" stroke="currentColor"/><text x="266" y="64">postgres</text>
+      <rect id="sv-practice" x="254" y="86" width="286" height="62" rx="3" fill="none" stroke="currentColor"/><text x="266" y="106" font-weight="700">practice</text>
+      <rect x="380" y="98" width="148" height="38" rx="3" fill="none" stroke="currentColor" stroke-dasharray="3 3"/><text x="392" y="122">table: courses</text>
+      <rect x="254" y="158" width="130" height="34" rx="3" fill="none" stroke="currentColor"/><text x="266" y="180">template0</text>
+      <rect x="398" y="158" width="142" height="34" rx="3" fill="none" stroke="currentColor"/><text x="410" y="180">template1</text>
+    </g>
+  </svg>
+  <p class="legend" id="conn-state">Connection: none yet. A dashed arrow means psql is not connected.</p>
+</figure>
+      <section id="current-control" class="control" aria-label="Your turn">
+<div data-step="1">
+  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): where do you type SQL? Options: into psql, a client program that connects to the server; into the PostgreSQL server program directly; into the database's files on disk; into the PostgreSQL download page. Answer: psql. The server runs in the background and only answers connections from clients; the database is data the server manages; the download page only provides installers.">
+    <legend>Prediction</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="predict" value="a"> <span class="ot">Into psql, a client that connects to the server</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span class="ot">Straight into the server program</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span class="ot">Into the database's files on disk</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span class="ot">Into the PostgreSQL download page</span></label></div>
+  </fieldset>
+  <div class="row">
+  <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
+    <legend id="pconf-help">How sure are you?</legend>
+    <label class="opt"><input type="radio" name="pconf" value="low"> <span class="ot">Low</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="medium"> <span class="ot">Medium</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="high"> <span class="ot">High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+  </div>
+</div><div data-step="2" hidden>
+  <div class="term" data-interaction="terminal" data-steps="2" data-static-alt="Terminal activity: connect and check the version. In the shell, psql practice (or psql -d practice) connects and prints: psql (18.6), Type &quot;help&quot; for help. The prompt becomes practice=&gt;. Then SELECT version(); prints one row, for example PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc, 64-bit, followed by (1 row). Typing psql with no name tries a database named after your user and fails here with: database &quot;ana&quot; does not exist. Leaving out the semicolon makes psql wait with the prompt practice-&gt;; typing ; finishes the statement.">
+    <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-2">Enter runs · ↑↓ history · Esc leaves</span></p>
+    <div class="log" id="log-2" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
+    <div class="cmdline" data-term="2">
+      <label for="cmd-2"><span class="pr">$</span><span class="vh"> command</span></label>
+      <input type="text" id="cmd-2" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-2 keys-2">
+      <button type="button" class="runbtn">Run</button>
+    </div>
+  </div>
+  <p class="simnote">Works here: <code>psql</code> with a database name or <code>-d</code>, <code>-h</code>, <code>-p</code>, <code>-U</code>; <code>psql --version</code>; <code>SELECT version();</code>.</p>
+</div><div data-step="3" hidden>
+  <div class="term" data-interaction="terminal" data-steps="4" data-static-alt="Terminal activity, connected to practice. \l prints List of databases: postgres, practice (owner ana), template0, template1. \dt prints List of tables with one row: public | courses | table | ana. \d courses prints Table &quot;public.courses&quot; with columns id integer not null, title text not null, credits integer not null, and the index courses_pkey PRIMARY KEY, btree (id). \q quits psql and returns to the shell prompt.">
+    <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-3">Enter runs · ↑↓ history · Esc leaves</span></p>
+    <div class="log" id="log-3" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
+    <div class="cmdline" data-term="3">
+      <label for="cmd-3"><span class="pr">$</span><span class="vh"> command</span></label>
+      <input type="text" id="cmd-3" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-3 keys-3">
+      <button type="button" class="runbtn">Run</button>
+    </div>
+  </div>
+  <p class="simnote">Works here: <code>\l</code>, <code>\dt</code>, <code>\d</code> with or without a table name, <code>\q</code>, <code>SELECT version();</code>.</p>
+</div><div data-step="4">
+  <div data-first>
+  <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: connected to shop, Mo needs the columns of orders and which may be empty. Options: \l (lists databases, not columns); \dt (lists tables, not their columns); \d orders (correct: describes the table, with each column's type and a Nullable column); SELECT version(); (reports the server version). Second try, other way round: a List of tables output was printed by \dt.">
+    <legend>Choose a command</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="apply-a" value="a"> <span class="ot"><code>\l</code></span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span class="ot"><code>\dt</code></span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span class="ot"><code>\d orders</code></span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span class="ot"><code>SELECT version();</code></span></label></div>
+  </fieldset>
+  <div class="row">
+  <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
+    <legend id="conf-help">How sure are you?</legend>
+    <label class="opt"><input type="radio" name="conf" value="low"> <span class="ot">Low</span></label>
+    <label class="opt"><input type="radio" name="conf" value="medium"> <span class="ot">Medium</span></label>
+    <label class="opt"><input type="radio" name="conf" value="high"> <span class="ot">High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
+  </div>
+  </div>
+  <div data-retry hidden>
+    <pre class="sql" aria-label="Output to identify">          List of tables
+ Schema |  Name  | Type  | Owner
+--------+--------+-------+-------
+ public | orders | table | mo
+(1 row)</pre>
+    <fieldset id="apply-b" aria-describedby="task-apply-b">
+      <legend>Which command printed this?</legend>
+      <div class="opts"><label class="opt"><input type="radio" name="apply-b" value="a"> <span class="ot"><code>\l</code></span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span class="ot"><code>\dt</code></span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span class="ot"><code>\d orders</code></span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span class="ot"><code>\q</code></span></label></div>
+    </fieldset>
+    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+  </div>
+</div><div data-step="5"></div>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+var TOPIC={
+steps:5,acts:['predict','connect','meta','apply'],
+init:function(){return {mode:'shell',db:null,buf:'',g:{},s3:false};},
+prompt:function(S){var t=S.t;return t.mode==='psql'?t.db+(t.buf?'->':'=>'):'ana@laptop:~$';},
+VERSION:'PostgreSQL 18.6 on x86_64-pc-linux-gnu, compiled by gcc (Debian 4.9.2-10) 4.9.2, 64-bit',
+OUT:{
+ l:['                                                List of databases',
+  '   Name    |  Owner   | Encoding | Locale Provider | Collate | Ctype | Locale | ICU Rules |   Access privileges   ',
+  '-----------+----------+----------+-----------------+---------+-------+--------+-----------+-----------------------',
+  ' postgres  | postgres | UTF8     | libc            | C       | C     |        |           | ',
+  ' practice  | ana      | UTF8     | libc            | C       | C     |        |           | ',
+  ' template0 | postgres | UTF8     | libc            | C       | C     |        |           | =c/postgres          +',
+  '           |          |          |                 |         |       |        |           | postgres=CTc/postgres',
+  ' template1 | postgres | UTF8     | libc            | C       | C     |        |           | =c/postgres          +',
+  '           |          |          |                 |         |       |        |           | postgres=CTc/postgres',
+  '(4 rows)',''],
+ dt:['          List of tables',' Schema |  Name   | Type  | Owner ','--------+---------+-------+-------',' public | courses | table | ana','(1 row)',''],
+ d:['        List of relations',' Schema |  Name   | Type  | Owner ','--------+---------+-------+-------',' public | courses | table | ana','(1 row)',''],
+ dc:['               Table "public.courses"',' Column  |  Type   | Collation | Nullable | Default ','---------+---------+-----------+----------+---------',
+  ' id      | integer |           | not null | ',' title   | text    |           | not null | ',' credits | integer |           | not null | ','Indexes:','    "courses_pkey" PRIMARY KEY, btree (id)','']
+},
+run:function(line,term,S,api){
+ var t=S.t,step=+term,out=[],msg='',T=this;
+ function o(c,s){out.push([c,s]);}
+ o('c',line);
+ var trimmed=line.trim();
+ if(t.mode==='shell'){
+  var w=trimmed.split(/\s+/).filter(Boolean);
+  if(!w.length){}
+  else if(w[0]!=='psql'){
+   if(/^(select|insert|create|update|delete)$/i.test(w[0])){o('e','bash: '+w[0]+': command not found');msg='SQL is not a shell command. Connect with psql first, then type SQL at the psql prompt.';}
+   else if(w[0].charAt(0)==='\\'){o('e','bash: '+w[0].slice(1)+': command not found');msg='Backslash commands work inside psql, not in the shell.';}
+   else{o('e',w[0]+': not available in this practice terminal (only psql works here)');}}
+  else{
+   var a=w.slice(1),db=null,user='ana',host=null,port='5432',bad=null,pos=[],ver=false;
+   for(var i=0;i<a.length;i++){var x=a[i],m;
+    if(x==='--version'||x==='-V'){ver=true;}
+    else if(x==='-d'||x==='-h'||x==='-p'||x==='-U'){var v=a[++i];if(v===undefined){bad='psql: error: option requires an argument -- \''+x.slice(1)+'\'';break;}
+     if(x==='-d'){db=v;}else if(x==='-h'){host=v;}else if(x==='-p'){port=v;}else{user=v;}}
+    else if((m=x.match(/^--(dbname|host|port|username)=(.*)$/))){if(m[1]==='dbname'){db=m[2];}else if(m[1]==='host'){host=m[2];}else if(m[1]==='port'){port=m[2];}else{user=m[2];}}
+    else if(x.charAt(0)==='-'){bad='psql option '+x+' is not available in this practice terminal.';break;}
+    else{pos.push(x);}}
+   if(!bad&&!ver){if(pos.length){if(db===null){db=pos[0];if(pos[1]){user=pos[1];}}else{user=pos[0];}}}
+   if(bad){o('e',bad);}
+   else if(ver){o('o','psql (PostgreSQL) 18.6');msg='That is the version of the psql client program. SELECT version(); inside psql asks the server instead.';}
+   else if(host&&host!=='localhost'&&host!=='127.0.0.1'){o('e','Only the local server (localhost) exists in this practice terminal.');}
+   else if(user!=='ana'){o('e','Only the PostgreSQL user ana exists in this practice terminal.');}
+   else{
+    var where=host?'connection to server at "localhost" (127.0.0.1), port '+port+' failed: ':'connection to server on socket "/var/run/postgresql/.s.PGSQL.'+port+'" failed: ';
+    if(port!=='5432'){o('e','psql: error: '+where+(host?'Connection refused':'No such file or directory'));o('e',host?'\tIs the server running on that host and accepting TCP/IP connections?':'\tIs the server running locally and accepting connections on that socket?');msg='Nothing listens on port '+port+' here. The server uses the default port, 5432.';}
+    else{if(db===null){db=user;}
+     if(db!=='practice'&&db!=='postgres'){o('e','psql: error: '+where+'FATAL:  database "'+db+'" does not exist');msg=(pos.length||a.length?'There is no database named '+db+'.':'With no database name, psql tries a database named after your user, ana, and there is none.')+' Name the database: practice.';}
+     else{o('o','psql (18.6)');o('o','Type "help" for help.');o('o','');t.mode='psql';t.db=db;t.buf='';
+      if(db==='practice'){if(step===2){t.g.conn=1;}msg='Connected. The prompt now names the database.';}
+      else{msg='Connected to postgres, a database the server creates for itself. The task needs practice: type \\q, then connect to practice.';}}}}}
+ } else {
+  if(trimmed.charAt(0)==='\\'){
+   var mm=trimmed.match(/^\\(\S+)\s*(.*)$/),cmd=mm[1],arg=mm[2].trim();
+   if(cmd==='q'||cmd==='quit'){t.mode='shell';t.db=null;t.buf='';if(step===3){t.g.q=1;}msg='psql quit; you are back at the shell prompt.';}
+   else if((cmd==='l'||cmd==='list')&&!arg){T.OUT.l.forEach(function(s){o('o',s);});if(step===3){t.g.l=1;}msg='\\l lists every database in the server.';}
+   else if(cmd==='dt'&&!arg){T.OUT.dt.forEach(function(s){o('o',s);});if(step===3){t.g.dt=1;}msg='\\dt lists the tables in the database you are connected to: '+t.db+'.';}
+   else if(cmd==='d'&&!arg){(t.db==='practice'?T.OUT.d:['Did not find any relations.']).forEach(function(s){o('o',s);});msg='\\d with no name lists the tables and other relations. Add a table name to describe one table.';}
+   else if(cmd==='d'){var nm=arg.replace(/^public\./,'');
+    if(nm==='courses'&&t.db==='practice'){T.OUT.dc.forEach(function(s){o('o',s);});if(step===3){t.g.d=1;}msg='\\d courses shows each column, its type and whether it may be empty (Nullable), plus the primary key index.';}
+    else{o('o','Did not find any relation named "'+arg+'".');msg='There is no table by that name in '+t.db+'.';}}
+   else if(/^(\?|h|help|c|connect|conninfo|x|du|dn|df|dv|di|ds|timing|i|e|password|l\+|dt\+|d\+|list\+|copy|echo|set|pset)$/.test(cmd)){o('e','\\'+cmd+' is a real psql command, but it is not available in this practice terminal.');}
+   else{o('e','invalid command \\'+cmd);o('e','Try \\? for help.');}
+  } else if(trimmed){
+   t.buf=t.buf?t.buf+'\n'+line:line;
+   var semi=t.buf.indexOf(';');
+   if(semi<0){msg='No semicolon yet, so psql waits for more of the statement. Type ; to finish it.';}
+   else{var stmt=t.buf.slice(0,semi),norm=stmt.replace(/\s+/g,' ').trim();t.buf='';
+    if(/^select version ?\( ?\)$/i.test(norm)){var V=T.VERSION,wd=V.length+2,pad=Math.floor((wd-7)/2);
+     o('o',new Array(pad+1).join(' ')+'version');o('o',new Array(wd+1).join('-'));o('o',' '+V);o('o','(1 row)');o('o','');
+     if(step===2){t.g.ver=1;}msg='The server answered with its version. Your own server prints its own version and platform.';}
+    else{var first=(norm.match(/^[A-Za-z_]+/)||[norm.split(' ')[0]||';'])[0];
+     if(/^(select|insert|update|delete|create|drop|alter|with|begin|commit|rollback|show|set|values|explain|table|grant)$/i.test(first)){o('e','That SQL is valid PostgreSQL, but this practice terminal only runs SELECT version(); here.');}
+     else{var l1=stmt.split('\n')[0],at=l1.indexOf(first);o('e','ERROR:  syntax error at or near "'+first+'"');o('e','LINE 1: '+l1+';');o('e',new Array(9+Math.max(at,0)).join(' ')+'^');msg='PostgreSQL did not recognise "'+first+'". Check the spelling.';}}}
+  }
+ }
+ var log=api.$('log-'+term);out.forEach(function(x){var dv=document.createElement('div');dv.className=x[0];dv.textContent=x[1];log.appendChild(dv);});log.scrollTop=log.scrollHeight;
+ var need={2:['conn','ver'],3:['l','dt','d','q']}[step]||[],left=need.filter(function(k){return !t.g[k];}).length,act={2:'connect',3:'meta'}[step];
+ if(!msg&&out.length&&out[out.length-1][0]==='e'){msg='That did not work, so no goal moved.';}
+ api.say('<p>'+api.esc(msg||'Command run.')+'</p><p>'+(left?left+' of '+need.length+' goals still open.':'<strong>All goals met.</strong> Continue when ready.')+'</p>');
+ if(!left&&need.length&&!S.done[act]){api.complete(act);}
+ this.render(S,api);
+},
+render:function(S,api){var t=S.t;
+ if(S.step===3&&!t.s3){t.s3=true;t.mode='psql';t.db='practice';t.buf='';var lg=api.$('log-3');if(lg&&!lg.firstChild){var h=document.createElement('div');h.className='h';h.textContent='(Already connected to practice.)';lg.appendChild(h);}
+  api.qa('.cmdline .pr').forEach(function(n){n.textContent=TOPIC.prompt(S);});}
+ var on=t.mode==='psql',link=api.$('sv-link'),box=api.$('sv-practice');
+ link.setAttribute('stroke-dasharray',on?'':'6 5');link.setAttribute('stroke-width',on?'4':'2');
+ box.setAttribute('stroke-width',on&&t.db==='practice'?'4':'1');
+ api.$('conn-state').textContent=on?'Connection: psql is connected to the database '+t.db+' (solid arrow, thick outline).':'Connection: none. A dashed arrow means psql is not connected.';
+ var g=t.g;api.qa('.goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!g[k]);li.querySelector('.st').textContent=g[k]?'done':'open';});
+},
+predict:{correct:'a',why:{
+ a:'psql is a client: it connects to the server and sends what you type.',
+ b:'The server runs in the background and only answers clients that connect to it; you do not type into it.',
+ c:'The server manages the database files; you never edit them by hand.',
+ d:'The download page only gives you installers and packages.'}},
+apply:{
+ A:{fs:'apply-a',correct:'c',
+  why:{a:'\\l lists the databases in the server, not the columns of a table.',b:'\\dt lists the tables, but not what is inside them.',c:'\\d orders describes that one table: each column, its type, and the Nullable column that shows which may be empty.',d:'SELECT version(); reports the server version only.'},
+  miss:{a:'\\l lists databases, one level too high.',b:'\\dt lists table names only.',d:'That asks the server for its version, not for a table.'},
+  okNote:'\\d plus a table name describes that table.',
+  hint:'Think about which command takes a table name.'},
+ B:{fs:'apply-b',correct:'b',
+  why:{a:'\\l prints "List of databases", with owners and encodings.',b:'\\dt prints "List of tables" for the connected database, as shown.',c:'\\d orders prints "Table "public.orders"" with one row per column.',d:'\\q prints nothing; it quits psql.'},
+  okNote:'A table list comes from \\dt; a column list comes from \\d with a table name.',
+  reveal:'The answer is \\dt: it printed the list of tables. For Mo\'s columns, \\d orders is the command.'}}
+};
+
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
+var SNAP={},LAST=TOPIC.steps,S;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init?TOPIC.init():{},sort:{}};}
+function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
+function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}}
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,render:function(){if(TOPIC.render){TOPIC.render(S,api);}},get S(){return S;}};
+function progress(){
+  var acts=TOPIC.acts,n=0,set=0,pips=qa('.pip',$('progress'));
+  acts.forEach(function(a,i){var p=pips[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
+    if(p){p.className='pip'+(on?(S.settled[a]?' settled':' on'):'');}});
+  $('prog-text').textContent='Activities done: '+n+' of '+acts.length+(set?' ('+set+' answered, not marked correct)':'');
+}
+function complete(act){if(!S.done[act]){S.done[act]=true;}progress();$('next').hidden=false;}
+function show(step,focus){
+  S.step=step;stageEl.setAttribute('data-step',String(step));
+  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
+  if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
+    SNAP[step]={html:h,t:clone(S.t)};}
+  $('reset').disabled=(step===LAST);
+  $('next').hidden=!S.done[TOPIC.acts[step-1]];
+  if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
+    c.textContent='All '+TOPIC.acts.length+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: read its explanation again before moving on.':'.');}}
+  else{main.removeAttribute('data-pep-complete');}
+  if(TOPIC.render){TOPIC.render(S,api);}progress();
+  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+}
+function optLabel(inp){return inp.closest('label');}
+function optText(inp){var s=optLabel(inp).querySelector('.ot');return (s?s.textContent:optLabel(inp).textContent).trim();}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function badgeHtml(list){return '<span class="badges">'+list.map(function(b){return '<span class="badge '+b[1]+'">'+b[0]+'</span>';}).join('')+'</span>';}
+function explainList(set,chosen,mark){
+  var html='<ul class="explain">';
+  Object.keys(set.why).forEach(function(k){
+    var inp=qa('input[value="'+k+'"]',$(set.fs))[0];var lab=inp?optText(inp):k;
+    html+='<li'+(k===chosen?' class="mine"':'')+'><span class="on">'+(mark?(k===set.correct?'Correct: ':'Not this: '):'')+esc(lab)+(k===chosen?' (your choice)':'')+'</span><span class="ex">'+set.why[k]+'</span></li>';
+  });
+  return html+'</ul>';
+}
+function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===set.correct&&chosen===set.correct){l.classList.add('right');}
+  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
+function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i),b=[];
+  if(i.value===chosen){b.push(['Your answer','mine-b']);}b.push(i.value===set.correct?['Correct','ok-b']:['Not correct','no-b']);
+  var w=d.createElement('span');w.className='why';w.innerHTML=badgeHtml(b)+set.why[i.value];l.appendChild(w);});}
+function firstDetails(){return '<details><summary>First question: every option explained</summary>'+explainList(TOPIC.apply.A,S.firstPick,true)+'</details>';}
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+'. Reported to you, never graded.</p>';}
+function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
+  var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
+  var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function checkApply(which){
+  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  if(which==='a'){
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf||S.tries!==0){return;}
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
+    if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p><p>'+A.okNote+'</p><p>Each option is explained under it.</p>'+confText());complete('apply');focusVerdict();return;}
+    S.firstPick=ch;
+    say('<p class="verdict no">Not yet. Try once more: same idea, shown a different way.</p><p>Your first answer, <span class="on">'+esc(optText(qa('input[name="apply-a"][value="'+ch+'"]')[0]))+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
+    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});
+    var t=$('task-apply-b');if(t){t.focus();}
+  } else {
+    var c2=checked('apply-b');if(!c2||S.tries!==1){return;}
+    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
+    if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>'+B.okNote+'</p><p>Each option is explained under it.</p>'+firstDetails()+confText());}
+    else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
+      say('<p class="verdict set">Answered and settled: not marked correct, no penalty.</p><p>'+B.reveal+'</p><p>Each option is explained under it.</p>'+firstDetails()+confText());}
+    complete('apply');focusVerdict();
+  }
+}
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
+  if(!ch||!pc||S.done.predict){return;}
+  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
+    var b=[];if(i.value===ch){b.push(['Your prediction','mine-b']);}b.push(i.value===P.correct?['Correct','ok-b']:['Not correct','no-b']);
+    var w=d.createElement('span');w.className='why';w.innerHTML=badgeHtml(b)+P.why[i.value];l.appendChild(w);});
+  say('<p class="verdict info">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; nothing is lost.')+'</p><p>Each option now shows why, directly under it.</p><p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(pc)+'. Reported to you, never graded.</p>'+(P.after?'<p>'+P.after+'</p>':''),1);
+  complete('predict');
+}
+/* sorter: one select per item; check marks each item and explains the chosen option */
+function sortCheck(id){
+  var cfg=TOPIC.sorters[id],box=qa('[data-sorter="'+id+'"]')[0];if(!cfg||!box||S.done[cfg.act]){return;}
+  var st=S.sort[id]||(S.sort[id]={checks:0});st.checks++;
+  var items=Object.keys(cfg.items),right=0,missing=0,lines=[];
+  items.forEach(function(k){var it=cfg.items[k],sel=$(id+'-'+k),row=sel.closest('.sitem'),v=sel.value,mk=row.querySelector('.mark');
+    row.classList.remove('right','wrong');
+    if(!v){missing++;mk.textContent='Not answered yet';row.classList.add('wrong');return;}
+    var ok=v===it.ok;if(ok){right++;}row.classList.add(ok?'right':'wrong');mk.textContent=ok?'Correct':'Not yet';
+    lines.push('<li><span class="on">'+(ok?'Correct: ':'Not yet: ')+esc(it.label)+' → '+esc(sel.options[sel.selectedIndex].text)+'</span><span class="ex">'+it.why[v]+'</span></li>');});
+  var all=right===items.length;
+  if(all){qa('select',box).forEach(function(s){s.disabled=true;});qa('[data-act="sort-check"]',box).forEach(function(b){b.disabled=true;});
+    say('<p class="verdict ok">All '+items.length+' correct'+(st.checks>1?' after '+st.checks+' checks':'')+'.</p><p>'+cfg.done+'</p><ul class="explain">'+lines.join('')+'</ul>');complete(cfg.act);}
+  else{say('<p class="verdict no">'+right+' of '+items.length+' correct'+(missing?', '+missing+' not answered':'')+'. Change the items marked Not yet, then check again.</p><ul class="explain">'+lines.join('')+'</ul>'+(st.checks>=2&&cfg.hint?'<p>Hint: '+cfg.hint+'</p>':''));}
+  if(TOPIC.render){TOPIC.render(S,api);}
+}
+/* statement runner: buttons run fixed statements against the simulated database */
+function runStmt(b){
+  var k=b.getAttribute('data-stmt'),R=TOPIC.runner,st=R.stmts[k];if(!st){return;}
+  var res=st.run(S.t),log=$(R.log),c=d.createElement('div');c.className='c';c.textContent=R.prompt+' '+st.sql;log.appendChild(c);
+  res.out.forEach(function(x){var dv=d.createElement('div');dv.className=x[0];dv.textContent=x[1];log.appendChild(dv);});log.scrollTop=log.scrollHeight;
+  var g=R.goals(S.t),need=Object.keys(g),left=need.filter(function(x){return !g[x];}).length;
+  say('<p>'+(res.ok?'<span class="verdict ok">Accepted.</span> ':'<span class="verdict no">Rejected.</span> ')+esc(res.note||'')+'</p><p>'+(left?left+' of '+need.length+' goals still open.':'<strong>All goals met.</strong> Continue when ready.')+'</p>');
+  if(!left&&!S.done[R.act]){complete(R.act);}
+  if(TOPIC.render){TOPIC.render(S,api);}
+}
+TOPIC.act=TOPIC.act||function(a,b){if(a==='sort-check'){sortCheck(b.getAttribute('data-sorter'));}else if(a==='run'){runStmt(b);}};
+function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
+function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
+  Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
+  qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){if(typeof HIST!=='undefined'){delete HIST[i.id];}});
+  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  Object.keys(TOPIC.sorters||{}).forEach(function(id){if(TOPIC.sorters[id].act===act){delete S.sort[id];}});
+  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  show(step,false);if(typeof syncPrompt==='function'){syncPrompt();}
+  say('<p class="verdict info">Activity restarted. Earlier activities keep their results.</p>');
+  var h=$('teach-'+step+'-h');if(h){h.focus();}}
+/* pep:component terminal@1 js */
+d.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b){return;}
+  if(b.id==='reset'){restart();return;}
+  if(b.id==='next'){show(S.step+1);return;}
+  if(b.id==='predict-check'){checkPredict();return;}
+  if(b.id==='apply-check'){checkApply('a');return;}
+  if(b.id==='apply-check-b'){checkApply('b');return;}
+  if(b.classList.contains('runbtn')){runTerminal(b.closest('.cmdline'));return;}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+});
+d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
+var HIST={};
+function prompt(){return TOPIC.prompt?TOPIC.prompt(S):'$';}
+function syncPrompt(){qa('.cmdline .pr').forEach(function(n){n.textContent=prompt();});}
+function runTerminal(box){
+  if(!box){return;}var inp=box.querySelector('input[type="text"]');if(!inp||inp.disabled){return;}
+  var line=inp.value,H=HIST[inp.id]||(HIST[inp.id]={l:[],i:0});if(line.trim()){H.l.push(line);}H.i=H.l.length;
+  var p=prompt();inp.value='';TOPIC.run(line,box.getAttribute('data-term'),S,api);
+  qa('.log .c:not([data-p])').forEach(function(n){n.setAttribute('data-p',p);});syncPrompt();inp.focus();}
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closest('.cmdline')||t.tagName!=='INPUT'){return;}
+  var H=HIST[t.id]||(HIST[t.id]={l:[],i:0});
+  if(e.key==='Enter'&&!e.isComposing){e.preventDefault();runTerminal(t.closest('.cmdline'));}
+  else if(e.key==='ArrowUp'){if(!H.l.length){return;}e.preventDefault();H.i=Math.max(0,H.i-1);t.value=H.l[H.i];}
+  else if(e.key==='ArrowDown'){if(!H.l.length){return;}e.preventDefault();H.i=Math.min(H.l.length,H.i+1);t.value=H.l[H.i]||'';}
+  else if(e.key==='Tab'&&!e.shiftKey&&!e.altKey&&!e.ctrlKey&&!e.metaKey){
+    // capture Tab only when a completion actually changes the line, so Tab never traps focus
+    var v=t.value.trim()&&TOPIC.complete?TOPIC.complete(t.value,S):null;if(v&&v!==t.value){e.preventDefault();t.value=v;}}
+  else if(e.key==='Escape'){var tk=$('task-'+S.step);if(tk){e.preventDefault();tk.setAttribute('tabindex','-1');tk.focus();}}
+});
+/* /pep:component terminal js */
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+setTheme(mq&&mq.matches?'dark':'light');
+if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+fresh();show(1,false);if(typeof syncPrompt==='function'){syncPrompt();}
+})();
+</script>
+</body>
+</html>

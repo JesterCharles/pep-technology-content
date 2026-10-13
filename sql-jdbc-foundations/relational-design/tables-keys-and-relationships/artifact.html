@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="sql-jdbc-foundations">
+<meta name="pep:module" content="relational-design">
+<meta name="pep:topic" content="Tables, keys and relationships">
+<meta name="pep:topic-id" content="tables-keys-and-relationships">
+<meta name="pep:budget-minutes" content="10">
+<meta name="pep:source" content="authoring/evidence/sql-jdbc-foundations/relational-design/tables-keys-and-relationships/sources.json">
+<title>Tables, keys and relationships · Relational Design</title>
+<style>
+:root{
+  --bg:#eef2f0;--surface:#f8faf9;--ink:#1b2320;--muted:#47524e;--rule:#6b7873;--line:#c9d2ce;
+  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
+  --on-teal:#ffffff;--term:#e2e8e5;--focus:#1f4fbf;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121816;--surface:#1a2220;--ink:#e3ebe7;--muted:#a8b6b0;--rule:#71827c;--line:#2f3b37;
+  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
+  --on-teal:#0b1311;--term:#0c1110;--focus:#8fb4ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+::selection{background:var(--teal);color:var(--on-teal)}
+code,kbd,.mono{font-family:var(--mono);font-size:.94em}
+a{color:var(--teal);text-underline-offset:3px}
+main{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
+.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--s6);row-gap:var(--s2);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
+h1,h2{font-family:var(--serif)}
+h1{margin:0;font-size:26px;line-height:32px;letter-spacing:-.01em}
+.meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
+.meta li:first-child{font-weight:700;color:var(--ink)}
+.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
+.objectives{grid-column:1/-1;margin:0;padding-left:1.25em}
+.tools{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:var(--s2);grid-row:1;grid-column:2}
+.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s3);align-items:start}
+.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.teach h2{margin:0 0 var(--s2);font-size:21px;line-height:28px}
+.teach p{margin:0 0 var(--s2);max-width:62ch}
+.teach ul,.teach ol{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
+.teach li{margin-bottom:var(--s1)}
+.task{padding:var(--s3) var(--s4);border-top:2px solid var(--teal);background:var(--surface)}
+.task p{margin:0;font-weight:600}
+.task p+p{margin-top:var(--s2)}
+.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
+.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
+.goals li:first-child{border-top:0}
+.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
+.goals li.done .st{color:var(--teal)}
+.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface);min-width:0}
+.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:var(--s2)}
+.control{min-width:0}
+.sql{margin:0 0 var(--s2);padding:var(--s2) var(--s3);border-left:3px solid var(--teal);background:var(--bg);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.dtab{border-collapse:collapse;font:14px/1.35 var(--mono);margin:0 0 var(--s2)}
+.dtab caption{text-align:left;font:700 15px/1.4 var(--sans);padding-bottom:2px}
+.dtab th,.dtab td{border:1px solid var(--rule);padding:2px var(--s2);text-align:left;vertical-align:top}
+.dtab th{background:var(--bg)}
+.dtab tr.new td{border-style:double;border-width:3px}
+.dtab .key{font-weight:700}
+.tables{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s4);align-items:flex-start}
+.tables>*{min-width:0;max-width:100%;overflow-x:auto}
+.legend{margin:0;font-size:14px;color:var(--muted)}
+.sorter{display:flex;flex-direction:column;gap:var(--s2)}
+.sitem{margin:0;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);min-width:0}
+.sitem legend{float:left;width:100%;margin:0 0 var(--s1);font-size:15px;font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.chips{clear:both;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s2)}
+.chips label{display:flex;align-items:center;gap:var(--s1);min-height:36px;padding:2px var(--s2);border:1px solid var(--rule);border-radius:4px;background:var(--bg);font-size:15px;cursor:pointer;overflow-wrap:anywhere}
+.chips label:has(input:checked){border:2px solid var(--teal);font-weight:600}
+.chips input{width:18px;height:18px;margin:0;accent-color:var(--teal)}
+.sitem.right{border-color:var(--teal)}
+.sitem.wrong{border-style:dashed;border-color:var(--red)}
+.sitem .mark{display:block;font-size:14px;font-weight:700}
+.sitem .mark:empty{display:none}
+.sitem.right .mark{color:var(--teal)}
+.sitem.wrong .mark{color:var(--red)}
+.stmts{display:flex;flex-direction:column;gap:var(--s2)}
+.stmts button{text-align:left;font:15px/1.4 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.out{min-height:72px;max-height:240px;overflow-y:auto;margin-top:var(--s2);padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--term);font:14px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.out .c{font-weight:700}
+.out .e{color:var(--red)}
+.out .h{color:var(--muted);font-family:var(--sans)}
+.verdict{font-weight:700}
+.verdict.ok{color:var(--teal)}
+.verdict.no{color:var(--red)}
+.verdict.set{color:var(--amber)}
+.explain{list-style:none;padding:0;margin:var(--s1) 0 0}
+.explain li{margin:0;padding:var(--s1) 0 var(--s1) var(--s3);border-left:2px solid var(--line)}
+.explain li+li{margin-top:var(--s1)}
+.explain li.mine{border-left-color:var(--teal)}
+.explain .on,.explain .ex{display:block}
+.on{font-weight:600}
+.opt .why{display:block;flex:1 0 100%;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
+.recap ul{padding-left:20px}
+.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
+.feedback details{margin:var(--s1) 0}
+.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
+.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
+.next-topic{font-weight:700}
+.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
+svg text{font-family:var(--sans)}
+[hidden]{display:none!important}
+@media (min-width:861px) and (max-height:720px){
+  main{padding-top:var(--s2)}
+  .stage{padding-top:var(--s2)}
+  .col{gap:var(--s2)}
+  .model{padding:var(--s2) var(--s4)}
+  .teach h2{margin-bottom:var(--s1)}
+}
+@media (max-width:860px){
+  main{padding:var(--s3) var(--s4) var(--s4)}
+  .top{grid-template-columns:minmax(0,1fr)}
+  .tools{grid-row:auto;grid-column:1;justify-content:flex-start}
+  .stage{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3)}
+  .col{display:contents}
+  #current-teaching{order:1}#current-task{order:2}#live-model{order:3}#current-control{order:4}.fbrow{order:5}
+}
+@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}
+  
+  .cmdline{flex-wrap:wrap;row-gap:var(--s1)}
+  .cmdline label{flex:1 0 100%;max-width:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+/* pep:component restart@1 css */
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* /pep:component restart css */
+/* pep:component progress@1 css */
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:repeating-linear-gradient(135deg,var(--amber) 0 3px,transparent 3px 6px);border-color:var(--amber)}
+/* /pep:component progress css */
+/* pep:component mcq-with-confidence@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start}
+.feedback{width:100%;min-width:0;font-size:15px;line-height:1.35}
+.feedback:empty{display:none}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin:0}
+.feedback .verdict{font-weight:700}
+.feedback .ok{color:var(--teal)}
+.feedback .no{color:var(--red)}
+.feedback .set{color:var(--amber)}
+.feedback .info{color:var(--ink)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+/* /pep:component mcq-with-confidence css */
+</style>
+</head>
+<body>
+<noscript><p class="nojs">This topic needs JavaScript for its practice activities and checks. Turn JavaScript on to take part.</p></noscript>
+<main id="lesson">
+  <header class="top">
+    <h1>Tables, keys and relationships</h1>
+    <div class="tools">
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 5</span><span class="pips" aria-hidden="true"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></span></div>
+      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart this activity</button>
+      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+    </div>
+    <ul class="meta"><li>Relational Design, topic 2 of 5</li><li>About 10 minutes</li><li>5 activities</li></ul>
+    <ul class="objectives" data-pep-objectives aria-label="Objectives">
+      <li>Identify a table's primary key and explain why its values must be unique and never null</li>
+      <li>Predict which inserts and deletes a foreign key rejects when it links a child table to a parent table</li>
+      <li>Classify a relationship between two entities as one-to-many or many-to-many, and name the junction table a many-to-many relationship needs</li>
+    </ul>
+  </header>
+  <div class="stage" id="stage" data-step="1">
+    <div class="col">
+      <section id="current-teaching" class="teach" aria-label="Current teaching">
+<div data-step="1">
+  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+  <p>A small library database has two tables, shown on the right. Guess before you learn the rule.</p>
+</div>
+<div data-step="2" data-pep-teaching>
+  <h2 id="teach-2-h" tabindex="-1">Primary key: one row, one identity</h2>
+  <p>A table stores one kind of thing; each row is one of them. The <strong>primary key</strong> is the column whose value identifies a row, like <code>authors.id</code>.</p>
+  <p>PostgreSQL requires primary key values to be <strong>unique</strong> and <strong>not null</strong>: two rows with the same id, or a row with no id, could not be told apart.</p>
+</div>
+<div data-step="3" data-pep-teaching>
+  <h2 id="teach-3-h" tabindex="-1">Foreign key: a link that must point somewhere</h2>
+  <p><code>books.author_id</code> is a <strong>foreign key</strong>: it <code>REFERENCES authors (id)</code>. Every value in it must match an existing author. The table holding the foreign key is the child; the referenced table is the parent.</p>
+  <ul>
+    <li>A child row that points at a missing parent is rejected.</li>
+    <li>By default, deleting a parent that a child still points at is rejected. Delete or change the child first.</li>
+  </ul>
+</div>
+<div data-step="4" data-pep-teaching>
+  <h2 id="teach-4-h" tabindex="-1">One-to-many and many-to-many</h2>
+  <p><strong>One-to-many:</strong> one author has many books, each book one author. The foreign key goes on the "many" side: <code>books.author_id</code>.</p>
+  <p><strong>Many-to-many:</strong> a member borrows many books, and a book is borrowed by many members. No single foreign key column can hold that, so add a <strong>junction table</strong>, such as <code>loans (member_id, book_id)</code>, with a foreign key to each side. Each row is one pairing.</p>
+</div>
+<div data-step="5" data-pep-teaching>
+  <h2 id="teach-5-h" tabindex="-1">Apply it</h2>
+  <p>Same rules, new tables.</p>
+</div>
+<div data-step="6" hidden data-pep-recap class="recap">
+  <h2 id="teach-6-h" tabindex="-1">Recap</h2>
+  <ul>
+    <li>A primary key identifies each row, so its values must be unique and never null.</li>
+    <li>A foreign key must match an existing parent row: inserting an orphan child is rejected, and so is deleting a parent that children still reference (the default).</li>
+    <li>One-to-many puts the foreign key on the many side; many-to-many needs a junction table with two foreign keys.</li>
+  </ul>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <table>
+      <tr><td><code>id integer PRIMARY KEY</code></td><td>unique and not null</td></tr>
+      <tr><td><code>author_id integer REFERENCES authors (id)</code></td><td>must match an existing authors.id</td></tr>
+      <tr><td><code>ERROR: duplicate key value violates unique constraint "authors_pkey"</code></td><td>repeated primary key</td></tr>
+      <tr><td><code>ERROR: insert or update on table "books" violates foreign key constraint</code></td><td>child points at a missing parent</td></tr>
+      <tr><td><code>ERROR: update or delete on table "authors" violates foreign key constraint</code></td><td>parent still referenced</td></tr>
+      <tr><td><code>loans (member_id, book_id)</code></td><td>junction table for many-to-many</td></tr>
+    </table>
+    <p>Options you will meet later: <code>ON DELETE CASCADE</code> deletes the children with the parent, and a foreign key column that is null is not checked, so add <code>NOT NULL</code> when every child must have a parent.</p>
+  </details>
+  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live PostgreSQL 18 pages on 2026-10-13. Error messages were copied from a real PostgreSQL 18 server.</p><ul>
+    <li><a href="https://www.postgresql.org/docs/current/ddl-basics.html" rel="noopener">PostgreSQL 18: 5.1 Table Basics</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/ddl-constraints.html" rel="noopener">PostgreSQL 18: 5.5 Constraints (primary keys, foreign keys)</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/tutorial-fk.html" rel="noopener">PostgreSQL 18 tutorial: 3.3 Foreign Keys</a></li>
+  </ul></details>
+  <p class="next-topic">Next topic: <a href="../designing-tables-from-a-user-story/artifact.html" rel="noopener">Designing tables from a user story</a></p>
+</div>
+      </section>
+      <section id="current-task" class="task" aria-label="Current task">
+<div data-step="1"><p id="task-1">You add a book whose <code>author_id</code> is 4, but no author has id 4. What does PostgreSQL do?</p></div>
+<div data-step="2"><p id="task-2">Add the author Toni Morrison. Run the statements in any order and watch which ones PostgreSQL rejects.</p>
+  <ul class="goals"><li data-goal="dup"><span>See a repeated id rejected</span><span class="st"></span></li><li data-goal="nul"><span>See a missing id rejected</span><span class="st"></span></li><li data-goal="add"><span>Toni Morrison is in <code>authors</code></span><span class="st"></span></li></ul></div>
+<div data-step="3"><p id="task-3">Make both changes. Some statements will be rejected; find an order that works.</p>
+  <ul class="goals"><li data-goal="beloved"><span><em>Beloved</em> is in <code>books</code>, linked to Toni Morrison</span><span class="st"></span></li><li data-goal="gone"><span>Octavia Butler (id 1) is removed from <code>authors</code></span><span class="st"></span></li></ul></div>
+<div data-step="4"><p id="task-4">Classify each relationship, then say where its link goes.</p></div>
+<div data-step="5"><p id="task-apply"><code>orders.customer_id</code> references <code>customers (id)</code>. Customers 1 and 2 exist; the only order belongs to customer 2. Which statement does PostgreSQL reject?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Second try, other way round: which statement produced the error shown below?</p></div>
+<div data-step="6"><p>All activities finished.</p><p id="complete-msg" class="complete"></p></div>
+      </section>
+      <div class="fbrow">
+        <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-explore-feedback></div>
+<div data-step="5" data-pep-apply-feedback></div>
+<div data-step="6"></div>
+        </div>
+        <button type="button" class="primary" id="next" hidden>Continue</button>
+      </div>
+    </div>
+    <div class="col">
+<figure id="live-model" class="model" aria-labelledby="model-cap" data-pep-model>
+  <figcaption id="model-cap">The library database: current rows. Bold columns are keys; a new row has a double border.</figcaption>
+  <div class="tables" id="db-tables"><table class="dtab"><caption>authors</caption><tr><th class="key">id (primary key)</th><th>name</th></tr><tr><td>1</td><td>Octavia Butler</td></tr><tr><td>2</td><td>Ursula K. Le Guin</td></tr></table><table class="dtab"><caption>books</caption><tr><th class="key">id (primary key)</th><th>title</th><th class="key">author_id (foreign key to authors.id)</th></tr><tr><td>10</td><td>Kindred</td><td>1</td></tr></table></div>
+  <svg id="relsvg" viewBox="0 0 520 150" width="100%" role="img" aria-labelledby="relsvg-t relsvg-d">
+    <title id="relsvg-t">One-to-many and many-to-many</title>
+    <desc id="relsvg-d">Top: authors, one, linked to books, many; the foreign key author_id sits in books. Bottom: members linked to books through the junction table loans; loans has member_id and book_id, a foreign key to each side, so each member has many loans and each book has many loans.</desc>
+    <g fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="6" y="8" width="120" height="40" rx="3"/><rect x="306" y="8" width="208" height="40" rx="3"/>
+      <rect x="6" y="96" width="120" height="40" rx="3"/><rect x="180" y="96" width="160" height="40" rx="3" stroke-dasharray="5 3"/><rect x="394" y="96" width="120" height="40" rx="3"/>
+      <line x1="126" y1="28" x2="306" y2="28"/><line x1="126" y1="116" x2="180" y2="116"/><line x1="340" y1="116" x2="394" y2="116"/>
+    </g>
+    <g font-size="14" fill="currentColor">
+      <text x="66" y="33" text-anchor="middle" font-weight="700">authors</text><text x="410" y="33" text-anchor="middle"><tspan font-weight="700">books</tspan> (author_id)</text>
+      <text x="136" y="22">1</text><text x="282" y="22">many</text>
+      <text x="66" y="121" text-anchor="middle" font-weight="700">members</text><text x="260" y="114" text-anchor="middle" font-weight="700">loans</text><text x="260" y="130" text-anchor="middle" font-size="12">member_id, book_id</text><text x="454" y="121" text-anchor="middle" font-weight="700">books</text>
+      <text x="130" y="110">1</text><text x="148" y="140" font-size="12">many</text><text x="352" y="140" font-size="12">many</text><text x="382" y="110">1</text>
+    </g>
+  </svg>
+  <p class="legend">Text version: authors one-to-many books, through books.author_id. Members and books are many-to-many, through the junction table loans (member_id, book_id).</p>
+</figure>
+      <section id="current-control" class="control" aria-label="Your turn">
+<div data-step="1">
+  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): you insert a book with author_id 4 and no author 4 exists. Options: PostgreSQL rejects the insert with an error; it inserts the book with an empty author; it creates author 4 automatically; it inserts the book and shows a warning. Answer: it rejects the insert. The foreign key requires every author_id to match an existing authors.id, so nothing is stored and nothing is created.">
+    <legend>Prediction</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="predict" value="a"> <span class="ot">Rejects the insert with an error</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span class="ot">Inserts the book with an empty author</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span class="ot">Creates author 4 automatically</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span class="ot">Inserts it and shows a warning</span></label></div>
+  </fieldset>
+  <div class="row">
+  <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
+    <legend id="pconf-help">How sure are you?</legend>
+    <label class="opt"><input type="radio" name="pconf" value="low"> <span class="ot">Low</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="medium"> <span class="ot">Medium</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="high"> <span class="ot">High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+  </div>
+</div><div data-step="2" hidden>
+  <div data-runner="pk" data-interaction="explore" data-static-alt="Statement activity on authors (ids 1 and 2 exist). INSERT INTO authors VALUES (2, 'Toni Morrison'); is rejected: ERROR: duplicate key value violates unique constraint &quot;authors_pkey&quot;, DETAIL: Key (id)=(2) already exists. INSERT INTO authors VALUES (NULL, 'Toni Morrison'); is rejected: ERROR: null value in column &quot;id&quot; of relation &quot;authors&quot; violates not-null constraint. INSERT INTO authors VALUES (3, 'Toni Morrison'); is accepted: INSERT 0 1.">
+    <div class="stmts">
+      <button type="button" class="ghost" data-act="run" data-stmt="dup">INSERT INTO authors VALUES (2, 'Toni Morrison');</button>
+      <button type="button" class="ghost" data-act="run" data-stmt="nul">INSERT INTO authors VALUES (NULL, 'Toni Morrison');</button>
+      <button type="button" class="ghost" data-act="run" data-stmt="add">INSERT INTO authors VALUES (3, 'Toni Morrison');</button>
+    </div>
+    <div class="out" id="out-2" role="log" tabindex="0" aria-label="PostgreSQL output, scrollable"></div>
+  </div>
+</div><div data-step="3" hidden>
+  <div data-runner="fk" data-interaction="explore" data-static-alt="Statement activity. INSERT INTO books VALUES (11, 'Beloved', 4); is rejected: ERROR: insert or update on table &quot;books&quot; violates foreign key constraint &quot;books_author_id_fkey&quot;, DETAIL: Key (author_id)=(4) is not present in table &quot;authors&quot;. INSERT INTO books VALUES (11, 'Beloved', 3); is accepted. DELETE FROM authors WHERE id = 1; is rejected while Kindred (book 10) still references author 1: ERROR: update or delete on table &quot;authors&quot; violates foreign key constraint &quot;books_author_id_fkey&quot; on table &quot;books&quot;, DETAIL: Key (id)=(1) is still referenced from table &quot;books&quot;. Working order: DELETE FROM books WHERE id = 10; then DELETE FROM authors WHERE id = 1;">
+    <div class="stmts">
+      <button type="button" class="ghost" data-act="run" data-stmt="b4">INSERT INTO books VALUES (11, 'Beloved', 4);</button>
+      <button type="button" class="ghost" data-act="run" data-stmt="b3">INSERT INTO books VALUES (11, 'Beloved', 3);</button>
+      <button type="button" class="ghost" data-act="run" data-stmt="da1">DELETE FROM authors WHERE id = 1;</button>
+      <button type="button" class="ghost" data-act="run" data-stmt="db10">DELETE FROM books WHERE id = 10;</button>
+    </div>
+    <div class="out" id="out-3" role="log" tabindex="0" aria-label="PostgreSQL output, scrollable"></div>
+  </div>
+</div><div data-step="4" hidden>
+  <div class="sorter" data-sorter="rel" data-interaction="explore" data-static-alt="Classification activity with answers. Author and book, where each book has one author: one-to-many. Member and book, borrowing over time: many-to-many. Customer and order, where each order belongs to one customer: one-to-many. Student and course enrollment: many-to-many. The author link goes in books, as books.author_id. Member and book borrowing needs a junction table, loans (member_id, book_id).">
+    <fieldset class="sitem" data-item="ab"><legend>Author and book (each book has one author)</legend><div class="chips"><label><input type="radio" name="rel-ab" value="one"> <span class="ot">One-to-many</span></label><label><input type="radio" name="rel-ab" value="many"> <span class="ot">Many-to-many</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="mb"><legend>Member and book, borrowing over time</legend><div class="chips"><label><input type="radio" name="rel-mb" value="one"> <span class="ot">One-to-many</span></label><label><input type="radio" name="rel-mb" value="many"> <span class="ot">Many-to-many</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="co"><legend>Customer and order (each order belongs to one customer)</legend><div class="chips"><label><input type="radio" name="rel-co" value="one"> <span class="ot">One-to-many</span></label><label><input type="radio" name="rel-co" value="many"> <span class="ot">Many-to-many</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="sc"><legend>Student and course (students enrol in courses)</legend><div class="chips"><label><input type="radio" name="rel-sc" value="one"> <span class="ot">One-to-many</span></label><label><input type="radio" name="rel-sc" value="many"> <span class="ot">Many-to-many</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="fk"><legend>Where does the author link go?</legend><div class="chips"><label><input type="radio" name="rel-fk" value="books"> <span class="ot">books.author_id</span></label><label><input type="radio" name="rel-fk" value="authors"> <span class="ot">authors.book_id</span></label><label><input type="radio" name="rel-fk" value="junction"> <span class="ot">a junction table</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="jt"><legend>What does member and book borrowing need?</legend><div class="chips"><label><input type="radio" name="rel-jt" value="mcol"> <span class="ot">members.book_id</span></label><label><input type="radio" name="rel-jt" value="bcol"> <span class="ot">books.member_id</span></label><label><input type="radio" name="rel-jt" value="junction"> <span class="ot">loans (member_id, book_id)</span></label></div><span class="mark"></span></fieldset>
+    <div class="row"><button type="button" class="primary" data-act="sort-check" data-sorter="rel" aria-describedby="task-4">Check my answers</button></div>
+  </div>
+</div><div data-step="5">
+  <div data-first>
+  <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: customers 1 and 2 exist; the only order references customer 2. Which statement is rejected? INSERT INTO orders VALUES (7, 1); is accepted, customer 1 exists. DELETE FROM customers WHERE id = 1; is accepted, no order references customer 1. DELETE FROM customers WHERE id = 2; is rejected (answer): an order still references customer 2. INSERT INTO customers VALUES (3, 'Kai'); is accepted, id 3 is new. Second try: the error DETAIL: Key (id)=(2) is still referenced from table &quot;orders&quot; came from deleting customer 2.">
+    <legend>Choose the rejected statement</legend>
+    <div class="opts one"><label class="opt"><input type="radio" name="apply-a" value="a"> <span class="ot"><code>INSERT INTO orders VALUES (7, 1);</code></span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span class="ot"><code>DELETE FROM customers WHERE id = 1;</code></span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span class="ot"><code>DELETE FROM customers WHERE id = 2;</code></span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span class="ot"><code>INSERT INTO customers VALUES (3, 'Kai');</code></span></label></div>
+  </fieldset>
+  <div class="row">
+  <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
+    <legend id="conf-help">How sure are you?</legend>
+    <label class="opt"><input type="radio" name="conf" value="low"> <span class="ot">Low</span></label>
+    <label class="opt"><input type="radio" name="conf" value="medium"> <span class="ot">Medium</span></label>
+    <label class="opt"><input type="radio" name="conf" value="high"> <span class="ot">High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
+  </div>
+  </div>
+  <div data-retry hidden>
+    <pre class="sql" aria-label="Error to explain">ERROR:  update or delete on table "customers" violates foreign key constraint "orders_customer_id_fkey" on table "orders"
+DETAIL:  Key (id)=(2) is still referenced from table "orders".</pre>
+    <fieldset id="apply-b" aria-describedby="task-apply-b">
+      <legend>Which statement caused it?</legend>
+      <div class="opts one"><label class="opt"><input type="radio" name="apply-b" value="a"> <span class="ot"><code>INSERT INTO orders VALUES (8, 2);</code></span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span class="ot"><code>DELETE FROM customers WHERE id = 2;</code></span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span class="ot"><code>INSERT INTO customers VALUES (2, 'Kai');</code></span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span class="ot"><code>DELETE FROM orders WHERE customer_id = 2;</code></span></label></div>
+    </fieldset>
+    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+  </div>
+</div><div data-step="6"></div>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+var TOPIC={
+steps:6,acts:['predict','pk','fk','rel','apply'],
+init:function(){return {authors:[[1,'Octavia Butler'],[2,'Ursula K. Le Guin']],books:[[10,'Kindred',1]],fresh:{},seen:{}};},
+runners:(function(){
+ function has(rows,id){return rows.some(function(r){return r[0]===id;});}
+ function dup(tbl,id){return {ok:false,out:[['e','ERROR:  duplicate key value violates unique constraint "'+tbl+'_pkey"'],['e','DETAIL:  Key (id)=('+id+') already exists.']],note:'The id '+id+' is already used, and a primary key must be unique.'};}
+ function insA(id,name){return function(t){
+  if(id===null){t.seen.nul=1;return {ok:false,out:[['e','ERROR:  null value in column "id" of relation "authors" violates not-null constraint'],['e','DETAIL:  Failing row contains (null, '+name+').']],note:'A primary key value can never be null.'};}
+  if(has(t.authors,id)){if(id===2){t.seen.dup=1;}return dup('authors',id);}
+  t.authors.push([id,name]);t.fresh={a:id};return {ok:true,out:[['o','INSERT 0 1']],note:'Id '+id+' was free, so the new author got its own identity.'};};}
+ function insB(id,title,aid){return function(t){
+  if(has(t.books,id)){return dup('books',id);}
+  if(!has(t.authors,aid)){return {ok:false,out:[['e','ERROR:  insert or update on table "books" violates foreign key constraint "books_author_id_fkey"'],['e','DETAIL:  Key (author_id)=('+aid+') is not present in table "authors".']],note:'No author has id '+aid+', so the new book would point at nothing.'};}
+  t.books.push([id,title,aid]);t.fresh={b:id};return {ok:true,out:[['o','INSERT 0 1']],note:'Author '+aid+' exists, so the link is valid.'};};}
+ return {
+  pk:{act:'pk',log:'out-2',prompt:'library=>',
+   stmts:{dup:{sql:"INSERT INTO authors VALUES (2, 'Toni Morrison');",run:insA(2,'Toni Morrison')},
+    nul:{sql:"INSERT INTO authors VALUES (NULL, 'Toni Morrison');",run:insA(null,'Toni Morrison')},
+    add:{sql:"INSERT INTO authors VALUES (3, 'Toni Morrison');",run:insA(3,'Toni Morrison')}},
+   goals:function(t){return {dup:!!t.seen.dup,nul:!!t.seen.nul,add:t.authors.some(function(r){return r[1]==='Toni Morrison';})};}},
+  fk:{act:'fk',log:'out-3',prompt:'library=>',
+   stmts:{b4:{sql:"INSERT INTO books VALUES (11, 'Beloved', 4);",run:insB(11,'Beloved',4)},
+    b3:{sql:"INSERT INTO books VALUES (11, 'Beloved', 3);",run:insB(11,'Beloved',3)},
+    da1:{sql:'DELETE FROM authors WHERE id = 1;',run:function(t){
+     if(!has(t.authors,1)){return {ok:true,out:[['o','DELETE 0']],note:'No row has id 1 any more, so nothing was deleted.'};}
+     if(t.books.some(function(r){return r[2]===1;})){return {ok:false,out:[['e','ERROR:  update or delete on table "authors" violates foreign key constraint "books_author_id_fkey" on table "books"'],['e','DETAIL:  Key (id)=(1) is still referenced from table "books".']],note:'Kindred still points at author 1, so the parent cannot go yet.'};}
+     t.authors=t.authors.filter(function(r){return r[0]!==1;});return {ok:true,out:[['o','DELETE 1']],note:'No book points at author 1 any more, so the delete is allowed.'};}},
+    db10:{sql:'DELETE FROM books WHERE id = 10;',run:function(t){
+     if(!has(t.books,10)){return {ok:true,out:[['o','DELETE 0']],note:'Book 10 is already gone.'};}
+     t.books=t.books.filter(function(r){return r[0]!==10;});return {ok:true,out:[['o','DELETE 1']],note:'Deleting a child row is always allowed; nothing points at a book.'};}}},
+   goals:function(t){return {beloved:t.books.some(function(r){return r[1]==='Beloved'&&r[2]===3;}),gone:!has(t.authors,1)};}}
+ };})(),
+sorters:{rel:{act:'rel',done:'One-to-many links go on the many side; many-to-many needs a junction table.',
+ hint:'ask "can one X have many Y?" and then the reverse. If both answers are yes, it is many-to-many.',
+ items:{
+  ab:{label:'Author and book',ok:'one',why:{one:'One author has many books, and each book here has exactly one author.',many:'Each book has one author in this design, so the reverse direction is "one", not "many".'}},
+  mb:{label:'Member and book, borrowing',ok:'many',why:{one:'Over time a book is borrowed by many members, so both directions are "many".',many:'A member borrows many books, and a book is borrowed by many members.'}},
+  co:{label:'Customer and order',ok:'one',why:{one:'A customer places many orders; each order belongs to one customer.',many:'Each order belongs to exactly one customer, so it is one-to-many.'}},
+  sc:{label:'Student and course',ok:'many',why:{one:'A course has many students, and a student takes many courses: both sides are many.',many:'A student takes many courses, and a course has many students.'}},
+  fk:{label:'Author link',ok:'books',why:{books:'The foreign key sits on the many side, so each book stores its one author_id.',authors:'One column in authors could hold only one book id, but an author has many books.',junction:'A junction table is for many-to-many; one-to-many needs only books.author_id.'}},
+  jt:{label:'Borrowing needs',ok:'junction',why:{mcol:'One column in members holds one book, but a member borrows many.',bcol:'One column in books holds one member, but a book is borrowed by many.',junction:'Each loans row pairs one member with one book, with a foreign key to each.'}}}}},
+change:function(target){if(target.type==='radio'){var row=target.closest('.sitem');if(row){row.classList.remove('right','wrong');row.querySelector('.mark').textContent='';}}},
+render:function(S,api){var t=S.t;
+ function tbl(name,head,rows,freshId){return '<table class="dtab"><caption>'+name+'</caption><tr>'+head.map(function(h){return '<th'+(h[1]?' class="key"':'')+'>'+api.esc(h[0])+'</th>';}).join('')+'</tr>'+
+  (rows.length?rows.map(function(r){return '<tr'+(r[0]===freshId?' class="new"':'')+'>'+r.map(function(c){return '<td>'+api.esc(c)+'</td>';}).join('')+'</tr>';}).join(''):'<tr><td colspan="'+head.length+'">(no rows)</td></tr>')+'</table>';}
+ api.$('db-tables').innerHTML=tbl('authors',[['id (primary key)',1],['name']],t.authors,t.fresh.a)+tbl('books',[['id (primary key)',1],['title'],['author_id (foreign key to authors.id)',1]],t.books,t.fresh.b);
+ var R=S.step===2?TOPIC.runners.pk:S.step===3?TOPIC.runners.fk:null;
+ if(R){var g=R.goals(t);api.qa('[data-step="'+S.step+'"] .goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!g[k]);li.querySelector('.st').textContent=g[k]?'done':'open';});}
+},
+predict:{correct:'a',why:{
+ a:'The foreign key requires books.author_id to match an existing authors.id, so the insert fails and nothing is stored.',
+ b:'PostgreSQL never fills in or blanks a value to get round a foreign key; it rejects the row.',
+ c:'A foreign key only checks; it never creates parent rows.',
+ d:'A constraint violation is an error, not a warning: the row is not inserted.'}},
+apply:{
+ A:{fs:'apply-a',correct:'c',
+  why:{a:'Accepted: customer 1 exists, so the new order points at a real parent.',b:'Accepted: no order references customer 1, so it can be deleted.',c:'Rejected: the existing order still references customer 2.',d:'Accepted: id 3 is new and not null.'},
+  miss:{a:'That order points at customer 1, who exists.',b:'Nothing references customer 1.',d:'Id 3 is new, so the primary key is satisfied.'},
+  okNote:'Deleting a parent that a child still references is rejected by default.',
+  hint:'Look for the statement that would leave a child pointing at nothing.'},
+ B:{fs:'apply-b',correct:'b',
+  why:{a:'Inserting an order for customer 2 is fine while customer 2 exists; a missing parent gives a different error ("is not present in table").',b:'Deleting customer 2 while an order still references it gives exactly this "still referenced" error.',c:'Repeating id 2 gives a "duplicate key value" error instead.',d:'Deleting child rows is always allowed by the foreign key.'},
+  okNote:'"Still referenced" means a parent delete was blocked by its children.',
+  reveal:'The answer is deleting customer 2: "is still referenced from table orders" means a child still points at that parent.'}}
+};
+
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
+var SNAP={},LAST=TOPIC.steps,S;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init?TOPIC.init():{},sort:{}};}
+function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
+function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}}
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,render:function(){if(TOPIC.render){TOPIC.render(S,api);}},get S(){return S;}};
+function progress(){
+  var acts=TOPIC.acts,n=0,set=0,pips=qa('.pip',$('progress'));
+  acts.forEach(function(a,i){var p=pips[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
+    if(p){p.className='pip'+(on?(S.settled[a]?' settled':' on'):'');}});
+  $('prog-text').textContent='Activities done: '+n+' of '+acts.length+(set?' ('+set+' answered, not marked correct)':'');
+}
+function complete(act){if(!S.done[act]){S.done[act]=true;}progress();$('next').hidden=false;}
+function show(step,focus){
+  S.step=step;stageEl.setAttribute('data-step',String(step));
+  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
+  if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
+    SNAP[step]={html:h,t:clone(S.t)};}
+  $('reset').disabled=(step===LAST);
+  $('next').hidden=!S.done[TOPIC.acts[step-1]];
+  if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
+    c.textContent='All '+TOPIC.acts.length+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: read its explanation again before moving on.':'.');}}
+  else{main.removeAttribute('data-pep-complete');}
+  if(TOPIC.render){TOPIC.render(S,api);}progress();
+  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+}
+function optLabel(inp){return inp.closest('label');}
+function optText(inp){var s=optLabel(inp).querySelector('.ot');return (s?s.textContent:optLabel(inp).textContent).trim();}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function badgeHtml(list){return '<span class="badges">'+list.map(function(b){return '<span class="badge '+b[1]+'">'+b[0]+'</span>';}).join('')+'</span>';}
+function explainList(set,chosen,mark){
+  var html='<ul class="explain">';
+  Object.keys(set.why).forEach(function(k){
+    var inp=qa('input[value="'+k+'"]',$(set.fs))[0];var lab=inp?optText(inp):k;
+    html+='<li'+(k===chosen?' class="mine"':'')+'><span class="on">'+(mark?(k===set.correct?'Correct: ':'Not this: '):'')+esc(lab)+(k===chosen?' (your choice)':'')+'</span><span class="ex">'+set.why[k]+'</span></li>';
+  });
+  return html+'</ul>';
+}
+function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===set.correct&&chosen===set.correct){l.classList.add('right');}
+  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
+function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i),b=[];
+  if(i.value===chosen){b.push(['Your answer','mine-b']);}b.push(i.value===set.correct?['Correct','ok-b']:['Not correct','no-b']);
+  var w=d.createElement('span');w.className='why';w.innerHTML=badgeHtml(b)+set.why[i.value];l.appendChild(w);});}
+function firstDetails(){return '<details><summary>First question: every option explained</summary>'+explainList(TOPIC.apply.A,S.firstPick,true)+'</details>';}
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+'. Reported to you, never graded.</p>';}
+function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
+  var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
+  var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function checkApply(which){
+  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  if(which==='a'){
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf||S.tries!==0){return;}
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
+    if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p><p>'+A.okNote+'</p><p>Each option is explained under it.</p>'+confText());complete('apply');focusVerdict();return;}
+    S.firstPick=ch;
+    say('<p class="verdict no">Not yet. Try once more: same idea, shown a different way.</p><p>Your first answer, <span class="on">'+esc(optText(qa('input[name="apply-a"][value="'+ch+'"]')[0]))+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
+    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});
+    var t=$('task-apply-b');if(t){t.focus();}
+  } else {
+    var c2=checked('apply-b');if(!c2||S.tries!==1){return;}
+    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
+    if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>'+B.okNote+'</p><p>Each option is explained under it.</p>'+firstDetails()+confText());}
+    else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
+      say('<p class="verdict set">Answered and settled: not marked correct, no penalty.</p><p>'+B.reveal+'</p><p>Each option is explained under it.</p>'+firstDetails()+confText());}
+    complete('apply');focusVerdict();
+  }
+}
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
+  if(!ch||!pc||S.done.predict){return;}
+  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
+    var b=[];if(i.value===ch){b.push(['Your prediction','mine-b']);}b.push(i.value===P.correct?['Correct','ok-b']:['Not correct','no-b']);
+    var w=d.createElement('span');w.className='why';w.innerHTML=badgeHtml(b)+P.why[i.value];l.appendChild(w);});
+  say('<p class="verdict info">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; nothing is lost.')+'</p><p>Each option now shows why, directly under it.</p><p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(pc)+'. Reported to you, never graded.</p>'+(P.after?'<p>'+P.after+'</p>':''),1);
+  complete('predict');
+}
+/* sorter: one select per item; check marks each item and explains the chosen option */
+function sortCheck(id){
+  var cfg=TOPIC.sorters[id],box=qa('[data-sorter="'+id+'"]')[0];if(!cfg||!box||S.done[cfg.act]){return;}
+  var st=S.sort[id]||(S.sort[id]={checks:0});st.checks++;
+  var items=Object.keys(cfg.items),right=0,missing=0,lines=[];
+  items.forEach(function(k){var it=cfg.items[k],row=qa('[data-item="'+k+'"]',box)[0],ci=qa('input[name="'+id+'-'+k+'"]:checked',box)[0],v=ci?ci.value:'',mk=row.querySelector('.mark');
+    row.classList.remove('right','wrong');
+    if(!v){missing++;mk.textContent='Not answered yet';row.classList.add('wrong');return;}
+    var ok=v===it.ok;if(ok){right++;}row.classList.add(ok?'right':'wrong');mk.textContent=ok?'Correct':'Not yet';
+    lines.push('<li><span class="on">'+(ok?'Correct: ':'Not yet: ')+esc(it.label)+' → '+esc(optText(ci))+'</span><span class="ex">'+it.why[v]+'</span></li>');});
+  var all=right===items.length;
+  if(all){qa('input',box).forEach(function(s){s.disabled=true;});qa('[data-act="sort-check"]',box).forEach(function(b){b.disabled=true;});
+    say('<p class="verdict ok">All '+items.length+' correct'+(st.checks>1?' after '+st.checks+' checks':'')+'.</p><p>'+cfg.done+'</p><ul class="explain">'+lines.join('')+'</ul>');complete(cfg.act);}
+  else{say('<p class="verdict no">'+right+' of '+items.length+' correct'+(missing?', '+missing+' not answered':'')+'. Change the items marked Not yet, then check again.</p><ul class="explain">'+lines.join('')+'</ul>'+(st.checks>=2&&cfg.hint?'<p>Hint: '+cfg.hint+'</p>':''));}
+  if(TOPIC.render){TOPIC.render(S,api);}
+}
+/* statement runner: buttons run fixed statements against the simulated database */
+function runStmt(b){
+  var box=b.closest('[data-runner]'),R=box&&TOPIC.runners[box.getAttribute('data-runner')],k=b.getAttribute('data-stmt'),st=R&&R.stmts[k];if(!st||S.done[R.act]&&R.lockWhenDone){return;}
+  var res=st.run(S.t),log=$(R.log),c=d.createElement('div');c.className='c';c.textContent=R.prompt+' '+st.sql;log.appendChild(c);
+  res.out.forEach(function(x){var dv=d.createElement('div');dv.className=x[0];dv.textContent=x[1];log.appendChild(dv);});log.scrollTop=log.scrollHeight;
+  var g=R.goals(S.t),need=Object.keys(g),left=need.filter(function(x){return !g[x];}).length;
+  say('<p>'+(res.ok?'<span class="verdict ok">Accepted.</span> ':'<span class="verdict no">Rejected.</span> ')+esc(res.note||'')+'</p><p>'+(left?left+' of '+need.length+' goals still open.':'<strong>All goals met.</strong> Continue when ready.')+'</p>');
+  if(!left&&!S.done[R.act]){complete(R.act);}
+  if(TOPIC.render){TOPIC.render(S,api);}
+}
+TOPIC.act=TOPIC.act||function(a,b){if(a==='sort-check'){sortCheck(b.getAttribute('data-sorter'));}else if(a==='run'){runStmt(b);}};
+function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
+function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
+  Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
+  qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){if(typeof HIST!=='undefined'){delete HIST[i.id];}});
+  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  Object.keys(TOPIC.sorters||{}).forEach(function(id){if(TOPIC.sorters[id].act===act){delete S.sort[id];}});
+  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  show(step,false);if(typeof syncPrompt==='function'){syncPrompt();}
+  say('<p class="verdict info">Activity restarted. Earlier activities keep their results.</p>');
+  var h=$('teach-'+step+'-h');if(h){h.focus();}}
+d.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b){return;}
+  if(b.id==='reset'){restart();return;}
+  if(b.id==='next'){show(S.step+1);return;}
+  if(b.id==='predict-check'){checkPredict();return;}
+  if(b.id==='apply-check'){checkApply('a');return;}
+  if(b.id==='apply-check-b'){checkApply('b');return;}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+});
+d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+setTheme(mq&&mq.matches?'dark':'light');
+if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+fresh();show(1,false);if(typeof syncPrompt==='function'){syncPrompt();}
+})();
+</script>
+</body>
+</html>
