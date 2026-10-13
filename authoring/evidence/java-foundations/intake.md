@@ -137,7 +137,7 @@ Topic ids follow the matrix's proposed slugs, shortened where the proposal was a
 | 54 | `java-review` | `testing-and-java-review` | review | `/tracks/0/weeks/3/days/2/topics/0` | F18 | exact | Java review: core language, HTTP with Javalin, testing |
 | 55 | `reading-older-java-code` | `testing-and-java-review` | review | `/tracks/0/weeks/3/days/2/topics/1` | F18 | exact | Reading older Java code (8, 11, 17) |
 
-Kinds: `reading` for the five `Reading:` rows; `review` for the two F18 review-day rows (the matrix expects a page, text alternative and in-page practice for each, with no quiz); `lab-brief` for the two day-level project briefs, F10 and F16 (the topic schema has no project kind); `core` for every other row, including F14 "Reading stack traces", which is a core skill row, not a `Reading:` row.
+Kinds: `reading` for the six `Reading:` rows; `review` for the two F18 review-day rows (the matrix expects a page, text alternative and in-page practice for each, with no quiz); `lab-brief` for the two day-level project briefs, F10 and F16 (the topic schema has no project kind); `core` for every other row, including F14 "Reading stack traces", which is a core skill row, not a `Reading:` row.
 
 ### Objectives
 
