@@ -2,22 +2,23 @@
 
 ## Goal
 
-Finish one small Java program, `Basics.java`, so that it prints six correct lines.
-Each task uses one idea from the Java Basics module: a primitive type, a String method, an operator, if/else, a switch expression and a for loop.
+Finish six small methods in one Java file, `Basics.java`.
+Each method practises one idea from the Java Basics module: a primitive type, a String method, an operator, if/else, a switch expression and a for loop.
 You build and test it with the real JDK and Maven on your own computer.
 
 ## Prerequisites
 
-You need a JDK 25 and Apache Maven 3.9 or later, both found on your `PATH`.
-The module topic *Installing Java and the IDE* walks through the install.
-Check both in a new terminal:
+You need JDK 25, Apache Maven 3.9 or later, and IntelliJ IDEA (or VS Code with Java support).
+If you have not installed them yet, follow **Now install on your own computer** at the end of the topic *Installing Java and the IDE*: it has numbered steps for macOS, Linux and Windows.
+Then check all three in a new terminal:
 
 ```
 java -version
+javac -version
 mvn -v
 ```
 
-- `java -version` must report version 25.
+- `java -version` and `javac -version` must report version 25.
 - `mvn -v` must report Apache Maven 3.9 or later, and its `Java version:` line must also say 25.
   If it shows another Java, see Troubleshooting.
 
@@ -39,40 +40,81 @@ After this step, everything else in the lab runs offline.
 
 ## Tasks
 
-Open `starter/src/main/java/basics/Basics.java` in your IDE or editor.
-Each task has a `TODO` comment inside `main`.
-Replace the placeholder value with Java code that works the result out from the given variables.
-Do not type the final value itself: the tests check that your code uses the idea each task names.
+Open the `starter` folder as a project in your IDE (choose `starter/pom.xml`, then **Open as Project**), and open `src/main/java/basics/Basics.java`.
+Each task is one method with a `TODO` comment; its comment says what the method must return.
+Work each result out from the method's parameters: the tests call every method with several inputs, including edge cases, so a typed-in answer for one input will fail.
 
-1. **Average.** Set `average` to the average of `scoreA` and `scoreB`, keeping the fraction.
-   Watch out for integer division.
-2. **Initials.** Build `initials` from the first letter of `first` and of `last`, in upper case.
-3. **Even.** Set `even` to whether `n` is even. Use the remainder operator `%`.
-4. **Grade.** Choose `grade` with `if`, `else if` and `else`: A for 90 or more, B for 80 or more, C for 70 or more, otherwise F.
-5. **Day.** Set `dayType` with a switch expression that uses arrow labels (`->`): days 1 to 5 are `"weekday"`, 6 and 7 are `"weekend"`, anything else is `"unknown"`.
-6. **Countdown.** After `Countdown:` is printed, use a `for` loop to print `" " + i` for `i` from 5 down to 1.
-
-You can run your program at any point from the `starter` folder:
-
-```
-mvn -q -o compile
-java -cp target/classes basics.Basics
-```
-
-## Test
-
-From the `starter` folder, run the one test command:
+After each task, run the one test command from the `starter` folder:
 
 ```
 mvn -q -o test
 ```
 
-- Before you start, all six tests fail.
-  Each failure names its task and shows the line it expected and the line your program printed, for example:
-  `Task 1: the average of 90 and 85 keeps its fraction ==> expected: <Average: 87.5> but was: <Average: 0.0>`
-- A task's test passes when its line is right and its code uses the idea the task names.
+Every failure line starts with its task number, so you can work through the tasks in any order.
+
+### Task 1: average
+
+1. Find the method `average(int a, int b)` and its `TODO`.
+2. Replace `return 0;` with code that returns the average of `a` and `b`, keeping the fraction. Think about what integer division does, and about two very large `int` values.
+3. Run the tests. While the method is wrong, you see lines such as `Task 1: average(90, 85) ==> expected: <87.5> but was: <0.0>`.
+4. Done when no line starting with `Task 1` appears.
+
+### Task 2: initials
+
+1. Find the method `initials(String first, String last)`.
+2. Return the first letter of each name, in upper case, using String methods.
+3. While it is wrong, you see lines such as `Task 2: initials("Grace", "hopper") ==> expected: <GH> but was: <>`.
+4. Done when no line starting with `Task 2` appears.
+
+### Task 3: even numbers
+
+1. Find the method `isEven(int n)`.
+2. Return whether `n` is even, using the remainder operator `%`. Check your idea against negative numbers too.
+3. While it is wrong, you see lines such as `Task 3: isEven(7)`. If the results are right but `%` is missing from this method, you see `Task 3: isEven must use the remainder operator %`.
+4. Done when no line starting with `Task 3` appears.
+
+### Task 4: grade
+
+1. Find the method `grade(int score)`.
+2. Choose the grade with an `if`, `else if` and `else` chain, using the thresholds in the method's comment. Think about which condition must come first.
+3. The tests try the scores on both sides of every threshold. While a branch is wrong, you see lines such as `Task 4: grade(89) ==> expected: <B> but was: <?>`.
+4. Done when no line starting with `Task 4` appears.
+
+### Task 5: day type
+
+1. Find the method `dayType(int day)`.
+2. Return the result of a switch expression with arrow labels (`->`), covering the values in the method's comment and every other value.
+3. While it is wrong, you see lines such as `Task 5: dayType(8)`. If the results are right but the method has no switch with `->`, you see `Task 5: dayType must use a switch with arrow labels (->)`.
+4. Done when no line starting with `Task 5` appears.
+
+### Task 6: countdown
+
+1. Find the method `countdown(int n)`.
+2. Build the text with a `for` loop, from `n` down to 1, with single spaces between the numbers and none at the ends. Check what your loop does when `n` is 0.
+3. While it is wrong, you see lines such as `Task 6: countdown(3) ==> expected: <3 2 1> but was: <>`. If the results are right but the method has no `for` loop, you see `Task 6: countdown must use a for loop`.
+4. Done when no line starting with `Task 6` appears.
+
+## Test
+
+The one test command, run from the `starter` folder, is:
+
+```
+mvn -q -o test
+```
+
+- Before you start, all six tests fail, and Maven ends with `Tests run: 6, Failures: 6`.
+- Each test calls its method with several inputs and lists every input that gave a wrong result.
+  Tasks 3, 5 and 6 also read that method's own code, ignoring comments and text in quotes, to check for `%`, a switch with `->`, or a `for` loop.
+  The tests cannot tell whether task 4 uses `else if`; use the chain anyway, because that is what the task practises.
 - If your code does not compile, Maven prints `COMPILATION ERROR` with the file, then `[line,column]`, then the compiler's message.
   Fix that line and run the test again.
+
+You can also run the program itself, which prints one line per task:
+
+```
+mvn -q -o compile
+java -cp target/classes basics.Basics
+```
 
 ## Expected output
 
@@ -100,4 +142,4 @@ The JUnit and plugin downloads stay in your local Maven repository (`~/.m2/repos
 - **`mvn -v` shows a Java version other than 25.** Maven uses the JDK named by `JAVA_HOME` when it is set, otherwise the `java` on your `PATH`. Set `JAVA_HOME` to your JDK 25 folder, or unset it, then open a new terminal.
 - **`release version 25 not supported`.** Maven is running on an older JDK. Fix it as in the previous item.
 - **`Cannot access central in offline mode`, or a missing artifact.** The setup step has not completed. Run `mvn -q dependency:go-offline` once while online.
-- **A test says "use ..." or "... instead of typing ...".** The printed line is right, but the code types the result or skips the idea the task names (`%`, an `else if` chain, a `switch` with `->`, a `for` loop). Rewrite that task so the code works the value out with that idea.
+- **A test says a method "must use" something.** Its results are right, but that method's own code lacks the idea the task names (`%`, a `switch` with `->`, a `for` loop). Text inside quotes or comments does not count. Rewrite the method with that idea.

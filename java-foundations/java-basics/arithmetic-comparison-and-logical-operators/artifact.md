@@ -16,7 +16,7 @@ Practice prediction, not scored.
 
 `*`, `/` and `%` bind tighter than `+` and `-`. Operators on the same level go left to right, and parentheses go first.
 
-`%` gives the remainder: `17 % 5` is `2`. A compound assignment works out its right side, then combines: `x += 3` means `x = x + 3`, and `x *= 2 + 1` multiplies `x` by 3.
+`%` gives the remainder: `17 % 5` is `2`. A compound assignment works out its right side, then combines: `x += 3` means `x = x + 3`, and `x *= 2 + 1` multiplies `x` by 3. That equivalence holds for simple `int` variables like these; in general, Java also casts the result back to the type of `x` and works out `x` only once.
 
 ### Conditions and short-circuits
 
@@ -54,7 +54,7 @@ Variables
 
 ## Recap
 
-- `* / %` before `+ -`, left to right on one level, parentheses first; `x op= e` means `x = x op (e)`.
+- `* / %` before `+ -`, left to right on one level, parentheses first; for a simple `int` variable, `x op= e` means `x = x op (e)`; Java also casts the result back to the type of `x`.
 - Comparisons give booleans; `&&`, `||` and `!` combine them.
 - `&&` and `||` skip their right side once the answer is known, so put the guard on the left.
 
