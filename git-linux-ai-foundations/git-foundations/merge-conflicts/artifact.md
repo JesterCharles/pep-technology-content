@@ -10,17 +10,17 @@
 
 ### Start with a guess
 
-Merging joins the work of two branches. Usually Git combines them on its own. The model shows main and feature/title, which both changed the page heading.
+Merging joins the work of two branches. Usually Git combines them on its own. The model shows `main` and `feature/title`, which both changed the page heading.
 
 ### Reading and resolving a conflict
 
 When both branches changed the same lines, Git stops with a conflict and writes both versions into the file:
 
-- <<<<<<< HEAD starts your current branch's version.
-- ======= separates the two.
-- >>>>>>> feature/title ends the incoming branch's version.
+- `<<<<<<< HEAD` starts your current branch's version.
+- `=======` separates the two.
+- `>>>>>>> feature/title` ends the incoming branch's version.
 
-To resolve: edit the file to the final text and delete all three marker lines; git add the file to mark it resolved; git commit to finish the merge. git merge --abort cancels everything.
+To resolve: edit the file to the final text and delete all three marker lines; `git add` the file to mark it resolved; `git commit` to finish the merge. `git merge --abort` cancels everything.
 
 ### Apply it to a new conflict
 
@@ -30,13 +30,13 @@ Same markers, different file.
 
 Practice repository Simulation: no real Git runs
 
-### Historynewest first
+### History newest first
 
 1. C4 Store title feature/title
 2. C3 Shop title HEAD → main
 3. C2 Add cart
 
-### index.html, heading lineindex.html on main
+### index.html, heading line index.html on main
 
 ```
 Welcome to PEP Shop
@@ -45,9 +45,9 @@ Welcome to PEP Shop
 ## Recap
 
 - A common conflict happens when both branches change the same area and Git cannot combine the changes automatically; Git stops and asks you.
-- Between <<<<<<< HEAD and ======= is your current branch; after it, the incoming branch.
-- Resolve by editing to the final text and deleting all markers, then git add and git commit.
-- Git lets you commit leftover markers, so check the file first. git merge --abort starts over.
+- Between `<<<<<<< HEAD` and `=======` is your current branch; after it, the incoming branch.
+- Resolve by editing to the final text and deleting all markers, then `git add` and `git commit`.
+- Git lets you commit leftover markers, so check the file first. `git merge --abort` starts over.
 
 Next topic: Merge vs rebase
 
@@ -55,11 +55,11 @@ Next topic: Merge vs rebase
 
 |  |  |
 | --- | --- |
-| git merge <branch> | merge <branch> into the current branch |
-| git status | lists unmerged (conflicted) files |
-| git add <file> | mark a conflict resolved |
-| git commit | finish the merge |
-| git merge --abort | cancel and restore the pre-merge state |
+| `git merge <branch>` | merge <branch> into the current branch |
+| `git status` | lists unmerged (conflicted) files |
+| `git add <file>` | mark a conflict resolved |
+| `git commit` | finish the merge |
+| `git merge --abort` | cancel and restore the pre-merge state |
 
 ## Sources
 
