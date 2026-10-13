@@ -130,8 +130,8 @@ Git `tNN.json` files, and the reusable route roles of AI `spec.js`. No course-1 
 
 ## Gate behavior
 
-- **T09:** loads the exact `artifact.html` through `file://`, blocks non-local requests, and fails console errors,
-  uncaught exceptions, and attempted network access.
+- **T09:** loads the exact `artifact.html` through `file://`, blocks network and sibling `file:` requests (only the
+  page itself may load), and fails console errors, uncaught exceptions, and attempted network or sibling-file access.
 - **T10:** runs all three routes inside an iframe whose only sandbox token is `allow-scripts`. Its opaque origin makes
   unguarded Web Storage access fail naturally.
 - **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion.
