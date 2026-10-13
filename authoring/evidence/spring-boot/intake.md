@@ -134,7 +134,7 @@ Two or three observable objectives per topic and brief, with exact ids (also in 
 
 - `spring-boot-basics/spring-vs-spring-boot-what-boot-adds`
   - o1: Distinguish the Spring Framework (the IoC container and Spring MVC) from Spring Boot (starters, auto-configuration and an embedded server) for a described application setup task
-  - o2: Name what Boot provides for a web application that plain Spring leaves to the developer: dependency management through starters, auto-configured beans and the embedded server started from a main method
+  - o2: Name what Boot adds for a web application that plain Spring leaves to the developer: curated dependency management through the spring-boot-dependencies BOM or the starter parent, starters as convenient sets of managed dependencies, auto-configured beans and an embedded server started from a main method
   - o3: Explain why a Spring Boot application runs with java -jar or mvn spring-boot:run without deploying to a separately installed server
 - `spring-boot-basics/generating-a-spring-boot-project-and-its-structure`
   - o1: Generate a Maven Spring Boot project with Spring Initializr, choosing the Java version, group, artifact and the web starter
@@ -270,7 +270,7 @@ Two or three observable objectives per topic and brief, with exact ids (also in 
   - o3: Choose between a plain unit test with a fake, a @MockitoBean slice test and a full context test for a described class
 - `validation-errors-and-testing/web-layer-tests-with-mockmvc`
   - o1: Write a @WebMvcTest that performs a request with MockMvc and asserts the status, headers and JSON body
-  - o2: Test validation failures and error responses of a controller with the service replaced by @MockitoBean
+  - o2: Test a controller's 404 and 400 responses in a @WebMvcTest, supplying the service bean from a @TestConfiguration fake (stubbing it with @MockitoBean is taught later in mockito-in-spring-at-mockitobean)
   - o3: Read a failing MockMvc assertion to tell an expected status mismatch from a wrong JSON value
 - `validation-errors-and-testing/debugging-a-failing-request`
   - o1: Trace a failing request through the controller, service and repository using the response status, the server log and the stack trace
@@ -289,7 +289,7 @@ Two or three observable objectives per topic and brief, with exact ids (also in 
   - o2: Read Spring Boot's default console log line to find the time, level, thread, logger and message
   - o3: Keep secrets and personal data out of log messages
 - `integration-and-observability/health-checks`
-  - o1: Add Spring Boot Actuator and read the /actuator/health response, including the status of the database health indicator
+  - o1: Add Spring Boot Actuator and read the aggregate status from /actuator/health, then enable component visibility with management.endpoint.health.show-components (component and detail visibility default to never; expose them only to trusted callers) and read the database health contributor's status
   - o2: Expose only the endpoints you need over HTTP and explain why other Actuator endpoints stay unexposed by default
   - o3: Explain how liveness and readiness health groups are used by a platform that restarts or routes traffic to the service
 - `api-security/session-cookies-vs-jwts-trade-offs`
@@ -313,7 +313,7 @@ Two or three observable objectives per topic and brief, with exact ids (also in 
   - o2: Prove that the default profile still enforces authentication by running the security tests without the dev profile
   - o3: Explain the risk of shipping an open profile and how profile activation and startup checks prevent it
 - `api-security/common-api-security-risks-owasp`
-  - o1: Name the OWASP API Security Top 10 2023 risks and match a described vulnerability to its category
+  - o1: Identify three common risks for this course's API in described endpoints: broken object level authorization (API1), broken authentication (API2) and broken function level authorization (API5) from the OWASP API Security Top 10 2023; the full list is optional reference
   - o2: Identify broken object level authorization in a described endpoint and the ownership check that fixes it
   - o3: Connect earlier course practices (validation, DTOs, error bodies without internals, password hashing, role checks) to the risks they reduce
 - `api-security/api-security-project`
@@ -352,6 +352,64 @@ The Fast day is the frozen route of six blocks — Warm-up 5, Skim 10, Try-first
 
 These roles are proposals for the Fast overlay, which validates the route against the blocks; this intake neither compresses page budgets nor adds or removes topics. T14's per-day page-budget sum remains a separate repository gate (see Minute budgets).
 
+### Fast-order prerequisites (reconciliation spring-intake-edu-001)
+
+The frozen topic order is kept. Every in-course `prerequisites` entry is a true prerequisite that is met earlier on **both** tracks (an earlier day, or an earlier row of the same day); later enrichment is never listed as a prerequisite. The correction removed or replaced every entry that broke this on Fast: Flyway before introductory JPA (now configuration), DTOs and lazy loading before the FT3 `relationship-pitfalls` skim (now entities and IDs), `@MockitoBean` and ProblemDetail before FT4 MockMvc (now controllers and status codes), lazy loading before the FT6 N+1 page (now the one-to-many mapping), `ResponseEntity` before the FT2 porting row 0 (removed), the Standard-only constructor-injection topic before Fast pages (now `dependency-injection-replacing-manual-wiring`), and the Standard-only S6 brief before the FT5 brief (now the layers page). The table below is the verifiable Fast-route record; no tooling enforces it (tooling is out of scope for a course intake).
+
+| Fast day, row | Topic | Prerequisites and where each is first met on the Fast route |
+|---|---|---|
+| FT1 row 0 | `spring-vs-spring-boot-what-boot-adds` | `java-foundations/inheritance-and-design/solid-basics` (Foundation); `java-foundations/http-and-javalin/routes-and-handlers-in-javalin` (Foundation) |
+| FT1 row 1 | `generating-a-spring-boot-project-and-its-structure` | `java-foundations/classes-and-objects/classes-in-practice-project` (Foundation); `spring-vs-spring-boot-what-boot-adds` (FT1 row 0) |
+| FT1 row 2 | `dependency-injection-replacing-manual-wiring` | `java-foundations/inheritance-and-design/solid-basics` (Foundation); `generating-a-spring-boot-project-and-its-structure` (FT1 row 1) |
+| FT1 row 3 | `rest-controllers` | `java-foundations/http-and-javalin/routes-and-handlers-in-javalin` (Foundation); `java-foundations/http-and-javalin/http-methods-status-codes-and-json` (Foundation); `dependency-injection-replacing-manual-wiring` (FT1 row 2) |
+| FT1 row 4 | `beans-and-bean-scopes` | `dependency-injection-replacing-manual-wiring` (FT1 row 2) |
+| FT1 row 5 | `how-auto-configuration-works` | `beans-and-bean-scopes` (FT1 row 4) |
+| FT2 row 0 | `porting-a-javalin-route-service-and-repository-to-spring-boot` | `java-foundations/http-and-javalin/repository-wiring-and-errors-project` (Foundation); `rest-controllers` (FT1 row 3) |
+| FT2 row 1 | `path-query-and-body-parameters` | `rest-controllers` (FT1 row 3) |
+| FT2 row 2 | `response-codes-with-responseentity` | `java-foundations/http-and-javalin/http-methods-status-codes-and-json` (Foundation); `path-query-and-body-parameters` (FT2 row 1) |
+| FT2 row 3 | `reading-an-openapi-spec-and-exploring-it-in-swagger-ui` | `response-codes-with-responseentity` (FT2 row 2) |
+| FT2 row 4 | `configuration-files-and-profiles` | `beans-and-bean-scopes` (FT1 row 4) |
+| FT2 row 5 | `secrets-from-the-environment` | `configuration-files-and-profiles` (FT2 row 4) |
+| FT2 row 6 | `rest-design-recap` | `response-codes-with-responseentity` (FT2 row 2) |
+| FT3 row 0 | `spring-data-jpa-with-hibernate` | `sql-jdbc-foundations/reporting-indexes-and-review/jdbc-data-access-project` (Foundation); `configuration-files-and-profiles` (FT2 row 4) |
+| FT3 row 1 | `entities-and-ids` | `sql-jdbc-foundations/relational-design/tables-keys-and-relationships` (Foundation); `spring-data-jpa-with-hibernate` (FT3 row 0) |
+| FT3 row 2 | `repositories-derived-queries-and-at-query` | `entities-and-ids` (FT3 row 1) |
+| FT3 row 3 | `seeing-the-generated-sql` | `repositories-derived-queries-and-at-query` (FT3 row 2) |
+| FT3 row 4 | `relationship-pitfalls` | `entities-and-ids` (FT3 row 1) |
+| FT4 row 0 | `controller-service-and-repository-layers` | `dependency-injection-replacing-manual-wiring` (FT1 row 2); `repositories-derived-queries-and-at-query` (FT3 row 2) |
+| FT4 row 1 | `dtos-and-mapping` | `java-foundations/inheritance-and-design/records` (Foundation); `controller-service-and-repository-layers` (FT4 row 0) |
+| FT4 row 2 | `pagination-and-sorting` | `sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting` (Foundation); `dtos-and-mapping` (FT4 row 1) |
+| FT4 row 3 | `schema-migrations-with-flyway` | `sql-jdbc-foundations/relational-design/create-table-data-types-and-constraints` (Foundation); `configuration-files-and-profiles` (FT2 row 4) |
+| FT4 row 4 | `web-layer-tests-with-mockmvc` | `rest-controllers` (FT1 row 3); `response-codes-with-responseentity` (FT2 row 2) |
+| FT5 row 0 | `bean-validation-on-requests` | `dtos-and-mapping` (FT4 row 1) |
+| FT5 row 0 | `error-handling-project` | `controller-service-and-repository-layers` (FT4 row 0); `dtos-and-mapping` (FT4 row 1); `response-codes-with-responseentity` (FT2 row 2); `web-layer-tests-with-mockmvc` (FT4 row 4) |
+| FT5 row 1 | `global-error-handling` | `java-foundations/exceptions-and-logging/custom-exceptions` (Foundation); `bean-validation-on-requests` (FT5 row 0) |
+| FT5 row 2 | `standard-error-responses-with-problemdetail` | `global-error-handling` (FT5 row 1) |
+| FT5 row 3 | `logging-in-spring` | `java-foundations/exceptions-and-logging/logging` (Foundation) |
+| FT6 row 0 | `one-to-many-and-many-to-one-relationships` | `sql-jdbc-foundations/relational-design/tables-keys-and-relationships` (Foundation); `entities-and-ids` (FT3 row 1) |
+| FT6 row 1 | `how-transactions-work-in-spring` | `controller-service-and-repository-layers` (FT4 row 0) |
+| FT6 row 2 | `the-n-1-query-problem-spotting-it-in-sql-logs` | `seeing-the-generated-sql` (FT3 row 3); `one-to-many-and-many-to-one-relationships` (FT6 row 0) |
+| FT6 row 3 | `fixing-n-1-with-join-fetch` | `the-n-1-query-problem-spotting-it-in-sql-logs` (FT6 row 2); `repositories-derived-queries-and-at-query` (FT3 row 2) |
+| FT6 row 4 | `lazy-and-eager-loading` | `one-to-many-and-many-to-one-relationships` (FT6 row 0) |
+| FT6 row 5 | `mockito-in-spring-at-mockitobean` | `java-foundations/testing-and-java-review/mocking-with-mockito` (Foundation); `dependency-injection-replacing-manual-wiring` (FT1 row 2); `rest-controllers` (FT1 row 3) |
+| FT6 row 6 | `debugging-a-failing-request` | `java-foundations/exceptions-and-logging/reading-stack-traces` (Foundation); `web-layer-tests-with-mockmvc` (FT4 row 4) |
+| FT7 row 0 | `api-security-project` | `error-handling-project` (FT5 row 0); `configuration-files-and-profiles` (FT2 row 4); `secrets-from-the-environment` (FT2 row 5); `entities-and-ids` (FT3 row 1); `web-layer-tests-with-mockmvc` (FT4 row 4) |
+| FT7 row 0 | `password-hashing` | `entities-and-ids` (FT3 row 1) |
+| FT7 row 1 | `issuing-and-checking-a-jwt` | `password-hashing` (FT7 row 0); `secrets-from-the-environment` (FT2 row 5) |
+| FT7 row 2 | `role-protected-endpoints` | `issuing-and-checking-a-jwt` (FT7 row 1); `web-layer-tests-with-mockmvc` (FT4 row 4) |
+| FT7 row 3 | `a-dev-profile-that-keeps-endpoints-open-during-front-end-work` | `role-protected-endpoints` (FT7 row 2); `configuration-files-and-profiles` (FT2 row 4) |
+| FT7 row 4 | `session-cookies-vs-jwts-trade-offs` | `rest-design-recap` (FT2 row 6) |
+| FT7 row 5 | `common-api-security-risks-owasp` | `role-protected-endpoints` (FT7 row 2) |
+| FT8 row 0 | `an-integration-test` | `web-layer-tests-with-mockmvc` (FT4 row 4); `repositories-derived-queries-and-at-query` (FT3 row 2) |
+| FT8 row 1 | `calling-another-service-with-restclient-base-url-and-timeouts` | `configuration-files-and-profiles` (FT2 row 4); `global-error-handling` (FT5 row 1) |
+| FT8 row 2 | `spring-review-layers-data-access-errors-testing-security` | `role-protected-endpoints` (FT7 row 2); `an-integration-test` (FT8 row 0); `fixing-n-1-with-join-fetch` (FT6 row 3); `standard-error-responses-with-problemdetail` (FT5 row 2) |
+
+Early Fast uses stay self-contained:
+
+- FT3 row 4 `relationship-pitfalls` (skim): read as reference with a one-paragraph just-in-time bridge (what an association between two entities is) built on `entities-and-ids`. Its checks depend on DTOs (FT4) and fetch types (FT6), so on the Fast route its practice-quiz items are taken on FT6 after the relationship and lazy-loading pages, never on FT3; the overlay places them.
+- FT4 row 4 `web-layer-tests-with-mockmvc`: objective o2 is now taught with a `@TestConfiguration` fake service, so FT4 teaches and checks only MockMvc behavior available before `@MockitoBean` (FT6) and ProblemDetail (FT5).
+- FT2 row 0 porting: the Javalin port is checked against status codes the port already returns; the `ResponseEntity` page follows in rows 1-2 of the same day.
+
 ## Project-artifact plan
 
 Each calendar project row gets exactly one reusable, learner-facing project brief; Standard and Fast both use the same canonical artifact. Following the merged `java-foundations` pattern (captain decision `pep-project-rows`, option A), each brief is a `topic.json` of kind `lab-brief` in the module of its day, whose `coding-lab/` directory holds the starter scaffold, fixtures and public tests in the lab-contract layout and is presented to learners as a project, never as a coding lab. The briefs are authored in their module PRs; this intake writes only their manifests.
@@ -372,7 +430,7 @@ Rules for every brief:
 - Outcomes (objectives o1-o3): layered controller, service and repository with no business rule in the controller; request and response DTO records mapped in one mapper; a paged and sorted listing whose content and page metadata pass the public tests.
 - Scaffold (Standard entry): a generated Boot project with the `Workshop` entity, a Flyway `V1` migration and a `WorkshopRepository extends JpaRepository` provided (S4-S5 skills, already practised in the S3-S4 and S5 labs); stub `WorkshopService`, `WorkshopController`, `WorkshopMapper` and DTO records with TODOs. The provided repository has no derived or `@Query` methods, so it gives away none of the FT3 increment's claimed fragments.
 - Public tests: `WorkshopControllerTest` (MockMvc) and `WorkshopServiceTest`, run with `mvn -q -o test`.
-- Teach-before-apply on Standard: every applied concept is taught on S1-S5 except the day's own rows, which the brief teaches with short embedded teach-then-check steps inside the Build block before first use: layers (6 minutes: 4 teach + 2 check, predict which layer owns a 404 decision), DTO records and mapping (6: 4 + 2, predict the JSON of a DTO versus the entity), `Pageable` and `PagedModel` (7: 5 + 2, predict page 1 of size 2 sorted by title). That leaves 61 minutes of building in the 80.
+- Teach before apply on Standard (reconciliation spring-intake-edu-002): the day's own three rows are taught in full **before the scaffold is opened**. The 80-minute Build block starts with a 36-minute teach phase: the pages `controller-service-and-repository-layers`, `dtos-and-mapping` and `pagination-and-sorting` (12 minutes each, their budgets), each ending with its in-page check (predict which layer owns a 404 decision; predict the JSON of a DTO versus the entity; predict page 1 of size 2 sorted by title). Only then do learners open the scaffold for a 44-minute build used for transfer and feedback: orient 4, layering refactor 12, DTOs and mapper 12, paged listing 12, wrap 4. Short reminders inside the build may stay but never count as teaching. Every other applied concept is taught on S1-S5. Pilot item for the S6 module PR: confirm the 36 + 44 split; if the build overruns, the paged listing becomes the extension step, never the teach phase.
 
 | Applied concept | Taught before S6 by |
 |---|---|
@@ -380,7 +438,7 @@ Rules for every brief:
 | constructor injection across layers | `porting-and-configuration/constructor-injection-across-layers` o1 (S3) |
 | configuration and Flyway migration | `porting-and-configuration/configuration-files-and-profiles` o1, `schema-migrations-with-flyway` o1 (S4) |
 | entities, repositories, SQL log | `spring-data-jpa/spring-data-jpa-with-hibernate` o2, `entities-and-ids` o1, `repositories-derived-queries-and-at-query` o1, `seeing-the-generated-sql` o1 (S5) |
-| layers, DTOs, pagination | the day's own rows: brief teach-then-check steps above, with `controller-service-and-repository-layers`, `dtos-and-mapping` and `pagination-and-sorting` as reference pages |
+| layers, DTOs, pagination | the day's own rows: the three pages and their checks in the teach phase, completed before the scaffold is opened |
 
 ### FT5 brief: `validation-errors-and-testing/error-handling-project` (Fast FT5 Project implementation; Standard optional)
 
@@ -388,7 +446,7 @@ Rules for every brief:
 - Outcomes (o1-o3): Bean Validation rejects invalid request DTOs with 400 before the service runs; one `@RestControllerAdvice` handles not-found, conflict and validation failures; every error is an RFC 9457 `ProblemDetail` with no stack trace.
 - Scaffold: an extension onto the learner's own cumulative project after FT4 (Fast) or after the S6 brief (Standard): new stub `ApiExceptionHandler`, `WorkshopNotFoundException`, constraint TODOs on the existing request DTO, and public tests `ErrorHandlingTest` (MockMvc). It ships no earlier increment's completed code.
 - Standard use: S9's required module lab stays Standard's required practice; Standard may use this brief as optional consolidation on the S6 project. No learner does both as required work.
-- Teach-before-apply (Fast): FT5's own rows are taught inside the 85-minute block: orient 5; Bean Validation 25 (7 teach + 2 check + 16 apply; check: predict which fields fail for a given body); global handler 25 (7 + 2 + 16; check: predict which handler runs for a thrown exception); ProblemDetail 22 (6 + 2 + 14; check: predict the problem body for a missing workshop); logging (skim) 4 (no new concept is claimed: log the caught exception at WARN with the provided logger); wrap 4. Total 85. Prior Fast prerequisites: DTOs (FT4), `ResponseEntity` status codes (FT2), MockMvc (FT4).
+- Teach before apply (Fast; reconciliations spring-intake-edu-002 and spring-sme-002): the Lab brief block (7) introduces the brief. The Guided block (85) opens with a 40-minute **teach-and-diagnostic phase** before any project work: the pages `bean-validation-on-requests`, `global-error-handling` and `standard-error-responses-with-problemdetail` (12 minutes each, ending with their checks: predict which fields fail for a given body; predict which handler runs for a thrown exception; predict the problem body for a missing workshop), then a 4-minute diagnostic of three predict items that gates opening the scaffold. The 45-minute build is transfer and feedback: orient 3, validation 12, global handler 12, ProblemDetail 12, wrap 6. Total 85. Logging is **not** a project action: the FT5 row 3 `logging-in-spring` (skim) stays in the Skim/reference role, and the scaffold's handler logs nothing the learner must write. Prior Fast prerequisites: DTOs and layers (FT4), `ResponseEntity` status codes (FT2), MockMvc (FT4).
 
 ### FT7 brief: `api-security/api-security-project` (Fast FT7 Project implementation; Standard optional)
 
@@ -396,7 +454,7 @@ Rules for every brief:
 - Outcomes (o1-o3): users stored with delegating `PasswordEncoder` hashes and a login endpoint that issues a signed JWT; write endpoints protected by role through a `SecurityFilterChain` that validates JWTs (401 versus 403); a dev profile that opens endpoints for local front-end work while the default profile stays protected.
 - Scaffold: an extension onto the cumulative project: stub `SecurityConfig`, `TokenService`, `AuthController`, `AppUser` entity with a Flyway migration, a fixed `Clock` bean for expiry tests, the JWT HMAC key read from the environment variable `APP_JWT_SECRET` with a test-only value in `src/test/resources`, and public tests `SecurityTest` and `DevProfileTest` (MockMvc with Spring Security test support). No network or identity provider: the app signs and validates its own tokens with Spring Security's Nimbus `JwtEncoder` and `JwtDecoder`.
 - Standard use: S12's required module lab stays Standard's required practice; the brief is optional consolidation on the S6 project.
-- Teach-before-apply (Fast): orient 5; password hashing 15 (4 + 2 + 9; check: predict whether `matches` accepts a re-hashed password); issuing a JWT 24 (7 + 2 + 15; check: predict the claims of an issued token); checking JWTs and roles 22 (6 + 2 + 14; check: predict 401 versus 403 for three requests); dev profile 12 (3 + 2 + 7; check: predict which profile's chain applies when `dev` is not active); wrap 7 (skim rows sessions versus JWTs and OWASP are reference; the wrap checklist maps the project's controls to API1, API2 and API5 without claiming those objectives). Total 85. Prior Fast prerequisites: configuration and secrets (FT2), entities and Flyway (FT3-FT4), MockMvc (FT4), error handling (FT5).
+- Teach before apply (Fast; reconciliation spring-intake-edu-002): the Lab brief block (7) introduces the brief. The Guided block (85) opens with a 52-minute **teach-and-diagnostic phase**: the pages `password-hashing`, `issuing-and-checking-a-jwt`, `role-protected-endpoints` and `a-dev-profile-that-keeps-endpoints-open-during-front-end-work` (12 minutes each, ending with their checks: predict whether `matches` accepts a re-hashed password; predict the claims of an issued token and the response for an expired one; predict 401 versus 403 for three requests; predict which profile's chain applies when `dev` is not active), then a 4-minute diagnostic that gates opening the scaffold. The 33-minute build is transfer and feedback: orient 3, hashing and login 8, issuing the token 8, JWT validation and role rules 8, dev profile 3, wrap 3. Total 85. The skim rows (sessions versus JWTs, OWASP) stay reference; the wrap checklist names API1, API2 and API5 without claiming those objectives. Pilot item for the api-security module PR: FT7's 33-minute build is the tightest; if a pilot overruns, the dev-profile build step moves to the page practice and `DevProfileTest` becomes practised, not claimed — the teach phase is never cut. Prior Fast prerequisites: configuration and secrets (FT2), entities and Flyway (FT3-FT4), MockMvc (FT4), error handling (FT5).
 
 ## Fast project increments: one cumulative project in six increments
 
@@ -408,12 +466,27 @@ Program Fast pattern applied to every increment:
 - Every applied concept gets a short, minuted, embedded **teach-then-check** step before its first use: a teach segment, then a check (a predict-the-result question or one named public test turning from failing to passing). The 10-minute Skim and the topic pages are reference only.
 - **Claimed versus practised**: a requirement fragment is claimed only with a named pre-application check (inside that step's check minutes) and a named public test that observes it. Every other fragment is practised, not claimed, and stays owned by its topic page and practice quiz. A claimed fragment is **whole** only when its objective has no other requirement; otherwise it is **partial**, with the remainder named.
 - Each increment ships a starter (FT1) or an extension (later days) with new stubs, fixtures and public tests only; no extension ships an earlier increment's completed code. Public tests live in one package per increment (`increment1` ... `increment8`, matching the Fast day) and run with the one language-native runner, offline after the one-time setup:
-  - while working on increment N: `mvn -q -o test -Dtest='increment<N>.**'` (the same Surefire command filtered to that package);
+  - while working on increment N: `mvn -q -o test -Dtest=increment<N>.*` (the same Surefire command filtered to that package; unquoted so it reads the same in cmd.exe, PowerShell and POSIX shells — reconciliation spring-sme-005; the module PR proves the exact selector against the authored package layout and runs a Windows command-line smoke run as a release check);
   - to complete increment N: `mvn -q -o test`, the cumulative command over all increments shipped so far.
 - A learner with an unfinished earlier increment gets no promise of a passing cumulative run. Late entry and the solved-run check are verified against uncommitted private checkpoints in which increments 1 to N-1 are complete, kept in private staging like solutions and never committed.
 - No Docker or other learner-side container engine; embedded H2 only; no network.
 - Reuse: FT4 is the S6 brief in its extension form (same stubs and public tests, applied to the learner's own project); FT3, FT6 and FT8 reuse the Standard S5, S7-S8 and S11 module-lab fixtures and the public tests whose skills match, presented inside the project.
 - Package slot (open for the Fast overlay, as in the `python` intake): no repository contract yet defines a project-increment artifact. This intake proposes one course-level package following the lab-contract layout (it spans modules, so `course.lock.json` would cover it) presented as a project; `course.json` `courseLabs` stays empty until that slot is agreed. Every increment must be piloted against its 70 minutes before release.
+
+Increment binding table (reconciliations spring-intake-edu-003 and spring-sme-006-fast-increments-unbound). This structured table binds all six increments and their public-test packages to the one course-level workshop booking API project, alongside the FT5 and FT7 briefs that sit between them. A machine-readable package or overlay manifest with lock, schema and check binding is deferred to the track-overlay task `pep-t1-track-overlays`, which owns Fast overlays for every course; this intake adds no tooling or schema.
+
+| Order | Fast day | Artifact | Calendar rows referenced (unchanged) | Extends | Public-test package and named tests | Claimed fragments | Minute plan in the block |
+|---|---|---|---|---|---|---|---|
+| 1 | FT1 | increment 1 (starter) | FT1 rows 0-3 (rows 4-5 skim) | — | `increment1`: `WiringTest#controllerReceivesCatalogByConstructor`, `WorkshopControllerTest#listReturnsJsonArray` | DI o1 (partial), REST controllers o1 (partial) | 8 + 20 + 25 + 12 + 5 = 70 |
+| 2 | FT2 | increment 2 (extension) | FT2 rows 0-2, 4-5 (rows 3, 6 page/skim) | 1 | `increment2`: `ParametersTest#pathAndOptionalQueryAreBound`, `StatusTest#createReturns201WithLocation`, `StatusTest#unknownIdReturns404`, `ConfigTest#devProfileOverridesCapacity` | parameters o1, ResponseEntity o1, profiles o2 (all partial) | 5 + 27 + 18 + 15 + 5 = 70 |
+| 3 | FT3 | increment 3 (extension) | FT3 rows 0-3 (row 4 skim) | 2 | `increment3`: `RepositoryTest#findByTopicIgnoreCase`, `RepositoryTest#findWithSeatsLeft` | repositories o2 (partial), o3 (whole) | 5 + 18 + 22 + 10 + 10 + 5 = 70 |
+| 4 | FT4 | increment 4 (the S6 brief in extension form) | FT4 rows 0-4 | 3 | `increment4`: `WorkshopControllerTest#secondPageSortedByTitle`, `WorkshopControllerTest#responseOmitsInternalFields`, `MigrationTest#schemaValidatesAgainstV1` | pagination o2 (whole), DTOs o1 (partial), Flyway o3 (partial) | 4 + 12 + 14 + 14 + 14 + 8 + 4 = 70 |
+| 5 | FT5 | brief `error-handling-project` | FT5 rows 0-3 (`shared`) | 4 | `ErrorHandlingTest#invalidBodyReturns400WithFieldErrors`, `ErrorHandlingTest#missingWorkshopReturnsProblemDetail` | Bean Validation o2 (whole), ProblemDetail o1 (partial) | brief 7; guided 85 = teach and diagnostic 40 + build 45 |
+| 6 | FT6 | increment 6 (extension) | FT6 rows 0-3 (rows 4-6 skim) | 5 | `increment6`: `MappingTest#registrationOwnsForeignKey`, `RegistrationServiceTest#failedRegistrationRollsBack`, `QueryCountTest#listingUsesOneQuery` | relationships o2 (partial), transactions o1 (whole), JOIN FETCH o1 (whole) | 4 + 20 + 18 + 22 + 6 = 70 |
+| 7 | FT7 | brief `api-security-project` | FT7 rows 0-5 (`shared`) | 6 | `SecurityTest#storedPasswordIsDelegatingHash`, `SecurityTest#loginWithWrongPasswordFails`, `SecurityTest#anonymousWriteIs401`, `SecurityTest#userRoleWriteIs403`, `DevProfileTest#defaultProfileStillProtected` | password hashing o1, roles o2, dev profile o2 (all whole) | brief 7; guided 85 = teach and diagnostic 52 + build 33 |
+| 8 | FT8 | increment 8 (extension) | FT8 rows 0-1 (skim) and row 2 (review) | 7 | `increment8`: `VenueClientTest#upstream500MapsTo502Problem` | RestClient o2 (partial) | 4 + 22 + 24 + 14 + 6 = 70 |
+
+All rows: no container engine, embedded H2, no network; `mvn -q -o test` is the cumulative command and `mvn -q -o test -Dtest=increment<N>.*` the per-increment selector.
 
 FT1 increment 1, project skeleton and first endpoint (70 minutes):
 
@@ -455,7 +528,7 @@ FT4 increment 4, layers, DTOs, pagination, migrations (70 minutes; the S6 brief 
 | Layers | 14 (4 + 2 + 8) | controller, service, repository responsibilities; check: which layer owns a 404 decision | the controller calls only `WorkshopService` |
 | DTOs | 14 (4 + 2 + 8) | request and response records, one mapper; check: predict the JSON of the DTO versus the entity | responses omit internal fields |
 | Pagination | 14 (4 + 2 + 8) | `Pageable`, sort parameter, `PagedModel`; check: predict page 1 of size 2 sorted by title | `GET /workshops?page=1&size=2&sort=title` returns the expected page |
-| MockMvc | 8 (3 + 1 + 4) | `@WebMvcTest`, `perform`, status and JSON path assertions; check: read a failing assertion | the learner adds one MockMvc test for the 404 case |
+| MockMvc | 8 (3 + 1 + 4) | `@WebMvcTest`, `perform`, status and JSON path assertions, with the service supplied by the provided `@TestConfiguration` fake (no `@MockitoBean` or ProblemDetail, which come on FT6 and FT5); check: read a failing assertion | the learner adds one MockMvc test for the 404 case |
 | Wrap | 4 | none | cumulative command passes increments 1-4; commit |
 
 FT6 increment 6, relationships, transactions and N+1 (70 minutes):
@@ -492,21 +565,23 @@ Coverage claimed by the increments and briefs. Each claimed row names its pre-ap
 | FT4 | `pagination-and-sorting#o2` | page content and metadata for a page, size and sort | page prediction (Pagination) | `increment4.WorkshopControllerTest#secondPageSortedByTitle` | whole |
 | FT4 | `dtos-and-mapping#o1` | responses expose only contract fields | DTO JSON prediction (DTOs) | `increment4.WorkshopControllerTest#responseOmitsInternalFields` | partial [request DTO] |
 | FT4 | `schema-migrations-with-flyway#o3` | `ddl-auto=validate` once Flyway owns the schema | edited-migration prediction (Flyway) | `increment4.MigrationTest#schemaValidatesAgainstV1` | partial [explaining why changes go in a new migration] |
-| FT5 | `bean-validation-on-requests#o2` | an invalid body returns 400 naming the failing fields | field-failure prediction (Bean Validation) | `ErrorHandlingTest#invalidBodyReturns400WithFieldErrors` | whole |
-| FT5 | `standard-error-responses-with-problemdetail#o1` | a not-found returns a ProblemDetail with type, title, status and detail | problem-body prediction (ProblemDetail) | `ErrorHandlingTest#missingWorkshopReturnsProblemDetail` | partial [extra property] |
+| FT5 | `bean-validation-on-requests#o2` | an invalid body returns 400 naming the failing fields | page check of `bean-validation-on-requests` (teach phase), then the gating diagnostic | `ErrorHandlingTest#invalidBodyReturns400WithFieldErrors` | whole |
+| FT5 | `standard-error-responses-with-problemdetail#o1` | a not-found returns a ProblemDetail with type, title, status and detail | page check of `standard-error-responses-with-problemdetail` (teach phase), then the gating diagnostic | `ErrorHandlingTest#missingWorkshopReturnsProblemDetail` | partial [extra property] |
 | FT6 | `one-to-many-and-many-to-one-relationships#o2` | the owning side holds the foreign key | inverse-side prediction (One-to-many) | `increment6.MappingTest#registrationOwnsForeignKey` | partial [predicting the inverse-only update] |
 | FT6 | `how-transactions-work-in-spring#o1` | several writes commit or roll back together | failure prediction (Transactions) | `increment6.RegistrationServiceTest#failedRegistrationRollsBack` | whole |
 | FT6 | `fixing-n-1-with-join-fetch#o1` | the listing loads parents and children in one query | query-count check (N+1) | `increment6.QueryCountTest#listingUsesOneQuery` | whole |
-| FT7 | `password-hashing#o1` | stored hashes come from the delegating encoder and `matches` checks a login | `matches` prediction (Password hashing) | `SecurityTest#storedPasswordIsDelegatingHash`, `#loginWithWrongPasswordFails` | whole |
-| FT7 | `role-protected-endpoints#o2` | 401 for anonymous and 403 for a wrong role | 401/403 prediction (Checking JWTs and roles) | `SecurityTest#anonymousWriteIs401`, `#userRoleWriteIs403` | whole |
-| FT7 | `a-dev-profile-that-keeps-endpoints-open-during-front-end-work#o2` | the default profile still enforces authentication | profile prediction (Dev profile) | `DevProfileTest#defaultProfileStillProtected` | whole |
+| FT7 | `password-hashing#o1` | stored hashes come from the delegating encoder and `matches` checks a login | page check of `password-hashing` (teach phase) | `SecurityTest#storedPasswordIsDelegatingHash`, `#loginWithWrongPasswordFails` | whole |
+| FT7 | `role-protected-endpoints#o2` | 401 for anonymous and 403 for a wrong role | page check of `role-protected-endpoints` (teach phase), then the gating diagnostic | `SecurityTest#anonymousWriteIs401`, `#userRoleWriteIs403` | whole |
+| FT7 | `a-dev-profile-that-keeps-endpoints-open-during-front-end-work#o2` | the default profile still enforces authentication | page check of the dev-profile page (teach phase) | `DevProfileTest#defaultProfileStillProtected` | whole |
 | FT8 | `calling-another-service-with-restclient-base-url-and-timeouts#o2` | an upstream 500 becomes a clear error from your API | upstream-500 prediction (RestClient call) | `increment8.VenueClientTest#upstream500MapsTo502Problem` | partial [timeouts; connection errors] |
 
-Practised, not claimed (used in the steps but lacking a pre-application check, an observing public test, or both; owned by the topic pages and quizzes): generating and running the project and reading the port (`generating-a-spring-boot-project-and-its-structure#o2`, `#o3`); `@PostMapping` and `curl` (`rest-controllers#o1`, `#o3`); the Javalin comparison (`porting-a-javalin-route-service-and-repository-to-spring-boot#o1`); request bodies (`path-query-and-body-parameters#o1`); environment overrides (`configuration-files-and-profiles#o3`, `secrets-from-the-environment#o1`); entity mapping and IDs (`entities-and-ids#o1`, `#o2`); SQL logging (`seeing-the-generated-sql#o1`, `#o2`); layering (`controller-service-and-repository-layers#o2`); the mapper (`dtos-and-mapping#o2`); writing a MockMvc test (`web-layer-tests-with-mockmvc#o1`); the global handler (`global-error-handling#o1`); sync helpers (`one-to-many-and-many-to-one-relationships#o1`, `#o3`); issuing and validating the JWT (`issuing-and-checking-a-jwt#o1`, `#o2`); the integration test (`an-integration-test#o1`); base URL configuration and `MockRestServiceServer` (`calling-another-service-with-restclient-base-url-and-timeouts#o1`, `#o3`).
+For FT5 and FT7 the pre-application check is the page's own check in the teach-and-diagnostic phase, completed before the scaffold is opened; the build only applies and transfers.
+
+Practised, not claimed (used in the steps but lacking a pre-application check, an observing public test, or both; owned by the topic pages and quizzes): generating and running the project and reading the port (`generating-a-spring-boot-project-and-its-structure#o2`, `#o3`); `@PostMapping` and `curl` (`rest-controllers#o1`, `#o3`); the Javalin comparison (`porting-a-javalin-route-service-and-repository-to-spring-boot#o1`); request bodies (`path-query-and-body-parameters#o1`); environment overrides (`configuration-files-and-profiles#o3`, `secrets-from-the-environment#o1`); entity mapping and IDs (`entities-and-ids#o1`, `#o2`); SQL logging (`seeing-the-generated-sql#o1`, `#o2`); layering (`controller-service-and-repository-layers#o2`); the mapper (`dtos-and-mapping#o2`); writing a MockMvc test (`web-layer-tests-with-mockmvc#o1`); the global handler (`global-error-handling#o1`); the S6 brief's layers and DTOs on Standard (taught by the pages in its teach phase and observed by its own public tests, not by an increment); sync helpers (`one-to-many-and-many-to-one-relationships#o1`, `#o3`); issuing and validating the JWT (`issuing-and-checking-a-jwt#o1`, `#o2`); the integration test (`an-integration-test#o1`); base URL configuration and `MockRestServiceServer` (`calling-another-service-with-restclient-base-url-and-timeouts#o1`, `#o3`).
 
 Not applied by the Fast project: the `(skim)` rows `beans-and-bean-scopes`, `how-auto-configuration-works`, `rest-design-recap`, `relationship-pitfalls`, `lazy-and-eager-loading`, `mockito-in-spring-at-mockitobean`, `debugging-a-failing-request`, `logging-in-spring`, `session-cookies-vs-jwts-trade-offs` and `common-api-security-risks-owasp` (Skim block and pages only), `reading-an-openapi-spec-and-exploring-it-in-swagger-ui` (page practice), and the Standard-only `constructor-injection-across-layers` and `health-checks`.
 
-Day fit: every increment totals exactly 70 minutes and every brief exactly its calendar build block (S6 80, FT5/FT7 85), so each Fast day fits its frozen 120-minute template with no reduction. Open item for the track-overlay task (not decided here): FT8 also carries the module check, but the Fast template has no module-check block; see the blueprint section.
+Day fit: every increment totals exactly 70 minutes and every brief exactly its calendar block (S6 Build 80 as teach 36 + build 44; FT5 and FT7 Guided 85 as teach-and-diagnostic plus build), so each Fast day fits its frozen 120-minute template with no reduction. Open item for the track-overlay task (not decided here): FT8 also carries the module check, but the Fast template has no module-check block; see the blueprint section.
 
 ## Artifact applicability
 
@@ -650,35 +725,34 @@ FT6 (7 pages, 84) and FT2 (7 pages, 81) are T14's binding constraints, with 36 a
 
 ## Spring Boot module check blueprint
 
-`spring-boot/assessments/spring-boot-module-check/blueprint.json`, one course-level blueprint whose identity and objective pool are shared by Standard S13 and Fast FT8, and whose timing is scoped to S13:
+`spring-boot/assessments/spring-boot-module-check/blueprint.json`, one course-level blueprint whose identity and objective pool are shared by Standard S13 and Fast FT8, and whose timing is scoped to S13. It holds only identity, objective references, format assignment, item counts, the Standard schedule, environment requirements and general learner instructions (reconciliation spring-sme-001): no item, task prompt, expected outcome, test, key, rubric, scoring guide or solution, here or in the blueprint.
 
 - Calendar identity copied verbatim from the snapshot `assessment` of both S13 and FT8 (identical): `kind` `moduleCheck`, `formats` `MCQ` and `coding`, `passMark` 70. The calendar gives no weights or cut scores, so `weights` is empty. `dayId` is `S13`, the Standard Review day whose "Module check" block (MCQ + coding assessment, 45 minutes) sets the duration; the schema holds one day id.
-- Duration and item counts (S13 only): MCQ 20 items in 20 minutes (about 1 minute per scenario item) and coding 2 short tasks in 25 minutes (about 12 minutes each); `durationMinutes` 45. The split inside the 45 minutes is this intake's proposal; the calendar gives only the block total. A Spring task needs a project already open and compiled, so the coding part uses one provided Maven project with both tasks and its public tests.
-- Objectives: 24 exact `spring-boot/<module>/<topic>#<objective-id>` references with `objectiveFormats`, one per sampled topic, all from topics that both tracks study. Excluded: the Standard-only `constructor-injection-across-layers` and `health-checks`, the review page and the project briefs (their outcomes are checked by their own public tests). A 45-minute check cannot sample all 42 shared topics; the other 18 are checked by their practice quizzes, labs and project tests.
+- Standard schedule (S13 only; reconciliation spring-intake-edu-005): MCQ 16 items in 16 minutes, then an explicit 4-minute transition to open the provided Maven project and run `mvn -q -o test` once, then the coding part of 2 items in 25 minutes; `durationMinutes` 45. The item count was reduced from 20 to 16 to reserve the transition and test-run time; the split is this intake's proposal, as the calendar gives only the block total.
+- Objectives: 20 exact `spring-boot/<module>/<topic>#<objective-id>` references with `objectiveFormats` (16 MCQ, 4 coding), one per sampled topic, all from topics that both tracks study. Excluded: the Standard-only `constructor-injection-across-layers` and `health-checks`, the review page and the project briefs (checked by their own public tests). A 45-minute check cannot sample all 42 shared topics; the other 22 are checked by their practice quizzes, labs and project tests.
 
   | Module | Sampled topic: objective (format) |
   |---|---|
-  | spring-boot-basics | `spring-vs-spring-boot-what-boot-adds` o1, `dependency-injection-replacing-manual-wiring` o2, `beans-and-bean-scopes` o2, `how-auto-configuration-works` o2, `path-query-and-body-parameters` o2, `response-codes-with-responseentity` o2 (MCQ) |
+  | spring-boot-basics | `spring-vs-spring-boot-what-boot-adds` o1, `dependency-injection-replacing-manual-wiring` o2, `path-query-and-body-parameters` o2, `response-codes-with-responseentity` o2 (MCQ) |
   | porting-and-configuration | `configuration-files-and-profiles` o3, `secrets-from-the-environment` o1, `schema-migrations-with-flyway` o2 (MCQ) |
-  | spring-data-jpa | `entities-and-ids` o3 (MCQ); `repositories-derived-queries-and-at-query` o2, `dtos-and-mapping` o2 (coding, task 2) |
-  | relationships-and-transactions | `one-to-many-and-many-to-one-relationships` o2, `lazy-and-eager-loading` o1, `how-transactions-work-in-spring` o2, `the-n-1-query-problem-spotting-it-in-sql-logs` o2, `fixing-n-1-with-join-fetch` o1 (MCQ) |
-  | validation-errors-and-testing | `mockito-in-spring-at-mockitobean` o3 (MCQ); `bean-validation-on-requests` o1, `standard-error-responses-with-problemdetail` o1 (coding, task 1) |
-  | integration-and-observability | `an-integration-test` o2, `calling-another-service-with-restclient-base-url-and-timeouts` o2 (MCQ) |
+  | spring-data-jpa | `entities-and-ids` o3 (MCQ); `repositories-derived-queries-and-at-query` o2, `dtos-and-mapping` o2 (coding) |
+  | relationships-and-transactions | `one-to-many-and-many-to-one-relationships` o2, `how-transactions-work-in-spring` o2, `the-n-1-query-problem-spotting-it-in-sql-logs` o2, `fixing-n-1-with-join-fetch` o1 (MCQ) |
+  | validation-errors-and-testing | `mockito-in-spring-at-mockitobean` o3 (MCQ); `bean-validation-on-requests` o1, `standard-error-responses-with-problemdetail` o1 (coding) |
+  | integration-and-observability | `calling-another-service-with-restclient-base-url-and-timeouts` o2 (MCQ) |
   | api-security | `role-protected-endpoints` o2, `common-api-security-risks-owasp` o2 (MCQ) |
 
-- Coding tasks, two of about 12 minutes each:
-  - Task 1, validate and report problems: `bean-validation-on-requests#o1` and `standard-error-responses-with-problemdetail#o1`. Observable evidence: an invalid request body is rejected with 400 and an RFC 9457 problem body; the public MockMvc tests for the task pass under `mvn -q -o test`.
-  - Task 2, query and map: `repositories-derived-queries-and-at-query#o2` and `dtos-and-mapping#o2`. Observable evidence: a derived query method returns the matching fixture rows and the endpoint returns them as response DTOs without entity fields; the public tests pass.
-  - Timing rationale: per task about 2 minutes to read the stub and test names, 7 minutes to implement and 3 minutes to run the tests and fix one failure. The assessment owner pilots the authored tasks against the 25 minutes; no item or task is authored in this repository.
-- Allowed resources: the frozen calendar states no resource rule for the S13 "Module check" block, so any rule is set and shown by the platform assessment owner; the repository invents no assessment policy. The coding part needs JDK 25, Maven and the Spring Boot 4.1 dependencies cached for offline use, provided or named by the platform owner; embedded H2 only, no container engine, network or AI service.
-- **Open pacing item for the track-overlay task (recorded, not solved):** the Fast day type has no 45-minute "Module check" block (Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5 already total 120), yet FT8 carries the same `moduleCheck`. FT8 delivery timing and placement are unresolved; the learner instructions state the timed parts for S13 only and tell Fast learners the platform shows FT8's timing.
-- The blueprint holds no items, keys, correct answers, rubrics, scoring guides, hidden tests, reference solutions or score secrets; gates T01 and T07 check its key names.
+- Allowed resources: the frozen calendar states no resource rule for the S13 "Module check" block, so any rule is set and shown by the platform assessment owner; the repository invents no assessment policy. Environment: JDK 25, Maven and the Spring Boot 4.1 dependencies cached so `mvn -q -o test` runs offline, provided or named by the platform owner; embedded H2 only, no container engine, network or AI service.
+- Open item (module authoring and the assessment owner): pilot the complete Standard route — quiz, transition, project open, test runs and both coding items — against the 45 minutes before release; the authored items stay in platform-only staging.
+- **Open pacing item for the track-overlay task (recorded, not solved):** the Fast day type has no 45-minute "Module check" block (Warm-up 5, Skim 10, Try-first diagnostic 15, Project 70, Timed without AI 15, Reflection 5 already total 120), yet FT8 carries the same `moduleCheck`. FT8 timing and placement are unresolved; the learner instructions state the Standard schedule only and tell Fast learners the platform shows FT8's timing.
+- Gates T01 and T07 check the blueprint's key names.
 
 ## Official sources per topic
 
 Closes `source-gap-spring-boot-official-evidence` (category A, sequenced to this intake). On 2026-10-13 this intake fetched 115 live first-party sources: the Spring Boot reference (docs.spring.io serving Spring Boot 4.1.1, the current GA per Maven Central metadata; 4.2.0 milestones are not used), its managed dependency coordinates (Hibernate ORM 7.4.5, Flyway 12.4.0, Spring Security 7.1.1, Jakarta Validation 3.1.1, Jakarta Persistence 3.2.0, JUnit 6.0.3, Mockito 5.23.0), Spring Framework, Spring Data JPA and Commons, Spring Security, Spring guides and Initializr, Hibernate ORM 7.4 guides, Jakarta Persistence 3.2, Validation 3.1 and Dependency Injection 2.0 specification pages, Redgate Flyway, H2, springdoc-openapi, the OpenAPI Specification (swagger.io serving 3.2; spec.openapis.org 3.1.1), Swagger UI, RFCs 9457, 9110, 7519, 6750 and 6265, the OWASP API Security Top 10 2023 and OWASP cheat sheets, JUnit, Mockito, Maven and Javalin. `authoring/evidence/spring-boot/source-snapshot.json` records each final URL (after redirects), retrieval time, sha256 of the fetched bytes and the topics and sections it supports. Raw fetched pages are not committed.
 
 Gaps and substitutions, recorded honestly: on the first pass seven URLs returned HTTP 404 and were not used — a non-existent Spring Framework `mvc-controller/ann-rest-exceptions.html` path (the live `webmvc/mvc-ann-rest-exceptions.html` is used), a non-existent Spring Data `repositories/query-methods.html` (the live `query-methods-details.html` and `jpa/query-methods.html` are used), three Jakarta specification document paths (the live specification landing pages for the same versions are used), an outdated Redgate Flyway migrations page id (the live "Migrations" page is used) and OWASP's former `JSON_Web_Token_for_Java_Cheat_Sheet` (the live `JSON_Web_Token_Cheat_Sheet` is used). Each replacement is the same publisher's current page for the same subject; all 115 frozen sources returned HTTP 200. No source is unreachable.
+
+Dynamic bytes and canonical hashes (reconciliation spring-sme-006-dynamic-source-hash): a second fetch of all 115 sources on 2026-10-13 returned different raw bytes for 7 pages because of per-request ids or timestamps (Cloudflare or CDN tails): the OWASP API Security home, Spring Boot Actuator endpoints and Common Application Properties, Spring Security Method Security, and the three Hibernate 7.4 guides. For each, `sectionsUsed` also records a canonical text sha256 under method canonical-text-v1 (drop `script`, `style`, `noscript` and `template` elements and HTML comments, strip tags, unescape entities, collapse whitespace, hash the UTF-8 text); the canonical hash was equal across both fetches. The raw sha256 stays recorded with the URL and retrieval time. Versioned documentation URLs were preferred where served: docs.spring.io's version-pinned paths (for example `/spring-boot/4.1.1/...`, `/spring-framework/reference/7.0/...`) redirect to the unversioned pages, which serve Spring Boot 4.1.1 (`data-version="4.1.1"`), so the final URLs are recorded; Hibernate uses its versioned `/orm/7.4/` path.
 
 Notes for authors and SME critics:
 
@@ -747,12 +821,35 @@ Calendar references for the `spring` technology: [Spring guides](https://spring.
 | `source-gap-spring-boot-official-evidence` | 115 live first-party sources fetched and frozen with sha256 and retrieval times in `authoring/evidence/spring-boot/source-snapshot.json`; no unreachable source. |
 | `conflict-ft5-lab-label` (already resolved by the approved track model) | Applied: FT5 and FT7 are Project implementation with project briefs, no Fast coding lab; the snapshot is unchanged. |
 
-## Open items for the track-overlay task
+## Open items
+
+For the track-overlay task (`pep-t1-track-overlays`):
 
 - FT8 module-check timing and placement on the Fast template (see blueprint section).
-- The slot for the Fast cumulative project package (course-level, lab-contract layout, presented as a project).
-- Fast rows placed out of Standard order (FT3 row 4, FT4 rows 3-4, FT5 row 3, FT6 rows 5-6): handled here by embedded teach-then-check steps; the overlay records the emphasis.
+- The machine-readable package or overlay manifest for the Fast cumulative project, with lock, schema and check binding (the increment binding table above is the intake's record).
+- Fast rows placed out of Standard order (FT3 row 4, FT4 rows 3-4, FT5 row 3, FT6 rows 5-6): handled by the Fast-order prerequisites table and self-contained early uses; the overlay records emphasis and places the deferred FT3 skim-page quiz on FT6.
+
+For module authoring (release checks, not decided here):
+
+- Pilot S6 (teach 36 + build 44), FT5 (40 + 45) and FT7 (52 + 33) against their blocks; FT7 is the tightest.
+- Pilot each Fast increment against its 70 minutes.
+- Prove the per-increment Surefire selector and run a Windows command-line smoke run.
+- Pilot the full S13 module-check route against 45 minutes.
 
 ## Intake criticism
 
-Pending: fresh independent educational and technology-SME critics review this first intake commit; their reports and the non-author reconciliation will be committed here as course-level evidence. The author does not approve its own first output.
+Fresh independent educational and technology-SME critics reviewed the first intake commit (`b716235`). Their reports and the non-author reconciliation are committed unchanged as `intake-critic-education.json`, `intake-critic-sme.json` and `intake-reconciliation.json`. Outcome: all 12 findings accepted (4 high, 7 medium, 1 low) and applied in one correction loop within the scope limits in each rationale (no tooling or schema change; the machine-readable Fast package binding is deferred to the track-overlay task):
+
+- spring-intake-edu-001: true prerequisites only, met earlier on both tracks; a verifiable Fast-order prerequisites table; self-contained FT3 and FT4 early uses (MockMvc objective o2 now uses a test-configuration fake).
+- spring-intake-edu-002: S6, FT5 and FT7 now teach their rows through the pages and checks before the scaffold is opened; the build is transfer and feedback.
+- spring-intake-edu-003 and spring-sme-006-fast-increments-unbound: the increment binding table.
+- spring-intake-edu-004: `common-api-security-risks-owasp` o1 narrowed to API1, API2 and API5.
+- spring-intake-edu-005: 16 MCQ items with an explicit 4-minute transition; full-route pilot recorded as an open item.
+- spring-sme-001: task prompts and task-specific outcomes removed from the blueprint and this intake.
+- spring-sme-002: the FT5 logging action removed; logging stays skim/reference.
+- spring-sme-003: `health-checks` o1 makes component visibility explicit (defaults to never).
+- spring-sme-004: `spring-vs-spring-boot-what-boot-adds` o2 separates BOM or parent dependency management from starters.
+- spring-sme-005: unquoted, shell-neutral per-increment selector and a Windows smoke-run release check.
+- spring-sme-006-dynamic-source-hash: canonical text hashes for the 7 dynamic sources; versioned-URL handling recorded.
+
+The high findings await the critics' focused rechecks on the corrected bytes.
