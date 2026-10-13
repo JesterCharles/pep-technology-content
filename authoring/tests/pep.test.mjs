@@ -1,11 +1,152 @@
-import test from 'node:test';import assert from 'node:assert/strict';import {cp,mkdtemp,readFile,writeFile,mkdir,readdir} from 'node:fs/promises';import os from 'node:os';import path from 'node:path';import {spawnSync} from 'node:child_process';import {createHash} from 'node:crypto';
-const repo=path.resolve(import.meta.dirname,'../..');function run(args,cwd=repo){return spawnSync(process.execPath,[path.join(repo,'authoring/tools/pep'),...args],{cwd,encoding:'utf8'});}const negatives=[['T01','t01-schema','authoring/tests/fixtures/t01-schema/demo-course/demo-module/demo-topic/topic.json'],['T02','t02-tree','authoring/tests/fixtures/t02-tree/topics'],['T03','t03-filenames','authoring/tests/fixtures/t03-filenames/demo-course/demo-module/demo-topic/rogue.txt'],['T04','t04-placeholder','authoring/tests/fixtures/t04-placeholder/demo-course/demo-module/demo-topic/artifact.html'],['T05','t05-manifest','authoring/tests/fixtures/t05-manifest/demo-course/demo-module/demo-topic/artifact.md'],['T07','t07-forbidden','authoring/tests/fixtures/t07-forbidden/config.txt'],['T08','t08-html','authoring/tests/fixtures/t08-html/demo-course/demo-module/demo-topic/artifact.html']];
-for(const [id,fixture,file] of negatives)test(`${id} reports exact rule and file`,()=>{const r=run(['check','--only',id,`authoring/tests/fixtures/${fixture}`]);assert.notEqual(r.status,0);assert.match(r.stderr,new RegExp(`^${id} ${file.replaceAll('/','\\/')}:`,'m'));});
-for(const id of ['T01','T02','T03','T04','T05','T07','T08'])test(`${id} accepts positive fixture`,()=>{const r=run(['check','--only',id,'authoring/tests/fixtures/positive']);assert.equal(r.status,0,r.stderr);});
-test('T06 stale-lock fixture reports its exact lock file',()=>{const r=run(['check','--only','T06'],path.join(repo,'authoring/tests/fixtures/t06-lock'));assert.notEqual(r.status,0);assert.match(r.stderr,/^T06 demo-course\/course\.lock\.json: course lock is stale/m);});
-test('T07 rejects solution filenames and allows formative GIFT',()=>{let r=run(['check','--only','T07','authoring/tests/fixtures/t07-solution']);assert.notEqual(r.status,0);assert.match(r.stderr,/^T07 authoring\/tests\/fixtures\/t07-solution\/reference-solution\.txt:/m);r=run(['check','--only','T07','authoring/tests/fixtures/t07-gift']);assert.equal(r.status,0,r.stderr);});
-test('default check excludes negative fixtures',()=>{const r=run(['check']);assert.equal(r.status,0,r.stderr);});
-test('lock regeneration is byte-identical and stale bytes fail T06',async()=>{const tmp=await mkdtemp(path.join(os.tmpdir(),'pep-lock-'));await cp(path.join(repo,'authoring/tests/fixtures/positive/demo-course'),path.join(tmp,'demo-course'),{recursive:true});let r=run(['lock'],tmp);assert.equal(r.status,0,r.stderr);const cf=path.join(tmp,'demo-course/course.lock.json'),mf=path.join(tmp,'demo-course/demo-module/module.lock.json'),before=[await readFile(cf),await readFile(mf)];r=run(['lock'],tmp);assert.equal(r.status,0,r.stderr);assert.deepEqual(await readFile(cf),before[0]);assert.deepEqual(await readFile(mf),before[1]);await writeFile(path.join(tmp,'demo-course/demo-module/demo-topic/artifact.html'),'changed');r=run(['check','--only','T06'],tmp);assert.notEqual(r.status,0);assert.match(r.stderr,/^T06 demo-course\/demo-module\/module\.lock\.json: module lock is stale/m);});
-test('stale evidence bindings are recorded as non-current',async()=>{const tmp=await mkdtemp(path.join(os.tmpdir(),'pep-binding-'));await cp(path.join(repo,'authoring/tests/fixtures/positive/demo-course'),path.join(tmp,'demo-course'),{recursive:true});const ef=path.join(tmp,'authoring/evidence/demo-course/demo-module/demo-topic/critic-sme.json');await mkdir(path.dirname(ef),{recursive:true});await writeFile(ef,JSON.stringify({reviewedSha256:'0'.repeat(64)}));const r=run(['lock'],tmp);assert.equal(r.status,0,r.stderr);const lock=JSON.parse(await readFile(path.join(tmp,'demo-course/demo-module/module.lock.json')));assert.equal(lock.evidenceBindings[0].current,false);});
-test('new-topic writes only an absent-artifact manifest',async()=>{const tmp=await mkdtemp(path.join(os.tmpdir(),'pep-new-'));await mkdir(path.join(tmp,'demo-course/demo-module'),{recursive:true});await writeFile(path.join(tmp,'demo-course/demo-module/module.json'),'{}');const r=run(['new-topic','demo-course/demo-module/new-topic'],tmp);assert.equal(r.status,0,r.stderr);assert.deepEqual(await readdir(path.join(tmp,'demo-course/demo-module/new-topic')),['topic.json']);const t=JSON.parse(await readFile(path.join(tmp,'demo-course/demo-module/new-topic/topic.json')));assert.ok(Object.values(t.artifacts).every(x=>x.status==='absent'&&x.reason));assert.equal(t.freshness.sourcesRef,'authoring/evidence/demo-course/demo-module/new-topic/sources.json');});
-test('every subcommand has help',()=>{for(const cmd of ['check','lock','export','export-lab','new-topic']){const r=run([cmd,'--help']);assert.equal(r.status,0,r.stderr);assert.match(r.stdout,/^Usage:/);}});
+import test from "node:test";
+import assert from "node:assert/strict";
+import { cp, mkdtemp, readFile, writeFile, mkdir, readdir } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { spawnSync } from "node:child_process";
+
+const repo = path.resolve(import.meta.dirname, "../..");
+const pep = path.join(repo, "authoring/tools/pep");
+
+function run(args, cwd = repo) {
+  return spawnSync(process.execPath, [pep, ...args], { cwd, encoding: "utf8" });
+}
+
+const negatives = [
+  ["T01", "t01-schema", "authoring/tests/fixtures/t01-schema/authoring/catalog/demo-course/demo-module/demo-topic/topic.json"],
+  ["T02", "t02-tree", "authoring/tests/fixtures/t02-tree/topics"],
+  ["T03", "t03-filenames", "authoring/tests/fixtures/t03-filenames/demo-course/demo-module/demo-topic/rogue.txt"],
+  ["T04", "t04-placeholder", "authoring/tests/fixtures/t04-placeholder/demo-course/demo-module/demo-topic/artifact.html"],
+  ["T05", "t05-manifest", "authoring/tests/fixtures/t05-manifest/demo-course/demo-module/demo-topic/artifact.md"],
+  ["T07", "t07-forbidden", "authoring/tests/fixtures/t07-forbidden/config.txt"],
+  ["T08", "t08-html", "authoring/tests/fixtures/t08-html/demo-course/demo-module/demo-topic/artifact.html"],
+];
+
+for (const [id, fixture, file] of negatives) {
+  test(`${id} reports exact rule and file`, () => {
+    const result = run(["check", "--only", id, `authoring/tests/fixtures/${fixture}`]);
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, new RegExp(`^${id} ${file.replaceAll("/", "\\/")}:`, "m"));
+  });
+}
+
+for (const id of ["T01", "T02", "T03", "T04", "T05", "T07", "T08"]) {
+  test(`${id} accepts positive fixture`, () => {
+    const result = run(["check", "--only", id, "authoring/tests/fixtures/positive"]);
+    assert.equal(result.status, 0, result.stderr);
+  });
+}
+
+test("T06 stale-lock fixture reports its exact lock file", () => {
+  const result = run(["check", "--only", "T06"], path.join(repo, "authoring/tests/fixtures/t06-lock"));
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /^T06 authoring\/catalog\/demo-course\/course\.lock\.json: course lock is stale/m);
+});
+
+test("T07 rejects solution filenames and allows formative GIFT", () => {
+  let result = run(["check", "--only", "T07", "authoring/tests/fixtures/t07-solution"]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /^T07 authoring\/tests\/fixtures\/t07-solution\/reference-solution\.txt:/m);
+  result = run(["check", "--only", "T07", "authoring/tests/fixtures/t07-gift"]);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("default check excludes negative fixtures", () => {
+  const result = run(["check"]);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+async function copyPositive(root) {
+  await cp(
+    path.join(repo, "authoring/tests/fixtures/positive/demo-course"),
+    path.join(root, "demo-course"),
+    { recursive: true },
+  );
+  await cp(
+    path.join(repo, "authoring/tests/fixtures/positive/authoring/catalog"),
+    path.join(root, "authoring/catalog"),
+    { recursive: true },
+  );
+}
+
+test("lock regeneration is byte-identical and stale bytes fail T06", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pep-lock-"));
+  await copyPositive(tmp);
+  let result = run(["lock"], tmp);
+  assert.equal(result.status, 0, result.stderr);
+  const courseLock = path.join(tmp, "authoring/catalog/demo-course/course.lock.json");
+  const moduleLock = path.join(tmp, "authoring/catalog/demo-course/demo-module/module.lock.json");
+  const before = [await readFile(courseLock), await readFile(moduleLock)];
+  result = run(["lock"], tmp);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(await readFile(courseLock), before[0]);
+  assert.deepEqual(await readFile(moduleLock), before[1]);
+  await writeFile(path.join(tmp, "demo-course/demo-module/demo-topic/artifact.html"), "changed");
+  result = run(["check", "--only", "T06"], tmp);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /^T06 authoring\/catalog\/demo-course\/demo-module\/module\.lock\.json: module lock is stale/m);
+});
+
+test("stale evidence bindings are recorded as non-current", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pep-binding-"));
+  await copyPositive(tmp);
+  const evidence = path.join(tmp, "authoring/evidence/demo-course/demo-module/demo-topic/critic-sme.json");
+  await mkdir(path.dirname(evidence), { recursive: true });
+  await writeFile(evidence, JSON.stringify({ reviewedSha256: "0".repeat(64) }));
+  const result = run(["lock"], tmp);
+  assert.equal(result.status, 0, result.stderr);
+  const lock = JSON.parse(await readFile(path.join(tmp, "authoring/catalog/demo-course/demo-module/module.lock.json")));
+  assert.equal(lock.evidenceBindings[0].current, false);
+});
+
+test("new-topic writes only an absent-artifact catalog manifest", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pep-new-"));
+  await mkdir(path.join(tmp, "authoring/catalog/demo-course/demo-module"), { recursive: true });
+  await writeFile(path.join(tmp, "authoring/catalog/demo-course/demo-module/module.json"), "{}");
+  const result = run(["new-topic", "demo-course/demo-module/new-topic"], tmp);
+  assert.equal(result.status, 0, result.stderr);
+  const catalogTopic = path.join(tmp, "authoring/catalog/demo-course/demo-module/new-topic");
+  assert.deepEqual(await readdir(catalogTopic), ["topic.json"]);
+  const topic = JSON.parse(await readFile(path.join(catalogTopic, "topic.json")));
+  assert.ok(Object.values(topic.artifacts).every((item) => item.status === "absent" && item.reason));
+  assert.equal(topic.freshness.sourcesRef, "authoring/evidence/demo-course/demo-module/new-topic/sources.json");
+  await assert.rejects(readdir(path.join(tmp, "demo-course/demo-module/new-topic")), { code: "ENOENT" });
+});
+
+test("export copies the content-only learner tree and omits catalog metadata", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pep-export-"));
+  await copyPositive(tmp);
+  await mkdir(path.join(tmp, "demo-course/assessments/check"), { recursive: true });
+  await writeFile(path.join(tmp, "demo-course/assessments/check/blueprint.json"), "{}\n");
+  const result = run(["export", "demo-course"], tmp);
+  assert.equal(result.status, 0, result.stderr);
+  await readFile(path.join(tmp, "build/export/demo-course/demo-module/demo-topic/artifact.html"));
+  await readFile(path.join(tmp, "build/export/demo-course/assessments/check/blueprint.json"));
+  await assert.rejects(readFile(path.join(tmp, "build/export/demo-course/course.json")), { code: "ENOENT" });
+});
+
+test("migrate-catalog uses git moves and is idempotent", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pep-migrate-"));
+  await mkdir(path.join(tmp, "demo-course/demo-module/demo-topic"), { recursive: true });
+  await writeFile(path.join(tmp, "demo-course/course.json"), '{"id":"demo-course","moduleOrder":["demo-module"]}\n');
+  await writeFile(path.join(tmp, "demo-course/demo-module/module.json"), '{"id":"demo-module","topicOrder":["demo-topic"]}\n');
+  await writeFile(path.join(tmp, "demo-course/demo-module/demo-topic/topic.json"), '{"id":"demo-topic"}\n');
+  assert.equal(spawnSync("git", ["init", "-b", "main"], { cwd: tmp }).status, 0);
+  assert.equal(spawnSync("git", ["add", "."], { cwd: tmp }).status, 0);
+  let result = run(["migrate-catalog"], tmp);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /moved 3 file\(s\)/);
+  result = run(["migrate-catalog", "--check"], tmp);
+  assert.equal(result.status, 0, result.stderr);
+  result = run(["migrate-catalog"], tmp);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /moved 0 file\(s\)/);
+});
+
+test("every subcommand has help", () => {
+  for (const command of ["check", "lock", "export", "export-lab", "new-topic", "migrate-catalog"]) {
+    const result = run([command, "--help"]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /^Usage:/);
+  }
+});

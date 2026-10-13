@@ -4,6 +4,7 @@ import path from "node:path";
 
 export const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const AUTHORING_ROOT = "authoring";
+export const CATALOG_ROOT = "catalog";
 export const RESERVED_ROOTS = new Set([
   ".git",
   ".github",
@@ -52,6 +53,34 @@ export function evidencePath(root, ...parts) {
   return authoringPath(root, "evidence", ...parts);
 }
 
+export function catalogPath(root, ...parts) {
+  return authoringPath(root, CATALOG_ROOT, ...parts);
+}
+
+export function contentPath(root, ...parts) {
+  return path.join(root, ...parts);
+}
+
+function movedMetadataRelativePath(value) {
+  const parts = value.split("/");
+  return (
+    (parts.length === 2 && ["course.json", "course.lock.json"].includes(parts[1])) ||
+    (parts.length === 3 && ["module.json", "module.lock.json"].includes(parts[2])) ||
+    (parts.length === 4 && parts[3] === "topic.json")
+  );
+}
+
+// Resolve immutable evidence references after the metadata-only catalog move.
+// Existing paths always win. The alias is deliberately limited to the five
+// moved metadata classes and only activates when the physical catalog file exists.
+export async function resolveCatalogMetadataPath(root, file) {
+  if (await exists(file)) return file;
+  const rel = relative(root, file);
+  if (!movedMetadataRelativePath(rel)) return file;
+  const catalogFile = catalogPath(root, rel);
+  return (await exists(catalogFile)) ? catalogFile : file;
+}
+
 // Course 1 and its review records predate the authoring/ layout. Preserve their
 // attested bytes while resolving only the old evidence/ namespace. A reference
 // that exists at its root path always wins, which keeps the alias narrow.
@@ -59,8 +88,8 @@ export async function resolveRepositoryPath(root, reference) {
   const direct = path.resolve(root, reference);
   if (path.isAbsolute(reference) || (await exists(direct))) return direct;
   const rel = relative(root, direct);
-  if (rel !== "evidence" && !rel.startsWith("evidence/")) return direct;
-  return authoringPath(root, rel);
+  if (rel === "evidence" || rel.startsWith("evidence/")) return authoringPath(root, rel);
+  return resolveCatalogMetadataPath(root, direct);
 }
 
 export async function isDirectory(file) {
@@ -111,42 +140,94 @@ export function defaultSkip(root) {
   };
 }
 
-export async function findCourseRoots(ctx) {
-  const found = new Set();
-  const roots = ctx.explicit ? ctx.targets : [ctx.root];
-  for (const target of roots) {
+async function catalogScopes(ctx) {
+  if (!ctx.explicit) return [ctx.root];
+  const scopes = new Set();
+  for (const target of ctx.targets) {
     let start = target;
     try {
       if (!(await stat(start)).isDirectory()) start = path.dirname(start);
     } catch {
       continue;
     }
-    let ancestor = start;
-    while (ancestor.startsWith(ctx.root)) {
-      if (await exists(path.join(ancestor, "course.json"))) {
-        found.add(ancestor);
-        break;
-      }
+    for (let ancestor = start; ancestor.startsWith(ctx.root); ancestor = path.dirname(ancestor)) {
+      if (await isDirectory(catalogPath(ancestor))) scopes.add(ancestor);
       if (ancestor === ctx.root) break;
-      ancestor = path.dirname(ancestor);
     }
-    const walked = await walk(start, { skip: ctx.explicit ? undefined : defaultSkip(ctx.root) });
-    for (const file of walked.files)
-      if (path.basename(file) === "course.json") found.add(path.dirname(file));
+    for (const file of (await walk(start)).files) {
+      const normalized = posix(file);
+      const marker = `/${AUTHORING_ROOT}/${CATALOG_ROOT}/`;
+      const index = normalized.lastIndexOf(marker);
+      if (index >= 0 && path.basename(file) === "course.json") {
+        scopes.add(normalized.slice(0, index) || path.parse(normalized).root);
+      }
+    }
   }
-  return [...found].sort();
+  return [...scopes].sort();
 }
 
-export async function loadCourse(courseRoot) {
-  const course = await readJson(path.join(courseRoot, "course.json"));
-  const modules = [];
-  for (const id of course.moduleOrder ?? []) {
-    const root = path.join(courseRoot, id);
-    if (!(await exists(path.join(root, "module.json")))) continue;
-    const manifest = await readJson(path.join(root, "module.json"));
-    modules.push({ id, root, manifest });
+function pathsIntersect(first, second) {
+  return (
+    first === second ||
+    first.startsWith(`${second}${path.sep}`) ||
+    second.startsWith(`${first}${path.sep}`)
+  );
+}
+
+export async function findCourses(ctx) {
+  const found = [];
+  for (const repoRoot of await catalogScopes(ctx)) {
+    const root = catalogPath(repoRoot);
+    for (const entry of await readdir(root, { withFileTypes: true }).catch(() => [])) {
+      if (!entry.isDirectory() || !SLUG_RE.test(entry.name)) continue;
+      const catalogRoot = path.join(root, entry.name);
+      const manifestFile = path.join(catalogRoot, "course.json");
+      if (!(await exists(manifestFile))) continue;
+      const contentRoot = contentPath(repoRoot, entry.name);
+      const evidenceRoot = evidencePath(repoRoot, entry.name);
+      if (
+        ctx.explicit &&
+        !ctx.targets.some(
+          (target) =>
+            target === repoRoot ||
+            pathsIntersect(target, catalogRoot) ||
+            pathsIntersect(target, contentRoot) ||
+            pathsIntersect(target, evidenceRoot),
+        )
+      ) continue;
+      found.push({
+        id: entry.name,
+        repoRoot,
+        catalogRoot,
+        contentRoot,
+        manifestFile,
+        manifest: await readJson(manifestFile),
+      });
+    }
   }
-  return { root: courseRoot, manifest: course, modules };
+  return found.sort((a, b) => a.manifestFile.localeCompare(b.manifestFile));
+}
+
+// Compatibility for callers that only need learner roots.
+export async function findCourseRoots(ctx) {
+  return (await findCourses(ctx)).map((course) => course.contentRoot);
+}
+
+export async function loadCourse(course) {
+  const modules = [];
+  for (const id of course.manifest.moduleOrder ?? []) {
+    const catalogRoot = path.join(course.catalogRoot, id);
+    const manifestFile = path.join(catalogRoot, "module.json");
+    if (!(await exists(manifestFile))) continue;
+    modules.push({
+      id,
+      catalogRoot,
+      contentRoot: path.join(course.contentRoot, id),
+      manifestFile,
+      manifest: await readJson(manifestFile),
+    });
+  }
+  return { ...course, modules };
 }
 
 export function error(rule, file, message) {

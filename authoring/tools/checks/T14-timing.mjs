@@ -6,7 +6,7 @@ import {
   authoringPath,
   error,
   exists,
-  findCourseRoots,
+  findCourses,
   loadCourse,
   readJson,
   sha256,
@@ -62,16 +62,16 @@ export async function run(ctx) {
   }
 
   const totals = new Map();
-  for (const courseRoot of await findCourseRoots(ctx)) {
-    const course = await loadCourse(courseRoot);
+  for (const courseDescriptor of await findCourses(ctx)) {
+    const course = await loadCourse(courseDescriptor);
     for (const module of course.modules) {
       for (const topicId of module.manifest.topicOrder ?? []) {
-        const topicFile = path.join(module.root, topicId, "topic.json");
+        const topicFile = path.join(module.catalogRoot, topicId, "topic.json");
         const topic = await readJson(topicFile).catch(() => null);
         if (!topic || topic.artifacts?.html?.status !== "present") {
           continue;
         }
-        const artifact = path.join(path.dirname(topicFile), "artifact.html");
+        const artifact = path.join(module.contentRoot, topicId, "artifact.html");
         let result;
         try {
           result = await estimate(ctx.root, artifact);

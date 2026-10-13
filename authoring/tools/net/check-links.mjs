@@ -1,27 +1,42 @@
 #!/usr/bin/env node
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { resolveRepositoryPath, walk } from "../lib/common.mjs";
+import { defaultSkip, findCourses, loadCourse, resolveRepositoryPath } from "../lib/common.mjs";
 import { artifactSha256, fetchBytes, sha256 } from "./receipts.mjs";
 
-async function topicFiles(root, inputs) {
-  const found = new Set();
-  for (const input of inputs.length ? inputs : [root]) {
-    const resolved = path.resolve(root, input);
-    const info = await stat(resolved);
-    if (info.isFile() && path.basename(resolved) === "topic.json") {
-      found.add(resolved);
-      continue;
-    }
-    const directory = info.isDirectory() ? resolved : path.dirname(resolved);
-    for (const file of (await walk(directory)).files) {
-      if (path.basename(file) === "topic.json") {
-        found.add(file);
+async function topics(root, inputs) {
+  const targets = (inputs.length ? inputs : [root]).map((input) => path.resolve(root, input));
+  const ctx = {
+    root,
+    explicit: inputs.length > 0,
+    targets,
+    scanRoots: targets,
+    skip: inputs.length ? undefined : defaultSkip(root),
+  };
+  const found = [];
+  for (const descriptor of await findCourses(ctx)) {
+    const course = await loadCourse(descriptor);
+    for (const module of course.modules) {
+      for (const topicId of module.manifest.topicOrder ?? []) {
+        const manifestFile = path.join(module.catalogRoot, topicId, "topic.json");
+        const contentRoot = path.join(module.contentRoot, topicId);
+        if (
+          ctx.explicit &&
+          !targets.some(
+            (target) =>
+              target === manifestFile ||
+              target === contentRoot ||
+              target.startsWith(`${contentRoot}${path.sep}`) ||
+              contentRoot.startsWith(`${target}${path.sep}`) ||
+              manifestFile.startsWith(`${target}${path.sep}`),
+          )
+        ) continue;
+        found.push({ course, manifestFile, contentRoot });
       }
     }
   }
-  return [...found].sort();
+  return found;
 }
 
 async function main() {
@@ -34,12 +49,13 @@ async function main() {
   }
   const root = process.cwd();
   let failed = false;
-  for (const topicFile of await topicFiles(root, inputs)) {
+  for (const entry of await topics(root, inputs)) {
+    const topicFile = entry.manifestFile;
     const topic = JSON.parse(await readFile(topicFile, "utf8"));
     if (topic.artifacts?.html?.status !== "present") {
       continue;
     }
-    const receiptFile = await resolveRepositoryPath(root, topic.freshness.sourcesRef);
+    const receiptFile = await resolveRepositoryPath(entry.course.repoRoot, topic.freshness.sourcesRef);
     let prior;
     try {
       prior = JSON.parse(await readFile(receiptFile, "utf8"));
@@ -81,7 +97,7 @@ async function main() {
         failed = true;
       }
     }
-    const artifact = path.join(path.dirname(topicFile), "artifact.html");
+    const artifact = path.join(entry.contentRoot, "artifact.html");
     const receipt = {
       schemaVersion: 1,
       reviewedSha256: await artifactSha256(artifact),

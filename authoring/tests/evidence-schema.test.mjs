@@ -15,17 +15,22 @@ async function writeJson(file, value) {
 }
 
 async function addObjectiveCourse(root, directory, id = directory) {
-  const courseRoot = path.join(root, directory);
   await cp(
     path.join(repo, "authoring/tests/fixtures/positive/demo-course"),
-    courseRoot,
+    path.join(root, directory),
     { recursive: true },
   );
-  const courseFile = path.join(courseRoot, "course.json");
+  const catalogRoot = path.join(root, "authoring/catalog", directory);
+  await cp(
+    path.join(repo, "authoring/tests/fixtures/positive/authoring/catalog/demo-course"),
+    catalogRoot,
+    { recursive: true },
+  );
+  const courseFile = path.join(catalogRoot, "course.json");
   const course = JSON.parse(await readFile(courseFile, "utf8"));
   course.id = id;
   await writeJson(courseFile, course);
-  const topicFile = path.join(courseRoot, "demo-module/demo-topic/topic.json");
+  const topicFile = path.join(catalogRoot, "demo-module/demo-topic/topic.json");
   const topic = JSON.parse(await readFile(topicFile, "utf8"));
   topic.objectives = [{ id: "o1", text: "Demonstrate the objective." }];
   await writeJson(topicFile, topic);

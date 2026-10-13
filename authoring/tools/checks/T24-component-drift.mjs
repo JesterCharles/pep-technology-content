@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { error, readJson, walk } from "../lib/common.mjs";
+import { error, findCourses, readJson, walk } from "../lib/common.mjs";
 
 export const id = "T24";
 export const gate = 24;
@@ -51,6 +51,7 @@ async function loadCanonical(ctx, name, kind) {
 export async function run(ctx) {
   const out = [];
   const seenFiles = new Set();
+  const courses = await findCourses(ctx);
   for (const target of ctx.scanRoots) {
     const walked = await walk(target, { skip: ctx.skip });
     for (const file of walked.files) {
@@ -61,7 +62,25 @@ export async function run(ctx) {
       const blocks = parseBlocks(text);
       let topic;
       try {
-        topic = await readJson(path.join(path.dirname(file), "topic.json"));
+        const course = courses.find(
+          (candidate) => file.startsWith(`${candidate.contentRoot}${path.sep}`),
+        );
+        if (course) {
+          const parts = path.relative(course.contentRoot, file).split(path.sep);
+          topic = await readJson(path.join(course.catalogRoot, parts[0], parts[1], "topic.json"));
+        } else {
+          const candidates = [];
+          for (const root of ctx.scanRoots) {
+            for (const candidate of (await walk(root, { skip: ctx.skip })).files) {
+              if (
+                path.basename(candidate) === "topic.json" &&
+                candidate.includes(`${path.sep}authoring${path.sep}catalog${path.sep}`)
+              ) candidates.push(candidate);
+            }
+          }
+          if (candidates.length !== 1) throw new Error("artifact is not joined to one catalog topic");
+          topic = await readJson(candidates[0]);
+        }
       } catch (cause) {
         if (blocks.length) out.push(error(id, display, `cannot read topic.json: ${cause.message}`));
         continue;

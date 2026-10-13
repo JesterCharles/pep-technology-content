@@ -10,7 +10,7 @@ import { createCourseLock, createModuleLock } from "../tools/lib/locks.mjs";
 const repo = path.resolve(import.meta.dirname, "../..");
 const pep = path.join(repo, "authoring", "tools", "pep");
 const target = "demo-course/demo-module/demo-topic/artifact.html";
-const topicManifest = "demo-course/demo-module/demo-topic/topic.json";
+const topicManifest = "authoring/catalog/demo-course/demo-module/demo-topic/topic.json";
 
 function hash(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -26,6 +26,11 @@ async function fixture() {
   await cp(
     path.join(repo, "authoring/tests/fixtures/positive/demo-course"),
     path.join(root, "demo-course"),
+    { recursive: true },
+  );
+  await cp(
+    path.join(repo, "authoring/tests/fixtures/positive/authoring/catalog"),
+    path.join(root, "authoring/catalog"),
     { recursive: true },
   );
   const bytes = await readFile(path.join(root, target));
@@ -396,6 +401,45 @@ test("T25 covers a course-level assessment blueprint with prefixed evidence", as
   assert.equal(result.status, 0, result.stderr);
 });
 
+test("T25 discovers learner-safe assessments and labs at course and module scope", async () => {
+  const { root, digest } = await fixture();
+  await writeTopicEvidence(root, report("education", digest), report("sme", digest));
+  const scopes = [
+    {
+      content: "demo-course",
+      evidence: "authoring/evidence/demo-course",
+      prefix: "course-work",
+      files: ["coding-lab/lab.json", "coding-lab/README.md", "assessments/check/blueprint.json"],
+    },
+    {
+      content: "demo-course/demo-module",
+      evidence: "authoring/evidence/demo-course/demo-module",
+      prefix: "module-work",
+      files: ["coding-lab/lab.json", "coding-lab/README.md", "assessments/check/blueprint.json"],
+    },
+  ];
+  for (const scope of scopes) {
+    const artifactHashes = {};
+    for (const relativeFile of scope.files) {
+      const file = path.join(root, scope.content, relativeFile);
+      await mkdir(path.dirname(file), { recursive: true });
+      await writeFile(file, `fixture ${relativeFile}\n`);
+      artifactHashes[relativeFile] = hash(await readFile(file));
+    }
+    for (const role of ["education", "sme"]) {
+      await writeJson(
+        path.join(root, scope.evidence, `${scope.prefix}-critic-${role}.json`),
+        report(role, artifactHashes[scope.files[0]], {
+          reviewedPath: `${scope.content}/${scope.files[0]}`,
+          artifactHashes,
+        }),
+      );
+    }
+  }
+  const result = check(root);
+  assert.equal(result.status, 0, result.stderr);
+});
+
 test("T25 keeps course intake rechecks historical after module changes", async () => {
   const { root, digest } = await fixture();
   await writeTopicEvidence(root, report("education", digest), report("sme", digest));
@@ -517,11 +561,11 @@ test("a removed binding is explicit, historical, and accepted by T06", async () 
   assert.equal(binding.missing, true);
 
   await writeJson(
-    path.join(root, "demo-course/course.lock.json"),
+    path.join(root, "authoring/catalog/demo-course/course.lock.json"),
     await createCourseLock(root, "demo-course"),
   );
   await writeJson(
-    path.join(root, "demo-course/demo-module/module.lock.json"),
+    path.join(root, "authoring/catalog/demo-course/demo-module/module.lock.json"),
     moduleLock,
   );
   await cp(path.join(repo, "authoring/schemas"), path.join(root, "authoring/schemas"), { recursive: true });
@@ -552,9 +596,9 @@ async function lockFixtureWithHistoricalCourseBinding() {
   });
   const courseLock = await createCourseLock(root, "demo-course");
   const moduleLock = await createModuleLock(root, "demo-course", "demo-module");
-  await writeJson(path.join(root, "demo-course/course.lock.json"), courseLock);
+  await writeJson(path.join(root, "authoring/catalog/demo-course/course.lock.json"), courseLock);
   await writeJson(
-    path.join(root, "demo-course/demo-module/module.lock.json"),
+    path.join(root, "authoring/catalog/demo-course/demo-module/module.lock.json"),
     moduleLock,
   );
   return { root, manifestFile, courseLock };
@@ -572,7 +616,7 @@ test("editing module topic.json leaves the course lock current", async () => {
   await changeTopicManifest(manifestFile);
   assert.deepEqual(await createCourseLock(root, "demo-course"), courseLock);
   await writeJson(
-    path.join(root, "demo-course/demo-module/module.lock.json"),
+    path.join(root, "authoring/catalog/demo-course/demo-module/module.lock.json"),
     await createModuleLock(root, "demo-course", "demo-module"),
   );
 

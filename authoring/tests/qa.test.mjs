@@ -28,12 +28,14 @@ async function makeRepository(pageName, options = {}) {
   let html = await readFile(path.join(fixtures, pageName), "utf8");
   if (options.transformHtml) html = options.transformHtml(html);
   await writeFile(path.join(topicRoot, "artifact.html"), html);
+  const catalogRoot = path.join(root, "authoring", "catalog", "course");
+  await mkdir(path.join(catalogRoot, "module", "topic"), { recursive: true });
   await writeFile(
-    path.join(root, "course", "course.json"),
+    path.join(catalogRoot, "course.json"),
     `${JSON.stringify({ id: "course", moduleOrder: ["module"] }, null, 2)}\n`,
   );
   await writeFile(
-    path.join(root, "course", "module", "module.json"),
+    path.join(catalogRoot, "module", "module.json"),
     `${JSON.stringify({ id: "module", topicOrder: ["topic"] }, null, 2)}\n`,
   );
   const topic = {
@@ -45,7 +47,7 @@ async function makeRepository(pageName, options = {}) {
       pdf: { status: options.pdf ? "present" : "absent" },
     },
   };
-  await writeFile(path.join(topicRoot, "topic.json"), `${JSON.stringify(topic, null, 2)}\n`);
+  await writeFile(path.join(catalogRoot, "module", "topic", "topic.json"), `${JSON.stringify(topic, null, 2)}\n`);
   const spec = options.spec ?? JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
   await writeFile(path.join(evidenceRoot, "qa-paths.json"), `${JSON.stringify(spec, null, 2)}\n`);
   if (options.markdownText !== undefined) {
@@ -445,10 +447,11 @@ test("T18 accepts deterministic Markdown", { timeout: 60000 }, async () => {
     const markdown = path.join(repository.topicRoot, "artifact.md");
     await writeFile(markdown, await markdownFromHtml(html));
     await pdfFromMarkdown(markdown, path.join(repository.topicRoot, "artifact.pdf"));
-    const topic = JSON.parse(await readFile(path.join(repository.topicRoot, "topic.json"), "utf8"));
+    const topicFile = path.join(repository.root, "authoring/catalog/course/module/topic/topic.json");
+    const topic = JSON.parse(await readFile(topicFile, "utf8"));
     topic.artifacts.pdf.status = "present";
     await writeFile(
-      path.join(repository.topicRoot, "topic.json"),
+      topicFile,
       `${JSON.stringify(topic, null, 2)}\n`,
     );
     assert.deepEqual(await runT18(context(repository.root)), []);

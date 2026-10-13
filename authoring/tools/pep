@@ -1,17 +1,19 @@
 #!/usr/bin/env node
-import { readdir, readFile, rm, mkdir, writeFile, copyFile, stat, chmod } from "node:fs/promises";
+import { readdir, readFile, rm, mkdir, writeFile, copyFile, rmdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
 import {
+  catalogPath,
   defaultSkip,
   error,
   exists,
-  findCourseRoots,
+  findCourses,
   formatError,
   posix,
   readJson,
   relative,
+  RESERVED_ROOTS,
   sha256,
   stableJson,
   walk,
@@ -21,12 +23,13 @@ const root = process.cwd(),
   args = process.argv.slice(2),
   command = args.shift();
 const helps = {
-  main: "Usage: authoring/tools/pep <check|lock|export|export-lab|new-topic> [options]",
+  main: "Usage: authoring/tools/pep <check|lock|export|export-lab|new-topic|migrate-catalog> [options]",
   check: "Usage: authoring/tools/pep check [--changed] [--only <gate-id>] [paths...]",
   lock: "Usage: authoring/tools/pep lock [<course>|<course>/<module>]",
   export: "Usage: authoring/tools/pep export [<course>]",
   "export-lab": "Usage: authoring/tools/pep export-lab <lab-id>",
   "new-topic": "Usage: authoring/tools/pep new-topic <course>/<module>/<topic>",
+  "migrate-catalog": "Usage: authoring/tools/pep migrate-catalog [--check]",
 };
 function die(message, code = 1) {
   console.error(message);
@@ -70,8 +73,11 @@ async function check() {
     } catch (e) {
       die(`check: unable to compare with origin/main: ${e.message}`);
     }
+    paths = (await Promise.all(
+      paths.map(async (item) => ((await exists(path.resolve(root, item))) ? item : null)),
+    )).filter(Boolean);
     if (!paths.length) {
-      console.log("check: no changed files");
+      console.log("check: no changed files remain in the worktree");
       return;
     }
   }
@@ -124,25 +130,25 @@ async function lock() {
     skip: defaultSkip(root),
     display: (f) => relative(root, f),
   };
-  const courses = await findCourseRoots(ctx);
+  const courses = await findCourses(ctx);
   let wrote = 0;
-  for (const cr of courses) {
-    const c = await readJson(path.join(cr, "course.json"));
+  for (const course of courses) {
+    const c = course.manifest;
     if (parts && parts[0] !== c.id) continue;
     if (parts?.length === 2) {
-      const out = path.join(cr, parts[1], "module.lock.json");
-      await writeFile(out, stableJson(await createModuleLock(root, c.id, parts[1])));
+      const out = path.join(course.catalogRoot, parts[1], "module.lock.json");
+      await writeFile(out, stableJson(await createModuleLock(course.repoRoot, c.id, parts[1])));
       console.log(relative(root, out));
       wrote++;
       continue;
     }
-    const cf = path.join(cr, "course.lock.json");
-    await writeFile(cf, stableJson(await createCourseLock(root, c.id)));
+    const cf = path.join(course.catalogRoot, "course.lock.json");
+    await writeFile(cf, stableJson(await createCourseLock(course.repoRoot, c.id)));
     console.log(relative(root, cf));
     wrote++;
     for (const mid of c.moduleOrder ?? []) {
-      const mf = path.join(cr, mid, "module.lock.json");
-      await writeFile(mf, stableJson(await createModuleLock(root, c.id, mid)));
+      const mf = path.join(course.catalogRoot, mid, "module.lock.json");
+      await writeFile(mf, stableJson(await createModuleLock(course.repoRoot, c.id, mid)));
       console.log(relative(root, mf));
       wrote++;
     }
@@ -161,28 +167,24 @@ async function exportCourse() {
       skip: defaultSkip(root),
       display: (f) => relative(root, f),
     },
-    courses = await findCourseRoots(ctx),
+    courses = await findCourses(ctx),
     base = path.join(root, "build", "export");
   await rm(cid ? path.join(base, cid) : base, { recursive: true, force: true });
   const links = [];
-  for (const cr of courses) {
-    const c = await readJson(path.join(cr, "course.json"));
+  let matched = false;
+  for (const course of courses) {
+    const c = course.manifest;
     if (cid && c.id !== cid) continue;
-    for (const f of (await walk(cr)).files) {
-      const rel = path.relative(cr, f);
-      if (
-        /(?:^|\/)artifact\.(?:html|md|pdf|gift)$|(?:^|\/)video-artifact\.md$|(?:^|\/)coding-lab\//.test(
-          posix(rel),
-        )
-      ) {
-        const d = path.join(base, c.id, rel);
-        await mkdir(path.dirname(d), { recursive: true });
-        await copyFile(f, d);
-        if (f.endsWith("artifact.html")) links.push(posix(path.join(c.id, rel)));
-      }
+    matched = true;
+    for (const f of (await walk(course.contentRoot)).files) {
+      const rel = path.relative(course.contentRoot, f);
+      const d = path.join(base, c.id, rel);
+      await mkdir(path.dirname(d), { recursive: true });
+      await copyFile(f, d);
+      if (f.endsWith("artifact.html")) links.push(posix(path.join(c.id, rel)));
     }
   }
-  if (cid && !links.length) die(`export: course not found or has no HTML: ${cid}`);
+  if (cid && !matched) die(`export: course not found: ${cid}`);
   await mkdir(base, { recursive: true });
   await writeFile(
     path.join(base, "index.html"),
@@ -229,9 +231,9 @@ async function newTopic() {
     die("new-topic: expected <course>/<module>/<topic>");
   const [c, m, t] = args[0].split("/");
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(t)) die("new-topic: topic id must be a slug");
-  if (!(await exists(path.join(root, c, m, "module.json"))))
+  if (!(await exists(catalogPath(root, c, m, "module.json"))))
     die(`new-topic: module not found: ${c}/${m}`);
-  const dir = path.join(root, c, m, t),
+  const dir = catalogPath(root, c, m, t),
     file = path.join(dir, "topic.json");
   if (await exists(file)) die(`new-topic: already exists: ${args[0]}`);
   const absent = { status: "absent", reason: "Not yet authored." },
@@ -275,6 +277,65 @@ async function newTopic() {
   await writeFile(file, stableJson(manifest));
   console.log(relative(root, file));
 }
+
+function legacyMetadataDestination(courseId, file) {
+  const rel = posix(path.relative(path.join(root, courseId), file));
+  const parts = rel.split("/");
+  const valid =
+    (parts.length === 1 && ["course.json", "course.lock.json"].includes(parts[0])) ||
+    (parts.length === 2 && ["module.json", "module.lock.json"].includes(parts[1])) ||
+    (parts.length === 3 && parts[2] === "topic.json");
+  return valid ? catalogPath(root, courseId, ...parts) : null;
+}
+
+async function migrateCatalog() {
+  if (args[0] === "--help") return help("migrate-catalog");
+  const checkOnly = args[0] === "--check";
+  if (args.length > (checkOnly ? 1 : 0)) die("migrate-catalog: unknown arguments");
+  const courseIds = new Set();
+  for (const entry of await readdir(root, { withFileTypes: true })) {
+    if (
+      entry.isDirectory() &&
+      !RESERVED_ROOTS.has(entry.name) &&
+      (await exists(path.join(root, entry.name, "course.json")))
+    ) courseIds.add(entry.name);
+  }
+  for (const entry of await readdir(catalogPath(root), { withFileTypes: true }).catch(() => [])) {
+    if (entry.isDirectory()) courseIds.add(entry.name);
+  }
+  const moves = [];
+  for (const courseId of [...courseIds].sort()) {
+    const contentRoot = path.join(root, courseId);
+    for (const file of (await walk(contentRoot)).files) {
+      const destination = legacyMetadataDestination(courseId, file);
+      if (destination) moves.push([file, destination]);
+    }
+  }
+  moves.sort(([left], [right]) => left.localeCompare(right));
+  if (checkOnly) {
+    if (moves.length) die(`migrate-catalog: ${moves.length} legacy metadata file(s) remain`);
+    console.log("migrate-catalog: no legacy metadata files");
+    return;
+  }
+  const oldDirectories = new Set();
+  for (const [source, destination] of moves) {
+    if (await exists(destination)) {
+      die(`migrate-catalog: collision: ${relative(root, source)} and ${relative(root, destination)}`);
+    }
+    await mkdir(path.dirname(destination), { recursive: true });
+    execFileSync("git", ["mv", "--", source, destination], { cwd: root });
+    for (let directory = path.dirname(source); directory !== root; directory = path.dirname(directory)) {
+      oldDirectories.add(directory);
+    }
+    console.log(`${relative(root, source)} -> ${relative(root, destination)}`);
+  }
+  for (const directory of [...oldDirectories].sort((a, b) => b.length - a.length)) {
+    await rmdir(directory).catch((cause) => {
+      if (!["ENOTEMPTY", "ENOENT"].includes(cause.code)) throw cause;
+    });
+  }
+  console.log(`migrate-catalog: moved ${moves.length} file(s)`);
+}
 try {
   if (!command || command === "--help" || command === "help") help();
   else if (command === "check") await check();
@@ -282,6 +343,7 @@ try {
   else if (command === "export") await exportCourse();
   else if (command === "export-lab") await exportLab();
   else if (command === "new-topic") await newTopic();
+  else if (command === "migrate-catalog") await migrateCatalog();
   else die(`unknown command: ${command}\n${helps.main}`);
 } catch (e) {
   die(`${command}: ${e.message}`);
