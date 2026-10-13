@@ -1,0 +1,46 @@
+// Practice quiz: Reading: image layers and build caching
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: containers-cicd/containers-and-compose/image-layers-and-build-caching
+
+::o1 which instructions add layers::Which Dockerfile instructions change the image's files and so each add a layer? {
+=RUN, COPY and ADD #Correct. They change the filesystem, so each adds a layer.
+~ENV, EXPOSE and CMD #Not quite. These set image settings and add no files.
+~Only FROM #Not quite. FROM chooses the base image's layers; later RUN, COPY and ADD steps add more.
+~Every line, including comments #Not quite. Comments add nothing, and settings such as ENV add no files.
+}
+
+::o1 cascade::A Dockerfile has 8 steps. Step 4 now copies a changed file. Which steps can still be reused from the cache? {
+=Steps 1 to 3 only #Correct. A changed step invalidates its own cache and that of every later step.
+~Every step except step 4 #Not quite. Steps after a changed step are rebuilt too.
+~None; any change rebuilds the whole image #Not quite. Steps before the change stay cached.
+~Steps 5 to 8, because their lines did not change #Not quite. Later steps rebuild even when their own lines are unchanged.
+}
+
+::o2 good order::A Python service has requirements.txt and an app/ folder. Which order keeps the dependency install cached when only app/ code changes? {
+=COPY requirements.txt ., then RUN pip install -r requirements.txt, then COPY app/ ./app/ #Correct. The install comes before the frequently changing source copy.
+~COPY . ., then RUN pip install -r requirements.txt #Not quite. Any source change invalidates COPY . . and so reruns the install.
+~RUN pip install -r requirements.txt, then COPY requirements.txt . #Not quite. The install needs the file copied in first.
+~COPY app/ ./app/, then COPY requirements.txt ., then RUN pip install -r requirements.txt #Not quite. The app copy comes first, so a code change still reruns the install.
+}
+
+::o2 predict after source change::With COPY package.json package-lock.json ./, RUN npm ci, COPY . ., RUN npm run build, you change only a source file. Which steps run again? {
+=COPY . . and RUN npm run build #Correct. The first changed step is COPY . .; npm ci stays cached.
+~All four steps #Not quite. The package files did not change, so their copy and npm ci stay cached.
+~Only RUN npm run build #Not quite. COPY . . copied the changed file, so it runs again first.
+~Only RUN npm ci #Not quite. npm ci comes before the changed step and stays cached.
+}
+
+::o3 what to ignore::Which .dockerignore keeps unneeded and sensitive files out of a Node build context? {
+=node_modules, dist, .git and .env #Correct. Installed packages, old output, version control and local secrets stay out.
+~src and package.json #Not quite. The build needs both.
+~Dockerfile only #Not quite. That leaves .git, .env and build output in the context.
+~Nothing; COPY . . only copies what the app uses #Not quite. COPY . . copies everything in the context that is not ignored.
+}
+
+::o3 secret file::A project has a .env file with a local API key and a Dockerfile with COPY . .. What prevents the key from ending up in the image? {
+=Listing .env in .dockerignore #Correct. Ignored files are never sent to the builder, so COPY cannot copy them.
+~Listing .env in .gitignore #Not quite. .gitignore affects Git, not the Docker build context.
+~Deleting the container after it runs #Not quite. The key would already be inside the image.
+~Putting COPY . . last in the Dockerfile #Not quite. Order affects caching, not what is copied.
+}

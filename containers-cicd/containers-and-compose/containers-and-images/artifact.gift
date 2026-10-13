@@ -1,0 +1,53 @@
+// Practice quiz: Containers and images (Docker and Podman)
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: containers-cicd/containers-and-compose/containers-and-images
+
+::o1 change inside a running container::You open a shell in a running container and create a file there. What happens to the image the container was created from? {
+=Nothing; the file is in the container's own writable layer and the image stays unchanged #Correct. An image is read-only; each container writes to its own thin layer on top.
+~The image gains the file, so every new container from it has the file too #Not quite. Images never change once built; a new container starts from the unchanged image.
+~The image is copied, and the copy gets the file #Not quite. Containers share the read-only image; nothing is copied.
+~The write fails, because containers are read-only #Not quite. Containers can write; their writes go to their own writable layer.
+}
+
+::o1 stopped container::A container's main process exits and it was started without --rm. Which statement is true? {
+=It still exists as a stopped container until you remove it, and docker ps -a lists it #Correct. Stopped containers stay until docker rm removes them.
+~It is deleted automatically, together with its image #Not quite. Without --rm nothing is deleted, and the image is never deleted by stopping.
+~It becomes a new image #Not quite. Stopping does not turn a container into an image.
+~It keeps running in the background #Not quite. When the main process exits, the container stops.
+}
+
+::o2 read a run command::What does docker run -d --name cache redis\:8 do? {
+=Creates a new container named cache from the image redis\:8 and starts it in the background, printing its ID #Correct. -d detaches and prints the container ID; --name sets the name.
+~Starts an existing container named cache #Not quite. docker run always creates a new container; docker start starts an existing one.
+~Downloads the image and stops without creating a container #Not quite. run creates and starts a container; pulling the image is only a first step when it is missing.
+~Creates an image named cache #Not quite. --name names the container, not an image.
+}
+
+::o2 reuse a name::A container named web exists but is stopped. You run docker run -d --name web nginx\:alpine. What happens? {
+=It fails with a name conflict, because the stopped container still owns the name #Correct. Remove the old container or choose another name.
+~The stopped web container is restarted #Not quite. run never restarts an existing container.
+~The old container is replaced automatically #Not quite. Docker does not remove containers for you.
+~A second container named web is created #Not quite. Container names are unique.
+}
+
+::o2 effect of --rm::Which command leaves no container behind after its process exits? {
+=docker run --rm hello-world #Correct. --rm removes the container when it exits.
+~docker run hello-world #Not quite. Without --rm the exited container stays until docker rm.
+~docker run -d hello-world #Not quite. -d only runs it in the background; the exited container stays.
+~docker run --name temp hello-world #Not quite. A name does not make the container temporary.
+}
+
+::o3 Podman on macOS::A learner installs Podman on macOS and podman run fails because it cannot connect. What is the usual fix? {
+=Create and start the Linux virtual machine with podman machine init and podman machine start #Correct. On macOS and Windows, Podman runs containers inside a Linux VM.
+~Start the Podman daemon with a system service #Not quite. Podman does not use a long-running daemon; on a Mac it needs its Linux VM.
+~Install Docker, because Podman cannot run images built for Docker #Not quite. Both run the same OCI images.
+~Rewrite the command with different Podman-only subcommands #Not quite. The core build, run, ps and images commands match Docker's.
+}
+
+::o3 same images::An image was built with docker build. Can Podman run it? {
+=Yes; both follow the OCI image format, so the same image runs with podman run #Correct. Docker and Podman run the same OCI images.
+~No; Podman needs images built with podman build #Not quite. The image format is shared, so either tool can run it.
+~Only on Linux #Not quite. On macOS and Windows Podman runs it inside its Linux VM.
+~Only after converting it with a special command #Not quite. No conversion is needed.
+}
