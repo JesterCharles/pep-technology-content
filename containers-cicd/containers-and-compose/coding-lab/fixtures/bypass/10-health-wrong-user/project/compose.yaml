@@ -1,0 +1,26 @@
+services:
+  api:
+    build: ./backend
+    ports:
+      - "127.0.0.1:9090:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://store:5432/orders
+      SPRING_DATASOURCE_USERNAME: app
+      SPRING_DATASOURCE_PASSWORD: ${ORDERS_DB_PASSWORD}
+    depends_on:
+      store:
+        condition: service_healthy
+  store:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: orders
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${ORDERS_DB_PASSWORD}
+    volumes:
+      - orders-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d orders"]
+      interval: 5s
+      retries: 10
+volumes:
+  orders-data:

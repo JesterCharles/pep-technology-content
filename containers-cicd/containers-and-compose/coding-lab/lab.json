@@ -60,27 +60,78 @@
     "starterExpectation": "fail",
     "failingTests": [
       "backend Dockerfile has a named JDK build stage and a JRE runtime stage",
-      "backend Dockerfile copies pom.xml and downloads dependencies before copying src",
-      "backend runtime stage copies only the jar from the build stage",
-      "backend runtime stage starts the jar with ENTRYPOINT or CMD",
+      "backend Dockerfile downloads dependencies with go-offline before copying src, then packages",
+      "backend runtime stage copies only the packaged jar from the build stage",
+      "backend runtime stage starts the jar it copied",
       "compose.yaml defines the api service built from ./backend and a postgres:18 db service",
       "compose.yaml keeps database data in a declared named volume",
       "compose.yaml binds every published port to 127.0.0.1",
-      "compose.yaml takes the database password from ${VAR} or an env_file, never a literal",
-      "the local env file is ignored by Git and not tracked",
-      "api datasource URL uses the db service name, not localhost",
-      "db has a pg_isready healthcheck and api waits for service_healthy",
+      "both services get the database password from an existing local env file, never a literal",
+      "local env files are ignored by Git and not tracked",
+      "api datasource URL uses the db service name, container port and database name",
+      "db healthcheck runs pg_isready with the wired user and database, and api waits for service_healthy",
       "backend .dockerignore leaves out build output, version control and secrets",
       "frontend .dockerignore leaves out installed packages, build output, version control and secrets",
       "frontend Dockerfile builds with Node and serves with nginx",
       "frontend Dockerfile installs dependencies before copying the source",
-      "frontend nginx stage copies only dist from the build stage"
+      "frontend nginx stage copies only the built dist folder"
     ]
   },
   "fixtures": {
     "seed": 0,
     "files": [
-      "fixtures/.env.example"
+      "fixtures/.env.example",
+      "fixtures/bypass/01-backend-no-go-offline/case.json",
+      "fixtures/bypass/01-backend-no-go-offline/project/backend/Dockerfile",
+      "fixtures/bypass/02-backend-jar-wrong-folder/case.json",
+      "fixtures/bypass/02-backend-jar-wrong-folder/project/backend/Dockerfile",
+      "fixtures/bypass/03-backend-start-mismatch/case.json",
+      "fixtures/bypass/03-backend-start-mismatch/project/backend/Dockerfile",
+      "fixtures/bypass/04-frontend-dist-wrong-folder/case.json",
+      "fixtures/bypass/04-frontend-dist-wrong-folder/project/frontend/Dockerfile",
+      "fixtures/bypass/05-password-var-without-env/case.json",
+      "fixtures/bypass/05-password-var-without-env/project/.gitignore",
+      "fixtures/bypass/05-password-var-without-env/project/compose.yaml",
+      "fixtures/bypass/06-password-env-missing-key/case.json",
+      "fixtures/bypass/06-password-env-missing-key/project/.gitignore",
+      "fixtures/bypass/06-password-env-missing-key/project/compose.yaml",
+      "fixtures/bypass/06-password-env-missing-key/project/dotenv",
+      "fixtures/bypass/07-password-env-file-missing/case.json",
+      "fixtures/bypass/07-password-env-file-missing/project/.gitignore",
+      "fixtures/bypass/07-password-env-file-missing/project/compose.yaml",
+      "fixtures/bypass/07-password-env-file-missing/project/dotenv",
+      "fixtures/bypass/08-password-literal/case.json",
+      "fixtures/bypass/08-password-literal/project/.gitignore",
+      "fixtures/bypass/08-password-literal/project/compose.yaml",
+      "fixtures/bypass/08-password-literal/project/dotenv",
+      "fixtures/bypass/09-health-single-dollar/case.json",
+      "fixtures/bypass/09-health-single-dollar/project/.gitignore",
+      "fixtures/bypass/09-health-single-dollar/project/compose.yaml",
+      "fixtures/bypass/09-health-single-dollar/project/dotenv",
+      "fixtures/bypass/10-health-wrong-user/case.json",
+      "fixtures/bypass/10-health-wrong-user/project/.gitignore",
+      "fixtures/bypass/10-health-wrong-user/project/compose.yaml",
+      "fixtures/bypass/10-health-wrong-user/project/dotenv",
+      "fixtures/bypass/11-health-no-wiring/case.json",
+      "fixtures/bypass/11-health-no-wiring/project/.gitignore",
+      "fixtures/bypass/11-health-no-wiring/project/compose.yaml",
+      "fixtures/bypass/11-health-no-wiring/project/dotenv",
+      "fixtures/bypass/12-url-wrong-database/case.json",
+      "fixtures/bypass/12-url-wrong-database/project/.gitignore",
+      "fixtures/bypass/12-url-wrong-database/project/compose.yaml",
+      "fixtures/bypass/12-url-wrong-database/project/dotenv",
+      "fixtures/bypass/13-url-host-port/case.json",
+      "fixtures/bypass/13-url-host-port/project/.gitignore",
+      "fixtures/bypass/13-url-host-port/project/compose.yaml",
+      "fixtures/bypass/13-url-host-port/project/dotenv",
+      "fixtures/bypass/14-url-localhost/case.json",
+      "fixtures/bypass/14-url-localhost/project/.gitignore",
+      "fixtures/bypass/14-url-localhost/project/compose.yaml",
+      "fixtures/bypass/14-url-localhost/project/dotenv",
+      "fixtures/bypass/15-envfile-not-ignored/case.json",
+      "fixtures/bypass/15-envfile-not-ignored/project/.gitignore",
+      "fixtures/bypass/15-envfile-not-ignored/project/compose.yaml",
+      "fixtures/bypass/15-envfile-not-ignored/project/dotenv"
     ]
   },
   "expectedOutput": "expected/solved-summary.txt",
@@ -92,7 +143,9 @@
     "notes": "Delete tests/node_modules (created by npm ci) and starter/.env (your disposable local password file). The lab creates no database, image, container or volume: nothing runs a container engine."
   },
   "minutes": {
-    "standard": 75
+    "standard-s36": 40,
+    "standard-s37": 35,
+    "standard-worst-required": 95
   },
   "trackRequirement": {
     "standard": "required",
@@ -109,14 +162,14 @@
       "source": "https://github.com/apache/maven-wrapper/blob/maven-wrapper-3.3.4/maven-wrapper-distribution/src/resources/only-mvnw (tag commit c82bcee2275b9ee2afd0fab17fdec05e1c6f67aa)"
     },
     {
-      "item": "yaml 2.8.1, installed by npm ci from tests/package-lock.json, not committed",
+      "item": "yaml 2.9.1, installed by npm ci from tests/package-lock.json, not committed",
       "license": "ISC",
-      "source": "https://www.npmjs.com/package/yaml/v/2.8.1"
+      "source": "https://www.npmjs.com/package/yaml/v/2.9.1"
     },
     {
-      "item": "vite 7.1.5 and its dependencies, pinned in starter/frontend/package-lock.json and installed only inside the learner image build, not committed",
+      "item": "vite 7.3.6 and its dependencies, pinned in starter/frontend/package-lock.json and installed only inside the learner image build, not committed",
       "license": "MIT",
-      "source": "https://www.npmjs.com/package/vite/v/7.1.5"
+      "source": "https://www.npmjs.com/package/vite/v/7.3.6"
     }
   ]
 }

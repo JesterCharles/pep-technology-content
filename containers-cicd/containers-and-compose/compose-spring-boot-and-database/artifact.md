@@ -18,7 +18,9 @@ Practice prediction, not scored.
 
 `environment` sets variables. Spring Boot reads `SPRING_DATASOURCE_URL`, `_USERNAME` and `_PASSWORD`. Write `${DB_PASSWORD}` and Compose fills it from a `.env` file beside `compose.yaml`, listed in `.gitignore`.
 
-This disposable value only wires local development; production uses Compose secrets.
+One networking rule now, the details next topic: inside a container, `localhost` is that container itself. Compose lets one service reach another by its service name and container port, so the API's URL names `db:5432`, then the database name.
+
+The password value is disposable and only wires local development; production uses Compose secrets.
 
 ### Up, ps, down
 
@@ -102,7 +104,7 @@ Prediction (practice, not scored): a stack with an API and PostgreSQL storing da
 
 ### explore
 
-Activity: complete compose.yaml. api: build: ./backend; ports: "127.0.0.1:8080:8080"; environment SPRING_DATASOURCE_URL jdbc:postgresql://db:5432/shop, SPRING_DATASOURCE_USERNAME shop, SPRING_DATASOURCE_PASSWORD ${DB_PASSWORD}. db: image: postgres:18; environment POSTGRES_DB shop, POSTGRES_USER shop, POSTGRES_PASSWORD ${DB_PASSWORD}; volumes - pgdata:/var/lib/postgresql. Top level: volumes: pgdata:. Wrong choices: image: ./backend (image names a ready image, not a folder); "8080:8080" (every host address); a literal password in the file; no volume (data lost with the container).
+Activity: complete compose.yaml. api: build: ./backend; ports: "127.0.0.1:8080:8080"; environment SPRING_DATASOURCE_URL jdbc:postgresql://db:5432/shop (db is the database service name, 5432 its container port, shop the database POSTGRES_DB creates; localhost would be the api container itself), SPRING_DATASOURCE_USERNAME shop, SPRING_DATASOURCE_PASSWORD ${DB_PASSWORD}. db: image: postgres:18; environment POSTGRES_DB shop, POSTGRES_USER shop, POSTGRES_PASSWORD ${DB_PASSWORD}; volumes - pgdata:/var/lib/postgresql. Top level: volumes: pgdata:. Wrong choices: image: ./backend (image names a ready image, not a folder); "8080:8080" (every host address); a literal password in the file; no volume (data lost with the container).
 
 ### terminal
 

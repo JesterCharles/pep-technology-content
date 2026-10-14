@@ -30,9 +30,9 @@ The final stage starts `FROM nginx:alpine`, a web server that serves files from 
 
 A stage left behind adds nothing to the image. Only the final stage's base layers and what you copy into it ship.
 
-Multi-stage back-end build: what ships Two Dockerfile stages: the project goes into stage build; only the jar is copied into the final stage. The caption below describes every part. Project folder mvnw, pom.xml, src/ JDK + Maven wrapper compile and package Maven cache downloaded dependencies target/*.jar the built jar app.jar ENTRYPOINT java -jar Java runtime (JRE) from the base image COPY go-offline package COPY --from=build Stage build: eclipse-temurin:25-jdk (left behind) Final stage: eclipse-temurin:25-jre (the image)
+Multi-stage back-end build: what ships One column, top to bottom: the project folder is copied into the build stage, which packages a jar; only that jar is copied with COPY --from=build into the final stage, the image. The caption below describes every part. Project folder mvnw, pom.xml, src/ JDK, Maven cache, source left behind target/*.jar packaged, then copied out app.jar ships; ENTRYPOINT java -jar Java runtime (JRE) ships: the final base image COPY package COPY --from=build Build stage Final stage
 
-Diagram in words: the project folder (mvnw, `pom.xml`, `src/`) is copied into stage build on `eclipse-temurin:25-jdk`. There the JDK and Maven wrapper fill the Maven cache and package `target/*.jar`. Only that jar crosses, with `COPY --from=build`, into the final stage on `eclipse-temurin:25-jre`, as `app.jar`. The JDK, cache and source stay behind.
+Diagram in words, top to bottom: the project folder (`mvnw`, `pom.xml`, `src/`) is copied into the build stage, based on `eclipse-temurin:25-jdk`. There the JDK and Maven wrapper fill the Maven cache and package `target/*.jar`. Only that jar crosses, with `COPY --from=build`, into the final stage, based on `eclipse-temurin:25-jre`, as `app.jar`, which `ENTRYPOINT java -jar` starts. The JDK, the Maven cache and the source stay behind in the build stage.
 
 So compilers, package caches and source files never reach production: a smaller download, fewer tools for an attacker, and the same running app.
 

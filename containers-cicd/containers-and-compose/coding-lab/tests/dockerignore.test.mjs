@@ -1,15 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ignoreEntries } from './lab.mjs';
-
-const missing = (rel, need) => { const have = new Set(ignoreEntries(rel)); return need.filter((n) => !have.has(n)); };
+import { check } from './lab.mjs';
 
 test('backend .dockerignore leaves out build output, version control and secrets', () => {
-  const m = missing('backend/.dockerignore', ['target', '.git', '.env']);
-  assert.deepEqual(m, [], 'backend/.dockerignore must list target, .git and .env');
+  const problem = check('ignore-backend');
+  assert.equal(problem, null, problem ?? undefined);
 });
 
 test('frontend .dockerignore leaves out installed packages, build output, version control and secrets', () => {
-  const m = missing('frontend/.dockerignore', ['node_modules', 'dist', '.git', '.env']);
-  assert.deepEqual(m, [], 'frontend/.dockerignore must list node_modules, dist, .git and .env');
+  const problem = check('ignore-frontend');
+  assert.equal(problem, null, problem ?? undefined);
 });
