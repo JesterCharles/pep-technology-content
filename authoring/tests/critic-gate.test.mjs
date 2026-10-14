@@ -189,7 +189,7 @@ test("T25 leaves an explicitly open high recheck open", async () => {
   assert.match(result.stderr, /high finding finding-1 remains open/);
 });
 
-test("T25 lets a later current resolved recheck supersede an earlier open one", async () => {
+test("T02 and T25 preserve a topic recheck chain and close from its current report", async () => {
   const { root, digest } = await fixture();
   const oldDigest = "0".repeat(64);
   const original = report("education", oldDigest, { findings: [highFinding(oldDigest)] });
@@ -214,9 +214,22 @@ test("T25 lets a later current resolved recheck supersede an earlier open one", 
     reconciliation(digest, [decision("accept")]),
     [
       ["critic-education-recheck.json", makeRecheck(oldDigest, "open", "Still present.")],
-      ["second-critic-education-recheck.json", makeRecheck(digest, "resolved", "Corrected.")],
+      ["focused-final-critic-education-recheck.json", makeRecheck(digest, "resolved", "Corrected.")],
     ],
   );
+
+  const treeResult = check(root, "T02");
+  assert.equal(treeResult.status, 0, treeResult.stderr);
+
+  const lock = await createModuleLock(root, "demo-course", "demo-module");
+  const lockedEvidence = new Set(lock.evidenceBindings.map((binding) => binding.evidencePath));
+  assert.ok(lockedEvidence.has(
+    "authoring/evidence/demo-course/demo-module/demo-topic/critic-education-recheck.json",
+  ));
+  assert.ok(lockedEvidence.has(
+    "authoring/evidence/demo-course/demo-module/demo-topic/focused-final-critic-education-recheck.json",
+  ));
+
   const result = check(root);
   assert.equal(result.status, 0, result.stderr);
 });
@@ -297,7 +310,7 @@ test("T25 requires every finding to be reconciled", async () => {
   assert.match(result.stderr, /finding finding-1 is not reconciled/);
 });
 
-test("T25 requires recheck.of to identify a same-role original report", async () => {
+test("T25 requires prefixed recheck.of to identify a same-role original report", async () => {
   const { root, digest } = await fixture();
   const recheck = report("education", digest, {
     recheck: {
@@ -310,11 +323,31 @@ test("T25 requires recheck.of to identify a same-role original report", async ()
     report("education", digest),
     report("sme", digest),
     null,
-    [["critic-education-recheck.json", recheck]],
+    [["focused-critic-education-recheck.json", recheck]],
   );
   const result = check(root);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /existing education critic report in this scope/);
+});
+
+test("T25 rejects a role-mismatched prefixed topic recheck", async () => {
+  const { root, digest } = await fixture();
+  const recheck = report("sme", digest, {
+    recheck: {
+      of: "authoring/evidence/demo-course/demo-module/demo-topic/critic-sme.json",
+      items: [],
+    },
+  });
+  await writeTopicEvidence(
+    root,
+    report("education", digest),
+    report("sme", digest),
+    null,
+    [["focused-critic-education-recheck.json", recheck]],
+  );
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /filename role education differs from role sme/);
 });
 
 test("T25 treats reject-with-evidence as closed", async () => {

@@ -124,18 +124,32 @@ test("T01 accepts objectiveFormats and prefixed recheck evidence", async () => {
   assert.equal(result.status, 0, result.stderr);
 });
 
-test("T02 rejects malformed review evidence filenames", async () => {
-  const root = await schemaFixture();
-  await writeJson(
-    path.join(
-      root,
-      "authoring/evidence/demo-course/demo-module/demo-topic/critic-education-final.json",
-    ),
-    {},
-  );
-  const result = check(root, "T02");
-  assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /invalid review evidence filename or location/);
+test("T02 rejects invalid prefixed topic review filenames and locations", async (t) => {
+  const invalidPaths = [
+    "critic-education-final.json",
+    "Final-critic-education-recheck.json",
+    "focused--critic-education-recheck.json",
+    "focused_critic-education-recheck.json",
+    "focused-critic-education.json",
+    "focused-critic-legal-recheck.json",
+    "nested/critic-education-recheck.json",
+  ];
+  for (const invalidPath of invalidPaths) {
+    await t.test(invalidPath, async () => {
+      const root = await schemaFixture();
+      await writeJson(
+        path.join(
+          root,
+          "authoring/evidence/demo-course/demo-module/demo-topic",
+          invalidPath,
+        ),
+        {},
+      );
+      const result = check(root, "T02");
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /invalid review evidence filename or location/);
+    });
+  }
 });
 
 test("T01 accepts a course-qualified cross-course objective", async () => {
