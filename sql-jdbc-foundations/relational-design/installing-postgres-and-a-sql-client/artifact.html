@@ -7,7 +7,7 @@
 <meta name="pep:module" content="relational-design">
 <meta name="pep:topic" content="Reading: Installing Postgres and a SQL client">
 <meta name="pep:topic-id" content="installing-postgres-and-a-sql-client">
-<meta name="pep:budget-minutes" content="13">
+<meta name="pep:budget-minutes" content="15">
 <meta name="pep:source" content="authoring/evidence/sql-jdbc-foundations/relational-design/installing-postgres-and-a-sql-client/sources.json">
 <title>Reading: Installing Postgres and a SQL client · Relational Design</title>
 <style>
@@ -103,6 +103,9 @@ h1{margin:0;font-size:26px;line-height:32px;letter-spacing:-.01em}
 .opt .why{display:block;flex:1 0 100%;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
 .recap ul{padding-left:20px}
 .recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.recap .route ol,.real-setup>ol{padding-left:20px}
+.real-setup h2{margin-top:var(--s3)}
+.recap pre.sql{margin:var(--s1) 0}
 .recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
 .feedback details{margin:var(--s1) 0}
 .recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
@@ -228,7 +231,7 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
       <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart this activity</button>
       <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
     </div>
-    <ul class="meta"><li>Relational Design, topic 1 of 5</li><li>About 13 minutes</li><li>4 activities</li></ul>
+    <ul class="meta"><li>Relational Design, topic 1 of 5</li><li>About 15 minutes</li><li>4 activities</li></ul>
     <details class="objectives" data-pep-objectives>
       <summary>What you'll be able to do</summary>
       <ul>
@@ -243,7 +246,7 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
       <section id="current-teaching" class="teach" aria-label="Current teaching">
 <div data-step="1">
   <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
-  <p>You installed PostgreSQL and opened a terminal. Before any teaching, guess where your SQL goes.</p>
+  <p>First you practise in a simulated terminal; at the end you install a real server. Before any teaching, guess where your SQL goes.</p>
 </div>
 <div data-step="2" data-pep-teaching>
   <h2 id="teach-2-h" tabindex="-1">Server, database, client</h2>
@@ -275,6 +278,44 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
     <li><code>psql practice</code> connects; <code>SELECT version();</code> asks the server which version it runs. SQL runs at the semicolon.</li>
     <li><code>\l</code> databases, <code>\dt</code> tables, <code>\d name</code> one table, <code>\q</code> quit.</li>
   </ul>
+  <div class="real-setup">
+  <h2 id="real-h">Now on your own computer</h2>
+  <p>The terminal above was a simulation. Install a real server: open the steps for your system.</p>
+  <details class="route"><summary>macOS: Postgres.app</summary><ol>
+    <li><strong>Where:</strong> postgresapp.com, linked from the PostgreSQL download page for macOS.</li>
+    <li><strong>What:</strong> move Postgres.app into Applications, open it and select <strong>Initialize</strong>. Then put its tools on your path:<pre class="sql">sudo mkdir -p /etc/paths.d &amp;&amp; echo /Applications/Postgres.app/Contents/Versions/latest/bin | sudo tee /etc/paths.d/postgresapp</pre></li>
+    <li><strong>Expect:</strong> the app shows a running server on port 5432. Your PostgreSQL user is your macOS user name, with no password. If macOS asks whether Terminal may connect, allow it.</li>
+    <li><strong>Done:</strong> in a new terminal, the checks below pass.</li>
+  </ol></details>
+  <details class="route"><summary>Windows: the installer</summary><ol>
+    <li><strong>Where:</strong> the Windows installer linked from the PostgreSQL download page for Windows.</li>
+    <li><strong>What:</strong> run it with the default components and port 5432. Choose a password for the superuser <code>postgres</code> and keep it. Then add <code>C:\Program Files\PostgreSQL\18\bin</code> to your Path environment variable.</li>
+    <li><strong>Expect:</strong> the server runs as a Windows service that starts with Windows.</li>
+    <li><strong>Done:</strong> in a new terminal, the checks below pass with <code>-U postgres</code> added and that password.</li>
+  </ol></details>
+  <details class="route"><summary>Linux: Ubuntu or Debian</summary><ol>
+    <li><strong>Where:</strong> a terminal. Other distributions: see the PostgreSQL download page for Linux.</li>
+    <li><strong>What:</strong> install the server, then create a PostgreSQL user with your name that may create databases:<pre class="sql">sudo apt install postgresql
+sudo -u postgres createuser --createdb --pwprompt "$USER"</pre></li>
+    <li><strong>Expect:</strong> the server starts after installing; <code>createuser</code> asks for your new password twice.</li>
+    <li><strong>Done:</strong> the checks below pass with that password.</li>
+  </ol></details>
+  <p><strong>Check client, server and connection.</strong></p>
+  <ol>
+    <li><strong>Where:</strong> a new terminal.</li>
+    <li><strong>What:</strong> run these three commands:<pre class="sql">psql --version
+pg_isready -h localhost -p 5432
+psql -h localhost -d postgres -c "SELECT version();"</pre></li>
+    <li><strong>Expect:</strong> <code>psql (PostgreSQL) 18.x</code> proves only the client exists. <code>accepting connections</code> proves the server runs. The last command prints one row starting <code>PostgreSQL 18</code>.</li>
+    <li><strong>Done:</strong> that version row is your first real connection.</li>
+  </ol>
+  <p><strong>If a check fails:</strong></p>
+  <ul>
+    <li><strong>Server not running</strong>: <code>Connection refused</code>, or <code>no response</code>. Start it: open Postgres.app and select Start; on Windows, start the <code>postgresql</code> service in Services; on Linux, run <code>sudo systemctl start postgresql</code>.</li>
+    <li><strong>Wrong user or database</strong>: <code>role "ana" does not exist</code> or <code>database "ana" does not exist</code>. Name ones that exist, such as <code>-U postgres -d postgres</code>.</li>
+    <li><strong>Authentication</strong>: <code>password authentication failed</code>. Retype the password you chose and check the user name. On Linux, <code>Peer authentication failed</code> means <code>-h localhost</code> is missing.</li>
+  </ul>
+  </div>
   <details data-section-skip>
     <summary>Cheat sheet</summary>
     <table>
@@ -284,15 +325,21 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
       <tr><td><code>SELECT version();</code></td><td>version of the server you are connected to</td></tr>
       <tr><td><code>\l</code> / <code>\dt</code> / <code>\d name</code> / <code>\q</code></td><td>databases / tables / describe one table / quit</td></tr>
     </table>
-    <p>Installing: the PostgreSQL download page lists packages and installers for Linux, macOS, Windows and other systems. Follow the one for your system, then check that <code>psql --version</code> works in a new terminal. Without a database name, psql tries a database named after your user name.</p>
+    <p>Without a database name, psql tries a database named after your user name.</p>
   </details>
   <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live PostgreSQL pages on 2026-10-14 (documentation for PostgreSQL 18).</p><ul>
     <li><a href="https://www.postgresql.org/download/" rel="noopener">PostgreSQL: Downloads</a></li>
+    <li><a href="https://www.postgresql.org/download/macosx/" rel="noopener">PostgreSQL: macOS packages (Postgres.app)</a></li>
+    <li><a href="https://www.postgresql.org/download/windows/" rel="noopener">PostgreSQL: Windows installers</a></li>
+    <li><a href="https://www.postgresql.org/download/linux/ubuntu/" rel="noopener">PostgreSQL: Linux downloads (Ubuntu)</a></li>
     <li><a href="https://www.postgresql.org/docs/current/tutorial-install.html" rel="noopener">PostgreSQL 18 tutorial: 1.1 Installation</a></li>
     <li><a href="https://www.postgresql.org/docs/current/tutorial-createdb.html" rel="noopener">PostgreSQL 18 tutorial: 1.3 Creating a Database</a></li>
     <li><a href="https://www.postgresql.org/docs/current/tutorial-accessdb.html" rel="noopener">PostgreSQL 18 tutorial: 1.4 Accessing a Database</a></li>
     <li><a href="https://www.postgresql.org/docs/current/app-psql.html" rel="noopener">PostgreSQL 18 reference: psql</a></li>
-  </ul><p>The practice terminal is a simulation. Its version text copies the PostgreSQL tutorial's example; yours names your own version and platform. The <code>\l</code> locale columns depend on how your server was set up.</p></details>
+    <li><a href="https://www.postgresql.org/docs/current/app-pg-isready.html" rel="noopener">PostgreSQL 18 reference: pg_isready</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/server-start.html" rel="noopener">PostgreSQL 18: 18.3 Starting the Database Server</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/client-authentication-problems.html" rel="noopener">PostgreSQL 18: Authentication Problems</a></li>
+  </ul><p>The installer steps (button names, paths, the service and the first-connection prompt) describe the current installers and packages, which can change; their download pages are the reference. The practice terminal is a simulation. Its version text copies the PostgreSQL tutorial's example; yours names your own version and platform. The <code>\l</code> locale columns depend on how your server was set up.</p></details>
   <p class="next-topic">Next topic: <a href="../tables-keys-and-relationships/artifact.html" rel="noopener">Tables, keys and relationships</a></p>
 </div>
       </section>

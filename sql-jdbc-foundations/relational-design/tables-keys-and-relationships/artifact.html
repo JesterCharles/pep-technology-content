@@ -231,7 +231,7 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
 </div>
 <div data-step="3" data-pep-teaching>
   <h2 id="teach-3-h" tabindex="-1">Foreign key: a link that must point somewhere</h2>
-  <p><code>books.author_id</code> is a <strong>foreign key</strong>: it <code>REFERENCES authors (id)</code>. Every value in it must match an existing author. The table holding the foreign key is the child; the referenced table is the parent.</p>
+  <p><code>books.author_id</code> is a <strong>foreign key</strong>: it <code>REFERENCES authors (id)</code>. Every non-null value in it must match an existing author; a null author_id is not checked. Add <code>NOT NULL</code> to make the link mandatory, so every book must have an author. The table holding the foreign key is the child; the referenced table is the parent.</p>
   <ul>
     <li>A child row that points at a missing parent is rejected.</li>
     <li>By default, deleting a parent that a child still points at is rejected. Delete or change the child first.</li>
@@ -250,20 +250,20 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
   <h2 id="teach-6-h" tabindex="-1">Recap</h2>
   <ul>
     <li>A primary key identifies each row, so its values must be unique and never null.</li>
-    <li>A foreign key must match an existing parent row: inserting an orphan child is rejected, and so is deleting a parent that children still reference (the default).</li>
+    <li>A non-null foreign key value must match an existing parent row (add <code>NOT NULL</code> to make the link mandatory): inserting an orphan child is rejected, and so is deleting a parent that children still reference (the default).</li>
     <li>One-to-many puts the foreign key on the many side; many-to-many needs a junction table with two foreign keys.</li>
   </ul>
   <details data-section-skip>
     <summary>Cheat sheet</summary>
     <table>
       <tr><td><code>id integer PRIMARY KEY</code></td><td>unique and not null</td></tr>
-      <tr><td><code>author_id integer REFERENCES authors (id)</code></td><td>must match an existing authors.id</td></tr>
+      <tr><td><code>author_id integer REFERENCES authors (id)</code></td><td>if not null, must match an existing authors.id</td></tr>
       <tr><td><code>ERROR: duplicate key value violates unique constraint "authors_pkey"</code></td><td>repeated primary key</td></tr>
       <tr><td><code>ERROR: insert or update on table "books" violates foreign key constraint</code></td><td>child points at a missing parent</td></tr>
       <tr><td><code>ERROR: update or delete on table "authors" violates foreign key constraint</code></td><td>parent still referenced</td></tr>
       <tr><td><code>loans (member_id, book_id)</code></td><td>junction table for many-to-many</td></tr>
     </table>
-    <p>Options you will meet later: <code>ON DELETE CASCADE</code> deletes the children with the parent, and a foreign key column that is null is not checked, so add <code>NOT NULL</code> when every child must have a parent.</p>
+    <p>Options you will meet later: <code>ON DELETE CASCADE</code> deletes the children with the parent.</p>
   </details>
   <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live PostgreSQL 18 pages on 2026-10-14. Error messages were copied from a real PostgreSQL 18 server.</p><ul>
     <li><a href="https://www.postgresql.org/docs/current/ddl-basics.html" rel="noopener">PostgreSQL 18: 5.1 Table Basics</a></li>
@@ -324,7 +324,7 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
 </figure>
       <section id="current-control" class="control" aria-label="Your turn">
 <div data-step="1">
-  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): you insert a book with author_id 4 and no author 4 exists. Options: PostgreSQL rejects the insert with an error; it inserts the book with an empty author; it creates author 4 automatically; it inserts the book and shows a warning. Answer: it rejects the insert. The foreign key requires every author_id to match an existing authors.id, so nothing is stored and nothing is created.">
+  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): you insert a book with author_id 4 and no author 4 exists. Options: PostgreSQL rejects the insert with an error; it inserts the book with an empty author; it creates author 4 automatically; it inserts the book and shows a warning. Answer: it rejects the insert. The foreign key requires every non-null author_id to match an existing authors.id, so nothing is stored and nothing is created.">
     <legend>Prediction</legend>
     <div class="opts"><label class="opt"><input type="radio" name="predict" value="a"> <span class="ot">Rejects the insert with an error</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span class="ot">Inserts the book with an empty author</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span class="ot">Creates author 4 automatically</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span class="ot">Inserts it and shows a warning</span></label></div>
   </fieldset>

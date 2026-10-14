@@ -10,7 +10,7 @@
 
 ### Start with a guess
 
-You installed PostgreSQL and opened a terminal. Before any teaching, guess where your SQL goes.
+First you practise in a simulated terminal; at the end you install a real server. Before any teaching, guess where your SQL goes.
 
 ### Server, database, client
 
@@ -47,6 +47,56 @@ Connection: none. A dashed arrow means psql is not connected.
 - `psql practice` connects; `SELECT version();` asks the server which version it runs. SQL runs at the semicolon.
 - `\l` databases, `\dt` tables, `\d name` one table, `\q` quit.
 
+### Now on your own computer
+
+The terminal above was a simulation. Install a real server: open the steps for your system.
+
+macOS: Postgres.app
+
+1. Where: postgresapp.com, linked from the PostgreSQL download page for macOS.
+2. What: move Postgres.app into Applications, open it and select Initialize. Then put its tools on your path:
+   ```
+   sudo mkdir -p /etc/paths.d && echo /Applications/Postgres.app/Contents/Versions/latest/bin | sudo tee /etc/paths.d/postgresapp
+   ```
+3. Expect: the app shows a running server on port 5432. Your PostgreSQL user is your macOS user name, with no password. If macOS asks whether Terminal may connect, allow it.
+4. Done: in a new terminal, the checks below pass.
+
+Windows: the installer
+
+1. Where: the Windows installer linked from the PostgreSQL download page for Windows.
+2. What: run it with the default components and port 5432. Choose a password for the superuser `postgres` and keep it. Then add `C:\Program Files\PostgreSQL\18\bin` to your Path environment variable.
+3. Expect: the server runs as a Windows service that starts with Windows.
+4. Done: in a new terminal, the checks below pass with `-U postgres` added and that password.
+
+Linux: Ubuntu or Debian
+
+1. Where: a terminal. Other distributions: see the PostgreSQL download page for Linux.
+2. What: install the server, then create a PostgreSQL user with your name that may create databases:
+   ```
+   sudo apt install postgresql
+   sudo -u postgres createuser --createdb --pwprompt "$USER"
+   ```
+3. Expect: the server starts after installing; `createuser` asks for your new password twice.
+4. Done: the checks below pass with that password.
+
+Check client, server and connection.
+
+1. Where: a new terminal.
+2. What: run these three commands:
+   ```
+   psql --version
+   pg_isready -h localhost -p 5432
+   psql -h localhost -d postgres -c "SELECT version();"
+   ```
+3. Expect: `psql (PostgreSQL) 18.x` proves only the client exists. `accepting connections` proves the server runs. The last command prints one row starting `PostgreSQL 18`.
+4. Done: that version row is your first real connection.
+
+If a check fails:
+
+- Server not running: `Connection refused`, or `no response`. Start it: open Postgres.app and select Start; on Windows, start the `postgresql` service in Services; on Linux, run `sudo systemctl start postgresql`.
+- Wrong user or database: `role "ana" does not exist` or `database "ana" does not exist`. Name ones that exist, such as `-U postgres -d postgres`.
+- Authentication: `password authentication failed`. Retype the password you chose and check the user name. On Linux, `Peer authentication failed` means `-h localhost` is missing.
+
 Next topic: Tables, keys and relationships
 
 ## Cheat sheet
@@ -59,19 +109,25 @@ Next topic: Tables, keys and relationships
 | `SELECT version();` | version of the server you are connected to |
 | `\l` / `\dt` / `\d name` / `\q` | databases / tables / describe one table / quit |
 
-Installing: the PostgreSQL download page lists packages and installers for Linux, macOS, Windows and other systems. Follow the one for your system, then check that `psql --version` works in a new terminal. Without a database name, psql tries a database named after your user name.
+Without a database name, psql tries a database named after your user name.
 
 ## Sources
 
 Checked against these live PostgreSQL pages on 2026-10-14 (documentation for PostgreSQL 18).
 
 - PostgreSQL: Downloads
+- PostgreSQL: macOS packages (Postgres.app)
+- PostgreSQL: Windows installers
+- PostgreSQL: Linux downloads (Ubuntu)
 - PostgreSQL 18 tutorial: 1.1 Installation
 - PostgreSQL 18 tutorial: 1.3 Creating a Database
 - PostgreSQL 18 tutorial: 1.4 Accessing a Database
 - PostgreSQL 18 reference: psql
+- PostgreSQL 18 reference: pg_isready
+- PostgreSQL 18: 18.3 Starting the Database Server
+- PostgreSQL 18: Authentication Problems
 
-The practice terminal is a simulation. Its version text copies the PostgreSQL tutorial's example; yours names your own version and platform. The `\l` locale columns depend on how your server was set up.
+The installer steps (button names, paths, the service and the first-connection prompt) describe the current installers and packages, which can change; their download pages are the reference. The practice terminal is a simulation. Its version text copies the PostgreSQL tutorial's example; yours names your own version and platform. The `\l` locale columns depend on how your server was set up.
 
 ## Static interaction alternatives
 

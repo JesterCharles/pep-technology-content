@@ -20,7 +20,7 @@ PostgreSQL requires primary key values to be unique and not null: two rows with 
 
 ### Foreign key: a link that must point somewhere
 
-`books.author_id` is a foreign key: it `REFERENCES authors (id)`. Every value in it must match an existing author. The table holding the foreign key is the child; the referenced table is the parent.
+`books.author_id` is a foreign key: it `REFERENCES authors (id)`. Every non-null value in it must match an existing author; a null author_id is not checked. Add `NOT NULL` to make the link mandatory, so every book must have an author. The table holding the foreign key is the child; the referenced table is the parent.
 
 - A child row that points at a missing parent is rejected.
 - By default, deleting a parent that a child still points at is rejected. Delete or change the child first.
@@ -55,7 +55,7 @@ Text version: authors one-to-many books, through books.author_id. Members and bo
 ## Recap
 
 - A primary key identifies each row, so its values must be unique and never null.
-- A foreign key must match an existing parent row: inserting an orphan child is rejected, and so is deleting a parent that children still reference (the default).
+- A non-null foreign key value must match an existing parent row (add `NOT NULL` to make the link mandatory): inserting an orphan child is rejected, and so is deleting a parent that children still reference (the default).
 - One-to-many puts the foreign key on the many side; many-to-many needs a junction table with two foreign keys.
 
 Next topic: Designing tables from a user story
@@ -65,13 +65,13 @@ Next topic: Designing tables from a user story
 |  |  |
 | --- | --- |
 | `id integer PRIMARY KEY` | unique and not null |
-| `author_id integer REFERENCES authors (id)` | must match an existing authors.id |
+| `author_id integer REFERENCES authors (id)` | if not null, must match an existing authors.id |
 | `ERROR: duplicate key value violates unique constraint "authors_pkey"` | repeated primary key |
 | `ERROR: insert or update on table "books" violates foreign key constraint` | child points at a missing parent |
 | `ERROR: update or delete on table "authors" violates foreign key constraint` | parent still referenced |
 | `loans (member_id, book_id)` | junction table for many-to-many |
 
-Options you will meet later: `ON DELETE CASCADE` deletes the children with the parent, and a foreign key column that is null is not checked, so add `NOT NULL` when every child must have a parent.
+Options you will meet later: `ON DELETE CASCADE` deletes the children with the parent.
 
 ## Sources
 
@@ -85,7 +85,7 @@ Checked against these live PostgreSQL 18 pages on 2026-10-14. Error messages wer
 
 ### predict
 
-Prediction (practice, not scored): you insert a book with author_id 4 and no author 4 exists. Options: PostgreSQL rejects the insert with an error; it inserts the book with an empty author; it creates author 4 automatically; it inserts the book and shows a warning. Answer: it rejects the insert. The foreign key requires every author_id to match an existing authors.id, so nothing is stored and nothing is created.
+Prediction (practice, not scored): you insert a book with author_id 4 and no author 4 exists. Options: PostgreSQL rejects the insert with an error; it inserts the book with an empty author; it creates author 4 automatically; it inserts the book and shows a warning. Answer: it rejects the insert. The foreign key requires every non-null author_id to match an existing authors.id, so nothing is stored and nothing is created.
 
 ### explore
 

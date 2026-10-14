@@ -1,17 +1,17 @@
 package relational;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.sql.Statement;
+import java.util.Set;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -22,10 +22,17 @@ import org.junit.jupiter.api.TestMethodOrder;
 
 /**
  * Public tests for the relational design lab.
+ *
+ * The tests check behaviour against the user story's acceptance criteria: which inserts and deletes
+ * PostgreSQL accepts or rejects, and which values it stores. Any suitable design passes; the tests do
+ * not look at constraint names, statement layout or one particular spelling of a type.
  * Each test runs inside a transaction that is rolled back, so tests never see each other's rows.
  */
 @TestMethodOrder(MethodOrderer.MethodName.class)
 class SchemaTest {
+    private static final Set<String> WHOLE_NUMBER = Set.of("smallint", "integer", "bigint");
+    private static final Set<String> CHARACTERS = Set.of("text", "character varying");
+
     private static Connection db;
     private static String schemaError;
 
@@ -55,46 +62,60 @@ class SchemaTest {
 
     // ---------- helpers ----------
 
-    private static void run(String sql) {
+    private static void accepted(String sql, String criterion) {
         try (Statement s = db.createStatement()) {
             s.execute(sql);
         } catch (SQLException e) {
-            fail("This statement should be accepted, but PostgreSQL rejected it:\n  " + sql + "\n  " + e.getMessage());
+            fail(criterion + "\n  This statement should be accepted, but PostgreSQL rejected it:\n  " + sql + "\n  " + e.getMessage());
         }
     }
 
-    /** Runs a statement that must be rejected with the given SQLSTATE (the kind of rule). */
-    private static void rejected(String sql, String sqlState, String rule) throws SQLException {
+    /** Runs a statement that must be rejected with one of the given SQLSTATEs (the kind of rule broken). */
+    private static void rejected(String sql, Set<String> sqlStates, String criterion) throws SQLException {
         Savepoint sp = db.setSavepoint();
         try (Statement s = db.createStatement()) {
             s.execute(sql);
-            fail("This statement should be rejected by " + rule + ", but it was accepted:\n  " + sql);
+            fail(criterion + "\n  This statement should be rejected, but it was accepted:\n  " + sql);
         } catch (SQLException e) {
-            assertEquals(sqlState, e.getSQLState(),
-                    "This statement should be rejected by " + rule + ", but the error was different:\n  " + sql + "\n  " + e.getMessage());
+            assertTrue(sqlStates.contains(e.getSQLState()),
+                    criterion + "\n  This statement should be rejected by a rule for that criterion, but the error was different:\n  "
+                            + sql + "\n  " + e.getMessage());
         } finally {
             db.rollback(sp);
         }
     }
 
-    private static String[] column(String table, String column) throws SQLException {
+    private static void rejected(String sql, String sqlState, String criterion) throws SQLException {
+        rejected(sql, Set.of(sqlState), criterion);
+    }
+
+    /** The column's data_type from information_schema, e.g. integer, text, numeric. */
+    private static String type(String table, String column) throws SQLException {
         try (PreparedStatement p = db.prepareStatement(
-                "SELECT data_type, character_maximum_length, numeric_scale, is_nullable "
-                        + "FROM information_schema.columns WHERE table_schema = 'public' AND table_name = ? AND column_name = ?")) {
+                "SELECT data_type FROM information_schema.columns "
+                        + "WHERE table_schema = 'public' AND table_name = ? AND column_name = ?")) {
             p.setString(1, table);
             p.setString(2, column);
             try (ResultSet r = p.executeQuery()) {
                 if (!r.next()) {
-                    fail("Table " + table + " has no column named " + column + ".");
+                    fail("Table " + table + " has no column named " + column + ". Use the names listed in README.md.");
                 }
-                return new String[] {r.getString(1), r.getString(2), r.getString(3), r.getString(4)};
+                return r.getString(1);
             }
         }
     }
 
+    private static BigDecimal storedGrade(String courseCode) throws SQLException {
+        try (Statement s = db.createStatement();
+                ResultSet r = s.executeQuery("SELECT grade FROM enrollments WHERE student_id = 1 AND course_code = '" + courseCode + "'")) {
+            assertTrue(r.next(), "The enrollment just inserted should be there.");
+            return r.getBigDecimal(1);
+        }
+    }
+
     private static void seed() {
-        run("INSERT INTO students (id, name, email) VALUES (1, 'Ana Lima', 'ana@example.com')");
-        run("INSERT INTO courses (code, title, capacity) VALUES ('SQL101', 'SQL Foundations', 30)");
+        accepted("INSERT INTO students (id, name, email) VALUES (1, 'Ana Lima', 'ana@example.com')", "Criterion 1: a valid student.");
+        accepted("INSERT INTO courses (code, title, capacity) VALUES ('SQL101', 'SQL Foundations', 30)", "Criterion 2: a valid course.");
     }
 
     // ---------- tasks ----------
@@ -110,67 +131,103 @@ class SchemaTest {
                 }
             }
         }
+        for (String[] c : new String[][] {{"students", "id"}, {"students", "name"}, {"students", "email"},
+                {"courses", "code"}, {"courses", "title"}, {"courses", "capacity"},
+                {"enrollments", "student_id"}, {"enrollments", "course_code"}, {"enrollments", "enrolled_at"}, {"enrollments", "grade"}}) {
+            type(c[0], c[1]);
+        }
     }
 
     @Test
     void task2Students() throws SQLException {
-        assertEquals("integer", column("students", "id")[0], "students.id must be an integer.");
-        String[] name = column("students", "name");
-        assertEquals("character varying", name[0], "students.name must be varchar(100).");
-        assertEquals("100", name[1], "students.name must allow at most 100 characters: varchar(100).");
-        assertEquals("text", column("students", "email")[0], "students.email must be text.");
+        String c1 = "Criterion 1 (students):";
+        assertTrue(WHOLE_NUMBER.contains(type("students", "id")), c1 + " a student id is a whole number, so students.id needs a whole-number type.");
+        assertTrue(CHARACTERS.contains(type("students", "name")), c1 + " students.name holds text, so it needs a character type.");
+        assertTrue(CHARACTERS.contains(type("students", "email")), c1 + " students.email holds text, so it needs a character type.");
         seed();
-        rejected("INSERT INTO students (id, name, email) VALUES (1, 'Ben Okafor', 'ben@example.com')", "23505", "the primary key on students.id");
-        rejected("INSERT INTO students (id, name, email) VALUES (NULL, 'Ben Okafor', 'ben@example.com')", "23502", "the primary key on students.id (never null)");
-        rejected("INSERT INTO students (id, name, email) VALUES (2, NULL, 'ben@example.com')", "23502", "NOT NULL on students.name");
-        rejected("INSERT INTO students (id, name, email) VALUES (2, 'Ben Okafor', NULL)", "23502", "NOT NULL on students.email");
-        rejected("INSERT INTO students (id, name, email) VALUES (2, 'Ben Okafor', 'ana@example.com')", "23505", "UNIQUE on students.email");
-        rejected("INSERT INTO students (id, name, email) VALUES (2, repeat('x', 101), 'ben@example.com')", "22001", "the varchar(100) type of students.name");
-        run("INSERT INTO students (id, name, email) VALUES (2, 'Ben Okafor', 'ben@example.com')");
+        rejected("INSERT INTO students (id, name, email) VALUES (1, 'Ben Okafor', 'ben@example.com')", "23505", c1 + " the id identifies one student, so a second student with id 1 must be rejected.");
+        rejected("INSERT INTO students (id, name, email) VALUES (NULL, 'Ben Okafor', 'ben@example.com')", "23502", c1 + " every student needs an id, so an empty id must be rejected.");
+        rejected("INSERT INTO students (id, name, email) VALUES (2, NULL, 'ben@example.com')", "23502", c1 + " the name is required.");
+        rejected("INSERT INTO students (id, name, email) VALUES (2, 'Ben Okafor', NULL)", "23502", c1 + " the email is required.");
+        rejected("INSERT INTO students (id, name, email) VALUES (2, 'Ben Okafor', 'ana@example.com')", "23505", c1 + " no two students share an email.");
+        rejected("INSERT INTO students (id, name, email) VALUES (2, repeat('x', 101), 'ben@example.com')", Set.of("22001", "23514"),
+                c1 + " a name has at most 100 characters, so a 101-character name must be rejected.");
+        accepted("INSERT INTO students (id, name, email) VALUES (2, repeat('x', 100), 'a.very.long.address.for.a.student.with.many.parts@university.example.com')",
+                c1 + " a 100-character name and a long email address are allowed.");
     }
 
     @Test
     void task3Courses() throws SQLException {
-        assertEquals("text", column("courses", "code")[0], "courses.code must be text.");
-        assertEquals("integer", column("courses", "capacity")[0], "courses.capacity must be an integer.");
+        String c2 = "Criterion 2 (courses):";
+        assertTrue(CHARACTERS.contains(type("courses", "code")), c2 + " a course code such as SQL101 holds letters and digits, so courses.code needs a character type.");
+        assertTrue(WHOLE_NUMBER.contains(type("courses", "capacity")), c2 + " capacity is a whole number, so courses.capacity needs a whole-number type.");
         seed();
-        rejected("INSERT INTO courses (code, title, capacity) VALUES ('SQL101', 'Again', 10)", "23505", "the primary key on courses.code");
-        rejected("INSERT INTO courses (code, title, capacity) VALUES ('JDBC201', NULL, 10)", "23502", "NOT NULL on courses.title");
-        rejected("INSERT INTO courses (code, title, capacity) VALUES ('JDBC201', 'JDBC', NULL)", "23502", "NOT NULL on courses.capacity");
-        rejected("INSERT INTO courses (code, title, capacity) VALUES ('JDBC201', 'JDBC', 0)", "23514", "a CHECK that capacity is more than 0");
-        run("INSERT INTO courses (code, title, capacity) VALUES ('JDBC201', 'JDBC', 1)");
+        rejected("INSERT INTO courses (code, title, capacity) VALUES ('SQL101', 'Again', 10)", "23505", c2 + " the code identifies one course, so a second course SQL101 must be rejected.");
+        rejected("INSERT INTO courses (code, title, capacity) VALUES (NULL, 'JDBC', 10)", "23502", c2 + " every course needs a code.");
+        rejected("INSERT INTO courses (code, title, capacity) VALUES ('JDBC201', NULL, 10)", "23502", c2 + " the title is required.");
+        rejected("INSERT INTO courses (code, title, capacity) VALUES ('JDBC201', 'JDBC', NULL)", "23502", c2 + " the capacity is required.");
+        rejected("INSERT INTO courses (code, title, capacity) VALUES ('JDBC201', 'JDBC', 0)", "23514", c2 + " capacity must be greater than 0, so 0 must be rejected.");
+        rejected("INSERT INTO courses (code, title, capacity) VALUES ('JDBC201', 'JDBC', -5)", "23514", c2 + " capacity must be greater than 0, so -5 must be rejected.");
+        accepted("INSERT INTO courses (code, title, capacity) VALUES ('JDBC201', 'JDBC', 1)", c2 + " a capacity of 1 is allowed.");
     }
 
     @Test
     void task4EnrollmentKeys() throws SQLException {
+        String c3 = "Criterion 3 (many-to-many):";
+        String c5 = "Criterion 5 (existing student and course):";
         seed();
-        run("INSERT INTO enrollments (student_id, course_code) VALUES (1, 'SQL101')");
-        rejected("INSERT INTO enrollments (student_id, course_code) VALUES (9, 'SQL101')", "23503", "the foreign key from enrollments.student_id to students");
-        rejected("INSERT INTO enrollments (student_id, course_code) VALUES (1, 'NOPE999')", "23503", "the foreign key from enrollments.course_code to courses");
-        rejected("INSERT INTO enrollments (student_id, course_code) VALUES (1, 'SQL101')", "23505", "a primary key on (student_id, course_code), so a student enrolls in a course once");
-        rejected("INSERT INTO enrollments (student_id, course_code) VALUES (NULL, 'SQL101')", "23502", "NOT NULL on enrollments.student_id");
-        rejected("DELETE FROM students WHERE id = 1", "23503", "the foreign key from enrollments.student_id (a student with enrollments cannot be deleted)");
-        run("INSERT INTO students (id, name, email) VALUES (2, 'Ben Okafor', 'ben@example.com')");
-        run("DELETE FROM students WHERE id = 2");
+        accepted("INSERT INTO courses (code, title, capacity) VALUES ('JDBC201', 'JDBC', 20)", c3 + " a second course.");
+        accepted("INSERT INTO students (id, name, email) VALUES (2, 'Ben Okafor', 'ben@example.com')", c3 + " a second student.");
+        accepted("INSERT INTO enrollments (student_id, course_code) VALUES (1, 'SQL101')", c3 + " a student enrolls in a course.");
+        accepted("INSERT INTO enrollments (student_id, course_code) VALUES (1, 'JDBC201')", c3 + " a student can enroll in many courses.");
+        accepted("INSERT INTO enrollments (student_id, course_code) VALUES (2, 'SQL101')", c3 + " a course has many students.");
+        rejected("INSERT INTO enrollments (student_id, course_code) VALUES (1, 'SQL101')", "23505", c3 + " a student cannot enroll in the same course twice.");
+        rejected("INSERT INTO enrollments (student_id, course_code) VALUES (9, 'SQL101')", "23503", c5 + " student 9 does not exist.");
+        rejected("INSERT INTO enrollments (student_id, course_code) VALUES (1, 'NOPE999')", "23503", c5 + " course NOPE999 does not exist.");
+        rejected("INSERT INTO enrollments (student_id, course_code) VALUES (NULL, 'SQL101')", "23502", c5 + " an enrollment must name a student.");
+        rejected("INSERT INTO enrollments (student_id, course_code) VALUES (1, NULL)", "23502", c5 + " an enrollment must name a course.");
+        rejected("DELETE FROM students WHERE id = 1", Set.of("23503", "23001"), c5 + " a student who has enrollments cannot be deleted.");
+        accepted("INSERT INTO students (id, name, email) VALUES (3, 'Chen Wei', 'chen@example.com')", c5 + " a student with no enrollments.");
+        accepted("DELETE FROM students WHERE id = 3", c5 + " a student with no enrollments can be deleted.");
     }
 
     @Test
     void task5EnrollmentDefaults() throws SQLException {
-        assertTrue(column("enrollments", "enrolled_at")[0].startsWith("timestamp"), "enrollments.enrolled_at must be a timestamp.");
-        String[] grade = column("enrollments", "grade");
-        assertEquals("numeric", grade[0], "enrollments.grade must be numeric(5,2).");
-        assertEquals("2", grade[2], "enrollments.grade must keep 2 decimal places: numeric(5,2).");
+        String c4 = "Criterion 4 (enrollment time and grade):";
+        assertTrue(type("enrollments", "enrolled_at").startsWith("timestamp"), c4 + " enrolled_at records a date and a time of day, so it needs a type that holds both.");
+        assertEquals("numeric", type("enrollments", "grade"), c4 + " a grade is an exact decimal number such as 87.25, so it needs an exact decimal type, not a whole-number or floating-point type.");
         seed();
-        run("INSERT INTO enrollments (student_id, course_code) VALUES (1, 'SQL101')");
+        // now() is the start time of this test's transaction, the same moment a current-time default records,
+        // so the comparison below does not depend on the wall clock or on how long the test takes.
+        accepted("INSERT INTO enrollments (student_id, course_code) VALUES (1, 'SQL101')", c4 + " an enrollment that leaves out enrolled_at and grade.");
         try (Statement s = db.createStatement();
-                ResultSet r = s.executeQuery("SELECT enrolled_at, grade FROM enrollments WHERE student_id = 1")) {
+                ResultSet r = s.executeQuery("SELECT enrolled_at IS NOT NULL, "
+                        + "abs(extract(epoch FROM (enrolled_at::timestamptz - now()))) < 1, grade IS NULL "
+                        + "FROM enrollments WHERE student_id = 1")) {
             assertTrue(r.next(), "The enrollment just inserted should be there.");
-            assertNotNull(r.getTimestamp(1), "enrolled_at was left out of the insert, so it needs a DEFAULT of the current time.");
-            assertNull(r.getBigDecimal(2), "grade was left out of the insert, so it should be empty (null).");
+            assertTrue(r.getBoolean(1), c4 + " enrolled_at was left out of the insert, so it must be filled in with the current time, but it is empty.");
+            assertTrue(r.getBoolean(2), c4 + " enrolled_at was left out of the insert, so it must be filled in with the current time, but it holds a different time.");
+            assertTrue(r.getBoolean(3), c4 + " grade was left out of the insert, so it must be empty (null) until graded.");
         }
-        run("INSERT INTO courses (code, title, capacity) VALUES ('JDBC201', 'JDBC', 20)");
-        rejected("INSERT INTO enrollments (student_id, course_code, grade) VALUES (1, 'JDBC201', 100.5)", "23514", "a CHECK that grade is between 0 and 100");
-        rejected("INSERT INTO enrollments (student_id, course_code, grade) VALUES (1, 'JDBC201', -1)", "23514", "a CHECK that grade is between 0 and 100");
-        run("INSERT INTO enrollments (student_id, course_code, grade) VALUES (1, 'JDBC201', 99.5)");
+        accepted("INSERT INTO courses (code, title, capacity) VALUES ('JDBC201', 'JDBC', 20)", c4 + " a second course.");
+        accepted("INSERT INTO courses (code, title, capacity) VALUES ('WEB101', 'Web', 20)", c4 + " a third course.");
+        rejected("INSERT INTO enrollments (student_id, course_code, enrolled_at) VALUES (1, 'JDBC201', NULL)", "23502",
+                c4 + " every enrollment records when it was made, so an explicitly empty enrolled_at must be rejected.");
+        accepted("INSERT INTO enrollments (student_id, course_code, enrolled_at, grade) VALUES (1, 'JDBC201', '2026-09-01 09:30', 87.25)",
+                c4 + " a given enrollment time and a grade with two decimal places.");
+        assertEquals(0, new BigDecimal("87.25").compareTo(storedGrade("JDBC201")), c4 + " the grade 87.25 must be stored exactly.");
+        rejected("INSERT INTO enrollments (student_id, course_code, grade) VALUES (1, 'WEB101', 100.5)", "23514", c4 + " a grade is at most 100.");
+        rejected("INSERT INTO enrollments (student_id, course_code, grade) VALUES (1, 'WEB101', -1)", "23514", c4 + " a grade is at least 0.");
+        accepted("INSERT INTO enrollments (student_id, course_code, grade) VALUES (1, 'WEB101', 100)", c4 + " a grade of 100 is allowed.");
+        accepted("DELETE FROM enrollments WHERE course_code = 'WEB101'", c4 + " an enrollment can be removed.");
+        Savepoint sp = db.setSavepoint();
+        try (Statement s = db.createStatement()) {
+            s.execute("INSERT INTO enrollments (student_id, course_code, grade) VALUES (1, 'WEB101', 87.255)");
+            BigDecimal stored = storedGrade("WEB101");
+            assertTrue(stored.stripTrailingZeros().scale() <= 2,
+                    c4 + " a grade keeps at most two decimal places, but 87.255 was stored as " + stored.toPlainString() + ".");
+        } catch (SQLException e) {
+            db.rollback(sp); // rejecting a third decimal place also meets the criterion
+        }
     }
 }
