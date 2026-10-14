@@ -61,6 +61,11 @@ test("tracked metrics snapshot is dated and internally consistent", async () => 
   assert.equal(review.secondRecheckUnique.resolved + review.secondRecheckUnique.open, review.uniqueFindings);
   assert.ok(metrics.unavailable.includes("platform upload or acceptance outcome"));
   assert.ok(metrics.unavailable.includes("learner usage, completion, or performance telemetry"));
+  const [guide, readme] = await Promise.all([text("index.html"), text("README.md")]);
+  for (const value of [metrics.capturedOn, repository.courses, repository.modules, repository.catalogTopics, repository.contractGates, repository.implementedCheckModules]) {
+    assert.ok(guide.includes(String(value)), `interactive guide must render snapshot value ${value}`);
+    assert.ok(readme.includes(String(value)), `written guide must render snapshot value ${value}`);
+  }
 });
 
 test("metrics generator previews the live tree without touching the tracked snapshot", async () => {
@@ -155,6 +160,9 @@ test("Archify output is pinned, static, hash-bound, and embedded byte-for-byte",
     readFile(path.join(root, "package-lock.json"), "utf8").then(JSON.parse)
   ]);
   const manifest = JSON.parse(manifestText);
+  const workflow = JSON.parse(source);
+  assert.deepEqual(workflow.mainPath, ["input", "design", "build", "verify", "review", "deliver"]);
+  assert.equal(workflow.mainPath.length, 6);
   assert.equal(manifest.producer.tag, "v3.0.1");
   assert.equal(manifest.producer.commit, "2ab3cae7ac2c2a55d7386ca789d03c4fcd31816c");
   assert.equal(manifest.producer.license, "MIT");
@@ -201,31 +209,31 @@ test("progressive stage inspection preserves a complete no-JavaScript reading", 
     const state = await page.evaluate(() => ({
       language: document.documentElement.lang,
       enhanced: document.documentElement.classList.contains("enhanced"),
-      stageTargets: [...document.querySelectorAll("[data-stage-target]")].map((element) => element.getAttribute("data-stage-target")),
+      allStages: [...document.querySelectorAll("[data-stage-panel]")].map((element) => element.id),
       visibleStages: [...document.querySelectorAll("[data-stage-panel]")].filter((element) => getComputedStyle(element).display !== "none").map((element) => element.id),
-      visibleMetrics: [...document.querySelectorAll("[data-metrics-panel]")].filter((element) => getComputedStyle(element).display !== "none").length,
       noJsNote: getComputedStyle(document.querySelector(".nojs-note")).display,
       toggle: getComputedStyle(document.querySelector(".theme-toggle")).display,
       pageBackground: getComputedStyle(document.body).backgroundColor,
       laneFill: getComputedStyle(document.querySelector(".diagram-scroll .c-lane")).fill,
       pageWidth: [document.documentElement.clientWidth, document.documentElement.scrollWidth],
-      instructionAnchors: document.querySelectorAll("[data-stage-panel] details").length,
-      stageFieldCounts: [...document.querySelectorAll("[data-stage-panel]")].map((panel) => panel.querySelectorAll(".field").length),
-      hasTextEquivalent: Boolean(document.querySelector(".flow-text"))
+      disclosures: document.querySelectorAll("[data-stage-panel] details").length,
+      essentialCounts: [...document.querySelectorAll("[data-stage-panel]")].map((panel) => panel.querySelectorAll(".essentials>div").length),
+      tabs: document.querySelectorAll('[role="tablist"],.metrics-panel,.states').length,
+      headings: [...document.querySelectorAll("[data-stage-panel] h2")].map((heading) => heading.textContent)
     }));
     assert.equal(state.language, "en");
     assert.equal(state.enhanced, false);
-    assert.equal(state.stageTargets.length, 10);
-    assert.deepEqual(state.visibleStages, state.stageTargets);
-    assert.equal(state.visibleMetrics, 2);
+    assert.deepEqual(state.allStages, ["stage-input", "stage-design", "stage-build", "stage-verify", "stage-review", "stage-deliver"]);
+    assert.deepEqual(state.visibleStages, state.allStages);
+    assert.deepEqual(state.headings, ["Input", "Design", "Build", "Verify", "Review + improve", "Deliver"]);
     assert.equal(state.noJsNote, "block");
     assert.equal(state.toggle, "none");
     assert.equal(state.pageBackground, "rgb(18, 24, 22)");
     assert.equal(state.laneFill, "rgb(26, 34, 32)");
     assert.deepEqual(state.pageWidth, [400, 400]);
-    assert.equal(state.instructionAnchors, 10);
-    assert.ok(state.stageFieldCounts.every((count) => count >= 6));
-    assert.equal(state.hasTextEquivalent, true);
+    assert.equal(state.disclosures, 13);
+    assert.ok(state.essentialCounts.every((count) => count === 3));
+    assert.equal(state.tabs, 0);
     assert.deepEqual(requests, [url]);
     await context.close();
   } finally {
@@ -233,7 +241,7 @@ test("progressive stage inspection preserves a complete no-JavaScript reading", 
   }
 });
 
-test("interactive controls work by keyboard and touch across theme and motion preferences", async () => {
+test("the architecture controls one integrated stage detail by keyboard and touch", async () => {
   const browser = await launchChromium();
   try {
     const context = await browser.newContext({
@@ -265,40 +273,38 @@ test("interactive controls work by keyboard and touch across theme and motion pr
       textFill: "rgb(227, 235, 231)"
     });
 
-    await page.locator('[data-stage-target="stage-reconcile"]').tap();
-    await page.getByRole("tab", { name: "Worked module" }).tap();
+    await page.locator("#node-review").tap();
     let state = await page.evaluate(() => ({
       stage: [...document.querySelectorAll("[data-stage-panel]")].filter((element) => !element.hidden).map((element) => element.id),
-      metrics: [...document.querySelectorAll("[data-metrics-panel]")].filter((element) => !element.hidden).map((element) => element.id),
+      selectedNode: document.querySelector("[data-stage-node].is-active")?.id,
       theme: document.documentElement.dataset.theme,
       noJsNote: getComputedStyle(document.querySelector(".nojs-note")).display,
       pageWidth: [document.documentElement.clientWidth, document.documentElement.scrollWidth],
       diagramWidth: [document.querySelector(".diagram-scroll").clientWidth, document.querySelector(".diagram-scroll").scrollWidth],
-      minimumTarget: Math.min(...[...document.querySelectorAll("button,.stage-index a,.quick-nav a")].map((element) => element.getBoundingClientRect().height)),
+      stageNodes: document.querySelectorAll("[data-stage-node]").length,
       gridFill: getComputedStyle(document.querySelector(".c-grid")).fill,
       scrollBehavior: getComputedStyle(document.documentElement).scrollBehavior,
       transitionDuration: getComputedStyle(document.querySelector(".theme-toggle")).transitionDuration
     }));
-    assert.deepEqual(state.stage, ["stage-reconcile"]);
-    assert.deepEqual(state.metrics, ["metrics-example"]);
+    assert.deepEqual(state.stage, ["stage-review"]);
+    assert.equal(state.selectedNode, "node-review");
     assert.equal(state.theme, "dark");
     assert.equal(state.noJsNote, "none");
     assert.deepEqual(state.pageWidth, [400, 400]);
     assert.ok(state.diagramWidth[1] > state.diagramWidth[0]);
-    assert.ok(state.minimumTarget >= 44);
+    assert.equal(state.stageNodes, 6);
     assert.equal(state.gridFill, "none");
     assert.equal(state.scrollBehavior, "auto");
     assert.equal(state.transitionDuration, "0s");
 
-    await page.locator('[data-stage-target="stage-intake"]').focus();
-    await page.keyboard.press("ArrowDown");
-    await page.keyboard.press("Enter");
+    await page.locator("#node-input").focus();
+    await page.keyboard.press("ArrowRight");
     state = await page.evaluate(() => ({
       activePanel: [...document.querySelectorAll("[data-stage-panel]")].find((element) => !element.hidden)?.id,
-      focus: document.activeElement?.id
+      focus: document.activeElement?.id,
+      selectedNode: document.querySelector("[data-stage-node].is-active")?.id
     }));
-    assert.equal(state.activePanel, "stage-design");
-    assert.equal(state.focus, "stage-design");
+    assert.deepEqual(state, { activePanel: "stage-design", focus: "node-design", selectedNode: "node-design" });
 
     await page.getByRole("button", { name: "Use light theme" }).click();
     assert.deepEqual(await themeState(), {
@@ -321,9 +327,8 @@ test("interactive controls work by keyboard and touch across theme and motion pr
       textFill: "rgb(227, 235, 231)"
     });
 
-    await page.locator('[data-stage-target="stage-catalog"]').click();
-    await page.getByRole("tab", { name: "Repository snapshot" }).click();
-    await page.locator("#stage-catalog details summary").click();
+    await page.locator("#node-deliver").click();
+    await page.locator("#stage-deliver details summary").first().click();
     assert.deepEqual(requests, [url]);
     await context.close();
   } finally {

@@ -1,87 +1,96 @@
 # How PEP content is built
 
-This is the short, repository-grounded guide to the PEP content pipeline. Open the [interactive companion](index.html) for the Archify golden path and stage-by-stage inspection. The HTML contains its diagram, styles, data and interaction inline, so core reading works from `file://`, offline, and without JavaScript.
+Open the [interactive companion](index.html) to scan the complete path and inspect one stage at a time. It embeds its diagram, styles, data and interaction, so the core reading works from `file://`, offline and without JavaScript.
 
-## The golden path
+## The six-stage path
 
-1. **Freeze intake.** Select the curriculum slice from the locked snapshots, set the course/module/topic map, objectives, artifact applicability, lab plan and honest minute budgets, then freeze version-specific official sources. Intake creates manifests, never placeholders. Sources: [`../workflow.md`](../workflow.md), [`../../../curriculum/curriculum.lock.json`](../../../curriculum/curriculum.lock.json), [`../tools/validators.md`](../tools/validators.md).
-2. **Map the canonical design.** Course, module and topic identities and order live in path-isomorphic manifests under `authoring/catalog/`. A topic exists in the catalog before learner bytes exist; its manifest records each artifact as present or absent with a reason. Sources: [`../../AGENTS.md`](../../AGENTS.md), [`../../../README.md`](../../../README.md), catalog schemas in [`../../schemas/`](../../schemas/).
-3. **Author learner material.** `artifact.html` is the topic source of truth. It embeds its CSS, JavaScript, data and accessible visuals. Deterministic Markdown, optional PDF, formative GIFT and optional video records are companions. Labs are multi-file bundles only when real-toolchain practice earns the setup cost. Sources: [`../html-artifact-contract.md`](../html-artifact-contract.md), [`../lab-contract.md`](../lab-contract.md), [`../tools/qa.md`](../tools/qa.md).
-4. **Bind provenance.** Source receipts bind live official-source fetches to current artifact bytes. Video receipts separately prove public availability, embeddability and duration. Evidence paths mirror course/module/topic scope. Sources: [`../tools/validators.md`](../tools/validators.md), [`../tools/evidence.md`](../tools/evidence.md), evidence schemas in [`../../schemas/`](../../schemas/).
-5. **Run deterministic gates.** `npm test`, `authoring/tools/pep migrate-catalog --check`, and `npm run check` are the repository and CI interface. The workflow defines 18 conceptual gates; the current tool directory implements them in 22 `T*.mjs` check modules. The QA harness covers offline, sandboxed behavior, accessibility, responsive layouts and deterministic Markdown/PDF checks. Sources: [`../../../package.json`](../../../package.json), [`../../../.github/workflows/ci.yml`](../../../.github/workflows/ci.yml), [`../../tools/pep`](../../tools/pep), [`../../tools/checks/`](../../tools/checks/).
-6. **Obtain independent criticism.** Fresh education and technology-SME critics review final bytes independently. They do not see the author transcript. The SME grounds findings in live official documentation. No available independent critic means pause, not self-approval. Source: [`../workflow.md`](../workflow.md).
-7. **Reconcile, correct and recheck.** A non-author decides `accept`, `reject-with-evidence` or `escalate`. The author applies accepted findings one correction loop at a time. The relevant critics recheck high and critical findings against new hashes. One second correction loop is allowed; a third escalates. Sources: [`../workflow.md`](../workflow.md), [`../tools/evidence.md`](../tools/evidence.md), [`../../tools/checks/T25-critic-gate.mjs`](../../tools/checks/T25-critic-gate.mjs).
-8. **Reconcile catalog and locks.** Content, declarations and evidence must agree. `authoring/tools/pep lock` regenerates scope-local course or module locks; locks retain historical stale bindings but only current bindings count for review coverage. T04/T05/T06 enforce catalog/file/lock agreement and T25 enforces current critic coverage. Sources: [`../workflow.md`](../workflow.md), [`../tools/evidence.md`](../tools/evidence.md), [`../../tools/lib/locks.mjs`](../../tools/lib/locks.mjs).
-9. **Open a focused PR and pass CI.** Branch scope is module, course or tooling—never a mixture. CI repeats tests, migration check and the complete gate run. Every merge requires approval. Sources: [`../workflow.md`](../workflow.md), [`../../../.github/workflows/ci.yml`](../../../.github/workflows/ci.yml).
-10. **Hand off neutrally.** `pep export` and `pep export-lab` prepare tracked learner material and a checksummed lab bundle under ignored `build/`. Platform conversion, private assessment material, upload, publication and deployment remain outside this repository. Source: [`../lab-contract.md`](../lab-contract.md), [`../../tools/pep`](../../tools/pep).
+1. **Input — freeze what should be taught.** Fix the approved curriculum slice, topic list, draft objectives, artifact applicability, honest timing and version-specific official sources before learner files exist. Intake creates manifests, never placeholders. Sources: [`../workflow.md`](../workflow.md) §2.1, [`../../../curriculum/curriculum.lock.json`](../../../curriculum/curriculum.lock.json), [`../tools/validators.md`](../tools/validators.md).
+2. **Design — give it one stable structure.** Put course, module and topic identity and order in path-isomorphic manifests under `authoring/catalog/`. Declare every intended companion present or absent with a reason. Sources: [`../../AGENTS.md`](../../AGENTS.md), [`../../../README.md`](../../../README.md), [`../../schemas/`](../../schemas/).
+3. **Build — create one standalone learner experience.** `artifact.html` is primary. Add deterministic Markdown, optional PDF, formative GIFT, video records or a real-toolchain lab only where declared and justified. Archify assets support authoring documentation only; they are not learner-page runtime. Sources: [`../html-artifact-contract.md`](../html-artifact-contract.md), [`../lab-contract.md`](../lab-contract.md), [`../tools/qa.md`](../tools/qa.md).
+4. **Verify — bind claims and exercise final behavior.** Source receipts bind current official documentation to artifact hashes; video receipts separately prove availability and duration. Local gates check structure, offline and sandboxed behavior, accessibility, responsiveness, timing and companion parity. Sources: [`../tools/validators.md`](../tools/validators.md), [`../tools/evidence.md`](../tools/evidence.md), [`../../tools/pep`](../../tools/pep).
+5. **Review + improve — apply independent judgment.** Fresh education and technology critics review the same candidate independently. A non-author reconciles every finding; the author corrects accepted findings; relevant critics recheck fresh hashes. One second correction loop is allowed; a third escalates. Sources: [`../workflow.md`](../workflow.md) §§2.3–2.4, [`../tools/evidence.md`](../tools/evidence.md), [`../../tools/checks/T25-critic-gate.mjs`](../../tools/checks/T25-critic-gate.mjs).
+6. **Deliver — reconcile, approve and hand off neutrally.** Align declarations, learner files and evidence; regenerate the scope-local lock; open a focused PR; pass CI; obtain approval. `pep export` and `pep export-lab` create ignored neutral bundles. Platform conversion, upload and publication remain outside this repository. Sources: [`../workflow.md`](../workflow.md) §4, [`../../../.github/workflows/ci.yml`](../../../.github/workflows/ci.yml), [`../lab-contract.md`](../lab-contract.md).
 
-### Real branches only
+### Real branches, only where applicable
 
-- **Standalone learner artifacts:** HTML is primary. Markdown, PDF, GIFT and video are present only when declared; every absence has a reason.
-- **Labs:** a topic, module or course bundle may exist. It has one language-native test command and no container engine. Private solutions and hidden tests never enter Git.
-- **Video:** `video-artifact.md` is optional; a current `video.json` receipt is required when it exists. No video file is downloaded.
-- **Archify:** supports authoring and repository documentation only. Adapted output is self-contained SVG with system fonts and a license record; it is never a learner-page runtime or interaction engine.
+- **Companions:** Markdown, PDF and formative GIFT are declared per topic; every absence has a reason.
+- **Labs:** a topic, module or course may carry one language-native bundle with no committed solution or hidden test.
+- **Video:** `video-artifact.md` is optional and requires a current `video.json` receipt. No video file is downloaded.
+- **Archify:** produces static authoring/documentation SVG only. The shipped guide has no Archify runtime dependency.
 
-## What the state words mean
+## Readiness words
 
-These are operational reading terms, not a new manifest state machine.
+These are reading terms, not a new manifest state machine.
 
-| State | Minimum defensible meaning | It does **not** mean |
+| State | Minimum defensible meaning | Not implied |
 |---|---|---|
-| **Authored** | Intended learner bytes exist, catalog declarations match them, and required source/provenance records have been prepared. | Accepted, approved or merged. An author's first output is never accepted. |
-| **Independently reviewed** | Current education and SME evidence covers each reviewable file; every finding has non-author reconciliation; no critical/high item remains open under T25. | All deterministic gates pass, or an approval exists. |
-| **Delivery-ready** | Final bytes pass applicable local tests and checks, declarations and locks are regenerated, review evidence is current, and the focused PR is ready for approval. | Merged, uploaded, published or platform-accepted. |
-| **Landed** | The approved focused PR has merged into the default branch and its CI result applies to that merged commit. | Platform delivery. |
-| **Platform-ready** | The neutral export is available and any required private staging has been validated for handoff to the platform owner. | Upload or acceptance. Those outcomes are not tracked here, so this guide cannot claim them. |
+| **Authored** | Intended learner bytes exist; declarations match; required provenance is prepared. | Accepted, approved or merged. |
+| **Independently reviewed** | Current education and SME coverage; every finding reconciled by a non-author; no open critical/high. | All deterministic gates pass or approval exists. |
+| **Delivery-ready** | Final bytes pass applicable local gates; declarations, locks and review evidence are current; the focused PR is reviewable. | Merged, uploaded or platform-accepted. |
+| **Landed** | The approved focused PR is merged to the default branch and merged-commit CI applies. | Platform delivery. |
+| **Platform-ready** | A neutral export exists and required private staging has been validated for handoff. | Upload or acceptance. Those outcomes are not tracked here. |
 
-## Prompts and roles
+## Roles and prompt ownership
 
-The repository tracks role contracts, schemas and evidence—not a standalone author, critic or reconciler prompt file. Do not reconstruct a hidden prompt from review prose or claim unverifiable model behavior. The canonical safe instruction anchors are:
+The repository tracks role contracts, schemas and evidence—not a standalone author, critic or reconciler prompt file. Do not reconstruct hidden prompts or claim unverifiable model behavior.
 
 - author: [`../../AGENTS.md`](../../AGENTS.md), [`../workflow.md`](../workflow.md), and the HTML/lab contracts;
-- education critic and technology-SME critic: the role definitions in [`../workflow.md`](../workflow.md) §2.3;
+- education and technology critics: [`../workflow.md`](../workflow.md) §2.3;
 - non-author reconciler and rechecker: [`../workflow.md`](../workflow.md) §2.4 and [`../tools/evidence.md`](../tools/evidence.md);
-- deterministic tools: source and CLI help under [`../../tools/`](../../tools/).
+- deterministic behavior: CLI help and checks under [`../../tools/`](../../tools/).
 
-The interactive companion labels this honestly as “prompt not tracked” and shows only short excerpts or links from those tracked contracts.
+The interactive guide places these safe excerpts and links inside the stage they govern.
 
-## Worked example: Linux Foundations
+## One module through the same path
 
-[`git-linux-ai-foundations/linux-foundations`](../../../git-linux-ai-foundations/linux-foundations/) is a tracked end-to-end example, selected for evidence completeness rather than rank. The generated [metrics snapshot](metrics.json) proves:
+[`git-linux-ai-foundations/linux-foundations`](../../../git-linux-ai-foundations/linux-foundations/) is the representative example because its tracked evidence is complete, not because it is ranked.
 
-- 5 topics, each with HTML, Markdown, GIFT and video; 1 topic also has a PDF;
-- 5 source receipts, 5 video receipts and 5 declarative QA-path files;
-- 7 unique module-review findings: 4 medium and 3 low; all 7 were accepted;
-- first recheck: 5 resolved and 1 open; a bounded second correction/recheck cycle closes all 7 unique findings; no third cycle was used;
-- the current module lock inventories 74 tracked file records.
+| Stage | Tracked example |
+|---|---|
+| Input | five curriculum-mapped topics |
+| Design | five ordered topic IDs in the [module manifest](../../catalog/git-linux-ai-foundations/linux-foundations/module.json) |
+| Build | 21 learner artifacts: 5 HTML, 5 Markdown, 1 PDF, 5 GIFT and 5 video records |
+| Verify | 5 source receipts, 5 video receipts and 5 QA-path files |
+| Review + improve | 7 accepted findings; 5 resolved / 1 open after the first recheck; all 7 resolved after the second; no third cycle |
+| Deliver | 74 file records in the generated [module lock](../../catalog/git-linux-ai-foundations/linux-foundations/module.lock.json) |
 
-Follow the bytes from the [module manifest](../../catalog/git-linux-ai-foundations/linux-foundations/module.json), through the [module reviews](../../evidence/git-linux-ai-foundations/linux-foundations/), to the [generated lock](../../catalog/git-linux-ai-foundations/linux-foundations/module.lock.json). `node authoring/tools/pep check --only T25 git-linux-ai-foundations/linux-foundations` verifies the current critic gate without using private material.
+Follow the evidence from the manifest through the [review and recheck records](../../evidence/git-linux-ai-foundations/linux-foundations/) to the lock. `node authoring/tools/pep check --only T25 git-linux-ai-foundations/linux-foundations` verifies current critic coverage without private material.
 
-Repository-wide counts in `metrics.json` are a source-tree snapshot, **not** production telemetry: 9 catalog courses, 36 modules, 249 catalog topics, 26 topics with HTML, 2 learner labs and 8 learner-safe assessment blueprints as captured on the `capturedOn` date (2026-10-14). The snapshot is point-in-time: content PRs do not update it and CI does not compare it with the live tree. Duration, model token/cost data, platform acceptance and learner telemetry are unavailable.
+## Dated repository context
 
-## Archify provenance and reproduction
+[`metrics.json`](metrics.json) is a point-in-time source-tree snapshot captured on `2026-10-14`, not telemetry or a deployment claim: 9 catalog courses, 36 modules, 249 topics, 26 topics with HTML, 2 learner labs, 8 learner-safe blueprints, and 18 contractual gates implemented by 22 current `T*.mjs` modules. Content PRs do not refresh this documentation snapshot and CI does not compare it with the growing live tree.
 
-The diagram producer is `tt-a1i/archify` **v3.0.1**, annotated tag object `679f195584e4216fd582c073d8964b3a9f59107e`, resolving to commit `2ab3cae7ac2c2a55d7386ca789d03c4fcd31816c`. The repository license at that commit is MIT. The actual CLI is `archify/bin/archify.mjs`; its SHA-256 is `97788086acaac4122aafc56c48acfe5fde1979d6aaa67db73aa1f4ab70b34390`. This is the source repository, not the unrelated npm package named `archify`.
+Unavailable—and not estimated—are authoring/review duration, model tokens or cost, platform upload/acceptance and learner usage, completion or performance.
 
-Tracked reproduction assets:
-
-- [`golden-path.archify.json`](golden-path.archify.json): typed workflow input;
-- [`reproduce-diagram.mjs`](reproduce-diagram.mjs): deterministic render, SVG extraction/adaptation and offline drift check;
-- [`diagram-provenance.json`](diagram-provenance.json): exact input, raw HTML, script and final SVG hashes;
-- [`golden-path.svg`](golden-path.svg): adapted final SVG, embedded byte-for-byte into `index.html`.
-
-To reproduce without network behavior, obtain and extract the pinned commit, verify the archive SHA-256 recorded in `diagram-provenance.json`, then run:
-
-```sh
-node authoring/docs/content-workflow/reproduce-diagram.mjs \
-  --archify-root /path/to/extracted/archify-v3.0.1
-```
-
-Add `--write` only after reviewing an intentional diagram change. The script checks the version, MIT license, package CLI mapping, CLI/license hashes, raw render hash, post-processing script hash and final SVG hash. It invokes only Archify `render`; it never invokes update, finalize, deliver, preview or any network behavior. The shipped guide has no Archify runtime dependency.
-
-Preview current repository metrics on stdout, or record a new dated snapshot on a tooling branch, with:
+Preview current metrics on stdout, or intentionally record a new dated snapshot on a tooling branch:
 
 ```sh
 node authoring/docs/content-workflow/generate-metrics.mjs
 node authoring/docs/content-workflow/generate-metrics.mjs --write
 ```
+
+When recording a snapshot, update the same dated values in this README and the interactive guide.
+
+## Archify provenance and reproduction
+
+The producer is `tt-a1i/archify` **v3.0.1**, annotated tag object `679f195584e4216fd582c073d8964b3a9f59107e`, resolving to commit `2ab3cae7ac2c2a55d7386ca789d03c4fcd31816c`. The license is MIT. The actual CLI is `archify/bin/archify.mjs` with SHA-256 `97788086acaac4122aafc56c48acfe5fde1979d6aaa67db73aa1f4ab70b34390`; this is not the unrelated npm package named `archify`.
+
+Tracked assets:
+
+- [`golden-path.archify.json`](golden-path.archify.json): six-stage typed input;
+- [`reproduce-diagram.mjs`](reproduce-diagram.mjs): deterministic render, SVG adaptation and offline drift check;
+- [`diagram-provenance.json`](diagram-provenance.json): producer, input, raw render, script and final SVG hashes;
+- [`golden-path.svg`](golden-path.svg): adapted SVG embedded byte-for-byte in `index.html`;
+- [`bind-diagram.mjs`](bind-diagram.mjs): checks that byte binding.
+
+Current input SHA-256 is `92ae09ca55005a721e97647ced74137c639fdc719318c13a6d73b6158e5feecd`; raw Archify HTML is `af0f705ad0fef143e6755444527cf4b6797d707f3a4dbc2b05c4df44fe475b9a`; final SVG is `5ca3cf3ea81b51c00fead395da14840ca8f14eb4e3d3e00667e47e1150775f21`.
+
+After obtaining and verifying the pinned source archive recorded in `diagram-provenance.json`, reproduce without network behavior:
+
+```sh
+node authoring/docs/content-workflow/reproduce-diagram.mjs \
+  --archify-root /path/to/extracted/archify-v3.0.1
+node authoring/docs/content-workflow/bind-diagram.mjs --check
+```
+
+Use `--write` only after reviewing an intentional diagram change. The recipe invokes Archify `render` only—never update, finalize, deliver, preview or another network behavior.

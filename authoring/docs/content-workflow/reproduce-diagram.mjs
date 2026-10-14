@@ -46,8 +46,11 @@ function finalSvg(raw, inputSha) {
   if (raw.indexOf("<svg ", start + 1) >= 0 && raw.indexOf("<svg ", start + 1) < end) {
     fail("Archify diagram contains an unexpected nested SVG");
   }
+  const generatedViewBox = 'viewBox="0 0 914 404"';
+  if (!svg.includes(generatedViewBox)) fail("Archify output viewBox changed; review the intentional crop before adapting it");
   svg = svg
     .replace("<svg ", `<svg xmlns="http://www.w3.org/2000/svg" data-archify-input-sha256="${inputSha}" `)
+    .replace(generatedViewBox, 'viewBox="0 0 914 296"')
     .replaceAll(/\s+tabindex="0"\s+role="button"/g, "")
     .replaceAll(/\s+aria-pressed="false"/g, "");
   const styles = `
@@ -120,7 +123,7 @@ const manifest = {
     rawHtmlSha256: sha256(rawBytes)
   },
   postprocess: {
-    recipe: "pep-content-workflow-svg-v1: extract the only outer SVG; add xmlns and input hash; remove Archify node button state; embed system-font light/dark styles, reduced-motion rule, and producer metadata; normalize one trailing newline",
+    recipe: "pep-content-workflow-svg-v1: extract the only outer SVG; add xmlns and input hash; crop the generated empty footer from viewBox height 404 to 296 after asserting exact geometry; remove Archify node button state; embed system-font light/dark styles, reduced-motion rule, and producer metadata; normalize one trailing newline",
     script: "authoring/docs/content-workflow/reproduce-diagram.mjs",
     scriptSha256: sha256(scriptBytes),
     finalSvgSha256: sha256(svg)
