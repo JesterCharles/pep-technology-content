@@ -1,0 +1,10 @@
+-- Relational design lab: write your schema here.
+--
+-- Read README.md for the user story and its acceptance criteria.
+-- Write three CREATE TABLE statements, each ending with a semicolon:
+--   students, courses and enrollments
+-- using the exact table and column names that README.md lists.
+--
+-- The tests create an empty lab database, run this whole file in it,
+-- then try inserts and deletes that your constraints must accept or reject.
+-- As shipped, this file creates nothing, so every test fails.

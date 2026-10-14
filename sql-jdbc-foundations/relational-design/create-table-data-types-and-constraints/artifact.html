@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="sql-jdbc-foundations">
+<meta name="pep:module" content="relational-design">
+<meta name="pep:topic" content="CREATE TABLE, data types and constraints">
+<meta name="pep:topic-id" content="create-table-data-types-and-constraints">
+<meta name="pep:budget-minutes" content="12">
+<meta name="pep:source" content="authoring/evidence/sql-jdbc-foundations/relational-design/create-table-data-types-and-constraints/sources.json">
+<title>CREATE TABLE, data types and constraints · Relational Design</title>
+<style>
+:root{
+  --bg:#eef2f0;--surface:#f8faf9;--ink:#1b2320;--muted:#47524e;--rule:#6b7873;--line:#c9d2ce;
+  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
+  --on-teal:#ffffff;--term:#e2e8e5;--focus:#1f4fbf;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --serif:Georgia,"Times New Roman",serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121816;--surface:#1a2220;--ink:#e3ebe7;--muted:#a8b6b0;--rule:#71827c;--line:#2f3b37;
+  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
+  --on-teal:#0b1311;--term:#0c1110;--focus:#8fb4ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+::selection{background:var(--teal);color:var(--on-teal)}
+code,kbd,.mono{font-family:var(--mono);font-size:.94em}
+a{color:var(--teal);text-underline-offset:3px}
+main{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
+.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:var(--s6);row-gap:var(--s2);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
+h1,h2{font-family:var(--serif)}
+h1{margin:0;font-size:26px;line-height:32px;letter-spacing:-.01em}
+.meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
+.meta li:first-child{font-weight:700;color:var(--ink)}
+.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
+.objectives{grid-column:1/-1;margin:0;font-size:15px}.objectives summary{cursor:pointer;color:var(--ink);font-weight:600;padding:10px 0;width:max-content;max-width:100%}.objectives ul{margin:var(--s1) 0 0;padding-left:1.25em}
+.task ol.how{margin:var(--s2) 0 0;padding-left:1.4em;font-weight:400}.task ol.how li+li{margin-top:var(--s1)}
+.tools{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:var(--s2);grid-row:1;grid-column:2}
+.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s3);align-items:start}
+.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.teach h2{margin:0 0 var(--s2);font-size:21px;line-height:28px}
+.teach p{margin:0 0 var(--s2);max-width:62ch}
+.teach ul,.teach ol{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
+.teach li{margin-bottom:var(--s1)}
+.task{padding:var(--s3) var(--s4);border-top:2px solid var(--teal);background:var(--surface)}
+.task p{margin:0;font-weight:600}
+.task p+p{margin-top:var(--s2)}
+.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
+.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
+.goals li:first-child{border-top:0}
+.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
+.goals li.done .st{color:var(--teal)}
+.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface);min-width:0}
+.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:var(--s2)}
+.control{min-width:0}
+.sql{margin:0 0 var(--s2);padding:var(--s2) var(--s3);border-left:3px solid var(--teal);background:var(--bg);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.dtab{border-collapse:collapse;font:14px/1.35 var(--mono);margin:0 0 var(--s2)}
+.dtab caption{text-align:left;font:700 15px/1.4 var(--sans);padding-bottom:2px}
+.dtab th,.dtab td{border:1px solid var(--rule);padding:2px var(--s2);text-align:left;vertical-align:top}
+.dtab th{background:var(--bg)}
+.dtab tr.new td{border-style:double;border-width:3px}
+.dtab .key{font-weight:700}
+.tables{display:flex;flex-wrap:wrap;gap:var(--s2) var(--s4);align-items:flex-start}
+.tables>*{min-width:0;max-width:100%;overflow-x:auto}
+.legend{margin:0;font-size:14px;color:var(--muted)}
+.sorter{display:flex;flex-direction:column;gap:var(--s2)}
+.sitem{margin:0;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);min-width:0}
+.sitem legend{float:left;width:100%;margin:0 0 var(--s1);font-size:15px;font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.chips{clear:both;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s2)}
+.chips label{display:flex;align-items:center;gap:var(--s1);min-height:36px;padding:2px var(--s2);border:1px solid var(--rule);border-radius:4px;background:var(--bg);font-size:15px;cursor:pointer;overflow-wrap:anywhere}
+.chips label:has(input:checked){border:2px solid var(--teal);font-weight:600}
+.chips input{width:18px;height:18px;margin:0;accent-color:var(--teal)}
+.sitem.right{border-color:var(--teal)}
+.sitem.wrong{border-style:dashed;border-color:var(--red)}
+.sitem .mark{display:block;font-size:14px;font-weight:700}
+.sitem .mark:empty{display:none}
+.sitem.right .mark{color:var(--teal)}
+.sitem.wrong .mark{color:var(--red)}
+.stmts{display:flex;flex-direction:column;gap:var(--s2)}
+.stmts button{text-align:left;font:15px/1.4 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.out{min-height:72px;max-height:240px;overflow-y:auto;margin-top:var(--s2);padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--term);font:14px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.out .c{font-weight:700}
+.out .e{color:var(--red)}
+.out .h{color:var(--muted);font-family:var(--sans)}
+.verdict{font-weight:700}
+.verdict.ok{color:var(--teal)}
+.verdict.no{color:var(--red)}
+.verdict.set{color:var(--amber)}
+.explain{list-style:none;padding:0;margin:var(--s1) 0 0}
+.explain li{margin:0;padding:var(--s1) 0 var(--s1) var(--s3);border-left:2px solid var(--line)}
+.explain li+li{margin-top:var(--s1)}
+.explain li.mine{border-left-color:var(--teal)}
+.explain .on,.explain .ex{display:block}
+.on{font-weight:600}
+.opt .why{display:block;flex:1 0 100%;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
+.recap ul{padding-left:20px}
+.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
+.feedback details{margin:var(--s1) 0}
+.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
+.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
+.next-topic{font-weight:700}
+.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
+svg text{font-family:var(--sans)}
+[hidden]{display:none!important}
+@media (min-width:861px) and (max-height:720px){
+  main{padding-top:var(--s2)}
+  .stage{padding-top:var(--s2)}
+  .col{gap:var(--s2)}
+  .model{padding:var(--s2) var(--s4)}
+  .teach h2{margin-bottom:var(--s1)}
+}
+@media (max-width:860px){
+  main{padding:var(--s3) var(--s4) var(--s4)}
+  .top{grid-template-columns:minmax(0,1fr)}
+  .tools{grid-row:auto;grid-column:1;justify-content:flex-start}
+  .stage{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3)}
+  .col{display:contents}
+  #current-teaching{order:1}#current-task{order:2}#live-model{order:3}#current-control{order:4}.fbrow{order:5}
+}
+@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}
+  
+  .cmdline{flex-wrap:wrap;row-gap:var(--s1)}
+  .cmdline label{flex:1 0 100%;max-width:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+.dtab{max-width:100%}.dtab th,.dtab td{overflow-wrap:anywhere}
+/* pep:component restart@1 css */
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* /pep:component restart css */
+/* pep:component progress@1 css */
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:repeating-linear-gradient(135deg,var(--amber) 0 3px,transparent 3px 6px);border-color:var(--amber)}
+/* /pep:component progress css */
+/* pep:component mcq-with-confidence@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start}
+.feedback{width:100%;min-width:0;font-size:15px;line-height:1.35}
+.feedback:empty{display:none}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin:0}
+.feedback .verdict{font-weight:700}
+.feedback .ok{color:var(--teal)}
+.feedback .no{color:var(--red)}
+.feedback .set{color:var(--amber)}
+.feedback .info{color:var(--ink)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+/* /pep:component mcq-with-confidence css */
+</style>
+</head>
+<body>
+<noscript><p class="nojs">This topic needs JavaScript for its practice activities and checks. Turn JavaScript on to take part.</p></noscript>
+<main id="lesson">
+  <header class="top">
+    <h1>CREATE TABLE, data types and constraints</h1>
+    <div class="tools">
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 5</span><span class="pips" aria-hidden="true"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></span></div>
+      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart this activity</button>
+      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+    </div>
+    <ul class="meta"><li>Relational Design, topic 5 of 5</li><li>About 12 minutes</li><li>5 activities</li></ul>
+    <details class="objectives" data-pep-objectives>
+      <summary>What you'll be able to do</summary>
+      <ul>
+      <li>Write a CREATE TABLE statement that chooses a suitable data type for each column (integer, numeric, text or varchar, boolean, date or timestamp)</li>
+      <li>Enforce a design's rules with PRIMARY KEY, FOREIGN KEY, NOT NULL, UNIQUE, CHECK and DEFAULT</li>
+      <li>Predict which INSERT a constraint rejects and identify the violated constraint from the error message</li>
+      </ul>
+    </details>
+  </header>
+  <div class="stage" id="stage" data-step="1">
+    <div class="col">
+      <section id="current-teaching" class="teach" aria-label="Current teaching">
+<div data-step="1">
+  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+  <p>The library's design is ready. Now the database itself will enforce it. Guess what a rule written into a table does.</p>
+</div>
+<div data-step="2" data-pep-teaching>
+  <h2 id="teach-2-h" tabindex="-1">Every column has a type</h2>
+  <p><code>CREATE TABLE name ( column type, ... );</code> lists each column with a data type. PostgreSQL rejects a value the type cannot hold.</p>
+  <ul>
+    <li><code>integer</code>: whole numbers, such as ids.</li>
+    <li><code>numeric(6,2)</code>: exact decimals, up to 6 digits with 2 after the point; recommended for money.</li>
+    <li><code>text</code>: strings of any length; <code>varchar(80)</code>: at most 80 characters.</li>
+    <li><code>boolean</code>: true or false.</li>
+    <li><code>date</code>: a calendar day; <code>timestamp</code>: a date with a time of day.</li>
+  </ul>
+</div>
+<div data-step="3" data-pep-teaching>
+  <h2 id="teach-3-h" tabindex="-1">Constraints write the rules down</h2>
+  <ul>
+    <li><code>PRIMARY KEY</code>: unique and not null.</li>
+    <li><code>REFERENCES members (id)</code>: a foreign key.</li>
+    <li><code>NOT NULL</code>: a value is required.</li>
+    <li><code>UNIQUE</code>: no two rows share the value.</li>
+    <li><code>CHECK (fine &gt;= 0)</code>: the condition must not be false.</li>
+    <li><code>DEFAULT false</code>: used when an insert leaves the column out. Without one, the default is null.</li>
+  </ul>
+</div>
+<div data-step="4" data-pep-teaching>
+  <h2 id="teach-4-h" tabindex="-1">Read the error to find the rule</h2>
+  <p>A rejected insert stores nothing. The first error line names the kind of rule; the <code>DETAIL</code> line shows the value.</p>
+  <p>If you do not name a constraint, PostgreSQL chooses a name. Here the names join the table, the column and the kind: <code>members_email_key</code> is the UNIQUE rule on email, <code>loans_fine_check</code> the CHECK on fine, <code>loans_member_id_fkey</code> the foreign key.</p>
+</div>
+<div data-step="5" data-pep-teaching>
+  <h2 id="teach-5-h" tabindex="-1">Apply it</h2>
+  <p>Predict a rejection, then read one.</p>
+</div>
+<div data-step="6" hidden data-pep-recap class="recap">
+  <h2 id="teach-6-h" tabindex="-1">Recap</h2>
+  <ul>
+    <li>Choose a type per column: integer, numeric for exact money, text or varchar(n), boolean, date or timestamp.</li>
+    <li>PRIMARY KEY, REFERENCES, NOT NULL, UNIQUE, CHECK and DEFAULT turn the design's rules into rules the database enforces.</li>
+    <li>A rejected insert stores nothing; the error names the rule and the DETAIL line shows the value.</li>
+  </ul>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <pre class="sql">CREATE TABLE members (
+  id        integer PRIMARY KEY,
+  email     text NOT NULL UNIQUE,
+  name      varchar(80) NOT NULL,
+  joined_on date NOT NULL DEFAULT CURRENT_DATE
+);
+CREATE TABLE loans (
+  id        integer PRIMARY KEY,
+  member_id integer NOT NULL REFERENCES members (id),
+  due_on    date NOT NULL,
+  returned  boolean NOT NULL DEFAULT false,
+  fine      numeric(6,2) NOT NULL DEFAULT 0 CHECK (fine &gt;= 0)
+);</pre>
+    <table>
+      <tr><td><code>violates unique constraint "..._pkey"</code></td><td>repeated primary key</td></tr>
+      <tr><td><code>violates unique constraint "..._key"</code></td><td>repeated UNIQUE value</td></tr>
+      <tr><td><code>violates not-null constraint</code></td><td>missing required value</td></tr>
+      <tr><td><code>violates check constraint</code></td><td>CHECK condition false</td></tr>
+      <tr><td><code>violates foreign key constraint</code></td><td>no matching parent row</td></tr>
+      <tr><td><code>invalid input syntax for type date</code></td><td>value does not fit the type</td></tr>
+    </table>
+    <p>Real applications often let PostgreSQL number new rows with <code>GENERATED ALWAYS AS IDENTITY</code>. This page writes ids by hand so the keys stay visible.</p>
+  </details>
+  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live PostgreSQL 18 pages on 2026-10-14. Error messages were copied from a real PostgreSQL 18 server. The constraint names follow what that server generated; the manual says only that the system chooses a name, so the naming pattern is listed as unverified in this topic's review record.</p><ul>
+    <li><a href="https://www.postgresql.org/docs/current/sql-createtable.html" rel="noopener">PostgreSQL 18 reference: CREATE TABLE</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/datatype.html" rel="noopener">PostgreSQL 18: Chapter 8 Data Types</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/datatype-numeric.html" rel="noopener">PostgreSQL 18: 8.1 Numeric Types</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/datatype-character.html" rel="noopener">PostgreSQL 18: 8.3 Character Types</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/datatype-datetime.html" rel="noopener">PostgreSQL 18: 8.5 Date/Time Types</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/datatype-boolean.html" rel="noopener">PostgreSQL 18: 8.6 Boolean Type</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/ddl-default.html" rel="noopener">PostgreSQL 18: 5.2 Default Values</a></li>
+    <li><a href="https://www.postgresql.org/docs/current/ddl-constraints.html" rel="noopener">PostgreSQL 18: 5.5 Constraints</a></li>
+  </ul></details>
+  <p class="next-topic">This is the last topic in Relational Design. Next, practise it for real in the module coding lab.</p>
+</div>
+      </section>
+      <section id="current-task" class="task" aria-label="Current task">
+<div data-step="1"><p id="task-1"><code>loans.fine</code> is declared <code>numeric(6,2) CHECK (fine &gt;= 0)</code>. You insert a loan with a fine of -2.50. What happens?</p>
+  <ol class="how"><li>Choose the answer you expect.</li><li>Choose how sure you are under <strong>How sure are you?</strong></li><li>Select <strong>Check my prediction</strong>. Feedback appears below, and every option shows why. This guess is not scored.</li></ol></div>
+<div data-step="2"><p id="task-2">Choose a data type for each column.</p>
+  <ol class="how"><li>For each item, choose one option.</li><li>Select <strong>Check my answers</strong>. Each item is marked Correct or Not yet, with the reason in the feedback.</li><li>Change any item marked Not yet and check again. When all are correct, select <strong>Continue</strong>.</li></ol></div>
+<div data-step="3"><p id="task-3">Match each rule from the design to the constraint that enforces it.</p>
+  <ol class="how"><li>For each item, choose one option.</li><li>Select <strong>Check my answers</strong>. Each item is marked Correct or Not yet, with the reason in the feedback.</li><li>Change any item marked Not yet and check again. When all are correct, select <strong>Continue</strong>.</li></ol></div>
+<div data-step="4"><p id="task-4">The tables now exist with every constraint. Run the inserts and match each error to its rule.</p>
+  <ol class="how"><li>Select a statement in the panel under this task. It runs against the tables in the diagram panel.</li><li>Read the result under the statements: <code>INSERT 0 1</code> or <code>DELETE 1</code> means accepted; <code>ERROR</code> means rejected, with the reason.</li><li>Watch the tables update. Each goal says done when it is met; then select <strong>Continue</strong>.</li></ol>
+  <ul class="goals"><li data-goal="uq"><span>See a UNIQUE rejection</span><span class="st"></span></li><li data-goal="nn"><span>See a NOT NULL rejection</span><span class="st"></span></li><li data-goal="ck"><span>See a CHECK rejection</span><span class="st"></span></li><li data-goal="fk"><span>See a foreign key rejection</span><span class="st"></span></li><li data-goal="ok"><span>Store a loan that uses the defaults</span><span class="st"></span></li></ul></div>
+<div data-step="5"><p id="task-apply">Member 1 has the email ana@example.com. Which insert into <code>members</code> (its CREATE TABLE is in the diagram panel) does PostgreSQL reject?</p>
+  <ol class="how"><li>Choose one answer, then how sure you are.</li><li>Select <strong>Check answer</strong>. Feedback appears below.</li><li>If it is wrong, the reason is shown and the same idea comes back in another form for one more try.</li></ol>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Second try, other way round: which constraint produced the error shown below?</p></div>
+<div data-step="6"><p>All activities finished.</p><p id="complete-msg" class="complete"></p></div>
+      </section>
+      <div class="fbrow">
+        <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-explore-feedback></div>
+<div data-step="5" data-pep-apply-feedback></div>
+<div data-step="6"></div>
+        </div>
+        <button type="button" class="primary" id="next" hidden>Continue</button>
+      </div>
+    </div>
+    <div class="col">
+<figure id="live-model" class="model" aria-labelledby="model-cap" data-pep-model>
+  <figcaption id="model-cap">The library's CREATE TABLE statements, filled in as you decide, and the rows stored so far</figcaption>
+  <pre class="sql" id="ddl">CREATE TABLE members (
+  id        ?,
+  email     ?,
+  name      varchar(80),
+  joined_on ?
+);
+CREATE TABLE loans (
+  id        integer,
+  member_id integer,
+  due_on    date,
+  returned  ?,
+  fine      ?
+);</pre>
+  <div id="rows" class="tables"><table class="dtab"><caption>members</caption><tr><th>id</th><th>email</th><th>name</th><th>joined_on</th></tr><tr><td>1</td><td>ana@example.com</td><td>Ana</td><td>2026-09-01</td></tr></table><table class="dtab"><caption>loans</caption><tr><th>id</th><th>member_id</th><th>due_on</th><th>returned</th><th>fine</th></tr><tr><td colspan="5">(no rows)</td></tr></table></div>
+</figure>
+      <section id="current-control" class="control" aria-label="Your turn">
+<div data-step="1">
+  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): fine is numeric(6,2) with CHECK (fine &gt;= 0), and you insert -2.50. Options: PostgreSQL rejects the row with a check constraint error; it stores 0.00 instead; it stores -2.50 and warns; it stores 2.50. Answer: it rejects the row, and nothing is stored. A constraint never changes a value to make it fit.">
+    <legend>Prediction</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="predict" value="a"> <span class="ot">Rejects the row with an error</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span class="ot">Stores 0.00 instead</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span class="ot">Stores -2.50 with a warning</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span class="ot">Stores 2.50</span></label></div>
+  </fieldset>
+  <div class="row">
+  <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
+    <legend id="pconf-help">How sure are you?</legend>
+    <label class="opt"><input type="radio" name="pconf" value="low"> <span class="ot">Low</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="medium"> <span class="ot">Medium</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="high"> <span class="ot">High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+  </div>
+</div><div data-step="2" hidden>
+  <div class="sorter" data-sorter="ty" data-interaction="explore" data-static-alt="Type activity with answers. members.id, a whole number: integer. members.email, a string of any length: text. members.joined_on, a calendar day: date. loans.returned, yes or no: boolean. loans.fine, an exact amount of money with cents: numeric(6,2). The moment a book was checked out, a date with a time of day: timestamp.">
+    <fieldset class="sitem" data-item="id"><legend>members.id: a whole number</legend><div class="chips"><label><input type="radio" name="ty-id" value="integer"> <span class="ot">integer</span></label><label><input type="radio" name="ty-id" value="numeric"> <span class="ot">numeric(6,2)</span></label><label><input type="radio" name="ty-id" value="text"> <span class="ot">text</span></label><label><input type="radio" name="ty-id" value="boolean"> <span class="ot">boolean</span></label><label><input type="radio" name="ty-id" value="date"> <span class="ot">date</span></label><label><input type="radio" name="ty-id" value="timestamp"> <span class="ot">timestamp</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="email"><legend>members.email: a string of any length</legend><div class="chips"><label><input type="radio" name="ty-email" value="integer"> <span class="ot">integer</span></label><label><input type="radio" name="ty-email" value="numeric"> <span class="ot">numeric(6,2)</span></label><label><input type="radio" name="ty-email" value="text"> <span class="ot">text</span></label><label><input type="radio" name="ty-email" value="boolean"> <span class="ot">boolean</span></label><label><input type="radio" name="ty-email" value="date"> <span class="ot">date</span></label><label><input type="radio" name="ty-email" value="timestamp"> <span class="ot">timestamp</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="joined"><legend>members.joined_on: the day someone joined</legend><div class="chips"><label><input type="radio" name="ty-joined" value="integer"> <span class="ot">integer</span></label><label><input type="radio" name="ty-joined" value="numeric"> <span class="ot">numeric(6,2)</span></label><label><input type="radio" name="ty-joined" value="text"> <span class="ot">text</span></label><label><input type="radio" name="ty-joined" value="boolean"> <span class="ot">boolean</span></label><label><input type="radio" name="ty-joined" value="date"> <span class="ot">date</span></label><label><input type="radio" name="ty-joined" value="timestamp"> <span class="ot">timestamp</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="ret"><legend>loans.returned: yes or no</legend><div class="chips"><label><input type="radio" name="ty-ret" value="integer"> <span class="ot">integer</span></label><label><input type="radio" name="ty-ret" value="numeric"> <span class="ot">numeric(6,2)</span></label><label><input type="radio" name="ty-ret" value="text"> <span class="ot">text</span></label><label><input type="radio" name="ty-ret" value="boolean"> <span class="ot">boolean</span></label><label><input type="radio" name="ty-ret" value="date"> <span class="ot">date</span></label><label><input type="radio" name="ty-ret" value="timestamp"> <span class="ot">timestamp</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="fine"><legend>loans.fine: an exact amount of money, such as 1.50</legend><div class="chips"><label><input type="radio" name="ty-fine" value="integer"> <span class="ot">integer</span></label><label><input type="radio" name="ty-fine" value="numeric"> <span class="ot">numeric(6,2)</span></label><label><input type="radio" name="ty-fine" value="text"> <span class="ot">text</span></label><label><input type="radio" name="ty-fine" value="boolean"> <span class="ot">boolean</span></label><label><input type="radio" name="ty-fine" value="date"> <span class="ot">date</span></label><label><input type="radio" name="ty-fine" value="timestamp"> <span class="ot">timestamp</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="out"><legend>checked_out_at: the date and the time of day</legend><div class="chips"><label><input type="radio" name="ty-out" value="integer"> <span class="ot">integer</span></label><label><input type="radio" name="ty-out" value="numeric"> <span class="ot">numeric(6,2)</span></label><label><input type="radio" name="ty-out" value="text"> <span class="ot">text</span></label><label><input type="radio" name="ty-out" value="boolean"> <span class="ot">boolean</span></label><label><input type="radio" name="ty-out" value="date"> <span class="ot">date</span></label><label><input type="radio" name="ty-out" value="timestamp"> <span class="ot">timestamp</span></label></div><span class="mark"></span></fieldset>
+    <div class="row"><button type="button" class="primary" data-act="sort-check" data-sorter="ty" aria-describedby="task-2">Check my answers</button></div>
+  </div>
+</div><div data-step="3" hidden>
+  <div class="sorter" data-sorter="ru" data-interaction="explore" data-static-alt="Constraint activity with answers. Each member has an id that identifies them: PRIMARY KEY. Every member must have an email: NOT NULL. No two members share an email: UNIQUE. A fine is never negative: CHECK (fine &gt;= 0). A new loan counts as not returned unless the insert says otherwise: DEFAULT false. Each loan&#x27;s member must exist: REFERENCES members (id).">
+    <fieldset class="sitem" data-item="pk"><legend>Each member has an id that identifies them</legend><div class="chips"><label><input type="radio" name="ru-pk" value="pk"> <span class="ot">PRIMARY KEY</span></label><label><input type="radio" name="ru-pk" value="fk"> <span class="ot">REFERENCES</span></label><label><input type="radio" name="ru-pk" value="nn"> <span class="ot">NOT NULL</span></label><label><input type="radio" name="ru-pk" value="uq"> <span class="ot">UNIQUE</span></label><label><input type="radio" name="ru-pk" value="ck"> <span class="ot">CHECK</span></label><label><input type="radio" name="ru-pk" value="df"> <span class="ot">DEFAULT</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="nn"><legend>Every member must have an email</legend><div class="chips"><label><input type="radio" name="ru-nn" value="pk"> <span class="ot">PRIMARY KEY</span></label><label><input type="radio" name="ru-nn" value="fk"> <span class="ot">REFERENCES</span></label><label><input type="radio" name="ru-nn" value="nn"> <span class="ot">NOT NULL</span></label><label><input type="radio" name="ru-nn" value="uq"> <span class="ot">UNIQUE</span></label><label><input type="radio" name="ru-nn" value="ck"> <span class="ot">CHECK</span></label><label><input type="radio" name="ru-nn" value="df"> <span class="ot">DEFAULT</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="uq"><legend>No two members share an email</legend><div class="chips"><label><input type="radio" name="ru-uq" value="pk"> <span class="ot">PRIMARY KEY</span></label><label><input type="radio" name="ru-uq" value="fk"> <span class="ot">REFERENCES</span></label><label><input type="radio" name="ru-uq" value="nn"> <span class="ot">NOT NULL</span></label><label><input type="radio" name="ru-uq" value="uq"> <span class="ot">UNIQUE</span></label><label><input type="radio" name="ru-uq" value="ck"> <span class="ot">CHECK</span></label><label><input type="radio" name="ru-uq" value="df"> <span class="ot">DEFAULT</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="ck"><legend>A fine is never negative</legend><div class="chips"><label><input type="radio" name="ru-ck" value="pk"> <span class="ot">PRIMARY KEY</span></label><label><input type="radio" name="ru-ck" value="fk"> <span class="ot">REFERENCES</span></label><label><input type="radio" name="ru-ck" value="nn"> <span class="ot">NOT NULL</span></label><label><input type="radio" name="ru-ck" value="uq"> <span class="ot">UNIQUE</span></label><label><input type="radio" name="ru-ck" value="ck"> <span class="ot">CHECK</span></label><label><input type="radio" name="ru-ck" value="df"> <span class="ot">DEFAULT</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="df"><legend>A new loan counts as not returned unless the insert says otherwise</legend><div class="chips"><label><input type="radio" name="ru-df" value="pk"> <span class="ot">PRIMARY KEY</span></label><label><input type="radio" name="ru-df" value="fk"> <span class="ot">REFERENCES</span></label><label><input type="radio" name="ru-df" value="nn"> <span class="ot">NOT NULL</span></label><label><input type="radio" name="ru-df" value="uq"> <span class="ot">UNIQUE</span></label><label><input type="radio" name="ru-df" value="ck"> <span class="ot">CHECK</span></label><label><input type="radio" name="ru-df" value="df"> <span class="ot">DEFAULT</span></label></div><span class="mark"></span></fieldset>
+    <fieldset class="sitem" data-item="fk"><legend>Each loan's member must exist</legend><div class="chips"><label><input type="radio" name="ru-fk" value="pk"> <span class="ot">PRIMARY KEY</span></label><label><input type="radio" name="ru-fk" value="fk"> <span class="ot">REFERENCES</span></label><label><input type="radio" name="ru-fk" value="nn"> <span class="ot">NOT NULL</span></label><label><input type="radio" name="ru-fk" value="uq"> <span class="ot">UNIQUE</span></label><label><input type="radio" name="ru-fk" value="ck"> <span class="ot">CHECK</span></label><label><input type="radio" name="ru-fk" value="df"> <span class="ot">DEFAULT</span></label></div><span class="mark"></span></fieldset>
+    <div class="row"><button type="button" class="primary" data-act="sort-check" data-sorter="ru" aria-describedby="task-3">Check my answers</button></div>
+  </div>
+</div><div data-step="4" hidden>
+  <div data-runner="ins" data-interaction="explore" data-static-alt="Insert activity against the finished tables (member 1, ana@example.com, already exists). INSERT INTO members (id, email, name) VALUES (2, 'ana@example.com', 'Ben'); is rejected: ERROR: duplicate key value violates unique constraint &quot;members_email_key&quot;, DETAIL: Key (email)=(ana@example.com) already exists. INSERT INTO members (id, name) VALUES (3, 'Chen'); is rejected: ERROR: null value in column &quot;email&quot; of relation &quot;members&quot; violates not-null constraint. INSERT INTO loans (id, member_id, due_on, fine) VALUES (101, 1, '2026-11-01', -2.50); is rejected: ERROR: new row for relation &quot;loans&quot; violates check constraint &quot;loans_fine_check&quot;. INSERT INTO loans (id, member_id, due_on) VALUES (102, 7, '2026-11-01'); is rejected: ERROR: insert or update on table &quot;loans&quot; violates foreign key constraint &quot;loans_member_id_fkey&quot;, DETAIL: Key (member_id)=(7) is not present in table &quot;members&quot;. INSERT INTO loans (id, member_id, due_on) VALUES (103, 1, 'soon'); is rejected by the date type: ERROR: invalid input syntax for type date: &quot;soon&quot;. INSERT INTO loans (id, member_id, due_on) VALUES (100, 1, '2026-11-01'); is accepted, and the defaults fill in returned false and fine 0.00.">
+    <div class="stmts">
+      <button type="button" class="ghost" data-act="run" data-stmt="uq">INSERT INTO members (id, email, name) VALUES (2, 'ana@example.com', 'Ben');</button>
+      <button type="button" class="ghost" data-act="run" data-stmt="nn">INSERT INTO members (id, name) VALUES (3, 'Chen');</button>
+      <button type="button" class="ghost" data-act="run" data-stmt="ck">INSERT INTO loans (id, member_id, due_on, fine) VALUES (101, 1, '2026-11-01', -2.50);</button>
+      <button type="button" class="ghost" data-act="run" data-stmt="fk">INSERT INTO loans (id, member_id, due_on) VALUES (102, 7, '2026-11-01');</button>
+      <button type="button" class="ghost" data-act="run" data-stmt="ty">INSERT INTO loans (id, member_id, due_on) VALUES (103, 1, 'soon');</button>
+      <button type="button" class="ghost" data-act="run" data-stmt="ok">INSERT INTO loans (id, member_id, due_on) VALUES (100, 1, '2026-11-01');</button>
+    </div>
+    <div class="out" id="out-4" role="log" tabindex="0" aria-label="PostgreSQL output, scrollable"></div>
+  </div>
+</div><div data-step="5">
+  <div data-first>
+  <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: member 1 has ana@example.com; members has id integer PRIMARY KEY, email text NOT NULL UNIQUE, name varchar(80) NOT NULL, joined_on date NOT NULL DEFAULT CURRENT_DATE. Which insert is rejected? (2, 'ben@example.com', 'Ben') is accepted. (3, 'ana@example.com', 'Chen') is rejected (answer): the UNIQUE rule on email. (4, 'dee@example.com', 'Dee', '2026-01-15') is accepted with joined_on given. (5, 'eve@example.com', 'Eve') is accepted: joined_on takes its default, today's date. Second try: duplicate key value violates unique constraint &quot;members_email_key&quot; comes from the UNIQUE constraint on email.">
+    <legend>Choose the rejected insert</legend>
+    <div class="opts one"><label class="opt"><input type="radio" name="apply-a" value="a"> <span class="ot"><code>INSERT INTO members (id, email, name) VALUES (2, 'ben@example.com', 'Ben');</code></span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span class="ot"><code>INSERT INTO members (id, email, name) VALUES (3, 'ana@example.com', 'Chen');</code></span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span class="ot"><code>INSERT INTO members (id, email, name, joined_on) VALUES (4, 'dee@example.com', 'Dee', '2026-01-15');</code></span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span class="ot"><code>INSERT INTO members (id, email, name) VALUES (5, 'eve@example.com', 'Eve');</code></span></label></div>
+  </fieldset>
+  <div class="row">
+  <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
+    <legend id="conf-help">How sure are you?</legend>
+    <label class="opt"><input type="radio" name="conf" value="low"> <span class="ot">Low</span></label>
+    <label class="opt"><input type="radio" name="conf" value="medium"> <span class="ot">Medium</span></label>
+    <label class="opt"><input type="radio" name="conf" value="high"> <span class="ot">High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
+  </div>
+  </div>
+  <div data-retry hidden>
+    <pre class="sql" aria-label="Error to explain">ERROR:  duplicate key value violates unique constraint "members_email_key"
+DETAIL:  Key (email)=(ana@example.com) already exists.</pre>
+    <fieldset id="apply-b" aria-describedby="task-apply-b">
+      <legend>Which constraint?</legend>
+      <div class="opts"><label class="opt"><input type="radio" name="apply-b" value="a"> <span class="ot"><code>PRIMARY KEY</code> on id</span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span class="ot"><code>UNIQUE</code> on email</span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span class="ot"><code>NOT NULL</code> on email</span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span class="ot"><code>CHECK</code> on email</span></label></div>
+    </fieldset>
+    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+  </div>
+</div><div data-step="6"></div>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+var TOPIC={
+steps:6,acts:['predict','types','rules','errors','apply'],
+init:function(){return {members:[[1,'ana@example.com','Ana','2026-09-01']],loans:[],seen:{},fresh:null};},
+runners:{ins:{act:'errors',log:'out-4',prompt:'library=>',
+ stmts:(function(){
+  function today(){var d=new Date(),p=function(n){return (n<10?'0':'')+n;};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+  function hasL(t,id){return t.loans.some(function(r){return r[0]===id;});}
+  function dupL(id){return {ok:false,out:[['e','ERROR:  duplicate key value violates unique constraint "loans_pkey"'],['e','DETAIL:  Key (id)=('+id+') already exists.']],note:'Loan '+id+' already exists: the primary key rejects a second one.'};}
+  return {
+   uq:{sql:"INSERT INTO members (id, email, name) VALUES (2, 'ana@example.com', 'Ben');",run:function(t){t.seen.uq=1;return {ok:false,out:[['e','ERROR:  duplicate key value violates unique constraint "members_email_key"'],['e','DETAIL:  Key (email)=(ana@example.com) already exists.']],note:'members_email_key is the UNIQUE rule on email: Ana already has that address.'};}},
+   nn:{sql:"INSERT INTO members (id, name) VALUES (3, 'Chen');",run:function(t){t.seen.nn=1;return {ok:false,out:[['e','ERROR:  null value in column "email" of relation "members" violates not-null constraint'],['e','DETAIL:  Failing row contains (3, null, Chen, '+today()+').']],note:'email was left out, has no default, so it would be null; NOT NULL rejects that. joined_on got its default, today.'};}},
+   ck:{sql:"INSERT INTO loans (id, member_id, due_on, fine) VALUES (101, 1, '2026-11-01', -2.50);",run:function(t){if(hasL(t,101)){return dupL(101);}t.seen.ck=1;return {ok:false,out:[['e','ERROR:  new row for relation "loans" violates check constraint "loans_fine_check"'],['e','DETAIL:  Failing row contains (101, 1, 2026-11-01, f, -2.50).']],note:'loans_fine_check is CHECK (fine >= 0), and -2.50 makes it false.'};}},
+   fk:{sql:"INSERT INTO loans (id, member_id, due_on) VALUES (102, 7, '2026-11-01');",run:function(t){if(hasL(t,102)){return dupL(102);}t.seen.fk=1;return {ok:false,out:[['e','ERROR:  insert or update on table "loans" violates foreign key constraint "loans_member_id_fkey"'],['e','DETAIL:  Key (member_id)=(7) is not present in table "members".']],note:'loans_member_id_fkey is the foreign key: there is no member 7.'};}},
+   ty:{sql:"INSERT INTO loans (id, member_id, due_on) VALUES (103, 1, 'soon');",run:function(t){t.seen.ty=1;return {ok:false,out:[['e','ERROR:  invalid input syntax for type date: "soon"'],['e',"LINE 1: ... INTO loans (id, member_id, due_on) VALUES (103, 1, 'soon');"],['e','                                                               ^']],note:'No constraint was needed here: the date type itself cannot hold "soon".'};}},
+   ok:{sql:"INSERT INTO loans (id, member_id, due_on) VALUES (100, 1, '2026-11-01');",run:function(t){if(hasL(t,100)){return dupL(100);}t.loans.push([100,1,'2026-11-01','f','0.00']);t.fresh=100;return {ok:true,out:[['o','INSERT 0 1']],note:'Accepted. returned and fine were left out, so their defaults filled in: false (shown f) and 0.00.'};}}};})(),
+ goals:function(t){return {uq:!!t.seen.uq,nn:!!t.seen.nn,ck:!!t.seen.ck,fk:!!t.seen.fk,ok:t.loans.some(function(r){return r[0]===100;})};}}},
+sorters:{
+ ty:{act:'types',done:'Whole numbers, exact money, strings, yes/no, days and moments each have their own type.',
+  hint:'ask what kind of value it is: whole number, exact decimal, words, yes or no, a day, or a day with a time.',
+  items:(function(){var W={integer:'integer holds whole numbers only.',numeric:'numeric(6,2) holds exact decimals with 2 places, made for amounts like money.',text:'text holds strings of any length.',boolean:'boolean holds true or false.',date:'date holds a calendar day with no time.',timestamp:'timestamp holds a day plus a time of day.'};
+   function it(label,ok,right){var w={};Object.keys(W).forEach(function(k){w[k]=(k===ok?right:'Not the best fit: '+W[k]);});return {label:label,ok:ok,why:w};}
+   return {id:it('members.id','integer','An id is a whole number: integer.'),email:it('members.email','text','An email is a string: text.'),joined:it('members.joined_on','date','A join day is a calendar day: date.'),
+    ret:it('loans.returned','boolean','Returned or not is true or false: boolean.'),fine:it('loans.fine','numeric','Money needs exact decimals: numeric(6,2).'),out:it('checked_out_at','timestamp','A day plus a time of day: timestamp.')};})()},
+ ru:{act:'rules',done:'Each rule in the design now has a constraint that enforces it.',
+  hint:'"identifies" means primary key, "must have" NOT NULL, "no two" UNIQUE, a condition CHECK, "unless stated" DEFAULT, "must exist" REFERENCES.',
+  items:(function(){var W={pk:'PRIMARY KEY makes a column the row\'s identity: unique and not null.',fk:'REFERENCES requires a matching row in another table.',nn:'NOT NULL requires a value but allows repeats.',uq:'UNIQUE forbids repeats but does not require a value.',ck:'CHECK tests a condition on the value.',df:'DEFAULT fills in a value when the insert leaves the column out; it rejects nothing.'};
+   function it(label,ok,right){var w={};Object.keys(W).forEach(function(k){w[k]=(k===ok?right:'Not this one: '+W[k]);});return {label:label,ok:ok,why:w};}
+   return {pk:it('Identifies each member','pk','PRIMARY KEY: the id identifies each member.'),nn:it('Must have an email','nn','NOT NULL: a member row needs an email value.'),uq:it('No shared email','uq','UNIQUE: two members cannot share one email.'),
+    ck:it('Fine never negative','ck','CHECK (fine >= 0) rejects a negative fine.'),df:it('Not returned unless stated','df','DEFAULT false fills in "not returned" when the insert says nothing.'),fk:it('Member must exist','fk','REFERENCES members (id) requires a real member.')};})()}},
+change:function(target){if(target.type==='radio'){var row=target.closest('.sitem');if(row){row.classList.remove('right','wrong');row.querySelector('.mark').textContent='';}}},
+render:function(S,api){var t=S.t,e=api.esc,ty=!!S.done.types,ru=!!S.done.rules;
+ function c(type,rule){return (ty?type:'?')+(ru&&rule?' '+rule:'');}
+ api.$('ddl').textContent='CREATE TABLE members (\n  id        '+c('integer','PRIMARY KEY')+',\n  email     '+c('text','NOT NULL UNIQUE')+',\n  name      varchar(80)'+(ru?' NOT NULL':'')+',\n  joined_on '+c('date','NOT NULL DEFAULT CURRENT_DATE')+'\n);\nCREATE TABLE loans (\n  id        integer'+(ru?' PRIMARY KEY':'')+',\n  member_id integer'+(ru?' NOT NULL REFERENCES members (id)':'')+',\n  due_on    date'+(ru?' NOT NULL':'')+',\n  returned  '+c('boolean','NOT NULL DEFAULT false')+',\n  fine      '+c('numeric(6,2)','NOT NULL DEFAULT 0 CHECK (fine >= 0)')+'\n);';
+ function tbl(name,head,rows){return '<table class="dtab"><caption>'+name+'</caption><tr>'+head.map(function(h){return '<th>'+e(h)+'</th>';}).join('')+'</tr>'+(rows.length?rows.map(function(r){return '<tr'+(r[0]===t.fresh?' class="new"':'')+'>'+r.map(function(x){return '<td>'+e(x)+'</td>';}).join('')+'</tr>';}).join(''):'<tr><td colspan="'+head.length+'">(no rows)</td></tr>')+'</table>';}
+ api.$('rows').innerHTML=tbl('members',['id','email','name','joined_on'],t.members)+tbl('loans',['id','member_id','due_on','returned','fine'],t.loans);
+ if(S.step===4){var g=TOPIC.runners.ins.goals(t);api.qa('[data-step="4"] .goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!g[k]);li.querySelector('.st').textContent=g[k]?'done':'open';});}
+},
+predict:{correct:'a',why:{
+ a:'The CHECK condition fine >= 0 is false for -2.50, so the whole row is rejected and nothing is stored.',
+ b:'A constraint never replaces your value; 0.00 is only used when the insert leaves fine out, through DEFAULT.',
+ c:'A constraint violation is an error, not a warning.',
+ d:'PostgreSQL never changes the sign of a value to make it fit.'}},
+apply:{
+ A:{fs:'apply-a',correct:'b',
+  why:{a:'Accepted: id 2 and ben@example.com are both new, and joined_on takes its default.',b:'Rejected: ana@example.com is already Ana\'s, and email is UNIQUE.',c:'Accepted: every value is new and fits its type.',d:'Accepted: leaving joined_on out is fine because it has a default.'},
+  miss:{a:'Nothing in that row repeats or is missing.',c:'Giving joined_on yourself is allowed.',d:'A column with a DEFAULT can be left out.'},
+  okNote:'UNIQUE on email rejects a second member with the same address.',
+  hint:'Compare each value with member 1, and check which columns may be left out.'},
+ B:{fs:'apply-b',correct:'b',
+  why:{a:'A repeated id would name members_pkey and show Key (id)=(...).',b:'members_email_key and Key (email)=(...) point at the UNIQUE rule on email.',c:'NOT NULL errors say "null value in column ... violates not-null constraint".',d:'A CHECK error says "violates check constraint" and there is no CHECK on email.'},
+  okNote:'The constraint name and the DETAIL key both point at email\'s UNIQUE rule.',
+  reveal:'The answer is UNIQUE on email: "duplicate key" with members_email_key and Key (email). That is the insert from the first question, member 3 reusing Ana\'s email.'}}
+};
+
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
+var SNAP={},LAST=TOPIC.steps,S;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init?TOPIC.init():{},sort:{}};}
+function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
+function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}}
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,render:function(){if(TOPIC.render){TOPIC.render(S,api);}},get S(){return S;}};
+function progress(){
+  var acts=TOPIC.acts,n=0,set=0,pips=qa('.pip',$('progress'));
+  acts.forEach(function(a,i){var p=pips[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
+    if(p){p.className='pip'+(on?(S.settled[a]?' settled':' on'):'');}});
+  $('prog-text').textContent='Activities done: '+n+' of '+acts.length+(set?' ('+set+' answered, not marked correct)':'');
+}
+function complete(act){if(!S.done[act]){S.done[act]=true;}progress();$('next').hidden=false;}
+function show(step,focus){
+  S.step=step;stageEl.setAttribute('data-step',String(step));
+  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
+  if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
+    SNAP[step]={html:h,t:clone(S.t)};}
+  $('reset').disabled=(step===LAST);
+  $('next').hidden=!S.done[TOPIC.acts[step-1]];
+  if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
+    c.textContent='All '+TOPIC.acts.length+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: read its explanation again before moving on.':'.');}}
+  else{main.removeAttribute('data-pep-complete');}
+  if(TOPIC.render){TOPIC.render(S,api);}progress();
+  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+}
+function optLabel(inp){return inp.closest('label');}
+function optText(inp){var s=optLabel(inp).querySelector('.ot');return (s?s.textContent:optLabel(inp).textContent).trim();}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function badgeHtml(list){return '<span class="badges">'+list.map(function(b){return '<span class="badge '+b[1]+'">'+b[0]+'</span>';}).join('')+'</span>';}
+function explainList(set,chosen,mark){
+  var html='<ul class="explain">';
+  Object.keys(set.why).forEach(function(k){
+    var inp=qa('input[value="'+k+'"]',$(set.fs))[0];var lab=inp?optText(inp):k;
+    html+='<li'+(k===chosen?' class="mine"':'')+'><span class="on">'+(mark?(k===set.correct?'Correct: ':'Not this: '):'')+esc(lab)+(k===chosen?' (your choice)':'')+'</span><span class="ex">'+set.why[k]+'</span></li>';
+  });
+  return html+'</ul>';
+}
+function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===set.correct&&chosen===set.correct){l.classList.add('right');}
+  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
+function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i),b=[];
+  if(i.value===chosen){b.push(['Your answer','mine-b']);}b.push(i.value===set.correct?['Correct','ok-b']:['Not correct','no-b']);
+  var w=d.createElement('span');w.className='why';w.innerHTML=badgeHtml(b)+set.why[i.value];l.appendChild(w);});}
+function firstDetails(){return '<details><summary>First question: every option explained</summary>'+explainList(TOPIC.apply.A,S.firstPick,true)+'</details>';}
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+'. Reported to you, never graded.</p>';}
+function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
+  var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
+  var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function checkApply(which){
+  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  if(which==='a'){
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf||S.tries!==0){return;}
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
+    if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p><p>'+A.okNote+'</p><p>Each option is explained under it.</p>'+confText());complete('apply');focusVerdict();return;}
+    S.firstPick=ch;
+    say('<p class="verdict no">Not yet. Try once more: same idea, shown a different way.</p><p>Your first answer, <span class="on">'+esc(optText(qa('input[name="apply-a"][value="'+ch+'"]')[0]))+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
+    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});
+    var t=$('task-apply-b');if(t){t.focus();}
+  } else {
+    var c2=checked('apply-b');if(!c2||S.tries!==1){return;}
+    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
+    if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>'+B.okNote+'</p><p>Each option is explained under it.</p>'+firstDetails()+confText());}
+    else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
+      say('<p class="verdict set">Answered and settled: not marked correct, no penalty.</p><p>'+B.reveal+'</p><p>Each option is explained under it.</p>'+firstDetails()+confText());}
+    complete('apply');focusVerdict();
+  }
+}
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
+  if(!ch||!pc||S.done.predict){return;}
+  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
+    var b=[];if(i.value===ch){b.push(['Your prediction','mine-b']);}b.push(i.value===P.correct?['Correct','ok-b']:['Not correct','no-b']);
+    var w=d.createElement('span');w.className='why';w.innerHTML=badgeHtml(b)+P.why[i.value];l.appendChild(w);});
+  say('<p class="verdict info">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; nothing is lost.')+'</p><p>Each option now shows why, directly under it.</p><p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(pc)+'. Reported to you, never graded.</p>'+(P.after?'<p>'+P.after+'</p>':''),1);
+  complete('predict');
+}
+/* sorter: one select per item; check marks each item and explains the chosen option */
+function sortCheck(id){
+  var cfg=TOPIC.sorters[id],box=qa('[data-sorter="'+id+'"]')[0];if(!cfg||!box||S.done[cfg.act]){return;}
+  var st=S.sort[id]||(S.sort[id]={checks:0});st.checks++;
+  var items=Object.keys(cfg.items),right=0,missing=0,lines=[];
+  items.forEach(function(k){var it=cfg.items[k],row=qa('[data-item="'+k+'"]',box)[0],ci=qa('input[name="'+id+'-'+k+'"]:checked',box)[0],v=ci?ci.value:'',mk=row.querySelector('.mark');
+    row.classList.remove('right','wrong');
+    if(!v){missing++;mk.textContent='Not answered yet';row.classList.add('wrong');return;}
+    var ok=v===it.ok;if(ok){right++;}row.classList.add(ok?'right':'wrong');mk.textContent=ok?'Correct':'Not yet';
+    lines.push('<li><span class="on">'+(ok?'Correct: ':'Not yet: ')+esc(it.label)+' → '+esc(optText(ci))+'</span><span class="ex">'+it.why[v]+'</span></li>');});
+  var all=right===items.length;
+  if(all){qa('input',box).forEach(function(s){s.disabled=true;});qa('[data-act="sort-check"]',box).forEach(function(b){b.disabled=true;});
+    say('<p class="verdict ok">All '+items.length+' correct'+(st.checks>1?' after '+st.checks+' checks':'')+'.</p><p>'+cfg.done+'</p><ul class="explain">'+lines.join('')+'</ul>');complete(cfg.act);}
+  else{say('<p class="verdict no">'+right+' of '+items.length+' correct'+(missing?', '+missing+' not answered':'')+'. Change the items marked Not yet, then check again.</p><ul class="explain">'+lines.join('')+'</ul>'+(st.checks>=2&&cfg.hint?'<p>Hint: '+cfg.hint+'</p>':''));}
+  if(TOPIC.render){TOPIC.render(S,api);}
+}
+/* statement runner: buttons run fixed statements against the simulated database */
+function runStmt(b){
+  var box=b.closest('[data-runner]'),R=box&&TOPIC.runners[box.getAttribute('data-runner')],k=b.getAttribute('data-stmt'),st=R&&R.stmts[k];if(!st||S.done[R.act]&&R.lockWhenDone){return;}
+  var res=st.run(S.t),log=$(R.log),c=d.createElement('div');c.className='c';c.textContent=R.prompt+' '+st.sql;log.appendChild(c);
+  res.out.forEach(function(x){var dv=d.createElement('div');dv.className=x[0];dv.textContent=x[1];log.appendChild(dv);});log.scrollTop=log.scrollHeight;
+  var g=R.goals(S.t),need=Object.keys(g),left=need.filter(function(x){return !g[x];}).length;
+  say('<p>'+(R.plain?'':res.ok?'<span class="verdict ok">Accepted.</span> ':'<span class="verdict no">Rejected.</span> ')+esc(res.note||'')+'</p><p>'+(left?left+' of '+need.length+' goals still open.':'<strong>All goals met.</strong> Continue when ready.')+'</p>');
+  if(!left&&!S.done[R.act]){complete(R.act);}
+  if(TOPIC.render){TOPIC.render(S,api);}
+}
+TOPIC.act=TOPIC.act||function(a,b){if(a==='sort-check'){sortCheck(b.getAttribute('data-sorter'));}else if(a==='run'){runStmt(b);}};
+function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
+function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
+  Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
+  qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){if(typeof HIST!=='undefined'){delete HIST[i.id];}});
+  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  Object.keys(TOPIC.sorters||{}).forEach(function(id){if(TOPIC.sorters[id].act===act){delete S.sort[id];}});
+  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  show(step,false);if(typeof syncPrompt==='function'){syncPrompt();}
+  say('<p class="verdict info">Activity restarted. Earlier activities keep their results.</p>');
+  var h=$('teach-'+step+'-h');if(h){h.focus();}}
+d.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b){return;}
+  if(b.id==='reset'){restart();return;}
+  if(b.id==='next'){show(S.step+1);return;}
+  if(b.id==='predict-check'){checkPredict();return;}
+  if(b.id==='apply-check'){checkApply('a');return;}
+  if(b.id==='apply-check-b'){checkApply('b');return;}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+});
+d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+setTheme(mq&&mq.matches?'dark':'light');
+if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+fresh();show(1,false);if(typeof syncPrompt==='function'){syncPrompt();}
+})();
+</script>
+</body>
+</html>

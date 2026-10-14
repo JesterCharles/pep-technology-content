@@ -67,7 +67,7 @@ The formal rules are called normal forms; most applications aim for third normal
 
 ## Sources
 
-Checked against these live pages on 2026-10-13. The names update, insert and delete anomaly are common teaching vocabulary; the Microsoft article describes the same problems without those names, so they are listed as unverified in this topic's review record.
+Checked against these live pages on 2026-10-14. The names update, insert and delete anomaly are common teaching vocabulary; the Microsoft article describes the same problems without those names, so they are listed as unverified in this topic's review record.
 
 - Microsoft Learn: Description of the database normalization basics
 - PostgreSQL 18: 5.5 Constraints (primary and foreign keys)

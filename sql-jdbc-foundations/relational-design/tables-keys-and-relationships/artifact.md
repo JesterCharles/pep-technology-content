@@ -75,7 +75,7 @@ Options you will meet later: `ON DELETE CASCADE` deletes the children with the p
 
 ## Sources
 
-Checked against these live PostgreSQL 18 pages on 2026-10-13. Error messages were copied from a real PostgreSQL 18 server.
+Checked against these live PostgreSQL 18 pages on 2026-10-14. Error messages were copied from a real PostgreSQL 18 server.
 
 - PostgreSQL 18: 5.1 Table Basics
 - PostgreSQL 18: 5.5 Constraints (primary keys, foreign keys)

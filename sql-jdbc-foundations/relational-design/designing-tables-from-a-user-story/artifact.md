@@ -76,7 +76,7 @@ The design for this story: `members (id, name, email)`, `events (id, title, even
 
 ## Sources
 
-Checked against these live PostgreSQL 18 pages on 2026-10-13. The user story format and the words entity and attribute are common design vocabulary, not PostgreSQL documentation terms; they are listed as unverified in this topic's review record.
+Checked against these live PostgreSQL 18 pages on 2026-10-14. The user story format and the words entity and attribute are common design vocabulary, not PostgreSQL documentation terms; they are listed as unverified in this topic's review record.
 
 - PostgreSQL 18: 5.1 Table Basics
 - PostgreSQL 18: 5.5 Constraints (primary and foreign keys, many-to-many example)

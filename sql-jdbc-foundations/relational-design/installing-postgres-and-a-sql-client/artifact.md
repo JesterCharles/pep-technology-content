@@ -63,7 +63,7 @@ Installing: the PostgreSQL download page lists packages and installers for Linux
 
 ## Sources
 
-Checked against these live PostgreSQL pages on 2026-10-13 (documentation for PostgreSQL 18).
+Checked against these live PostgreSQL pages on 2026-10-14 (documentation for PostgreSQL 18).
 
 - PostgreSQL: Downloads
 - PostgreSQL 18 tutorial: 1.1 Installation
