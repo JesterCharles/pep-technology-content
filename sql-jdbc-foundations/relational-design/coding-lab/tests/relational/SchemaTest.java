@@ -142,8 +142,8 @@ class SchemaTest {
     void task2Students() throws SQLException {
         String c1 = "Criterion 1 (students):";
         assertTrue(WHOLE_NUMBER.contains(type("students", "id")), c1 + " a student id is a whole number, so students.id needs a whole-number type.");
-        assertTrue(CHARACTERS.contains(type("students", "name")), c1 + " students.name holds text, so it needs text or varchar.");
-        assertTrue(CHARACTERS.contains(type("students", "email")), c1 + " students.email holds text, so it needs text or varchar.");
+        assertTrue(CHARACTERS.contains(type("students", "name")), c1 + " students.name holds text, so it needs a character type.");
+        assertTrue(CHARACTERS.contains(type("students", "email")), c1 + " students.email holds text, so it needs a character type.");
         seed();
         rejected("INSERT INTO students (id, name, email) VALUES (1, 'Ben Okafor', 'ben@example.com')", "23505", c1 + " the id identifies one student, so a second student with id 1 must be rejected.");
         rejected("INSERT INTO students (id, name, email) VALUES (NULL, 'Ben Okafor', 'ben@example.com')", "23502", c1 + " every student needs an id, so an empty id must be rejected.");
@@ -159,7 +159,7 @@ class SchemaTest {
     @Test
     void task3Courses() throws SQLException {
         String c2 = "Criterion 2 (courses):";
-        assertTrue(CHARACTERS.contains(type("courses", "code")), c2 + " a course code such as SQL101 holds letters and digits, so courses.code needs text or varchar.");
+        assertTrue(CHARACTERS.contains(type("courses", "code")), c2 + " a course code such as SQL101 holds letters and digits, so courses.code needs a character type.");
         assertTrue(WHOLE_NUMBER.contains(type("courses", "capacity")), c2 + " capacity is a whole number, so courses.capacity needs a whole-number type.");
         seed();
         rejected("INSERT INTO courses (code, title, capacity) VALUES ('SQL101', 'Again', 10)", "23505", c2 + " the code identifies one course, so a second course SQL101 must be rejected.");
