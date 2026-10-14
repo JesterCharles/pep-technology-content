@@ -6,6 +6,7 @@ import { spawnSync } from "node:child_process";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import AxeBuilder from "@axe-core/playwright";
 import { launchChromium } from "../tools/qa/harness.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
@@ -325,6 +326,29 @@ test("interactive controls work by keyboard and touch across theme and motion pr
     await page.locator("#stage-catalog details summary").click();
     assert.deepEqual(requests, [url]);
     await context.close();
+  } finally {
+    await browser.close();
+  }
+});
+
+test("guide has no axe violations and keeps scrollable regions keyboard reachable at every width", async () => {
+  const browser = await launchChromium();
+  try {
+    for (const [width, colorScheme] of [[320, "dark"], [390, "light"], [1440, "dark"]]) {
+      const context = await browser.newContext({ colorScheme, viewport: { width, height: 860 } });
+      const page = await context.newPage();
+      await page.goto(pathToFileURL(guidePath).href);
+      const { violations } = await new AxeBuilder({ page }).analyze();
+      assert.deepEqual(violations.map((violation) => `${violation.id}: ${violation.nodes.map((node) => node.target).join(", ")}`), [], `${width}px ${colorScheme}`);
+      const unreachable = await page.evaluate(() => [...document.querySelectorAll("body *")]
+        .filter((element) => {
+          const overflow = getComputedStyle(element).overflowX;
+          return (overflow === "auto" || overflow === "scroll") && element.scrollWidth > element.clientWidth && element.tabIndex < 0;
+        })
+        .map((element) => element.className || element.tagName));
+      assert.deepEqual(unreachable, [], `${width}px scrollable regions without keyboard focus`);
+      await context.close();
+    }
   } finally {
     await browser.close();
   }
