@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Multi-stage back-end build",
+    "locale": "en",
+    "output": "multi-stage.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "hidden"
+    }
+  },
+  "components": [
+    {
+      "id": "proj",
+      "type": "external",
+      "label": "Project folder",
+      "sublabel": "mvnw, pom.xml, src/",
+      "pos": [
+        360,
+        30
+      ],
+      "size": [
+        220,
+        64
+      ]
+    },
+    {
+      "id": "jdk",
+      "type": "backend",
+      "label": "JDK + Maven wrapper",
+      "sublabel": "compile and package",
+      "pos": [
+        360,
+        180
+      ],
+      "size": [
+        220,
+        64
+      ]
+    },
+    {
+      "id": "m2",
+      "type": "database",
+      "label": "Maven cache",
+      "sublabel": "downloaded dependencies",
+      "pos": [
+        40,
+        180
+      ],
+      "size": [
+        210,
+        64
+      ]
+    },
+    {
+      "id": "jarb",
+      "type": "backend",
+      "label": "target/*.jar",
+      "sublabel": "the built jar",
+      "pos": [
+        360,
+        300
+      ],
+      "size": [
+        220,
+        64
+      ]
+    },
+    {
+      "id": "jarf",
+      "type": "backend",
+      "label": "app.jar",
+      "sublabel": "ENTRYPOINT java -jar",
+      "pos": [
+        360,
+        470
+      ],
+      "size": [
+        220,
+        64
+      ]
+    },
+    {
+      "id": "jre",
+      "type": "backend",
+      "label": "Java runtime (JRE)",
+      "sublabel": "from the base image",
+      "pos": [
+        40,
+        470
+      ],
+      "size": [
+        210,
+        64
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Stage build: eclipse-temurin:25-jdk (left behind)",
+      "wraps": [
+        "jdk",
+        "m2",
+        "jarb"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Final stage: eclipse-temurin:25-jre (the image)",
+      "wraps": [
+        "jarf",
+        "jre"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "copy-project",
+      "from": "proj",
+      "to": "jdk",
+      "label": "COPY",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "download",
+      "from": "jdk",
+      "to": "m2",
+      "label": "go-offline",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "package",
+      "from": "jdk",
+      "to": "jarb",
+      "label": "package",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "copy-from",
+      "from": "jarb",
+      "to": "jarf",
+      "label": "COPY --from=build",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Left behind",
+      "items": [
+        "JDK compiler and tools",
+        "Maven cache",
+        "Java source"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Ships in the image",
+      "items": [
+        "JRE from the final base",
+        "app.jar, copied with COPY --from"
+      ]
+    }
+  ]
+}

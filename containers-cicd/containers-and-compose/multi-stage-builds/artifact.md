@@ -30,6 +30,10 @@ The final stage starts `FROM nginx:alpine`, a web server that serves files from 
 
 A stage left behind adds nothing to the image. Only the final stage's base layers and what you copy into it ship.
 
+Multi-stage back-end build: what ships Two Dockerfile stages: the project goes into stage build; only the jar is copied into the final stage. The caption below describes every part. Project folder mvnw, pom.xml, src/ JDK + Maven wrapper compile and package Maven cache downloaded dependencies target/*.jar the built jar app.jar ENTRYPOINT java -jar Java runtime (JRE) from the base image COPY go-offline package COPY --from=build Stage build: eclipse-temurin:25-jdk (left behind) Final stage: eclipse-temurin:25-jre (the image)
+
+Diagram in words: the project folder (mvnw, `pom.xml`, `src/`) is copied into stage build on `eclipse-temurin:25-jdk`. There the JDK and Maven wrapper fill the Maven cache and package `target/*.jar`. Only that jar crosses, with `COPY --from=build`, into the final stage on `eclipse-temurin:25-jre`, as `app.jar`. The JDK, cache and source stay behind.
+
 So compilers, package caches and source files never reach production: a smaller download, fewer tools for an attacker, and the same running app.
 
 ### Apply it: find the leak
