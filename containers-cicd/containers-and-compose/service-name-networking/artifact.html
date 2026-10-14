@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="containers-cicd">
+<meta name="pep:module" content="containers-and-compose">
+<meta name="pep:topic" content="Service-name networking: why localhost fails between containers">
+<meta name="pep:topic-id" content="service-name-networking">
+<meta name="pep:budget-minutes" content="7">
+<meta name="pep:source" content="authoring/evidence/containers-cicd/containers-and-compose/service-name-networking/sources.json">
+<title>Service-name networking: why localhost fails between containers · Containers and Compose</title>
+<style>
+:root{
+  --bg:#eef2f0;--surface:#f8faf9;--ink:#1b2320;--muted:#47524e;--rule:#6b7873;--line:#c9d2ce;
+  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
+  --on-teal:#ffffff;--term:#e2e8e5;--focus:#1f4fbf;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121816;--surface:#1a2220;--ink:#e3ebe7;--muted:#a8b6b0;--rule:#71827c;--line:#2f3b37;
+  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
+  --on-teal:#0b1311;--term:#0c1110;--focus:#8fb4ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+::selection{background:var(--teal);color:var(--on-teal)}
+code,kbd,.mono{font-family:var(--mono);font-size:.94em}
+a{color:var(--teal);text-underline-offset:3px}
+main{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
+.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title tools";column-gap:var(--s6);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
+.top .crumbs{grid-area:crumbs}.top h1{grid-area:title}.top .meta{grid-area:meta}.top .tools{grid-area:tools}
+.crumbs{margin:0 0 var(--s1);font-size:15px;color:var(--muted)}
+.crumbs ol{display:flex;flex-wrap:wrap;gap:0 var(--s2);margin:0;padding:0;list-style:none}
+.crumbs li+li::before{content:"/";margin-right:var(--s2);color:var(--rule)}
+.crumbs [aria-current]{color:var(--ink);font-weight:600}
+h1{margin:0;font-size:24px;line-height:30px;letter-spacing:-.01em}
+.meta{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s2) 0 0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
+.meta li:first-child{font-weight:700;color:var(--ink)}
+.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
+.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2);flex:0 0 auto}
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:var(--amber-soft);border:2px dashed var(--amber)}
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s3);align-items:start}
+.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
+.teach p{margin:0 0 var(--s2);max-width:62ch}
+.teach ul{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
+.teach li{margin-bottom:var(--s1)}
+.teach code,.task code{white-space:nowrap}
+.task{padding:var(--s3) var(--s4);border-top:2px solid var(--teal);background:var(--surface)}
+.task p{margin:0;font-weight:600}
+.task p+p{margin-top:var(--s2)}
+.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
+.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
+.goals li:first-child{border-top:0}
+.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
+.goals li.done .st{color:var(--teal)}
+.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
+.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:var(--s2)}
+.model code{font-size:1em}
+.control{min-width:0}
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:6px var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);background:var(--teal-soft)}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);background:var(--red-soft);box-shadow:inset 4px 0 0 var(--red)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.confrow{margin-top:var(--s2)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+/* pep:component terminal@1 css */
+.term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
+.term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
+.term-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px var(--s3);margin:0;padding:var(--s1) var(--s3);border-bottom:1px solid var(--rule);font-size:15px;color:var(--muted)}
+.term-top span:first-child{font-weight:700}
+.log{height:220px;overflow-y:auto;padding:var(--s2) var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.log .c{font-weight:700}
+.log .c::before{content:attr(data-p) " ";color:var(--teal);font-weight:700}
+.log .e{color:var(--red)}
+.log .h{color:var(--muted);font-family:var(--sans)}
+.cmdline{display:flex;gap:var(--s2);align-items:center;padding:0 var(--s1) 0 var(--s3);border-top:1px solid var(--rule)}
+.cmdline label{flex:0 1 auto;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 16px var(--mono);color:var(--teal)}
+.cmdline{padding:var(--s2) var(--s2) var(--s2) var(--s3)}
+.cmdline input{flex:1 1 auto;min-width:0;min-height:44px;padding:var(--s2) 0;font:16px var(--mono);color:var(--ink);background:transparent;border:0;caret-color:var(--teal)}
+.cmdline input::placeholder{color:var(--muted);opacity:1}
+.cmdline input:focus,.cmdline input:focus-visible{outline:none}
+.cmdline .runbtn{flex:0 0 auto;min-height:36px;padding:var(--s1) var(--s3);background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:600}
+.cmdline .runbtn:hover{border-color:var(--ink)}
+.simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+/* /pep:component terminal css */
+.fbrow{display:flex;flex-direction:column;gap:var(--s2);align-items:flex-start}
+.feedback{width:100%;min-width:0;line-height:1.4;font-size:15px;line-height:1.45}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin-bottom:2px}
+.verdict{font-weight:700}
+.feedback .on{font-weight:600}
+.badge{display:inline-block;margin:0 var(--s1) 0 0;padding:0 6px;border:2px solid currentColor;border-radius:3px;font:700 15px/1.4 var(--sans);vertical-align:baseline}
+.badge.ok{color:var(--teal)}.badge.no{color:var(--red)}.badge.me{color:var(--ink)}
+.opt .badges{display:block;margin-top:2px}
+.explain{list-style:none;padding:0;margin:var(--s1) 0 0}
+.explain li{margin:0;padding:var(--s1) 0 var(--s1) var(--s3);border-left:2px solid var(--line)}
+.explain li+li{margin-top:var(--s1)}
+.explain li.mine{border-left-color:var(--teal)}
+.explain .on,.explain .ex{display:block}
+.explain .ex::first-letter{text-transform:uppercase}
+.teach ul.chunks{list-style:none;padding:0}
+.teach ul.chunks li{margin-bottom:var(--s2)}
+.opt .why{display:block;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
+.opt .why code{font-size:.94em}
+.verdict.ok{color:var(--teal)}
+.verdict.no{color:var(--red)}
+.verdict.set{color:var(--amber)}
+.conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+.recap ul{padding-left:20px}
+.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
+.feedback details{margin:var(--s1) 0}
+.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
+.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
+.next-topic{font-weight:700}
+.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
+[hidden]{display:none!important}
+@media (min-width:861px) and (max-height:720px){
+  main{padding-top:var(--s2)}
+  .stage{padding-top:var(--s2)}
+  .col{gap:var(--s2)}
+  .model{padding:var(--s2) var(--s4)}
+  .model figcaption{margin-bottom:var(--s1)}
+  .meta{margin-top:var(--s1)}
+  .opts{gap:6px}
+  legend{margin-bottom:var(--s1)}
+  .row{margin-top:var(--s2)}
+  .teach h2{margin-bottom:var(--s1)}
+}
+@media (max-width:860px){
+  main{padding:var(--s3) var(--s4) var(--s4)}
+  .top{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "tools";row-gap:var(--s2)}
+  .tools{justify-content:flex-start;flex-wrap:wrap}
+  .stage{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3)}
+  .col{display:contents}
+  #current-teaching{order:1}#current-task{order:2}#live-model{order:3}#current-control{order:4}.fbrow{order:5}
+  .fbrow{flex-direction:column}
+}
+@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}
+  .cmdline{flex-wrap:wrap;row-gap:var(--s1)}
+  .cmdline label{flex:1 0 100%;max-width:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+.top .metaline{grid-column:1/-1}
+.objectives{grid-column:1/-1;margin:var(--s2) 0 0;padding-left:1.25em}
+.teach pre,.filecode{margin:0 0 var(--s2);padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--term);font:14px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.filecode .hl{background:var(--amber-soft);outline:1px solid var(--amber)}
+.filecode .bad{background:var(--red-soft);text-decoration:underline wavy var(--red)}
+.builder{display:flex;flex-direction:column;gap:var(--s2)}
+.builder .brow{display:grid;grid-template-columns:minmax(0,1fr);gap:2px}
+.builder .brow span{font-size:15px;font-weight:600}
+.builder select{font:15px var(--mono);min-height:44px;padding:var(--s1) var(--s2);color:var(--ink);background:var(--surface);border:2px solid var(--rule);border-radius:4px;max-width:100%;min-width:0}
+.builder select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.orderlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--s1)}
+.orderlist li{display:flex;align-items:center;gap:var(--s2);padding:var(--s1) var(--s2);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
+.orderlist li code{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;white-space:normal}
+.orderlist button{min-height:44px;min-width:44px;padding:var(--s1) var(--s2)}
+.toggles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.toggles button{text-align:left;font-family:var(--mono);font-size:15px}
+.toggles button[aria-pressed="true"]::before{content:"\2713  "}
+.boxes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
+.box{padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--bg);min-width:0}
+.box h3{margin:0 0 var(--s1);font-size:15px}
+.box ul{margin:0;padding-left:18px;font-size:15px}
+.box p{margin:0;font-size:15px}
+.chip{display:inline-block;padding:0 6px;border:2px solid var(--rule);border-radius:3px;font:600 14px/1.5 var(--sans)}
+.chip.ok{border-color:var(--teal);color:var(--teal)}
+.chip.no{border-color:var(--red);color:var(--red);border-style:dashed}
+.chip.wait{border-color:var(--amber);color:var(--amber);border-style:dotted}
+.mtable{width:100%;border-collapse:collapse;font-size:15px}
+.mtable th,.mtable td{padding:var(--s1) var(--s2);border-bottom:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere}
+.mtable th{color:var(--muted);font-weight:700}
+.mnote{margin:var(--s2) 0 0;font-size:15px;color:var(--muted)}
+@media (max-width:480px){.boxes,.toggles{grid-template-columns:minmax(0,1fr)}}
+.goals li,.explain li{border-color:var(--rule)}
+.mtable th,.mtable td{border-bottom-color:var(--rule)}
+.teach code,.task code,.opt code,.recap code{white-space:normal;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<noscript><p class="nojs">This topic needs JavaScript for its practice activities and checks. Turn JavaScript on to take part.</p></noscript>
+<main id="lesson">
+  <header class="top">
+    <h1>Service-name networking: why localhost fails between containers</h1>
+    <div class="tools">
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 4</span><span class="pips" aria-hidden="true"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></span></div>
+      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+    </div>
+    <ul class="meta metaline"><li>About 7 minutes</li><li>Containers and Compose, topic 6 of 8</li><li>Simulated practice; no container engine runs</li></ul>
+    <ul class="objectives" data-pep-objectives aria-label="Objectives">
+      <li>Explain why localhost inside a container refers to that container itself, not to the host or to another service</li>
+      <li>Write a connection URL that reaches another Compose service by its service name and container port</li>
+      <li>Tell the published host port used from a browser on the host apart from the container port one service uses to reach another</li>
+    </ul>
+  </header>
+  <div class="stage" id="stage" data-step="1">
+    <div class="col">
+      <section id="current-teaching" class="teach" aria-label="Current teaching">
+<div data-step="1">
+  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+  <p>Practice prediction, not scored.</p>
+</div>
+<div data-step="2" data-pep-teaching>
+  <h2 id="teach-2-h" tabindex="-1">Every container has its own localhost</h2>
+  <p>Each container gets its own network stack. Inside the <code>api</code> container, <code>localhost</code> means <code>api</code> itself, not your laptop and not the database container.</p>
+  <p>Compose puts every service on one network, <code>shop_default</code>, and registers each <strong>service name</strong> there. So <code>api</code> reaches the database as <code>db</code>, the service name in <code>compose.yaml</code>. Container IP addresses change; names do not.</p>
+</div>
+<div data-step="3" data-pep-teaching>
+  <h2 id="teach-3-h" tabindex="-1">Two ports, two audiences</h2>
+  <p>In <code>"127.0.0.1:15432:5432"</code>, 15432 is the <strong>host port</strong>: your browser and tools on the laptop use <code>localhost:15432</code>.</p>
+  <p>5432 is the <strong>container port</strong>: other services use it with the service name, <code>db:5432</code>. Service-to-service traffic never goes through the published host port.</p>
+</div>
+<div data-step="4" data-pep-teaching>
+  <h2 id="teach-4-h" tabindex="-1">Apply it: a new port mapping</h2>
+  <p>Ask who is calling first.</p>
+</div>
+<div data-step="5" hidden data-pep-recap class="recap">
+  <h2 id="teach-5-h" tabindex="-1">Recap</h2>
+  <ul><li>Inside a container, <code>localhost</code> is that container.</li><li>Services on one Compose network reach each other by service name and container port, such as <code>db:5432</code>.</li><li>Your laptop uses <code>localhost</code> and the published host port, such as <code>localhost:15432</code>.</li></ul>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <table><tr><td>Who calls</td><td>Address</td></tr><tr><td>Browser or tool on the laptop</td><td><code>localhost:HOST_PORT</code></td></tr><tr><td>Another service in the stack</td><td><code>SERVICE_NAME:CONTAINER_PORT</code></td></tr><tr><td>A container calling itself</td><td><code>localhost:CONTAINER_PORT</code></td></tr></table>
+    <p><code>SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/shop</code></p>
+  </details>
+  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live official sources on 2026-10-14. Versions shown: Docker Compose 5.6 and Docker Engine 29 on the default bridge network. Connection results are simulated; real error text depends on the client (here the PostgreSQL JDBC driver).</p><ul><li><a href="https://docs.docker.com/compose/how-tos/networking/" rel="noopener">Docker Docs: Networking in Compose (default network, service discovery, HOST_PORT and CONTAINER_PORT)</a></li><li><a href="https://docs.docker.com/engine/network/" rel="noopener">Docker Docs: Networking overview (each container has its own network stack)</a></li><li><a href="https://docs.docker.com/engine/network/port-publishing/" rel="noopener">Docker Docs: Port publishing and mapping</a></li></ul></details>
+  <p class="next-topic">Next topic: <a href="../depends-on-with-health-checks/artifact.html" rel="noopener">depends_on with health checks</a></p>
+</div>
+      </section>
+      <section id="current-task" class="task" aria-label="Current task">
+<div data-step="1"><p id="task-1">The <code>api</code> and <code>db</code> services run in one Compose stack. The API's datasource URL is <code>jdbc:postgresql://localhost:5432/shop</code>. What happens when the API starts?</p></div>
+<div data-step="2"><p id="task-2">From inside the <code>api</code> container, test connections. Find out what <code>localhost</code> reaches, then reach PostgreSQL.</p>
+  <ul class="goals"><li data-goal="self"><span>See what <code>localhost:5432</code> reaches from <code>api</code></span><span class="st"></span></li><li data-goal="name"><span>Reach PostgreSQL by service name</span><span class="st"></span></li></ul></div>
+<div data-step="3"><p id="task-3">The <code>db</code> service publishes <code>"127.0.0.1:15432:5432"</code> and <code>api</code> publishes <code>"127.0.0.1:8080:8080"</code>. Choose the address each caller uses.</p>
+  <ul class="goals"><li data-goal="urls"><span>All three addresses pass the check</span><span class="st"></span></li></ul></div>
+<div data-step="4"><p id="task-apply">A teammate changes the database mapping to <code>"127.0.0.1:6543:5432"</code>. What should the API's datasource URL be now?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same mapping. Which pair is right: the API's address, then a laptop tool's address?</p></div>
+<div data-step="5"><p>All activities finished.</p><p id="complete-msg" class="complete"></p></div>
+      </section>
+      <div class="fbrow">
+        <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-apply-feedback></div>
+<div data-step="5" ></div>
+        </div>
+        <button type="button" class="primary" id="next" hidden>Continue</button>
+      </div>
+    </div>
+    <div class="col">
+<figure id="live-model" class="model" aria-labelledby="model-cap">
+<figcaption id="model-cap">Your laptop and the shop_default network (simulated)</figcaption>
+  <div class="boxes">
+    <div class="box"><h3>Laptop (host)</h3><ul><li>Browser, database tool</li><li><code>localhost:8080</code> to api</li><li><code>localhost:15432</code> to db</li></ul></div>
+    <div class="box"><h3>Network shop_default</h3><ul><li><code>api</code>: its own localhost, listens on 8080</li><li><code>db</code>: its own localhost, listens on 5432</li></ul></div>
+  </div>
+  <p class="mnote" id="m-last">No connection tried yet.</p>
+</figure>
+      <section id="current-control" class="control" aria-label="Your turn">
+<div data-step="1">
+  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): api and db in one Compose stack; the API datasource URL is jdbc:postgresql://localhost:5432/shop. Answer: connection refused, because inside the api container localhost is the api container itself, and nothing listens on 5432 there. Sharing a laptop does not share localhost; publishing a db port only helps the laptop; Compose never rewrites localhost.">
+    <legend>Prediction</legend>
+    <div class="opts one"><label class="opt"><input type="radio" name="predict" value="a"> <span>Connection refused: <code>localhost</code> is the api container itself</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span>It connects: both containers run on the same laptop</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span>It connects only if <code>db</code> publishes port 5432</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span>It connects to <code>db</code>, because Compose rewrites localhost</span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
+    <legend id="pconf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="pconf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+  </div>
+</div>
+<div data-step="2" hidden>
+  <fieldset id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-2" data-static-alt="Activity: connection tests from inside the api container. localhost:5432: connection refused, because localhost is api itself and nothing listens on 5432 there. localhost:8080: reaches api itself, its own web server. db:5432: connects to PostgreSQL, because the service name db resolves on the shop_default network. db:15432: refused, because 15432 is the host port on the laptop; inside the network PostgreSQL listens on 5432."><legend>Connect from inside <code>api</code> to</legend>
+  <div class="toggles"><button type="button" class="ghost" id="t-self5432" data-act="try" data-k="self5432">localhost:5432</button><button type="button" class="ghost" id="t-self8080" data-act="try" data-k="self8080">localhost:8080</button><button type="button" class="ghost" id="t-db5432" data-act="try" data-k="db5432">db:5432</button><button type="button" class="ghost" id="t-db15432" data-act="try" data-k="db15432">db:15432</button></div>
+  </fieldset>
+</div>
+<div data-step="3" hidden>
+  <fieldset id="x3" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-static-alt="Activity: choose addresses. A browser on the laptop opens the API at http://localhost:8080, the published host port; the name api only resolves inside the Compose network. The api container connects with jdbc:postgresql://db:5432/shop, the service name and the container port. A database tool on the laptop connects to localhost:15432, the published host port."><legend>Address for each caller</legend>
+  <div class="builder"><fieldset class="brow" id="r-browser-fs"><legend>A browser on your laptop opens the API</legend><div class="opts one"><label class="opt"><input type="radio" name="r-browser" value="a"> <span><code>http://localhost:8080</code></span></label><label class="opt"><input type="radio" name="r-browser" value="b"> <span><code>http://api:8080</code></span></label></div></fieldset><fieldset class="brow" id="r-api-fs"><legend>The api container connects to PostgreSQL</legend><div class="opts one"><label class="opt"><input type="radio" name="r-api" value="a"> <span><code>jdbc:postgresql://localhost:5432/shop</code></span></label><label class="opt"><input type="radio" name="r-api" value="b"> <span><code>jdbc:postgresql://db:5432/shop</code></span></label><label class="opt"><input type="radio" name="r-api" value="c"> <span><code>jdbc:postgresql://db:15432/shop</code></span></label></div></fieldset><fieldset class="brow" id="r-tool-fs"><legend>A database tool on your laptop connects</legend><div class="opts one"><label class="opt"><input type="radio" name="r-tool" value="a"> <span><code>localhost:15432</code></span></label><label class="opt"><input type="radio" name="r-tool" value="b"> <span><code>db:5432</code></span></label></div></fieldset></div>
+  <div class="row"><button type="button" class="primary" id="r-check" data-act="rcheck">Check addresses</button></div>
+  </fieldset>
+</div>
+<div data-step="4">
+  <div data-first>
+  <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: the db mapping becomes &quot;127.0.0.1:6543:5432&quot;. The API URL stays jdbc:postgresql://db:5432/shop, because services use the service name and the container port, which did not change. db:6543 uses the host port inside the network; localhost from the api container is api itself. Retry as a pair: the API uses db:5432 and a laptop tool uses localhost:6543.">
+    <legend>Choose the API URL</legend>
+    <div class="opts one"><label class="opt"><input type="radio" name="apply-a" value="a"> <span><code>jdbc:postgresql://db:6543/shop</code></span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span><code>jdbc:postgresql://db:5432/shop</code>, unchanged</span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span><code>jdbc:postgresql://localhost:6543/shop</code></span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span><code>jdbc:postgresql://localhost:5432/shop</code></span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
+    <legend id="conf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="conf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="conf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="conf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
+  </div>
+  </div>
+  <div data-retry hidden>
+    <fieldset id="apply-b" aria-describedby="task-apply-b">
+      <legend>Choose the pair</legend>
+      <div class="opts one"><label class="opt"><input type="radio" name="apply-b" value="a"> <span>API: <code>db:5432</code> · laptop tool: <code>localhost:6543</code></span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span>API: <code>db:6543</code> · laptop tool: <code>localhost:5432</code></span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span>API: <code>localhost:6543</code> · laptop tool: <code>db:5432</code></span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span>API: <code>db:6543</code> · laptop tool: <code>db:6543</code></span></label></div>
+    </fieldset>
+    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+  </div>
+</div>
+<div data-step="5"></div>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+var TOPIC={
+steps:5,acts:["predict","reach","urls","apply"],
+init:function(){return {g:{},last:null};},
+goals:{2:['self','name'],3:['urls']},
+predict:{correct:'a',why:{
+ a:'inside api, localhost is api itself, and nothing listens on 5432 there.',
+ b:'each container has its own network stack, so sharing a laptop does not share localhost.',
+ c:'publishing a db port only opens it on the laptop; api still looks inside itself.',
+ d:'Compose resolves service names; it never rewrites localhost.'}},
+apply:{A:{fs:'apply-a',correct:'b',okNote:'<p>Only the host side changed. Inside the network, PostgreSQL still listens on container port 5432 at <code>db</code>.</p>',
+  why:{a:'6543 is the new host port on the laptop; inside the network db still listens on 5432.',b:'service name plus container port, and the container port did not change.',c:'localhost inside api is api itself.',d:'localhost inside api is api itself, whatever the port.'},
+  miss:{a:'6543 is the laptop side of the mapping. Services use the container port.',c:'From inside <code>api</code>, <code>localhost</code> is <code>api</code>.',d:'From inside <code>api</code>, <code>localhost</code> is <code>api</code>.'},
+  hint:'The caller is another container. Which half of HOST:CONTAINER does it use?'},
+ B:{fs:'apply-b',correct:'a',reveal:'The API keeps <code>db:5432</code>; a tool on the laptop now uses <code>localhost:6543</code>.',
+  why:{a:'container port for services, host port for the laptop.',b:'the halves are swapped.',c:'api cannot use its own localhost, and the laptop cannot resolve db.',d:'the laptop cannot resolve the service name db, and services use the container port.'}}},
+act:function(a,b,S,api){var t=S.t;
+ if(a==='try'){var k=b.getAttribute('data-k'),M={
+  self5432:['refused','Connection to localhost:5432 refused. Inside api, localhost is api itself, and nothing listens on 5432 there.'],
+  self8080:['self','Connected, but to api itself: its own web server on 8080. localhost never leaves the container.'],
+  db5432:['ok','Connected to PostgreSQL. The name db resolved on shop_default to the db container, which listens on container port 5432.'],
+  db15432:['refused','Connection to db:15432 refused. 15432 is the host port on your laptop; inside the network, db listens on 5432.']}[k];
+  t.last=k;if(k==='self5432'){api.goal('self');}if(k==='db5432'){api.goal('name');}
+  api.say('<p>'+(M[0]==='ok'?'<span class="chip ok">connected</span> ':M[0]==='self'?'<span class="chip wait">reached itself</span> ':'<span class="chip no">refused</span> ')+api.esc(M[1])+'</p>'+api.goalStatus());}
+ if(a==='rcheck'){function v(n){var r=api.qa('input[name="'+n+'"]:checked')[0];return r?r.value:'';}var is=[];
+  if(v('r-browser')!=='a'){is.push(v('r-browser')?'The laptop is outside the Compose network, so it cannot resolve the name api. Use the published host port: http://localhost:8080.':'Choose the browser address.');}
+  if(v('r-api')!=='b'){is.push(v('r-api')==='a'?'Inside api, localhost is api itself. Use the service name: db.':v('r-api')==='c'?'15432 is the host port. Inside the network, db listens on its container port 5432.':'Choose the API datasource URL.');}
+  if(v('r-tool')!=='a'){is.push(v('r-tool')?'Your laptop cannot resolve the service name db. Use the published host port: localhost:15432.':'Choose the tool address.');}
+  if(!is.length){api.goal('urls');api.say('<p class="verdict ok">Correct.</p><p>Laptop callers use localhost and a host port; services use a service name and a container port.</p>'+api.goalStatus());}
+  else{api.say('<p class="verdict no">Not yet. Check these:</p><ul>'+is.map(function(x){return '<li>'+api.esc(x)+'</li>';}).join('')+'</ul>'+api.goalStatus());}}
+ this.render(S,api);
+},
+render:function(S,api){var t=S.t,L={self5432:'Last test: api to localhost:5432, stayed inside api, refused.',self8080:'Last test: api to localhost:8080, reached api itself.',db5432:'Last test: api to db:5432 over shop_default, connected.',db15432:'Last test: api to db:15432, refused: wrong side of the mapping.'};
+ api.$('m-last').textContent=S.step===2&&t.last?L[t.last]:(S.step>=4?'The mapping changes to 127.0.0.1:6543:5432.':'No connection tried yet.');}
+};
+
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
+var SNAP={};
+function clone(o){return JSON.parse(JSON.stringify(o));}
+var LAST=TOPIC.steps,S;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init()};}
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,goal:goal,left:left,get S(){return S;}};
+function need(step){return (TOPIC.goals&&TOPIC.goals[step])||[];}
+function left(step){var g=S.t.g||{};return need(step||S.step).filter(function(k){return !g[k];}).length;}
+function goal(k){var g=S.t.g||(S.t.g={});g[k]=1;var st=S.step,act=TOPIC.acts[st-1];if(need(st).length&&!left(st)&&!S.done[act]){complete(act);}}
+function goalStatus(){var st=S.step,n=need(st),l=left(st);return n.length?'<p>'+(l?l+' of '+n.length+' goals still open.':'<strong>All goals met.</strong> Continue when ready.')+'</p>':'';}
+api.goalStatus=goalStatus;
+function renderGoals(){var g=S.t.g||{};qa('.goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!g[k]);li.querySelector('.st').textContent=g[k]?'done':'open';});}
+function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
+function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}if(S.t&&S.t.g){renderGoals();}}
+function progress(){
+  var acts=TOPIC.acts,n=0,set=0;
+  acts.forEach(function(a,i){var p=qa('.pip',$('progress'))[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
+    p.className='pip'+(on?(S.settled[a]?' settled':' on'):'');});
+  $('prog-text').textContent='Activities done: '+n+' of '+acts.length+(set?' ('+set+' answered, not marked correct)':'');
+}
+function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
+function show(step,focus){
+  S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
+  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
+  if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
+    SNAP[step]={html:h,t:clone(S.t)};}
+  var rb=$('reset');rb.disabled=(step===LAST);
+  $('next').hidden=true;
+  if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
+    c.textContent='All '+TOPIC.acts.length+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: review its explanation above before moving on.':'.');}}
+  else{main.removeAttribute('data-pep-complete');}
+  TOPIC.render(S,api);renderGoals();progress();
+  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+}
+function optLabel(inp){return inp.closest('label');}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function explainList(set,chosen,mark){
+  var html='<ul>';
+  Object.keys(set.why).forEach(function(k){
+    var txt=qa('input[value="'+k+'"]',$(set.fs))[0];var lab=txt?optLabel(txt).textContent.trim():k;
+    var tag=(k===set.correct)?'<strong>Correct: </strong>':'<strong>Not this: </strong>';
+    html+='<li>'+(mark?tag:'')+'<span class="on">'+esc(lab)+'</span>: '+set.why[k]+(k===chosen?' <em>(your choice)</em>':'')+'</li>';
+  });
+  return html+'</ul>';
+}
+function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===set.correct&&(chosen===set.correct)){l.classList.add('right');}
+  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
+function firstDetails(){return '<details><summary>First question: every option explained</summary>'+explainList(TOPIC.apply.A,null,true)+'</details>';}
+function badges(ok,mine,who){return '<span class="badges">'+(mine?'<span class="badge me">'+who+'</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
+function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
+  w.innerHTML=badges(i.value===set.correct,i.value===chosen,'Your answer')+set.why[i.value];sp.appendChild(w);});}
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
+function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
+  var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
+  var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function checkApply(which){
+  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  if(which==='a'){
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
+    if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText());complete('apply');TOPIC.render(S,api);focusVerdict();return;}
+    S.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
+    say('<p class="verdict no">Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <span class="on">'+esc(S.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
+    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});TOPIC.render(S,api);
+    var t=$('task-apply-b');if(t){t.focus();}
+  } else {
+    var c2=checked('apply-b');if(!c2){return;}
+    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
+    if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+firstDetails()+confText());}
+    else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
+      say('<p class="verdict set">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+firstDetails()+confText());}
+    complete('apply');TOPIC.render(S,api);focusVerdict();
+  }
+}
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
+  if(!ch||!pc){return;}
+  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
+    if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
+  var html='<p class="verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+' Each option, explained:</p><ul class="explain">';
+  Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
+    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
+  say(html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||''),1);complete('predict');
+}
+function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
+function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
+  Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
+  qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
+  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  show(step,false);syncPrompt();var h=$('teach-'+step+'-h');if(h){h.focus();}}
+/* pep:component terminal@1 js */
+d.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b){return;}
+  if(b.id==='reset'){restart();return;}
+  if(b.id==='next'){show(S.step+1);return;}
+  if(b.id==='predict-check'){checkPredict();return;}
+  if(b.id==='apply-check'){checkApply('a');return;}
+  if(b.id==='apply-check-b'){checkApply('b');return;}
+  if(b.classList.contains('runbtn')){runTerminal(b.closest('.cmdline'));return;}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+});
+d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
+var HIST={};
+function prompt(){return TOPIC.prompt?TOPIC.prompt(S):'$';}
+function syncPrompt(){qa('.cmdline .pr').forEach(function(n){n.textContent=prompt();});}
+function runTerminal(box){
+  if(!box){return;}var inp=box.querySelector('input[type="text"]');if(!inp||inp.disabled){return;}
+  var line=inp.value,H=HIST[inp.id]||(HIST[inp.id]={l:[],i:0});if(line.trim()){H.l.push(line);}H.i=H.l.length;
+  var p=prompt();inp.value='';TOPIC.run(line,box.getAttribute('data-term'),S,api);
+  qa('.log .c:not([data-p])').forEach(function(n){n.setAttribute('data-p',p);});syncPrompt();inp.focus();}
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closest('.cmdline')||t.tagName!=='INPUT'){return;}
+  var H=HIST[t.id]||(HIST[t.id]={l:[],i:0});
+  if(e.key==='Enter'&&!e.isComposing){e.preventDefault();runTerminal(t.closest('.cmdline'));}
+  else if(e.key==='ArrowUp'){if(!H.l.length){return;}e.preventDefault();H.i=Math.max(0,H.i-1);t.value=H.l[H.i];}
+  else if(e.key==='ArrowDown'){if(!H.l.length){return;}e.preventDefault();H.i=Math.min(H.l.length,H.i+1);t.value=H.l[H.i]||'';}
+  else if(e.key==='Tab'&&!e.shiftKey&&!e.altKey&&!e.ctrlKey&&!e.metaKey){
+    // capture Tab only when a completion actually changes the line, so Tab never traps focus
+    var v=t.value.trim()&&TOPIC.complete?TOPIC.complete(t.value,S):null;if(v&&v!==t.value){e.preventDefault();t.value=v;}}
+  else if(e.key==='Escape'){var tk=$('task-'+S.step);if(tk){e.preventDefault();tk.setAttribute('tabindex','-1');tk.focus();}}
+});
+/* /pep:component terminal js */
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+setTheme(mq&&mq.matches?'dark':'light');
+if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+fresh();show(1,false);syncPrompt();
+})();
+
+</script>
+</body>
+</html>
