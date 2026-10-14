@@ -11,16 +11,16 @@ HTML is the primary learner artifact; every other topic file is a companion to i
 
 ## Layout
 
-- Content lives in one canonical root `<course>/<module>/<topic>/` tree.
+- Learner content lives in one canonical root `<course>/<module>/<topic>/` tree; machine metadata lives in the path-isomorphic `authoring/catalog/<course>/...` tree.
   There is no `topics/` directory at any level, and there are no parallel or versioned build folders.
-- A root directory containing `course.json` is a course; internal production material lives under `authoring/`.
-- Directory names are stable slugs equal to ids (`^[a-z0-9]+(-[a-z0-9]+)*$`); order lives in `course.json` and `module.json`, never in name prefixes.
-- A topic directory may contain only `topic.json`, `artifact.html`, `artifact.md`, `artifact.pdf`, `artifact.gift`, `video-artifact.md` and `coding-lab/`.
-  An absent companion is recorded with a reason in `topic.json`; empty or placeholder files are forbidden.
-- Manifests: `<course>/course.json`, `<course>/<module>/module.json`, `<course>/<module>/<topic>/topic.json`.
+- A directory containing `authoring/catalog/<course>/course.json` defines a course. Pending catalog structure does not create empty learner directories.
+- Directory names are stable slugs equal to ids (`^[a-z0-9]+(-[a-z0-9]+)*$`); order lives in catalog `course.json` and `module.json`, never in name prefixes.
+- A learner topic directory may contain only `artifact.html`, `artifact.md`, `artifact.pdf`, `artifact.gift`, `video-artifact.md` and `coding-lab/`.
+  An absent companion is recorded with a reason in its catalog `topic.json`; empty or placeholder files are forbidden.
+- Manifests: `authoring/catalog/<course>/course.json`, `authoring/catalog/<course>/<module>/module.json`, `authoring/catalog/<course>/<module>/<topic>/topic.json`.
 - Locks are generated, never hand-edited:
-  - `<course>/<module>/module.lock.json` covers that module's files and its `authoring/evidence/<course>/<module>/` subtree.
-  - `<course>/course.lock.json` covers only course-level files: `course.json`, course assessments, course labs and course-level evidence.
+  - `authoring/catalog/<course>/<module>/module.lock.json` covers that module's catalog metadata, learner files and `authoring/evidence/<course>/<module>/` subtree.
+  - `authoring/catalog/<course>/course.lock.json` covers only the course manifest, course-level learner assessments/labs and course-level evidence.
 - Evidence lives under `authoring/evidence/<course>/` (course level) and `authoring/evidence/<course>/<module>/<topic>/` (per topic).
 - Assessment blueprints live in `<course>/assessments/` or `<course>/<module>/assessments/`.
 - Reusable learner components live in `components/`; schemas, tools, tests and process docs live in `authoring/`; CI remains in `.github/workflows/` for discovery.
@@ -54,7 +54,7 @@ HTML is the primary learner artifact; every other topic file is a companion to i
 ## Commands
 
 - The repository gate interface is `npm ci`, `npm test` and `npm run check`; CI runs them from the root.
-- The `authoring/tools/pep` CLI provides `check`, `lock`, `export`, `export-lab` and `new-topic`; read its help for usage.
+- The `authoring/tools/pep` CLI provides `check`, `lock`, `export`, `export-lab`, `new-topic` and `migrate-catalog`; read its help for usage.
 - The QA harness ships with that tooling; run it locally through `npm run check`.
 - Use `authoring/tools/pep <subcommand> --help` for deterministic, offline CLI usage; generated exports stay under gitignored `build/`.
 
@@ -66,7 +66,7 @@ HTML is the primary learner artifact; every other topic file is a companion to i
 ## Delivery
 
 - Scope each branch and PR to one of: one module, course-level files, or repository tooling.
-  A module branch edits only its module directory and its `authoring/evidence/<course>/<module>/` subtree; a course branch edits course-level files only; a tooling branch edits `authoring/` excluding `authoring/evidence/`, plus `components/`, CI and root config only.
+  A module branch edits its learner module directory, matching `authoring/catalog/<course>/<module>/` metadata and `authoring/evidence/<course>/<module>/`; a course branch edits course-level learner files plus matching catalog/evidence files; a tooling branch edits `authoring/` excluding course catalog/evidence content, plus `components/`, CI and root config only.
 - Never let parallel branches edit the same manifest or lock.
 - All gates must pass; merge only with approval.
 

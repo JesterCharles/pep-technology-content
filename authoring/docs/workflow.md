@@ -6,7 +6,7 @@ This document defines how learner content is authored, criticized, reconciled, g
 
 ## 1. Scope
 
-- In scope: learner content in the canonical `<course>/<module>/<topic>/` tree, its evidence, and the repository tooling that validates it.
+- In scope: learner content in the canonical `<course>/<module>/<topic>/` tree, its path-isomorphic metadata under `authoring/catalog/<course>/`, its evidence, and the repository tooling that validates it.
 - Out of scope: Evolv platform code or configuration, platform-only material, syllabus changes, assessment policy, publication, upload and deployment.
 
 ## 2. Pipeline
@@ -50,9 +50,9 @@ Every gate runs locally and in CI except the lab solved-run gate (part of gate 1
 
 1. Schema: every manifest, lab, blueprint and evidence file validates.
 2. Tree: no `topics/` directory; allowed filenames only; no empty or placeholder files; manifests and files match; absences carry reasons.
-3. Lock: `module.lock.json` and `course.lock.json` are byte-identical to regeneration. Each evidence binding records whether its reviewed hash is current; stale critic coverage is rejected by gate 18.
+3. Lock: catalog `module.lock.json` and `course.lock.json` are byte-identical to regeneration. Each evidence binding records whether its reviewed hash is current; stale critic coverage is rejected by gate 18.
 4. Forbidden content: no keys, rubrics, solutions, hidden tests or scoring secrets outside the formative GIFT and MCQ exception; secret scan; no remote fonts; no form-submission dependency.
-5. Standalone and offline: loads from `file://` with network blocked and zero console errors.
+5. Standalone and offline: loads from `file://` with network and sibling-file requests blocked and zero console errors; every learner artifact meets the standalone rules in `authoring/docs/html-artifact-contract.md` (T09, T20).
 6. Platform sandbox: every behavioral path completes in an iframe with `sandbox="allow-scripts"` only, tolerating storage failures.
 7. Behavior: success route, wrong-first and retry route, simulator edge cases, restart without duplicate credit, and progress reaching 100%.
 8. Accessibility: no serious or critical automated findings, keyboard-only path completes, visible focus, `aria-live`, reduced motion, contrast in both themes.
@@ -76,8 +76,8 @@ The tooling under `authoring/tools/` implements these gates behind `npm run chec
 - A critic report's optional `reviewedPath` names its repo-relative review target. A recheck names its original same-role report in `recheck.of`; each rechecked item records its finding id, `resolved` or `open` status, repo-relative file, current reviewed sha256 and a note. A recheck may have no new `findings`.
 - For each `reviewedSha256` or `artifactSha256`, the binding target is the containing object's `reviewedPath`, then its `file`, then its `location.file`, then the nearest ancestor `reviewedPath`. Topic evidence otherwise defaults to that topic's `artifact.html`; evidence at other levels must name a target. `artifactHashes` retains its map-key-relative behavior.
 - `authoring/tools/pep lock` records each in-scope evidence hash, resolved target and `current: true|false`. Stale hashes are retained rather than preventing regeneration. A target removed after immutable review evidence was recorded remains explicitly marked `current: false`, `historical: true`, and `missing: true`; it cannot provide current T25 coverage. T06 requires every lock to exist and be byte-identical to regeneration, while T25 rejects stale critic coverage.
-  - `<course>/<module>/module.lock.json` covers that module's files and `authoring/evidence/<course>/<module>/`.
-  - `<course>/course.lock.json` covers only course-level files: `course.json`, course assessments, course labs and course-level evidence. A course evidence reference to module content is a historical intake record: its bytes remain protected by the course evidence file record, but its target is excluded from current course-lock bindings so later module work cannot stale the shared lock.
+  - `authoring/catalog/<course>/<module>/module.lock.json` covers that module's catalog metadata, learner files and `authoring/evidence/<course>/<module>/`.
+  - `authoring/catalog/<course>/course.lock.json` covers only course-level files: catalog `course.json`, learner course assessments/labs and course-level evidence. A course evidence reference to module content or catalog metadata is a historical intake record: its bytes remain protected by the course evidence file record, but its target is excluded from current course-lock bindings so later module work cannot stale the shared lock.
 - The per-module lock exists so parallel module PRs never edit one shared manifest.
 - Screenshots, traces and browser profiles are CI artifacts or private local data, never committed.
 
@@ -90,9 +90,9 @@ The tooling under `authoring/tools/` implements these gates behind `npm run chec
 
 ## 4. Branch scope and delivery
 
-- Module branch: one focused branch and PR per module, editing only `<course>/<module>/` and `authoring/evidence/<course>/<module>/`.
-- Course branch: course-wide assembly or shared course metadata, in a separate branch and PR after module integration, editing course-level files only.
-- Tooling branch: repository-wide tooling in its own branch and PR, editing `authoring/schemas/`, `authoring/tools/`, `authoring/tests/`, `components/`, `authoring/docs/`, CI and root config only.
+- Module branch: one focused branch and PR per module, editing `<course>/<module>/`, `authoring/catalog/<course>/<module>/` and `authoring/evidence/<course>/<module>/`.
+- Course branch: course-wide assembly or shared course metadata, in a separate branch and PR after module integration, editing course-level learner, catalog and evidence files only.
+- Tooling branch: repository-wide tooling in its own branch and PR, editing schemas, tools, fixtures, shared components, current docs, CI and root config; a catalog migration may atomically move metadata without changing learner bytes.
 - Never mix these scopes in one branch, and never let parallel workers edit the same manifest or lock.
 - Content and mixed changes run full validation; internal tooling may use a direct PR.
 - Every merge requires approval.

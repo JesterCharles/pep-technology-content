@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { error, findCourseRoots, readJson } from "../lib/common.mjs";
+import { error, findCourses, readJson } from "../lib/common.mjs";
 export const id = "T08";
 export const gate = 8;
 export const description = "static HTML contract";
@@ -14,17 +14,17 @@ function metas(html) {
 }
 export async function run(ctx) {
   const out = [];
-  for (const cr of await findCourseRoots(ctx)) {
-    const c = await readJson(path.join(cr, "course.json")).catch(() => null);
-    if (!c) continue;
+  for (const course of await findCourses(ctx)) {
+    const c = course.manifest;
+    const cr = course.contentRoot;
     for (const mid of c.moduleOrder ?? []) {
-      const m = await readJson(path.join(cr, mid, "module.json")).catch(() => null);
+      const m = await readJson(path.join(course.catalogRoot, mid, "module.json")).catch(() => null);
       if (!m) continue;
       for (const tid of m.topicOrder ?? []) {
-        const tf = path.join(cr, mid, tid, "topic.json"),
+        const tf = path.join(course.catalogRoot, mid, tid, "topic.json"),
           t = await readJson(tf).catch(() => null);
         if (!t || t.artifacts?.html?.status !== "present") continue;
-        const f = path.join(path.dirname(tf), "artifact.html"),
+        const f = path.join(cr, mid, tid, "artifact.html"),
           html = await readFile(f, "utf8").catch(() => null);
         if (html == null) continue;
         if (

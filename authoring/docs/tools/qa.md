@@ -22,7 +22,7 @@ The harness uses the Playwright-managed Chromium pinned by `package-lock.json`.
 
 ## Topic path file
 
-Every HTML topic has
+Every HTML topic is joined by ids from `authoring/catalog/<course>/<module>/<topic>/topic.json` to the learner directory and has
 `authoring/evidence/<course>/<module>/<topic>/qa-paths.json`, validated by
 `authoring/schemas/qa-paths.schema.json`.
 Selectors belong to the page, not to the harness. A path is an ordered list of declarative actions.
@@ -130,8 +130,8 @@ Git `tNN.json` files, and the reusable route roles of AI `spec.js`. No course-1 
 
 ## Gate behavior
 
-- **T09:** loads the exact `artifact.html` through `file://`, blocks non-local requests, and fails console errors,
-  uncaught exceptions, and attempted network access.
+- **T09:** loads the exact `artifact.html` through `file://`, blocks network and sibling `file:` requests (only the
+  page itself may load), and fails console errors, uncaught exceptions, and attempted network or sibling-file access.
 - **T10:** runs all three routes inside an iframe whose only sandbox token is `allow-scripts`. Its opaque origin makes
   unguarded Web Storage access fail naturally.
 - **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion.

@@ -5,7 +5,7 @@ import path from "node:path";
 import {
   authoringPath,
   error,
-  findCourseRoots,
+  findCourseCandidates,
   findForbiddenKeys,
   readJson,
   walk,
@@ -35,10 +35,10 @@ const mapping = [
   [/\/evidence\/legacy\/course-1-packages\.json$/, "legacy-course-packages"],
   [/\/evidence\/legacy\/tournament\.json$/, "legacy-tournament"],
 ];
-async function objectiveExists(courseRoot, match) {
+async function objectiveExists(course, match) {
   try {
     const topic = await readJson(
-      path.join(courseRoot, match[2], match[3], "topic.json"),
+      path.join(course.catalogRoot, match[2], match[3], "topic.json"),
     );
     return (topic.objectives ?? []).some((objective) => objective.id === match[4]);
   } catch {
@@ -48,16 +48,11 @@ async function objectiveExists(courseRoot, match) {
 
 async function checkBlueprintReferences(ctx, file, data, courses) {
   const errors = [];
-  let courseRoot = path.dirname(file);
-  while (courseRoot.startsWith(ctx.root)) {
-    try {
-      await readJson(path.join(courseRoot, "course.json"));
-      break;
-    } catch {
-      if (courseRoot === ctx.root) return errors;
-      courseRoot = path.dirname(courseRoot);
-    }
-  }
+  const owner = courses.find(
+    (candidate) =>
+      file === candidate.contentRoot || file.startsWith(`${candidate.contentRoot}${path.sep}`),
+  );
+  if (!owner) return errors;
 
   const objectives = Array.isArray(data.objectives) ? data.objectives : [];
   for (const reference of objectives) {
@@ -71,19 +66,10 @@ async function checkBlueprintReferences(ctx, file, data, courses) {
     }
 
     const matches = new Set();
-    if (
-      match[1] === path.basename(courseRoot) &&
-      (await objectiveExists(courseRoot, match))
-    )
-      matches.add(courseRoot);
     for (const course of courses) {
-      if (
-        course.manifest?.id === match[1] &&
-        (await objectiveExists(course.root, match))
-      )
-        matches.add(course.root);
+      if (course.manifest?.id === match[1] && (await objectiveExists(course, match)))
+        matches.add(course.catalogRoot);
     }
-
     if (matches.size === 0) {
       errors.push(error(id, ctx.display(file), `objective ${reference} does not resolve`));
     } else if (matches.size > 1) {
@@ -164,15 +150,9 @@ export async function run(ctx) {
     validators[name] = ajv.compile(
       await readJson(authoringPath(ctx.root, "schemas", `${name}.schema.json`)),
     );
-  const courseRoots = await findCourseRoots({ ...ctx, explicit: false });
-  const courses = [];
-  for (const root of courseRoots) {
-    try {
-      courses.push({ root, manifest: await readJson(path.join(root, "course.json")) });
-    } catch {
-      // Schema parsing below reports malformed course manifests.
-    }
-  }
+  const defaultCourses = ctx.explicit
+    ? null
+    : await findCourseCandidates(ctx, { allInScopes: true });
   const errors = [];
   for (const target of ctx.scanRoots) {
     const w = await walk(target, { skip: ctx.skip });
@@ -215,8 +195,15 @@ export async function run(ctx) {
       if (["lab", "assessment-blueprint"].includes(pair[1]))
         for (const key of findForbiddenKeys(data))
           errors.push(error(id, ctx.display(file), `forbidden key ${key}`));
-      if (pair[1] === "assessment-blueprint")
+      if (pair[1] === "assessment-blueprint") {
+        const courses =
+          defaultCourses ??
+          (await findCourseCandidates(
+            { ...ctx, targets: [file], scanRoots: [file] },
+            { allInScopes: true },
+          ));
         errors.push(...(await checkBlueprintReferences(ctx, file, data, courses)));
+      }
       if (pair[1] === "reconciliation" && data.author === data.decidedBy)
         errors.push(error(id, ctx.display(file), "decidedBy must differ from author"));
     }

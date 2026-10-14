@@ -7,17 +7,20 @@ The gates in `authoring/docs/workflow.md` check it mechanically wherever a rule 
 
 ## 1. Place in the tree
 
-- Each topic lives at `<course>/<module>/<topic>/`; there is no `topics/` level and there are no parallel versioned build folders.
+- Each authored learner topic lives at `<course>/<module>/<topic>/`; there is no `topics/` level and there are no parallel versioned build folders. Pending topics live only in `authoring/catalog/`.
 - `artifact.html` is the primary learner artifact and the single source of truth for the topic's learner content.
-- A topic directory may contain only `topic.json`, `artifact.html`, `artifact.md`, `artifact.pdf`, `artifact.gift`, `video-artifact.md` and `coding-lab/`.
-- Hashes are generated into `<course>/<module>/module.lock.json`; authored files never carry their own hashes.
+- A learner topic directory may contain only `artifact.html`, `artifact.md`, `artifact.pdf`, `artifact.gift`, `video-artifact.md` and `coding-lab/`; its metadata is `authoring/catalog/<course>/<module>/<topic>/topic.json`.
+- Hashes are generated into `authoring/catalog/<course>/<module>/module.lock.json`; authored files never carry their own hashes.
 
-## 2. Standalone
+## 2. Standalone learner artifacts
 
-- One file of plain HTML, CSS and JavaScript.
-- No frameworks, CDNs, web fonts or runtime network requests.
-- System font stacks only: serif headings, `system-ui` body, `ui-monospace` code.
-- The page works when opened from `file://` and when embedded in an iframe.
+Every learner-facing artifact remains usable when copied without sibling repository files. Core teaching, assessment, visuals, data, and interaction must be present in that artifact.
+
+An HTML learner page is one plain HTML file. It embeds all required CSS, JavaScript, data, and accessible visuals; uses system font stacks; and works from `file://` and in the required sandbox. It must not load a stylesheet, script, font, image, media file, frame, object, worker, module, or data file by relative path or network URL, and it must not make a runtime network request for core behavior. Inline CSS, inline JavaScript, inline accessible SVG, and embedded data that does not require another file are permitted.
+
+Markdown companions, PDF/handouts, video text alternatives, GIFT exports, and course- or module-level learner pages carry their core content in their own bytes. They must not require a sibling image, stylesheet, script, font, template, JSON/data file, or companion artifact. PDF fonts and required assets are embedded. External citations and optional navigation links may remain links, but following a link is never required to understand the artifact or complete its core interaction.
+
+Reusable authoring components are copied into the learner artifact. A source marker may identify where copied bytes came from; it is not a runtime dependency.
 
 ## 3. Platform-embeddable
 
@@ -58,8 +61,8 @@ The gates in `authoring/docs/workflow.md` check it mechanically wherever a rule 
 
 ## 7. Metadata
 
-- The page carries normalized `pep:` meta tags (`pep:course`, `pep:module`, `pep:topic`, `pep:topic-id`, `pep:budget-minutes`, `pep:source`) generated from `topic.json`.
-- A gate verifies the meta tags equal `topic.json`.
+- The page carries normalized `pep:` meta tags (`pep:course`, `pep:module`, `pep:topic`, `pep:topic-id`, `pep:budget-minutes`, `pep:source`) generated from its catalog `topic.json`.
+- A gate joins the catalog entry to the learner path and verifies the meta tags equal it.
 - Interactive elements keep the `data-interaction`, `data-confidence` and `data-steps` attributes the timing estimator reads.
 
 ## 8. No telemetry
@@ -148,6 +151,8 @@ Every companion is present or honestly absent: an absent companion is recorded i
 - Lists alternates and rejected candidates with reasons.
 - Never a downloaded file and never an invented URL.
 - When no suitable verified video exists, the companion is absent with the search recorded as the reason.
+
+A linked video is optional navigation. When a video text alternative is supplied, the explanatory alternative is contained in the Markdown itself; it does not require the learner to play the linked video. Markdown images are embedded or replaced by an equivalent in-file text description. PDF generation must not turn code/file examples into required external links.
 
 ### Diagrams
 

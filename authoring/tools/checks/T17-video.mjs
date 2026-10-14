@@ -4,7 +4,7 @@ import {
   error,
   evidencePath,
   exists,
-  findCourseRoots,
+  findCourses,
   loadCourse,
   readJson,
   sha256,
@@ -18,16 +18,16 @@ export const description = "video liveness receipts and budget";
 
 export async function run(ctx) {
   const out = [];
-  for (const courseRoot of await findCourseRoots(ctx)) {
-    const course = await loadCourse(courseRoot);
+  for (const courseDescriptor of await findCourses(ctx)) {
+    const course = await loadCourse(courseDescriptor);
     for (const module of course.modules) {
       for (const topicId of module.manifest.topicOrder ?? []) {
-        const topicFile = path.join(module.root, topicId, "topic.json");
+        const topicFile = path.join(module.catalogRoot, topicId, "topic.json");
         const topic = await readJson(topicFile).catch(() => null);
         if (!topic || topic.artifacts?.video?.status !== "present") {
           continue;
         }
-        const artifact = path.join(path.dirname(topicFile), "video-artifact.md");
+        const artifact = path.join(module.contentRoot, topicId, "video-artifact.md");
         let metadata;
         try {
           metadata = parseVideoFrontmatter(await readFile(artifact, "utf8"));
@@ -43,7 +43,7 @@ export async function run(ctx) {
           out.push(error(id, ctx.display(artifact), "video metadata must mark the selection embeddable"));
         }
         const receiptFile = evidencePath(
-          ctx.root,
+          course.repoRoot,
           course.manifest.id,
           module.id,
           topic.id,

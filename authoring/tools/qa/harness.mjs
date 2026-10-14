@@ -4,7 +4,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
 import { chromium } from "playwright";
-import { evidencePath, findCourseRoots, readJson } from "../lib/common.mjs";
+import { evidencePath, findCourses, loadCourse, readJson } from "../lib/common.mjs";
 
 export const VIEWPORTS = [
   { name: "desktop", width: 1366, height: 768, theme: "light", zoom: 1 },
@@ -31,14 +31,13 @@ export async function launchChromium() {
 
 export async function findHtmlTopics(ctx) {
   const topics = [];
-  for (const courseRoot of await findCourseRoots(ctx)) {
-    const course = await readJson(path.join(courseRoot, "course.json"));
-    for (const moduleId of course.moduleOrder ?? []) {
-      const moduleRoot = path.join(courseRoot, moduleId);
-      const module = await readJson(path.join(moduleRoot, "module.json")).catch(() => null);
-      for (const topicId of module?.topicOrder ?? []) {
-        const topicRoot = path.join(moduleRoot, topicId);
-        const manifest = await readJson(path.join(topicRoot, "topic.json")).catch(() => null);
+  for (const descriptor of await findCourses(ctx)) {
+    const course = await loadCourse(descriptor);
+    for (const module of course.modules) {
+      const moduleId = module.id;
+      for (const topicId of module.manifest.topicOrder ?? []) {
+        const topicRoot = path.join(module.contentRoot, topicId);
+        const manifest = await readJson(path.join(module.catalogRoot, topicId, "topic.json")).catch(() => null);
         if (manifest?.artifacts?.html?.status !== "present") continue;
         topics.push({
           courseId: course.id,
@@ -50,9 +49,9 @@ export async function findHtmlTopics(ctx) {
           manifest,
           displayHtml: ctx.display(path.join(topicRoot, "artifact.html")),
           displaySpec: ctx.display(
-            evidencePath(ctx.root, course.id, moduleId, topicId, "qa-paths.json"),
+            evidencePath(course.repoRoot, course.id, moduleId, topicId, "qa-paths.json"),
           ),
-          spec: evidencePath(ctx.root, course.id, moduleId, topicId, "qa-paths.json"),
+          spec: evidencePath(course.repoRoot, course.id, moduleId, topicId, "qa-paths.json"),
         });
       }
     }
@@ -83,10 +82,15 @@ function attachDiagnostics(page, log) {
   page.on("pageerror", (error) => log.push(`page error: ${error.message}`));
 }
 
-async function blockNetwork(page, log) {
+async function blockNetwork(page, log, pageUrl) {
   await page.route("**/*", async (route) => {
     const url = route.request().url();
-    if (/^(file:|data:|about:|blob:)/.test(url)) return route.continue();
+    if (/^(data:|about:|blob:)/.test(url)) return route.continue();
+    if (url.startsWith("file:")) {
+      if (pageUrl && url.split(/[?#]/)[0] === pageUrl) return route.continue();
+      log.push(`sibling file request: ${url}`);
+      return route.abort("blockedbyclient");
+    }
     log.push(`network request: ${url}`);
     return route.abort("blockedbyclient");
   });
@@ -251,11 +255,12 @@ async function withPage(browser, topic, options, callback) {
   const diagnostics = [];
   const label = (options.label ?? "page").replace(/[^a-z0-9-]+/gi, "-");
   attachDiagnostics(page, diagnostics);
-  if (options.offline !== false) await blockNetwork(page, diagnostics);
+  const pageUrl = pathToFileURL(topic.html).href;
+  if (options.offline !== false) await blockNetwork(page, diagnostics, pageUrl);
   await context.tracing.start({ screenshots: true, snapshots: true });
   let failed = false;
   try {
-    await page.goto(pathToFileURL(topic.html).href, { waitUntil: "load" });
+    await page.goto(pageUrl, { waitUntil: "load" });
     await callback(page, diagnostics, context);
     if (diagnostics.length) throw new Error(diagnostics.join("; "));
   } catch (error) {

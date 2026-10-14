@@ -4,7 +4,7 @@ import {
   error,
   evidencePath,
   exists,
-  findCourseRoots,
+  findCourses,
   readJson,
   relative,
   resolveRepositoryPath,
@@ -48,7 +48,10 @@ async function labFiles(root) {
   return files;
 }
 
-async function scopesForCourse(repoRoot, courseRoot, course) {
+async function scopesForCourse(course) {
+  const repoRoot = course.repoRoot;
+  const courseRoot = course.contentRoot;
+  const manifest = course.manifest;
   const courseReviewable = [
     ...(await assessmentFiles(courseRoot)),
     ...(await labFiles(courseRoot)),
@@ -56,20 +59,23 @@ async function scopesForCourse(repoRoot, courseRoot, course) {
   const scopes = [
     {
       kind: "course",
+      repoRoot,
       contentRoot: courseRoot,
       evidenceRoot: evidencePath(repoRoot, course.id),
       reviewable: courseReviewable,
-      historicalRoots: (course.moduleOrder ?? []).map((moduleId) =>
+      historicalRoots: (manifest.moduleOrder ?? []).flatMap((moduleId) => [
         path.join(courseRoot, moduleId),
-      ),
+        path.join(course.catalogRoot, moduleId),
+      ]),
     },
   ];
 
-  for (const moduleId of course.moduleOrder ?? []) {
+  for (const moduleId of manifest.moduleOrder ?? []) {
     const moduleRoot = path.join(courseRoot, moduleId);
-    const module = await readJson(path.join(moduleRoot, "module.json")).catch(() => null);
+    const module = await readJson(path.join(course.catalogRoot, moduleId, "module.json")).catch(() => null);
     scopes.push({
       kind: "module",
+      repoRoot,
       contentRoot: moduleRoot,
       evidenceRoot: evidencePath(repoRoot, course.id, moduleId),
       reviewable: [
@@ -87,6 +93,7 @@ async function scopesForCourse(repoRoot, courseRoot, course) {
       reviewable.push(...(await labFiles(topicRoot)));
       scopes.push({
         kind: "topic",
+        repoRoot,
         contentRoot: topicRoot,
         evidenceRoot: evidencePath(repoRoot, course.id, moduleId, topicId),
         reviewable,
@@ -135,9 +142,9 @@ async function checkScope(ctx, scope) {
       let bindings = [];
       try {
         bindings = await bindingsForEvidenceFile(
-          ctx.root,
+          scope.repoRoot,
           file,
-          bindingOptions(ctx.root, scope),
+          bindingOptions(scope.repoRoot, scope),
         );
       } catch (cause) {
         errors.push(error(id, ctx.display(file), cause.message));
@@ -164,7 +171,7 @@ async function checkScope(ctx, scope) {
         );
       reports.push({
         file,
-        evidencePath: relative(ctx.root, file),
+        evidencePath: relative(scope.repoRoot, file),
         role: data.role,
         data,
         bindings,
@@ -186,7 +193,7 @@ async function checkScope(ctx, scope) {
     const originalReference = report.data.recheck?.of;
     const originalPath =
       typeof originalReference === "string"
-        ? relative(ctx.root, await resolveRepositoryPath(ctx.root, originalReference))
+        ? relative(scope.repoRoot, await resolveRepositoryPath(scope.repoRoot, originalReference))
         : null;
     const original = reportsByPath.get(originalPath);
     if (
@@ -206,7 +213,7 @@ async function checkScope(ctx, scope) {
   }
 
   for (const reviewable of scope.reviewable) {
-    const reviewablePath = relative(ctx.root, reviewable);
+    const reviewablePath = relative(scope.repoRoot, reviewable);
     for (const role of roles) {
       const covered = reports.some(
         (report) =>
@@ -299,14 +306,8 @@ async function checkScope(ctx, scope) {
 export async function run(ctx) {
   const errors = [];
   let reviewableCount = 0;
-  for (const courseRoot of await findCourseRoots(ctx)) {
-    let course;
-    try {
-      course = await readJson(path.join(courseRoot, "course.json"));
-    } catch {
-      continue;
-    }
-    for (const scope of await scopesForCourse(ctx.root, courseRoot, course)) {
+  for (const course of await findCourses(ctx)) {
+    for (const scope of await scopesForCourse(course)) {
       reviewableCount += scope.reviewable.length;
       errors.push(...(await checkScope(ctx, scope)));
     }

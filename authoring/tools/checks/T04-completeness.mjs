@@ -1,6 +1,6 @@
-import { readFile, stat } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { error, findCourseRoots, readJson } from "../lib/common.mjs";
+import { error, findCourses, readJson } from "../lib/common.mjs";
 export const id = "T04";
 export const gate = 2;
 export const description = "nonempty artifacts and honest absences";
@@ -14,17 +14,13 @@ const names = {
 };
 export async function run(ctx) {
   const out = [];
-  for (const cr of await findCourseRoots(ctx)) {
-    let c;
-    try {
-      c = await readJson(path.join(cr, "course.json"));
-    } catch {
-      continue;
-    }
+  for (const course of await findCourses(ctx)) {
+    const c = course.manifest;
+    const cr = course.contentRoot;
     for (const mid of c.moduleOrder ?? []) {
       let m;
       try {
-        m = await readJson(path.join(cr, mid, "module.json"));
+        m = await readJson(path.join(course.catalogRoot, mid, "module.json"));
       } catch {
         continue;
       }
@@ -32,7 +28,7 @@ export async function run(ctx) {
         const tr = path.join(cr, mid, tid);
         let t;
         try {
-          t = await readJson(path.join(tr, "topic.json"));
+          t = await readJson(path.join(course.catalogRoot, mid, tid, "topic.json"));
         } catch {
           continue;
         }
@@ -41,7 +37,7 @@ export async function run(ctx) {
             out.push(
               error(
                 id,
-                ctx.display(path.join(tr, "topic.json")),
+                ctx.display(path.join(course.catalogRoot, mid, tid, "topic.json")),
                 `absent artifact ${kind} requires a reason`,
               ),
             );
