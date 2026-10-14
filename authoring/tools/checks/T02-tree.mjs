@@ -13,7 +13,7 @@ export const id = "T02";
 export const gate = 2;
 export const description = "canonical course/module/topic tree";
 const topicReviewName =
-  /^(?:critic-(?:education|sme)(?:-recheck)?|reconciliation)\.json$/;
+  /^(?:critic-(?:education|sme)|(?:[a-z0-9]+(?:-[a-z0-9]+)*-)?critic-(?:education|sme)-recheck|reconciliation)\.json$/;
 const scopedReviewName =
   /^(?:[a-z0-9]+(?:-[a-z0-9]+)*-)?(?:critic-(?:education|sme)(?:-recheck)?|reconciliation)\.json$/;
 

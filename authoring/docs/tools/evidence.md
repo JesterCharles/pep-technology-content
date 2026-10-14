@@ -4,13 +4,17 @@
 
 ## Files
 
-Topic evidence uses these exact names under `authoring/evidence/<course>/<module>/<topic>/`:
+Topic evidence uses these exact original-report and reconciliation names under
+`authoring/evidence/<course>/<module>/<topic>/`:
 
 - `critic-education.json`
 - `critic-sme.json`
-- `critic-education-recheck.json`
-- `critic-sme-recheck.json`
 - `reconciliation.json`
+
+Topic rechecks use `critic-education-recheck.json` or `critic-sme-recheck.json`. To retain more than one immutable
+recheck for a role, a recheck may add a deterministic kebab-case prefix, for example
+`focused-final-critic-education-recheck.json`. Prefixes are allowed only on rechecks; topic original reports and the
+reconciliation retain their exact names.
 
 Course- and module-level evidence prefixes the same names with the reviewed unit, such as
 `intake-critic-education.json` or `module-check-reconciliation.json`. Reports and reconciliations are validated by
