@@ -14,7 +14,7 @@ A team builds a Save control as `<div role="button" onclick="save()">Save</div>`
 
 ### Three barriers to spot
 
-- Missing alternative text: an image that carries information needs `alt` text saying what it shows. A purely decorative image gets `alt=""`, so screen readers skip it.
+- Missing alternative text: an image that carries information needs `alt` text that conveys its relevant information or purpose in this context. A purely decorative image gets `alt=""`, so screen readers skip it.
 - Missing label: a form control with no linked label or other name is announced as just "edit text".
 - Keyboard trap: keyboard focus moves into a part of the page and Tab, Shift+Tab or Escape cannot move it out again.
 
@@ -57,7 +57,7 @@ Save (B: div with role="button")
 ## Recap
 
 - Look for three barriers: an informative image without `alt`, a control without a label, and focus that cannot leave a part of the page.
-- Decorative images get `alt=""`.
+- Informative images get `alt` text that conveys their information or purpose in context; decorative images get `alt=""`.
 - ARIA roles describe; they do not add focus or keyboard behavior. Prefer a native element that already behaves correctly.
 - Test with the keyboard alone: Tab reaches every control, Enter or Space operates it, focus is visible and never trapped.
 
@@ -91,15 +91,15 @@ Prediction (practice, not scored): a Save control is a div with role=button and 
 
 ### drag
 
-Audit sorter for a fictional page. Worked answer: img src=sales-chart.png with no alt is missing alternative text, because the chart carries information; img src=divider.png alt=empty is no problem, because a decorative image should be skipped; an input with only a placeholder Search is a missing label; a button with the text Subscribe is no problem, because its text is its name; a date picker where Tab and Escape keep focus inside is a keyboard trap; a link around img alt=Acme Books home is no problem, because the alt text names the link.
+Steps: 1. Where to look: The item named above the buttons, with its markup and a short description; items appear one at a time. 2. What to do: Press Missing alt text, Missing label, Keyboard trap or No problem. 3. What to expect: A right choice shows the next item; a wrong choice explains why and lets you choose again. 4. How to know it is done: The counter reads 6 of 6 sorted and Continue appears. Audit sorter for a fictional page. Worked answer: img src=sales-chart.png with no alt is missing alternative text, because the chart carries information; img src=divider.png alt=empty is no problem, because a decorative image should be skipped; an input with only a placeholder Search is a missing label; a button with the text Subscribe is no problem, because its text is its name; a date picker where Tab and Escape keep focus inside is a keyboard trap; a link around img alt=Acme Books home is no problem, because the alt text names the link.
 
 ### explore
 
-Two real Save controls. Control A is a native button: Tab reaches it and Enter or Space presses it. Control B is a div with role=button and tabindex=0 but no key handler: Tab reaches it, yet Enter and Space fire no click, so nothing saves. The best fix is to replace B with a native button, which brings focus, keys and the button role at once; adding more ARIA does not add behavior.
+Steps: 1. Where to look: The two Save controls in the model and the log under them. 2. What to do: Press Tab until control A is focused and press Enter; do the same on control B. Then choose a fix for B below and press Check fix. 3. What to expect: The log records what each control did when you pressed Enter. 4. How to know it is done: Check fix confirms your fix and Continue appears. Two real Save controls. Control A is a native button: Tab reaches it and Enter or Space presses it. Control B is a div with role=button and tabindex=0 but no key handler: Tab reaches it, yet Enter and Space fire no click, so nothing saves. The best fix is to replace B with a native button, which brings focus, keys and the button role at once; adding more ARIA does not add behavior.
 
 ### explore
 
-Simulated keyboard walk through a fictional page with five controls in source order: a Home link, a Menu control built as a div with only a click handler, a Search field with a label, a Volume slider widget, and a Send button. Pressing Tab moves from Home to Search, skipping Menu, because the div is not focusable. From Search, Tab enters Volume, and further Tab, Shift+Tab and Escape presses keep focus there, so Send is never reached. The failing controls are Menu, unreachable, and Volume, a keyboard trap.
+Steps: 1. Where to look: The list of sample-page controls in the model; a focus marker shows where focus is. 2. What to do: Press the simulated Tab, Shift+Tab or Escape buttons until focus stops moving, then tick the failing controls and press Check my findings. 3. What to expect: The focus marker moves down the list, and the feedback says when something was skipped or when focus did not move. 4. How to know it is done: Check my findings confirms both failures and Continue appears. Simulated keyboard walk through a fictional page with five controls in source order: a Home link, a Menu control built as a div with only a click handler, a Search field with a label, a Volume slider widget, and a Send button. Pressing Tab moves from Home to Search, skipping Menu, because the div is not focusable. From Search, Tab enters Volume, and further Tab, Shift+Tab and Escape presses keep focus there, so Send is never reached. The failing controls are Menu, unreachable, and Volume, a keyboard trap.
 
 ### mcq
 

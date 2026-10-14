@@ -39,10 +39,10 @@ Each child then takes its place with `grid-area: head;`. Every named area must b
 
 ### Grid or Flexbox?
 
-- Flexbox is one-dimensional: a single row or column of items, often sized by their content, such as a toolbar, a row of tags or nav links.
+- Flexbox lays items out along one dimension at a time, often sized by their content, such as a toolbar, a set of tags or nav links. When items wrap, each flex line is laid out on its own, so items in different lines do not line up as shared columns.
 - Grid is two-dimensional: rows and columns that line up with each other, such as a page shell, a gallery or a form with aligned labels and fields.
 
-Ask: must things line up in both directions? Then Grid. Is it one line of items? Then Flexbox. Many pages use both: Grid for the shell, Flexbox inside a header.
+Ask: must things line up in both directions? Then Grid. Do items only need spacing along one axis? Then Flexbox. Many pages use both: Grid for the shell, Flexbox inside a header.
 
 ### Apply it to a new layout
 
@@ -50,9 +50,9 @@ A shop shows product cards that must line up in rows and columns, as many per ro
 
 ## Model
 
-A grid has rows and columns that line up in both directions; Flexbox has one line. Every grid here is a real element laid out by this browser.
+A grid has rows and columns that line up in both directions; Flexbox works along one dimension at a time. Every grid here is a real element laid out by this browser.
 
-One dimension and two dimensionsLeft: Flexbox, one row of three boxes of different widths with an arrow along the row. Right: Grid, a two by three grid of equal cells with arrows along both the rows and the columns. Flexbox: one line Grid: rows and columns
+One dimension and two dimensionsLeft: Flexbox, three boxes of different widths with an arrow along their single axis. Right: Grid, a two by three grid of equal cells with arrows along both the rows and the columns. Flexbox: one axis Grid: rows and columns
 
 1
 
@@ -79,7 +79,7 @@ footer
 - `grid-template-columns` lists column sizes; `fr` shares the leftover space after fixed tracks.
 - `repeat()` shortens a list; `minmax(min, max)` sets a range; `repeat(auto-fill, minmax(…))` fits as many columns as the width allows.
 - `grid-template-areas` names rectangular areas; children use `grid-area`.
-- Choose Grid when items must line up in two dimensions, Flexbox for one line of items.
+- Choose Grid when items must line up in two dimensions, Flexbox when items only need laying out along one axis; wrapped flex lines do not share columns.
 
 Next topic: Responsive, mobile-first layout
 
@@ -110,16 +110,16 @@ Prediction (practice, not scored): a 600px grid has grid-template-columns 200px 
 
 ### explore
 
-Track builder on a real 300px grid with six cells. Goal 1, three equal columns: repeat(3, 1fr) or 1fr 1fr 1fr, each 100px. Goal 2, a 100px sidebar column and a main column taking the rest: 100px 1fr, giving 100px and 200px. Goal 3, as many columns of at least 90px as fit: repeat(auto-fill, minmax(90px, 1fr)), which gives 3 columns of 100px at 300px and 2 columns of 100px at 200px. repeat(3, 90px) stays three fixed columns at any width.
+Steps: 1. Where to look: The six cells in the model and the grid CSS shown above them. 2. What to do: Press a grid-template-columns value below the model. 3. What to expect: The cells move, and the measured line under them lists the first-row column widths. 4. How to know it is done: All three goals in the list show done and Continue appears. Track builder on a real 300px grid with six cells. Goal 1, three equal columns: repeat(3, 1fr) or 1fr 1fr 1fr, each 100px. Goal 2, a 100px sidebar column and a main column taking the rest: 100px 1fr, giving 100px and 200px. Goal 3, as many columns of at least 90px as fit: repeat(auto-fill, minmax(90px, 1fr)), which gives 3 columns of 100px at 300px and 2 columns of 100px at 200px. repeat(3, 90px) stays three fixed columns at any width.
 
 ### explore
 
-Area map for a page shell in a real grid with columns 100px 1fr. Worked answer: grid-template-areas: "header header" "side main" "footer footer". Each child has grid-area set to its name. An L-shaped or split area, such as header in the top-left cell and the bottom-right cell, makes the browser reject the declaration.
+Steps: 1. Where to look: The 3-row, 2-column area map in the model, and the grid under it. 2. What to do: Press a cell in the area map, then press a name for it; repeat for all six cells, then press Apply areas. 3. What to expect: The map shows your names; after Apply areas, the grid places header, side, main and footer, or reports that the browser rejected the map. 4. How to know it is done: Apply areas confirms the shell and Continue appears. Area map for a page shell in a real grid with columns 100px 1fr. Worked answer: grid-template-areas: "header header" "side main" "footer footer". Each child has grid-area set to its name. An L-shaped or split area, such as header in the top-left cell and the bottom-right cell, makes the browser reject the declaration.
 
 ### drag
 
-Grid or Flexbox sorter. Worked answer: a page shell with header, sidebar, main and footer is Grid, because the regions line up in rows and columns; a row of tags of different widths that wraps is Flexbox, one line of content-sized items; a photo gallery whose photos line up in rows and columns is Grid; a nav bar with links on the left and a button on the right is Flexbox, a single row; a form whose labels line up in one column and fields in another is Grid, because both columns must align across rows.
+Steps: 1. Where to look: The layout described above the two buttons; layouts appear one at a time. 2. What to do: Press Grid or Flexbox. 3. What to expect: A right choice shows the next layout; a wrong choice explains why and lets you choose again. 4. How to know it is done: The counter reads 5 of 5 sorted and Continue appears. Grid or Flexbox sorter. Worked answer: a page shell with header, sidebar, main and footer is Grid, because the regions line up in rows and columns; a set of tags of different widths that wraps is Flexbox, content-sized items along one axis whose wrapped lines need not share columns; a photo gallery whose photos line up in rows and columns is Grid; a nav bar with links on the left and a button on the right is Flexbox, items spaced along one axis; a form whose labels line up in one column and fields in another is Grid, because both columns must align across rows.
 
 ### mcq
 
-Apply question: product cards must line up in rows and columns, as many per row as fit, each at least 200px. Options: Grid with repeat(auto-fill, minmax(200px, 1fr)), because the cards align in two dimensions (correct); Flexbox with justify-content space-between, because the cards form a row (cards would not line up in columns, and the last row spreads out); Grid with grid-template-columns 200px, because Grid is for cards (that is one fixed column); Flexbox with flex-direction column, because cards stack (a single column, not as many as fit).
+Apply question: product cards must line up in rows and columns, as many per row as fit, each at least 200px. Options: Grid with repeat(auto-fill, minmax(200px, 1fr)), because the cards align in two dimensions (correct); Flexbox with justify-content space-between, because the cards form a row (wrapped flex lines are laid out independently, so cards would not line up in shared columns, and the last row spreads out); Grid with grid-template-columns 200px, because Grid is for cards (that is one fixed column); Flexbox with flex-direction column, because cards stack (a single column, not as many as fit).
