@@ -2,7 +2,8 @@ import path from "node:path";
 import {
   error,
   evidencePath,
-  findCourseRoots,
+  findCourseCandidates,
+  findCourses,
   readJson,
   RESERVED_ROOTS,
   walk,
@@ -22,34 +23,52 @@ function looksLikeReviewEvidence(name) {
 
 export async function run(ctx) {
   const out = [];
+  const candidates = await findCourseCandidates(ctx);
+  for (const course of candidates) {
+    const name = path.basename(course.catalogRoot);
+    if (!SLUG_RE.test(name))
+      out.push(error(id, ctx.display(course.manifestFile), "catalog course directory must be a slug"));
+    if (RESERVED_ROOTS.has(name))
+      out.push(error(id, ctx.display(course.manifestFile), "reserved root cannot be a catalog course"));
+    if (course.manifest && course.manifest.id !== name)
+      out.push(error(id, ctx.display(course.manifestFile), "catalog course directory must equal id"));
+  }
+  const metadataNames = new Set([
+    "course.json",
+    "course.lock.json",
+    "module.json",
+    "module.lock.json",
+    "topic.json",
+  ]);
   for (const root of ctx.scanRoots) {
     const w = await walk(root, { skip: ctx.skip });
     for (const d of w.directories)
       if (path.basename(d) === "topics")
         out.push(error(id, ctx.display(d), "topics/ directories are forbidden"));
+    for (const file of w.files) {
+      const name = path.basename(file);
+      if (!metadataNames.has(name)) continue;
+      const owner = candidates.find(
+        (course) => file === course.catalogRoot || file.startsWith(`${course.catalogRoot}${path.sep}`),
+      );
+      const parts = owner ? path.relative(owner.catalogRoot, file).split(path.sep) : [];
+      const valid =
+        owner &&
+        ((parts.length === 1 && ["course.json", "course.lock.json"].includes(name)) ||
+          (parts.length === 2 && ["module.json", "module.lock.json"].includes(name)) ||
+          (parts.length === 3 && name === "topic.json"));
+      if (!valid)
+        out.push(error(id, ctx.display(file), "authoring metadata is outside a canonical course catalog"));
+    }
   }
-  for (const cr of await findCourseRoots(ctx)) {
-    let c;
-    try {
-      c = await readJson(path.join(cr, "course.json"));
-    } catch {
-      continue;
-    }
-    const courseFile = path.join(cr, "course.json");
-    if (!ctx.explicit && path.dirname(cr) !== ctx.root) {
-      out.push(error(id, ctx.display(courseFile), "course directory must be a direct child of the repository root"));
-    } else if (!ctx.explicit && RESERVED_ROOTS.has(path.basename(cr))) {
-      out.push(error(id, ctx.display(courseFile), "reserved root cannot be a course directory"));
-    }
-    if (path.basename(cr) !== c.id)
-      out.push(error(id, ctx.display(courseFile), "course directory must equal id"));
-
-    const evidenceRoot = evidencePath(ctx.root, c.id);
+  for (const course of await findCourses(ctx)) {
+    const c = course.manifest;
+    const evidenceRoot = evidencePath(course.repoRoot, c.id);
     const moduleIds = new Set(c.moduleOrder ?? []);
     const topicIds = new Map();
     for (const mid of c.moduleOrder ?? []) {
       try {
-        const module = await readJson(path.join(cr, mid, "module.json"));
+        const module = await readJson(path.join(course.catalogRoot, mid, "module.json"));
         topicIds.set(mid, new Set(module.topicOrder ?? []));
       } catch {
         topicIds.set(mid, new Set());
@@ -73,7 +92,7 @@ export async function run(ctx) {
     }
 
     for (const mid of c.moduleOrder ?? []) {
-      const mr = path.join(cr, mid);
+      const mr = path.join(course.catalogRoot, mid);
       let m;
       try {
         m = await readJson(path.join(mr, "module.json"));

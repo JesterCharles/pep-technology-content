@@ -7,10 +7,10 @@ The gates in `authoring/docs/workflow.md` check it mechanically wherever a rule 
 
 ## 1. Place in the tree
 
-- Each topic lives at `<course>/<module>/<topic>/`; there is no `topics/` level and there are no parallel versioned build folders.
+- Each authored learner topic lives at `<course>/<module>/<topic>/`; there is no `topics/` level and there are no parallel versioned build folders. Pending topics live only in `authoring/catalog/`.
 - `artifact.html` is the primary learner artifact and the single source of truth for the topic's learner content.
-- A topic directory may contain only `topic.json`, `artifact.html`, `artifact.md`, `artifact.pdf`, `artifact.gift`, `video-artifact.md` and `coding-lab/`.
-- Hashes are generated into `<course>/<module>/module.lock.json`; authored files never carry their own hashes.
+- A learner topic directory may contain only `artifact.html`, `artifact.md`, `artifact.pdf`, `artifact.gift`, `video-artifact.md` and `coding-lab/`; its metadata is `authoring/catalog/<course>/<module>/<topic>/topic.json`.
+- Hashes are generated into `authoring/catalog/<course>/<module>/module.lock.json`; authored files never carry their own hashes.
 
 ## 2. Standalone
 
@@ -58,8 +58,8 @@ The gates in `authoring/docs/workflow.md` check it mechanically wherever a rule 
 
 ## 7. Metadata
 
-- The page carries normalized `pep:` meta tags (`pep:course`, `pep:module`, `pep:topic`, `pep:topic-id`, `pep:budget-minutes`, `pep:source`) generated from `topic.json`.
-- A gate verifies the meta tags equal `topic.json`.
+- The page carries normalized `pep:` meta tags (`pep:course`, `pep:module`, `pep:topic`, `pep:topic-id`, `pep:budget-minutes`, `pep:source`) generated from its catalog `topic.json`.
+- A gate joins the catalog entry to the learner path and verifies the meta tags equal it.
 - Interactive elements keep the `data-interaction`, `data-confidence` and `data-steps` attributes the timing estimator reads.
 
 ## 8. No telemetry

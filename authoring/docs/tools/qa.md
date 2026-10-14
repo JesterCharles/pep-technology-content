@@ -22,7 +22,7 @@ The harness uses the Playwright-managed Chromium pinned by `package-lock.json`.
 
 ## Topic path file
 
-Every HTML topic has
+Every HTML topic is joined by ids from `authoring/catalog/<course>/<module>/<topic>/topic.json` to the learner directory and has
 `authoring/evidence/<course>/<module>/<topic>/qa-paths.json`, validated by
 `authoring/schemas/qa-paths.schema.json`.
 Selectors belong to the page, not to the harness. A path is an ordered list of declarative actions.

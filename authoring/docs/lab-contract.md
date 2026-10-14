@@ -26,9 +26,9 @@ coding-lab/
 - Topic lab: one topic's objectives need real-toolchain practice that the page simulator cannot honestly give.
   It lives at `<course>/<module>/<topic>/coding-lab/`.
 - Module lab: one exercise set spans several topics in a module.
-  It lives at `<course>/<module>/coding-lab/` and is covered by `module.lock.json`.
+  It lives at `<course>/<module>/coding-lab/` and is covered by `authoring/catalog/<course>/<module>/module.lock.json`.
 - Course lab: a cumulative build across modules.
-  It lives at `<course>/coding-lab/` and is covered by `course.lock.json`.
+  It lives at `<course>/coding-lab/` and is covered by `authoring/catalog/<course>/course.lock.json`.
 - Omission: when the page simulator already gives truthful, assessed practice and a local toolchain adds setup cost without new learning.
   The topic records `lab: "none"` with a one-line reason confirmed by the educational critic.
 

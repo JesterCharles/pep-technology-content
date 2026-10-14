@@ -15,17 +15,22 @@ async function writeJson(file, value) {
 }
 
 async function addObjectiveCourse(root, directory, id = directory) {
-  const courseRoot = path.join(root, directory);
   await cp(
     path.join(repo, "authoring/tests/fixtures/positive/demo-course"),
-    courseRoot,
+    path.join(root, directory),
     { recursive: true },
   );
-  const courseFile = path.join(courseRoot, "course.json");
+  const catalogRoot = path.join(root, "authoring/catalog", directory);
+  await cp(
+    path.join(repo, "authoring/tests/fixtures/positive/authoring/catalog/demo-course"),
+    catalogRoot,
+    { recursive: true },
+  );
+  const courseFile = path.join(catalogRoot, "course.json");
   const course = JSON.parse(await readFile(courseFile, "utf8"));
   course.id = id;
   await writeJson(courseFile, course);
-  const topicFile = path.join(courseRoot, "demo-module/demo-topic/topic.json");
+  const topicFile = path.join(catalogRoot, "demo-module/demo-topic/topic.json");
   const topic = JSON.parse(await readFile(topicFile, "utf8"));
   topic.objectives = [{ id: "o1", text: "Demonstrate the objective." }];
   await writeJson(topicFile, topic);
@@ -61,8 +66,8 @@ function blueprint(overrides = {}) {
   };
 }
 
-function check(root, gate = "T01") {
-  return spawnSync(process.execPath, [pep, "check", "--only", gate], {
+function check(root, gate = "T01", targets = []) {
+  return spawnSync(process.execPath, [pep, "check", "--only", gate, ...targets], {
     cwd: root,
     encoding: "utf8",
   });
@@ -178,6 +183,116 @@ test("T01 rejects an ambiguous cross-course blueprint objective", async () => {
   assert.match(result.stderr, /objective .*#o1 is ambiguous across courses/);
   assert.match(result.stderr, /first-copy/);
   assert.match(result.stderr, /second-copy/);
+});
+
+test("T01 resolves objectives for an exact blueprint path in a nested catalog scope", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-nested-schema-"));
+  await cp(
+    path.join(repo, "authoring", "schemas"),
+    path.join(root, "authoring", "schemas"),
+    { recursive: true },
+  );
+  const nested = path.join(root, "nested");
+  await addObjectiveCourse(nested, "demo-course");
+  const invalid = "demo-course/demo-module/demo-topic#o99";
+  const blueprintFile = path.join(nested, "demo-course/assessments/intake/blueprint.json");
+  await writeJson(
+    blueprintFile,
+    blueprint({ objectives: [invalid], objectiveFormats: { [invalid]: ["mcq"] } }),
+  );
+  const result = check(root, "T01", [path.relative(root, blueprintFile)]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /objective .*#o99 does not resolve/);
+});
+
+test("T01 resolves cross-course objectives within a nested catalog scope", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-nested-cross-course-"));
+  await cp(
+    path.join(repo, "authoring", "schemas"),
+    path.join(root, "authoring", "schemas"),
+    { recursive: true },
+  );
+  const nested = path.join(root, "nested");
+  await addObjectiveCourse(nested, "demo-course");
+  await addObjectiveCourse(nested, "other-course");
+  const crossCourse = "other-course/demo-module/demo-topic#o1";
+  const blueprintFile = path.join(nested, "demo-course/assessments/intake/blueprint.json");
+  await writeJson(
+    blueprintFile,
+    blueprint({
+      objectives: [crossCourse],
+      objectiveFormats: { [crossCourse]: ["mcq"] },
+    }),
+  );
+  const result = check(root, "T01", [path.relative(root, blueprintFile)]);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("T01 nested path scans cannot resolve objectives from an enclosing catalog", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-nearest-catalog-"));
+  await cp(
+    path.join(repo, "authoring", "schemas"),
+    path.join(root, "authoring", "schemas"),
+    { recursive: true },
+  );
+  await addObjectiveCourse(root, "outer-course");
+  const nested = path.join(root, "nested");
+  await addObjectiveCourse(nested, "demo-course");
+  const outerOnly = "outer-course/demo-module/demo-topic#o1";
+  const blueprintFile = path.join(nested, "demo-course/assessments/intake/blueprint.json");
+  await writeJson(
+    blueprintFile,
+    blueprint({ objectives: [outerOnly], objectiveFormats: { [outerOnly]: ["mcq"] } }),
+  );
+  const result = check(root, "T01", [path.relative(root, blueprintFile)]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /objective outer-course\/demo-module\/demo-topic#o1 does not resolve/);
+});
+
+test("T01 nested path scans ignore a same-id course in an enclosing catalog", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-nearest-same-id-"));
+  await cp(
+    path.join(repo, "authoring", "schemas"),
+    path.join(root, "authoring", "schemas"),
+    { recursive: true },
+  );
+  await addObjectiveCourse(root, "shared-course");
+  const nested = path.join(root, "nested");
+  await addObjectiveCourse(nested, "shared-course");
+  const local = "shared-course/demo-module/demo-topic#o1";
+  const blueprintFile = path.join(nested, "shared-course/assessments/intake/blueprint.json");
+  await writeJson(
+    blueprintFile,
+    blueprint({ objectives: [local], objectiveFormats: { [local]: ["mcq"] } }),
+  );
+  const result = check(root, "T01", [path.relative(root, blueprintFile)]);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("T01 keeps objective lookup isolated across multiple explicit catalog scopes", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-multi-scope-"));
+  await cp(
+    path.join(repo, "authoring", "schemas"),
+    path.join(root, "authoring", "schemas"),
+    { recursive: true },
+  );
+  const first = path.join(root, "first-scope");
+  const second = path.join(root, "second-scope");
+  await addObjectiveCourse(first, "demo-course");
+  await addObjectiveCourse(second, "outer-course");
+  const crossScope = "outer-course/demo-module/demo-topic#o1";
+  const blueprintFile = path.join(first, "demo-course/assessments/intake/blueprint.json");
+  await writeJson(
+    blueprintFile,
+    blueprint({ objectives: [crossScope], objectiveFormats: { [crossScope]: ["mcq"] } }),
+  );
+  const outerManifest = path.join(second, "authoring/catalog/outer-course/course.json");
+  const result = check(root, "T01", [
+    path.relative(root, blueprintFile),
+    path.relative(root, outerManifest),
+  ]);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /objective outer-course\/demo-module\/demo-topic#o1 does not resolve/);
 });
 
 test("T01 rejects an unresolved blueprint objective", async () => {

@@ -9,10 +9,10 @@ Video artifact front matter supports scalar values and YAML block lists. Block-l
 and `cautions` are validated as arrays by `authoring/schemas/video-artifact.frontmatter.schema.json`.
 
 Every blueprint objective is an exact, course-qualified `<course>/<module>/<topic>#<objective-id>` reference that
-must resolve to exactly one objective across all repository course manifests. A blueprint may reference another
+must resolve to exactly one objective across all repository catalog manifests. A blueprint may reference another
 course's objective; unresolved and ambiguous references fail. The optional `objectiveFormats` object maps those same
-references to non-empty, unique arrays of formats declared by the blueprint. T01 checks both the topic reference and
-the map's keys and values.
+references to non-empty, unique arrays of formats declared by the blueprint. T01 checks both the catalog `topic.json`
+reference and the map's keys and values.
 
 ## Curriculum snapshot (T19)
 
@@ -119,4 +119,4 @@ node authoring/tools/net/check-video.mjs course-id/module-id/topic-id
 The command uses the provider's JSON oEmbed endpoint to establish public availability and embeddability. It obtains
 runtime from oEmbed when provided, or from YouTube's public player metadata, and writes
 `authoring/evidence/<course>/<module>/<topic>/video.json`. T17 runs offline and requires a receipt bound to the current video
-file, no older than 30 days, with successful oEmbed and runtime no greater than `topic.json`'s minute budget.
+file, no older than 30 days, with successful oEmbed and runtime no greater than the catalog `topic.json` minute budget.

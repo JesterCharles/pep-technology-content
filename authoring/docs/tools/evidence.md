@@ -50,7 +50,10 @@ For an object containing `reviewedSha256` or `artifactSha256`, `authoring/tools/
 
 These paths are repository-relative. A binding with no target or a path outside the repository fails lock
 generation. `artifactHashes` maps keep their existing behavior: each map key is resolved relative to the associated
-course, module or topic artifact root.
+course, module or topic artifact root. Immutable records that use an old learner-tree path for one of the five moved
+metadata classes (`course.json`, `course.lock.json`, `module.json`, `module.lock.json`, `topic.json`) resolve narrowly
+to the matching `authoring/catalog/` path only when that catalog file exists; an existing direct path always wins.
+Generated locks record the physical catalog path.
 
 Generated locks retain fresh and stale in-scope hashes and mark each binding with `current`. When a target recorded
 by immutable review evidence has since been removed, its binding remains in the lock with `current: false`,
@@ -60,8 +63,8 @@ current education and SME coverage.
 A course-level evidence reference to module content is historical: the course lock protects the evidence file bytes
 but omits that cross-scope binding, so later module changes do not stale the shared course lock. Such a historical
 intake reference can close its course-level intake finding, but it never supplies current critic coverage for module
-content; current module coverage must come from evidence under that module. T06 requires committed locks to be
-byte-identical to regeneration. Regenerate with `authoring/tools/pep lock` after changing content or evidence.
+content; current module coverage must come from evidence under that module. T06 requires committed catalog locks to be
+byte-identical to regeneration. Regenerate with `authoring/tools/pep lock` after changing catalog metadata, content or evidence.
 
 ## Legacy evidence references
 
