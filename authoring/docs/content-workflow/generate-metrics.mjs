@@ -4,9 +4,22 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const root = path.resolve(here, "../../..");
 const outputPath = path.join(here, "metrics.json");
-const write = process.argv.includes("--write");
+const args = process.argv.slice(2);
+function option(name) {
+  const index = args.indexOf(name);
+  if (index < 0) return undefined;
+  const value = args[index + 1];
+  if (!value || value.startsWith("--")) throw new Error(`${name} requires a value`);
+  return value;
+}
+const write = args.includes("--write");
+const root = path.resolve(option("--root") ?? path.resolve(here, "../../.."));
+const capturedOn = option("--captured-on") ?? new Date().toISOString().slice(0, 10);
+if (!/^\d{4}-\d{2}-\d{2}$/.test(capturedOn) || Number.isNaN(Date.parse(`${capturedOn}T00:00:00Z`))) {
+  throw new Error("--captured-on must be an ISO date (YYYY-MM-DD)");
+}
+if (write && option("--root")) throw new Error("--write only records a snapshot of this repository; omit --root");
 
 async function json(relative) {
   return JSON.parse(await readFile(path.join(root, relative), "utf8"));
@@ -99,6 +112,8 @@ const lock = await json(`authoring/catalog/${exampleRoot}/module.lock.json`);
 const metrics = {
   schemaVersion: 1,
   label: "Tracked repository snapshot, not production or learner telemetry",
+  capturedOn,
+  regeneration: "point-in-time; regenerated on demand with generate-metrics.mjs --write, never required by CI",
   sources: [
     "authoring/catalog/*/course.json",
     "authoring/catalog/*/*/module.json",
@@ -149,12 +164,7 @@ const metrics = {
 const serialized = `${JSON.stringify(metrics, null, 2)}\n`;
 if (write) {
   await writeFile(outputPath, serialized);
-  console.log(`wrote ${path.relative(root, outputPath)}`);
+  console.error(`wrote ${path.relative(root, outputPath)}`);
 } else {
-  const current = await readFile(outputPath, "utf8");
-  if (current !== serialized) {
-    console.error("content-workflow metrics: tracked metrics are stale; run generate-metrics.mjs --write and review the diff");
-    process.exit(1);
-  }
-  console.log("content-workflow metrics: fresh");
+  process.stdout.write(serialized);
 }

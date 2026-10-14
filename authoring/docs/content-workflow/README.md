@@ -57,7 +57,7 @@ The interactive companion labels this honestly as “prompt not tracked” and s
 
 Follow the bytes from the [module manifest](../../catalog/git-linux-ai-foundations/linux-foundations/module.json), through the [module reviews](../../evidence/git-linux-ai-foundations/linux-foundations/), to the [generated lock](../../catalog/git-linux-ai-foundations/linux-foundations/module.lock.json). `node authoring/tools/pep check --only T25 git-linux-ai-foundations/linux-foundations` verifies the current critic gate without using private material.
 
-Repository-wide counts in `metrics.json` are a source-tree snapshot, **not** production telemetry: 9 catalog courses, 36 modules, 249 catalog topics, 26 topics with HTML, 2 learner labs and 8 learner-safe assessment blueprints at the time of generation. Duration, model token/cost data, platform acceptance and learner telemetry are unavailable.
+Repository-wide counts in `metrics.json` are a source-tree snapshot, **not** production telemetry: 9 catalog courses, 36 modules, 249 catalog topics, 26 topics with HTML, 2 learner labs and 8 learner-safe assessment blueprints as captured on the `capturedOn` date (2026-10-14). The snapshot is point-in-time: content PRs do not update it and CI does not compare it with the live tree. Duration, model token/cost data, platform acceptance and learner telemetry are unavailable.
 
 ## Archify provenance and reproduction
 
@@ -79,9 +79,9 @@ node authoring/docs/content-workflow/reproduce-diagram.mjs \
 
 Add `--write` only after reviewing an intentional diagram change. The script checks the version, MIT license, package CLI mapping, CLI/license hashes, raw render hash, post-processing script hash and final SVG hash. It invokes only Archify `render`; it never invokes update, finalize, deliver, preview or any network behavior. The shipped guide has no Archify runtime dependency.
 
-Refresh and verify repository metrics with:
+Preview current repository metrics on stdout, or record a new dated snapshot on a tooling branch, with:
 
 ```sh
-node authoring/docs/content-workflow/generate-metrics.mjs --write
 node authoring/docs/content-workflow/generate-metrics.mjs
+node authoring/docs/content-workflow/generate-metrics.mjs --write
 ```
