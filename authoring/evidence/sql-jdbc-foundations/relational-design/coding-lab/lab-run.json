@@ -1,33 +1,37 @@
 {
   "schemaVersion": 1,
   "lab": "sql-jdbc-foundations/relational-design/coding-lab",
-  "record": "solved at 81d882c1135a0466bc0a4c6b42aa39f20ad2b8c6 by run local-1792005071",
-  "commit": "81d882c1135a0466bc0a4c6b42aa39f20ad2b8c6",
-  "runId": "local-1792005071",
-  "ranAt": "2026-10-14T17:11:11Z",
+  "record": "solved at 1ff0de5b39b45b1514b52430a58fd4f551772396 by run local-1792012331",
+  "commit": "1ff0de5b39b45b1514b52430a58fd4f551772396",
+  "runId": "local-1792012331",
+  "ranAt": "2026-10-14T21:12:11Z",
   "environment": {
     "os": "macOS 26.7.1 (Darwin 25.6.0, arm64)",
     "jdk": "Eclipse Temurin 25.0.4.1+1",
     "maven": "Apache Maven 3.9.9",
-    "postgresql": "PostgreSQL 18.3 server (local, port 54329, user postgres, trust authentication), psql 18.3"
+    "postgresql": "PostgreSQL 18.3 server (local, port 54329, user postgres, trust authentication), psql 18.3; password-authentication runs used a second local 18.3 server with scram-sha-256"
   },
   "procedure": [
     "Exported the lab files of the named commit with git archive into uncommitted private staging outside the repository.",
-    "Ran the setup command mvn -q dependency:go-offline in starter/ against an empty local Maven repository, then the test command mvn -q -o test on the shipped starter.",
-    "Replaced only starter/schema.sql with the privately staged completed schema; the public tests were byte-identical to the commit; ran mvn -q -o test again with PGHOST, PGPORT and PGUSER pointing at the local server."
+    "Ran the setup command mvn -q dependency:go-offline in starter/ against an empty local Maven repository.",
+    "Created an unrelated database named relational_design_lab (the old fixed lab name) holding a marker table, then ran mvn -q -o test on the shipped starter.",
+    "Replaced only starter/schema.sql with the privately staged completed schema; the public tests were byte-identical to the commit; ran mvn -q -o test again with PGHOST, PGPORT and PGUSER pointing at the local server.",
+    "Ran the same command with a privately staged alternative suitable schema (bigint identity id, text name with a length CHECK, varchar email and code, smallint capacity, timestamptz DEFAULT now(), numeric(10,2) grade, UNIQUE pair instead of a primary key, ON DELETE RESTRICT) and with three nonconforming task-5 schemas (constant 2000-01-01 default, nullable enrolled_at, numeric grade without scale)."
   ],
-  "result": "mvn -q -o test exited 0 with no output; surefire report: Tests run: 5, Failures: 0, Errors: 0, Skipped: 0.",
+  "result": "Completed schema: mvn -q -o test exited 0 with empty stdout (stderr held only JDK/Maven native-access warnings); surefire report: Tests run: 5, Failures: 0, Errors: 0, Skipped: 0.",
   "starterRun": "On the shipped starter, mvn -q -o test exits 1 and fails all five declared failingTests (Tests run: 5, Failures: 5), each with a stable message naming the missing table or column.",
-  "cleanup": "Both runs created only starter/target inside the lab; the tests dropped the database relational_design_lab (pg_database count 0 afterwards). The documented cleanup removes starter/target.",
-  "otherSystems": "Linux and Windows runs, and password authentication through PGPASSWORD, are not yet recorded; CI covers Ubuntu (lab-contract section 10).",
+  "cleanup": "Every run created only starter/target inside the lab and one uniquely named relational_design_lab_<12 hex> database, which it dropped at the end; afterwards no relational_design_lab_% database remained and starter/target/lab-database.txt was gone. The marker database was then dropped by the author and starter/target deleted, leaving no lab database.",
+  "otherSystems": "Password authentication was run on macOS against a scram-sha-256 server: through a PGPASSFILE password file (exit 0, 5 passed), with no password available (stable 'Could not reach PostgreSQL' setup error), and through PGPASSWORD (exit 0, 5 passed); a socket-directory PGHOST gave the stable 'PGHOST is set to ... which is not a host name' error. Linux and Windows runs are not yet recorded and remain unverified; CI covers Ubuntu (lab-contract section 10).",
   "artifactHashes": {
-    "README.md": "d95837378d8a78b7b9be9979ebb50abfc7bb95174d6195961e7f476fa71edfa5",
-    "expected/test-summary.txt": "697a015421017de714775b1917937332db795a5312552884f293199dd703868a",
-    "lab.json": "2f26b299bf912ff9a481ff63638c88c9a14f0202bb8ecb3a65897854908850da",
+    "README.md": "d52b0269b242d36277ebff102e4084b7375cbbcaebfa43b3b64a555520b7c721",
+    "expected/test-summary.txt": "6d438c03a1a5b61ea1264498d05be0163519a36f03ce64f08b083314edaf0ba9",
+    "lab.json": "447eb1e2f67dd1cefa20dbe751b3a57d9be960ff28168fbf3f1e363d38a7c5c8",
     "starter/pom.xml": "88a3777bf1356022d34fadb8b6fc18c077c47b02a3edf6174ca4d12cd8f69ec2",
-    "starter/schema.sql": "3396446bcf923683df9fa1316ba3a822b9787cfb23e4b4e85c245e8e1b563b1e",
-    "tests/relational/LabDatabase.java": "a5fcc623a272559c54fb0eb2c9bcd76e058d96a17fd05f74e5dc58986b5d80df",
-    "tests/relational/SchemaTest.java": "1b9fe4dc3c99392f30d65e4c0150e48b6c04d3df261caeea0baf76a39df0e47d"
+    "starter/schema.sql": "e24f7a4d5ea81db07810bbb21bfca3def3b8570439717cb4eb29f30dbedfcad1",
+    "tests/relational/LabDatabase.java": "a7f6ba47299faf0a686422832e0f0d56a3f1ccbd8ffb89c2f19ee23489bff0e6",
+    "tests/relational/SchemaTest.java": "f631bff32e5e00e7f595855fcbdf9c0bd2faafc1076e479a61541a4d7368723a"
   },
-  "testScope": "The public tests check table and column names, column types, and which inserts and deletes PostgreSQL accepts or rejects (by SQLSTATE); they do not check constraint names or statement layout."
+  "testScope": "The public tests check table and column names, that each column's type is a suitable kind for its criterion, which inserts and deletes PostgreSQL accepts or rejects (by SQLSTATE), and the values it stores (current-time default, exact two-decimal grade); they do not check constraint names, statement layout or one particular type spelling.",
+  "variantRuns": "Alternative suitable schema: exit 0, Tests run: 5, Failures: 0. Each nonconforming task-5 schema: exit 1 with only task5EnrollmentDefaults failing (Tests run: 5, Failures: 1).",
+  "collisionSafety": "The pre-existing relational_design_lab database and its marker row (42) survived the starter, completed, alternative and nonconforming runs. In a separate private run with the name generator forced to collide on its first attempt, a pre-created relational_design_lab_000000000000 database with a marker survived and the run used a second generated name (Tests run: 5, Failures: 0)."
 }
