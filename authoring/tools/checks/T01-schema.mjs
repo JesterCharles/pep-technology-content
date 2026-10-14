@@ -21,6 +21,7 @@ const mapping = [
   [/\/course\.lock\.json$/, "course-lock"],
   [/\/module\.lock\.json$/, "module-lock"],
   [/\/lab\.json$/, "lab"],
+  [/\/(?:lab-run|[a-z0-9]+(?:-[a-z0-9]+)*-solved-run)\.json$/, "solved-run"],
   [/\/blueprint\.json$/, "assessment-blueprint"],
   [/\/tracks\/[^/]+\.json$/, "track"],
   [/\/source-snapshot\.json$/, "source-snapshot"],
@@ -192,7 +193,7 @@ export async function run(ctx) {
             error(id, ctx.display(file), `${issue.instancePath || "/"} ${issue.message}`),
           );
       }
-      if (["lab", "assessment-blueprint"].includes(pair[1]))
+      if (["lab", "solved-run", "assessment-blueprint"].includes(pair[1]))
         for (const key of findForbiddenKeys(data))
           errors.push(error(id, ctx.display(file), `forbidden key ${key}`));
       if (pair[1] === "assessment-blueprint") {
