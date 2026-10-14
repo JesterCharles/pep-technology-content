@@ -33,4 +33,4 @@ Each route started from the solved state with one change and failed only the che
 
 - A run on Node.js 22.12 exactly, and Linux and Windows runs: only macOS with Node.js v24.2.0 was available; CI does not yet execute lab commands.
 - Learner pilot timing: the 62-minute cap is the intake planning allowance for the S21 guided lab and the 50-minute median a design estimate, not a measured pilot.
-- Rendered appearance: the tests check source rules only; the README's browser checks were looked at by the author on the staged solution, not by a learner.
+- Rendered appearance: the tests check source rules only; the README's browser checks were not run in this record.
