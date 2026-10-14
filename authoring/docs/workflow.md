@@ -52,7 +52,7 @@ Every gate runs locally and in CI except the lab solved-run gate (part of gate 1
 2. Tree: no `topics/` directory; allowed filenames only; no empty or placeholder files; manifests and files match; absences carry reasons.
 3. Lock: catalog `module.lock.json` and `course.lock.json` are byte-identical to regeneration. Each evidence binding records whether its reviewed hash is current; stale critic coverage is rejected by gate 18.
 4. Forbidden content: no keys, rubrics, solutions, hidden tests or scoring secrets outside the formative GIFT and MCQ exception; secret scan; no remote fonts; no form-submission dependency.
-5. Standalone and offline: loads from `file://` with network blocked and zero console errors.
+5. Standalone and offline: loads from `file://` with network and sibling-file requests blocked and zero console errors; every learner artifact meets the standalone rules in `authoring/docs/html-artifact-contract.md` (T09, T20).
 6. Platform sandbox: every behavioral path completes in an iframe with `sandbox="allow-scripts"` only, tolerating storage failures.
 7. Behavior: success route, wrong-first and retry route, simulator edge cases, restart without duplicate credit, and progress reaching 100%.
 8. Accessibility: no serious or critical automated findings, keyboard-only path completes, visible focus, `aria-live`, reduced motion, contrast in both themes.

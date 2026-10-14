@@ -139,6 +139,11 @@ test("T09 reports a blocked remote load against the exact HTML file", { timeout:
   assertPreciseFailure(errors, "T09", /network request: https:\/\/example\.invalid\/remote\.png/);
 });
 
+test("T09 reports a script-built sibling file load against the exact HTML file", { timeout: 60000 }, async () => {
+  const errors = await runFixture("T09", "sibling-load.html");
+  assertPreciseFailure(errors, "T09", /sibling file request: file:\/\/.*\/diagram\.png/);
+});
+
 test("T09 reports a console error against the exact HTML file", { timeout: 60000 }, async () => {
   const errors = await runFixture("T09", "console-error.html");
   assertPreciseFailure(errors, "T09", /console error: intentional fixture error/);

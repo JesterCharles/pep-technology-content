@@ -89,7 +89,7 @@ For the complete artifact, review and delivery rules, read `authoring/AGENTS.md`
 
 ## Local gates
 
-Prerequisites: Git and the Node.js major named in `.nvmrc` (for example through `nvm use`).
+Prerequisites: Git, the Node.js major named in `.nvmrc` (for example through `nvm use`), and Poppler (`pdfinfo` and `pdffonts`; for example `poppler-utils` or `brew install poppler`), which T20 needs to inspect PDFs.
 
 ```sh
 npm ci
