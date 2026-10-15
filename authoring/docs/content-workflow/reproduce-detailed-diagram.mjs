@@ -59,11 +59,11 @@ function finalSvg(raw, inputSha) {
   if (raw.indexOf("<svg ", start + 1) >= 0 && raw.indexOf("<svg ", start + 1) < end) {
     fail("Archify diagram contains an unexpected nested SVG");
   }
-  const generatedViewBox = 'viewBox="0 0 1160 652"';
+  const generatedViewBox = 'viewBox="0 0 1258 652"';
   if (!svg.includes(generatedViewBox)) fail("Archify output viewBox changed; review the intentional crop before adapting it");
   svg = svg
     .replace("<svg ", `<svg xmlns="http://www.w3.org/2000/svg" data-archify-input-sha256="${inputSha}" `)
-    .replace(generatedViewBox, 'viewBox="0 0 1160 564"')
+    .replace(generatedViewBox, 'viewBox="0 0 1258 564"')
     .replaceAll(/\s+tabindex="0"\s+role="button"/g, "")
     .replaceAll(/\s+aria-pressed="false"/g, "");
   const styles = `
@@ -135,11 +135,11 @@ const manifest = {
   },
   generation: {
     command: "node <archify-root>/archify/bin/archify.mjs render workflow authoring/docs/content-workflow/detailed-architecture.archify.json build/content-workflow-detailed-reproduction/detailed-architecture.raw.html --quality standard",
-    networkBehavior: "render only; no update, finalize, deliver, preview, or network command",
+    networkBehavior: "render only; no network-capable Archify command",
     rawHtmlSha256: sha256(rawBytes)
   },
   postprocess: {
-    recipe: "pep-content-workflow-detailed-svg-v1: extract the only outer SVG; add xmlns and input hash; crop the generated empty footer from viewBox height 652 to 564 after asserting exact geometry; remove Archify node button state; embed system-font light/dark styles, reduced-motion rule, and producer metadata; normalize one trailing newline",
+    recipe: "pep-content-workflow-detailed-svg-v1: extract the only outer SVG; add xmlns and input hash; crop the generated empty footer from viewBox 1258x652 to 1258x564 after asserting exact geometry; remove Archify node button state; embed system-font light/dark styles, reduced-motion rule, and producer metadata; normalize one trailing newline",
     script: "authoring/docs/content-workflow/reproduce-detailed-diagram.mjs",
     scriptSha256: sha256(scriptBytes),
     finalSvgSha256: sha256(svg)

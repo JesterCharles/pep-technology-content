@@ -119,7 +119,7 @@ const manifest = {
   },
   generation: {
     command: "node <archify-root>/archify/bin/archify.mjs render workflow authoring/docs/content-workflow/golden-path.archify.json build/content-workflow-reproduction/golden-path.raw.html --quality showcase",
-    networkBehavior: "render only; no update, finalize, deliver, preview, or network command",
+    networkBehavior: "render only; no network-capable Archify command",
     rawHtmlSha256: sha256(rawBytes)
   },
   postprocess: {

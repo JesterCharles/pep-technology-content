@@ -107,21 +107,19 @@ const firstStatuses = [...firstEducationRecheck.recheck.items, ...firstSmeRechec
 const secondStatuses = [...secondEducationRecheck.recheck.items, ...secondSmeRecheck.recheck.items];
 const uniqueSecondStatuses = new Map(secondStatuses.map((item) => [item.findingId, item.status]));
 const severity = Object.fromEntries(["critical", "high", "medium", "low"].map((value) => [value, allFindings.filter((finding) => finding.severity === value).length]));
-const lock = await json(`authoring/catalog/${exampleRoot}/module.lock.json`);
 
 const metrics = {
   schemaVersion: 1,
   label: "Tracked repository snapshot, not production or learner telemetry",
   capturedOn,
-  regeneration: "point-in-time; regenerated on demand with generate-metrics.mjs --write, never required by CI",
+  regeneration: "point-in-time; regenerated on demand with generate-metrics.mjs --write, not a live content check",
   sources: [
     "authoring/catalog/*/course.json",
     "authoring/catalog/*/*/module.json",
     "<course>/<module>/<topic>/artifact.*",
     "authoring/tools/checks/T*.mjs",
     "authoring/docs/workflow.md#25-machine-gates",
-    `authoring/evidence/${exampleRoot}/module-*.json`,
-    `authoring/catalog/${exampleRoot}/module.lock.json`
+    `authoring/evidence/${exampleRoot}/module-*.json`
   ],
   repository,
   example: {
@@ -151,13 +149,11 @@ const metrics = {
       },
       correctionCyclesUsed: 2,
       thirdCycle: "not used; the contract requires escalation before one"
-    },
-    lockFileRecords: lock.files.length
+    }
   },
   unavailable: [
     "authoring and review duration",
     "model token or cost data",
-    "platform upload or acceptance outcome",
     "learner usage, completion, or performance telemetry"
   ]
 };

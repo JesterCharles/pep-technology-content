@@ -59,8 +59,8 @@ test("tracked metrics snapshot is dated and internally consistent", async () => 
   assert.equal(Object.values(review.severity).reduce((sum, value) => sum + value, 0), review.uniqueFindings);
   assert.ok(review.acceptedFindings <= review.uniqueFindings);
   assert.equal(review.secondRecheckUnique.resolved + review.secondRecheckUnique.open, review.uniqueFindings);
-  assert.ok(metrics.unavailable.includes("platform upload or acceptance outcome"));
   assert.ok(metrics.unavailable.includes("learner usage, completion, or performance telemetry"));
+  assert.ok(!Object.hasOwn(example, "lockFileRecords"));
   const [guide, readme] = await Promise.all([text("index.html"), text("README.md")]);
   for (const value of [metrics.capturedOn, repository.courses, repository.modules, repository.catalogTopics, repository.contractGates, repository.implementedCheckModules]) {
     assert.ok(guide.includes(String(value)), `interactive guide must render snapshot value ${value}`);
@@ -92,7 +92,6 @@ test("metrics generator derives counts from catalog, files, gates and review evi
     await writeJson(fixture, `authoring/catalog/${course}/course.json`, { moduleOrder: [module, "empty"] });
     await writeJson(fixture, `authoring/catalog/${course}/${module}/module.json`, { topicOrder: ["one", "two"] });
     await writeJson(fixture, `authoring/catalog/${course}/empty/module.json`, { topicOrder: ["three"] });
-    await writeJson(fixture, `authoring/catalog/${course}/${module}/module.lock.json`, { files: [{}, {}, {}] });
     for (const topic of ["one", "two"]) {
       await touch(fixture, `${course}/${module}/${topic}/artifact.html`);
       await touch(fixture, `${course}/${module}/${topic}/artifact.md`);
@@ -139,7 +138,8 @@ test("metrics generator derives counts from catalog, files, gates and review evi
       implementedCheckModules: 2
     });
     assert.equal(metrics.example.topics, 2);
-    assert.deepEqual([metrics.example.sourceReceipts, metrics.example.videoReceipts, metrics.example.lockFileRecords], [2, 1, 3]);
+    assert.deepEqual([metrics.example.sourceReceipts, metrics.example.videoReceipts], [2, 1]);
+    assert.ok(!Object.hasOwn(metrics.example, "lockFileRecords"));
     assert.deepEqual(metrics.example.moduleReview.severity, { critical: 0, high: 1, medium: 1, low: 1 });
     assert.equal(metrics.example.moduleReview.uniqueFindings, 3);
     assert.equal(metrics.example.moduleReview.acceptedFindings, 2);
@@ -176,7 +176,7 @@ test("both Archify outputs are pinned, static, hash-bound, and embedded byte-for
   ]);
   const simpleWorkflow = JSON.parse(simpleSource);
   const detailedWorkflow = JSON.parse(detailedSource);
-  const expectedPath = ["input", "design", "build", "verify", "review", "deliver"];
+  const expectedPath = ["input", "design", "create", "verify", "review", "ready"];
   assert.deepEqual(simpleWorkflow.mainPath, expectedPath);
   assert.deepEqual(detailedWorkflow.mainPath, expectedPath);
   assert.equal(simpleWorkflow.mainPath.length, 6);
@@ -184,9 +184,9 @@ test("both Archify outputs are pinned, static, hash-bound, and embedded byte-for
   assert.equal(detailedWorkflow.lanes.length, 4);
   assert.deepEqual(
     detailedWorkflow.nodes.filter((node) => !expectedPath.includes(node.id)).map((node) => node.id).sort(),
-    ["affected-checks", "clarify", "correct", "handoff-return", "recheck", "reconcile", "refresh-proof", "repair-artifact", "repair-design", "responsible-fix"].sort()
+    ["affected-checks", "clarify", "correct", "correct-content", "recheck", "reconcile", "refresh-evidence", "repair-lab", "revise-plan"].sort()
   );
-  for (const edge of ["input-unclear", "design-invalid", "verify-failed", "review-findings", "deliver-stale", "deliver-ci", "deliver-handoff"]) {
+  for (const edge of ["input-unclear", "design-mismatch", "create-defect", "verify-lab", "review-findings", "ready-stale"]) {
     assert.ok(detailedWorkflow.edges.some((candidate) => candidate.id === edge), `missing detailed failure edge ${edge}`);
   }
 
@@ -235,7 +235,8 @@ test("the Artifact-ready source is self-contained and carries a publication-safe
   assert.match(safety, /Use \[`index\.html`\]\(index\.html\) as the single-file Claude Artifact source/);
   assert.match(safety, /credentials, tokens, secrets and absolute machine paths/);
   assert.match(safety, /assessment answer keys, rubrics, hidden tests/);
-  assert.match(safety, /Preparing it does not publish, upload, deploy/);
+  assert.match(safety, /Preparing it does not publish, upload or deploy/);
+  assert.match(safety, /source-control, automated release and downstream distribution mechanics/);
   assert.doesNotMatch(guide, /(?:\/Users\/|[A-Za-z]:\\\\Users\\\\)/);
   assert.doesNotMatch(guide, /<(?:script|img|iframe|embed|object|source|track)\b[^>]+\b(?:src|data)\s*=/i);
   assert.doesNotMatch(guide, /<link\b[^>]+rel=["']stylesheet["']/i);
@@ -276,7 +277,8 @@ test("progressive stage inspection preserves a complete no-JavaScript reading", 
       tabRoles: document.querySelectorAll('[role="tablist"],[role="tab"]').length,
       diagrams: document.querySelectorAll(".diagram-scroll svg").length,
       detailedDiagramWidth: [document.querySelector(".detailed-architecture .diagram-scroll").clientWidth, document.querySelector(".detailed-architecture .diagram-scroll").scrollWidth],
-      headings: [...document.querySelectorAll("[data-stage-panel] h2")].map((heading) => heading.textContent)
+      headings: [...document.querySelectorAll("[data-stage-panel] h2")].map((heading) => heading.textContent),
+      renderedText: document.body.innerText
     }));
     const noJsEdgeLabels = await page.locator('#detailed-view svg text[class^="t-edge-"]').evaluateAll((labels) => {
       const rgb = (value) => value.match(/[\d.]+/g).slice(0, 3).map(Number);
@@ -293,9 +295,10 @@ test("progressive stage inspection preserves a complete no-JavaScript reading", 
     });
     assert.equal(state.language, "en");
     assert.equal(state.enhanced, false);
-    assert.deepEqual(state.allStages, ["stage-input", "stage-design", "stage-build", "stage-verify", "stage-review", "stage-deliver"]);
+    assert.deepEqual(state.allStages, ["stage-input", "stage-design", "stage-create", "stage-verify", "stage-review", "stage-ready"]);
     assert.deepEqual(state.visibleStages, state.allStages);
-    assert.deepEqual(state.headings, ["Input", "Design", "Build", "Verify", "Review + improve", "Deliver"]);
+    assert.deepEqual(state.headings, ["Input", "Design", "Create", "Verify", "Review + improve", "Ready"]);
+    assert.doesNotMatch(state.renderedText, /\b(?:PR|CI|Git|GitHub|branches?|commits?|merged?|platform|handoff|landed)\b/i);
     assert.deepEqual(state.visibleViews, ["simple-view", "detailed-view"]);
     assert.deepEqual(state.noJsNotes, ["block", "block"]);
     assert.equal(state.toggle, "none");
@@ -472,21 +475,20 @@ test("the tab shell and both architectures work by keyboard, touch, URL history,
       selected: document.querySelector('[data-failure-control][aria-pressed="true"]')?.id,
       visibleDetails: [...document.querySelectorAll(".failure-list details")].filter((element) => !element.hidden).map((element) => element.id),
       reviewLoopMuted: document.querySelector('[data-edge-id="review-findings"]').classList.contains("is-loop-muted"),
-      designLoopActive: document.querySelector('[data-edge-id="design-invalid"]').classList.contains("is-loop-active")
+      designLoopActive: document.querySelector('[data-edge-id="design-mismatch"]').classList.contains("is-loop-active")
     })), { focus: "detail-node-design", selected: "detail-node-design", visibleDetails: ["failure-design"], reviewLoopMuted: true, designLoopActive: true });
 
     for (const [stageId, edgeId] of [
-      ["input", "input-unclear"], ["design", "design-invalid"], ["build", "verify-failed"],
-      ["verify", "deliver-stale"], ["review", "review-findings"], ["deliver", "deliver-ci"]
+      ["input", "input-unclear"], ["design", "design-mismatch"], ["create", "create-defect"],
+      ["verify", "verify-lab"], ["review", "review-findings"], ["ready", "ready-stale"]
     ]) {
       await page.locator(`#detail-node-${stageId}`).click();
       assert.deepEqual(await page.evaluate(({ stageId, edgeId }) => ({
         selected: document.querySelector('[data-failure-control][aria-pressed="true"]')?.getAttribute("data-failure-control"),
         visibleDetails: [...document.querySelectorAll(".failure-list details")].filter((element) => !element.hidden).map((element) => element.dataset.failureDetail),
         activeEdge: document.querySelector(`[data-edge-id="${edgeId}"]`).classList.contains("is-loop-active"),
-        inactiveHandoff: document.querySelector('[data-edge-id="deliver-handoff"]').classList.contains("is-loop-muted"),
         visibleExamples: [...document.querySelectorAll(".failure-list details")].filter((element) => getComputedStyle(element).display !== "none").length
-      }), { stageId, edgeId }), { selected: stageId, visibleDetails: [stageId], activeEdge: true, inactiveHandoff: true, visibleExamples: 1 });
+      }), { stageId, edgeId }), { selected: stageId, visibleDetails: [stageId], activeEdge: true, visibleExamples: 1 });
     }
 
     await page.goBack();
@@ -544,8 +546,8 @@ test("the tab shell and both architectures work by keyboard, touch, URL history,
     assert.ok(edgeLabels.labels.every((label) => label.contrast >= 4.5), JSON.stringify(edgeLabels));
     assert.deepEqual(new Set(edgeLabels.labels.map((label) => label.foreground)), new Set(["rgb(255, 139, 124)", "rgb(173, 153, 255)"]));
 
-    await page.locator("#node-deliver").click();
-    await page.locator("#stage-deliver details summary").first().click();
+    await page.locator("#node-ready").click();
+    await page.locator("#stage-ready details summary").first().click();
     assert.deepEqual(requests, [url]);
     await context.close();
   } finally {
