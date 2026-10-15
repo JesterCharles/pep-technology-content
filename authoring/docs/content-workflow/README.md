@@ -23,7 +23,7 @@ The Detailed tab preserves the same happy path and shows bounded returns to the 
 - CI/tooling defects return to the responsible content or tooling stage;
 - a platform-owner rejection returns to the owning stage and requires a new neutral export, but platform acceptance remains external and untracked.
 
-Each closed disclosure names the failure in plain language. Opening it identifies what failed, where work returns, what evidence refreshes and what permits resuming.
+With JavaScript, Detailed starts on the clean happy path. Its six stage nodes are selectable controls: one selected stage and its return loop stay prominent while unrelated loops dim, and one public-safe example identifies the failure, observable evidence, return stage, refreshed proof and resume condition. Mouse, touch, Enter/Space and arrow keys select the controls. Without JavaScript, the same examples remain available as six sequential native disclosures.
 
 ### Real branches, only where applicable
 
@@ -97,7 +97,7 @@ Tracked assets:
 
 Simple hashes remain: input `92ae09ca55005a721e97647ced74137c639fdc719318c13a6d73b6158e5feecd`; raw Archify HTML `af0f705ad0fef143e6755444527cf4b6797d707f3a4dbc2b05c4df44fe475b9a`; final SVG `5ca3cf3ea81b51c00fead395da14840ca8f14eb4e3d3e00667e47e1150775f21`.
 
-Detailed hashes are: input `80f7d1152b9fcc2642f0b4e60aaf61d1005ea693558610d3c38597695f0aa90e`; raw Archify HTML `14325849945e85206569ffbdfb823f3b05fde8b513953f9e29edb53338e898ea`; final SVG `5e15d4dd8d0221ed2dcad862b40adf2fe1f2773aac7b86c707bc21f08e0bb0e8`.
+Detailed hashes are: input `80f7d1152b9fcc2642f0b4e60aaf61d1005ea693558610d3c38597695f0aa90e`; raw Archify HTML `14325849945e85206569ffbdfb823f3b05fde8b513953f9e29edb53338e898ea`; final SVG `b177df779e89e9973cc4e9a489342afa0a52a08e0b1acff710ff864ef9a0aa3f`.
 
 After obtaining and verifying the pinned source archive recorded in `diagram-provenance.json`, reproduce without network behavior:
 

@@ -278,6 +278,19 @@ test("progressive stage inspection preserves a complete no-JavaScript reading", 
       detailedDiagramWidth: [document.querySelector(".detailed-architecture .diagram-scroll").clientWidth, document.querySelector(".detailed-architecture .diagram-scroll").scrollWidth],
       headings: [...document.querySelectorAll("[data-stage-panel] h2")].map((heading) => heading.textContent)
     }));
+    const noJsEdgeLabels = await page.locator('#detailed-view svg text[class^="t-edge-"]').evaluateAll((labels) => {
+      const rgb = (value) => value.match(/[\d.]+/g).slice(0, 3).map(Number);
+      const luminance = (color) => rgb(color).map((value) => {
+        value /= 255;
+        return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+      }).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
+      return labels.map((label) => {
+        const foreground = getComputedStyle(label).fill;
+        const background = getComputedStyle(label.previousElementSibling).fill;
+        const [light, dark] = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+        return { className: label.className.baseVal, foreground, contrast: (light + 0.05) / (dark + 0.05) };
+      });
+    });
     assert.equal(state.language, "en");
     assert.equal(state.enhanced, false);
     assert.deepEqual(state.allStages, ["stage-input", "stage-design", "stage-build", "stage-verify", "stage-review", "stage-deliver"]);
@@ -296,6 +309,8 @@ test("progressive stage inspection preserves a complete no-JavaScript reading", 
     assert.equal(state.tabRoles, 0);
     assert.equal(state.diagrams, 2);
     assert.ok(state.detailedDiagramWidth[1] > state.detailedDiagramWidth[0]);
+    assert.ok(noJsEdgeLabels.every((label) => label.contrast >= 4.5), JSON.stringify(noJsEdgeLabels));
+    assert.deepEqual(new Set(noJsEdgeLabels.map((label) => label.foreground)), new Set(["rgb(255, 139, 124)", "rgb(173, 153, 255)"]));
     assert.deepEqual(requests, [url]);
     await context.close();
   } finally {
@@ -303,7 +318,7 @@ test("progressive stage inspection preserves a complete no-JavaScript reading", 
   }
 });
 
-test("the tab shell and simple architecture work by keyboard, touch, URL history, and reduced motion", async () => {
+test("the tab shell and both architectures work by keyboard, touch, URL history, and reduced motion", async () => {
   const browser = await launchChromium();
   try {
     const context = await browser.newContext({
@@ -327,6 +342,25 @@ test("the tab shell and simple architecture work by keyboard, touch, URL history
       textFill: getComputedStyle(document.querySelector("#simple-view .diagram-scroll .t-primary")).fill,
       detailedFailureFill: getComputedStyle(document.querySelector("#detailed-view .c-security-group")).fill
     }));
+    const edgeLabelState = () => page.evaluate(() => {
+      const rgb = (value) => value.match(/[\d.]+/g).slice(0, 3).map(Number);
+      const luminance = (color) => rgb(color).map((value) => {
+        value /= 255;
+        return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+      }).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
+      const labels = [...document.querySelectorAll('#detailed-view svg text[class^="t-edge-"]')].map((label) => {
+        const foreground = getComputedStyle(label).fill;
+        const background = getComputedStyle(label.previousElementSibling).fill;
+        const [light, dark] = [luminance(foreground), luminance(background)].sort((a, b) => b - a);
+        return { className: label.className.baseVal, foreground, contrast: (light + 0.05) / (dark + 0.05) };
+      });
+      return {
+        labels,
+        nodeFill: getComputedStyle(document.querySelector("#detailed-view .t-primary")).fill,
+        failureArrow: getComputedStyle(document.querySelector("#detailed-view .a-security")).stroke,
+        returnArrow: getComputedStyle(document.querySelector("#detailed-view .a-dashed")).stroke
+      };
+    });
     assert.deepEqual(await themeState(), {
       theme: "dark",
       pressed: "true",
@@ -341,8 +375,10 @@ test("the tab shell and simple architecture work by keyboard, touch, URL history
       selectedTab: document.querySelector('[role="tab"][aria-selected="true"]')?.id,
       tabs: document.querySelectorAll('[role="tab"]').length,
       hash: location.hash,
-      staticDetailedButtons: document.querySelectorAll("#detailed-view svg [role=button]").length
-    })), { visibleView: "simple-view", selectedTab: "tab-simple", tabs: 2, hash: "", staticDetailedButtons: 0 });
+      detailedControls: document.querySelectorAll("#detailed-view svg [data-failure-control][role=button]").length,
+      pressedDetailedControls: document.querySelectorAll('#detailed-view svg [data-failure-control][aria-pressed="true"]').length,
+      visibleFailureDetails: [...document.querySelectorAll(".failure-list details")].filter((element) => !element.hidden).length
+    })), { visibleView: "simple-view", selectedTab: "tab-simple", tabs: 2, hash: "", detailedControls: 6, pressedDetailedControls: 0, visibleFailureDetails: 0 });
 
     await page.locator("#node-review").tap();
     let state = await page.evaluate(() => ({
@@ -374,6 +410,12 @@ test("the tab shell and simple architecture work by keyboard, touch, URL history
       selectedTab: document.querySelector('[role="tab"][aria-selected="true"]')?.id,
       hash: location.hash,
       failureDisclosures: document.querySelectorAll(".failure-list details").length,
+      visibleFailureDisclosures: [...document.querySelectorAll(".failure-list details")].filter((element) => !element.hidden).length,
+      pressedFailureControls: document.querySelectorAll('[data-failure-control][aria-pressed="true"]').length,
+      activeLoops: document.querySelectorAll("#detailed-view svg .is-loop-active").length,
+      mutedLoops: document.querySelectorAll("#detailed-view svg .is-loop-muted").length,
+      happyPathMuted: document.querySelectorAll('#detailed-view svg [data-edge-role="main"].is-loop-muted').length,
+      defaultPrompt: getComputedStyle(document.querySelector(".failure-default")).display,
       diagramWidth: [document.querySelector(".detailed-architecture .diagram-scroll").clientWidth, document.querySelector(".detailed-architecture .diagram-scroll").scrollWidth],
       pageWidth: [document.documentElement.clientWidth, document.documentElement.scrollWidth]
     }));
@@ -381,10 +423,68 @@ test("the tab shell and simple architecture work by keyboard, touch, URL history
     assert.equal(state.selectedTab, "tab-detailed");
     assert.equal(state.hash, "#detailed-view");
     assert.equal(state.failureDisclosures, 6);
+    assert.equal(state.visibleFailureDisclosures, 0);
+    assert.equal(state.pressedFailureControls, 0);
+    assert.equal(state.activeLoops, 0);
+    assert.ok(state.mutedLoops > 0);
+    assert.equal(state.happyPathMuted, 0);
+    assert.equal(state.defaultPrompt, "block");
     assert.ok(state.diagramWidth[1] > state.diagramWidth[0]);
     assert.deepEqual(state.pageWidth, [400, 400]);
-    await page.getByText("When an independent critic raises a finding", { exact: true }).click();
-    assert.equal(await page.locator(".failure-list details").nth(4).getAttribute("open"), "");
+    let edgeLabels = await edgeLabelState();
+    assert.ok(edgeLabels.labels.every((label) => label.contrast >= 4.5), JSON.stringify(edgeLabels));
+    assert.deepEqual(new Set(edgeLabels.labels.map((label) => label.foreground)), new Set(["rgb(255, 139, 124)", "rgb(173, 153, 255)"]));
+    assert.equal(edgeLabels.failureArrow, "rgb(255, 139, 124)");
+    assert.equal(edgeLabels.returnArrow, "rgb(173, 153, 255)");
+    assert.notEqual(edgeLabels.nodeFill, edgeLabels.failureArrow);
+
+    await page.locator("#detail-node-review").tap();
+    state = await page.evaluate(() => ({
+      selectedControl: document.querySelector('[data-failure-control][aria-pressed="true"]')?.id,
+      visibleDetails: [...document.querySelectorAll(".failure-list details")].filter((element) => !element.hidden).map((element) => element.id),
+      openDetails: [...document.querySelectorAll(".failure-list details[open]")].filter((element) => !element.hidden).length,
+      activeLoops: document.querySelectorAll("#detailed-view svg .is-loop-active").length,
+      mutedLoops: document.querySelectorAll("#detailed-view svg .is-loop-muted").length,
+      happyPathMuted: document.querySelectorAll('#detailed-view svg [data-edge-role="main"].is-loop-muted').length,
+      defaultPrompt: getComputedStyle(document.querySelector(".failure-default")).display,
+      exampleLabels: [...document.querySelectorAll("#failure-review dt")].map((element) => element.textContent),
+      exampleText: document.querySelector("#failure-review").textContent,
+      loopTransition: getComputedStyle(document.querySelector('#detailed-view svg [data-edge-id="review-findings"].is-loop-active')).transitionDuration
+    }));
+    assert.equal(state.selectedControl, "detail-node-review");
+    assert.deepEqual(state.visibleDetails, ["failure-review"]);
+    assert.equal(state.openDetails, 1);
+    assert.ok(state.activeLoops > 0);
+    assert.ok(state.mutedLoops > state.activeLoops);
+    assert.equal(state.happyPathMuted, 0);
+    assert.equal(state.defaultPrompt, "none");
+    assert.deepEqual(state.exampleLabels, ["Example failure", "Observable evidence", "Return stage", "Proof refreshed", "Resume when"]);
+    assert.match(state.exampleText, /5 resolved and 1 open/);
+    assert.match(state.exampleText, /second cycle closes all 7 unique findings/);
+    assert.equal(state.loopTransition, "0s");
+
+    await page.locator("#detail-node-input").focus();
+    await page.keyboard.press("ArrowRight");
+    assert.deepEqual(await page.evaluate(() => ({
+      focus: document.activeElement?.id,
+      selected: document.querySelector('[data-failure-control][aria-pressed="true"]')?.id,
+      visibleDetails: [...document.querySelectorAll(".failure-list details")].filter((element) => !element.hidden).map((element) => element.id),
+      reviewLoopMuted: document.querySelector('[data-edge-id="review-findings"]').classList.contains("is-loop-muted"),
+      designLoopActive: document.querySelector('[data-edge-id="design-invalid"]').classList.contains("is-loop-active")
+    })), { focus: "detail-node-design", selected: "detail-node-design", visibleDetails: ["failure-design"], reviewLoopMuted: true, designLoopActive: true });
+
+    for (const [stageId, edgeId] of [
+      ["input", "input-unclear"], ["design", "design-invalid"], ["build", "verify-failed"],
+      ["verify", "deliver-stale"], ["review", "review-findings"], ["deliver", "deliver-ci"]
+    ]) {
+      await page.locator(`#detail-node-${stageId}`).click();
+      assert.deepEqual(await page.evaluate(({ stageId, edgeId }) => ({
+        selected: document.querySelector('[data-failure-control][aria-pressed="true"]')?.getAttribute("data-failure-control"),
+        visibleDetails: [...document.querySelectorAll(".failure-list details")].filter((element) => !element.hidden).map((element) => element.dataset.failureDetail),
+        activeEdge: document.querySelector(`[data-edge-id="${edgeId}"]`).classList.contains("is-loop-active"),
+        visibleExamples: [...document.querySelectorAll(".failure-list details")].filter((element) => getComputedStyle(element).display !== "none").length
+      }), { stageId, edgeId }), { selected: stageId, visibleDetails: [stageId], activeEdge: true, visibleExamples: 1 });
+    }
 
     await page.goBack();
     await page.waitForFunction(() => location.hash === "#stage-review");
@@ -419,6 +519,12 @@ test("the tab shell and simple architecture work by keyboard, touch, URL history
       textFill: "rgb(27, 35, 32)",
       detailedFailureFill: "rgb(255, 244, 242)"
     });
+    edgeLabels = await edgeLabelState();
+    assert.ok(edgeLabels.labels.every((label) => label.contrast >= 4.5), JSON.stringify(edgeLabels));
+    assert.deepEqual(new Set(edgeLabels.labels.map((label) => label.foreground)), new Set(["rgb(143, 31, 23)", "rgb(107, 75, 232)"]));
+    assert.equal(edgeLabels.failureArrow, "rgb(163, 34, 24)");
+    assert.equal(edgeLabels.returnArrow, "rgb(107, 75, 232)");
+    assert.notEqual(edgeLabels.nodeFill, edgeLabels.failureArrow);
 
     await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
     await page.getByRole("button", { name: "Use dark theme" }).click();
@@ -431,6 +537,9 @@ test("the tab shell and simple architecture work by keyboard, touch, URL history
       textFill: "rgb(227, 235, 231)",
       detailedFailureFill: "rgb(40, 28, 26)"
     });
+    edgeLabels = await edgeLabelState();
+    assert.ok(edgeLabels.labels.every((label) => label.contrast >= 4.5), JSON.stringify(edgeLabels));
+    assert.deepEqual(new Set(edgeLabels.labels.map((label) => label.foreground)), new Set(["rgb(255, 139, 124)", "rgb(173, 153, 255)"]));
 
     await page.locator("#node-deliver").click();
     await page.locator("#stage-deliver details summary").first().click();
@@ -451,7 +560,7 @@ test("both views have no axe violations and keep overflow inside keyboard-reacha
       for (const view of ["simple", "detailed"]) {
         if (view === "detailed") {
           await page.getByRole("tab", { name: "Detailed" }).click();
-          await page.locator(".failure-list details").evaluateAll((details) => details.forEach((detail) => { detail.open = true; }));
+          await page.getByRole("button", { name: "Explore Review + improve failure path" }).click();
         }
         const { violations } = await new AxeBuilder({ page }).analyze();
         assert.deepEqual(violations.map((violation) => `${violation.id}: ${violation.nodes.map((node) => node.target).join(", ")}`), [], `${width}px ${colorScheme} ${view}`);

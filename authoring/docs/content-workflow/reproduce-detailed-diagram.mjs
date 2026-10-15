@@ -74,6 +74,7 @@ function finalSvg(raw, inputSha) {
           .c-mask{fill:#f8faf9}.c-frontend{fill:#d6ebe5;stroke:#0d6657}.c-backend{fill:#e7ecea;stroke:#47524e}.c-database{fill:#e7ecea;stroke:#47524e}
           .c-security{fill:#f8e0dc;stroke:#a32218}.c-messagebus{fill:#d6ebe5;stroke:#0d6657}.c-external{fill:#f6e7d6;stroke:#87470a}
           .t-primary{fill:#1b2320}.t-muted,.t-dim{fill:#47524e}.t-security{fill:#8f1f17}
+          .t-edge-default{fill:#47524e}.t-edge-emphasis{fill:#0d6657}.t-edge-security{fill:#8f1f17}.t-edge-dashed{fill:#6b4be8}
           .semantic-sigil{fill:none;stroke:#1b2320;stroke-width:1.25;stroke-linecap:round;stroke-linejoin:round}.sigil-fill{fill:#1b2320;stroke:none}
           .a-emphasis,.a-dashed,.a-security,.a-default{fill:none;stroke-linejoin:round;stroke-linecap:round}.a-emphasis{stroke:#0d6657}.a-dashed{stroke:#6b4be8;stroke-dasharray:6 5}.a-security{stroke:#a32218}.a-default{stroke:#47524e}
           .m-emphasis{fill:#0d6657}.m-dashed{fill:#6b4be8}.m-security{fill:#a32218}.m-default{fill:#47524e}
@@ -83,6 +84,7 @@ function finalSvg(raw, inputSha) {
             .c-mask{fill:#1a2220}.c-frontend{fill:#173430;stroke:#5fcab3}.c-backend,.c-database{fill:#202a27;stroke:#a8b6b0}
             .c-security{fill:#3d1d19;stroke:#ff8b7c}.c-messagebus{fill:#173430;stroke:#5fcab3}.c-external{fill:#36281a;stroke:#e6a65c}
             .t-primary{fill:#e3ebe7}.t-muted,.t-dim{fill:#a8b6b0}.t-security{fill:#ff8b7c}
+            .t-edge-default{fill:#a8b6b0}.t-edge-emphasis{fill:#5fcab3}.t-edge-security{fill:#ff8b7c}.t-edge-dashed{fill:#ad99ff}
             .semantic-sigil{stroke:#e3ebe7}.sigil-fill{fill:#e3ebe7}.a-emphasis{stroke:#5fcab3}.a-dashed{stroke:#ad99ff}.a-security{stroke:#ff8b7c}.a-default{stroke:#a8b6b0}
             .m-emphasis{fill:#5fcab3}.m-dashed{fill:#ad99ff}.m-security{fill:#ff8b7c}.m-default{fill:#a8b6b0}
             text{stroke:#1a2220}
