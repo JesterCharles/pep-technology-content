@@ -227,7 +227,7 @@ One compact wrapping row holds the topic `h1`, progress text and segments, the n
 
 ### Reading and instruction panel (green left)
 
-The narrower region holds the step heading, complete core concept, a separate **Where this fits** decision pattern, nearby success checks and optional hint or anecdote disclosures. **Where this fits** states an authentic decision, a good-fit use and an important when-not-to-use boundary; it is practical context, not the anecdote repeated under a new heading. [A]
+The narrower region holds the step heading, complete core concept, nearby success checks and optional hint or anecdote disclosures. When the concept presents a meaningful practitioner choice, a separate **Where this fits** pattern states the authentic decision, a good-fit use and an important when-not-to-use boundary; omit it rather than manufacture context when no useful choice exists. It is practical context, not the anecdote repeated under a new heading. [A]
 
 ### Interactive workspace (purple)
 
@@ -239,7 +239,7 @@ The wider region opens with **Your task**, naming the exact action and where to 
 - **Narrow frames** (<960 px): one column in source order: topic bar → complete instruction → optional guidance → workspace → feedback → reversible navigation. [A]
 - **Bounded scrolling.** Only the editor body and Problems/Output may scroll internally, at the maxima in [Editor workspace](#editor-workspace). [T][A]
 - **One activity at a time with reversible access.** JavaScript-enhanced pages show one current activity. Completed and current timeline steps are links; future steps remain visibly locked. **Previous activity** sits beside Continue/Next. Moving either direction preserves completed work, attempts, open feedback and current inputs. [A]
-- **State model.** Keep `currentActivity`, an `unlockedThrough` frontier, completion/attempt state by activity, and live input values. Navigation changes only `currentActivity`; completion may advance the frontier; no navigation path decreases it. Restart clears only the current activity to its authored start and its credit, never earlier activities and never duplicate credit. [A]
+- **State model.** Keep `currentActivity`, a monotonic `unlockedThrough` frontier, and each activity's live inputs, attempts, settled feedback, completion, credit, grade contribution and Continue availability separately. Navigation changes only `currentActivity`; it never issues credit. Restart restores only the current authored controls, attempts, settled UI, feedback, completion, credit, grade and Continue state; it preserves every other activity, the unlocked frontier and required time, then permits one credit on re-completion. Expose these values through the stable `data-pep-current-activity`, `data-pep-unlocked-through`, `data-pep-required-minutes`, `data-pep-attempts`, `data-pep-settled`, `data-pep-completed`, `data-pep-credit`, `data-pep-grade`, `data-pep-continue` and `data-pep-feedback` QA hooks. [A]
 - **History and fallback.** Push `#activity-N` on explicit navigation and respond to Back/Forward (`popstate` or `hashchange`) without recreating activity state. Ignore a deep link beyond `unlockedThrough`. Without JavaScript, render every activity as an ordinary anchored section with a table-of-contents link and a **Back to activity N** link; do not author later sections with `hidden`. [A]
 - After explicit keyboard or pointer navigation, focus the destination activity heading. Do not move focus for browser Back/Forward. Native buttons and links provide keyboard and screen-reader names; all remain 44 px touch targets. [A]
 
@@ -355,7 +355,7 @@ The page runs in a sandboxed frame inside the Learner topic page. [T]
 
 Print always uses the light tokens; the recipe scopes dark values to `screen`. [A]
 Cards, figures, tables, code blocks and optional disclosures avoid page breaks inside (`break-inside: avoid`). [G]
-Optional disclosures print expanded, retaining their summary label, cue and optional-time text. The print helper below opens them for `beforeprint` and restores only those it opened on `afterprint`; without JavaScript, learners can open a native disclosure before printing. Buttons and toggles MAY be hidden with a `pep-noprint` class, and backgrounds drop to white except status tints. [A]
+Every enrolled page prints all activities, teaching, activity checks, objectives, sequential hints, optional labels and static alternatives while navigation-only controls disappear. The print helper opens closed disclosures for `beforeprint`, remembers disclosures that were already open, and restores the exact prior open/closed state on `afterprint`; without JavaScript, learners can open a native disclosure before printing. Buttons and toggles MAY be hidden with a `pep-noprint` class, and backgrounds drop to white except status tints. [A]
 
 ## Elevation & Depth
 
@@ -378,7 +378,7 @@ Recipes assume the [token reference](#token-reference) is pasted first. Class na
 
 ### Base, focus and motion
 
-New or re-authored pages use `<main class="pep-main" data-pep-responsive>`. The stable marker enrolls that page in the current 320/390/768, touch and zoom QA matrix; add it only when the page actually meets this contract, never as a marker-only migration. Add `data-pep-guidance-contract` only when the page also adopts the objectives, fit guidance, reversible navigation, activity checks and hint hooks below. Mark the complete instruction block with `data-pep-instructions` and its following interaction with `data-pep-workspace` so reading order is deterministic.
+New or re-authored pages use `<main class="pep-main" data-pep-responsive>`. The stable marker enrolls that page in the current 320/390/768, touch and zoom QA matrix; add it only when the page actually meets this contract, never as a marker-only migration. Add `data-pep-guidance-contract` only when the page also adopts objectives, reversible navigation, activity checks, applicable hint hooks and any meaningful fit guidance below; the marker and complete `qa-paths.json` `guidance` object are mandatory together. Mark the complete instruction block with `data-pep-instructions` and its following interaction with `data-pep-workspace` so reading order is deterministic.
 
 ```css
 *, *::before, *::after { box-sizing: border-box; }
@@ -453,7 +453,7 @@ Native `<details>` is the required no-JavaScript fallback. If script adds hover 
 
 ### Where this fits
 
-Use this required pattern after the core explanation and before task instructions. Keep it separate from the optional anecdote.
+Use this pattern after the core explanation and before task instructions **only when the topic or activity presents a meaningful practitioner choice**. One topic-level decision is enough unless activities genuinely involve different choices. Omit the entire section when no useful decision exists; do not create boilerplate. Keep it separate from the optional anecdote.
 
 ```html
 <section data-pep-where-fits aria-labelledby="where-fits">
@@ -464,24 +464,32 @@ Use this required pattern after the core explanation and before task instruction
 </section>
 ```
 
-The decision is authentic rather than rhetorical. The good fit describes actual scale and purpose. The boundary names a materially different tool or structure, not merely “when it is hard.” This section may use necessary domain terms, but contains no answer to the activity. [A]
+The decision is authentic rather than rhetorical. The good fit describes actual scale and purpose. The boundary names a materially different tool or structure, not merely “when it is hard.” This section may use necessary domain terms, but contains no answer to the activity. Structural QA checks presence, order, non-empty fields and placement; independent education and technology-SME review judges whether the choice is meaningful, authentic and technically true. [A]
 
 ### Progressive optional hints
 
-Put a native disclosure beside each `data-pep-task data-pep-may-stall` task. Hints are optional guidance, not delayed error feedback.
+Put a native disclosure beside each `data-pep-task data-pep-may-stall` task. Hints are optional guidance, not delayed error feedback. Multi-hint sequences are nested so a later hint does not exist in the rendered or keyboard path until its predecessor opens.
 
 ```html
 <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3"
          data-pep-hint-order="1" data-section-skip>
-  <summary>Need a hint?</summary>
+  <summary><span>Need a hint?</span><span>Hint 1 of 2 for Activity 3</span></summary>
   <div class="pep-hint__body">
     <p data-pep-hint-target><strong>Where to act:</strong> In the first placeholder in the editor.</p>
     <p data-pep-hint-step><strong>Next step:</strong> Identify the value collected on each matching pass.</p>
+    <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3"
+             data-pep-hint-order="2" data-section-skip>
+      <summary><span>Another hint</span><span>Another hint, 2 of 2 for Activity 3</span></summary>
+      <div class="pep-hint__body">
+        <p data-pep-hint-target><strong>Where to act:</strong> In the source part of that placeholder.</p>
+        <p data-pep-hint-step><strong>Next step:</strong> Identify which collection supplies each candidate value.</p>
+      </div>
+    </details>
   </div>
 </details>
 ```
 
-Use one hint when one reasoning step is enough. Multiple hints use contiguous order values and each reveals strictly more: first orient, then decompose, then distinguish a remaining choice. A hint never supplies the final answer, finished expression, reference implementation, private test or exact required output. It carries no objective, interaction, progress, grade or completion hook, is excluded from required time with `data-section-skip`, and remains a keyboard/touch/screen-reader-operable native disclosure without JavaScript. [A]
+Use one hint when one reasoning step is enough. Every task has a unique non-empty `id`, and every hint's `data-pep-hint-for` equals that exact id. Multiple hints use `1..N` in source order, nest each later disclosure inside its predecessor, and expose unique activity-and-ordinal summary names. Closing an ancestor makes later hints unavailable without deleting them. Each hint owns exactly one non-empty target and step; normalized clues cannot duplicate. A hint never supplies the final answer, finished expression, reference implementation, private test or exact required output. It carries no objective, interaction, progress, grade or completion hook, is excluded from required time with `data-section-skip`, and remains keyboard/touch/screen-reader operable without JavaScript. Machine checks establish structure, sequence, uniqueness and high-confidence answer safety; independent education and SME review decides whether each clue genuinely adds reasoning help and remains semantically answer-safe. [A]
 
 ### Optional Anecdote and Challenge disclosures
 
@@ -556,7 +564,7 @@ These are optional authoring patterns, not required page furniture. Use at most 
 
 Both disclosures are closed in authored HTML (no `open` attribute). Native `<summary>` supplies keyboard, touch and screen-reader behavior; scripts do not replace it or move focus after toggling. The print helper changes disclosure state only for printing and restores the authored state.
 
-An anecdote contains exactly one `data-pep-anecdote-story`: a concrete everyday story, analogy or plain-language mental model. It is code-free and contains no syntax, pseudocode, API name, terminal command, exact program output, or second copy of the ordinary technical explanation. One optional `data-pep-anecdote-map` sentence (at most 25 words) may connect the story back to the concept in plain language. Core teaching remains complete while it is closed. A challenge extends only taught objectives and labels time as additional. Optional descendants carry no `data-interaction`, `data-confidence`, objectives, required progress or completion hook. Opening, attempting, resetting or printing them cannot change required progress, completion, grade, Continue or `pep:budget-minutes`. [A]
+An anecdote contains exactly one non-empty `data-pep-anecdote-story`: a concrete everyday story, analogy or plain-language mental model. It is code-free and contains no syntax, pseudocode, API name, terminal command, exact program output, or second copy of the ordinary technical explanation. It needs no magic cue such as “imagine”; ordinary words such as “terminal” and “prints,” and ordinary parentheticals, are not code by themselves. One optional non-empty `data-pep-anecdote-map` sentence (at most 25 words) may connect the story back to the concept in plain language. Parsed QA rejects code elements, code hooks, decoded high-confidence syntax and command/output blocks. Independent education and SME review—not a keyword heuristic—judges concreteness, usefulness, disguised technical restatement and truth. Core teaching remains complete while it is closed. A challenge extends only taught objectives and labels time as additional. Optional descendants carry no `data-interaction`, `data-confidence`, objectives, required progress or completion hook. Opening, attempting, resetting or printing them cannot change required progress, completion, grade, Continue or `pep:budget-minutes`. [A]
 
 ### Cards and callouts
 
@@ -692,7 +700,7 @@ function go(number, mode = 'push', moveFocus = true) {
 addEventListener('popstate', () => go(Number(location.hash.match(/activity-(\d+)/)?.[1]), 'replace', false));
 ```
 
-A production page also binds Previous/Next, guards timeline clicks, and sets disabled states. Completion advances `unlockedThrough`; revisiting does not. Restart snapshots or explicitly restores only the current activity's authored controls, feedback and credit. Because state lives entirely in the standalone page and guarded storage is optional, navigation works offline and in the sandbox. [A]
+A production page also binds Previous/Next and ordinary back links, guards timeline clicks, sets disabled states and reflects the stable state hooks above. Completion advances `unlockedThrough`; revisiting does not. Locked activation and a fresh future fragment change neither current activity nor frontier; a disallowed fragment normalizes to the canonical allowed fragment. Back/Forward restores an unlocked activity without changing state or moving focus. Restart is exercised after wrong and completed attempts and must clear only current state, preserve the frontier and required time, and award exactly one credit after re-completion. Because state lives entirely in the standalone page and guarded storage is optional, navigation works offline and in the sandbox. [A]
 
 ### Figures, diagrams, charts and tables
 
@@ -765,11 +773,14 @@ For Python Slicing and Comprehensions Activity 3, keep the bounded editor but re
 - Name two edits in order: (1) replace the `result` placeholder with a **list comprehension** equivalent to the shown loop; (2) replace the `doubled` placeholder with a **set or dict comprehension** that doubles only prices over 10. Say explicitly that each `___` stands for one whole comprehension, not one number or keyword.
 - Explain the shown loop before asking for the rewrite: it visits `prices`, keeps values over 10, doubles each kept value, and produces `[24, 24, 60]`; the repeated 24 is retained because the loop builds a list. This observable loop result is context, not a client-visible finished comprehension.
 - Keep **Problems**, **Output**, Run, Reset code and the bounded editor visible. Problems identifies an unsupported shape or a location to fix; Output compares the learner's resulting values with the shown loop behavior. Never embed a complete expression, answer key, hidden solution, reference implementation or private test in HTML, JavaScript, static alternatives or hint copy.
-- Add the separate **Where this fits** decision: comprehensions fit small, readable, in-memory transform/filter work that builds a new collection. Prefer an ordinary loop when the purpose is a side effect, or when the work needs multi-step branching, exception handling or early exit.
-- Supply progressive hints in this order: identify the **collected value**; identify the `for` **source**; then decide whether the optional **filter** is needed. For the second placeholder, a later hint may ask whether duplicates or key-to-value association matter, but it cannot provide the final expression.
+- Consolidate the existing applicable **Where this fits** teaching rather than adding a duplicate: comprehensions fit a bounded iterable already in memory when the transform/filter remains clear as one expression and the whole result is needed. Consider a generator or iterator approach for large or streaming inputs. Prefer an ordinary loop for side effects, multi-step branching, per-item exception handling, early exit, or whenever it states the control flow more clearly.
+- Supply nested progressive hints in this order: identify the **collected value**; identify the `for` **source**; decide whether the optional **filter** is needed; then, for the second placeholder, distinguish set uniqueness from dict key-to-value association. Each later disclosure is nested in its predecessor and cannot provide a final expression.
+- Declare the task and its two targets through the answer-sensitive hooks shown below. QA decodes HTML, scans rendered and hidden text, attributes, no-JavaScript/static alternatives, hint/fit/anecdote copy, embedded script strings and every QA JSON string, and asks CPython `tokenize` plus `ast` to reject any complete target list/set/dict comprehension. This scanner is target-specific; an independent Python SME still judges semantic leakage.
 
 ```html
-<section id="task-3" data-pep-task data-pep-may-stall data-pep-instructions>
+<section id="task-3" data-pep-task data-pep-may-stall data-pep-instructions
+         data-pep-answer-sensitive="python-comprehension"
+         data-pep-answer-targets="result doubled">
   <h2>Your task</h2>
   <ol>
     <li>In <code>result = ___</code>, replace the placeholder with one list comprehension that matches the shown loop.</li>
@@ -777,17 +788,18 @@ For Python Slicing and Comprehensions Activity 3, keep the bounded editor but re
   </ol>
   <p>Each <code>___</code> stands for one whole comprehension. The shown loop keeps qualifying prices, doubles them, and builds <code>[24, 24, 60]</code>.</p>
   <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
-    <summary>Need a hint?</summary>
+    <summary><span>Need a hint?</span><span>Hint 1 of 4 for Activity 3</span></summary>
     <div class="pep-hint__body">
       <p data-pep-hint-target><strong>Where to act:</strong> Start in the first placeholder after <code>result =</code>.</p>
       <p data-pep-hint-step><strong>Next step:</strong> Name the value the loop adds on each qualifying pass; that becomes the collected-value part.</p>
+      <!-- Nest hint 2 here; nest hints 3 and 4 in the same strict sequence. -->
     </div>
   </details>
 </section>
 <div data-pep-workspace="code"><!-- bounded editor, then Problems and Output --></div>
 ```
 
-**Comprehension check.** After reading only **Your task** and hint 1, a learner must be able to point to the first placeholder and state that it needs a list comprehension whose collected value matches what the loop appends; they need not know or see the finished expression. A deterministic review test should ask that question verbatim. [A]
+**Semantic review boundary.** Machine checks prove structure and reject detectable completed expressions; they do not prove transfer. Education review asks whether, after only **Your task** and hint 1, a learner can state what to type and where without seeing the answer. The Python SME separately checks technical truth, representative practice, collection semantics and when-not-to-use boundaries. [A]
 
 ### Editor workspace
 
@@ -876,7 +888,7 @@ Known `@1` gaps, accepted until a component version changes them: some fragments
 - Keep course objectives in the topic-bar native disclosure (`data-pep-objectives`) and per-activity completion criteria beside the task (`data-pep-activity-checks`).
 - Put **Previous activity** beside Next/Continue; preserve activity work across both directions and browser history while keeping future steps locked.
 - Put native progressive **Need a hint?** disclosures beside tasks where a learner may reasonably stall, outside required progress, grading and time.
-- Include a separate **Where this fits** decision, good fit and when-not-to-use boundary.
+- Include a separate **Where this fits** decision, good fit and when-not-to-use boundary when the concept presents a meaningful practitioner choice; otherwise omit it.
 - Give code-writing objectives the editor workspace, not piece selectors; keep its instructions first, mobile controls visible, heights bounded and no-JavaScript reading complete.
 - Keep Optional Anecdote and Challenge disclosures native, closed by default, public-safe and outside all required objective, progress, completion and time accounting. Keep anecdotes concrete, everyday and code-free.
 

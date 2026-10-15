@@ -1,10 +1,12 @@
 import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
+import Ajv2020 from "ajv/dist/2020.js";
 import { chromium } from "playwright";
-import { evidencePath, findCourses, loadCourse, readJson } from "../lib/common.mjs";
+import { error, evidencePath, findCourses, loadCourse, readJson, relative, sha256, walk } from "../lib/common.mjs";
 
 export const VIEWPORTS = [
   { name: "desktop", width: 1366, height: 768, theme: "light", zoom: 1 },
@@ -24,6 +26,10 @@ const LEGACY_VIEWPORTS = [
 const PACKAGE = JSON.parse(
   await readFile(new URL("../../../package.json", import.meta.url), "utf8"),
 );
+const QA_PATH_SCHEMA = JSON.parse(
+  await readFile(new URL("../../schemas/qa-paths.schema.json", import.meta.url), "utf8"),
+);
+const validateQaPath = new Ajv2020({ allErrors: true, strict: false }).compile(QA_PATH_SCHEMA);
 
 function digest(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -77,11 +83,30 @@ function issue(rule, topic, detail) {
 }
 
 async function loadSpec(topic) {
+  let spec;
   try {
-    return await readJson(topic.spec);
+    spec = await readJson(topic.spec);
   } catch (error) {
     throw new Error(`${topic.displaySpec} is required and must be valid JSON: ${error.message}`);
   }
+  if (!validateQaPath(spec)) {
+    const detail = (validateQaPath.errors ?? [])
+      .map((item) => `${item.instancePath || "/"} ${item.message}`)
+      .join("; ");
+    throw new Error(`${topic.displaySpec} does not match qa-paths.schema.json: ${detail}`);
+  }
+  const html = await readFile(topic.html, "utf8");
+  const enrolled = /<main\b[^>]*\bdata-pep-guidance-contract(?:\s|=|>)/iu.test(html);
+  if (enrolled !== Boolean(spec.guidance)) {
+    throw new Error("data-pep-guidance-contract and spec.guidance must be present together");
+  }
+  if (enrolled) {
+    const hasHints = /<details\b[^>]*\bdata-pep-hint(?:\s|=|>)/iu.test(html);
+    if (hasHints !== Boolean(spec.guidance.hints)) {
+      throw new Error("spec.guidance.hints must be present exactly when the enrolled page contains hints");
+    }
+  }
+  return spec;
 }
 
 function attachDiagnostics(page, log) {
@@ -198,11 +223,21 @@ async function focusVisible(locator) {
 
 async function perform(target, action, options = {}) {
   if (action.do === "goBack") {
-    await target.goBack();
+    if (typeof target.goBack === "function") await target.goBack();
+    else {
+      const before = await target.evaluate(() => location.href);
+      await target.evaluate(() => history.back());
+      await target.waitForFunction((value) => location.href !== value, before);
+    }
     return;
   }
   if (action.do === "goForward") {
-    await target.goForward();
+    if (typeof target.goForward === "function") await target.goForward();
+    else {
+      const before = await target.evaluate(() => location.href);
+      await target.evaluate(() => history.forward());
+      await target.waitForFunction((value) => location.href !== value, before);
+    }
     return;
   }
   const locator = target.locator(action.selector);
@@ -265,6 +300,66 @@ async function execute(target, actions, options = {}) {
   for (const action of actions) await perform(target, action, options);
 }
 
+async function exerciseSequentialHints(target, options = {}) {
+  const hints = target.locator("details[data-pep-hint]");
+  const count = await hints.count();
+  for (let index = 0; index < count; index++) {
+    const hint = hints.nth(index);
+    if (await hint.getAttribute("data-pep-hint-order") !== "1" && await hint.locator(":scope > summary").isVisible()) {
+      throw new Error("a later hint is visible before its predecessor opens");
+    }
+  }
+  for (let index = 0; index < count; index++) {
+    const hint = hints.nth(index);
+    const summary = hint.locator(":scope > summary");
+    if (!(await summary.isVisible())) throw new Error(`hint ${index + 1} is unavailable after its predecessor opens`);
+    if (options.keyboard) {
+      if (!(await focusVisible(summary))) throw new Error(`hint ${index + 1} has no visible focus indicator`);
+      await summary.press("Enter");
+    } else if (options.touch) await summary.tap();
+    else await summary.click();
+    if ((await hint.getAttribute("open")) === null) throw new Error(`hint ${index + 1} did not open`);
+    const step = hint.locator(":scope > .pep-hint__body > [data-pep-hint-step]");
+    if (!(await step.isVisible())) throw new Error(`hint ${index + 1} next step is not visible`);
+    if (options.afterOpen) await options.afterOpen(index, hint);
+  }
+}
+
+async function guidanceState(target) {
+  return target.locator("[data-pep-guidance-contract]").evaluate((root) => {
+    const controls = [...root.querySelectorAll("input, textarea, select")].map((control) => ({
+      id: control.id,
+      value: control.value,
+      checked: control.checked,
+      selectedIndex: control.selectedIndex,
+    }));
+    const activities = [...root.querySelectorAll("[data-pep-activity]")].map((activity) => ({
+      id: activity.id,
+      attempts: activity.dataset.pepAttempts,
+      settled: activity.dataset.pepSettled,
+      completed: activity.dataset.pepCompleted,
+      credit: activity.dataset.pepCredit,
+      grade: activity.dataset.pepGrade,
+      canContinue: activity.dataset.pepContinue,
+      feedback: [...activity.querySelectorAll("[data-pep-feedback]")].map((node) => ({
+        text: node.textContent,
+        hidden: node.hidden,
+      })),
+    }));
+    return {
+      current: root.dataset.pepCurrentActivity,
+      frontier: root.dataset.pepUnlockedThrough,
+      requiredMinutes: root.dataset.pepRequiredMinutes,
+      complete: root.dataset.pepComplete,
+      controls,
+      activities,
+      hash: location.hash,
+      focused: document.activeElement?.id ?? "",
+      disclosures: [...root.querySelectorAll("details")].map((item) => item.open),
+    };
+  });
+}
+
 async function withPage(browser, topic, options, callback) {
   const context = await browser.newContext({
     viewport: options.viewport ?? { width: 1366, height: 768 },
@@ -314,10 +409,40 @@ async function sandboxFrame(page, topic) {
   return frame;
 }
 
+async function checkPrint(browser, topic) {
+  await withPage(browser, topic, { label: "print" }, async (page) => {
+    if (!(await page.locator("[data-pep-guidance-contract]").count())) return;
+    const details = page.locator("details[data-pep-objectives], details[data-pep-hint], details[data-pep-optional]");
+    if (await details.count()) await details.first().locator(":scope > summary").click();
+    const before = await details.evaluateAll((items) => items.map((item) => item.open));
+    await page.evaluate(() => dispatchEvent(new Event("beforeprint")));
+    await page.emulateMedia({ media: "print" });
+    for (const selector of ["[data-pep-activity]", "[data-pep-teaching]", "[data-pep-activity-checks]", "details[data-pep-objectives]", "details[data-pep-hint]", "details[data-pep-optional]"]) {
+      const items = page.locator(selector);
+      for (let index = 0; index < await items.count(); index++) {
+        if (!(await items.nth(index).isVisible())) throw new Error(`print hides required ${selector} content`);
+      }
+    }
+    const navigation = page.locator('[aria-label="Activities"], [aria-label="Activity navigation"]');
+    for (let index = 0; index < await navigation.count(); index++) {
+      if (await navigation.nth(index).isVisible()) throw new Error("print must hide navigation-only controls");
+    }
+    await page.evaluate(() => dispatchEvent(new Event("afterprint")));
+    await page.emulateMedia({ media: "screen" });
+    const after = await details.evaluateAll((items) => items.map((item) => item.open));
+    if (JSON.stringify(after) !== JSON.stringify(before)) throw new Error("print did not restore exact disclosure state");
+  });
+}
+
 async function checkOffline(browser, topic) {
+  await loadSpec(topic);
   await withPage(browser, topic, {}, async () => {});
   await withPage(browser, topic, { javaScriptEnabled: false, label: "no-js" }, async (page) => {
     if (!(await page.locator("body").innerText()).trim()) throw new Error("no-JavaScript reading is empty");
+    const laterHints = page.locator('details[data-pep-hint]:not([data-pep-hint-order="1"])');
+    for (let index = 0; index < await laterHints.count(); index++) {
+      if (await laterHints.nth(index).locator(":scope > summary").isVisible()) throw new Error("a later hint is operable before its predecessor opens");
+    }
     const disclosures = page.locator("details[data-pep-optional], details[data-pep-hint], details[data-pep-objectives]");
     for (let index = 0; index < await disclosures.count(); index++) {
       const disclosure = disclosures.nth(index);
@@ -329,23 +454,33 @@ async function checkOffline(browser, topic) {
     }
     if (await page.locator("[data-pep-guidance-contract]").count()) {
       const activities = page.locator("[data-pep-activity]");
-      if ((await activities.count()) < 2) throw new Error("guided no-JavaScript reading requires ordinary activity sections");
-      for (let index = 0; index < await activities.count(); index++) {
-        if (!(await activities.nth(index).isVisible())) throw new Error("no-JavaScript activity section is hidden");
-      }
-      if (!(await page.locator('a[data-pep-activity-link][href^="#activity-"]').count()) ||
-          !(await page.locator('a[data-pep-back-link][href^="#activity-"]').count())) {
-        throw new Error("guided no-JavaScript reading requires activity anchors and back links");
+      const links = page.locator("a[data-pep-activity-link]");
+      const count = await activities.count();
+      if (count < 2 || await links.count() !== count) throw new Error("guided no-JavaScript reading requires one timeline anchor per activity");
+      for (let index = 0; index < count; index++) {
+        const activity = activities.nth(index);
+        const id = await activity.getAttribute("id");
+        if (!(await activity.isVisible())) throw new Error("no-JavaScript activity section is hidden");
+        if (await links.nth(index).getAttribute("href") !== `#${id}`) throw new Error("no-JavaScript timeline href/id order mismatch");
+        await links.nth(index).evaluate((link) => link.click());
+        if (await page.evaluate(() => location.hash) !== `#${id}`) throw new Error("no-JavaScript timeline anchor did not reach its activity");
+        const back = activity.locator("a[data-pep-back-link]");
+        if (index === 0 && await back.count()) throw new Error("first activity has an unexpected no-JavaScript back link");
+        if (index > 0) {
+          const priorId = await activities.nth(index - 1).getAttribute("id");
+          if (await back.count() !== 1 || await back.getAttribute("href") !== `#${priorId}`) throw new Error("no-JavaScript back link does not resolve to the predecessor");
+          await back.evaluate((link) => link.click());
+          if (await page.evaluate(() => location.hash) !== `#${priorId}`) throw new Error("no-JavaScript back link did not reach its predecessor");
+        }
       }
     }
     const codeWorkspaces = page.locator('[data-pep-workspace="code"]');
     for (let index = 0; index < await codeWorkspaces.count(); index++) {
       const reading = codeWorkspaces.nth(index).locator("noscript[data-pep-no-js]");
-      if ((await reading.count()) !== 1 || !(await reading.innerText()).trim()) {
-        throw new Error("code workspace requires a complete noscript[data-pep-no-js] reading");
-      }
+      if ((await reading.count()) !== 1 || !(await reading.innerText()).trim()) throw new Error("code workspace requires a complete noscript[data-pep-no-js] reading");
     }
   });
+  await checkPrint(browser, topic);
 }
 
 async function checkSandbox(browser, topic) {
@@ -363,6 +498,15 @@ async function checkSandbox(browser, topic) {
       await execute(frame, spec.routes[name]);
       await assertState(frame, spec.completion);
       await assertState(frame, spec.progress);
+    }
+    if (spec.guidance) {
+      for (const name of ["activityNavigation", "activityNavigationKeyboard", "activityNavigationTouch", "objectives", "objectivesTouch", "hints"]) {
+        if (!spec.guidance[name]) continue;
+        const frame = await sandboxFrame(page, topic);
+        await execute(frame, spec.guidance[name], { keyboard: name.endsWith("Keyboard") });
+      }
+      const frame = await sandboxFrame(page, topic);
+      await exerciseSequentialHints(frame);
     }
     if (diagnostics.length) throw new Error(diagnostics.join("; "));
   } catch (error) {
@@ -393,43 +537,125 @@ async function checkBehavior(browser, topic) {
     await execute(page, spec.restart.actions);
     await assertState(page, spec.restart.credit);
   });
-  if (spec.guidance?.activityNavigation) {
-    await withPage(browser, topic, { label: "activity-navigation" }, async (page) => {
-      await execute(page, spec.guidance.activityNavigation);
-    });
-  }
-  if (spec.guidance?.activityNavigationKeyboard) {
-    await withPage(browser, topic, { label: "activity-navigation-keyboard" }, async (page) => {
-      await execute(page, spec.guidance.activityNavigationKeyboard, { keyboard: true });
-    });
-  }
-  if (spec.guidance?.activityNavigationTouch) {
-    await withPage(browser, topic, { label: "activity-navigation-touch", touch: true }, async (page) => {
-      await execute(page, spec.guidance.activityNavigationTouch, { touch: true });
-    });
-  }
-  if (spec.guidance?.objectives) {
+  if (spec.guidance) {
+    await withPage(browser, topic, { label: "activity-navigation" }, async (page) => execute(page, spec.guidance.activityNavigation));
+    await withPage(browser, topic, { label: "activity-navigation-keyboard" }, async (page) => execute(page, spec.guidance.activityNavigationKeyboard, { keyboard: true }));
+    for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
+      await withPage(browser, topic, { label: `activity-navigation-touch-${viewport.width}`, viewport, touch: true }, async (page) => execute(page, spec.guidance.activityNavigationTouch, { touch: true }));
+    }
+    await withPage(browser, topic, { label: "objectives" }, async (page) => execute(page, spec.guidance.objectives));
     await withPage(browser, topic, { label: "objectives-keyboard" }, async (page) => {
-      await execute(page, spec.guidance.objectives);
+      const summary = page.locator("details[data-pep-objectives] > summary");
+      if (!(await focusVisible(summary))) throw new Error("objectives summary has no visible focus indicator");
+      await summary.press("Enter");
+      if ((await page.locator("details[data-pep-objectives]").getAttribute("open")) === null) throw new Error("keyboard did not open objectives");
+      await summary.press("Escape");
+      if ((await page.locator("details[data-pep-objectives]").getAttribute("open")) !== null) throw new Error("Escape did not close objectives");
+      if (!(await summary.evaluate((element) => element === document.activeElement))) throw new Error("Escape did not return focus to objectives summary");
     });
-    await withPage(browser, topic, { label: "objectives-touch", touch: true }, async (page) => {
-      await execute(page, spec.guidance.objectivesTouch ?? spec.guidance.objectives, { touch: true });
+    for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
+      await withPage(browser, topic, { label: `objectives-touch-${viewport.width}`, viewport, touch: true }, async (page) => execute(page, spec.guidance.objectivesTouch, { touch: true }));
+    }
+    if (spec.guidance.hints) {
+      await withPage(browser, topic, { label: "hints-pointer" }, async (page) => exerciseSequentialHints(page));
+      await withPage(browser, topic, { label: "hints-keyboard" }, async (page) => exerciseSequentialHints(page, { keyboard: true }));
+      for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
+        await withPage(browser, topic, { label: `hints-touch-${viewport.width}`, viewport, touch: true }, async (page) => exerciseSequentialHints(page, { touch: true }));
+      }
+    }
+    await withPage(browser, topic, { label: "guidance-invariants" }, async (page) => {
+      const root = page.locator("[data-pep-guidance-contract]");
+      const links = page.locator("[data-pep-activity-link]");
+      const activities = page.locator("[data-pep-activity]");
+      const initial = await guidanceState(page);
+      if (!initial.current || !initial.frontier || !initial.requiredMinutes) throw new Error("guidance state hooks are incomplete");
+      for (let index = Number(initial.frontier); index < await links.count(); index++) {
+        const before = await guidanceState(page);
+        await links.nth(index).dispatchEvent("click");
+        const after = await guidanceState(page);
+        delete before.focused;
+        delete after.focused;
+        if (JSON.stringify(after) !== JSON.stringify(before)) throw new Error("locked future timeline activation changed guidance state");
+      }
+      await page.locator("[data-pep-wrong-attempt]").click();
+      const afterWrong = await guidanceState(page);
+      const otherBefore = afterWrong.activities.slice(1);
+      const frontierBeforeRestart = afterWrong.frontier;
+      await page.locator("[data-pep-reset]").click();
+      const afterWrongRestart = await guidanceState(page);
+      const currentState = afterWrongRestart.activities[Number(afterWrongRestart.current) - 1];
+      if (currentState.attempts !== "0" || currentState.settled !== "false" || currentState.completed !== "false" || currentState.credit !== "0" || currentState.grade !== "0" || currentState.canContinue !== "false" || currentState.feedback.some((item) => item.text)) {
+        throw new Error("Restart after a wrong attempt left stale current-activity state");
+      }
+      if (JSON.stringify(afterWrongRestart.activities.slice(1)) !== JSON.stringify(otherBefore) || afterWrongRestart.frontier !== frontierBeforeRestart || afterWrongRestart.requiredMinutes !== initial.requiredMinutes) {
+        throw new Error("Restart changed another activity, the unlocked frontier, or required time");
+      }
+      const complete = page.locator("[data-pep-activity]:not([hidden]) [data-pep-complete-activity]").first();
+      await complete.click();
+      let completed = await guidanceState(page);
+      if (completed.activities[0].credit !== "1" || Number(completed.frontier) < Number(initial.frontier)) throw new Error("completion did not award exactly one credit or preserve a monotonic frontier");
+      await page.locator("[data-pep-reset]").click();
+      await page.locator("[data-pep-activity]:not([hidden]) [data-pep-complete-activity]").first().click();
+      completed = await guidanceState(page);
+      if (completed.activities[0].credit !== "1") throw new Error("re-completion after Restart did not award exactly one credit");
+      await page.locator("[data-pep-activity]:not([hidden]) [data-pep-complete-activity]").first().click();
+      completed = await guidanceState(page);
+      if (completed.activities[0].credit !== "1") throw new Error("revisiting completion duplicated credit");
+      if (await activities.count() > 1) {
+        const firstEditable = page.locator("[data-pep-activity]:not([hidden]) input:not([type=hidden]), [data-pep-activity]:not([hidden]) textarea").first();
+        if (await firstEditable.count()) await firstEditable.fill("harness-preserved-first-state");
+        const beforeNavigation = await guidanceState(page);
+        await page.locator("[data-pep-next]").click();
+        const afterNavigation = await guidanceState(page);
+        if (afterNavigation.activities.reduce((sum, item) => sum + Number(item.credit), 0) !== beforeNavigation.activities.reduce((sum, item) => sum + Number(item.credit), 0)) throw new Error("navigation issued credit");
+        if (Number(afterNavigation.frontier) < Number(beforeNavigation.frontier)) throw new Error("navigation decreased the unlocked frontier");
+        if (JSON.stringify(afterNavigation.activities) !== JSON.stringify(beforeNavigation.activities) || JSON.stringify(afterNavigation.controls) !== JSON.stringify(beforeNavigation.controls) || afterNavigation.requiredMinutes !== beforeNavigation.requiredMinutes) throw new Error("forward navigation changed preserved activity state");
+        const secondEditable = page.locator("[data-pep-activity]:not([hidden]) input:not([type=hidden]), [data-pep-activity]:not([hidden]) textarea").first();
+        if (await secondEditable.count()) await secondEditable.fill("harness-preserved-second-state");
+        const preservedState = await guidanceState(page);
+        const historyFocus = page.locator("[data-pep-reset]");
+        await historyFocus.focus();
+        const focusedId = await historyFocus.getAttribute("id");
+        await page.goBack();
+        let historyState = await guidanceState(page);
+        if (historyState.current !== beforeNavigation.current || historyState.focused !== focusedId || JSON.stringify(historyState.activities) !== JSON.stringify(preservedState.activities) || JSON.stringify(historyState.controls) !== JSON.stringify(preservedState.controls)) throw new Error("browser Back changed state or failed to preserve focus");
+        await page.goForward();
+        historyState = await guidanceState(page);
+        if (historyState.current !== afterNavigation.current || historyState.focused !== focusedId || JSON.stringify(historyState.activities) !== JSON.stringify(preservedState.activities) || JSON.stringify(historyState.controls) !== JSON.stringify(preservedState.controls)) throw new Error("browser Forward changed state or failed to preserve focus");
+        await page.locator("[data-pep-previous]").click();
+        const afterPrevious = await guidanceState(page);
+        if (JSON.stringify(afterPrevious.activities) !== JSON.stringify(preservedState.activities) || JSON.stringify(afterPrevious.controls) !== JSON.stringify(preservedState.controls) || afterPrevious.frontier !== beforeNavigation.frontier) throw new Error("backward navigation changed preserved activity state");
+      }
+      if (await root.getAttribute("data-pep-current-activity") !== (await guidanceState(page)).current) throw new Error("current activity hook drifted");
     });
-  }
-  if (spec.guidance?.hints) {
-    await withPage(browser, topic, { label: "hints" }, async (page) => execute(page, spec.guidance.hints));
+    await withPage(browser, topic, { label: "future-fragment" }, async (page) => {
+      const last = await page.locator("[data-pep-activity]").last().getAttribute("id");
+      await page.goto(`${pathToFileURL(topic.html).href}#${last}`, { waitUntil: "load" });
+      const state = await guidanceState(page);
+      if (state.frontier !== "1" || state.current !== "1" || state.hash !== "#activity-1") throw new Error("fresh future fragment unlocked or selected a future activity");
+    });
   }
   await withPage(browser, topic, { label: "optional-accounting" }, async (page) => {
     const disclosures = page.locator("details[data-pep-optional], details[data-pep-hint]");
     if ((await disclosures.count()) === 0) return;
-    const snapshot = async () => ({
-      completion: spec.completion.attribute
-        ? await page.locator(spec.completion.selector).getAttribute(spec.completion.attribute)
-        : await page.locator(spec.completion.selector).innerText(),
-      progress: spec.progress.attribute
-        ? await page.locator(spec.progress.selector).getAttribute(spec.progress.attribute)
-        : await page.locator(spec.progress.selector).innerText(),
-    });
+    const snapshot = async () => {
+      const required = {
+        completion: spec.completion.attribute
+          ? await page.locator(spec.completion.selector).getAttribute(spec.completion.attribute)
+          : await page.locator(spec.completion.selector).innerText(),
+        progress: spec.progress.attribute
+          ? await page.locator(spec.progress.selector).getAttribute(spec.progress.attribute)
+          : await page.locator(spec.progress.selector).innerText(),
+      };
+      if (spec.guidance) {
+        const state = await guidanceState(page);
+        required.current = state.current;
+        required.frontier = state.frontier;
+        required.requiredMinutes = state.requiredMinutes;
+        required.activities = state.activities;
+      }
+      return required;
+    };
     const before = await snapshot();
     for (let index = 0; index < await disclosures.count(); index++) {
       const disclosure = disclosures.nth(index);
@@ -630,6 +856,7 @@ async function checkResponsive(browser, topic) {
               '[role="tab"]',
               '[role="checkbox"]',
               '[role="radio"]',
+              'a[href]',
             ].join(",");
             const undersized = [...document.querySelectorAll(targetSelector)]
               .filter(isVisible)
@@ -653,6 +880,12 @@ async function checkResponsive(browser, topic) {
           }
         };
         await inspect();
+        if (spec.guidance) {
+          const objectives = page.locator("details[data-pep-objectives]");
+          await objectives.locator(":scope > summary").click();
+          await inspect();
+          if (spec.guidance.hints) await exerciseSequentialHints(page, { touch: viewport.touch, afterOpen: inspect });
+        }
         for (const action of spec.routes.wrongTwice) {
           await perform(page, action, { touch: viewport.touch });
           await inspect();
@@ -671,6 +904,46 @@ const CHECKERS = {
   T12: checkAccessibility,
   T13: checkResponsive,
 };
+
+export async function validateQaPrivateProofs(repoRoot, evidenceRoot) {
+  const out = [];
+  const privateName = /(^|[-_.\/])(?:answer[-_ ]?key|rubric|(?:reference|instructor|private)[-_ ]?solution|hidden[-_ ]?tests?)([-_.\/]|$)/iu;
+  for (const receiptFile of (await walk(evidenceRoot)).files.filter((file) => path.basename(file) === "qa-receipt.json")) {
+    const receipt = await readJson(receiptFile).catch(() => null);
+    const proof = receipt?.privateSuccessProof;
+    if (!proof) continue;
+    const display = relative(repoRoot, receiptFile);
+    if (proof.record !== `validated at ${proof.commit} by run ${proof.runId}`) out.push(error("T06", display, "private success record must match commit and runId"));
+    const commit = spawnSync("git", ["cat-file", "-e", `${proof.commit}^{commit}`], { cwd: repoRoot, encoding: "utf8" });
+    if (commit.status !== 0) out.push(error("T06", display, "private success proof commit does not exist in this repository"));
+    const evidenceRelative = relative(repoRoot, receiptFile).split("/");
+    const evidenceIndex = evidenceRelative.indexOf("evidence");
+    const owner = evidenceIndex >= 0 ? evidenceRelative.slice(evidenceIndex + 1, -1) : [];
+    const required = new Set([
+      `${owner.join("/")}/artifact.html`,
+      `authoring/evidence/${owner.join("/")}/qa-paths.json`,
+      "authoring/tools/qa/harness.mjs",
+      "authoring/tools/qa/python-answer-scan.py",
+      "authoring/tools/checks/T08-html-static.mjs",
+    ]);
+    const seen = new Set();
+    for (const binding of proof.publicBindings ?? []) {
+      if (seen.has(binding.file)) out.push(error("T06", display, `duplicate private-success public binding: ${binding.file}`));
+      seen.add(binding.file);
+      if (privateName.test(binding.file)) out.push(error("T06", display, `private material cannot be bound: ${binding.file}`));
+      const file = path.join(repoRoot, ...binding.file.split("/"));
+      try {
+        const actual = sha256(await readFile(file));
+        if (actual !== binding.reviewedSha256) out.push(error("T06", display, `stale private-success public binding: ${binding.file}`));
+      } catch (cause) {
+        if (cause.code === "ENOENT") out.push(error("T06", display, `private-success public binding is missing: ${binding.file}`));
+        else throw cause;
+      }
+    }
+    for (const file of required) if (!seen.has(file)) out.push(error("T06", display, `missing private-success public binding: ${file}`));
+  }
+  return out;
+}
 
 export async function updateReceipt(ctx, topic, rule, passed, detail, writeEvidence = false) {
   writeEvidence ||= process.env.PEP_QA_WRITE_EVIDENCE === "1";
@@ -715,6 +988,79 @@ export async function updateReceipt(ctx, topic, rule, passed, detail, writeEvide
   receipt.passCount = receipt.checks.filter((check) => check.status === "pass").length;
   await mkdir(outputRoot, { recursive: true });
   await writeFile(receiptFile, `${JSON.stringify(receipt, null, 2)}\n`);
+}
+
+export async function runPrivateOverlay(ctx, overlayFile) {
+  const absolute = path.resolve(overlayFile);
+  const outside = path.relative(ctx.root, absolute);
+  if (!outside.startsWith(`..${path.sep}`) && outside !== "..") throw new Error("private overlay must be outside the repository");
+  let overlay;
+  try {
+    overlay = JSON.parse(await readFile(absolute, "utf8"));
+  } catch {
+    throw new Error("private overlay is required and must be valid JSON");
+  }
+  if (overlay?.schemaVersion !== 1 || !/^[A-Za-z0-9._-]+$/u.test(overlay?.runId ?? "") ||
+      !/^[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(overlay?.topic ?? "")) {
+    throw new Error("private overlay metadata is invalid");
+  }
+  const routeNames = ["success", "wrongFirst", "keyboard", "sandbox"];
+  if (!overlay.routes || routeNames.some((name) => !Array.isArray(overlay.routes[name]) || !overlay.routes[name].length)) {
+    throw new Error("private overlay requires success, wrongFirst, keyboard and sandbox routes");
+  }
+  const topic = (await findHtmlTopics(ctx)).find((item) => `${item.courseId}/${item.moduleId}/${item.topicId}` === overlay.topic);
+  if (!topic) throw new Error("private overlay topic does not resolve to one HTML topic");
+  const spec = await loadSpec(topic);
+  for (const name of routeNames) {
+    const candidate = structuredClone(spec);
+    candidate.routes.success = overlay.routes[name];
+    if (!validateQaPath(candidate)) throw new Error(`private overlay ${name} route does not match the public action schema`);
+  }
+  const browser = await launchChromium();
+  const runTopLevel = async (actions, keyboard = false) => {
+    const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
+    const page = await context.newPage();
+    let attemptedExternalLoad = false;
+    await page.route("**/*", async (route) => {
+      const url = route.request().url();
+      if (url.split(/[?#]/u)[0] === pathToFileURL(topic.html).href) return route.continue();
+      attemptedExternalLoad = true;
+      return route.abort("blockedbyclient");
+    });
+    try {
+      await page.goto(pathToFileURL(topic.html).href, { waitUntil: "load" });
+      await execute(page, actions, { keyboard });
+      await assertState(page, spec.completion);
+      await assertState(page, spec.progress);
+      if (attemptedExternalLoad) throw new Error("external load");
+    } finally {
+      await context.close();
+    }
+  };
+  try {
+    await runTopLevel(overlay.routes.success);
+    await runTopLevel(overlay.routes.wrongFirst);
+    await runTopLevel(overlay.routes.keyboard, true);
+    const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
+    const page = await context.newPage();
+    let sandboxExternalLoad = false;
+    await page.route("**/*", async (route) => { sandboxExternalLoad = true; await route.abort("blockedbyclient"); });
+    try {
+      const frame = await sandboxFrame(page, topic);
+      await execute(frame, overlay.routes.sandbox);
+      await assertState(frame, spec.completion);
+      await assertState(frame, spec.progress);
+      if (sandboxExternalLoad) throw new Error("external load");
+    } finally {
+      await context.close();
+    }
+  } catch {
+    throw new Error("private success route failed; no private values were recorded");
+  } finally {
+    await browser.close();
+  }
+  const commit = spawnSync("git", ["rev-parse", "HEAD"], { cwd: ctx.root, encoding: "utf8" }).stdout.trim();
+  return { commit, runId: overlay.runId, result: "pass" };
 }
 
 export async function runBrowserGate(ctx, rule, options = {}) {
