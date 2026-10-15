@@ -20,7 +20,8 @@ const supportedMinimumWidths = mediaQueries(css).flatMap((query) => {
 function probeWidths(fixed, minimum) {
   const authored = supportedMinimumWidths
     .filter((width) => width >= minimum)
-    .flatMap((width) => [Math.ceil(width), Math.ceil(width) + 1]);
+    .flatMap((width) => [Math.ceil(width), Math.ceil(width) + 1])
+    .filter((width) => width <= 10_000_000);
   return [...new Set([...fixed, ...authored])];
 }
 
