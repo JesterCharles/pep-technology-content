@@ -150,31 +150,68 @@ test("metrics generator derives counts from catalog, files, gates and review evi
   }
 });
 
-test("Archify output is pinned, static, hash-bound, and embedded byte-for-byte", async () => {
-  const [guide, source, svg, script, manifestText, packageLock] = await Promise.all([
+test("both Archify outputs are pinned, static, hash-bound, and embedded byte-for-byte", async () => {
+  const [
+    guide,
+    simpleSource,
+    simpleSvg,
+    simpleScript,
+    simpleManifestText,
+    detailedSource,
+    detailedSvg,
+    detailedScript,
+    detailedManifestText,
+    packageLock
+  ] = await Promise.all([
     text("index.html"),
     readFile(path.join(directory, "golden-path.archify.json")),
     text("golden-path.svg"),
     readFile(path.join(directory, "reproduce-diagram.mjs")),
     text("diagram-provenance.json"),
+    readFile(path.join(directory, "detailed-architecture.archify.json")),
+    text("detailed-architecture.svg"),
+    readFile(path.join(directory, "reproduce-detailed-diagram.mjs")),
+    text("detailed-diagram-provenance.json"),
     readFile(path.join(root, "package-lock.json"), "utf8").then(JSON.parse)
   ]);
-  const manifest = JSON.parse(manifestText);
-  const workflow = JSON.parse(source);
-  assert.deepEqual(workflow.mainPath, ["input", "design", "build", "verify", "review", "deliver"]);
-  assert.equal(workflow.mainPath.length, 6);
-  assert.equal(manifest.producer.tag, "v3.0.1");
-  assert.equal(manifest.producer.commit, "2ab3cae7ac2c2a55d7386ca789d03c4fcd31816c");
-  assert.equal(manifest.producer.license, "MIT");
-  assert.equal(manifest.producer.cliPath, "archify/bin/archify.mjs");
-  assert.equal(manifest.input.sha256, sha256(source));
-  assert.equal(manifest.postprocess.scriptSha256, sha256(script));
-  assert.equal(manifest.postprocess.finalSvgSha256, sha256(svg));
-  assert.match(svg, new RegExp(`data-archify-input-sha256="${sha256(source)}"`));
-  assert.doesNotMatch(svg, /\s(?:src|href)="https?:/i);
-  assert.doesNotMatch(svg, /url\(\s*["']?https?:/i);
-  assert.doesNotMatch(svg, /role="button"|tabindex="0"/);
-  assert.ok(guide.includes(`<!-- diagram:start -->\n${svg.trim()}\n<!-- diagram:end -->`));
+  const simpleWorkflow = JSON.parse(simpleSource);
+  const detailedWorkflow = JSON.parse(detailedSource);
+  const expectedPath = ["input", "design", "build", "verify", "review", "deliver"];
+  assert.deepEqual(simpleWorkflow.mainPath, expectedPath);
+  assert.deepEqual(detailedWorkflow.mainPath, expectedPath);
+  assert.equal(simpleWorkflow.mainPath.length, 6);
+  assert.equal(detailedWorkflow.meta.quality_profile, "standard");
+  assert.equal(detailedWorkflow.lanes.length, 4);
+  assert.deepEqual(
+    detailedWorkflow.nodes.filter((node) => !expectedPath.includes(node.id)).map((node) => node.id).sort(),
+    ["affected-checks", "clarify", "correct", "handoff-return", "recheck", "reconcile", "refresh-proof", "repair-artifact", "repair-design", "responsible-fix"].sort()
+  );
+  for (const edge of ["input-unclear", "design-invalid", "verify-failed", "review-findings", "deliver-stale", "deliver-ci", "deliver-handoff"]) {
+    assert.ok(detailedWorkflow.edges.some((candidate) => candidate.id === edge), `missing detailed failure edge ${edge}`);
+  }
+
+  for (const [source, svg, script, manifestText] of [
+    [simpleSource, simpleSvg, simpleScript, simpleManifestText],
+    [detailedSource, detailedSvg, detailedScript, detailedManifestText]
+  ]) {
+    const manifest = JSON.parse(manifestText);
+    assert.equal(manifest.producer.tag, "v3.0.1");
+    assert.equal(manifest.producer.commit, "2ab3cae7ac2c2a55d7386ca789d03c4fcd31816c");
+    assert.equal(manifest.producer.license, "MIT");
+    assert.equal(manifest.producer.cliPath, "archify/bin/archify.mjs");
+    assert.equal(manifest.input.sha256, sha256(source));
+    assert.equal(manifest.postprocess.scriptSha256, sha256(script));
+    assert.equal(manifest.postprocess.finalSvgSha256, sha256(svg));
+    assert.match(svg, new RegExp(`data-archify-input-sha256="${sha256(source)}"`));
+    assert.doesNotMatch(svg, /\s(?:src|href)="https?:/i);
+    assert.doesNotMatch(svg, /url\(\s*["']?https?:/i);
+    assert.doesNotMatch(svg, /role="button"|tabindex="0"/);
+  }
+  const simpleIds = new Set([...simpleSvg.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]));
+  const detailedIds = new Set([...detailedSvg.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]));
+  assert.deepEqual([...detailedIds].filter((id) => simpleIds.has(id)), [], "inline SVG ids must remain unique");
+  assert.ok(guide.includes(`<!-- diagram:start -->\n${simpleSvg.trim()}\n<!-- diagram:end -->`));
+  assert.ok(guide.includes(`<!-- detailed-diagram:start -->\n${detailedSvg.trim()}\n<!-- detailed-diagram:end -->`));
   assert.ok(!Object.hasOwn(packageLock.packages, "node_modules/archify"));
   assert.ok(!Object.hasOwn(packageLock.packages[""].dependencies ?? {}, "archify"));
   assert.ok(!Object.hasOwn(packageLock.packages[""].devDependencies ?? {}, "archify"));
@@ -193,6 +230,20 @@ test("every local guide link resolves from the documentation directory", async (
   }
 });
 
+test("the Artifact-ready source is self-contained and carries a publication-safety inventory", async () => {
+  const [guide, safety] = await Promise.all([text("index.html"), text("PUBLICATION-SAFETY.md")]);
+  assert.match(safety, /Use \[`index\.html`\]\(index\.html\) as the single-file Claude Artifact source/);
+  assert.match(safety, /credentials, tokens, secrets and absolute machine paths/);
+  assert.match(safety, /assessment answer keys, rubrics, hidden tests/);
+  assert.match(safety, /Preparing it does not publish, upload, deploy/);
+  assert.doesNotMatch(guide, /(?:\/Users\/|[A-Za-z]:\\\\Users\\\\)/);
+  assert.doesNotMatch(guide, /<(?:script|img|iframe|embed|object|source|track)\b[^>]+\b(?:src|data)\s*=/i);
+  assert.doesNotMatch(guide, /<link\b[^>]+rel=["']stylesheet["']/i);
+  assert.doesNotMatch(guide, /@import\b|url\(\s*["']?https?:|\bfetch\s*\(|\bXMLHttpRequest\b|\bWebSocket\b|\bEventSource\b|sendBeacon\s*\(/i);
+  assert.match(guide, /<!-- diagram:start -->[\s\S]+<!-- diagram:end -->/);
+  assert.match(guide, /<!-- detailed-diagram:start -->[\s\S]+<!-- detailed-diagram:end -->/);
+});
+
 test("progressive stage inspection preserves a complete no-JavaScript reading", async () => {
   const browser = await launchChromium();
   try {
@@ -201,6 +252,7 @@ test("progressive stage inspection preserves a complete no-JavaScript reading", 
       colorScheme: "dark",
       viewport: { width: 400, height: 860 }
     });
+    await context.setOffline(true);
     const page = await context.newPage();
     const requests = [];
     page.on("request", (request) => requests.push(request.url()));
@@ -211,14 +263,19 @@ test("progressive stage inspection preserves a complete no-JavaScript reading", 
       enhanced: document.documentElement.classList.contains("enhanced"),
       allStages: [...document.querySelectorAll("[data-stage-panel]")].map((element) => element.id),
       visibleStages: [...document.querySelectorAll("[data-stage-panel]")].filter((element) => getComputedStyle(element).display !== "none").map((element) => element.id),
-      noJsNote: getComputedStyle(document.querySelector(".nojs-note")).display,
+      visibleViews: [...document.querySelectorAll("[data-view-panel]")].filter((element) => getComputedStyle(element).display !== "none").map((element) => element.id),
+      noJsNotes: [...document.querySelectorAll(".nojs-note")].map((element) => getComputedStyle(element).display),
       toggle: getComputedStyle(document.querySelector(".theme-toggle")).display,
       pageBackground: getComputedStyle(document.body).backgroundColor,
       laneFill: getComputedStyle(document.querySelector(".diagram-scroll .c-lane")).fill,
       pageWidth: [document.documentElement.clientWidth, document.documentElement.scrollWidth],
-      disclosures: document.querySelectorAll("[data-stage-panel] details").length,
+      simpleDisclosures: document.querySelectorAll("[data-stage-panel] details").length,
+      failureDisclosures: document.querySelectorAll(".failure-list details").length,
       essentialCounts: [...document.querySelectorAll("[data-stage-panel]")].map((panel) => panel.querySelectorAll(".essentials>div").length),
-      tabs: document.querySelectorAll('[role="tablist"],.metrics-panel,.states').length,
+      tabLinks: document.querySelectorAll("[data-view-tab]").length,
+      tabRoles: document.querySelectorAll('[role="tablist"],[role="tab"]').length,
+      diagrams: document.querySelectorAll(".diagram-scroll svg").length,
+      detailedDiagramWidth: [document.querySelector(".detailed-architecture .diagram-scroll").clientWidth, document.querySelector(".detailed-architecture .diagram-scroll").scrollWidth],
       headings: [...document.querySelectorAll("[data-stage-panel] h2")].map((heading) => heading.textContent)
     }));
     assert.equal(state.language, "en");
@@ -226,14 +283,19 @@ test("progressive stage inspection preserves a complete no-JavaScript reading", 
     assert.deepEqual(state.allStages, ["stage-input", "stage-design", "stage-build", "stage-verify", "stage-review", "stage-deliver"]);
     assert.deepEqual(state.visibleStages, state.allStages);
     assert.deepEqual(state.headings, ["Input", "Design", "Build", "Verify", "Review + improve", "Deliver"]);
-    assert.equal(state.noJsNote, "block");
+    assert.deepEqual(state.visibleViews, ["simple-view", "detailed-view"]);
+    assert.deepEqual(state.noJsNotes, ["block", "block"]);
     assert.equal(state.toggle, "none");
     assert.equal(state.pageBackground, "rgb(18, 24, 22)");
     assert.equal(state.laneFill, "rgb(26, 34, 32)");
     assert.deepEqual(state.pageWidth, [400, 400]);
-    assert.equal(state.disclosures, 13);
+    assert.equal(state.simpleDisclosures, 13);
+    assert.equal(state.failureDisclosures, 6);
     assert.ok(state.essentialCounts.every((count) => count === 3));
-    assert.equal(state.tabs, 0);
+    assert.equal(state.tabLinks, 2);
+    assert.equal(state.tabRoles, 0);
+    assert.equal(state.diagrams, 2);
+    assert.ok(state.detailedDiagramWidth[1] > state.detailedDiagramWidth[0]);
     assert.deepEqual(requests, [url]);
     await context.close();
   } finally {
@@ -241,7 +303,7 @@ test("progressive stage inspection preserves a complete no-JavaScript reading", 
   }
 });
 
-test("the architecture controls one integrated stage detail by keyboard and touch", async () => {
+test("the tab shell and simple architecture work by keyboard, touch, URL history, and reduced motion", async () => {
   const browser = await launchChromium();
   try {
     const context = await browser.newContext({
@@ -261,8 +323,9 @@ test("the architecture controls one integrated stage detail by keyboard and touc
       pressed: document.querySelector("#theme-toggle").getAttribute("aria-pressed"),
       toggleVisible: getComputedStyle(document.querySelector(".theme-toggle")).display !== "none",
       pageBackground: getComputedStyle(document.body).backgroundColor,
-      laneFill: getComputedStyle(document.querySelector(".diagram-scroll .c-lane")).fill,
-      textFill: getComputedStyle(document.querySelector(".diagram-scroll .t-primary")).fill
+      laneFill: getComputedStyle(document.querySelector("#simple-view .diagram-scroll .c-lane")).fill,
+      textFill: getComputedStyle(document.querySelector("#simple-view .diagram-scroll .t-primary")).fill,
+      detailedFailureFill: getComputedStyle(document.querySelector("#detailed-view .c-security-group")).fill
     }));
     assert.deepEqual(await themeState(), {
       theme: "dark",
@@ -270,32 +333,72 @@ test("the architecture controls one integrated stage detail by keyboard and touc
       toggleVisible: true,
       pageBackground: "rgb(18, 24, 22)",
       laneFill: "rgb(26, 34, 32)",
-      textFill: "rgb(227, 235, 231)"
+      textFill: "rgb(227, 235, 231)",
+      detailedFailureFill: "rgb(40, 28, 26)"
     });
+    assert.deepEqual(await page.evaluate(() => ({
+      visibleView: [...document.querySelectorAll("[data-view-panel]")].find((element) => !element.hidden)?.id,
+      selectedTab: document.querySelector('[role="tab"][aria-selected="true"]')?.id,
+      tabs: document.querySelectorAll('[role="tab"]').length,
+      hash: location.hash,
+      staticDetailedButtons: document.querySelectorAll("#detailed-view svg [role=button]").length
+    })), { visibleView: "simple-view", selectedTab: "tab-simple", tabs: 2, hash: "", staticDetailedButtons: 0 });
 
     await page.locator("#node-review").tap();
     let state = await page.evaluate(() => ({
       stage: [...document.querySelectorAll("[data-stage-panel]")].filter((element) => !element.hidden).map((element) => element.id),
       selectedNode: document.querySelector("[data-stage-node].is-active")?.id,
-      theme: document.documentElement.dataset.theme,
-      noJsNote: getComputedStyle(document.querySelector(".nojs-note")).display,
+      noJsNotes: [...document.querySelectorAll(".nojs-note")].map((element) => getComputedStyle(element).display),
       pageWidth: [document.documentElement.clientWidth, document.documentElement.scrollWidth],
-      diagramWidth: [document.querySelector(".diagram-scroll").clientWidth, document.querySelector(".diagram-scroll").scrollWidth],
+      diagramWidth: [document.querySelector("#simple-view .diagram-scroll").clientWidth, document.querySelector("#simple-view .diagram-scroll").scrollWidth],
       stageNodes: document.querySelectorAll("[data-stage-node]").length,
-      gridFill: getComputedStyle(document.querySelector(".c-grid")).fill,
+      gridFill: getComputedStyle(document.querySelector("#simple-view .c-grid")).fill,
       scrollBehavior: getComputedStyle(document.documentElement).scrollBehavior,
-      transitionDuration: getComputedStyle(document.querySelector(".theme-toggle")).transitionDuration
+      transitionDuration: getComputedStyle(document.querySelector(".theme-toggle")).transitionDuration,
+      hash: location.hash
     }));
     assert.deepEqual(state.stage, ["stage-review"]);
     assert.equal(state.selectedNode, "node-review");
-    assert.equal(state.theme, "dark");
-    assert.equal(state.noJsNote, "none");
+    assert.deepEqual(state.noJsNotes, ["none", "none"]);
     assert.deepEqual(state.pageWidth, [400, 400]);
     assert.ok(state.diagramWidth[1] > state.diagramWidth[0]);
     assert.equal(state.stageNodes, 6);
     assert.equal(state.gridFill, "none");
     assert.equal(state.scrollBehavior, "auto");
     assert.equal(state.transitionDuration, "0s");
+    assert.equal(state.hash, "#stage-review");
+
+    await page.getByRole("tab", { name: "Detailed" }).tap();
+    state = await page.evaluate(() => ({
+      visibleView: [...document.querySelectorAll("[data-view-panel]")].find((element) => !element.hidden)?.id,
+      selectedTab: document.querySelector('[role="tab"][aria-selected="true"]')?.id,
+      hash: location.hash,
+      failureDisclosures: document.querySelectorAll(".failure-list details").length,
+      diagramWidth: [document.querySelector(".detailed-architecture .diagram-scroll").clientWidth, document.querySelector(".detailed-architecture .diagram-scroll").scrollWidth],
+      pageWidth: [document.documentElement.clientWidth, document.documentElement.scrollWidth]
+    }));
+    assert.equal(state.visibleView, "detailed-view");
+    assert.equal(state.selectedTab, "tab-detailed");
+    assert.equal(state.hash, "#detailed-view");
+    assert.equal(state.failureDisclosures, 6);
+    assert.ok(state.diagramWidth[1] > state.diagramWidth[0]);
+    assert.deepEqual(state.pageWidth, [400, 400]);
+    await page.getByText("When an independent critic raises a finding", { exact: true }).click();
+    assert.equal(await page.locator(".failure-list details").nth(4).getAttribute("open"), "");
+
+    await page.goBack();
+    await page.waitForFunction(() => location.hash === "#stage-review");
+    assert.equal(await page.locator("#tab-simple").getAttribute("aria-selected"), "true");
+
+    await page.locator("#tab-simple").focus();
+    await page.keyboard.press("ArrowRight");
+    assert.deepEqual(await page.evaluate(() => ({
+      visibleView: [...document.querySelectorAll("[data-view-panel]")].find((element) => !element.hidden)?.id,
+      focus: document.activeElement?.id,
+      hash: location.hash
+    })), { visibleView: "detailed-view", focus: "tab-detailed", hash: "#detailed-view" });
+    await page.keyboard.press("ArrowLeft");
+    assert.equal(await page.evaluate(() => document.activeElement?.id), "tab-simple");
 
     await page.locator("#node-input").focus();
     await page.keyboard.press("ArrowRight");
@@ -313,7 +416,8 @@ test("the architecture controls one integrated stage detail by keyboard and touc
       toggleVisible: true,
       pageBackground: "rgb(238, 242, 240)",
       laneFill: "rgb(248, 250, 249)",
-      textFill: "rgb(27, 35, 32)"
+      textFill: "rgb(27, 35, 32)",
+      detailedFailureFill: "rgb(255, 244, 242)"
     });
 
     await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
@@ -324,7 +428,8 @@ test("the architecture controls one integrated stage detail by keyboard and touc
       toggleVisible: true,
       pageBackground: "rgb(18, 24, 22)",
       laneFill: "rgb(26, 34, 32)",
-      textFill: "rgb(227, 235, 231)"
+      textFill: "rgb(227, 235, 231)",
+      detailedFailureFill: "rgb(40, 28, 26)"
     });
 
     await page.locator("#node-deliver").click();
@@ -336,22 +441,32 @@ test("the architecture controls one integrated stage detail by keyboard and touc
   }
 });
 
-test("guide has no axe violations and keeps scrollable regions keyboard reachable at every width", async () => {
+test("both views have no axe violations and keep overflow inside keyboard-reachable regions", async () => {
   const browser = await launchChromium();
   try {
     for (const [width, colorScheme] of [[320, "dark"], [390, "light"], [1440, "dark"]]) {
       const context = await browser.newContext({ colorScheme, viewport: { width, height: 860 } });
       const page = await context.newPage();
       await page.goto(pathToFileURL(guidePath).href);
-      const { violations } = await new AxeBuilder({ page }).analyze();
-      assert.deepEqual(violations.map((violation) => `${violation.id}: ${violation.nodes.map((node) => node.target).join(", ")}`), [], `${width}px ${colorScheme}`);
-      const unreachable = await page.evaluate(() => [...document.querySelectorAll("body *")]
-        .filter((element) => {
-          const overflow = getComputedStyle(element).overflowX;
-          return (overflow === "auto" || overflow === "scroll") && element.scrollWidth > element.clientWidth && element.tabIndex < 0;
-        })
-        .map((element) => element.className || element.tagName));
-      assert.deepEqual(unreachable, [], `${width}px scrollable regions without keyboard focus`);
+      for (const view of ["simple", "detailed"]) {
+        if (view === "detailed") {
+          await page.getByRole("tab", { name: "Detailed" }).click();
+          await page.locator(".failure-list details").evaluateAll((details) => details.forEach((detail) => { detail.open = true; }));
+        }
+        const { violations } = await new AxeBuilder({ page }).analyze();
+        assert.deepEqual(violations.map((violation) => `${violation.id}: ${violation.nodes.map((node) => node.target).join(", ")}`), [], `${width}px ${colorScheme} ${view}`);
+        const layout = await page.evaluate(() => ({
+          pageWidth: [document.documentElement.clientWidth, document.documentElement.scrollWidth],
+          unreachable: [...document.querySelectorAll("body *")]
+            .filter((element) => {
+              const overflow = getComputedStyle(element).overflowX;
+              return (overflow === "auto" || overflow === "scroll") && element.scrollWidth > element.clientWidth && element.tabIndex < 0;
+            })
+            .map((element) => element.className || element.tagName)
+        }));
+        assert.deepEqual(layout.pageWidth, [width, width], `${width}px ${view} page overflow`);
+        assert.deepEqual(layout.unreachable, [], `${width}px ${view} scrollable regions without keyboard focus`);
+      }
       await context.close();
     }
   } finally {

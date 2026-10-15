@@ -1,6 +1,6 @@
 # How PEP content is built
 
-Open the [interactive companion](index.html) to scan the complete path and inspect one stage at a time. It embeds its diagram, styles, data and interaction, so the core reading works from `file://`, offline and without JavaScript.
+Open the [interactive companion](index.html) to scan the complete path and inspect one stage at a time. **Simple** is the default six-stage guide; **Detailed** adds the authenticated correction loops and stage-adjacent failure disclosures. The same file is the Claude-Artifact-ready source. It embeds both diagrams, styles, data and interaction, so the core reading works from `file://`, offline and without JavaScript. Review [`PUBLICATION-SAFETY.md`](PUBLICATION-SAFETY.md) before any separately authorized public share.
 
 ## The six-stage path
 
@@ -10,6 +10,20 @@ Open the [interactive companion](index.html) to scan the complete path and inspe
 4. **Verify — bind claims and exercise final behavior.** Source receipts bind current official documentation to artifact hashes; video receipts separately prove availability and duration. Local gates check structure, offline and sandboxed behavior, accessibility, responsiveness, timing and companion parity. Sources: [`../tools/validators.md`](../tools/validators.md), [`../tools/evidence.md`](../tools/evidence.md), [`../../tools/pep`](../../tools/pep).
 5. **Review + improve — apply independent judgment.** Fresh education and technology critics review the same candidate independently. A non-author reconciles every finding; the author corrects accepted findings; relevant critics recheck fresh hashes. One second correction loop is allowed; a third escalates. Sources: [`../workflow.md`](../workflow.md) §§2.3–2.4, [`../tools/evidence.md`](../tools/evidence.md), [`../../tools/checks/T25-critic-gate.mjs`](../../tools/checks/T25-critic-gate.mjs).
 6. **Deliver — reconcile, approve and hand off neutrally.** Align declarations, learner files and evidence; regenerate the scope-local lock; open a focused PR; pass CI; obtain approval. `pep export` and `pep export-lab` create ignored neutral bundles. Platform conversion, upload and publication remain outside this repository. Sources: [`../workflow.md`](../workflow.md) §4, [`../../../.github/workflows/ci.yml`](../../../.github/workflows/ci.yml), [`../lab-contract.md`](../lab-contract.md).
+
+### Detailed correction loops
+
+The Detailed tab preserves the same happy path and shows bounded returns to the smallest owner:
+
+- unclear scope or source versions return to Input/clarification before learner bytes advance;
+- catalog/tree mismatches return to Design;
+- artifact and deterministic-gate defects return to the owning authoring step, followed by affected-gate reruns;
+- accepted education or technology findings move through non-author reconciliation, correction and fresh same-role recheck; a second loop is allowed once and a third escalates;
+- stale receipts, solved-run records, review bindings or locks require fresh exact-head proof and affected checks;
+- CI/tooling defects return to the responsible content or tooling stage;
+- a platform-owner rejection returns to the owning stage and requires a new neutral export, but platform acceptance remains external and untracked.
+
+Each closed disclosure names the failure in plain language. Opening it identifies what failed, where work returns, what evidence refreshes and what permits resuming.
 
 ### Real branches, only where applicable
 
@@ -77,18 +91,20 @@ The producer is `tt-a1i/archify` **v3.0.1**, annotated tag object `679f195584e42
 
 Tracked assets:
 
-- [`golden-path.archify.json`](golden-path.archify.json): six-stage typed input;
-- [`reproduce-diagram.mjs`](reproduce-diagram.mjs): deterministic render, SVG adaptation and offline drift check;
-- [`diagram-provenance.json`](diagram-provenance.json): producer, input, raw render, script and final SVG hashes;
-- [`golden-path.svg`](golden-path.svg): adapted SVG embedded byte-for-byte in `index.html`;
-- [`bind-diagram.mjs`](bind-diagram.mjs): checks that byte binding.
+- [`golden-path.archify.json`](golden-path.archify.json), [`golden-path.svg`](golden-path.svg), [`diagram-provenance.json`](diagram-provenance.json) and [`reproduce-diagram.mjs`](reproduce-diagram.mjs): Simple source, adapted SVG, hashes and deterministic drift check;
+- [`detailed-architecture.archify.json`](detailed-architecture.archify.json), [`detailed-architecture.svg`](detailed-architecture.svg), [`detailed-diagram-provenance.json`](detailed-diagram-provenance.json) and [`reproduce-detailed-diagram.mjs`](reproduce-detailed-diagram.mjs): Detailed source, adapted SVG, hashes and deterministic drift check;
+- [`bind-diagram.mjs`](bind-diagram.mjs): proves both adapted SVGs are embedded byte-for-byte in `index.html`.
 
-Current input SHA-256 is `92ae09ca55005a721e97647ced74137c639fdc719318c13a6d73b6158e5feecd`; raw Archify HTML is `af0f705ad0fef143e6755444527cf4b6797d707f3a4dbc2b05c4df44fe475b9a`; final SVG is `5ca3cf3ea81b51c00fead395da14840ca8f14eb4e3d3e00667e47e1150775f21`.
+Simple hashes remain: input `92ae09ca55005a721e97647ced74137c639fdc719318c13a6d73b6158e5feecd`; raw Archify HTML `af0f705ad0fef143e6755444527cf4b6797d707f3a4dbc2b05c4df44fe475b9a`; final SVG `5ca3cf3ea81b51c00fead395da14840ca8f14eb4e3d3e00667e47e1150775f21`.
+
+Detailed hashes are: input `80f7d1152b9fcc2642f0b4e60aaf61d1005ea693558610d3c38597695f0aa90e`; raw Archify HTML `14325849945e85206569ffbdfb823f3b05fde8b513953f9e29edb53338e898ea`; final SVG `5e15d4dd8d0221ed2dcad862b40adf2fe1f2773aac7b86c707bc21f08e0bb0e8`.
 
 After obtaining and verifying the pinned source archive recorded in `diagram-provenance.json`, reproduce without network behavior:
 
 ```sh
 node authoring/docs/content-workflow/reproduce-diagram.mjs \
+  --archify-root /path/to/extracted/archify-v3.0.1
+node authoring/docs/content-workflow/reproduce-detailed-diagram.mjs \
   --archify-root /path/to/extracted/archify-v3.0.1
 node authoring/docs/content-workflow/bind-diagram.mjs --check
 ```
