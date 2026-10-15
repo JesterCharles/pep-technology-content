@@ -1,0 +1,53 @@
+// Practice quiz: Tables, keys and relationships
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: sql-jdbc-foundations/relational-design/tables-keys-and-relationships
+
+::o1 why unique and not null::Why must every value in a primary key column be unique and never null? {
+=Because the key is how each row is identified, and two rows with the same key or a row with no key could not be told apart #Correct. PostgreSQL enforces both rules for a primary key so that every row has one identity.
+~Because unique values sort faster #Not quite. Speed is not the reason; identity is.
+~Because PostgreSQL stores nulls in a different file #Not quite. Nulls are allowed in ordinary columns; a primary key forbids them because a row needs an identity.
+~They need not be unique; only not null is required #Not quite. A primary key requires both: unique and not null.
+}
+
+::o1 spot the key::A table students has columns student_number, name and email. Several students share a name, every student has a student number, and no two have the same one. Which column suits the primary key best? {
+=student_number #Correct. It is present for every row and never repeats, which is what a primary key needs.
+~name #Not quite. Names repeat, and a primary key must be unique.
+~email and name together, because both are text #Not quite. Being text says nothing about uniqueness; student_number already identifies each row.
+~No column; PostgreSQL picks one for you #Not quite. You declare the primary key yourself.
+}
+
+::o2 orphan insert::books.author_id references authors (id). Authors 1 and 2 exist. Which insert into books does PostgreSQL reject? {
+=INSERT INTO books VALUES (20, 'Dawn', 5); #Correct. No author has id 5, so the foreign key rejects the new book.
+~INSERT INTO books VALUES (21, 'Parable of the Sower', 1); #Not quite. Author 1 exists, so the link is valid.
+~INSERT INTO books VALUES (22, 'The Dispossessed', 2); #Not quite. Author 2 exists, so the link is valid.
+~None of them; foreign keys are only checked on delete #Not quite. A foreign key is checked when a child row is inserted or updated, and when a parent is deleted.
+}
+
+::o2 parent delete::Book 10 references author 1. You run DELETE FROM authors WHERE id \= 1; with the default foreign key settings. What happens? {
+=It is rejected because book 10 still references author 1 #Correct. The error says the key is still referenced; delete or change book 10 first.
+~Author 1 and book 10 are both deleted #Not quite. That only happens if the foreign key was declared ON DELETE CASCADE; the default rejects the delete.
+~Author 1 is deleted and book 10 keeps author_id 1 #Not quite. That would leave a book pointing at nothing, which the foreign key prevents.
+~Book 10's author_id is set to null #Not quite. That needs ON DELETE SET NULL; the default rejects the delete.
+}
+
+::o2 child delete::Book 10 references author 1. Is DELETE FROM books WHERE id \= 10; allowed? {
+=Yes; deleting a child row never breaks the link, because nothing points at the book #Correct. Only the referencing side is checked, so removing a child is always allowed by this foreign key.
+~No; the book is referenced by its author #Not quite. The author does not point at the book; the book points at the author.
+~Only if author 1 is deleted first #Not quite. Author 1 cannot be deleted first while the book still references it.
+~No; rows with a foreign key cannot be deleted #Not quite. Child rows can always be deleted.
+}
+
+::o3 classify::A doctor sees many patients, and a patient sees many doctors over time. What kind of relationship is this, and what does it need? {
+=Many-to-many; it needs a junction table such as appointments (doctor_id, patient_id) #Correct. Both directions are many, so each pairing becomes one row in a junction table with a foreign key to each side.
+~One-to-many; add doctor_id to patients #Not quite. A single doctor_id column holds one doctor, but a patient sees many.
+~One-to-many; add patient_id to doctors #Not quite. A single patient_id column holds one patient, but a doctor sees many.
+~One-to-one; merge the two tables #Not quite. Each side relates to many of the other.
+}
+
+::o3 where the key goes::Each order belongs to exactly one customer, and a customer can place many orders. Where does the foreign key go? {
+=In orders, as orders.customer_id #Correct. In a one-to-many relationship the foreign key sits on the many side.
+~In customers, as customers.order_id #Not quite. One column in customers could hold only one order.
+~In a junction table customer_orders #Not quite. A junction table is for many-to-many; this is one-to-many.
+~In both tables #Not quite. One foreign key on the many side is enough.
+}

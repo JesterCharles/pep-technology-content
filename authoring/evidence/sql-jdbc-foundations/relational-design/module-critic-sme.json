@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "pep-m-sql-critic-sme",
+  "reviewedPath": "authoring/catalog/sql-jdbc-foundations/relational-design/module.json",
+  "reviewedSha256": "5d902bdc517254bbad08d7cd44a4d0624a0df4f750437726a6151bf700286c69",
+  "artifactHashes": {
+    "coding-lab/README.md": "d95837378d8a78b7b9be9979ebb50abfc7bb95174d6195961e7f476fa71edfa5",
+    "coding-lab/expected/test-summary.txt": "697a015421017de714775b1917937332db795a5312552884f293199dd703868a",
+    "coding-lab/lab.json": "2f26b299bf912ff9a481ff63638c88c9a14f0202bb8ecb3a65897854908850da",
+    "coding-lab/starter/pom.xml": "88a3777bf1356022d34fadb8b6fc18c077c47b02a3edf6174ca4d12cd8f69ec2",
+    "coding-lab/starter/schema.sql": "3396446bcf923683df9fa1316ba3a822b9787cfb23e4b4e85c245e8e1b563b1e",
+    "coding-lab/tests/relational/LabDatabase.java": "a5fcc623a272559c54fb0eb2c9bcd76e058d96a17fd05f74e5dc58986b5d80df",
+    "coding-lab/tests/relational/SchemaTest.java": "1b9fe4dc3c99392f30d65e4c0150e48b6c04d3df261caeea0baf76a39df0e47d"
+  },
+  "findings": [
+    {
+      "id": "relational-design-sme-001",
+      "severity": "critical",
+      "location": {
+        "file": "sql-jdbc-foundations/relational-design/coding-lab/tests/relational/LabDatabase.java",
+        "line": 52
+      },
+      "claim": "Before creating the lab database, the public test helper unconditionally executes DROP DATABASE IF EXISTS relational_design_lab. A learner-owned, unrelated database with that common fixed name is irreversibly removed; the reproduced run deleted a pre-existing marker database. This violates the lab cleanup boundary.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/sql-dropdatabase.html",
+          "section": "DROP DATABASE \u2014 remove a database; Description and Notes",
+          "retrievedAt": "2026-10-14T19:40:44Z",
+          "textSha256": "925cb856ae423169411ef79928864ea7b1dd41aa854deae55c4bbe68414dda19"
+        }
+      ],
+      "recommendation": "Generate a collision-resistant per-run database name, create only that name, retain ownership/state in the test process, and drop only the database that this run successfully created. Never pre-drop a fixed name.",
+      "reviewedSha256": "a5fcc623a272559c54fb0eb2c9bcd76e058d96a17fd05f74e5dc58986b5d80df"
+    },
+    {
+      "id": "relational-design-sme-002",
+      "severity": "medium",
+      "location": {
+        "file": "sql-jdbc-foundations/relational-design/coding-lab/tests/relational/SchemaTest.java",
+        "line": 159
+      },
+      "claim": "task5EnrollmentDefaults does not test the requested numeric(5,2) precision or that enrolled_at defaults to CURRENT_TIMESTAMP and is non-null. A scratch schema using numeric(10,2) and a nullable fixed 2000-01-01 default passed all five public tests.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/datatype-numeric.html",
+          "section": "8.1.2 Arbitrary Precision Numbers: precision and scale",
+          "retrievedAt": "2026-10-14T20:11:46Z",
+          "textSha256": "09cf7418cf1f2ef4175d1a836925f42d3990dedfe31272c90aa8ff8bee645622"
+        },
+        {
+          "url": "https://www.postgresql.org/docs/current/ddl-default.html",
+          "section": "5.2 Default Values",
+          "retrievedAt": "2026-10-14T20:11:46Z",
+          "textSha256": "c58c010b8858cf44cff7b0cefc55dd9c4a5590fb48c8f610d3f89f4929fc975a"
+        }
+      ],
+      "recommendation": "Query numeric_precision as well as numeric_scale, inspect or behaviorally distinguish the CURRENT_TIMESTAMP default without wall-clock flakiness, and reject an explicit null if criterion 4 requires every enrollment to record a time.",
+      "reviewedSha256": "1b9fe4dc3c99392f30d65e4c0150e48b6c04d3df261caeea0baf76a39df0e47d"
+    },
+    {
+      "id": "relational-design-sme-003",
+      "severity": "medium",
+      "location": {
+        "file": "sql-jdbc-foundations/relational-design/coding-lab/README.md",
+        "line": 19
+      },
+      "claim": "The prerequisite says psql -d postgres proves that the tests connect the same way, but on Unix psql may use a local socket while LabDatabase always constructs a TCP jdbc:postgresql://localhost:5432/... URL by default. Socket authentication can pass while the lab fails TCP authentication.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/app-psql.html",
+          "section": "psql connection options and defaults",
+          "retrievedAt": "2026-10-14T20:11:46Z",
+          "textSha256": "ec3c62a0c96d5dcfee0f01de546b8c11e04dad0112420c08115013d560420f27"
+        },
+        {
+          "url": "https://jdbc.postgresql.org/documentation/use/",
+          "section": "Connecting to the Database: JDBC URL forms and host",
+          "retrievedAt": "2026-10-14T19:40:44Z",
+          "textSha256": "966705905ece8bf4820bd8fb3d42240bd4522cf15c31dfc95320f8a88d47cedd"
+        }
+      ],
+      "recommendation": "State that the tests use TCP, require PGHOST to be a hostname/IP supported by the helper, and make the prerequisite probe use the same host, port, user and database values as the JDBC URL.",
+      "reviewedSha256": "d95837378d8a78b7b9be9979ebb50abfc7bb95174d6195961e7f476fa71edfa5"
+    },
+    {
+      "id": "relational-design-sme-004",
+      "severity": "medium",
+      "location": {
+        "file": "sql-jdbc-foundations/relational-design/coding-lab/README.md",
+        "line": 31
+      },
+      "claim": "The only documented password mechanism is PGPASSWORD. PostgreSQL explicitly warns that this variable is not recommended because some operating systems expose process environments to other users.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/libpq-envars.html",
+          "section": "32.15 Environment Variables: PGPASSWORD security warning",
+          "retrievedAt": "2026-10-14T19:40:44Z",
+          "textSha256": "3fec2fd7619d13808dadfd988d04645348e3990d6a507195a863c1e96cd76789"
+        }
+      ],
+      "recommendation": "Prefer a password file/PGPASSFILE-compatible flow supported by the pinned driver, or at minimum disclose the official risk and use a throwaway local lab credential. Keep platform-specific file permissions explicit.",
+      "reviewedSha256": "d95837378d8a78b7b9be9979ebb50abfc7bb95174d6195961e7f476fa71edfa5"
+    }
+  ]
+}
