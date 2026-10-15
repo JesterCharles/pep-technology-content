@@ -79,7 +79,7 @@ For the complete artifact, review and delivery rules, read `authoring/AGENTS.md`
 | `authoring/catalog/` | Course/module/topic manifests and generated locks |
 | `curriculum/` | Shared curriculum source snapshots and integrity lock |
 | `components/` | Reusable learner-facing UI fragments |
-| `authoring/docs/` | HTML, lab, workflow and tool contracts |
+| `authoring/docs/` | HTML, lab, workflow and tool contracts; `content-workflow/` offers Simple and Detailed pipeline views |
 | `authoring/evidence/` | Source receipts, critic reports and reconciliation records |
 | `authoring/schemas/` | Manifest and evidence schemas |
 | `authoring/tests/` | Tool tests and fixtures |
