@@ -139,7 +139,7 @@ components:
 This file is the authoritative visual contract for every learner-facing standalone HTML page in this repository (`artifact.html` and course- or module-level learner pages).
 It governs how a page looks and how its interaction is presented.
 Behavior, accessibility gates, metadata and companions stay governed by [`authoring/docs/html-artifact-contract.md`](authoring/docs/html-artifact-contract.md).
-The page anatomy aligns with the HTML contract: position and required minutes live in the topic bar, while objectives remain visible in a Goals list that keeps `data-pep-objectives`.
+The page anatomy aligns with the HTML contract: position and required minutes live in the topic bar, while course objectives live in a compact native disclosure and per-activity completion criteria stay beside the task.
 Existing pages are not restyled by this file; it applies when a page is authored or re-authored.
 
 Keywords: **MUST** is required for new or re-authored pages, **SHOULD** is the default unless a recorded reason says otherwise, **MAY** is optional.
@@ -176,34 +176,34 @@ Wide frame (≥960 px, usually a standalone window):
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────┐
-│ Topic name (h1)    Activity 2 of 4 ▰▰▱▱ · about 14 min  [Restart]        │
+│ Topic (h1)  Activity 2 of 4 ▰▰▱▱  [Objectives] [Restart activity]        │
+│ [1 complete] [2 current] [3 locked] [4 locked]                           │
 ├─────────────────────────────┬────────────────────────────────────────────┤
 │ READING + INSTRUCTIONS  5fr │ WORKSPACE                              7fr │
-│ h2  Step heading            │ h2  Same step, task wording                │
-│ Concept (≤120 words)        │ ┌ editor · model · manipulation ─────────┐ │
-│ Goals      ○ open  ✓ done   │ │                                        │ │
-│ 1. Where to look            │ └────────────────────────────────────────┘ │
-│ 2. What to type or choose   │ [Run] [Reset code]                         │
-│ 3. What you should see      │ Problems | Output        (bounded height)  │
-│ 4. How done shows           │ Status line, verdict and why               │
-│ [Optional anecdote]         │ [Optional challenge, after required work]  │
+│ h2 Step heading             │ h2 Your task                               │
+│ Concept (≤120 words)        │ Exact action and location                   │
+│ Where this fits             │ ┌ editor · model · manipulation ─────────┐ │
+│ What success looks like     │ │                                        │ │
+│ [Need a hint?]              │ └────────────────────────────────────────┘ │
+│ [Optional anecdote]         │ Problems | Output · status and why         │
+│                             │ [Previous activity] [Next activity]         │
 └─────────────────────────────┴────────────────────────────────────────────┘
 ```
 
-Narrow frame (<960 px, including the ~570 px Evolv column and phones). The topic bar wraps and never scrolls sideways:
+Narrow frame (<960 px, including the ~570 px Evolv column and phones). The topic bar and navigation wrap without becoming horizontal scrollers:
 
 ```text
 ┌──────────────────────────────────┐
-│ Topic name (h1)                  │
-│ Activity 2 of 4 ▰▰▱▱  [Restart]  │
+│ Topic (h1) [Objectives] [Restart]│
+│ Activity 2 of 4 · step links     │
 ├──────────────────────────────────┤
 │ h2 Step heading · concept        │
-│ Goals · numbered steps           │
+│ Where this fits · success checks │
+│ Need a hint?                     │
 ├──────────────────────────────────┤
-│ h2 Task · workspace              │
+│ h2 Your task · workspace         │
 │ Run / Reset · Problems | Output  │
-│ Status, verdict and why          │
-│ Optional disclosures, if useful  │
+│ Previous activity · Next activity│
 └──────────────────────────────────┘
 ```
 
@@ -211,36 +211,37 @@ Narrow frame (<960 px, including the ~570 px Evolv column and phones). The topic
 
 - In-page breadcrumb or course / module / topic trail, and "Topic N of M". Evolv already shows where the learner is. [R][T]
 - Loose metadata rows such as "About N minutes · 4 activities · Python 3.10 or later". [R]
-- A collapsible "Objectives" disclosure as header furniture. [R]
+- A page-wide, task-like **Goals** panel. Course objectives inform the destination; they do not behave like extra completion work. [A]
 - Any other page-level chrome above the activity: intro banners, version stamps, duplicate titles and kind badges. [R][T]
 
-Nothing the learner needs to finish the activity is removed; it moves into the bar or the panel:
+Nothing the learner needs to finish the activity is removed:
 
-- The honest minutes label and the learner's position become the quiet text in the topic bar ("Activity 2 of 4 · about 14 min"). They are never a separate row. [A]
-- A required runtime or version note becomes one sentence in the first instruction step that depends on it. [A]
-- The objectives become the **Goals** checklist at the top of the reading panel. It keeps `data-pep-objectives` and one `li` per objective, so the Markdown companion still derives them, and it stays visible instead of collapsed. Goals are phrased as observable outcomes ("A `/` result that is a float"), not repeated as a separate list elsewhere. [R][A]
+- The honest minutes label and activity position remain quiet text in the topic bar. [A]
+- Course objectives move to a compact native **Objectives** or **What you’ll learn** disclosure in that bar. It keeps `data-pep-objectives` and one `li` per objective for companion derivation. [A]
+- Observable requirements move beside their activity under **What success looks like** or **Activity checks** (`data-pep-activity-checks`). They are not labeled Goals. [A]
+- A required runtime or version note becomes one sentence in the first instruction that depends on it. [A]
 
 ### Topic bar (green top band)
 
-One compact row: the topic name as the page's only `h1` (20 px), then activity progress as segments plus text, completion indicators, and the **Restart activity** control. [R]
-It is not sticky, it carries no breadcrumb or course name, and on narrow frames it wraps onto two lines. [T][A]
+One compact wrapping row holds the topic `h1`, progress text and segments, the native objectives disclosure, and **Restart activity**. The objectives summary is the visible control and has a relationship to its body; native click, focus, keyboard and tap always work. Desktop hover MAY additionally open it, but must never be the only path. Escape and outside click close an enhanced disclosure, print expands it, and no JavaScript leaves ordinary `<details>` behavior. [A]
 
 ### Reading and instruction panel (green left)
 
-The narrower region holds, in order: the step heading, the concept (≤120 words per teach step), the Goals checklist with per-goal open/done state, numbered steps (at most about four: where to look, what to type or choose, what you should see, how done shows), and a one-line goal summary ("1 of 3 goals still open"). [R][A]
-It contains no controls that change the workspace, other than links that move focus to it.
+The narrower region holds the step heading, complete core concept, a separate **Where this fits** decision pattern, nearby success checks and optional hint or anecdote disclosures. **Where this fits** states an authentic decision, a good-fit use and an important when-not-to-use boundary; it is practical context, not the anecdote repeated under a new heading. [A]
 
 ### Interactive workspace (purple)
 
-The wider region holds only the current activity's interaction and its own feedback: the editor, model or manipulation; Run and Reset; Problems and Output; and the status line with verdict and explanation. [R][A]
-Results appear next to the control that produced them, not in the reading panel. [A]
+The wider region opens with **Your task**, naming the exact action and where to perform it, then holds only the current activity's interaction and feedback: editor, model or manipulation; Run and Reset; Problems and Output; and status with verdict and explanation. Results appear next to the control that produced them. [R][A]
 
-### Alignment, scrolling and stacking
+### Alignment, scrolling and activity state
 
-- **Wide frames** (≥960 px): two columns, `minmax(0, 5fr) minmax(0, 7fr)`, top-aligned, with a 24 px gap. [R][A] Both regions open with an `h2` naming the same step, so the instruction and its workspace read as one pair. [A]
-- **Narrow frames** (<960 px): one column in the order topic bar → step heading and concept → Goals and steps → workspace → feedback → optional challenge. The steps sit directly above the workspace they describe; an optional Anecdote follows its complete core explanation. [A]
-- **Bounded scrolling.** The main flow never scrolls inside itself. Only the editor body (400 px maximum; 240 px below 480 px) and the Output and Problems panel (240 px maximum; 180 px below 480 px) MAY scroll internally. Each scrollable region is keyboard-focusable and labeled, lets the user leave it at its boundaries, and is followed in reading order by the next page content. Neither panel is fixed or sticky. [T][A]
-- **One activity at a time.** The workspace shows the current activity only. Finished activities collapse to their result, and later ones are not stacked below as a long scroll of extra controls. [R][A]
+- **Wide frames** (≥960 px): two columns, `minmax(0, 5fr) minmax(0, 7fr)`, top-aligned, with a 24 px gap. [R][A]
+- **Narrow frames** (<960 px): one column in source order: topic bar → complete instruction → optional guidance → workspace → feedback → reversible navigation. [A]
+- **Bounded scrolling.** Only the editor body and Problems/Output may scroll internally, at the maxima in [Editor workspace](#editor-workspace). [T][A]
+- **One activity at a time with reversible access.** JavaScript-enhanced pages show one current activity. Completed and current timeline steps are links; future steps remain visibly locked. **Previous activity** sits beside Continue/Next. Moving either direction preserves completed work, attempts, open feedback and current inputs. [A]
+- **State model.** Keep `currentActivity`, an `unlockedThrough` frontier, completion/attempt state by activity, and live input values. Navigation changes only `currentActivity`; completion may advance the frontier; no navigation path decreases it. Restart clears only the current activity to its authored start and its credit, never earlier activities and never duplicate credit. [A]
+- **History and fallback.** Push `#activity-N` on explicit navigation and respond to Back/Forward (`popstate` or `hashchange`) without recreating activity state. Ignore a deep link beyond `unlockedThrough`. Without JavaScript, render every activity as an ordinary anchored section with a table-of-contents link and a **Back to activity N** link; do not author later sections with `hidden`. [A]
+- After explicit keyboard or pointer navigation, focus the destination activity heading. Do not move focus for browser Back/Forward. Native buttons and links provide keyboard and screen-reader names; all remain 44 px touch targets. [A]
 
 ### Interaction matches the objective
 
@@ -260,8 +261,9 @@ Execution stays honest and bounded:
 - Run evaluates only the supported subset, deterministically and offline.
 - Anything outside that subset produces a visible "not supported in this practice editor" problem rather than a guess.
 - Reset code restores the starter.
-- Restart activity clears the activity without duplicate credit.
-- Every control works by keyboard, with no keyboard trap.
+- Restart activity clears only the current activity without duplicate credit or loss in earlier activities.
+- Previous/Next, completed/current timeline links, browser Back/Forward and the no-JavaScript anchors all reach the same activity order.
+- Every control works by keyboard and touch, with no keyboard, focus or scroll trap.
 
 These rules restate the repository contract's honest-simulator, restart and accessibility requirements; they do not add behavior. [A]
 
@@ -376,7 +378,7 @@ Recipes assume the [token reference](#token-reference) is pasted first. Class na
 
 ### Base, focus and motion
 
-New or re-authored pages use `<main class="pep-main" data-pep-responsive>`. The stable marker enrolls that page in the current 320/390/768, touch and zoom QA matrix; add it only when the page actually meets this contract, never as a marker-only migration. Mark the complete instruction block with `data-pep-instructions` and its following interaction with `data-pep-workspace` so reading order is deterministic.
+New or re-authored pages use `<main class="pep-main" data-pep-responsive>`. The stable marker enrolls that page in the current 320/390/768, touch and zoom QA matrix; add it only when the page actually meets this contract, never as a marker-only migration. Add `data-pep-guidance-contract` only when the page also adopts the objectives, fit guidance, reversible navigation, activity checks and hint hooks below. Mark the complete instruction block with `data-pep-instructions` and its following interaction with `data-pep-workspace` so reading order is deterministic.
 
 ```css
 *, *::before, *::after { box-sizing: border-box; }
@@ -416,7 +418,19 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 - Every tap target is at least 44 × 44 px, with at least 8 px between adjacent targets. Nothing works only on hover. [T][A]
 - **Motion** lasts 120 ms for color and border and 200 ms for reveal (opacity plus ≤8 px translate), eased with `cubic-bezier(0.2, 0, 0, 1)`. Do not animate layout properties, loop decoration, or use parallax. Under reduced motion the state change still happens, instantly. [A]
 
-### Topic bar, regions, goals and steps
+### Topic bar, objectives, regions and activity checks
+
+```html
+<header class="pep-topicbar">
+  <h1>Topic name</h1>
+  <span class="pep-topicbar__progress">Activity 2 of 4 · about 14 min</span>
+  <details class="pep-objectives" data-pep-objectives>
+    <summary aria-controls="pep-objectives-body">Objectives</summary>
+    <div id="pep-objectives-body"><ul><li>Explain the topic outcome.</li></ul></div>
+  </details>
+  <button class="pep-btn" type="button" data-pep-reset>Restart activity</button>
+</header>
+```
 
 ```css
 .pep-topicbar {
@@ -424,33 +438,50 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
   padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line);
 }
 .pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
-.pep-topicbar__progress { display: flex; flex: 1 1 260px; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; }
-.pep-topicbar__progress .pep-progress { flex: 1 1 96px; width: 96px; max-width: 160px; }
-.pep-topicbar .pep-btn { flex: 0 0 auto; }
-
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-objectives { position: relative; break-inside: avoid; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
 .pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
 @media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
 .pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-
-.pep-goals { margin: 0; padding: 12px 16px; list-style: none; border: 1px solid var(--pep-line); border-radius: var(--pep-radius-md); background: var(--pep-card); }
-.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pep-line); }
-.pep-goals > li:first-child { border-top: 0; }
-.pep-goals .state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
-.pep-goals .is-done .state { color: var(--pep-success); }
-.pep-steps-list { margin: 0; padding-left: 24px; }
-.pep-steps-list > li + li { margin-top: 8px; }
-
-.pep-chip {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 4px 12px;
-  border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill);
-  background: var(--pep-control); color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans);
-}
-.pep-chip--accent { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-accent-text); }
+.pep-activity-checks { padding: 12px 16px; border: 1px solid var(--pep-line); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+@media print { .pep-objectives > div { display: block !important; width: auto; } }
 ```
 
-- The goal state is a word ("open", "done") plus a check icon when done, never color alone. [R][A]
-- Restart activity is a secondary `pep-btn` in the bar. It is never danger red, and it never asks for confirmation through a dialog. [R][A]
-- Chips are informational labels inside a region ("Single choice", "Python subset"), not header metadata. A chip that acts as a control becomes a button at least 44 px tall. [S][A]
+Native `<details>` is the required no-JavaScript fallback. If script adds hover for a fine pointer, focus and click/tap MUST still open it; Escape closes and returns focus to the summary, outside click closes, and `aria-controls` keeps the visible relationship. The print helper opens objectives before print and restores only what it opened. Restart remains a secondary 44 px button and clears only the current activity. [A]
+
+### Where this fits
+
+Use this required pattern after the core explanation and before task instructions. Keep it separate from the optional anecdote.
+
+```html
+<section data-pep-where-fits aria-labelledby="where-fits">
+  <h2 id="where-fits">Where this fits</h2>
+  <p data-pep-fit-decision><strong>Decision:</strong> Name the real choice a practitioner faces.</p>
+  <p data-pep-fit-good><strong>Good fit:</strong> Name the bounded situation where this concept helps.</p>
+  <p data-pep-fit-boundary><strong>Choose something else when:</strong> Name one important boundary.</p>
+</section>
+```
+
+The decision is authentic rather than rhetorical. The good fit describes actual scale and purpose. The boundary names a materially different tool or structure, not merely “when it is hard.” This section may use necessary domain terms, but contains no answer to the activity. [A]
+
+### Progressive optional hints
+
+Put a native disclosure beside each `data-pep-task data-pep-may-stall` task. Hints are optional guidance, not delayed error feedback.
+
+```html
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-3"
+         data-pep-hint-order="1" data-section-skip>
+  <summary>Need a hint?</summary>
+  <div class="pep-hint__body">
+    <p data-pep-hint-target><strong>Where to act:</strong> In the first placeholder in the editor.</p>
+    <p data-pep-hint-step><strong>Next step:</strong> Identify the value collected on each matching pass.</p>
+  </div>
+</details>
+```
+
+Use one hint when one reasoning step is enough. Multiple hints use contiguous order values and each reveals strictly more: first orient, then decompose, then distinguish a remaining choice. A hint never supplies the final answer, finished expression, reference implementation, private test or exact required output. It carries no objective, interaction, progress, grade or completion hook, is excluded from required time with `data-section-skip`, and remains a keyboard/touch/screen-reader-operable native disclosure without JavaScript. [A]
 
 ### Optional Anecdote and Challenge disclosures
 
@@ -465,7 +496,8 @@ These are optional authoring patterns, not required page furniture. Use at most 
     <span class="pep-optional__cue">Optional example</span>
   </summary>
   <div class="pep-optional__body">
-    <p>A variable is like a labeled shelf: the label stays useful while the value on the shelf can change.</p>
+    <p data-pep-anecdote-story>Imagine a labeled shelf in a busy stockroom: the label stays while different parcels come and go.</p>
+    <p data-pep-anecdote-map>A variable likewise keeps its name while the value it holds can change.</p>
   </div>
 </details>
 
@@ -509,7 +541,9 @@ These are optional authoring patterns, not required page furniture. Use at most 
   (() => {
     let printOpened = [];
     addEventListener('beforeprint', () => {
-      printOpened = [...document.querySelectorAll('details[data-pep-optional]:not([open])')];
+      printOpened = [...document.querySelectorAll(
+        'details[data-pep-optional]:not([open]), details[data-pep-objectives]:not([open]), details[data-pep-hint]:not([open])'
+      )];
       printOpened.forEach(details => { details.open = true; });
     });
     addEventListener('afterprint', () => {
@@ -520,7 +554,9 @@ These are optional authoring patterns, not required page furniture. Use at most 
 </script>
 ```
 
-Both disclosures are closed in authored HTML (no `open` attribute). Native `<summary>` supplies keyboard, touch and screen-reader behavior; scripts do not replace it or move focus after toggling. The print helper changes disclosure state only for printing and restores the authored state. Anecdote content is one accurate simpler explanation, analogy or example with no new prerequisite. Challenge content extends only taught objectives and labels time as additional. Optional descendants carry no `data-interaction`, `data-confidence`, objectives, required progress or completion hook. Opening, attempting, resetting or printing them cannot change required progress, completion, grade, Continue or `pep:budget-minutes`. [A]
+Both disclosures are closed in authored HTML (no `open` attribute). Native `<summary>` supplies keyboard, touch and screen-reader behavior; scripts do not replace it or move focus after toggling. The print helper changes disclosure state only for printing and restores the authored state.
+
+An anecdote contains exactly one `data-pep-anecdote-story`: a concrete everyday story, analogy or plain-language mental model. It is code-free and contains no syntax, pseudocode, API name, terminal command, exact program output, or second copy of the ordinary technical explanation. One optional `data-pep-anecdote-map` sentence (at most 25 words) may connect the story back to the concept in plain language. Core teaching remains complete while it is closed. A challenge extends only taught objectives and labels time as additional. Optional descendants carry no `data-interaction`, `data-confidence`, objectives, required progress or completion hook. Opening, attempting, resetting or printing them cannot change required progress, completion, grade, Continue or `pep:budget-minutes`. [A]
 
 ### Cards and callouts
 
@@ -611,7 +647,52 @@ The Learner quiz shows a card holding "Question 1 of 3", a type chip and a segme
 
 - **Stepper.** Numbered pills with the current step tinted, as in the Learner reference interactive. [S] On narrow widths it wraps; it never scrolls sideways. [A]
 - **Progress.** Segmented, one segment per step, with a text equivalent ("Step 2 of 5") always present. [S][A]
-- **Timelines and process maps.** Use 28 px numbered nodes joined by a 2 px line-strong connector, vertical by default. A horizontal map MAY be used only when it fits 560 px with labels at 13 px or larger. [A]
+- **Timelines and process maps.** Activity steps are anchors. Completed and current anchors are operable; future anchors use `aria-disabled="true"`, are guarded in script, and are not unlocked by URL fragments. A horizontal map MAY be used only when it fits 560 px with labels at 13 px or larger. [A]
+
+Use ordinary anchored sections first, then enhance them. The live page owns richer state than this compact navigation recipe; `renderActivity` must never recreate controls or overwrite values.
+
+```html
+<nav aria-label="Activities"><ol class="pep-steps">
+  <li><a class="pep-step" href="#activity-1" data-pep-activity-link>Activity 1</a></li>
+  <li><a class="pep-step" href="#activity-2" data-pep-activity-link aria-disabled="true">Activity 2</a></li>
+</ol></nav>
+<section id="activity-1" data-pep-activity>…</section>
+<section id="activity-2" data-pep-activity>… <a href="#activity-1" data-pep-back-link>Back to activity 1</a></section>
+<div class="pep-activity-actions" role="group" aria-label="Activity navigation">
+  <button class="pep-btn" type="button" data-pep-previous>Previous activity</button>
+  <button class="pep-btn pep-btn--primary" type="button" data-pep-next>Next activity</button>
+</div>
+```
+
+```css
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions .pep-btn { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn { flex: 0 1 auto; } }
+@media print { .pep-activity-actions, nav[aria-label="Activities"] { display: none; } [data-pep-activity] { display: block !important; } }
+```
+
+```js
+const state = { currentActivity: 1, unlockedThrough: 1, completed: new Set() };
+function go(number, mode = 'push', moveFocus = true) {
+  if (number < 1 || number > state.unlockedThrough) return;
+  state.currentActivity = number; // Do not rebuild controls: their values remain in the DOM.
+  document.querySelectorAll('[data-pep-activity]').forEach((section, index) => {
+    section.hidden = index + 1 !== number;
+  });
+  document.querySelectorAll('[data-pep-activity-link]').forEach((link, index) => {
+    const n = index + 1;
+    if (n === number) link.setAttribute('aria-current', 'step');
+    else link.removeAttribute('aria-current');
+    if (n > state.unlockedThrough) link.setAttribute('aria-disabled', 'true');
+    else link.removeAttribute('aria-disabled');
+  });
+  history[mode === 'replace' ? 'replaceState' : 'pushState']({ activity: number }, '', `#activity-${number}`);
+  if (moveFocus) document.querySelector(`#activity-${number} h2`)?.focus();
+}
+addEventListener('popstate', () => go(Number(location.hash.match(/activity-(\d+)/)?.[1]), 'replace', false));
+```
+
+A production page also binds Previous/Next, guards timeline clicks, and sets disabled states. Completion advances `unlockedThrough`; revisiting does not. Restart snapshots or explicitly restores only the current activity's authored controls, feedback and credit. Because state lives entirely in the standalone page and guarded storage is optional, navigation works offline and in the sandbox. [A]
 
 ### Figures, diagrams, charts and tables
 
@@ -664,8 +745,8 @@ Diagrams are inline SVG, never raster screenshots of diagrams. They scale to the
 .pep-code .tok-key { color: var(--pep-accent-text); }
 .pep-code .tok-str { color: var(--pep-success); }
 .pep-code .tok-com { color: var(--pep-text-muted); }
-.pep-code mark { background: var(--pep-accent-soft); color: inherit; border-radius: 4px; }
-:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); }
+.pep-code mark { background: var(--pep-accent-soft); color: inherit; border-radius: var(--pep-radius-sm); }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); }
 .pep-terminal { padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); overflow-wrap: anywhere; }
 .pep-terminal:focus-within { border-color: var(--pep-focus); box-shadow: 0 0 0 1px var(--pep-focus); }
 .pep-terminal .prompt { color: var(--pep-accent-text); font-weight: 600; }
@@ -675,6 +756,38 @@ Diagrams are inline SVG, never raster screenshots of diagrams. They scale to the
 - Code blocks are under 30 lines, and under 15 in a question. Wrap long lines rather than scroll sideways. [T][A]
 - Syntax color is limited to three roles (keyword, string, comment). Never use green or red for anything that could read as a verdict, except `tok-str`, which never sits next to a correctness badge. [A]
 - An unsupported command shows a warning callout ("Not available in this practice terminal"), not danger red; the learner did nothing wrong. [A]
+
+### Python comprehension activity correction recipe
+
+For Python Slicing and Comprehensions Activity 3, keep the bounded editor but replace the vague “type the loop as comprehensions” prompt with the following downstream contract. This is a correction recipe, not learner-byte content for this change.
+
+- Put a concise **Your task** block immediately adjacent to `comprehensions.py`, before the editor in source and visual order.
+- Name two edits in order: (1) replace the `result` placeholder with a **list comprehension** equivalent to the shown loop; (2) replace the `doubled` placeholder with a **set or dict comprehension** that doubles only prices over 10. Say explicitly that each `___` stands for one whole comprehension, not one number or keyword.
+- Explain the shown loop before asking for the rewrite: it visits `prices`, keeps values over 10, doubles each kept value, and produces `[24, 24, 60]`; the repeated 24 is retained because the loop builds a list. This observable loop result is context, not a client-visible finished comprehension.
+- Keep **Problems**, **Output**, Run, Reset code and the bounded editor visible. Problems identifies an unsupported shape or a location to fix; Output compares the learner's resulting values with the shown loop behavior. Never embed a complete expression, answer key, hidden solution, reference implementation or private test in HTML, JavaScript, static alternatives or hint copy.
+- Add the separate **Where this fits** decision: comprehensions fit small, readable, in-memory transform/filter work that builds a new collection. Prefer an ordinary loop when the purpose is a side effect, or when the work needs multi-step branching, exception handling or early exit.
+- Supply progressive hints in this order: identify the **collected value**; identify the `for` **source**; then decide whether the optional **filter** is needed. For the second placeholder, a later hint may ask whether duplicates or key-to-value association matter, but it cannot provide the final expression.
+
+```html
+<section id="task-3" data-pep-task data-pep-may-stall data-pep-instructions>
+  <h2>Your task</h2>
+  <ol>
+    <li>In <code>result = ___</code>, replace the placeholder with one list comprehension that matches the shown loop.</li>
+    <li>In <code>doubled = ___</code>, replace the placeholder with one set or dict comprehension for doubled prices over 10.</li>
+  </ol>
+  <p>Each <code>___</code> stands for one whole comprehension. The shown loop keeps qualifying prices, doubles them, and builds <code>[24, 24, 60]</code>.</p>
+  <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
+    <summary>Need a hint?</summary>
+    <div class="pep-hint__body">
+      <p data-pep-hint-target><strong>Where to act:</strong> Start in the first placeholder after <code>result =</code>.</p>
+      <p data-pep-hint-step><strong>Next step:</strong> Name the value the loop adds on each qualifying pass; that becomes the collected-value part.</p>
+    </div>
+  </details>
+</section>
+<div data-pep-workspace="code"><!-- bounded editor, then Problems and Output --></div>
+```
+
+**Comprehension check.** After reading only **Your task** and hint 1, a learner must be able to point to the first placeholder and state that it needs a list comprehension whose collected value matches what the loop appends; they need not know or see the finished expression. A deterministic review test should ask that question verbatim. [A]
 
 ### Editor workspace
 
@@ -760,9 +873,12 @@ Known `@1` gaps, accepted until a component version changes them: some fragments
 - Convey state with words and icons as well as color.
 
 - Follow the [Page anatomy](#page-anatomy): one topic bar, a reading and instruction panel, and a workspace, stacking below 960 px.
-- Keep every instruction needed to finish the activity, and keep objectives as the visible Goals checklist (`data-pep-objectives`).
+- Keep course objectives in the topic-bar native disclosure (`data-pep-objectives`) and per-activity completion criteria beside the task (`data-pep-activity-checks`).
+- Put **Previous activity** beside Next/Continue; preserve activity work across both directions and browser history while keeping future steps locked.
+- Put native progressive **Need a hint?** disclosures beside tasks where a learner may reasonably stall, outside required progress, grading and time.
+- Include a separate **Where this fits** decision, good fit and when-not-to-use boundary.
 - Give code-writing objectives the editor workspace, not piece selectors; keep its instructions first, mobile controls visible, heights bounded and no-JavaScript reading complete.
-- Keep Optional Anecdote and Challenge disclosures native, closed by default, public-safe and outside all required objective, progress, completion and time accounting.
+- Keep Optional Anecdote and Challenge disclosures native, closed by default, public-safe and outside all required objective, progress, completion and time accounting. Keep anecdotes concrete, everyday and code-free.
 
 **SHOULD**
 
@@ -779,9 +895,11 @@ Known `@1` gaps, accepted until a component version changes them: some fragments
 **Don't**
 
 - Recreate Learner app chrome: top bar, breadcrumbs, sprint or topic rails, assistant buttons, "AI" badges, avatars, role or device switchers, kind badges, or completion buttons.
-- Put a breadcrumb, a "Topic N of M" line, a loose metadata row, or a collapsed Objectives disclosure above the activity.
+- Put a breadcrumb, a "Topic N of M" line, a loose metadata row, a page-wide Goals panel, or objectives outside the topic bar.
+- Rely on hover for objectives, hints or navigation.
+- Use an anecdote for code, syntax, commands, output or a second technical explanation.
 - Make learners assemble code from operand, operator or token radio grids when they could type it.
-- Stack several activities' controls in one long workspace, or put results in the panel away from the control that made them.
+- Stack several activities' controls in one long enhanced workspace, lock completed steps, discard inputs during navigation, or put results away from the control that made them.
 - Reuse the reference annotation colors (red, green, purple) as UI colors.
 - Carry over admin patterns: preview-state toggles, dashed debug chips, bulk-action toolbars, dense data grids, settings forms.
 - Use orange or kind colors, gradients, glassmorphism, drop shadows, neon glows, or decorative motion.
@@ -840,7 +958,7 @@ Paste this block first in every page's `<style>`. Light values are the default a
 @media print {
   body { background: #FFFFFF; }
   .pep-noprint { display: none !important; }
-  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional { break-inside: avoid; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
   .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
 ```
@@ -908,7 +1026,7 @@ Measured contrast (WCAG 2.x), lowest pairing per role:
 - **Contrast fixes.** Accent text is `#A595FF` because `#8B78FF` measures 4.27:1 on cards. Line strong is added because `#333A48` measures 1.4:1 and cannot mark controls. The sunken well and soft tints are each computed and contrast-checked.
 - **System fonts.** Font files are not embedded, because the repository contract requires system font stacks.
 - **Layout and motion.** Breakpoints at 480 and 960 px, the 1200 px standalone max width, the 68ch measure, motion tokens, print scoping, the components bridge, and all recipe compositions.
-- **Anatomy.** The 5fr / 7fr split rounds the [R] proportions. The stacked order, bounded editor and output heights, a visible Goals list that keeps `data-pep-objectives`, and the minutes label in the topic bar keep the contract's content (position, honest minutes, objectives) without the removed furniture.
+- **Anatomy.** The 5fr / 7fr split rounds the [R] proportions. The stacked order, bounded editor and output heights, topic-bar objectives, activity-local checks, reversible navigation and the minutes label keep required context without page-wide Goals furniture.
 
 **Not carried over** (app or admin chrome, or print-only):
 

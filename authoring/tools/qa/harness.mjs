@@ -197,6 +197,14 @@ async function focusVisible(locator) {
 }
 
 async function perform(target, action, options = {}) {
+  if (action.do === "goBack") {
+    await target.goBack();
+    return;
+  }
+  if (action.do === "goForward") {
+    await target.goForward();
+    return;
+  }
   const locator = target.locator(action.selector);
   const timeout = action.timeoutMs ?? 5000;
   if (action.do.startsWith("expect")) {
@@ -310,14 +318,25 @@ async function checkOffline(browser, topic) {
   await withPage(browser, topic, {}, async () => {});
   await withPage(browser, topic, { javaScriptEnabled: false, label: "no-js" }, async (page) => {
     if (!(await page.locator("body").innerText()).trim()) throw new Error("no-JavaScript reading is empty");
-    const disclosures = page.locator("details[data-pep-optional]");
+    const disclosures = page.locator("details[data-pep-optional], details[data-pep-hint], details[data-pep-objectives]");
     for (let index = 0; index < await disclosures.count(); index++) {
       const disclosure = disclosures.nth(index);
       const summary = disclosure.locator(":scope > summary");
-      if (!(await summary.innerText()).trim()) throw new Error("optional disclosure has no no-JavaScript summary");
+      if (!(await summary.innerText()).trim()) throw new Error("native disclosure has no no-JavaScript summary");
       await summary.click();
-      if ((await disclosure.getAttribute("open")) === null) throw new Error("optional disclosure did not open without JavaScript");
-      if (!(await disclosure.innerText()).trim()) throw new Error("optional disclosure has no no-JavaScript content");
+      if ((await disclosure.getAttribute("open")) === null) throw new Error("native disclosure did not open without JavaScript");
+      if (!(await disclosure.innerText()).trim()) throw new Error("native disclosure has no no-JavaScript content");
+    }
+    if (await page.locator("[data-pep-guidance-contract]").count()) {
+      const activities = page.locator("[data-pep-activity]");
+      if ((await activities.count()) < 2) throw new Error("guided no-JavaScript reading requires ordinary activity sections");
+      for (let index = 0; index < await activities.count(); index++) {
+        if (!(await activities.nth(index).isVisible())) throw new Error("no-JavaScript activity section is hidden");
+      }
+      if (!(await page.locator('a[data-pep-activity-link][href^="#activity-"]').count()) ||
+          !(await page.locator('a[data-pep-back-link][href^="#activity-"]').count())) {
+        throw new Error("guided no-JavaScript reading requires activity anchors and back links");
+      }
     }
     const codeWorkspaces = page.locator('[data-pep-workspace="code"]');
     for (let index = 0; index < await codeWorkspaces.count(); index++) {
@@ -374,8 +393,34 @@ async function checkBehavior(browser, topic) {
     await execute(page, spec.restart.actions);
     await assertState(page, spec.restart.credit);
   });
+  if (spec.guidance?.activityNavigation) {
+    await withPage(browser, topic, { label: "activity-navigation" }, async (page) => {
+      await execute(page, spec.guidance.activityNavigation);
+    });
+  }
+  if (spec.guidance?.activityNavigationKeyboard) {
+    await withPage(browser, topic, { label: "activity-navigation-keyboard" }, async (page) => {
+      await execute(page, spec.guidance.activityNavigationKeyboard, { keyboard: true });
+    });
+  }
+  if (spec.guidance?.activityNavigationTouch) {
+    await withPage(browser, topic, { label: "activity-navigation-touch", touch: true }, async (page) => {
+      await execute(page, spec.guidance.activityNavigationTouch, { touch: true });
+    });
+  }
+  if (spec.guidance?.objectives) {
+    await withPage(browser, topic, { label: "objectives-keyboard" }, async (page) => {
+      await execute(page, spec.guidance.objectives);
+    });
+    await withPage(browser, topic, { label: "objectives-touch", touch: true }, async (page) => {
+      await execute(page, spec.guidance.objectivesTouch ?? spec.guidance.objectives, { touch: true });
+    });
+  }
+  if (spec.guidance?.hints) {
+    await withPage(browser, topic, { label: "hints" }, async (page) => execute(page, spec.guidance.hints));
+  }
   await withPage(browser, topic, { label: "optional-accounting" }, async (page) => {
-    const disclosures = page.locator("details[data-pep-optional]");
+    const disclosures = page.locator("details[data-pep-optional], details[data-pep-hint]");
     if ((await disclosures.count()) === 0) return;
     const snapshot = async () => ({
       completion: spec.completion.attribute

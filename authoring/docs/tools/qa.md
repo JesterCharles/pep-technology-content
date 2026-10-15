@@ -35,7 +35,10 @@ The three required routes must independently finish the topic:
 `simulatorEdges` records realistic unsupported, partial, or look-alike states and their assertions.
 `progress` separately asserts that each route reached 100%. `restart.actions` completes, restarts, and repeats an
 activity; `restart.credit` proves credit was not duplicated. `keyboard` is the complete success route using semantic
-keyboard activation. The harness requires visible focus at each
+keyboard activation. A page enrolled in `data-pep-guidance-contract` may add `guidance.activityNavigation`, its
+`activityNavigationKeyboard` and `activityNavigationTouch` variants, `guidance.objectives`,
+`guidance.objectivesTouch` and `guidance.hints`; the contract fixture demonstrates the exact
+shape and exercises preservation, future locks, browser history, Restart, disclosure closing and native hint semantics. The harness requires visible focus at each
 keyboard activation and verifies the same completion assertion. A focus indicator may be on the control or a
 `:focus-within` ancestor, but it must appear on focus and its outline or shadow must contrast at least 3:1 with the
 adjacent background.
@@ -45,6 +48,7 @@ adjacent background.
 Each action has `do` and `selector`. Supported actions are:
 
 - input: `click`, `check`, `fill` (`value`), `press` (`key`), and `select` (`value`);
+- page history (no selector): `goBack` and `goForward`;
 - assertions: `expectText` (`text`, a regular expression), `expectValue` (`value`, a regular expression),
   `expectAttribute` (`attribute` and `equals`), `expectVisible`, `expectHidden`, `expectEnabled`,
   `expectDisabled`, and `expectFocus`.
@@ -132,12 +136,15 @@ Git `tNN.json` files, and the reusable route roles of AI `spec.js`. No course-1 
 
 - **T09:** loads the exact `artifact.html` through `file://`, blocks network and sibling `file:` requests (only the
   page itself may load), and fails console errors, uncaught exceptions, and attempted network or sibling-file access.
-  It also loads with JavaScript disabled: the document must remain non-empty, native optional disclosures must open
-  and expose their content, and each `[data-pep-workspace="code"]` must expose one non-empty
-  `<noscript data-pep-no-js>` reading.
+  It also loads with JavaScript disabled: the document must remain non-empty; native optional, hint and objective
+  disclosures must open; guidance-contract activities must all be visible through ordinary anchors and back links;
+  and each `[data-pep-workspace="code"]` must expose one non-empty `<noscript data-pep-no-js>` reading.
 - **T10:** runs all three routes inside an iframe whose only sandbox token is `allow-scripts`. Its opaque origin makes
   unguarded Web Storage access fail naturally.
-- **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion.
+- **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion. When a
+  `guidance` path is present, it also proves activity-input preservation, future-step locks, browser Back/Forward,
+  current-only Restart, keyboard/click and touch objectives, progressive hints, and unchanged accounting while hints
+  or optional disclosures are used.
 - **T12:** permits no serious or critical axe findings; runs the keyboard and reduced-motion success routes; requires
   `aria-live`; checks direct body text at 4.5:1 and rendered borders at 3:1 in forced light and dark themes. Fully
   transparent borders are not rendered and are excluded.

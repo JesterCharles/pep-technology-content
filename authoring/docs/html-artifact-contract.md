@@ -32,24 +32,36 @@ Reusable authoring components are copied into the learner artifact. A source mar
 
 ## 4. Interactive learning shape
 
-- Follow root `DESIGN.md` for page anatomy. New or re-authored pages mark their root `<main data-pep-responsive>` to opt into the current deterministic 320/390/768, touch and zoom contract; migration is per page, never a marker-only mass edit. A topic bar contains the learner's activity position, honest "about N min" label and usable **Restart activity** control; 2-3 observable objectives remain visible as a Goals list inside `[data-pep-objectives]`.
+- Follow root `DESIGN.md` for page anatomy. New or re-authored pages mark their root `<main data-pep-responsive>` to opt into the deterministic 320/390/768, touch and zoom contract; migration is per page, never a marker-only mass edit. Add `data-pep-guidance-contract` only when the page also adopts every guidance hook below.
+- A topic bar contains activity position, honest "about N min" text, a usable **Restart activity** control and one native `[data-pep-objectives]` disclosure labeled **Objectives** or **What you’ll learn**. Objectives are informational and print expanded; they are not a page-wide Goals task. Native focus/click/keyboard/tap remain available even if fine-pointer hover also opens it; Escape and outside click close the enhanced view.
 - The learner predicts before any teaching.
 - The page builds one mental model.
 - Teach then do, 2-3 times, with at most 120 words per teach step and nothing used before it is taught.
-- In source and visual reading order, all instructions needed for an interaction precede that interaction. A page under the current `data-pep-responsive` contract marks the pair with `data-pep-instructions` and `data-pep-workspace`; both are present and instructions come first.
+- In source and visual reading order, all instructions needed for an interaction precede that interaction. A page under the current `data-pep-responsive` contract marks the pair with `data-pep-instructions` and `data-pep-workspace`; both are present and instructions come first. A task heading says **Your task** and names the action and location precisely enough that the learner can state what to do and where.
+- After the core explanation and before the task, a `[data-pep-where-fits]` section gives an authentic decision (`data-pep-fit-decision`), a good-fit use (`data-pep-fit-good`) and a when-not-to-use boundary (`data-pep-fit-boundary`). It is distinct from the optional anecdote and contains no activity answer.
+- Per-activity requirements stay beside that activity in `[data-pep-activity-checks]`, labeled **What success looks like** or **Activity checks**, never Goals or course objectives.
 - An apply check asks for a real confidence rating before showing feedback.
 - A recap closes the required path, with an optional cheat sheet marked `data-section-skip`.
 - The page offers at least 2 genuine manipulations, not just reading and clicking "next".
 - Every option is explained, right or wrong.
 - A wrong answer gets one retry, then the answer is revealed.
 - An answer locks once settled.
-- Each activity can restart without duplicate credit; the last edit counts. Restart remains a 44 px target at narrow widths, resets the current required activity to its authored start, clears its feedback and credit, and never duplicates credit. It may close optional disclosures; if it resets an optional challenge starter, that reset is still optional and cannot change required progress.
+- Each activity can restart without duplicate credit; the last edit counts. Restart remains a 44 px target at narrow widths, resets only the current required activity to its authored start, clears its feedback and credit, preserves every other activity's work, and never duplicates credit. It does not re-lock an already unlocked activity. It may close optional disclosures; if it resets an optional challenge starter, that reset is still optional and cannot change required progress.
+
+### Reversible activity navigation
+
+- Put an accessible **Previous activity** button (`data-pep-previous`) beside Continue/Next (`data-pep-next`). Use native buttons with visible labels and 44 px targets; do not use a gesture, shortcut or hover as the only navigation.
+- Completed and current timeline steps are revisit-able anchors (`data-pep-activity-link`). Future steps remain visibly locked with `aria-disabled="true"` and script guards until completion advances the unlocked frontier. A URL fragment cannot bypass the frontier.
+- The state model keeps current activity, unlocked frontier, completion/attempt state and live input values separately. Backward, forward and timeline navigation change only current activity; they never rebuild controls, clear values, revoke completion or issue credit.
+- Explicit page navigation pushes `#activity-N`; browser Back/Forward restores the matching unlocked activity through history/hash handling without resetting state. Move focus to the destination heading after an in-page button/link action, not after browser history traversal.
+- With JavaScript disabled, every activity remains an ordinary visible `<section id="activity-N" data-pep-activity>` reached from an `href="#activity-N"` table of contents and followed where useful by an ordinary `data-pep-back-link`. Author source without `hidden`; progressive enhancement hides non-current sections.
+- Navigation and preserved state work from `file://`, offline and in the required sandbox. Screen readers receive activity names, `aria-current="step"`, locked state and a named Previous/Next group. Print shows all activity sections and omits only navigation controls.
 
 ### Optional learner disclosures
 
 A page MAY include either, both or neither of these native disclosures. Omit one when it adds no specific learner value; never fill it with boilerplate. The required teaching and practice remain complete when disclosures are absent or never opened.
 
-- **Anecdote** uses `<details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>`. Its `<summary>` learner label is **Another way to think about it** and includes the cue **Optional example**. It gives one simpler explanation, analogy or concrete example, remains technically accurate, introduces no prerequisite and never replaces the core explanation.
+- **Anecdote** uses `<details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>`. Its `<summary>` learner label is **Another way to think about it** and includes **Optional example**. Its body contains exactly one `data-pep-anecdote-story`: a concrete everyday story, analogy or plain-language mental model. It is code-free: no code or syntax, pseudocode, API name, terminal command, exact program output or second copy of the technical explanation. One optional `data-pep-anecdote-map` may connect the story to the concept in one short plain-language sentence (at most 25 words). It remains accurate, introduces no prerequisite and never replaces the complete core explanation.
 - **Challenge** uses `<details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>`. Its `<summary>` label is **Challenge (optional)**. Its body states an estimated optional time in `[data-pep-optional-time]` and clear success criteria in `[data-pep-success-criteria]`. It extends or combines only objectives already taught.
 
 Both disclosures are closed by default and appear inside the relevant activity section: Anecdote after the complete core explanation, and Challenge after the required practice and feedback. They do not create heading-level jumps; a disclosure nested under an `h2` activity may use `h3` internally, but its summary is not treated as a heading. Native toggle focus stays on `<summary>`; scripts do not move focus on open or close. Summary and any controls are at least 44 × 44 px, keyboard and touch operable, visibly focused, and screen-reader named. Disclosure content cannot depend on hover, a shortcut or JavaScript and remains in source order for no-JavaScript and assistive-technology reading.
@@ -59,6 +71,14 @@ Optional disclosures and descendants MUST NOT carry `data-interaction`, `data-co
 A code challenge may reuse the page's editor with a visibly resettable starter, but is not a second required workspace. It MUST NOT contain or expose a complete answer, hidden solution, rubric, secret test, answer key or client-visible reference implementation. All optional copy is public-safe because the standalone HTML is learner-visible source.
 
 In print, both disclosure bodies expand and retain their **Optional example** / **Challenge (optional)** labels and optional-time cue; interactive buttons may be omitted. A `beforeprint` listener may open closed optional disclosures and an `afterprint` listener MUST restore only those it opened. Without JavaScript, native disclosures remain readable and can be opened before printing. Restart does not alter print output. Progressive enhancement may remember disclosure state only through guarded storage, but the authored default is closed and native HTML remains complete without script.
+
+### Progressive optional hints
+
+- Put a native `<details data-pep-hint data-pep-hint-for="task-id" data-pep-hint-order="1" data-section-skip>` beside every `[data-pep-task][data-pep-may-stall]` where a learner may reasonably stall. Its summary is exactly **Need a hint?**.
+- Each hint has one `data-pep-hint-target` sentence naming where to act and one `data-pep-hint-step` sentence revealing the next reasoning step. It does not give the answer, a finished expression, hidden solution, reference implementation, private test or scoring material.
+- Prefer one hint. Multiple hints for one task use contiguous order values and reveal strictly more in sequence; rewording the same clue does not qualify.
+- Hints carry no required objective, interaction, progress, completion, grading or timing hook. `data-section-skip` excludes them from required time. Opening, closing or reading them changes no activity state or credit.
+- Native summary behavior supplies keyboard, touch, screen-reader and no-JavaScript access. Hints remain closed by default, require no hover, and retain visible labels in print.
 
 ## 5. Honest simulators and coding workspaces
 
@@ -71,6 +91,18 @@ In print, both disclosure bodies expand and retain their **Optional example** / 
 - Text entry is at least 16 px on phone layouts and has `scroll-margin-block: 16px`, so focusing it with a virtual keyboard does not trigger browser zoom or hide it behind fixed UI (fixed UI is forbidden).
 - A coding workspace includes a visible `<noscript data-pep-no-js>` reading in the workspace. It restates the task, starter code, supported subset and expected way to compare results as plain text; it does not reveal a graded answer. JavaScript enhances that complete reading into the editor rather than supplying the only instructions.
 
+### Python Slicing and Comprehensions Activity 3 correction boundary
+
+The module correction keeps the bounded editor and observable Problems/Output, but its adjacent **Your task** must:
+
+1. identify the first edit as replacing `result = ___` with one list comprehension equivalent to the shown loop;
+2. identify the second edit as replacing `doubled = ___` with one set or dict comprehension for doubled prices over 10;
+3. say that each `___` represents one whole comprehension;
+4. explain that the shown loop visits `prices`, keeps values over 10, doubles each kept value and produces `[24, 24, 60]`, retaining the duplicate because it builds a list; and
+5. keep all final comprehension expressions absent from learner-visible HTML, JavaScript, static alternatives and hints.
+
+The separate **Where this fits** says comprehensions are a good fit for small, readable, in-memory transform/filter work that builds a new collection. It directs learners to an ordinary loop for side effects, multi-step branching, exception handling or early exit. Progressive hints decompose the first edit into the collected value, the `for` source and then the optional filter; only a later hint may distinguish set uniqueness from dict key-to-value association. After only **Your task** and hint 1, a learner must be able to point to the first placeholder and state that it needs a list comprehension whose collected value matches what the loop appends, without seeing the completed expression.
+
 ## 6. Accessibility and responsive operation
 
 - Semantic controls, full keyboard use, screen-reader names and a visible focus indicator. Every pointer target is at least 44 × 44 CSS px. No action is hover-only or keyboard-shortcut-only.
@@ -81,7 +113,7 @@ In print, both disclosure bodies expand and retain their **Optional example** / 
 - At 320, 390 and 768 CSS px, practical portrait and landscape sizes, and 200% zoom, the page has no page-level horizontal overflow or clipped essential content. Topic/progress controls wrap, Restart remains usable and instructions precede their interaction.
 - The host document owns vertical scrolling. Pages use no fixed or sticky element, viewport-height main flow, scroll takeover or nested scrolling for the reading flow. Only bounded editors and Problems/Output regions may scroll; keyboard and touch users can reach and leave each region, and can reach Problems/Output without losing the instruction/workspace association.
 - Inputs and editors remain usable when a mobile virtual keyboard reduces the visual viewport: labels and instructions remain before them, focused fields have scroll margin, controls are not fixed behind the keyboard, and text-entry controls use at least 16 px text on phone layouts.
-- Print uses the light palette, preserves required teaching and static alternatives, expands optional disclosure content, avoids breaks inside short cards/code/figures, and removes only controls that have no printed meaning.
+- Print uses the light palette, preserves required teaching and static alternatives, expands objectives and optional disclosure content with labels intact, shows every activity section, avoids breaks inside short cards/code/figures, and removes only controls that have no printed meaning.
 
 ## 7. Metadata
 
@@ -102,7 +134,7 @@ In print, both disclosure bodies expand and retain their **Optional example** / 
 
 ## 10. Timing
 
-- Minutes come from the frozen reading-time estimator; its cost table is never changed to make a page pass. Content in a contract-owned optional disclosure is marked `data-section-skip` and is excluded from required-path words, code and interactions.
+- Minutes come from the frozen reading-time estimator; its cost table is never changed to make a page pass. Content in a contract-owned optional disclosure or hint is marked `data-section-skip` and is excluded from required-path words, code and interactions.
 - The estimator P50 must fit the topic budget. Its P90 is informational, not a substitute for a modeled learner route.
 - The "About N minutes" label covers the worst required path: two wrong graded attempts and wrong-first explores before settling, modeled per interactive unit and recorded with its evidence.
 - 15 minutes is a ceiling for one topic page.

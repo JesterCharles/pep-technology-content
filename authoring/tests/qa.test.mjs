@@ -7,7 +7,7 @@ import { pathToFileURL } from "node:url";
 import test from "node:test";
 import MarkdownIt from "markdown-it";
 import { run as runT01 } from "../tools/checks/T01-schema.mjs";
-import { validateOptionalDisclosures } from "../tools/checks/T08-html-static.mjs";
+import { validateLearnerGuidance, validateOptionalDisclosures } from "../tools/checks/T08-html-static.mjs";
 import { run as runT09 } from "../tools/checks/T09-offline.mjs";
 import { run as runT10 } from "../tools/checks/T10-sandbox.mjs";
 import { run as runT11 } from "../tools/checks/T11-behavior.mjs";
@@ -254,8 +254,8 @@ rejected: []
 test("T12 ignores fully transparent borders", { timeout: 60000 }, async () => {
   const errors = await runFixture("T12", "good.html", {
     transformHtml: (html) => html.replace(
-      '<main id="lesson" data-pep-responsive data-pep-complete="false">',
-      '<main id="lesson" data-pep-responsive data-pep-complete="false"><div style="border: 2px solid transparent"></div>',
+      '<main id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false">',
+      '<main id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false"><div style="border: 2px solid transparent"></div>',
     ),
   });
   assert.deepEqual(errors, []);
@@ -264,8 +264,8 @@ test("T12 ignores fully transparent borders", { timeout: 60000 }, async () => {
 test("T12 catches a rendered low-contrast border", { timeout: 60000 }, async () => {
   const errors = await runFixture("T12", "good.html", {
     transformHtml: (html) => html.replace(
-      '<main id="lesson" data-pep-responsive data-pep-complete="false">',
-      '<main id="lesson" data-pep-responsive data-pep-complete="false"><div id="low-border" style="border: 2px solid #ddd">Bordered panel</div>',
+      '<main id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false">',
+      '<main id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false"><div id="low-border" style="border: 2px solid #ddd">Bordered panel</div>',
     ),
   });
   assertPreciseFailure(errors, "T12", /light contrast: #low-border border .* < 3/);
@@ -308,8 +308,8 @@ test("T12 catches low contrast in forced dark mode", { timeout: 60000 }, async (
 test("T13 skips zero-size hidden live text and controls in closed details", { timeout: 60000 }, async () => {
   const errors = await runFixture("T13", "good.html", {
     transformHtml: (html) => html.replace(
-      '<main id="lesson" data-pep-responsive data-pep-complete="false">',
-      '<main id="lesson" data-pep-responsive data-pep-complete="false"><div id="empty-live" aria-live="polite" style="height:0;overflow:hidden"><span hidden>Old feedback</span></div><details><summary style="min-height:44px">Optional details</summary><button style="width:2000px">Closed action</button></details>',
+      '<main id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false">',
+      '<main id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false"><div id="empty-live" aria-live="polite" style="height:0;overflow:hidden"><span hidden>Old feedback</span></div><details><summary style="min-height:44px">Optional details</summary><button style="width:2000px">Closed action</button></details>',
     ),
   });
   assert.deepEqual(errors, []);
@@ -318,8 +318,8 @@ test("T13 skips zero-size hidden live text and controls in closed details", { ti
 test("T13 catches visibly clipped essential text", { timeout: 60000 }, async () => {
   const errors = await runFixture("T13", "good.html", {
     transformHtml: (html) => html.replace(
-      '<main id="lesson" data-pep-responsive data-pep-complete="false">',
-      '<main id="lesson" data-pep-responsive data-pep-complete="false"><div style="width:120px;overflow:hidden"><p id="clipped-text" data-essential style="width:300px">Visible essential text is clipped</p></div>',
+      '<main id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false">',
+      '<main id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false"><div style="width:120px;overflow:hidden"><p id="clipped-text" data-essential style="width:300px">Visible essential text is clipped</p></div>',
     ),
   });
   assertPreciseFailure(errors, "T13", /desktop clipped essentials: clipped-text/);
@@ -345,8 +345,8 @@ test("T13 catches horizontal overflow at 320 px", { timeout: 60000 }, async () =
 test("T13 catches touch targets below 44 by 44 CSS pixels", { timeout: 60000 }, async () => {
   const errors = await runFixture("T13", "good.html", {
     transformHtml: (html) => html.replace(
-      '<main id="lesson" data-pep-responsive data-pep-complete="false">',
-      '<main id="lesson" data-pep-responsive data-pep-complete="false"><button id="tiny" aria-label="Tiny" style="box-sizing:border-box;width:20px;height:20px;padding:0"></button>',
+      '<main id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false">',
+      '<main id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false"><button id="tiny" aria-label="Tiny" style="box-sizing:border-box;width:20px;height:20px;min-height:20px;padding:0"></button>',
     ),
   });
   assertPreciseFailure(errors, "T13", /phone-320 touch targets below 44x44: #tiny 20x20/);
@@ -365,15 +365,60 @@ test("optional disclosure hooks enforce native semantics and accounting boundari
   );
 });
 
+test("optional anecdotes reject code and technical-copy substitutes", async () => {
+  const html = await readFile(path.join(fixtures, "good.html"), "utf8");
+  const codeBearing = html.replace(
+    "Imagine a shopper walking one aisle, placing only the useful items into a fresh basket.",
+    "Imagine a shopper using <code>[item for item in aisle]</code>.",
+  );
+  assert.match(validateOptionalDisclosures(codeBearing).join("; "), /must be code-free/);
+  const technicalCopy = html.replace(
+    "Imagine a shopper walking one aisle, placing only the useful items into a fresh basket.",
+    "A comprehension moves the collected expression before its for loop.",
+  );
+  assert.match(validateOptionalDisclosures(technicalCopy).join("; "), /must not repeat the ordinary technical explanation/);
+});
+
+test("guidance contract fixture owns objectives, fit guidance, navigation, checks and progressive hints", async () => {
+  const html = await readFile(path.join(fixtures, "good.html"), "utf8");
+  assert.deepEqual(validateLearnerGuidance(html), []);
+  assert.match(
+    validateLearnerGuidance(html.replace(" data-pep-previous", "")).join("; "),
+    /Previous activity and Continue\/Next/,
+  );
+  assert.match(
+    validateLearnerGuidance(html.replace(" data-pep-fit-boundary", "")).join("; "),
+    /when-not-to-use boundary/,
+  );
+  assert.match(
+    validateLearnerGuidance(html.replace(" data-pep-hint-step", "")).join("; "),
+    /one next reasoning step/,
+  );
+});
+
+test("628e2c3 Python Activity 3 correction remains actionable without exposing an answer", async () => {
+  const design = await readFile(path.resolve("DESIGN.md"), "utf8");
+  const recipe = design.match(/### Python comprehension activity correction recipe([\s\S]*?)### Editor workspace/)?.[1] ?? "";
+  assert.match(recipe, /Name two edits in order:[\s\S]*result[\s\S]*list comprehension/i);
+  assert.match(recipe, /\(2\)[\s\S]*doubled[\s\S]*set or dict comprehension/i);
+  assert.match(recipe, /visits `prices`[\s\S]*keeps values over 10[\s\S]*produces `\[24, 24, 60\]`/i);
+  assert.match(recipe, /collected value[\s\S]*`for`[\s\S]*source[\s\S]*optional[\s\S]*filter/i);
+  assert.match(recipe, /small, readable, in-memory transform\/filter[\s\S]*side effect[\s\S]*exception handling[\s\S]*early exit/i);
+  assert.match(recipe, /After reading only \*\*Your task\*\* and hint 1[\s\S]*first placeholder[\s\S]*collected value/i);
+  assert.doesNotMatch(recipe, /\[\s*p\s*\*\s*2\s+for\s+p\s+in\s+prices/i);
+});
+
 test("optional disclosures expand for print and restore their closed state", { timeout: 60000 }, async () => {
   const browser = await launchChromium();
   try {
     const page = await browser.newPage();
     await page.goto(pathToFileURL(path.join(fixtures, "good.html")).href);
     assert.equal(await page.locator("#challenge-body").isVisible(), false);
+    assert.equal(await page.locator("#objectives-body").isVisible(), false);
     await page.evaluate(() => dispatchEvent(new Event("beforeprint")));
     await page.emulateMedia({ media: "print" });
     assert.equal(await page.locator("#challenge-body").isVisible(), true);
+    assert.equal(await page.locator("#objectives-body").isVisible(), true);
     await page.evaluate(() => dispatchEvent(new Event("afterprint")));
     await page.emulateMedia({ media: "screen" });
     assert.equal(await page.locator('[data-pep-optional="challenge"]').getAttribute("open"), null);
