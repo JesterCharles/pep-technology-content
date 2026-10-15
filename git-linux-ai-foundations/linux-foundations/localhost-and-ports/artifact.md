@@ -14,14 +14,14 @@ Look at the programs on your laptop, then guess. Practice prediction, not scored
 
 ### localhost and ports
 
-- localhost is a name for this same computer: IPv4 127.0.0.1, IPv6 ::1. A request to it never leaves your machine.
+- localhost is a name for this same computer: IPv4 `127.0.0.1`, IPv6 `::1`. A request to it never leaves your machine.
 - Ports: one computer runs many programs that answer requests; each listens on its own port, a number up to 65535.
-- Reading a URL: http://localhost:8080/health has host localhost, port 8080, path /health.
-- No port: http uses 80. Nothing listening: connection refused.
+- Reading a URL: `http://localhost:8080/health` has host `localhost`, port `8080`, path `/health`.
+- No port: http uses 80. Nothing listening: `connection refused`.
 
 ### One port, one listener
 
-Normally only one program at a time can listen on a port. Starting another on a busy port fails with an error such as address already in use; the exact wording depends on the tool.
+Normally only one program at a time can listen on a port. Starting another on a busy port fails with an error such as `address already in use`; the exact wording depends on the tool.
 
 Fix it by stopping the old program or by choosing a free port.
 
@@ -35,13 +35,25 @@ Programs and ports. A simulation: no real network requests are made.
 
 Your laptop localhost = 127.0.0.1
 
-- 3000 web app, listening
-- 5000 nothing listening
-- 8080 api, listening
+- ```
+  3000
+  ```
+  web app, listening
+- ```
+  5000
+  ```
+  nothing listening
+- ```
+  8080
+  ```
+  api, listening
 
 Ben's laptop another computer
 
-- 8080 api, listening
+- ```
+  8080
+  ```
+  api, listening
 
 A request to localhost never reaches this machine.
 
@@ -49,9 +61,9 @@ No request sent yet.
 
 ## Recap
 
-- localhost (127.0.0.1) always means the computer you are on.
-- The port picks which program gets the request: http://localhost:8080 means port 8080.
-- connection refused: nothing listens there. address already in use: something already does.
+- `localhost` (`127.0.0.1`) always means the computer you are on.
+- The port picks which program gets the request: `http://localhost:8080` means port 8080.
+- `connection refused`: nothing listens there. `address already in use`: something already does.
 - localhost never reaches another computer, such as a teammate's laptop.
 
 Next: back to the course index for the next module
@@ -60,8 +72,8 @@ Next: back to the course index for the next module
 
 |  |  |
 | --- | --- |
-| localhost, 127.0.0.1 | this computer |
-| http://host:port/path | parts of a URL |
+| `localhost`, `127.0.0.1` | this computer |
+| `http://host:port/path` | parts of a URL |
 | no port in an http URL | port 80 |
 | connection refused | nothing listening on that port |
 | address already in use | port taken: stop the old program or pick another port |

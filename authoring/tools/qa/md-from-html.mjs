@@ -134,10 +134,13 @@ export async function deriveMarkdown(page) {
           const lines = rendered.split("\n").filter((line) => line.trim());
           const marker = ordered ? `${index + 1}.` : "-";
           const indent = "  ".repeat(depth);
+          // Continuation lines align with the item's content column, which follows the
+          // marker and one space; less indentation ends the item and breaks block content.
+          const continuation = `${indent}${" ".repeat(marker.length + 1)}`;
           if (!lines.length) return "";
           return `${indent}${marker} ${lines[0]}${lines
             .slice(1)
-            .map((line) => `\n${indent}  ${line}`)
+            .map((line) => `\n${continuation}${line}`)
             .join("")}`;
         })
         .filter(Boolean)

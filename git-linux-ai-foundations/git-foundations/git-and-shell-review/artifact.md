@@ -18,9 +18,9 @@ The steps: A typical change: go to the repository folder, branch, stage, commit,
 
 Reminders:
 
-- Git commands work only inside a folder that contains .git; ls -a shows it.
-- git switch -c name carries your uncommitted changes onto the new branch.
-- The first push of a new branch needs -u origin name to create it on GitHub and link it.
+- Git commands work only inside a folder that contains `.git`; `ls -a` shows it.
+- `git switch -c name` carries your uncommitted changes onto the new branch.
+- The first push of a new branch needs `-u origin name` to create it on GitHub and link it.
 
 ### Apply it: shell meets Git
 
@@ -32,25 +32,25 @@ Practice repository Simulation: no real Git runs
 
 Shell location: /home/ana/projects/shop
 
-### Working copyshop
+### Working copy shop
 
 - clean
 
-### Staging areanext commit
+### Staging area next commit
 
-- receipt.jsstaged
+- receipt.js staged
 
-### CommitsHEAD on main
+### Commits HEAD on main
 
 - C7 Add receipt (main)
 
-### GitHubbranches
+### GitHub branches
 
-- mainC7
+- main C7
 
 ## Recap
 
-- Changes move working copy → staging (git add) → commit; .gitignore keeps secrets out.
+- Changes move working copy → staging (`git add`) → commit; `.gitignore` keeps secrets out.
 - Branches are movable names; commit moves the one HEAD is on. Stash sets work aside.
 - Revert what is pushed; reset only local commits. Fetch looks, pull merges, push shares.
 - Resolve conflicts by editing out markers; merge shared work; land changes through reviewed pull requests.
@@ -61,10 +61,10 @@ Next: back to the course page for Linux and AI Foundations.
 
 |  |  |
 | --- | --- |
-| cd ~/projects/shop | go to the repository folder |
-| git switch -c <name> | new branch, changes come along |
-| git add / git commit | stage, then save |
-| git push -u origin <name> | first push of a new branch |
+| `cd ~/projects/shop` | go to the repository folder |
+| `git switch -c <name>` | new branch, changes come along |
+| `git add / git commit` | stage, then save |
+| `git push -u origin <name>` | first push of a new branch |
 
 ## Sources
 

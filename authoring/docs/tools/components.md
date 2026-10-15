@@ -31,7 +31,7 @@ Use HTML comments around HTML and block comments around CSS or JavaScript:
 ```
 
 The opening marker carries the version. The closing marker repeats the name and fragment kind. Preserve the
-fragment's final newline before the closing marker. Add the same version to the topic manifest:
+fragment's final newline before the closing marker. Add the same version to the topic manifest under `authoring/catalog/<course>/<module>/<topic>/topic.json`:
 
 ```json
 {
@@ -53,7 +53,7 @@ npm run check -- --only T24
 ```
 
 T24 compares every marked block byte-for-byte with the named fragment, rejects unknown or duplicate blocks,
-and verifies marker versions against both `component.json` and `topic.json`.
+and verifies marker versions against both `component.json` and the joined catalog `topic.json`.
 
 The terminal reference comes from the Linux Evolv terminal repair. It intentionally uses direct click and
 Enter dispatch, not form submission, so it works in `sandbox="allow-scripts"` without `allow-forms`.

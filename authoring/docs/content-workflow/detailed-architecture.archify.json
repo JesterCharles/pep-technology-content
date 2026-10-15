@@ -1,0 +1,65 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "PEP content workflow: happy path and bounded returns",
+    "subtitle": "Content failures return to the smallest owning stage; they do not restart the whole pipeline.",
+    "animation": "none",
+    "visual_preset": "classic",
+    "quality_profile": "standard",
+    "output": "build/content-workflow-detailed.raw.html",
+    "legend": { "mode": "hidden" }
+  },
+  "lanes": [
+    { "id": "happy", "label": "Happy path" },
+    { "id": "content-loop", "label": "Input, design and content correction", "variant": "exception" },
+    { "id": "review-loop", "label": "Independent review loop", "variant": "exception" },
+    { "id": "evidence-loop", "label": "Evidence refresh", "variant": "exception" }
+  ],
+  "mainPath": ["input", "design", "create", "verify", "review", "ready"],
+  "nodes": [
+    { "id": "input", "lane": "happy", "col": 0, "type": "external", "label": "Input", "sublabel": "curriculum + sources", "width": 126 },
+    { "id": "design", "lane": "happy", "col": 1, "type": "database", "label": "Design", "sublabel": "objectives + activities", "width": 126 },
+    { "id": "create", "lane": "happy", "col": 2, "type": "frontend", "label": "Create", "sublabel": "artifacts + practice", "width": 126 },
+    { "id": "verify", "lane": "happy", "col": 3, "type": "security", "label": "Verify", "sublabel": "content + behavior", "width": 126 },
+    { "id": "review", "lane": "happy", "col": 4, "type": "security", "label": "Review + improve", "sublabel": "education + technology", "width": 144 },
+    { "id": "ready", "lane": "happy", "col": 5, "type": "messagebus", "label": "Ready", "sublabel": "reviewed package + evidence", "width": 138 },
+
+    { "id": "clarify", "lane": "content-loop", "col": 0, "type": "security", "label": "Clarify input", "sublabel": "freeze scope + version", "width": 138 },
+    { "id": "revise-plan", "lane": "content-loop", "col": 1, "type": "database", "label": "Revise learning plan", "sublabel": "align objective + activity", "width": 148 },
+    { "id": "correct-content", "lane": "content-loop", "col": 2, "type": "frontend", "label": "Correct material", "sublabel": "accuracy + access", "width": 138 },
+    { "id": "repair-lab", "lane": "content-loop", "col": 3, "type": "frontend", "label": "Repair lab", "sublabel": "bundle + public tests", "width": 138 },
+
+    { "id": "correct", "lane": "review-loop", "col": 2, "type": "frontend", "label": "Correct accepted items", "sublabel": "one loop at a time", "width": 148 },
+    { "id": "recheck", "lane": "review-loop", "col": 3, "type": "security", "label": "Fresh recheck", "sublabel": "same role · new hashes", "width": 138 },
+    { "id": "reconcile", "lane": "review-loop", "col": 5, "type": "security", "label": "Reconcile findings", "sublabel": "non-author decision", "width": 146 },
+
+    { "id": "refresh-evidence", "lane": "evidence-loop", "col": 1, "type": "database", "label": "Refresh evidence", "sublabel": "current exact bytes", "width": 154 },
+    { "id": "affected-checks", "lane": "evidence-loop", "col": 3, "type": "security", "label": "Rerun affected checks", "sublabel": "content + behavior", "width": 150 }
+  ],
+  "edges": [
+    { "id": "input-design", "from": "input", "to": "design", "variant": "emphasis", "role": "main" },
+    { "id": "design-create", "from": "design", "to": "create", "variant": "emphasis", "role": "main" },
+    { "id": "create-verify", "from": "create", "to": "verify", "variant": "emphasis", "role": "main" },
+    { "id": "verify-review", "from": "verify", "to": "review", "variant": "emphasis", "role": "main" },
+    { "id": "review-ready", "from": "review", "to": "ready", "variant": "emphasis", "role": "main" },
+
+    { "id": "input-unclear", "from": "input", "to": "clarify", "label": "unclear", "variant": "security", "role": "error" },
+    { "id": "clarify-design", "from": "clarify", "to": "design", "label": "frozen", "variant": "dashed", "role": "return" },
+    { "id": "design-mismatch", "from": "design", "to": "revise-plan", "label": "mismatch", "variant": "security", "role": "error" },
+    { "id": "plan-create", "from": "revise-plan", "to": "create", "label": "aligned", "variant": "dashed", "role": "return" },
+    { "id": "create-defect", "from": "create", "to": "correct-content", "label": "content defect", "variant": "security", "role": "error" },
+    { "id": "content-verify", "from": "correct-content", "to": "verify", "label": "corrected", "variant": "dashed", "role": "return" },
+    { "id": "verify-lab", "from": "verify", "to": "repair-lab", "label": "lab fails", "variant": "security", "role": "error" },
+    { "id": "lab-review", "from": "repair-lab", "to": "review", "label": "checks pass", "variant": "dashed", "role": "return" },
+
+    { "id": "review-findings", "from": "review", "to": "reconcile", "label": "findings", "variant": "security", "role": "error" },
+    { "id": "reconcile-correct", "from": "reconcile", "to": "correct", "label": "accept", "variant": "security", "role": "return" },
+    { "id": "correct-recheck", "from": "correct", "to": "recheck", "label": "fresh bytes", "variant": "dashed", "role": "return" },
+    { "id": "recheck-review", "from": "recheck", "to": "review", "label": "resolved", "variant": "dashed", "role": "return" },
+
+    { "id": "ready-stale", "from": "ready", "to": "refresh-evidence", "label": "stale evidence", "variant": "security", "role": "error" },
+    { "id": "evidence-checks", "from": "refresh-evidence", "to": "affected-checks", "label": "fresh binding", "variant": "dashed", "role": "return" },
+    { "id": "checks-ready", "from": "affected-checks", "to": "ready", "label": "current", "variant": "dashed", "role": "return" }
+  ]
+}

@@ -15,43 +15,43 @@ Git keeps your project in three places, shown in the model: your working copy (t
 ### Three places a change can live
 
 - Working copy: the files on disk that you edit.
-- Staging area (also called the index): the snapshot you are preparing for the next commit. git add app.js copies the file into it.
-- Commit: a saved snapshot in history, made from the staging area by git commit -m "message".
+- Staging area (also called the index): the snapshot you are preparing for the next commit. `git add app.js` copies the file into it.
+- Commit: a saved snapshot in history, made from the staging area by `git commit -m "message"`.
 
-git status lists which files differ where. git diff compares working copy with staging; git diff --staged compares staging with the last commit, so it shows exactly what the next commit will hold.
+`git status` lists which files differ where. `git diff` compares working copy with staging; `git diff --staged` compares staging with the last commit, so it shows exactly what the next commit will hold.
 
 ### Keep secrets out with .gitignore
 
-.env holds settings such as keys. It must never be committed, but it keeps showing as untracked, and git add . would stage it.
+`.env` holds settings such as keys. It must never be committed, but it keeps showing as untracked, and `git add .` would stage it.
 
-A .gitignore file lists name patterns Git should not track. A matching untracked file disappears from git status, and git add . skips it. .gitignore does not unstage or untrack a file Git already has. Commit .gitignore itself so your whole team shares the rule.
+A `.gitignore` file lists name patterns Git should not track. A matching untracked file disappears from `git status`, and `git add .` skips it. `.gitignore` does not unstage or untrack a file Git already has. Commit `.gitignore` itself so your whole team shares the rule.
 
 ### Apply it to a new file
 
-Same three places, new situation. Use the model: the staging area is a snapshot taken when you run git add.
+Same three places, new situation. Use the model: the staging area is a snapshot taken when you run `git add`.
 
 ## Model
 
 Practice repository Simulation: no real Git runs
 
-### Working copyfiles you edit
+### Working copy files you edit
 
-- app.jsmodified
+- app.js modified
 
-### Staging areanext commit
+### Staging area next commit
 
 - nothing staged
 
-### Commitshistory, newest first
+### Commits history, newest first
 
-- C1 Start shopapp.js, notes.txt
+- C1 Start shop app.js, notes.txt
 
 ## Recap
 
-- A change starts in the working copy; git add copies it into the staging area; git commit saves the staged snapshot to history.
-- git diff shows unstaged changes; git diff --staged shows what the next commit will hold.
-- Stage files by name for a focused commit. git add . stages everything that is not ignored, secrets included.
-- .gitignore keeps untracked files such as .env out. Commit .gitignore itself.
+- A change starts in the working copy; `git add` copies it into the staging area; `git commit` saves the staged snapshot to history.
+- `git diff` shows unstaged changes; `git diff --staged` shows what the next commit will hold.
+- Stage files by name for a focused commit. `git add .` stages everything that is not ignored, secrets included.
+- `.gitignore` keeps untracked files such as `.env` out. Commit `.gitignore` itself.
 
 Next topic: Branches and switching between them
 
@@ -59,12 +59,12 @@ Next topic: Branches and switching between them
 
 |  |  |
 | --- | --- |
-| git status | which files differ in working copy, staging and last commit |
-| git add <file> | copy a file into the staging area |
-| git restore --staged <file> | take a file back out of staging |
-| git diff / git diff --staged | unstaged changes / what the next commit holds |
-| git commit -m "message" | save the staging area as a commit |
-| .gitignore | name patterns Git should not track |
+| `git status` | which files differ in working copy, staging and last commit |
+| `git add <file>` | copy a file into the staging area |
+| `git restore --staged <file>` | take a file back out of staging |
+| `git diff / git diff --staged` | unstaged changes / what the next commit holds |
+| `git commit -m "message"` | save the staging area as a commit |
+| `.gitignore` | name patterns Git should not track |
 
 ## Sources
 

@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="java-foundations">
+<meta name="pep:module" content="java-basics">
+<meta name="pep:topic" content="if/else and switch">
+<meta name="pep:topic-id" content="if-else-and-switch">
+<meta name="pep:budget-minutes" content="10">
+<meta name="pep:source" content="authoring/evidence/java-foundations/java-basics/if-else-and-switch/sources.json">
+<title>if/else and switch · Java Basics</title>
+<style>
+:root{
+  --bg:#eef2f0;--surface:#f8faf9;--ink:#1b2320;--muted:#47524e;--rule:#6b7873;--line:#c9d2ce;
+  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
+  --on-teal:#ffffff;--term:#e2e8e5;--focus:#1f4fbf;
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#121816;--surface:#1a2220;--ink:#e3ebe7;--muted:#a8b6b0;--rule:#71827c;--line:#2f3b37;
+  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
+  --on-teal:#0b1311;--term:#0c1110;--focus:#8fb4ff;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
+::selection{background:var(--teal);color:var(--on-teal)}
+code,kbd,.mono{font-family:var(--mono);font-size:.94em}
+a{color:var(--teal);text-underline-offset:3px}
+main{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
+.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
+.top{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title tools";column-gap:var(--s6);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
+.top .crumbs{grid-area:crumbs}.top h1{grid-area:title}.top .meta{grid-area:meta}.top .tools{grid-area:tools}
+.crumbs{margin:0 0 var(--s1);font-size:15px;color:var(--muted)}
+.crumbs ol{display:flex;flex-wrap:wrap;gap:0 var(--s2);margin:0;padding:0;list-style:none}
+.crumbs li+li::before{content:"/";margin-right:var(--s2);color:var(--rule)}
+.crumbs [aria-current]{color:var(--ink);font-weight:600}
+h1{margin:0;font-size:24px;line-height:30px;letter-spacing:-.01em}
+.meta{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s2) 0 0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
+.objectives{margin:0;font-size:15px}.objectives summary{cursor:pointer;color:var(--ink);font-weight:600;padding:10px 0;width:max-content;max-width:100%}.objectives summary:focus-visible{outline:3px solid var(--focus,var(--teal));outline-offset:2px}.objectives ul{margin:var(--s1) 0 0;padding-left:1.25em}
+.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2);flex:0 0 auto}
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:var(--amber-soft);border:2px dashed var(--amber)}
+/* pep:component restart@1 css */
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* /pep:component restart css */
+.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s3);align-items:start}
+.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
+.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
+.teach p{margin:0 0 var(--s2);max-width:62ch}
+.teach ul{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
+.teach li{margin-bottom:var(--s1)}
+.teach code,.task code{white-space:nowrap}
+.task{padding:var(--s3) var(--s4);border-top:2px solid var(--teal);background:var(--surface)}
+.task p{margin:0;font-weight:600}
+.task p+p{margin-top:var(--s2)}
+.task ol.how{margin:var(--s2) 0 0;padding-left:1.4em}.task ol.how li+li{margin-top:var(--s1)}.task ol.how+pre,.task pre+ol.how{margin-top:var(--s2)}
+.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
+.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
+.goals li:first-child{border-top:0}
+.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
+.goals li.done .st{color:var(--teal)}
+.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
+.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:var(--s2)}
+.model code{font-size:1em}
+.control{min-width:0}
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:6px var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);background:var(--teal-soft)}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);background:var(--red-soft);box-shadow:inset 4px 0 0 var(--red)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.confrow{margin-top:var(--s2)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+/* pep:component terminal@1 css */
+.term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
+.term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
+.term-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px var(--s3);margin:0;padding:var(--s1) var(--s3);border-bottom:1px solid var(--rule);font-size:15px;color:var(--muted)}
+.term-top span:first-child{font-weight:700}
+.log{height:220px;overflow-y:auto;padding:var(--s2) var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.log .c{font-weight:700}
+.log .c::before{content:attr(data-p) " ";color:var(--teal);font-weight:700}
+.log .e{color:var(--red)}
+.log .h{color:var(--muted);font-family:var(--sans)}
+.cmdline{display:flex;gap:var(--s2);align-items:center;padding:0 var(--s1) 0 var(--s3);border-top:1px solid var(--rule)}
+.cmdline label{flex:0 1 auto;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 16px var(--mono);color:var(--teal)}
+.cmdline{padding:var(--s2) var(--s2) var(--s2) var(--s3)}
+.cmdline input{flex:1 1 auto;min-width:0;min-height:44px;padding:var(--s2) 0;font:16px var(--mono);color:var(--ink);background:transparent;border:0;caret-color:var(--teal)}
+.cmdline input::placeholder{color:var(--muted);opacity:1}
+.cmdline input:focus,.cmdline input:focus-visible{outline:none}
+.cmdline .runbtn{flex:0 0 auto;min-height:36px;padding:var(--s1) var(--s3);background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:600}
+.cmdline .runbtn:hover{border-color:var(--ink)}
+.simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+/* /pep:component terminal css */
+.task p.simnote{font-weight:400}
+.fbrow{display:flex;flex-direction:column;gap:var(--s2);align-items:flex-start}
+.feedback{width:100%;min-width:0;line-height:1.4;font-size:15px;line-height:1.45}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin-bottom:2px}
+.verdict{font-weight:700}
+.feedback .on{font-weight:600}
+.badge{display:inline-block;margin:0 var(--s1) 0 0;padding:0 6px;border:2px solid currentColor;border-radius:3px;font:700 15px/1.4 var(--sans);vertical-align:baseline}
+.badge.ok{color:var(--teal)}.badge.no{color:var(--red)}.badge.me{color:var(--ink)}
+.opt .badges{display:block;margin-top:2px}
+.explain{list-style:none;padding:0;margin:var(--s1) 0 0}
+.explain li{margin:0;padding:var(--s1) 0 var(--s1) var(--s3);border-left:2px solid var(--line)}
+.explain li+li{margin-top:var(--s1)}
+.explain li.mine{border-left-color:var(--teal)}
+.explain .on,.explain .ex{display:block}
+.explain .ex::first-letter{text-transform:uppercase}
+.teach ul.chunks{list-style:none;padding:0}
+.teach ul.chunks li{margin-bottom:var(--s2)}
+.opt .why{display:block;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
+.opt .why code{font-size:.94em}
+.verdict.ok{color:var(--teal)}
+.verdict.no{color:var(--red)}
+.verdict.set{color:var(--amber)}
+.conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+.recap ul{padding-left:20px}
+.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
+.feedback details{margin:var(--s1) 0}
+.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
+.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
+.next-topic{font-weight:700}
+.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
+[hidden]{display:none!important}
+@media (min-width:861px) and (max-height:720px){
+  main{padding-top:var(--s2)}
+  .stage{padding-top:var(--s2)}
+  .col{gap:var(--s2)}
+  .model{padding:var(--s2) var(--s4)}
+  .model figcaption{margin-bottom:var(--s1)}
+  .meta{margin-top:var(--s1)}
+  .opts{gap:6px}
+  legend{margin-bottom:var(--s1)}
+  .row{margin-top:var(--s2)}
+  .teach h2{margin-bottom:var(--s1)}
+}
+@media (max-width:860px){
+  main{padding:var(--s3) var(--s4) var(--s4)}
+  .top{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "tools";row-gap:var(--s2)}
+  .tools{justify-content:flex-start;flex-wrap:wrap}
+  .stage{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3)}
+  .col{display:contents}
+  #current-teaching{order:1}#current-task{order:2}#live-model{order:3}#current-control{order:4}.fbrow{order:5}
+  .fbrow{flex-direction:column}
+}
+@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}
+  .cmdline{flex-wrap:wrap;row-gap:var(--s1)}
+  .cmdline label{flex:1 0 100%;max-width:none}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+.src{margin:0 0 var(--s2);padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--term);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.src .ln{color:var(--muted)}
+.task .src{font-weight:400}
+@media (max-width:480px){.src{font-size:13px;padding:var(--s2)}}
+.recap table code{white-space:normal;overflow-wrap:anywhere}
+.recap details pre{white-space:pre-wrap;overflow-wrap:anywhere}
+.code{margin:0 0 var(--s2);padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--term);font:15px/1.5 var(--mono);list-style:none;overflow-wrap:anywhere}
+.code li{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s1) var(--s2);padding:2px var(--s1);border:2px solid transparent;border-radius:3px;white-space:pre-wrap}
+.code li.ran{border-color:var(--teal);background:var(--teal-soft)}
+.code li .mv{display:flex;gap:var(--s1);margin-left:auto}
+.code li .mv button{min-width:44px;padding:var(--s1)}
+.code li .brk{min-height:36px;padding:var(--s1) var(--s2);font:600 14px/1 var(--sans)}
+.tests{width:100%;border-collapse:collapse;font-size:15px;margin:0 0 var(--s2)}
+.tests th,.tests td{text-align:left;padding:var(--s1) var(--s2);border-bottom:1px solid var(--rule)}
+.tests td.ok{color:var(--teal);font-weight:700}
+.tests td.no{color:var(--red);font-weight:700}
+.outbox{margin:0 0 var(--s2);padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;font:15px/1.45 var(--mono);white-space:pre-wrap;min-height:3em}
+.stepper{display:flex;align-items:center;gap:var(--s2);margin-bottom:var(--s2)}
+.stepper button{min-width:44px;padding:var(--s1)}
+.wl{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
+.sub{margin:0 0 var(--s2);font-size:15px;color:var(--muted)}
+</style>
+</head>
+<body>
+<noscript><p class="nojs">This topic needs JavaScript for its practice activities and checks. Turn JavaScript on to take part.</p></noscript>
+<main id="lesson">
+  <header class="top">
+    <h1>if/else and switch</h1>
+    <p class="meta" style="grid-area:auto/1/auto/-1">Java Basics · topic 6 of 7 · About 10 minutes · Java 25</p>
+    <details class="objectives" data-pep-objectives style="grid-column:1/-1">
+      <summary>What you'll be able to do</summary>
+      <ul>
+      <li>Choose between branches with if, else if and else, ordering the conditions correctly</li>
+      <li>Write a switch with arrow labels, including a switch expression that yields a value</li>
+      <li>Predict fall-through in an old-style colon switch that has no break</li>
+      </ul>
+    </details>
+    <div class="tools">
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 4</span><span class="pips" aria-hidden="true"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></span></div>
+      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+    </div>
+  </header>
+  <div class="stage" id="stage" data-step="1">
+    <div class="col">
+      <section id="current-teaching" class="teach" aria-label="Current teaching">
+<div data-step="1">
+  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+  <p>Practice prediction, not scored.</p>
+</div>
+<div data-step="2" data-pep-teaching>
+  <h2 id="teach-2-h" tabindex="-1">The first true branch wins</h2>
+  <p>An <code>if</code> / <code>else if</code> / <code>else</code> chain tests its conditions from the top. Java runs the first branch whose condition is <code>true</code> and skips every other branch; <code>else</code> catches whatever is left.</p>
+  <p>So order matters. If <code>score &gt;= 60</code> comes first, a score of 95 stops there. Put the narrowest condition first, here the highest threshold, and widen as you go down.</p>
+</div>
+<div data-step="3" data-pep-teaching>
+  <h2 id="teach-3-h" tabindex="-1">Two kinds of switch</h2>
+  <p>An old-style switch uses colon labels, <code>case 1:</code>. Java jumps to the matching label and keeps running into the next cases until a <code>break</code>: this is fall-through.</p>
+  <p>Arrow labels, <code>case 1 -&gt;</code>, run only their own branch and never fall through; <code>case 2, 3 -&gt;</code> lists several values. A switch expression yields a value, and must cover every input, usually with <code>default</code>:</p>
+  <pre class="src">String medal = switch (level) {
+    case 1 -&gt; "Bronze";
+    case 2 -&gt; "Silver";
+    default -&gt; "Gold";
+};</pre>
+</div>
+<div data-step="4" data-pep-teaching>
+  <h2 id="teach-4-h" tabindex="-1">Apply it: write a switch expression</h2>
+  <p>Check the arrows, the commas, the semicolons and the default.</p>
+</div>
+<div data-step="5" hidden data-pep-recap class="recap">
+  <h2 id="teach-5-h" tabindex="-1">Recap</h2>
+  <ul><li>if / else if / else runs the first true branch only, so order conditions from narrowest to widest.</li><li>Arrow labels never fall through; a switch expression yields a value and needs every input covered, often with <code>default</code>.</li><li>A colon label with no <code>break</code> falls through into the next cases.</li></ul>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <pre>if (score &gt;= 90) {
+    grade = "A";
+} else if (score &gt;= 80) {
+    grade = "B";
+} else {
+    grade = "C or below";
+}
+
+String size = switch (n) {
+    case 1, 2 -&gt; "small";
+    case 3 -&gt; "medium";
+    default -&gt; "large";
+};</pre>
+    <p>Switch arrow labels and switch expressions arrived in Java 14; older code mostly uses colon labels with <code>break</code>.</p>
+  </details>
+  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live official sources on 2026-10-13. The switch examples were compiled and run with a real JDK 25.0.4.1.</p><ul><li><a href="https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html" rel="noopener">JLS SE 25, chapter 14: Blocks, Statements, and Patterns (if, switch)</a></li><li><a href="https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html" rel="noopener">JLS SE 25, chapter 15: Expressions (switch expressions)</a></li><li><a href="https://dev.java/learn/language/constructs/basics/controlling-flow/" rel="noopener">Dev.java: Control flow statements</a></li><li><a href="https://dev.java/learn/language/constructs/basics/switch-statement/" rel="noopener">Dev.java: Branching with switch statements</a></li><li><a href="https://dev.java/learn/language/constructs/basics/switch-expression/" rel="noopener">Dev.java: Branching with switch expressions</a></li><li><a href="https://openjdk.org/jeps/361" rel="noopener">JEP 361: Switch Expressions</a></li></ul></details>
+  <p class="next-topic">Next topic: <a href="../for-while-and-do-while-loops/artifact.html">for, while and do-while loops</a></p>
+</div>
+      </section>
+      <section id="current-task" class="task" aria-label="Current task">
+<div data-step="1"><p id="task-1">With <code>level</code> equal to 2, what does this print?</p><pre class="src">switch (level) {
+    case 1:
+        System.out.println("Bronze");
+    case 2:
+        System.out.println("Silver");
+    case 3:
+        System.out.println("Gold");
+}</pre>
+  <ol class="how"><li>Choose the answer you expect.</li><li>Choose how sure you are under <strong>Confidence</strong>.</li><li>Select <strong>Check my prediction</strong>. Feedback appears below. This guess is not scored.</li></ol></div>
+<div data-step="2"><p id="task-2">Reorder the grade branches until every test score gets its expected grade.</p>
+  <ol class="how"><li>Read the test table: each score, the grade it should get, and the grade it gets now.</li><li>Use the <strong>↑</strong> and <strong>↓</strong> buttons beside a branch to move it. <code>else</code> stays last.</li><li>Done when every row says matches. Feedback names the branch that caught a wrong score.</li></ol></div>
+<div data-step="3"><p id="task-3">Add <code>break;</code> where it is needed so each level prints only its own medal.</p>
+  <ol class="how"><li>Select <strong>add break;</strong> after a case to add a break there. Select it again to remove it.</li><li>Use <strong>+</strong> and <strong>−</strong> beside <strong>level</strong> to change the value, then read the Output.</li><li>A goal ticks when that level prints only its own medal.</li></ol>
+  <ul class="goals"><li data-goal="l1"><span>Level 1 prints only Bronze</span><span class="st"></span></li><li data-goal="l2"><span>Level 2 prints only Silver</span><span class="st"></span></li></ul></div>
+<div data-step="4"><p id="task-apply">Which line sets <code>label</code> to "S" for 1, "M" for 2 and "L" for anything else?</p>
+  <ol class="how"><li>Choose one answer, then your confidence.</li><li>Select <strong>Check answer</strong>. A wrong answer is explained, and the same idea comes back in another form for one more try.</li></ol>
+  <div id="task-apply-b" tabindex="-1" data-retry hidden><p>Read a correct one instead. With <code>size</code> equal to 3, what does this switch expression yield?</p><pre class="src">switch (size) {
+    case 1 -&gt; "S";
+    case 2, 3 -&gt; "M";
+    default -&gt; "L";
+}</pre></div></div>
+<div data-step="5"><p>All activities finished.</p><p id="complete-msg" class="complete"></p></div>
+      </section>
+      <div class="fbrow">
+        <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-apply-feedback></div>
+<div data-step="5" ></div>
+        </div>
+        <button type="button" class="primary" id="next" hidden>Continue</button>
+      </div>
+    </div>
+    <div class="col">
+<figure id="live-model" class="model" aria-labelledby="model-cap">
+  <figcaption id="model-cap">Control flow: highlighted lines are the ones that run.</figcaption>
+  <p class="wl" id="model-title">The code</p>
+  <ol class="code" id="model-code" aria-label="Code with the lines that run highlighted"></ol>
+  <p class="sub" id="model-note">Choose an activity to see which lines run.</p>
+</figure>
+      <section id="current-control" class="control" aria-label="Your turn">
+<div data-step="1">
+  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): a colon switch with no break statements and level 2. Options: Silver; Silver then Gold; Bronze, Silver then Gold; nothing. Answer: Silver then Gold. Java jumps to case 2 and, with no break, falls through into case 3. It never runs case 1, which comes before the matching label.">
+    <legend>Prediction</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="predict" value="a"> <span>Silver</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span>Silver, then Gold</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span>Bronze, Silver, then Gold</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span>Nothing</span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
+    <legend id="pconf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="pconf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+  </div>
+</div><div data-step="2" hidden>
+  <fieldset data-interaction="drag" id="ladder-fs" aria-describedby="task-2" data-static-alt="Ordering activity, worked example. The working order is: if (score &gt;= 90) grade = &quot;A&quot;; else if (score &gt;= 80) grade = &quot;B&quot;; else if (score &gt;= 60) grade = &quot;D&quot;; else grade = &quot;F&quot;. Then 95 gives A, 85 gives B, 65 gives D and 40 gives F. With score &gt;= 60 first, 95 and 85 would both stop at D, because the first true branch wins.">
+    <legend>Branch order (else stays last)</legend>
+    <ol class="code" id="ladder"></ol>
+    <table class="tests"><caption class="vh">Test scores</caption><thead><tr><th scope="col">Score</th><th scope="col">Expected</th><th scope="col">Gets</th></tr></thead><tbody id="tests"></tbody></table>
+  </fieldset>
+</div><div data-step="3" hidden>
+  <fieldset data-interaction="explore" data-steps="2" id="sw-fs" aria-describedby="task-3" data-static-alt="Fall-through activity, worked example. Without break, level 1 prints Bronze, Silver and Gold, because execution falls through every later case. Adding break; after case 1 and after case 2 makes level 1 print only Bronze and level 2 only Silver; level 3 prints Gold either way, because it is the last case. The arrow form, case 1 -&gt; System.out.println(&quot;Bronze&quot;); and so on, needs no break because arrow labels never fall through.">
+    <legend>Old-style switch: add break where needed</legend>
+    <ol class="code" id="swcode"></ol>
+    <div class="stepper"><span id="lv-lab">level: <span id="lv">1</span></span><button type="button" class="ghost" data-act="lv-dn" aria-label="Decrease level" aria-describedby="lv-lab">−</button><button type="button" class="ghost" data-act="lv-up" aria-label="Increase level" aria-describedby="lv-lab">+</button></div>
+    <p class="wl">Output</p>
+    <div class="outbox" id="swout" aria-live="polite"></div>
+  </fieldset>
+</div><div data-step="4">
+  <div data-first>
+  <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: which line sets label to S for 1, M for 2 and L otherwise? Options: String label = switch (size) { case 1 -&gt; &quot;S&quot;; case 2 -&gt; &quot;M&quot;; default -&gt; &quot;L&quot;; }; (correct); the same without default (compile error: the switch expression does not cover all possible input values); case 1: &quot;S&quot; with colons (a colon label cannot just name a value; it would need yield); arrows without semicolons (does not compile). Retry: with size 3, case 2, 3 -&gt; &quot;M&quot; matches, so it yields M.">
+    <legend>Choose the switch expression</legend>
+    <div class="opts one"><label class="opt"><input type="radio" name="apply-a" value="a"> <span><code>String label = switch (size) { case 1 -&gt; "S"; case 2 -&gt; "M"; default -&gt; "L"; };</code></span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span><code>String label = switch (size) { case 1 -&gt; "S"; case 2 -&gt; "M"; };</code></span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span><code>String label = switch (size) { case 1: "S"; case 2: "M"; default: "L"; };</code></span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span><code>String label = switch (size) { case 1 -&gt; "S" case 2 -&gt; "M" default -&gt; "L" };</code></span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
+    <legend id="conf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="conf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="conf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="conf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
+  </div>
+  </div>
+  <div data-retry hidden>
+    <fieldset id="apply-b" aria-describedby="task-apply-b">
+      <legend>Choose the value</legend>
+      <div class="opts"><label class="opt"><input type="radio" name="apply-b" value="a"> <span>"S"</span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span>"M"</span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span>"L"</span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span>"M" then "L"</span></label></div>
+    </fieldset>
+    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+  </div>
+</div><div data-step="5"></div>
+      </section>
+    </div>
+  </div>
+</main>
+<script>
+var TOPIC=(function(){
+var RUNGS={a:{min:90,g:'A'},b:{min:80,g:'B'},d:{min:60,g:'D'}};
+var TESTS=[[95,'A'],[85,'B'],[65,'D'],[40,'F']];
+var MEDALS=['Bronze','Silver','Gold'];
+function grade(order,s){for(var i=0;i<order.length;i++){var r=RUNGS[order[i]];if(s>=r.min){return {g:r.g,at:i};}}return {g:'F',at:order.length};}
+function swRun(brk,lv){var out=[],lines=[],start=lv-1;if(start<0||start>2){return {out:out,lines:lines};}for(var i=start;i<3;i++){out.push(MEDALS[i]);lines.push(i);if(brk[i]){break;}}return {out:out,lines:lines};}
+return {
+steps:5,acts:['predict','ladder','switch','apply'],
+init:function(){return {order:['d','a','b'],lv:1,brk:[false,false,false],g:{}};},
+predict:{correct:'b',why:{
+ a:'there is no break after Silver, so execution falls through into case 3.',
+ b:'Java jumps to case 2, prints Silver, then falls through and prints Gold.',
+ c:'case 1 comes before the matching label, so it never runs.',
+ d:'case 2 matches level 2, so its line runs.'}},
+apply:{A:{fs:'apply-a',correct:'a',okNote:'<p>Arrow labels, a semicolon after each value, and <code>default</code> so every input gives a value.</p>',
+  why:{a:'arrows, semicolons and a default: every input yields a String.',b:'without default it does not compile: the switch expression does not cover all possible input values.',c:'a colon label cannot just name a value; a switch expression with colons needs yield.',d:'each arrow branch value needs a semicolon after it.'},
+  miss:{b:'Without <code>default</code>, sizes other than 1 and 2 have no value, so the compiler rejects it.',c:'With colon labels, a bare value such as <code>"S";</code> is not a statement; this does not compile.',d:'Each <code>case ... -&gt; value</code> needs a semicolon after its value.'},
+  hint:'A switch expression must give a value for every possible input.'},
+ B:{fs:'apply-b',correct:'b',reveal:'size 3 matches case 2, 3, so the switch yields "M".',
+  why:{a:'3 does not match case 1.',b:'case 2, 3 lists both values, so 3 matches it.',c:'default is only used when no case matches.',d:'arrow labels never fall through, so only one value is yielded.'}}},
+act:function(a,b,S,api){var t=S.t,msg;
+ if(/^mv-/.test(a)&&!S.done.ladder){var p=a.split('-'),i=+p[2],j=p[1]==='up'?i-1:i+1;if(j<0||j>2){return;}var o=t.order,x=o[i];o[i]=o[j];o[j]=x;
+  var res=TESTS.map(function(tc){return grade(o,tc[0]).g===tc[1];}),bad=TESTS.filter(function(tc,k){return !res[k];});
+  if(!bad.length){api.say('<p class="verdict ok">Every score gets its expected grade.</p><p>The highest threshold comes first, so each score stops at the narrowest branch that fits.</p>');api.qa('#ladder button').forEach(function(x){x.disabled=true;});api.complete('ladder');}
+  else{var tc=bad[0],gg=grade(o,tc[0]);api.say('<p>'+bad.length+' of 4 tests still wrong.</p><p>'+api.esc('Score '+tc[0]+' stops at the first true branch and gets '+gg.g+', not '+tc[1]+'.')+'</p>');}
+  this.render(S,api);var f=api.qa('#ladder button[data-act="'+a.replace(/-\d$/,'-'+j)+'"]')[0]||api.qa('#ladder button:not([disabled])')[0];if(f){f.focus();}return;}
+ if(/^brk-/.test(a)&&!S.done['switch']){var k=+a.slice(4);t.brk[k]=!t.brk[k];}
+ if(a==='lv-up'){t.lv=Math.min(4,t.lv+1);}if(a==='lv-dn'){t.lv=Math.max(1,t.lv-1);}
+ if(/^(brk-|lv-)/.test(a)){var r=swRun(t.brk,t.lv),only=r.out.length===1;
+  t.g={};if(swRun(t.brk,1).out.length===1){t.g.l1=1;}if(swRun(t.brk,2).out.length===1){t.g.l2=1;}
+  if(t.lv===4){msg='level 4 matches no case, so nothing prints: this switch has no default.';}
+  else if(only){msg='level '+t.lv+' prints only '+r.out[0]+(t.lv===3?': it is the last case, so there is nothing to fall into.':': the break stops it.');}
+  else{msg='level '+t.lv+' falls through: '+r.out.join(', ')+'. A break after its println would stop it.';}
+  var left=['l1','l2'].filter(function(k){return !t.g[k];}).length;
+  api.say('<p>'+api.esc(msg)+'</p><p>'+(left?left+' of 2 goals open. Change the level to see each output.':'<strong>Both goals met.</strong> In arrow form, case 1 -&gt; ... needs no break: arrow labels never fall through.')+'</p>');
+  if(!left&&!S.done['switch']){api.complete('switch');}
+  this.render(S,api);if(b&&b.isConnected){b.focus();}else{var f2=api.qa('#swcode [data-act="'+a+'"]')[0];if(f2){f2.focus();}}}},
+render:function(S,api){var t=S.t,me=this;
+ function codeLine(list,txt,ran,extra){var li=document.createElement('li');var sp=document.createElement('span');sp.textContent=txt;li.appendChild(sp);if(ran){li.className='ran';var v=document.createElement('span');v.className='vh';v.textContent=' (runs)';li.appendChild(v);}if(extra){li.appendChild(extra);}list.appendChild(li);return li;}
+ var ld=api.$('ladder');if(ld){while(ld.firstChild){ld.removeChild(ld.firstChild);}
+  t.order.forEach(function(k,i){var r=RUNGS[k],mv=document.createElement('span');mv.className='mv';
+   [['up','↑','Move up'],['dn','↓','Move down']].forEach(function(d){var bt=document.createElement('button');bt.type='button';bt.className='ghost';bt.setAttribute('data-act','mv-'+d[0]+'-'+i);bt.setAttribute('aria-label',d[2]+': score >= '+r.min);bt.textContent=d[1];if(S.done.ladder||(d[0]==='up'&&i===0)||(d[0]==='dn'&&i===2)){bt.disabled=true;}mv.appendChild(bt);});
+   codeLine(ld,(i?'else if':'if')+' (score >= '+r.min+') grade = "'+r.g+'";',false,mv);});
+  codeLine(ld,'else grade = "F";',false);
+  var tb=api.$('tests');while(tb.firstChild){tb.removeChild(tb.firstChild);}
+  TESTS.forEach(function(tc){var tr=document.createElement('tr'),gg=grade(t.order,tc[0]).g,ok=gg===tc[1];[String(tc[0]),tc[1],gg+(ok?' ✓ matches':' ✗ wrong')].forEach(function(c,i){var td=document.createElement('td');td.textContent=c;if(i===2){td.className=ok?'ok':'no';}tr.appendChild(td);});tb.appendChild(tr);});}
+ var sc=api.$('swcode');if(sc){while(sc.firstChild){sc.removeChild(sc.firstChild);}var r=swRun(t.brk,t.lv);
+  codeLine(sc,'switch (level) {',false);
+  MEDALS.forEach(function(m,i){codeLine(sc,'    case '+(i+1)+':',false);var bt=document.createElement('button');bt.type='button';bt.className='ghost brk';bt.setAttribute('data-act','brk-'+i);bt.setAttribute('aria-pressed',t.brk[i]?'true':'false');bt.textContent=t.brk[i]?'break; added':'add break;';if(S.done['switch']){bt.disabled=true;}
+   codeLine(sc,'        System.out.println("'+m+'");'+(t.brk[i]?'\n        break;':''),r.lines.indexOf(i)>=0,bt);});
+  codeLine(sc,'}',false);api.$('lv').textContent=t.lv;var o=api.$('swout');o.textContent=r.out.length?r.out.join('\n'):'(nothing printed)';}
+ var mc=api.$('model-code');while(mc.firstChild){mc.removeChild(mc.firstChild);}
+ if(S.step===2){api.$('model-title').textContent='Score 95 with the current order';var g95=grade(t.order,95);t.order.forEach(function(k,i){codeLine(mc,(i?'else if':'if')+' (score >= '+RUNGS[k].min+')',i===g95.at);});codeLine(mc,'else',g95.at===3);api.$('model-note').textContent='Java tests from the top and stops at the first true condition: 95 gets '+g95.g+'.';}
+ else if(S.step===3){api.$('model-title').textContent='Arrow form of the same switch';MEDALS.forEach(function(m,i){codeLine(mc,'case '+(i+1)+' -> System.out.println("'+m+'");',t.lv===i+1);});api.$('model-note').textContent='Arrow labels run one branch only, so level '+t.lv+' prints '+(t.lv<=3?MEDALS[t.lv-1]:'nothing')+' with no break needed.';}
+ else{api.$('model-title').textContent='The code';api.$('model-note').textContent='The ordering and switch activities highlight the lines that run.';}
+ api.qa('.goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!t.g[k]);li.querySelector('.st').textContent=t.g[k]?'done':'open';});}
+};})();
+
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
+var SNAP={};
+function clone(o){return JSON.parse(JSON.stringify(o));}
+var LAST=TOPIC.steps,S;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init()};}
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,get S(){return S;}};
+function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
+function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}}
+function progress(){
+  var acts=TOPIC.acts,n=0,set=0;
+  acts.forEach(function(a,i){var p=qa('.pip',$('progress'))[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
+    p.className='pip'+(on?(S.settled[a]?' settled':' on'):'');});
+  $('prog-text').textContent='Activities done: '+n+' of '+acts.length+(set?' ('+set+' answered, not marked correct)':'');
+}
+function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
+function show(step,focus){
+  S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
+  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
+  if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
+    SNAP[step]={html:h,t:clone(S.t)};}
+  var rb=$('reset');rb.disabled=(step===LAST);
+  $('next').hidden=true;
+  if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
+    c.textContent='All '+TOPIC.acts.length+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: review its explanation above before moving on.':'.');}}
+  else{main.removeAttribute('data-pep-complete');}
+  TOPIC.render(S,api);progress();
+  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+}
+function optLabel(inp){return inp.closest('label');}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function explainList(set,chosen,mark){
+  var html='<ul>';
+  Object.keys(set.why).forEach(function(k){
+    var txt=qa('input[value="'+k+'"]',$(set.fs))[0];var lab=txt?optLabel(txt).textContent.trim():k;
+    var tag=(k===set.correct)?'<strong>Correct: </strong>':'<strong>Not this: </strong>';
+    html+='<li>'+(mark?tag:'')+'<span class="on">'+esc(lab)+'</span>: '+set.why[k]+(k===chosen?' <em>(your choice)</em>':'')+'</li>';
+  });
+  return html+'</ul>';
+}
+function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===set.correct&&(chosen===set.correct)){l.classList.add('right');}
+  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
+function firstDetails(){return '<details><summary>First question: every option explained</summary>'+explainList(TOPIC.apply.A,null,true)+'</details>';}
+function badges(ok,mine,who){return '<span class="badges">'+(mine?'<span class="badge me">'+who+'</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
+function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
+  w.innerHTML=badges(i.value===set.correct,i.value===chosen,'Your answer')+set.why[i.value];sp.appendChild(w);});}
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
+function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
+  var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
+  var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function checkApply(which){
+  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  if(which==='a'){
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
+    if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText());complete('apply');TOPIC.render(S,api);focusVerdict();return;}
+    S.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
+    say('<p class="verdict no">Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <span class="on">'+esc(S.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
+    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});TOPIC.render(S,api);
+    var t=$('task-apply-b');if(t){t.focus();}
+  } else {
+    var c2=checked('apply-b');if(!c2){return;}
+    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
+    if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+firstDetails()+confText());}
+    else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
+      say('<p class="verdict set">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+firstDetails()+confText());}
+    complete('apply');TOPIC.render(S,api);focusVerdict();
+  }
+}
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
+  if(!ch||!pc){return;}
+  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
+    if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
+  var html='<p class="verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+' Each option, explained:</p><ul class="explain">';
+  Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
+    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
+  say(html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||''),1);complete('predict');
+}
+function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
+function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
+  Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
+  qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
+  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  if(TOPIC.reset){TOPIC.reset(step,S,api);}
+  show(step,false);syncPrompt();var h=$('teach-'+step+'-h');if(h){h.focus();}}
+/* pep:component terminal@1 js */
+d.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b){return;}
+  if(b.id==='reset'){restart();return;}
+  if(b.id==='next'){show(S.step+1);return;}
+  if(b.id==='predict-check'){checkPredict();return;}
+  if(b.id==='apply-check'){checkApply('a');return;}
+  if(b.id==='apply-check-b'){checkApply('b');return;}
+  if(b.classList.contains('runbtn')){runTerminal(b.closest('.cmdline'));return;}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+});
+d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
+var HIST={};
+function prompt(){return TOPIC.prompt?TOPIC.prompt(S):'$';}
+function syncPrompt(){qa('.cmdline .pr').forEach(function(n){n.textContent=prompt();});}
+function runTerminal(box){
+  if(!box){return;}var inp=box.querySelector('input[type="text"]');if(!inp||inp.disabled){return;}
+  var line=inp.value,H=HIST[inp.id]||(HIST[inp.id]={l:[],i:0});if(line.trim()){H.l.push(line);}H.i=H.l.length;
+  var p=prompt();inp.value='';TOPIC.run(line,box.getAttribute('data-term'),S,api);
+  qa('.log .c:not([data-p])').forEach(function(n){n.setAttribute('data-p',p);});syncPrompt();inp.focus();}
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closest('.cmdline')||t.tagName!=='INPUT'){return;}
+  var H=HIST[t.id]||(HIST[t.id]={l:[],i:0});
+  if(e.key==='Enter'&&!e.isComposing){e.preventDefault();runTerminal(t.closest('.cmdline'));}
+  else if(e.key==='ArrowUp'){if(!H.l.length){return;}e.preventDefault();H.i=Math.max(0,H.i-1);t.value=H.l[H.i];}
+  else if(e.key==='ArrowDown'){if(!H.l.length){return;}e.preventDefault();H.i=Math.min(H.l.length,H.i+1);t.value=H.l[H.i]||'';}
+  else if(e.key==='Tab'&&!e.shiftKey&&!e.altKey&&!e.ctrlKey&&!e.metaKey){
+    // capture Tab only when a completion actually changes the line, so Tab never traps focus
+    var v=t.value.trim()&&TOPIC.complete?TOPIC.complete(t.value,S):null;if(v&&v!==t.value){e.preventDefault();t.value=v;}}
+  else if(e.key==='Escape'){var tk=$('task-'+S.step);if(tk){e.preventDefault();tk.setAttribute('tabindex','-1');tk.focus();}}
+});
+/* /pep:component terminal js */
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+setTheme(mq&&mq.matches?'dark':'light');
+if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+fresh();show(1,false);syncPrompt();
+})();
+
+</script>
+</body>
+</html>

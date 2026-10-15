@@ -10,23 +10,23 @@
 
 ### Start with a guess
 
-Everyone commits a mistake sometimes. Git has two ways to undo one, and the safe choice depends on who already has the commit. In the model, the dashed label origin/main marks what you have already pushed.
+Everyone commits a mistake sometimes. Git has two ways to undo one, and the safe choice depends on who already has the commit. In the model, the dashed label `origin/main` marks what you have already pushed.
 
 ### Revert what others already have
 
-git revert C3 adds a new commit that applies the opposite of C3's change. History keeps C3, so people who already have it simply pull the fix.
+`git revert C3` adds a new commit that applies the opposite of C3's change. History keeps C3, so people who already have it simply pull the fix.
 
-git reset instead moves your branch name back to an earlier commit; later commits drop out of your branch. If others already have those commits, your history no longer matches theirs, and Git rejects a normal push.
+`git reset` instead moves your branch name back to an earlier commit; later commits drop out of your branch. If others already have those commits, your history no longer matches theirs, and Git rejects a normal push.
 
 Rule of thumb: revert anything you have pushed.
 
 ### Reset what only you have
 
-git reset is fine for commits nobody else has. HEAD~1 means one commit before where you are.
+`git reset` is fine for commits nobody else has. `HEAD~1` means one commit before where you are.
 
-- --soft: the branch moves back; that commit's changes wait, staged, in the staging area.
-- No option (the default, --mixed): changes stay in the working copy, unstaged.
-- --hard: the branch moves back and staged and working-copy changes to tracked files are thrown away.
+- `--soft`: the branch moves back; that commit's changes wait, staged, in the staging area.
+- No option (the default, `--mixed`): changes stay in the working copy, unstaged.
+- `--hard`: the branch moves back and staged and working-copy changes to tracked files are thrown away.
 
 ### Apply it to a new mistake
 
@@ -44,9 +44,9 @@ Staging area: empty. Working copy changes: none.
 
 ## Recap
 
-- git revert <commit> adds a new commit that undoes an earlier one. History keeps the original. Use it for anything pushed.
-- git reset moves your branch back. Use it only for commits nobody else has.
-- --soft keeps the changes staged; the default keeps them unstaged; --hard throws them away.
+- `git revert <commit>` adds a new commit that undoes an earlier one. History keeps the original. Use it for anything pushed.
+- `git reset` moves your branch back. Use it only for commits nobody else has.
+- `--soft` keeps the changes staged; the default keeps them unstaged; `--hard` throws them away.
 - A reset of pushed commits makes your history differ from everyone else's, and a normal push is rejected.
 
 Next topic: Stash: setting work aside
@@ -55,10 +55,10 @@ Next topic: Stash: setting work aside
 
 |  |  |
 | --- | --- |
-| git revert <commit> | new commit that undoes <commit> |
-| git reset --soft HEAD~1 | undo last commit, keep changes staged |
-| git reset HEAD~1 | undo last commit, keep changes unstaged |
-| git reset --hard HEAD~1 | undo last commit and discard its changes |
+| `git revert <commit>` | new commit that undoes <commit> |
+| `git reset --soft HEAD~1` | undo last commit, keep changes staged |
+| `git reset HEAD~1` | undo last commit, keep changes unstaged |
+| `git reset --hard HEAD~1` | undo last commit and discard its changes |
 
 ## Sources
 

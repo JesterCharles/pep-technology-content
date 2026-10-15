@@ -1,0 +1,46 @@
+// Practice quiz: Designing tables from a user story
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: sql-jdbc-foundations/relational-design/designing-tables-from-a-user-story
+
+::o1 entity or attribute::Story: "As a shop owner, I want to record each product's price and the supplier it comes from." Suppliers have a name and a phone number. Which list holds only entities? {
+=product, supplier #Correct. The shop keeps many products and many suppliers, each with facts of its own, so each becomes a table.
+~price, phone number #Not quite. These are facts about one product or one supplier, so they become columns.
+~product, price #Not quite. price is a fact about a product, not a kind of thing with its own facts.
+~shop owner, supplier #Not quite. The shop owner is the person using the system; nothing in the story asks to store owners.
+}
+
+::o1 relationship words::In "A patient books appointments with a dentist", which part names a relationship? {
+=books ... with #Correct. The verb links a patient to a dentist; relationships become keys.
+~patient #Not quite. A patient is an entity, a kind of thing the system keeps many of.
+~dentist #Not quite. A dentist is an entity.
+~appointments, because it is plural #Not quite. Plural nouns are usually entities or the rows of a link table; the verb names the relationship.
+}
+
+::o2 foreign key placement::Story: each ticket is raised by one customer, and a customer can raise many tickets. Which design is right? {
+=customers (id PK, name) and tickets (id PK, customer_id FK to customers.id, subject) #Correct. Each table has a primary key, and the one-to-many link is a foreign key on the many side.
+~customers (id PK, name, ticket_id FK) and tickets (id PK, subject) #Not quite. One ticket_id column in customers could hold only one ticket.
+~one table tickets (id PK, customer_name, subject) #Not quite. Customer details would repeat on every ticket, and there is no customers table to point at.
+~customers (name, ticket) with no keys #Not quite. Every table needs a primary key, and the link needs a foreign key.
+}
+
+::o2 many to many::Story: a recipe uses many ingredients, and an ingredient appears in many recipes. Each use has a quantity. Where does quantity go? {
+=In a junction table recipe_ingredients (recipe_id, ingredient_id, quantity) #Correct. Quantity describes one recipe-ingredient pairing, so it belongs to the junction row.
+~In recipes #Not quite. A recipe uses many ingredients with different quantities.
+~In ingredients #Not quite. An ingredient appears in many recipes with different quantities.
+~Nowhere; quantities cannot be stored #Not quite. A fact about a link is stored in the junction table.
+}
+
+::o3 missing column::Criterion: "Each event shows its room." The design has events (id PK, title, event_date). What is missing? {
+=A room column in events #Correct. Room is one fact about one event, and no column stores it yet.
+~A rooms junction table #Not quite. Nothing here is many-to-many; one event has one room.
+~A primary key on events #Not quite. events already has id as its primary key.
+~Nothing; title can hold the room #Not quite. Mixing two facts in one column makes both hard to use; add a room column.
+}
+
+::o3 missing key::The design has signups (member_id FK, event_id FK, signed_up_at) and no primary key. Which change fixes the rule "every table has a primary key"? {
+=Add PRIMARY KEY (member_id, event_id) #Correct. The pair identifies each sign-up, and it also stops the same member signing up twice for one event.
+~Make member_id the primary key on its own #Not quite. A member signs up for many events, so member_id repeats.
+~Remove the foreign keys #Not quite. The foreign keys are needed for the links; the table just lacks a primary key.
+~Nothing; junction tables need no key #Not quite. Every table needs a primary key, including a junction table.
+}

@@ -20,15 +20,17 @@ coding-lab/
 - `README.md` covers the goal, prerequisites with a version check, setup, task steps, how to test, expected output, the offline note, cleanup and troubleshooting.
 - No other files or directories belong in a lab.
 
+A coding lab or course project is the only learner-artifact form that may require multiple files. The bundle root is the dependency boundary. `README.md` is the learner entrypoint and must contain the exact setup and test commands declared in `lab.json`. Every regular file shipped below `coding-lab/` is a required bundle file; exported bundles include `LAB_BUNDLE.sha256`, which inventories every other shipped file. No symlink, absolute path, `..` traversal, import, command, or file reference may require material outside the bundle. Language/runtime tools are allowed only when declared under `prerequisites`; core setup and tests follow the bundle's declared network policy.
+
 ## 2. Scope
 
 - A lab is scoped to a topic, a module or a course, or is honestly omitted.
 - Topic lab: one topic's objectives need real-toolchain practice that the page simulator cannot honestly give.
   It lives at `<course>/<module>/<topic>/coding-lab/`.
 - Module lab: one exercise set spans several topics in a module.
-  It lives at `<course>/<module>/coding-lab/` and is covered by `module.lock.json`.
+  It lives at `<course>/<module>/coding-lab/` and is covered by `authoring/catalog/<course>/<module>/module.lock.json`.
 - Course lab: a cumulative build across modules.
-  It lives at `<course>/coding-lab/` and is covered by `course.lock.json`.
+  It lives at `<course>/coding-lab/` and is covered by `authoring/catalog/<course>/course.lock.json`.
 - Omission: when the page simulator already gives truthful, assessed practice and a local toolchain adds setup cost without new learning.
   The topic records `lab: "none"` with a one-line reason confirmed by the educational critic.
 
@@ -67,6 +69,7 @@ coding-lab/
 - Reference solutions and hidden tests are written only in uncommitted private staging outside the repository.
   `platform-only/` is ignored by Git as a backstop, never as a storage location.
 - Validation runs the staged solution against the public tests and records only "solved at <commit> by run <id>", never a hash of the solution or a key.
+- The solved-run JSON is evidence, not part of the learner bundle. `authoring/schemas/solved-run.schema.json` owns its shape, and `authoring/docs/tools/evidence.md` defines its public-file binding.
 - The staged material is handed to the platform owner, and the staging copy is retired after confirmed upload.
 
 ## 9. Platform handoff
@@ -80,7 +83,7 @@ coding-lab/
 - The starter expectation holds.
 - The test command passes offline after setup against the private solution.
   This solved-run gate runs locally against uncommitted private staging only, never in CI, because solutions never enter the repository.
-  It is recorded in the lab's evidence as text of the form "solved at <commit> by run <id>", bound to the sha256 of the current lab bytes.
-  CI checks that this record is present and that its binding equals the current lab bytes; a missing or stale record fails the gate.
+  It is recorded in the lab's JSON evidence as text of the form "solved at <commit> by run <id>", with a lowercase sha256 binding for every tracked public lab file.
+  `authoring/tools/pep check` rejects missing, extra, duplicate, malformed, private-material and stale file bindings. A lab edit therefore invalidates the solved run even after its generated lock is refreshed; the private run must be repeated and re-recorded.
 - Cleanup leaves nothing behind.
 - Labs run on Ubuntu in CI; other operating systems are recorded locally until CI covers them.

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Known-good QA fixture</title>
   <style>
     :root {
@@ -9,9 +10,10 @@
       --bg: #fff;
       --ink: #172033;
       --line: #596274;
+      --focus: #5b3fd6;
     }
     @media (prefers-color-scheme: dark) {
-      :root { --bg: #111827; --ink: #f3f4f6; --line: #aeb8ca; }
+      :root { --bg: #111827; --ink: #f3f4f6; --line: #aeb8ca; --focus: #8b78ff; }
     }
     * { box-sizing: border-box; }
     body {
@@ -22,7 +24,7 @@
       max-width: 50rem;
       padding: 1rem;
     }
-    button, input {
+    button, input, textarea {
       background: var(--bg);
       border: 2px solid var(--line);
       color: var(--ink);
@@ -30,32 +32,62 @@
       margin: 0.25rem;
       padding: 0.5rem;
     }
-    button:focus-visible, input:focus-visible {
-      outline: 3px solid #d97706;
+    button:focus-visible, input:focus-visible, textarea:focus-visible, summary:focus-visible {
+      outline: 3px solid var(--focus);
       outline-offset: 2px;
     }
+    .pep-optional {
+      border-block: 1px solid var(--line);
+      margin-block: 1rem;
+    }
+    .pep-optional > summary {
+      align-items: center;
+      cursor: pointer;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem 0.75rem;
+      justify-content: space-between;
+      min-height: 44px;
+      padding-block: 0.5rem;
+    }
+    .pep-optional__cue, [data-pep-optional-time] { font-size: 0.875rem; }
+    .pep-optional__body { padding-block: 0.25rem 1rem; }
+    textarea { display: block; font-size: 16px; min-height: 5rem; width: 100%; }
     @media (prefers-reduced-motion: reduce) {
       * { animation: none !important; transition: none !important; }
+    }
+    @media print {
+      .pep-optional { break-inside: avoid; }
     }
   </style>
 </head>
 <body>
-  <main id="lesson" data-pep-complete="false">
+  <main id="lesson" data-pep-responsive data-pep-complete="false">
     <h1>Known-good QA fixture</h1>
     <section class="objectives" data-pep-objectives>
       <h2>Objectives</h2>
       <ul><li>Complete a safe interaction.</li></ul>
     </section>
-    <section class="teach" data-pep-teaching>
+    <section class="teach" data-pep-teaching data-pep-instructions>
       <h2>Teaching</h2>
       <p>Direct controls work without network access.</p>
     </section>
     <section id="model" data-pep-model>
       <h2>Model</h2>
       <p>A control updates local state.</p>
+      <details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+        <summary>
+          <span>Another way to think about it</span>
+          <span class="pep-optional__cue">Optional example</span>
+        </summary>
+        <div class="pep-optional__body" id="anecdote-body">
+          <p>A local control is like a lamp switch: changing it affects this room, not a remote building.</p>
+        </div>
+      </details>
     </section>
     <section
       data-interaction="practice"
+      data-pep-workspace="activity"
       data-static-alt="Choose the safe action, then compare it with the explained result."
     >
       <h2>Practice</h2>
@@ -69,6 +101,16 @@
       <p id="terminal-log"></p>
       <p id="progress">0 of 1</p>
       <p id="feedback" aria-live="polite"></p>
+      <details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+        <summary>Challenge (optional)</summary>
+        <div class="pep-optional__body" id="challenge-body">
+          <p data-pep-optional-time><strong>Optional time:</strong> about 2 minutes</p>
+          <p data-pep-success-criteria><strong>Success criteria:</strong> Write two safe actions using only the controls already taught.</p>
+          <label for="challenge-starter">Optional starter</label>
+          <textarea id="challenge-starter">safe action</textarea>
+          <button type="button" id="challenge-reset">Reset optional starter</button>
+        </div>
+      </details>
     </section>
     <section data-pep-recap>
       <h2>Recap</h2>
@@ -117,6 +159,18 @@
       credited = false;
       document.querySelector('#progress').textContent = '0 of 1';
       feedback.textContent = 'Activity restarted.';
+    });
+    document.querySelector('#challenge-reset').addEventListener('click', () => {
+      document.querySelector('#challenge-starter').value = 'safe action';
+    });
+    let printOpened = [];
+    addEventListener('beforeprint', () => {
+      printOpened = [...document.querySelectorAll('details[data-pep-optional]:not([open])')];
+      printOpened.forEach(details => { details.open = true; });
+    });
+    addEventListener('afterprint', () => {
+      printOpened.forEach(details => { details.open = false; });
+      printOpened = [];
     });
   </script>
 </body>

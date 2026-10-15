@@ -10,7 +10,7 @@ import { createCourseLock, createModuleLock } from "../tools/lib/locks.mjs";
 const repo = path.resolve(import.meta.dirname, "../..");
 const pep = path.join(repo, "authoring", "tools", "pep");
 const target = "demo-course/demo-module/demo-topic/artifact.html";
-const topicManifest = "demo-course/demo-module/demo-topic/topic.json";
+const topicManifest = "authoring/catalog/demo-course/demo-module/demo-topic/topic.json";
 
 function hash(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -26,6 +26,11 @@ async function fixture() {
   await cp(
     path.join(repo, "authoring/tests/fixtures/positive/demo-course"),
     path.join(root, "demo-course"),
+    { recursive: true },
+  );
+  await cp(
+    path.join(repo, "authoring/tests/fixtures/positive/authoring/catalog"),
+    path.join(root, "authoring/catalog"),
     { recursive: true },
   );
   const bytes = await readFile(path.join(root, target));
@@ -184,7 +189,7 @@ test("T25 leaves an explicitly open high recheck open", async () => {
   assert.match(result.stderr, /high finding finding-1 remains open/);
 });
 
-test("T25 lets a later current resolved recheck supersede an earlier open one", async () => {
+test("T02 and T25 preserve a topic recheck chain and close from its current report", async () => {
   const { root, digest } = await fixture();
   const oldDigest = "0".repeat(64);
   const original = report("education", oldDigest, { findings: [highFinding(oldDigest)] });
@@ -209,9 +214,22 @@ test("T25 lets a later current resolved recheck supersede an earlier open one", 
     reconciliation(digest, [decision("accept")]),
     [
       ["critic-education-recheck.json", makeRecheck(oldDigest, "open", "Still present.")],
-      ["second-critic-education-recheck.json", makeRecheck(digest, "resolved", "Corrected.")],
+      ["focused-final-critic-education-recheck.json", makeRecheck(digest, "resolved", "Corrected.")],
     ],
   );
+
+  const treeResult = check(root, "T02");
+  assert.equal(treeResult.status, 0, treeResult.stderr);
+
+  const lock = await createModuleLock(root, "demo-course", "demo-module");
+  const lockedEvidence = new Set(lock.evidenceBindings.map((binding) => binding.evidencePath));
+  assert.ok(lockedEvidence.has(
+    "authoring/evidence/demo-course/demo-module/demo-topic/critic-education-recheck.json",
+  ));
+  assert.ok(lockedEvidence.has(
+    "authoring/evidence/demo-course/demo-module/demo-topic/focused-final-critic-education-recheck.json",
+  ));
+
   const result = check(root);
   assert.equal(result.status, 0, result.stderr);
 });
@@ -292,7 +310,7 @@ test("T25 requires every finding to be reconciled", async () => {
   assert.match(result.stderr, /finding finding-1 is not reconciled/);
 });
 
-test("T25 requires recheck.of to identify a same-role original report", async () => {
+test("T25 requires prefixed recheck.of to identify a same-role original report", async () => {
   const { root, digest } = await fixture();
   const recheck = report("education", digest, {
     recheck: {
@@ -305,11 +323,31 @@ test("T25 requires recheck.of to identify a same-role original report", async ()
     report("education", digest),
     report("sme", digest),
     null,
-    [["critic-education-recheck.json", recheck]],
+    [["focused-critic-education-recheck.json", recheck]],
   );
   const result = check(root);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /existing education critic report in this scope/);
+});
+
+test("T25 rejects a role-mismatched prefixed topic recheck", async () => {
+  const { root, digest } = await fixture();
+  const recheck = report("sme", digest, {
+    recheck: {
+      of: "authoring/evidence/demo-course/demo-module/demo-topic/critic-sme.json",
+      items: [],
+    },
+  });
+  await writeTopicEvidence(
+    root,
+    report("education", digest),
+    report("sme", digest),
+    null,
+    [["focused-critic-education-recheck.json", recheck]],
+  );
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /filename role education differs from role sme/);
 });
 
 test("T25 treats reject-with-evidence as closed", async () => {
@@ -392,6 +430,45 @@ test("T25 covers a course-level assessment blueprint with prefixed evidence", as
     path.join(evidence, "intake-critic-sme.json"),
     report("sme", blueprintDigest, { reviewedPath: blueprintPath }),
   );
+  const result = check(root);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("T25 discovers learner-safe assessments and labs at course and module scope", async () => {
+  const { root, digest } = await fixture();
+  await writeTopicEvidence(root, report("education", digest), report("sme", digest));
+  const scopes = [
+    {
+      content: "demo-course",
+      evidence: "authoring/evidence/demo-course",
+      prefix: "course-work",
+      files: ["coding-lab/lab.json", "coding-lab/README.md", "assessments/check/blueprint.json"],
+    },
+    {
+      content: "demo-course/demo-module",
+      evidence: "authoring/evidence/demo-course/demo-module",
+      prefix: "module-work",
+      files: ["coding-lab/lab.json", "coding-lab/README.md", "assessments/check/blueprint.json"],
+    },
+  ];
+  for (const scope of scopes) {
+    const artifactHashes = {};
+    for (const relativeFile of scope.files) {
+      const file = path.join(root, scope.content, relativeFile);
+      await mkdir(path.dirname(file), { recursive: true });
+      await writeFile(file, `fixture ${relativeFile}\n`);
+      artifactHashes[relativeFile] = hash(await readFile(file));
+    }
+    for (const role of ["education", "sme"]) {
+      await writeJson(
+        path.join(root, scope.evidence, `${scope.prefix}-critic-${role}.json`),
+        report(role, artifactHashes[scope.files[0]], {
+          reviewedPath: `${scope.content}/${scope.files[0]}`,
+          artifactHashes,
+        }),
+      );
+    }
+  }
   const result = check(root);
   assert.equal(result.status, 0, result.stderr);
 });
@@ -517,11 +594,11 @@ test("a removed binding is explicit, historical, and accepted by T06", async () 
   assert.equal(binding.missing, true);
 
   await writeJson(
-    path.join(root, "demo-course/course.lock.json"),
+    path.join(root, "authoring/catalog/demo-course/course.lock.json"),
     await createCourseLock(root, "demo-course"),
   );
   await writeJson(
-    path.join(root, "demo-course/demo-module/module.lock.json"),
+    path.join(root, "authoring/catalog/demo-course/demo-module/module.lock.json"),
     moduleLock,
   );
   await cp(path.join(repo, "authoring/schemas"), path.join(root, "authoring/schemas"), { recursive: true });
@@ -552,9 +629,9 @@ async function lockFixtureWithHistoricalCourseBinding() {
   });
   const courseLock = await createCourseLock(root, "demo-course");
   const moduleLock = await createModuleLock(root, "demo-course", "demo-module");
-  await writeJson(path.join(root, "demo-course/course.lock.json"), courseLock);
+  await writeJson(path.join(root, "authoring/catalog/demo-course/course.lock.json"), courseLock);
   await writeJson(
-    path.join(root, "demo-course/demo-module/module.lock.json"),
+    path.join(root, "authoring/catalog/demo-course/demo-module/module.lock.json"),
     moduleLock,
   );
   return { root, manifestFile, courseLock };
@@ -572,7 +649,7 @@ test("editing module topic.json leaves the course lock current", async () => {
   await changeTopicManifest(manifestFile);
   assert.deepEqual(await createCourseLock(root, "demo-course"), courseLock);
   await writeJson(
-    path.join(root, "demo-course/demo-module/module.lock.json"),
+    path.join(root, "authoring/catalog/demo-course/demo-module/module.lock.json"),
     await createModuleLock(root, "demo-course", "demo-module"),
   );
 

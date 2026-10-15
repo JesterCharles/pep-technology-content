@@ -3,7 +3,7 @@ import path from "node:path";
 import {
   error,
   exists,
-  findCourseRoots,
+  findCourses,
   loadCourse,
   readJson,
   resolveRepositoryPath,
@@ -17,11 +17,11 @@ export const description = "source link receipts";
 
 export async function run(ctx) {
   const out = [];
-  for (const courseRoot of await findCourseRoots(ctx)) {
-    const course = await loadCourse(courseRoot);
+  for (const courseDescriptor of await findCourses(ctx)) {
+    const course = await loadCourse(courseDescriptor);
     for (const module of course.modules) {
       for (const topicId of module.manifest.topicOrder ?? []) {
-        const topicFile = path.join(module.root, topicId, "topic.json");
+        const topicFile = path.join(module.catalogRoot, topicId, "topic.json");
         const topic = await readJson(topicFile).catch(() => null);
         if (!topic || topic.artifacts?.html?.status !== "present") {
           continue;
@@ -33,7 +33,7 @@ export async function run(ctx) {
           out.push(error(id, ctx.display(topicFile), "unverified source claims must be listed"));
         }
         const receiptFile = await resolveRepositoryPath(
-          ctx.root,
+          course.repoRoot,
           topic.freshness?.sourcesRef ?? "",
         );
         if (!(await exists(receiptFile))) {
@@ -47,7 +47,7 @@ export async function run(ctx) {
           out.push(error(id, ctx.display(receiptFile), `invalid receipt JSON: ${issue.message}`));
           continue;
         }
-        const artifact = path.join(path.dirname(topicFile), "artifact.html");
+        const artifact = path.join(module.contentRoot, topicId, "artifact.html");
         if (receipt.reviewedSha256 !== sha256(await readFile(artifact))) {
           out.push(error(id, ctx.display(receiptFile), "receipt does not bind current artifact bytes"));
         }

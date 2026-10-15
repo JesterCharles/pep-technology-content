@@ -1,11 +1,13 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import {
+  catalogPath,
   evidencePath,
   fileRecord,
   posix,
   readJson,
   relative,
+  resolveCatalogMetadataPath,
   resolveRepositoryPath,
   sha256,
   walk,
@@ -78,9 +80,10 @@ async function bindingTarget(repoRoot, binding, artifactRoot) {
   if (!binding.relativeToArtifact && path.isAbsolute(binding.target)) return null;
   const base = binding.relativeToArtifact ? artifactRoot : repoRoot;
   if (!base) return null;
-  const target = binding.relativeToArtifact
+  const candidate = binding.relativeToArtifact
     ? path.resolve(base, binding.target)
     : await resolveRepositoryPath(repoRoot, binding.target);
+  const target = await resolveCatalogMetadataPath(repoRoot, candidate);
   const root = path.resolve(repoRoot);
   if (target !== root && !target.startsWith(`${root}${path.sep}`)) return null;
   return target;
@@ -153,10 +156,13 @@ async function evidenceBindings(repoRoot, evidenceFiles, contextFor) {
 
 export async function createModuleLock(repoRoot, courseId, moduleId) {
   const moduleRoot = path.join(repoRoot, courseId, moduleId);
-  const moduleWalk = await walk(moduleRoot);
-  const moduleFiles = moduleWalk.files.filter(
-    (file) => path.basename(file) !== "module.lock.json",
-  );
+  const moduleCatalogRoot = catalogPath(repoRoot, courseId, moduleId);
+  const contentWalk = await walk(moduleRoot);
+  const catalogWalk = await walk(moduleCatalogRoot);
+  const moduleFiles = [
+    ...contentWalk.files,
+    ...catalogWalk.files.filter((file) => path.basename(file) !== "module.lock.json"),
+  ];
   const evidenceRoot = evidencePath(repoRoot, courseId, moduleId);
   const evidenceWalk = await walk(evidenceRoot);
   const allFiles = [...moduleFiles, ...evidenceWalk.files];
@@ -171,7 +177,7 @@ export async function createModuleLock(repoRoot, courseId, moduleId) {
     };
   });
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     course: courseId,
     module: moduleId,
     files: await records(repoRoot, allFiles),
@@ -196,8 +202,9 @@ export async function createModuleLock(repoRoot, courseId, moduleId) {
 
 export async function createCourseLock(repoRoot, courseId) {
   const courseRoot = path.join(repoRoot, courseId);
-  const courseManifest = await readJson(path.join(courseRoot, "course.json"));
-  const courseFiles = [path.join(courseRoot, "course.json")];
+  const courseManifestFile = catalogPath(repoRoot, courseId, "course.json");
+  const courseManifest = await readJson(courseManifestFile);
+  const courseFiles = [courseManifestFile];
   for (const name of ["assessments", "coding-lab"])
     courseFiles.push(...(await walk(path.join(courseRoot, name))).files);
   const evidenceRoot = evidencePath(repoRoot, courseId);
@@ -210,10 +217,13 @@ export async function createCourseLock(repoRoot, courseId) {
   const files = [...courseFiles, ...courseEvidence];
   const bindings = await evidenceBindings(repoRoot, courseEvidence, () => ({
     artifactRoot: courseRoot,
-    historicalRoots: [...moduleIds].map((moduleId) => path.join(courseRoot, moduleId)),
+    historicalRoots: [...moduleIds].flatMap((moduleId) => [
+      path.join(courseRoot, moduleId),
+      catalogPath(repoRoot, courseId, moduleId),
+    ]),
   }));
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     course: courseId,
     evidenceBindingScope: "course-level-files",
     files: await records(repoRoot, files),

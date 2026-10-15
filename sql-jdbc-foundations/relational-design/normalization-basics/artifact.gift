@@ -1,0 +1,46 @@
+// Practice quiz: Normalization basics
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: sql-jdbc-foundations/relational-design/normalization-basics
+
+::o1 spot the repetition::A table orders (order_id, customer_name, customer_phone, product, qty) has 12 orders from Kai. What is stored more often than it needs to be? {
+=Kai's name and phone, once per order #Correct. Facts about Kai are repeated in every one of Kai's order rows.
+~order_id #Not quite. Each order has its own id; it is not repeated.
+~qty #Not quite. Each quantity belongs to its own order.
+~Nothing; every row is different #Not quite. Rows can differ while still repeating the same customer facts.
+}
+
+::o1 update anomaly::Kai's phone number is stored in 12 order rows. Someone changes it in 11 of them. What is this problem called? {
+=An update anomaly #Correct. One fact stored in many places must change everywhere; missing one copy makes the table contradict itself.
+~An insert anomaly #Not quite. An insert anomaly is being unable to store a fact without an unrelated one.
+~A delete anomaly #Not quite. A delete anomaly is losing a fact when a row is removed.
+~A foreign key violation #Not quite. Nothing here checks a link; the copies simply disagree.
+}
+
+::o1 delete anomaly::In a sheet of enrollments (student, course_code, course_title), the last student in course BIO200 drops out and the row is deleted. What else is lost? {
+=The title of BIO200, because no other row stored it #Correct. A fact that lived only inside the deleted row disappears with it: a delete anomaly.
+~Nothing; titles are stored elsewhere #Not quite. In this sheet the title exists only inside enrollment rows.
+~Every other course's title #Not quite. Only the facts in the deleted row are lost.
+~The student's other enrollments #Not quite. Deleting one row removes only that row.
+}
+
+::o1 multi valued::A cell in a members table holds "555-0101, 555-0199". What is wrong? {
+=One cell holds two values, so each phone number cannot be stored, searched or changed on its own #Correct. Keep one value per cell, for example a phones table with one row per number.
+~Nothing; commas are allowed in text #Not quite. It is allowed as text, but two facts hide in one cell.
+~Phone numbers must be stored as integers #Not quite. The problem is two values in one cell, not the type.
+~The cell is too long #Not quite. Length is not the issue; the number of values is.
+}
+
+::o2 split the table::orders (order_id, customer_name, customer_phone, product, qty) repeats customer details. Which split stores each fact once? {
+=customers (id, name, phone) and orders (order_id, customer_id, product, qty), with orders.customer_id a foreign key #Correct. Customer facts live once in customers, and each order points at its customer by key.
+~orders1 and orders2, each with half of the rows #Not quite. Splitting rows keeps the same repetition in both halves.
+~customers (id, name, phone, order_id) and orders (order_id, product, qty) #Not quite. One order_id column in customers holds one order, but a customer has many.
+~Keep one table and add phone2 #Not quite. Extra columns for the same fact make a repeating group.
+}
+
+::o2 after the split::After splitting into customers and orders linked by customer_id, Kai changes phone number. How many cells change? {
+=One, in Kai's row of customers #Correct. The phone is stored once, so one change is enough and nothing can drift.
+~Twelve, one per order #Not quite. Orders now store only customer_id, not the phone.
+~Thirteen, all orders plus the customer #Not quite. The phone is no longer in orders.
+~None; foreign keys update it #Not quite. You still change the one stored copy yourself.
+}

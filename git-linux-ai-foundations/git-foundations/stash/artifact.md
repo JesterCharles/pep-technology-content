@@ -13,44 +13,44 @@ Sometimes you must drop what you are doing: an urgent bug needs you on another b
 
 ### The stash is a shelf for unfinished work
 
-git stash saves your changes to tracked files (staged or not) on a stack called the stash, and resets those files to the last commit. Now you can switch branches.
+`git stash` saves your changes to tracked files (staged or not) on a stack called the stash, and resets those files to the last commit. Now you can switch branches.
 
-By default untracked files, never added, stay in the working copy; git stash -u includes them.
+By default untracked files, never added, stay in the working copy; `git stash -u` includes them.
 
-git stash list shows entries; the newest is stash@{0}. git stash pop reapplies the newest entry to the branch you are on now and, once it applies cleanly, removes it from the stack, so switch back first. If applying it causes conflicts, the entry stays in the stash: resolve them, then remove it with git stash drop.
+`git stash list` shows entries; the newest is `stash@{0}`. `git stash pop` reapplies the newest entry to the branch you are on now and, once it applies cleanly, removes it from the stack, so switch back first. If applying it causes conflicts, the entry stays in the stash: resolve them, then remove it with `git stash drop`.
 
 ### Apply it to new files
 
-Same rule: plain git stash takes tracked changes only.
+Same rule: plain `git stash` takes tracked changes only.
 
 ## Model
 
 Practice repository Simulation: no real Git runs
 
-### Working copyon feature
+### Working copy on feature
 
-- app.jsmodified
-- draft.mduntracked
+- app.js modified
+- draft.md untracked
 
-### Staging areanext commit
+### Staging area next commit
 
 - nothing staged
 
-### Brancheslatest commit
+### Branches latest commit
 
-- mainC3 Fix login
-- HEAD → featureC4 Add search
+- main C3 Fix login
+- HEAD → feature C4 Add search
 
-### Stashnewest first
+### Stash newest first
 
 - empty
 
 ## Recap
 
-- git stash sets aside changes to tracked files and returns them to the last commit, so you can switch.
-- Untracked files stay unless you use git stash -u.
-- git stash list shows entries; stash@{0} is the newest.
-- git stash pop reapplies the newest entry to the current branch and removes it once it applies cleanly (after a conflict the entry stays until you drop it), so switch back first.
+- `git stash` sets aside changes to tracked files and returns them to the last commit, so you can switch.
+- Untracked files stay unless you use `git stash -u`.
+- `git stash list` shows entries; `stash@{0}` is the newest.
+- `git stash pop` reapplies the newest entry to the current branch and removes it once it applies cleanly (after a conflict the entry stays until you drop it), so switch back first.
 
 Next topic: Remotes: SSH keys, clone, push, fetch vs pull
 
@@ -58,10 +58,10 @@ Next topic: Remotes: SSH keys, clone, push, fetch vs pull
 
 |  |  |
 | --- | --- |
-| git stash | set aside tracked changes |
-| git stash -u | also set aside untracked files |
-| git stash list | show saved entries |
-| git stash pop | reapply newest entry here and remove it (kept if it conflicts) |
+| `git stash` | set aside tracked changes |
+| `git stash -u` | also set aside untracked files |
+| `git stash list` | show saved entries |
+| `git stash pop` | reapply newest entry here and remove it (kept if it conflicts) |
 
 ## Sources
 

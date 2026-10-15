@@ -6,6 +6,7 @@ import path from "node:path";
 import test from "node:test";
 import { resolveRepositoryPath } from "../tools/lib/common.mjs";
 import { lockedFilePath } from "../tools/checks/T19-curriculum.mjs";
+import { selectTopics } from "../tools/net/check-links.mjs";
 
 const repo = path.resolve(import.meta.dirname, "../..");
 const pep = path.join(repo, "authoring/tools/pep");
@@ -72,12 +73,11 @@ test("curriculum lock resolves only its historical extraction-tool path", async 
   );
 });
 
-test("default scans reject a valid course below the repository root", async () => {
+test("default scans reject a course catalog below the repository catalog root", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "pep-nested-course-"));
-  await cp(
-    path.join(repo, "authoring/tests/fixtures/positive/demo-course"),
-    path.join(root, "v2/demo-course"),
-    { recursive: true },
+  await put(
+    path.join(root, "v2/authoring/catalog/demo-course/course.json"),
+    `${JSON.stringify({ id: "demo-course", moduleOrder: [] }, null, 2)}\n`,
   );
 
   const result = spawnSync(process.execPath, [pep, "check", "--only", "T02"], {
@@ -85,30 +85,125 @@ test("default scans reject a valid course below the repository root", async () =
     encoding: "utf8",
   });
   assert.notEqual(result.status, 0);
-  assert.match(
-    result.stderr,
-    /v2\/demo-course\/course\.json: course directory must be a direct child/,
+  assert.match(result.stderr, /course\.json: authoring metadata is outside a canonical course catalog/);
+});
+
+test("default scans reject every metadata class in a nested catalog", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-nested-metadata-"));
+  const files = [
+    "v2/authoring/catalog/demo-course/course.json",
+    "v2/authoring/catalog/demo-course/course.lock.json",
+    "v2/authoring/catalog/demo-course/demo-module/module.json",
+    "v2/authoring/catalog/demo-course/demo-module/module.lock.json",
+    "v2/authoring/catalog/demo-course/demo-module/demo-topic/topic.json",
+  ];
+  for (const file of files) await put(path.join(root, file), "{}\n");
+  const result = spawnSync(process.execPath, [pep, "check", "--only", "T02"], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  assert.notEqual(result.status, 0);
+  for (const file of files) {
+    assert.match(result.stderr, new RegExp(`${file.replaceAll("/", "\\/")}: authoring metadata is outside`));
+  }
+});
+
+test("T02 rejects non-slug, reserved, and id-mismatched catalog courses", async () => {
+  for (const [directory, manifestId, message] of [
+    ["Bad-Directory", "Bad-Directory", "catalog course directory must be a slug"],
+    ["build", "build", "reserved root cannot be a catalog course"],
+    ["demo-course", "other-course", "catalog course directory must equal id"],
+  ]) {
+    const root = await mkdtemp(path.join(os.tmpdir(), "pep-invalid-catalog-course-"));
+    await put(
+      path.join(root, "authoring/catalog", directory, "course.json"),
+      `${JSON.stringify({ id: manifestId, moduleOrder: [] }, null, 2)}\n`,
+    );
+    const result = spawnSync(process.execPath, [pep, "check", "--only", "T02"], {
+      cwd: root,
+      encoding: "utf8",
+    });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, new RegExp(message));
+  }
+});
+
+test("T02 rejects authoring metadata in a learner directory", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-content-metadata-"));
+  await put(
+    path.join(root, "authoring/catalog/demo-course/course.json"),
+    `${JSON.stringify({ id: "demo-course", moduleOrder: [] }, null, 2)}\n`,
+  );
+  await put(path.join(root, "demo-course/course.json"), "{}\n");
+
+  const result = spawnSync(process.execPath, [pep, "check", "--only", "T02"], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /demo-course\/course\.json: authoring metadata is outside a canonical course catalog/);
+});
+
+test("explicit learner and catalog paths select the same course", () => {
+  const fixture = path.join(repo, "authoring/tests/fixtures/positive");
+  for (const target of [
+    path.join(fixture, "demo-course/demo-module/demo-topic/artifact.html"),
+    path.join(fixture, "authoring/catalog/demo-course/demo-module/demo-topic/topic.json"),
+  ]) {
+    const result = spawnSync(process.execPath, [pep, "check", "--only", "T02", target], {
+      cwd: repo,
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, result.stderr);
+  }
+});
+
+test("moved metadata references resolve narrowly to the catalog", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-catalog-alias-"));
+  const physical = path.join(root, "authoring/catalog/course/module/topic/topic.json");
+  await put(physical, "{}\n");
+  assert.equal(await resolveRepositoryPath(root, "course/module/topic/topic.json"), physical);
+  assert.equal(
+    await resolveRepositoryPath(root, "course/module/topic/artifact.html"),
+    path.join(root, "course/module/topic/artifact.html"),
   );
 });
 
-test("default scans reject reserved roots as courses", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "pep-reserved-course-"));
-  for (const id of ["authoring", "components", "curriculum", "evidence"]) {
-    await put(
-      path.join(root, id, "course.json"),
-      `${JSON.stringify({ id, moduleOrder: [] }, null, 2)}\n`,
-    );
-  }
+test("source-link selection validates inputs and supports catalog manifest scopes", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-link-selection-"));
+  const catalog = path.join(root, "authoring/catalog/demo-course");
+  await put(
+    path.join(catalog, "course.json"),
+    '{"id":"demo-course","moduleOrder":["module-one","module-two"]}\n',
+  );
+  await put(
+    path.join(catalog, "module-one/module.json"),
+    '{"id":"module-one","topicOrder":["topic-one","topic-two"]}\n',
+  );
+  await put(path.join(catalog, "module-one/topic-one/topic.json"), '{"id":"topic-one"}\n');
+  await put(path.join(catalog, "module-one/topic-two/topic.json"), '{"id":"topic-two"}\n');
+  await put(
+    path.join(catalog, "module-two/module.json"),
+    '{"id":"module-two","topicOrder":["topic-three"]}\n',
+  );
+  await put(path.join(catalog, "module-two/topic-three/topic.json"), '{"id":"topic-three"}\n');
 
-  const result = spawnSync(process.execPath, [pep, "check", "--only", "T02"], {
-    cwd: root,
-    encoding: "utf8",
-  });
-  assert.notEqual(result.status, 0);
-  for (const id of ["authoring", "components", "curriculum", "evidence"]) {
-    assert.match(
-      result.stderr,
-      new RegExp(`${id}/course\\.json: reserved root cannot be a course directory`),
-    );
-  }
+  assert.equal((await selectTopics(root, [path.join(catalog, "course.json")])).length, 3);
+  assert.equal((await selectTopics(root, [path.join(catalog, "module-one/module.json")])).length, 2);
+  assert.equal(
+    (await selectTopics(root, [path.join(catalog, "module-one/topic-one/topic.json")])).length,
+    1,
+  );
+  await assert.rejects(selectTopics(root, [path.join(root, "does-not-exist")]), /path does not exist/);
+  const unrelated = path.join(root, "demo-course/README.md");
+  await put(unrelated, "course notes\n");
+  await assert.rejects(selectTopics(root, [unrelated]), /select no catalog topics/);
+});
+
+test("an existing learner metadata path takes precedence over the catalog alias", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-catalog-precedence-"));
+  const direct = path.join(root, "course/course.json");
+  await put(direct, "direct\n");
+  await put(path.join(root, "authoring/catalog/course/course.json"), "catalog\n");
+  assert.equal(await resolveRepositoryPath(root, "course/course.json"), direct);
 });

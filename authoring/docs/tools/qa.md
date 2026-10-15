@@ -22,7 +22,7 @@ The harness uses the Playwright-managed Chromium pinned by `package-lock.json`.
 
 ## Topic path file
 
-Every HTML topic has
+Every HTML topic is joined by ids from `authoring/catalog/<course>/<module>/<topic>/topic.json` to the learner directory and has
 `authoring/evidence/<course>/<module>/<topic>/qa-paths.json`, validated by
 `authoring/schemas/qa-paths.schema.json`.
 Selectors belong to the page, not to the harness. A path is an ordered list of declarative actions.
@@ -130,17 +130,25 @@ Git `tNN.json` files, and the reusable route roles of AI `spec.js`. No course-1 
 
 ## Gate behavior
 
-- **T09:** loads the exact `artifact.html` through `file://`, blocks non-local requests, and fails console errors,
-  uncaught exceptions, and attempted network access.
+- **T09:** loads the exact `artifact.html` through `file://`, blocks network and sibling `file:` requests (only the
+  page itself may load), and fails console errors, uncaught exceptions, and attempted network or sibling-file access.
+  It also loads with JavaScript disabled: the document must remain non-empty, native optional disclosures must open
+  and expose their content, and each `[data-pep-workspace="code"]` must expose one non-empty
+  `<noscript data-pep-no-js>` reading.
 - **T10:** runs all three routes inside an iframe whose only sandbox token is `allow-scripts`. Its opaque origin makes
   unguarded Web Storage access fail naturally.
 - **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion.
 - **T12:** permits no serious or critical axe findings; runs the keyboard and reduced-motion success routes; requires
   `aria-live`; checks direct body text at 4.5:1 and rendered borders at 3:1 in forced light and dark themes. Fully
   transparent borders are not rendered and are excluded.
-- **T13:** checks 1366x768 light, 1366x681 light, 400x860 dark, and an equivalent 200% zoom CSS viewport. It rejects
-  horizontal overflow and clipped essential controls or text. Non-rendered content—including descendants of closed
-  `details`, CSS-hidden content, and zero-size live regions with no visible descendants—is excluded.
+- **T13:** for pages whose root main carries `data-pep-responsive`, checks 1366×768 and short desktop; 320×568 and
+  390×844 phone portraits; 844×390 phone landscape; 768×1024 tablet portrait; and an equivalent 200% zoom CSS
+  viewport. Light and dark contexts are represented. Unmigrated pages retain the previous desktop, short desktop,
+  400×860 and 200% zoom matrix until they are re-authored; add the marker only with the responsive migration.
+  Touch contexts execute the required wrong-twice route with real tap events and reject visible semantic action targets
+  below 44×44 CSS px. Every context rejects page-level horizontal overflow and clipped essential controls or text.
+  Non-rendered content—including descendants of closed `details`, CSS-hidden content, and zero-size live regions with
+  no visible descendants—is excluded.
 - **T18:** regenerates Markdown in memory and requires byte equality. A declared PDF must load as PDF and contain an
   extractable text map (or produce non-empty `pdftotext` output when that tool is installed).
 
@@ -159,7 +167,8 @@ Use `<pre>`, block `<code>`, `.diff`, `[data-diff]` or `[data-code-block]` for l
 label/value child classes or attributes for labelled rows. Nested section markers have structural ownership, so a
 recap containing a cheat sheet and sources emits each section once; repeated text in distinct sections is not
 deduplicated. Missing objectives or static alternatives fail rather than being invented. PDF rendering uses
-`authoring/tools/qa/print-template.html` version 1 and pinned Playwright Chromium.
+`authoring/tools/qa/print-template.html` at the `PRINT_TEMPLATE_VERSION` declared in `pdf-from-md.mjs` and pinned
+Playwright Chromium.
 
 ## Provenance
 

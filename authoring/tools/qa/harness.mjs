@@ -4,13 +4,22 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
 import { chromium } from "playwright";
-import { evidencePath, findCourseRoots, readJson } from "../lib/common.mjs";
+import { evidencePath, findCourses, loadCourse, readJson } from "../lib/common.mjs";
 
 export const VIEWPORTS = [
   { name: "desktop", width: 1366, height: 768, theme: "light", zoom: 1 },
   { name: "short", width: 1366, height: 681, theme: "light", zoom: 1 },
-  { name: "mobile", width: 400, height: 860, theme: "dark", zoom: 1 },
+  { name: "phone-320", width: 320, height: 568, theme: "dark", zoom: 1, touch: true },
+  { name: "phone-390", width: 390, height: 844, theme: "light", zoom: 1, touch: true },
+  { name: "phone-landscape", width: 844, height: 390, theme: "dark", zoom: 1, touch: true },
+  { name: "tablet-768", width: 768, height: 1024, theme: "light", zoom: 1, touch: true },
   { name: "zoom-200", width: 1366, height: 768, theme: "light", zoom: 2 },
+];
+const LEGACY_VIEWPORTS = [
+  VIEWPORTS[0],
+  VIEWPORTS[1],
+  { name: "mobile", width: 400, height: 860, theme: "dark", zoom: 1 },
+  VIEWPORTS.at(-1),
 ];
 const PACKAGE = JSON.parse(
   await readFile(new URL("../../../package.json", import.meta.url), "utf8"),
@@ -31,14 +40,13 @@ export async function launchChromium() {
 
 export async function findHtmlTopics(ctx) {
   const topics = [];
-  for (const courseRoot of await findCourseRoots(ctx)) {
-    const course = await readJson(path.join(courseRoot, "course.json"));
-    for (const moduleId of course.moduleOrder ?? []) {
-      const moduleRoot = path.join(courseRoot, moduleId);
-      const module = await readJson(path.join(moduleRoot, "module.json")).catch(() => null);
-      for (const topicId of module?.topicOrder ?? []) {
-        const topicRoot = path.join(moduleRoot, topicId);
-        const manifest = await readJson(path.join(topicRoot, "topic.json")).catch(() => null);
+  for (const descriptor of await findCourses(ctx)) {
+    const course = await loadCourse(descriptor);
+    for (const module of course.modules) {
+      const moduleId = module.id;
+      for (const topicId of module.manifest.topicOrder ?? []) {
+        const topicRoot = path.join(module.contentRoot, topicId);
+        const manifest = await readJson(path.join(module.catalogRoot, topicId, "topic.json")).catch(() => null);
         if (manifest?.artifacts?.html?.status !== "present") continue;
         topics.push({
           courseId: course.id,
@@ -50,9 +58,9 @@ export async function findHtmlTopics(ctx) {
           manifest,
           displayHtml: ctx.display(path.join(topicRoot, "artifact.html")),
           displaySpec: ctx.display(
-            evidencePath(ctx.root, course.id, moduleId, topicId, "qa-paths.json"),
+            evidencePath(course.repoRoot, course.id, moduleId, topicId, "qa-paths.json"),
           ),
-          spec: evidencePath(ctx.root, course.id, moduleId, topicId, "qa-paths.json"),
+          spec: evidencePath(course.repoRoot, course.id, moduleId, topicId, "qa-paths.json"),
         });
       }
     }
@@ -83,10 +91,15 @@ function attachDiagnostics(page, log) {
   page.on("pageerror", (error) => log.push(`page error: ${error.message}`));
 }
 
-async function blockNetwork(page, log) {
+async function blockNetwork(page, log, pageUrl) {
   await page.route("**/*", async (route) => {
     const url = route.request().url();
-    if (/^(file:|data:|about:|blob:)/.test(url)) return route.continue();
+    if (/^(data:|about:|blob:)/.test(url)) return route.continue();
+    if (url.startsWith("file:")) {
+      if (pageUrl && url.split(/[?#]/)[0] === pageUrl) return route.continue();
+      log.push(`sibling file request: ${url}`);
+      return route.abort("blockedbyclient");
+    }
     log.push(`network request: ${url}`);
     return route.abort("blockedbyclient");
   });
@@ -230,7 +243,10 @@ async function perform(target, action, options = {}) {
       return;
     }
   }
-  if (action.do === "click") await locator.click();
+  if (action.do === "click") {
+    if (options.touch) await locator.tap();
+    else await locator.click();
+  }
   else if (action.do === "check") await locator.check();
   else if (action.do === "fill") await locator.fill(action.value ?? "");
   else if (action.do === "press") await locator.press(action.key);
@@ -246,16 +262,19 @@ async function withPage(browser, topic, options, callback) {
     viewport: options.viewport ?? { width: 1366, height: 768 },
     colorScheme: options.theme ?? "light",
     reducedMotion: options.reducedMotion ? "reduce" : "no-preference",
+    hasTouch: options.touch ?? false,
+    javaScriptEnabled: options.javaScriptEnabled ?? true,
   });
   const page = await context.newPage();
   const diagnostics = [];
   const label = (options.label ?? "page").replace(/[^a-z0-9-]+/gi, "-");
   attachDiagnostics(page, diagnostics);
-  if (options.offline !== false) await blockNetwork(page, diagnostics);
+  const pageUrl = pathToFileURL(topic.html).href;
+  if (options.offline !== false) await blockNetwork(page, diagnostics, pageUrl);
   await context.tracing.start({ screenshots: true, snapshots: true });
   let failed = false;
   try {
-    await page.goto(pathToFileURL(topic.html).href, { waitUntil: "load" });
+    await page.goto(pageUrl, { waitUntil: "load" });
     await callback(page, diagnostics, context);
     if (diagnostics.length) throw new Error(diagnostics.join("; "));
   } catch (error) {
@@ -289,6 +308,25 @@ async function sandboxFrame(page, topic) {
 
 async function checkOffline(browser, topic) {
   await withPage(browser, topic, {}, async () => {});
+  await withPage(browser, topic, { javaScriptEnabled: false, label: "no-js" }, async (page) => {
+    if (!(await page.locator("body").innerText()).trim()) throw new Error("no-JavaScript reading is empty");
+    const disclosures = page.locator("details[data-pep-optional]");
+    for (let index = 0; index < await disclosures.count(); index++) {
+      const disclosure = disclosures.nth(index);
+      const summary = disclosure.locator(":scope > summary");
+      if (!(await summary.innerText()).trim()) throw new Error("optional disclosure has no no-JavaScript summary");
+      await summary.click();
+      if ((await disclosure.getAttribute("open")) === null) throw new Error("optional disclosure did not open without JavaScript");
+      if (!(await disclosure.innerText()).trim()) throw new Error("optional disclosure has no no-JavaScript content");
+    }
+    const codeWorkspaces = page.locator('[data-pep-workspace="code"]');
+    for (let index = 0; index < await codeWorkspaces.count(); index++) {
+      const reading = codeWorkspaces.nth(index).locator("noscript[data-pep-no-js]");
+      if ((await reading.count()) !== 1 || !(await reading.innerText()).trim()) {
+        throw new Error("code workspace requires a complete noscript[data-pep-no-js] reading");
+      }
+    }
+  });
 }
 
 async function checkSandbox(browser, topic) {
@@ -335,6 +373,34 @@ async function checkBehavior(browser, topic) {
   await withPage(browser, topic, {}, async (page) => {
     await execute(page, spec.restart.actions);
     await assertState(page, spec.restart.credit);
+  });
+  await withPage(browser, topic, { label: "optional-accounting" }, async (page) => {
+    const disclosures = page.locator("details[data-pep-optional]");
+    if ((await disclosures.count()) === 0) return;
+    const snapshot = async () => ({
+      completion: spec.completion.attribute
+        ? await page.locator(spec.completion.selector).getAttribute(spec.completion.attribute)
+        : await page.locator(spec.completion.selector).innerText(),
+      progress: spec.progress.attribute
+        ? await page.locator(spec.progress.selector).getAttribute(spec.progress.attribute)
+        : await page.locator(spec.progress.selector).innerText(),
+    });
+    const before = await snapshot();
+    for (let index = 0; index < await disclosures.count(); index++) {
+      const disclosure = disclosures.nth(index);
+      await disclosure.locator(":scope > summary").click();
+      const fields = disclosure.locator("input:not([type=hidden]), textarea");
+      for (let field = 0; field < await fields.count(); field++) {
+        const control = fields.nth(field);
+        if (await control.isEditable()) await control.fill("optional attempt");
+      }
+      const buttons = disclosure.locator("button:not([disabled])");
+      for (let button = 0; button < await buttons.count(); button++) await buttons.nth(button).click();
+    }
+    const after = await snapshot();
+    if (JSON.stringify(after) !== JSON.stringify(before)) {
+      throw new Error(`optional disclosures changed required state from ${JSON.stringify(before)} to ${JSON.stringify(after)}`);
+    }
   });
 }
 
@@ -432,7 +498,10 @@ async function checkAccessibility(browser, topic) {
 
 async function checkResponsive(browser, topic) {
   const spec = await loadSpec(topic);
-  for (const viewport of VIEWPORTS) {
+  const html = await readFile(topic.html, "utf8");
+  const viewports = /\bdata-pep-responsive(?:\s|=|>)/i.test(html) ? VIEWPORTS : LEGACY_VIEWPORTS;
+  topic.checkedViewports = viewports;
+  for (const viewport of viewports) {
     await withPage(
       browser,
       topic,
@@ -442,6 +511,7 @@ async function checkResponsive(browser, topic) {
           height: Math.floor(viewport.height / viewport.zoom),
         },
         theme: viewport.theme,
+        touch: viewport.touch,
       },
       async (page) => {
         const inspect = async () => {
@@ -505,7 +575,25 @@ async function checkResponsive(browser, topic) {
                 return false;
               })
               .map(({ element }) => element.id || element.tagName.toLowerCase());
-            return { scrollWidth: root.scrollWidth, clientWidth: root.clientWidth, clipped };
+            const targetSelector = [
+              "button:not([hidden])",
+              "input:not([type=hidden])",
+              "select",
+              "textarea",
+              "summary",
+              '[role="button"]',
+              '[role="tab"]',
+              '[role="checkbox"]',
+              '[role="radio"]',
+            ].join(",");
+            const undersized = [...document.querySelectorAll(targetSelector)]
+              .filter(isVisible)
+              .map((element) => ({ element, box: element.getBoundingClientRect() }))
+              .filter(({ box }) => box.width < 44 || box.height < 44)
+              .map(({ element, box }) =>
+                `${element.id ? `#${element.id}` : element.tagName.toLowerCase()} ${Math.round(box.width)}x${Math.round(box.height)}`
+              );
+            return { scrollWidth: root.scrollWidth, clientWidth: root.clientWidth, clipped, undersized };
           });
           if (geometry.scrollWidth > geometry.clientWidth + 1) {
             throw new Error(
@@ -515,10 +603,13 @@ async function checkResponsive(browser, topic) {
           if (geometry.clipped.length) {
             throw new Error(`${viewport.name} clipped essentials: ${geometry.clipped.join(", ")}`);
           }
+          if (viewport.touch && geometry.undersized.length) {
+            throw new Error(`${viewport.name} touch targets below 44x44: ${geometry.undersized.join(", ")}`);
+          }
         };
         await inspect();
         for (const action of spec.routes.wrongTwice) {
-          await perform(page, action);
+          await perform(page, action, { touch: viewport.touch });
           await inspect();
         }
         await assertState(page, spec.completion);
@@ -559,6 +650,9 @@ export async function updateReceipt(ctx, topic, rule, passed, detail, writeEvide
         chromium: topic.browserVersion ?? "not-recorded",
       },
     };
+  }
+  if (topic.checkedViewports) {
+    receipt.viewports = topic.checkedViewports.map(({ width, height, theme, zoom }) => ({ width, height, theme, zoom }));
   }
   for (const [artifact, filename] of [
     ["html", "artifact.html"],
