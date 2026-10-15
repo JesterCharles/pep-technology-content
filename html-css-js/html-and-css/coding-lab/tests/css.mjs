@@ -13,6 +13,19 @@ export function readStarter(name) {
 
 const clean = (value) => value.replace(/\s+/g, " ").trim();
 
+// Equivalent spellings of one value compare equal: "repeat(2,1fr )" reads as "repeat(2, 1fr)".
+const cleanValue = (value) => clean(value).replace(/\(\s+/g, "(").replace(/\s+\)/g, ")").replace(/\s*,\s*/g, ", ");
+
+// Equivalent spellings of one media condition compare equal: "screen and (min-width:600px)" and
+// "(width >= 600px)" both read as "(min-width: 600px)". Other conditions keep their own meaning.
+export function cleanMedia(value) {
+  return cleanValue(value.toLowerCase())
+    .replace(/^(only\s+)?(screen|all)\s+and\s+/, "")
+    .replace(/\s*:\s*/g, ": ")
+    .replace(/^\(width\s*>=\s*([^\s()]+)\)$/, "(min-width: $1)")
+    .replace(/^\(([^\s()]+)\s*<=\s*width\)$/, "(min-width: $1)");
+}
+
 function parseRules(text, media, out) {
   let i = 0;
   while (i < text.length) {
@@ -28,13 +41,13 @@ function parseRules(text, media, out) {
     }
     const body = text.slice(open + 1, j - 1);
     if (prelude.startsWith("@media")) {
-      parseRules(body, clean(prelude.slice(6)), out);
+      parseRules(body, cleanMedia(prelude.slice(6)), out);
     } else if (prelude) {
       const decls = {};
       for (const part of body.split(";")) {
         const colon = part.indexOf(":");
         if (colon < 0) continue;
-        decls[clean(part.slice(0, colon)).toLowerCase()] = clean(part.slice(colon + 1));
+        decls[clean(part.slice(0, colon)).toLowerCase()] = cleanValue(part.slice(colon + 1));
       }
       out.push({ media, selectors: prelude.split(",").map(clean), decls });
     }
@@ -48,7 +61,7 @@ export function parseCss(text) {
 }
 
 export function mediaQueries(text) {
-  return [...text.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/@media\s*([^{]+)\{/g)].map((m) => clean(m[1]));
+  return [...text.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/@media\s*([^{]+)\{/g)].map((m) => cleanMedia(m[1]));
 }
 
 // The value a selector gets for a property under one media condition (null for the base styles).
