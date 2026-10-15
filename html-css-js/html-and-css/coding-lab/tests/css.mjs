@@ -72,12 +72,12 @@ function parseRules(text, media, out, foundMedia = null) {
 }
 
 export function parseCss(text) {
-  return parseRules(text.replace(/\/\*[\s\S]*?\*\//g, ""), null, []);
+  return parseRules(text.replace(/\/\*[\s\S]*?\*\//g, " "), null, []);
 }
 
 export function mediaQueries(text) {
   const found = [];
-  parseRules(text.replace(/\/\*[\s\S]*?\*\//g, ""), null, [], found);
+  parseRules(text.replace(/\/\*[\s\S]*?\*\//g, " "), null, [], found);
   return found;
 }
 

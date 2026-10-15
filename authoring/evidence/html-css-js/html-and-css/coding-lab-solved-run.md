@@ -1,12 +1,12 @@
 # Solved-run record: `html-css-js/html-and-css/coding-lab`
 
-solved at 843af270bed5d8d89201865a5484b43b35f80488 with the final lab correction applied by run solved-1792025518
+solved at 06e6b6b6d9cbebeb50bdc6166024b57d386c36af with the post-fix lab correction applied by run solved-1792030050
 
-- Lab bytes binding: sha256 `d86cce1a93893c286b45460c166f115fe14e8a3d3e904c46549e978c29ce7a18` of the `LAB_BUNDLE.sha256` manifest written by `authoring/tools/pep export-lab html-css-js/html-and-css/coding-lab` from the bytes corrected in this commit.
+- Lab bytes binding: sha256 `8685d088de02adf161fab85525c9ae11140e5b876b0937afa8e4e71c4764d3f0` of the `LAB_BUNDLE.sha256` manifest written by `authoring/tools/pep export-lab html-css-js/html-and-css/coding-lab` from the corrected lab bytes.
   Any change to a lab file changes this binding; the record is then stale and the run must be repeated.
 - Private material: the independently completed `starter/index.html` and `starter/styles.css` existed only in ignored temporary staging, were never added to Git, and were retired after the run. No solution or solution hash is recorded here.
 - Environment: macOS, Node.js v24.2.0, npm 11.3.0; network used only by the one-time `npm ci`; no container engine.
-- Supersedes `solved at 460f79a040ffdfeee6236e32ae7c618587c1ecb1 with the review fix to tests/css.mjs applied by run solved-1792023109` (bundle `45fd4984…`), whose lab bytes changed in the final correction.
+- Supersedes `solved at 843af270bed5d8d89201865a5484b43b35f80488 with the final lab correction applied by run solved-1792025518` (bundle `d86cce1a…`), whose lab bytes changed in the post-fix correction.
 
 ## What the run checked
 
@@ -19,7 +19,7 @@ All routes used the public command against the corrected public tests and pinned
 | Setup | `npm ci` in the exported bundle's `starter/` added 3 packages, found 0 vulnerabilities, and installed Playwright 1.55.1's headless Chromium inside `starter/node_modules` |
 | Starter expectation `fail` | the shipped starter gave `pass 0`, `fail 7`; all seven declared `failingTests` failed with outcome-first messages |
 | Solved test run offline | `node --test --test-reporter=spec` gave `pass 7`, `fail 0`; the browser blocked every non-file request |
-| Rendered breakpoint outcomes | Chromium measured one card column at 599px, two at 600px and 700px, stacked regions at 999px, and the required two-column region layout at 1000px and 1100px |
+| Rendered breakpoint outcomes | Chromium measured the fixed 599/600/700px and 999/1000/1100px probes plus each supported learner-authored boundary and its following pixel; required card and page outcomes persisted through valid 800px and 1200px later rules |
 | Expected output | the solved output matched `expected/on-completion.txt` after replacing timings with `<ms>` |
 | Cleanup | deleting `starter/node_modules` and private staging left only shipped files; `git status --porcelain html-css-js` showed only the intended tracked correction |
 
@@ -37,6 +37,9 @@ Each route started from the completed control with only the named spelling or in
 | uppercase media at-keywords | `pass 7` |
 | finite decimal spellings numerically equal to 600px and 1000px | `pass 7` |
 | defined custom-property indirection for the one- and two-column tracks, with a quoted comma token present | `pass 7`; the quoted token remained unchanged in source inspection |
+| comments separating `@media` from its media type | `pass 7` |
+| later 800px rule retaining two equal card columns | `pass 7` |
+| later 1200px rule retaining the required page grid | `pass 7` |
 
 ## Retained negative routes
 
@@ -63,6 +66,10 @@ Each route started from the completed control with only the named defect and was
 | hidden overflow with a 900px page | reject at 400px with root overflow forced visible |
 | missing responsive hero rule | reject at 400px |
 | stacked navigation | reject |
+| later 800px override producing three card columns | reject at task 4 with an outcome-first 800px message |
+| later 1200px override changing the page back to block layout | reject at task 5 with an outcome-first 1200px message |
+
+The public command therefore produced the expected result for all 32 completed routes: 11 accepted routes (the eight prior positive routes plus the comment-separated syntax and two later-rule controls) and 21 rejected routes (the 19 retained negative routes plus both later-rule overrides). The shipped starter separately remained `pass 0`, `fail 7`.
 
 ## Not yet recorded
 

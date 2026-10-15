@@ -10,6 +10,33 @@ const css = readStarter("styles.css");
 const rules = parseCss(css);
 const html = readStarter("index.html");
 const MQ1000 = "(min-width: 1000px)";
+const supportedMinimumWidths = mediaQueries(css).flatMap((query) => {
+  const match = query.match(/^\(min-width:\s*((?:\d+(?:\.\d*)?|\.\d+))px\)$/);
+  if (!match) return [];
+  const width = Number(match[1]);
+  return Number.isFinite(width) ? [width] : [];
+});
+
+function probeWidths(fixed, minimum) {
+  const authored = supportedMinimumWidths
+    .filter((width) => width >= minimum)
+    .flatMap((width) => [Math.ceil(width), Math.ceil(width) + 1]);
+  return [...new Set([...fixed, ...authored])];
+}
+
+function assertTwoEqualCardColumns(width, measured) {
+  assert.equal(measured.cardColumns, 2, `At ${width}px wide, the cards are not two equal columns yet.`);
+  assert.ok(Math.max(...measured.cardWidths) - Math.min(...measured.cardWidths) <= 0.5, `At ${width}px wide, the two card columns are not equal yet.`);
+}
+
+function assertRequiredPageLayout(width, measured) {
+  const { header, main, aside, footer } = measured.regions;
+  assert.equal(measured.pageDisplay, "grid", `At ${width}px wide, the page is not laid out as a grid yet.`);
+  assert.ok(header && main && aside && footer, `At ${width}px wide, one or more required page regions could not be measured.`);
+  assert.ok(aside.left >= main.right - 0.5 && aside.top < main.bottom, `At ${width}px wide, the gear checklist is not beside the trails yet.`);
+  assert.ok(header.left <= main.left + 0.5 && header.right >= aside.right - 0.5, `At ${width}px wide, the header does not span both content columns yet.`);
+  assert.ok(footer.left <= main.left + 0.5 && footer.right >= aside.right - 0.5, `At ${width}px wide, the footer does not span both content columns yet.`);
+}
 
 test("task 1: a phone lays the page out at its own width, at normal zoom", () => {
   const content = viewportContent(html);
@@ -40,12 +67,11 @@ test("task 4: the trail cards are one column on phones and two columns from 600p
   const tokenRule = parseCss(':root { --reader-token: "a,b"; }');
   assert.equal(valueOf(tokenRule, ":root", "--reader-token"), '"a,b"', "The lab checker could not preserve a quoted CSS token while reading the stylesheet.");
 
-  const [below, boundary, documented] = await measureManyAt([599, 600, 700]);
-  assert.equal(below.cardColumns, 1, "Below 600px wide, the cards are not one column yet.");
-  assert.equal(boundary.cardColumns, 2, "At 600px wide, the cards are not two equal columns yet.");
-  assert.ok(Math.max(...boundary.cardWidths) - Math.min(...boundary.cardWidths) <= 0.5, "At 600px wide, the two card columns are not equal yet.");
-  assert.equal(documented.cardColumns, 2, "At 700px wide, the cards are not two equal columns yet.");
-  assert.ok(Math.max(...documented.cardWidths) - Math.min(...documented.cardWidths) <= 0.5, "At 700px wide, the two card columns are not equal yet.");
+  const widths = probeWidths([599, 600, 700], 600);
+  const measurements = await measureManyAt(widths);
+  const byWidth = new Map(widths.map((width, index) => [width, measurements[index]]));
+  assert.equal(byWidth.get(599).cardColumns, 1, "Below 600px wide, the cards are not one column yet.");
+  for (const width of widths.filter((value) => value >= 600)) assertTwoEqualCardColumns(width, byWidth.get(width));
 });
 
 test("task 5: from 1000px, the header and footer span the page and the gear checklist sits beside the trails", async () => {
@@ -57,15 +83,12 @@ test("task 5: from 1000px, the header and footer span the page and the gear chec
     assert.equal(got, area, `${selector} is not placed in the ${area} area yet.`);
   }
 
-  const [below, boundary, documented] = await measureManyAt([999, 1000, 1100]);
+  const widths = probeWidths([999, 1000, 1100], 1000);
+  const measurements = await measureManyAt(widths);
+  const byWidth = new Map(widths.map((width, index) => [width, measurements[index]]));
+  const below = byWidth.get(999);
   assert.ok(below.regions.aside.top >= below.regions.main.bottom - 0.5, "Below 1000px wide, the gear checklist is not stacked after the trails.");
-  for (const [width, measured] of [[1000, boundary], [1100, documented]]) {
-    const { header, main, aside, footer } = measured.regions;
-    assert.equal(measured.pageDisplay, "grid", `At ${width}px wide, the page is not laid out as a grid yet.`);
-    assert.ok(aside.left >= main.right - 0.5 && aside.top < main.bottom, `At ${width}px wide, the gear checklist is not beside the trails yet.`);
-    assert.ok(header.left <= main.left + 0.5 && header.right >= aside.right - 0.5, `At ${width}px wide, the header does not span both content columns yet.`);
-    assert.ok(footer.left <= main.left + 0.5 && footer.right >= aside.right - 0.5, `At ${width}px wide, the footer does not span both content columns yet.`);
-  }
+  for (const width of widths.filter((value) => value >= 1000)) assertRequiredPageLayout(width, byWidth.get(width));
 });
 
 test("task 4 and 5: the stylesheet is mobile-first, adding wider-screen rules from small to large", () => {
