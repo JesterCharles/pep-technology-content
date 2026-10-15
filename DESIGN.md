@@ -139,7 +139,7 @@ components:
 This file is the authoritative visual contract for every learner-facing standalone HTML page in this repository (`artifact.html` and course- or module-level learner pages).
 It governs how a page looks and how its interaction is presented.
 Behavior, accessibility gates, metadata and companions stay governed by [`authoring/docs/html-artifact-contract.md`](authoring/docs/html-artifact-contract.md).
-The one deliberate presentation change is in [Page anatomy](#page-anatomy). The contract's header items move into the topic bar and the reading panel: position and minutes into the bar, and objectives into a visible Goals list that keeps `data-pep-objectives`. That supersedes only §4's "collapsed `<details>`" presentation wording, which a later contract revision should align.
+The page anatomy aligns with the HTML contract: position and required minutes live in the topic bar, while objectives remain visible in a Goals list that keeps `data-pep-objectives`.
 Existing pages are not restyled by this file; it applies when a page is authored or re-authored.
 
 Keywords: **MUST** is required for new or re-authored pages, **SHOULD** is the default unless a recorded reason says otherwise, **MAY** is optional.
@@ -186,6 +186,7 @@ Wide frame (≥960 px, usually a standalone window):
 │ 2. What to type or choose   │ [Run] [Reset code]                         │
 │ 3. What you should see      │ Problems | Output        (bounded height)  │
 │ 4. How done shows           │ Status line, verdict and why               │
+│ [Optional anecdote]         │ [Optional challenge, after required work]  │
 └─────────────────────────────┴────────────────────────────────────────────┘
 ```
 
@@ -202,6 +203,7 @@ Narrow frame (<960 px, including the ~570 px Evolv column and phones). The topic
 │ h2 Task · workspace              │
 │ Run / Reset · Problems | Output  │
 │ Status, verdict and why          │
+│ Optional disclosures, if useful  │
 └──────────────────────────────────┘
 ```
 
@@ -236,8 +238,8 @@ Results appear next to the control that produced them, not in the reading panel.
 ### Alignment, scrolling and stacking
 
 - **Wide frames** (≥960 px): two columns, `minmax(0, 5fr) minmax(0, 7fr)`, top-aligned, with a 24 px gap. [R][A] Both regions open with an `h2` naming the same step, so the instruction and its workspace read as one pair. [A]
-- **Narrow frames** (<960 px): one column in the order topic bar → step heading and concept → Goals and steps → workspace → feedback. The steps sit directly above the workspace they describe. [A]
-- **Bounded scrolling.** The page never scrolls inside itself. Only the editor body (at most 20 lines) and the Output and Problems panel (at most 240 px) MAY scroll internally. Each such region is keyboard-focusable and labeled. Neither panel is sticky. [T][A]
+- **Narrow frames** (<960 px): one column in the order topic bar → step heading and concept → Goals and steps → workspace → feedback → optional challenge. The steps sit directly above the workspace they describe; an optional Anecdote follows its complete core explanation. [A]
+- **Bounded scrolling.** The main flow never scrolls inside itself. Only the editor body (400 px maximum; 240 px below 480 px) and the Output and Problems panel (240 px maximum; 180 px below 480 px) MAY scroll internally. Each scrollable region is keyboard-focusable and labeled, lets the user leave it at its boundaries, and is followed in reading order by the next page content. Neither panel is fixed or sticky. [T][A]
 - **One activity at a time.** The workspace shows the current activity only. Finished activities collapse to their result, and later ones are not stacked below as a long scroll of extra controls. [R][A]
 
 ### Interaction matches the objective
@@ -327,7 +329,7 @@ The only sizes are 12, 13, 14, 16, 20 and 28 px; nothing smaller than 12 px. [T]
 The page runs in a sandboxed frame inside the Learner topic page. [T]
 
 - The host owns the artifact title, kind badge, duration, status, course navigation, topic list, assistant panel and completion. The page MUST NOT imitate any of them: no app bars, breadcrumbs, side rails, sprint carousels, avatar or role switchers, "AI" badges, or a "mark complete" control. [T][A]
-- **Width.** The column can be as narrow as about 570 px on a laptop. Lay out with flex or grid that wraps; no fixed width over 560 px; no horizontal page scroll. [T] Pages MUST also hold at 400 px wide and at 200% zoom (repository contract §6).
+- **Width.** The column can be as narrow as about 570 px on a laptop. Lay out with flex or grid that wraps; no fixed width over 560 px and no horizontal page scroll. [T] Pages MUST remain fully usable—not merely stacked—at 320, 390 and 768 CSS px, practical phone/tablet portrait and landscape sizes, and 200% zoom. Long titles, progress text, tabs and controls wrap without clipping. [A]
 - **Height and scroll.** The host page scrolls, not the document. Pages MUST NOT use `position: fixed` or `sticky`, viewport-height page layouts (`100vh`, `100dvh`), or an inner scrolling region for the main flow, and MUST NOT take over window scroll. [T]
 - **Size.** Inline HTML is capped at 512 KB by the platform, so keep embedded images and SVG lean. [T]
 - **Seams.** The `body` background is `--pep-page`. Do not frame the whole page in an outer card, sheet, margin or drop shadow. [S][A]
@@ -341,15 +343,17 @@ The page runs in a sandboxed frame inside the Learner topic page. [T]
 - **Reading measure:** teaching prose is capped at 68ch. [A]
 - **Regions:** see [Page anatomy](#page-anatomy). Two regions sit side by side at ≥960 px viewport width (the frame's own width inside Evolv) and stack below that. [R][A]
 - Every grid or flex child that holds text sets `min-width: 0`. [A]
-- Option grids go to one column at ≤480 px. [A]
+- Option grids go to one column at ≤480 px. Topic-bar progress and steppers wrap rather than becoming horizontal scrollers; Restart activity remains a visible 44 px target. [A]
+- At every width, source and visual order keep the complete instruction block immediately before its workspace. Problems and Output remain adjacent to that workspace, after Run/Reset, so reaching results does not discard context. [A]
+- Mobile input layouts reserve no fixed viewport height. Text-entry controls are at least 16 px below 480 px and use `scroll-margin-block: 16px`; no fixed action bar can be covered by the virtual keyboard because fixed and sticky positioning are forbidden. [A]
 - **Rhythm:** 8 px inside a group, 16 px between related blocks, 32 px between sections, and 48 px before the recap. [A]
 - **Density:** one card per idea, and one workspace interaction visible per step. Data-management density (filters, bulk actions, many-column tables) does not belong in learner pages. [A]
 
 ### Print
 
 Print always uses the light tokens; the recipe scopes dark values to `screen`. [A]
-Cards, figures, tables and code blocks avoid page breaks inside (`break-inside: avoid`). [G]
-Buttons and toggles MAY be hidden with a `pep-noprint` class, and backgrounds drop to white except status tints. [A]
+Cards, figures, tables, code blocks and optional disclosures avoid page breaks inside (`break-inside: avoid`). [G]
+Optional disclosures print expanded, retaining their summary label, cue and optional-time text. The print helper below opens them for `beforeprint` and restores only those it opened on `afterprint`; without JavaScript, learners can open a native disclosure before printing. Buttons and toggles MAY be hidden with a `pep-noprint` class, and backgrounds drop to white except status tints. [A]
 
 ## Elevation & Depth
 
@@ -372,9 +376,11 @@ Recipes assume the [token reference](#token-reference) is pasted first. Class na
 
 ### Base, focus and motion
 
+New or re-authored pages use `<main class="pep-main" data-pep-responsive>`. The stable marker enrolls that page in the current 320/390/768, touch and zoom QA matrix; add it only when the page actually meets this contract, never as a marker-only migration. Mark the complete instruction block with `data-pep-instructions` and its following interaction with `data-pep-workspace` so reading order is deterministic.
+
 ```css
 *, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
 body {
   background: var(--pep-page);
   color: var(--pep-text);
@@ -384,15 +390,20 @@ body {
 h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
 h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
 h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
-p, li { max-width: 68ch; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
 a { color: var(--pep-accent-text); text-underline-offset: 3px; }
 a:hover { text-decoration-thickness: 2px; }
 code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
 :focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
 ::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
 .pep-lead { font-size: 28px; line-height: 36px; font-weight: 700; letter-spacing: -0.01em; color: var(--pep-text-strong); }
-.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; }
-@media (max-width: 480px) { .pep-main { padding: 16px; } }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
 
 /* Motion: state feedback only (color, border, opacity, small transforms). */
 button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
@@ -413,8 +424,9 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
   padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line);
 }
 .pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
-.pep-topicbar__progress { display: flex; align-items: center; gap: 12px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; }
-.pep-topicbar__progress .pep-progress { width: 96px; }
+.pep-topicbar__progress { display: flex; flex: 1 1 260px; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress .pep-progress { flex: 1 1 96px; width: 96px; max-width: 160px; }
+.pep-topicbar .pep-btn { flex: 0 0 auto; }
 
 .pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
 @media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
@@ -439,6 +451,76 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 - The goal state is a word ("open", "done") plus a check icon when done, never color alone. [R][A]
 - Restart activity is a secondary `pep-btn` in the bar. It is never danger red, and it never asks for confirmation through a dialog. [R][A]
 - Chips are informational labels inside a region ("Single choice", "Python subset"), not header metadata. A chip that acts as a control becomes a button at least 44 px tall. [S][A]
+
+### Optional Anecdote and Challenge disclosures
+
+These are optional authoring patterns, not required page furniture. Use at most one of each, omit them when they add no value, and keep the required explanation and practice complete when they stay closed. Their stable hooks are contract-owned; do not rename or reuse them for required content.
+
+```html
+<!-- Place after the complete core explanation. -->
+<details class="pep-optional pep-optional--anecdote"
+         data-pep-optional="anecdote" data-section-skip>
+  <summary>
+    <span>Another way to think about it</span>
+    <span class="pep-optional__cue">Optional example</span>
+  </summary>
+  <div class="pep-optional__body">
+    <p>A variable is like a labeled shelf: the label stays useful while the value on the shelf can change.</p>
+  </div>
+</details>
+
+<!-- Place after required practice and feedback; it never gates Continue. -->
+<details class="pep-optional pep-optional--challenge"
+         data-pep-optional="challenge" data-section-skip>
+  <summary>Challenge (optional)</summary>
+  <div class="pep-optional__body">
+    <p data-pep-optional-time><strong>Optional time:</strong> about 3 minutes</p>
+    <p data-pep-success-criteria><strong>Success criteria:</strong> Change the starter so it prints both already-taught values.</p>
+    <!-- A resettable starter may follow; never embed an answer or hidden solution. -->
+  </div>
+</details>
+```
+
+```css
+.pep-optional {
+  min-width: 0; border-block: 1px solid var(--pep-line); background: transparent;
+  break-inside: avoid;
+}
+.pep-optional > summary {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer;
+  color: var(--pep-text-strong); font-weight: 600;
+}
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] {
+  color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans);
+}
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+@media print {
+  .pep-optional > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker { display: none; }
+}
+```
+
+```html
+<script>
+  (() => {
+    let printOpened = [];
+    addEventListener('beforeprint', () => {
+      printOpened = [...document.querySelectorAll('details[data-pep-optional]:not([open])')];
+      printOpened.forEach(details => { details.open = true; });
+    });
+    addEventListener('afterprint', () => {
+      printOpened.forEach(details => { details.open = false; });
+      printOpened = [];
+    });
+  })();
+</script>
+```
+
+Both disclosures are closed in authored HTML (no `open` attribute). Native `<summary>` supplies keyboard, touch and screen-reader behavior; scripts do not replace it or move focus after toggling. The print helper changes disclosure state only for printing and restores the authored state. Anecdote content is one accurate simpler explanation, analogy or example with no new prerequisite. Challenge content extends only taught objectives and labels time as additional. Optional descendants carry no `data-interaction`, `data-confidence`, objectives, required progress or completion hook. Opening, attempting, resetting or printing them cannot change required progress, completion, grade, Continue or `pep:budget-minutes`. [A]
 
 ### Cards and callouts
 
@@ -533,7 +615,7 @@ The Learner quiz shows a card holding "Question 1 of 3", a type chip and a segme
 
 ### Figures, diagrams, charts and tables
 
-Diagrams are inline SVG, never raster screenshots of diagrams. They scale to the column (`width: 100%; height: auto`) and color everything through tokens so both themes work. SVG text scales with the drawing, so labels MUST still render at 12 px or more at the narrowest required width of 400 px. A 360-unit-wide `viewBox` with 16-unit labels meets that; a wider diagram stacks vertically below 480 px or uses HTML labels:
+Diagrams are inline SVG, never raster screenshots of diagrams. They scale to the column (`width: 100%; height: auto`) and color everything through tokens so both themes work. SVG text scales with the drawing, so labels MUST still render at 12 px or more at the narrowest required viewport of 320 px (288 px content width with the phone gutter). A 360-unit-wide `viewBox` with 16-unit labels meets that; a wider diagram stacks vertically below 480 px or uses HTML labels:
 
 ```html
 <figure class="pep-figure">
@@ -609,25 +691,38 @@ This file styles that anatomy; it does not change the shell's behavior or bytes.
 ```css
 .pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; }
 .pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line); }
-.pep-editor__file { font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-right: auto; }
-.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
 .pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; }
-.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: none; min-height: 160px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; tab-size: 4; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; tab-size: 4; }
 .pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
 .pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line); }
 .pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
 .pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
-.pep-editor__panel { max-height: 240px; overflow: auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); }
 .pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; }
 .pep-editor__problem .kind-error { color: var(--pep-danger); } .pep-editor__problem .kind-limit { color: var(--pep-warning); }
 .pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
 ```
 
-- The code area is the one place where lines do not wrap. It scrolls inside its own bounded box; the page never scrolls sideways. [A]
+- The code area is the one place where lines do not wrap. It scrolls inside its own bounded box; the page never scrolls sideways. Boundary scrolling returns to the host page rather than trapping wheel, touch or keyboard users. [A]
 - Starter code is short: 3 to 12 lines, with the learner's edit area obvious from a comment. [A]
 - **Problems.** An error the real language certainly raises is danger. An unsupported construct ("limit") is warning. A hint is muted. Each problem moves the caret to its line. [A]
 - **Output.** A pass, mismatch, runtime error or stop is announced in the status bar with words. Verdict color follows the [Meaning-Only Rule](#colors). [A]
-- **Loading and error states** use the empty and error patterns below. A no-JS fallback shows the exercise and the expected results as plain text. [A]
+- **Mobile reduction.** Below 480 px, hide only `.pep-editor__secondary` chrome such as shortcut legends or extra metadata. Keep file name, Run, Reset code, Problems, Output and status visible. Toolbar controls and tabs wrap into equal flexible rows; the code area is at most 240 px and Problems/Output at most 180 px. At 481 px and above the maxima are 400 px and 240 px. [A]
+- **Virtual keyboard.** Phone editor text is 16/24 px and the input has 16 px block scroll margin. No editor action is fixed or sticky, so Run/Reset stay discoverable above the field rather than being covered by the keyboard. [A]
+- **Loading and error states** use the empty and error patterns below. A `<noscript data-pep-no-js>` block inside `[data-pep-workspace="code"]` restates the task, starter, supported subset and how to compare expected results as honest plain text without exposing a graded answer. The editor is progressive enhancement of that complete reading. [A]
 
 ### Empty, error and success states
 
@@ -660,13 +755,14 @@ Known `@1` gaps, accepted until a component version changes them: some fragments
 - Paste the [token reference](#token-reference) and use roles, not raw hex, in every rule.
 - Keep text at ≥4.5:1 and meaningful borders and icons at ≥3:1 in both themes. The tokens are pre-checked; re-check any new pairing.
 - Show a visible 2 px focus ring, make targets at least 44 × 44 px, and never depend on hover.
-- Respect `prefers-reduced-motion`, fit 400 px, 570 px and 200% zoom with no horizontal page scroll, and use no fixed or sticky positioning.
+- Respect `prefers-reduced-motion`; stay fully usable at 320, 390, 768 and 200% zoom with no horizontal page scroll; and use no fixed or sticky positioning.
 - Keep the page offline and standalone: no external or embedded fonts, scripts, stylesheets, images, frameworks or runtime requests.
 - Convey state with words and icons as well as color.
 
 - Follow the [Page anatomy](#page-anatomy): one topic bar, a reading and instruction panel, and a workspace, stacking below 960 px.
 - Keep every instruction needed to finish the activity, and keep objectives as the visible Goals checklist (`data-pep-objectives`).
-- Give code-writing objectives the editor workspace, not piece selectors.
+- Give code-writing objectives the editor workspace, not piece selectors; keep its instructions first, mobile controls visible, heights bounded and no-JavaScript reading complete.
+- Keep Optional Anecdote and Challenge disclosures native, closed by default, public-safe and outside all required objective, progress, completion and time accounting.
 
 **SHOULD**
 
@@ -744,7 +840,7 @@ Paste this block first in every page's `<style>`. Light values are the default a
 @media print {
   body { background: #FFFFFF; }
   .pep-noprint { display: none !important; }
-  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code { break-inside: avoid; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional { break-inside: avoid; }
   .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
 ```
