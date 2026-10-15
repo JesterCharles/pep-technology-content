@@ -61,9 +61,33 @@ test("T07 rejects solution filenames and allows formative GIFT", () => {
   assert.equal(result.status, 0, result.stderr);
 });
 
-test("default check excludes negative fixtures", () => {
-  const result = run(["check"]);
+test("default check excludes negative fixtures", async () => {
+  const tmp = await mkdtemp(path.join(os.tmpdir(), "pep-default-skip-"));
+  const fixture = path.join(tmp, "authoring/tests/fixtures/negative");
+  await mkdir(fixture, { recursive: true });
+  await writeFile(path.join(fixture, "reference-solution.txt"), "must remain test-only\n");
+
+  let result = run(["check", "--only", "T07"], tmp);
   assert.equal(result.status, 0, result.stderr);
+  result = run(["check", "--only", "T07", "authoring/tests/fixtures/negative"], tmp);
+  assert.notEqual(result.status, 0);
+});
+
+test("CI retains the complete gate sequence and timeout budget", async () => {
+  const workflow = await readFile(path.join(repo, ".github/workflows/ci.yml"), "utf8");
+  const timeout = workflow.match(/^    timeout-minutes: (\d+)$/mu);
+  assert.ok(timeout, "gates must declare an explicit timeout");
+  assert.ok(Number(timeout[1]) >= 30, "gates must retain the measured timeout budget");
+
+  const step = workflow.match(
+    /^      - name: Run repository gates\n        run: \|\n((?:          [^\n]+\n)+)/mu,
+  );
+  assert.ok(step, "workflow must retain the repository gate step");
+  assert.deepEqual(
+    step[1].trim().split("\n").map((line) => line.trim()),
+    ["npm test", "authoring/tools/pep migrate-catalog --check", "npm run check"],
+  );
+  assert.doesNotMatch(workflow, /^\s*continue-on-error:\s*true\s*$/mu);
 });
 
 test("check --changed gates deletion-only and mixed changes", async () => {
