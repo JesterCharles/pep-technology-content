@@ -1,16 +1,14 @@
-// Public tests for the HTML and CSS layout lab. Tasks 1 to 5 read starter/index.html and
-// starter/styles.css and check that each layout outcome is set up. Task 6 opens the page in the
-// lab's own headless Chromium at 400px wide and measures it. The README's browser checks cover
-// how the page looks at other widths.
+// Public tests for the HTML and CSS layout lab. Tasks 1 to 3 read starter/index.html and
+// starter/styles.css. Tasks 4 to 6 also open the page in the lab's own pinned headless Chromium
+// so valid CSS indirection is judged by its rendered layout at the documented widths.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { areaRows, mediaQueries, parseCss, readStarter, valueOf, viewportContent } from "./css.mjs";
-import { measureAt } from "./browser.mjs";
+import { measureAt, measureManyAt } from "./browser.mjs";
 
 const css = readStarter("styles.css");
 const rules = parseCss(css);
 const html = readStarter("index.html");
-const MQ600 = "(min-width: 600px)";
 const MQ1000 = "(min-width: 1000px)";
 
 test("task 1: a phone lays the page out at its own width, at normal zoom", () => {
@@ -35,25 +33,38 @@ test("task 3: the nav links sit side by side with space between them", () => {
   assert.ok(gap && !/^0(px)?$/.test(gap), "There is no space between the nav links yet.");
 });
 
-test("task 4: the trail cards are one column on phones and two columns from 600px", () => {
+test("task 4: the trail cards are one column on phones and two columns from 600px", async () => {
   assert.equal(valueOf(rules, ".cards", "display"), "grid", "The cards are not laid out as a grid in the base styles.");
-  const base = valueOf(rules, ".cards", "grid-template-columns");
-  assert.ok(["1fr", "repeat(1, 1fr)", "minmax(0, 1fr)"].includes(base), "On a phone-width screen the cards are not one column yet.");
-  const wide = valueOf(rules, ".cards", "grid-template-columns", MQ600);
-  assert.ok(["1fr 1fr", "repeat(2, 1fr)", "repeat(2, minmax(0, 1fr))", "minmax(0, 1fr) minmax(0, 1fr)"].includes(wide),
-    "From 600px wide, the cards are not two equal columns yet.");
+
+  // Regression guard: source inspection must never rewrite quoted custom-property token contents.
+  const tokenRule = parseCss(':root { --reader-token: "a,b"; }');
+  assert.equal(valueOf(tokenRule, ":root", "--reader-token"), '"a,b"', "The lab checker could not preserve a quoted CSS token while reading the stylesheet.");
+
+  const [below, boundary, documented] = await measureManyAt([599, 600, 700]);
+  assert.equal(below.cardColumns, 1, "Below 600px wide, the cards are not one column yet.");
+  assert.equal(boundary.cardColumns, 2, "At 600px wide, the cards are not two equal columns yet.");
+  assert.ok(Math.max(...boundary.cardWidths) - Math.min(...boundary.cardWidths) <= 0.5, "At 600px wide, the two card columns are not equal yet.");
+  assert.equal(documented.cardColumns, 2, "At 700px wide, the cards are not two equal columns yet.");
+  assert.ok(Math.max(...documented.cardWidths) - Math.min(...documented.cardWidths) <= 0.5, "At 700px wide, the two card columns are not equal yet.");
 });
 
-test("task 5: from 1000px, the header and footer span the page and the gear checklist sits beside the trails", () => {
-  const display = valueOf(rules, ".page", "display", MQ1000) ?? valueOf(rules, ".page", "display");
-  assert.equal(display, "grid", "From 1000px wide, the page is not a grid yet.");
+test("task 5: from 1000px, the header and footer span the page and the gear checklist sits beside the trails", async () => {
   assert.deepEqual(areaRows(valueOf(rules, ".page", "grid-template-areas", MQ1000)),
     [["header", "header"], ["main", "aside"], ["footer", "footer"]],
-    "From 1000px wide, the named areas do not yet put the header across the top, main and aside side by side, and the footer across the bottom.");
-  assert.ok(valueOf(rules, ".page", "grid-template-columns", MQ1000), "From 1000px wide, the page grid does not define its two columns yet.");
+    "From 1000px wide, the named regions do not yet form the required page layout.");
   for (const [selector, area] of [[".site-header", "header"], [".site-main", "main"], [".site-aside", "aside"], [".site-footer", "footer"]]) {
     const got = valueOf(rules, selector, "grid-area") ?? valueOf(rules, selector, "grid-area", MQ1000);
     assert.equal(got, area, `${selector} is not placed in the ${area} area yet.`);
+  }
+
+  const [below, boundary, documented] = await measureManyAt([999, 1000, 1100]);
+  assert.ok(below.regions.aside.top >= below.regions.main.bottom - 0.5, "Below 1000px wide, the gear checklist is not stacked after the trails.");
+  for (const [width, measured] of [[1000, boundary], [1100, documented]]) {
+    const { header, main, aside, footer } = measured.regions;
+    assert.equal(measured.pageDisplay, "grid", `At ${width}px wide, the page is not laid out as a grid yet.`);
+    assert.ok(aside.left >= main.right - 0.5 && aside.top < main.bottom, `At ${width}px wide, the gear checklist is not beside the trails yet.`);
+    assert.ok(header.left <= main.left + 0.5 && header.right >= aside.right - 0.5, `At ${width}px wide, the header does not span both content columns yet.`);
+    assert.ok(footer.left <= main.left + 0.5 && footer.right >= aside.right - 0.5, `At ${width}px wide, the footer does not span both content columns yet.`);
   }
 });
 
@@ -61,9 +72,11 @@ test("task 4 and 5: the stylesheet is mobile-first, adding wider-screen rules fr
   const queries = mediaQueries(css);
   assert.ok(queries.length >= 2, "The stylesheet does not add rules for wider screens yet.");
   const widths = queries.map((q) => {
-    const m = q.match(/^\(min-width:\s*(\d+)px\)$/);
-    assert.ok(m, `A media query targets narrower screens or something other than a minimum width: @media ${q}. Mobile-first CSS only adds rules for wider screens.`);
-    return Number(m[1]);
+    const m = q.match(/^\(min-width:\s*((?:\d+(?:\.\d*)?|\.\d+))px\)$/);
+    assert.ok(m, `A media query targets narrower screens or something other than one minimum width. Mobile-first CSS only adds rules for wider screens.`);
+    const width = Number(m[1]);
+    assert.ok(Number.isFinite(width), "A wider-screen rule does not use a finite pixel width.");
+    return width;
   });
   assert.deepEqual(widths, [...widths].sort((a, b) => a - b), "The wider-screen rules are not written from small to large, so a smaller breakpoint can override a larger one.");
 });

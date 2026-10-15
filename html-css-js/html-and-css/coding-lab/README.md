@@ -10,9 +10,10 @@ This lab practises these topics: Flexbox, Grid, and Responsive, mobile-first lay
 
 ## What the tests check, and what they do not
 
-- Tasks 1 to 5: the tests read `starter/index.html` and `starter/styles.css` and check that each outcome is set up with the layout tools named in the task.
-- Task 6: the tests open your page in a headless Chromium browser at 400px wide and measure it: the page must not scroll sideways, and the hero picture must stay inside its box. Hiding the overflow does not count; the test measures the content with nothing hidden.
-- The tests do not look at other widths or at colours and spacing. Section "Check it in a browser" lists what to look at yourself.
+- Tasks 1 to 3 read `starter/index.html` and `starter/styles.css` and check that each outcome is set up with the layout tool named in the task.
+- Tasks 4 and 5 also open your page in the pinned headless Chromium at the breakpoint boundaries and at the documented 700px and 1100px checks. They measure the card columns and page regions, so valid custom-property indirection is welcome when it produces the required layout.
+- Task 6 measures the page at 400px: it must not scroll sideways, and the hero picture must stay inside its box. Hiding the overflow does not count; the test measures the content with nothing hidden.
+- The tests do not assess colours and spacing. Section "Check it in a browser" lists what to inspect yourself.
 
 ## Prerequisites
 
@@ -108,7 +109,7 @@ From `coding-lab/`, run the one test command:
 node --test --test-reporter=spec
 ```
 
-While you work, failing tests show `✖` and a message naming the missing outcome. Task 6 opens the browser, so it takes a few seconds. When every task is done, all seven show `✔`.
+While you work, failing tests show `✖` and a message naming the missing outcome. Tasks 4 to 6 open the test browser, so the command takes a few seconds. When every task is done, all seven show `✔`.
 
 ## Expected output
 
@@ -150,6 +151,6 @@ Delete `starter/node_modules/` to remove the test tool and its browser; the test
 - `The test browser is not installed yet`: run `npm ci` inside `starter/` (Setup, step 2), then run the tests again from `coding-lab/`.
 - `npm ci` fails while downloading: check your network connection and run it again; it resumes from a clean install.
 - No tests run, or `Could not find`: run the test command from the `coding-lab/` folder, the one that holds this README.
-- A test still fails after your change: read its message, then the task's hints. Tasks 1 to 5 read the rule text, so check that the selector is spelled as in the starter (for example `.site-nav ul`) and that the rule sits in the base styles or in the right media query.
+- A test still fails after your change: read its message, then the task's hints. Check that the selector is spelled as in the starter (for example `.site-nav ul`) and that wider layouts begin at the stated breakpoint.
 - Task 6 still says the page scrolls sideways: look for anything with a fixed width wider than 400px in the base styles, including the picture.
 - The page looks unstyled in the browser: keep `<link rel="stylesheet" href="styles.css">` in `index.html` and keep both files in `starter/`.
