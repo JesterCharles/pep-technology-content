@@ -37,6 +37,7 @@ HTML is the primary learner artifact; every other topic file is a companion to i
 ## Authoring contract
 
 - Follow `authoring/docs/html-artifact-contract.md` for every learner page and companion.
+- Follow root `DESIGN.md` as the authoritative visual and page-anatomy contract for every new or re-authored learner HTML page.
 - Shared page components come from `components/` at a declared version.
 - No telemetry.
 
