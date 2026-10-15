@@ -69,6 +69,7 @@ A coding lab or course project is the only learner-artifact form that may requir
 - Reference solutions and hidden tests are written only in uncommitted private staging outside the repository.
   `platform-only/` is ignored by Git as a backstop, never as a storage location.
 - Validation runs the staged solution against the public tests and records only "solved at <commit> by run <id>", never a hash of the solution or a key.
+- The solved-run JSON is evidence, not part of the learner bundle. `authoring/schemas/solved-run.schema.json` owns its shape, and `authoring/docs/tools/evidence.md` defines its public-file binding.
 - The staged material is handed to the platform owner, and the staging copy is retired after confirmed upload.
 
 ## 9. Platform handoff
@@ -82,7 +83,7 @@ A coding lab or course project is the only learner-artifact form that may requir
 - The starter expectation holds.
 - The test command passes offline after setup against the private solution.
   This solved-run gate runs locally against uncommitted private staging only, never in CI, because solutions never enter the repository.
-  It is recorded in the lab's evidence as text of the form "solved at <commit> by run <id>", bound to the sha256 of the current lab bytes.
-  CI checks that this record is present and that its binding equals the current lab bytes; a missing or stale record fails the gate.
+  It is recorded in the lab's JSON evidence as text of the form "solved at <commit> by run <id>", with a lowercase sha256 binding for every tracked public lab file.
+  `authoring/tools/pep check` rejects missing, extra, duplicate, malformed, private-material and stale file bindings. A lab edit therefore invalidates the solved run even after its generated lock is refreshed; the private run must be repeated and re-recorded.
 - Cleanup leaves nothing behind.
 - Labs run on Ubuntu in CI; other operating systems are recorded locally until CI covers them.

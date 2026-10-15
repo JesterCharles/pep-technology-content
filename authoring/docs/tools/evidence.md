@@ -64,6 +64,21 @@ by immutable review evidence has since been removed, its binding remains in the 
 `historical: true`, and `missing: true`. It cannot provide current critic coverage; replacement files still require
 current education and SME coverage.
 
+### Solved-run evidence
+
+`authoring/schemas/solved-run.schema.json` owns JSON files named `lab-run.json` or `<scope>-solved-run.json` under
+the associated course, module or topic evidence directory. `lab` is the normalized repository-relative path of the
+public `coding-lab/`. Existing records express the complete file inventory either as `artifactHashes` keyed relative
+to that lab or as `files` entries containing a repository-relative `file` and `reviewedSha256`; both normalize to the
+same contract.
+
+T06 compares that inventory with `git ls-files` for the declared lab and hashes the current bytes. Every tracked
+public lab file must appear exactly once with a lowercase SHA-256, and no other path may appear. Missing files, newly
+tracked files, stale bytes, duplicate or escaping paths, and any attempted private solution binding fail even after
+lock regeneration. The evidence may describe private staging, but it must never contain or hash private solution
+bytes, hidden tests, answer keys or scoring material. These solved-run checks do not change the historical semantics
+of critic bindings.
+
 A course-level evidence reference to module content is historical: the course lock protects the evidence file bytes
 but omits that cross-scope binding, so later module changes do not stale the shared course lock. Such a historical
 intake reference can close its course-level intake finding, but it never supplies current critic coverage for module
