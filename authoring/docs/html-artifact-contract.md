@@ -32,32 +32,56 @@ Reusable authoring components are copied into the learner artifact. A source mar
 
 ## 4. Interactive learning shape
 
-- A header shows the learner's position and an honest "About N minutes" label, and offers 2-3 observable objectives in a collapsed, accessible `<details>` disclosure (inside `[data-pep-objectives]`).
+- Follow root `DESIGN.md` for page anatomy. New or re-authored pages mark their root `<main data-pep-responsive>` to opt into the current deterministic 320/390/768, touch and zoom contract; migration is per page, never a marker-only mass edit. A topic bar contains the learner's activity position, honest "about N min" label and usable **Restart activity** control; 2-3 observable objectives remain visible as a Goals list inside `[data-pep-objectives]`.
 - The learner predicts before any teaching.
 - The page builds one mental model.
 - Teach then do, 2-3 times, with at most 120 words per teach step and nothing used before it is taught.
+- In source and visual reading order, all instructions needed for an interaction precede that interaction. A page under the current `data-pep-responsive` contract marks the pair with `data-pep-instructions` and `data-pep-workspace`; both are present and instructions come first.
 - An apply check asks for a real confidence rating before showing feedback.
-- A recap closes the page, with an optional cheat sheet marked `data-section-skip`.
+- A recap closes the required path, with an optional cheat sheet marked `data-section-skip`.
 - The page offers at least 2 genuine manipulations, not just reading and clicking "next".
 - Every option is explained, right or wrong.
 - A wrong answer gets one retry, then the answer is revealed.
 - An answer locks once settled.
-- Each activity can restart without duplicate credit; the last edit counts.
+- Each activity can restart without duplicate credit; the last edit counts. Restart remains a 44 px target at narrow widths, resets the current required activity to its authored start, clears its feedback and credit, and never duplicates credit. It may close optional disclosures; if it resets an optional challenge starter, that reset is still optional and cannot change required progress.
 
-## 5. Honest simulators
+### Optional learner disclosures
+
+A page MAY include either, both or neither of these native disclosures. Omit one when it adds no specific learner value; never fill it with boilerplate. The required teaching and practice remain complete when disclosures are absent or never opened.
+
+- **Anecdote** uses `<details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>`. Its `<summary>` learner label is **Another way to think about it** and includes the cue **Optional example**. It gives one simpler explanation, analogy or concrete example, remains technically accurate, introduces no prerequisite and never replaces the core explanation.
+- **Challenge** uses `<details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>`. Its `<summary>` label is **Challenge (optional)**. Its body states an estimated optional time in `[data-pep-optional-time]` and clear success criteria in `[data-pep-success-criteria]`. It extends or combines only objectives already taught.
+
+Both disclosures are closed by default and appear inside the relevant activity section: Anecdote after the complete core explanation, and Challenge after the required practice and feedback. They do not create heading-level jumps; a disclosure nested under an `h2` activity may use `h3` internally, but its summary is not treated as a heading. Native toggle focus stays on `<summary>`; scripts do not move focus on open or close. Summary and any controls are at least 44 × 44 px, keyboard and touch operable, visibly focused, and screen-reader named. Disclosure content cannot depend on hover, a shortcut or JavaScript and remains in source order for no-JavaScript and assistive-technology reading.
+
+Optional disclosures and descendants MUST NOT carry `data-interaction`, `data-confidence`, `data-pep-objectives`, `data-pep-complete`, or another required-progress/completion hook. Their `data-section-skip` marker excludes their words and code from the required time estimator. Opening, closing, attempting or resetting one never changes Continue availability, required progress, completion, grade, the topic's "about" label or its required time budget. Optional time is additional and is labeled as such; it is not added to `pep:budget-minutes`.
+
+A code challenge may reuse the page's editor with a visibly resettable starter, but is not a second required workspace. It MUST NOT contain or expose a complete answer, hidden solution, rubric, secret test, answer key or client-visible reference implementation. All optional copy is public-safe because the standalone HTML is learner-visible source.
+
+In print, both disclosure bodies expand and retain their **Optional example** / **Challenge (optional)** labels and optional-time cue; interactive buttons may be omitted. A `beforeprint` listener may open closed optional disclosures and an `afterprint` listener MUST restore only those it opened. Without JavaScript, native disclosures remain readable and can be opened before printing. Restart does not alter print output. Progressive enhancement may remember disclosure state only through guarded storage, but the authored default is closed and native HTML remains complete without script.
+
+## 5. Honest simulators and coding workspaces
 
 - A simulator says plainly when something is unsupported, for example "not available in this practice terminal".
 - Tasks check the resulting state, not the exact keystrokes.
 - A simulator never shows behavior the real tool would not show.
+- A code-writing activity uses the standalone Monaco-style shell in root `DESIGN.md`; it never loads Monaco or another runtime. Use `data-pep-workspace="code"` on the workspace and place its matching `[data-pep-instructions]` first.
+- At widths below 480 px, collapse secondary editor chrome (extra file metadata, shortcut legends and decorative status items), but never the file name, Run, Reset code, Problems, Output or the plain-language status. The toolbar and tabs wrap; Run and Reset remain visible 44 px targets. Bound the code area to 240 px and Problems/Output to 180 px on phones; at larger widths their maxima are 400 px and 240 px. Neither region sets the page height or becomes sticky.
+- Problems and Output remain adjacent to the editor and reachable after its controls. Their tab buttons use native buttons with tab names and selected state; panels are labeled and focusable only when scrolling is possible. A learner can scroll to the boundary and continue through the page without a keyboard or touch scroll trap.
+- Text entry is at least 16 px on phone layouts and has `scroll-margin-block: 16px`, so focusing it with a virtual keyboard does not trigger browser zoom or hide it behind fixed UI (fixed UI is forbidden).
+- A coding workspace includes a visible `<noscript data-pep-no-js>` reading in the workspace. It restates the task, starter code, supported subset and expected way to compare results as plain text; it does not reveal a graded answer. JavaScript enhances that complete reading into the editor rather than supplying the only instructions.
 
-## 6. Accessibility
+## 6. Accessibility and responsive operation
 
-- Semantic controls, full keyboard use and a visible focus indicator.
+- Semantic controls, full keyboard use, screen-reader names and a visible focus indicator. Every pointer target is at least 44 × 44 CSS px. No action is hover-only or keyboard-shortcut-only.
 - Dynamic output is announced through `aria-live`.
 - Correctness is never shown by color alone.
-- Motion respects `prefers-reduced-motion`.
+- Motion respects `prefers-reduced-motion` without removing state changes.
 - Text contrast is at least 4.5:1 and meaningful borders at least 3:1, in both light and dark themes.
-- The page works at 200% zoom and at 400 px width without horizontal scroll.
+- At 320, 390 and 768 CSS px, practical portrait and landscape sizes, and 200% zoom, the page has no page-level horizontal overflow or clipped essential content. Topic/progress controls wrap, Restart remains usable and instructions precede their interaction.
+- The host document owns vertical scrolling. Pages use no fixed or sticky element, viewport-height main flow, scroll takeover or nested scrolling for the reading flow. Only bounded editors and Problems/Output regions may scroll; keyboard and touch users can reach and leave each region, and can reach Problems/Output without losing the instruction/workspace association.
+- Inputs and editors remain usable when a mobile virtual keyboard reduces the visual viewport: labels and instructions remain before them, focused fields have scroll margin, controls are not fixed behind the keyboard, and text-entry controls use at least 16 px text on phone layouts.
+- Print uses the light palette, preserves required teaching and static alternatives, expands optional disclosure content, avoids breaks inside short cards/code/figures, and removes only controls that have no printed meaning.
 
 ## 7. Metadata
 
@@ -78,7 +102,7 @@ Reusable authoring components are copied into the learner artifact. A source mar
 
 ## 10. Timing
 
-- Minutes come from the frozen reading-time estimator; its cost table is never changed to make a page pass.
+- Minutes come from the frozen reading-time estimator; its cost table is never changed to make a page pass. Content in a contract-owned optional disclosure is marked `data-section-skip` and is excluded from required-path words, code and interactions.
 - The estimator P50 must fit the topic budget. Its P90 is informational, not a substitute for a modeled learner route.
 - The "About N minutes" label covers the worst required path: two wrong graded attempts and wrong-first explores before settling, modeled per interactive unit and recorded with its evidence.
 - 15 minutes is a ceiling for one topic page.

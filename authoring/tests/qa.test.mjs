@@ -3,9 +3,11 @@ import { spawnSync } from "node:child_process";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import test from "node:test";
 import MarkdownIt from "markdown-it";
 import { run as runT01 } from "../tools/checks/T01-schema.mjs";
+import { validateOptionalDisclosures } from "../tools/checks/T08-html-static.mjs";
 import { run as runT09 } from "../tools/checks/T09-offline.mjs";
 import { run as runT10 } from "../tools/checks/T10-sandbox.mjs";
 import { run as runT11 } from "../tools/checks/T11-behavior.mjs";
@@ -14,6 +16,7 @@ import { run as runT13 } from "../tools/checks/T13-responsive.mjs";
 import { run as runT18 } from "../tools/checks/T18-markdown-pdf.mjs";
 import { markdownFromHtml } from "../tools/qa/md-from-html.mjs";
 import { pdfFromMarkdown } from "../tools/qa/pdf-from-md.mjs";
+import { launchChromium, VIEWPORTS } from "../tools/qa/harness.mjs";
 
 const fixtures = path.resolve("authoring/tests/fixtures/qa");
 const runners = { T09: runT09, T10: runT10, T11: runT11, T12: runT12, T13: runT13, T18: runT18 };
@@ -251,8 +254,8 @@ rejected: []
 test("T12 ignores fully transparent borders", { timeout: 60000 }, async () => {
   const errors = await runFixture("T12", "good.html", {
     transformHtml: (html) => html.replace(
-      '<main id="lesson" data-pep-complete="false">',
-      '<main id="lesson" data-pep-complete="false"><div style="border: 2px solid transparent"></div>',
+      '<main id="lesson" data-pep-responsive data-pep-complete="false">',
+      '<main id="lesson" data-pep-responsive data-pep-complete="false"><div style="border: 2px solid transparent"></div>',
     ),
   });
   assert.deepEqual(errors, []);
@@ -261,8 +264,8 @@ test("T12 ignores fully transparent borders", { timeout: 60000 }, async () => {
 test("T12 catches a rendered low-contrast border", { timeout: 60000 }, async () => {
   const errors = await runFixture("T12", "good.html", {
     transformHtml: (html) => html.replace(
-      '<main id="lesson" data-pep-complete="false">',
-      '<main id="lesson" data-pep-complete="false"><div id="low-border" style="border: 2px solid #ddd">Bordered panel</div>',
+      '<main id="lesson" data-pep-responsive data-pep-complete="false">',
+      '<main id="lesson" data-pep-responsive data-pep-complete="false"><div id="low-border" style="border: 2px solid #ddd">Bordered panel</div>',
     ),
   });
   assertPreciseFailure(errors, "T12", /light contrast: #low-border border .* < 3/);
@@ -305,8 +308,8 @@ test("T12 catches low contrast in forced dark mode", { timeout: 60000 }, async (
 test("T13 skips zero-size hidden live text and controls in closed details", { timeout: 60000 }, async () => {
   const errors = await runFixture("T13", "good.html", {
     transformHtml: (html) => html.replace(
-      '<main id="lesson" data-pep-complete="false">',
-      '<main id="lesson" data-pep-complete="false"><div id="empty-live" aria-live="polite" style="height:0;overflow:hidden"><span hidden>Old feedback</span></div><details><summary>Optional details</summary><button style="width:2000px">Closed action</button></details>',
+      '<main id="lesson" data-pep-responsive data-pep-complete="false">',
+      '<main id="lesson" data-pep-responsive data-pep-complete="false"><div id="empty-live" aria-live="polite" style="height:0;overflow:hidden"><span hidden>Old feedback</span></div><details><summary style="min-height:44px">Optional details</summary><button style="width:2000px">Closed action</button></details>',
     ),
   });
   assert.deepEqual(errors, []);
@@ -315,16 +318,91 @@ test("T13 skips zero-size hidden live text and controls in closed details", { ti
 test("T13 catches visibly clipped essential text", { timeout: 60000 }, async () => {
   const errors = await runFixture("T13", "good.html", {
     transformHtml: (html) => html.replace(
-      '<main id="lesson" data-pep-complete="false">',
-      '<main id="lesson" data-pep-complete="false"><div style="width:120px;overflow:hidden"><p id="clipped-text" data-essential style="width:300px">Visible essential text is clipped</p></div>',
+      '<main id="lesson" data-pep-responsive data-pep-complete="false">',
+      '<main id="lesson" data-pep-responsive data-pep-complete="false"><div style="width:120px;overflow:hidden"><p id="clipped-text" data-essential style="width:300px">Visible essential text is clipped</p></div>',
     ),
   });
   assertPreciseFailure(errors, "T13", /desktop clipped essentials: clipped-text/);
 });
 
-test("T13 catches horizontal overflow at 400 px", { timeout: 60000 }, async () => {
+test("T13 covers phone, landscape, tablet, and 200% zoom contexts", () => {
+  assert.deepEqual(VIEWPORTS.map(({ name, width, zoom }) => [name, width, zoom]), [
+    ["desktop", 1366, 1],
+    ["short", 1366, 1],
+    ["phone-320", 320, 1],
+    ["phone-390", 390, 1],
+    ["phone-landscape", 844, 1],
+    ["tablet-768", 768, 1],
+    ["zoom-200", 1366, 2],
+  ]);
+});
+
+test("T13 catches horizontal overflow at 320 px", { timeout: 60000 }, async () => {
   const errors = await runFixture("T13", "horizontal-overflow.html");
-  assertPreciseFailure(errors, "T13", /mobile horizontal overflow: 500 > 400/);
+  assertPreciseFailure(errors, "T13", /phone-320 horizontal overflow: 500 > 320/);
+});
+
+test("T13 catches touch targets below 44 by 44 CSS pixels", { timeout: 60000 }, async () => {
+  const errors = await runFixture("T13", "good.html", {
+    transformHtml: (html) => html.replace(
+      '<main id="lesson" data-pep-responsive data-pep-complete="false">',
+      '<main id="lesson" data-pep-responsive data-pep-complete="false"><button id="tiny" aria-label="Tiny" style="box-sizing:border-box;width:20px;height:20px;padding:0"></button>',
+    ),
+  });
+  assertPreciseFailure(errors, "T13", /phone-320 touch targets below 44x44: #tiny 20x20/);
+});
+
+test("optional disclosure hooks enforce native semantics and accounting boundaries", async () => {
+  const html = await readFile(path.join(fixtures, "good.html"), "utf8");
+  assert.deepEqual(validateOptionalDisclosures(html), []);
+  assert.match(
+    validateOptionalDisclosures(html.replace(" data-section-skip>", ">"))[0],
+    /must carry data-section-skip/,
+  );
+  assert.match(
+    validateOptionalDisclosures(html.replace("<div class=\"pep-optional__body\" id=\"challenge-body\">", "<div class=\"pep-optional__body\" id=\"challenge-body\" data-interaction=\"challenge\">"))[0],
+    /must not carry required objective, interaction, progress or completion hooks/,
+  );
+});
+
+test("optional disclosures expand for print and restore their closed state", { timeout: 60000 }, async () => {
+  const browser = await launchChromium();
+  try {
+    const page = await browser.newPage();
+    await page.goto(pathToFileURL(path.join(fixtures, "good.html")).href);
+    assert.equal(await page.locator("#challenge-body").isVisible(), false);
+    await page.evaluate(() => dispatchEvent(new Event("beforeprint")));
+    await page.emulateMedia({ media: "print" });
+    assert.equal(await page.locator("#challenge-body").isVisible(), true);
+    await page.evaluate(() => dispatchEvent(new Event("afterprint")));
+    await page.emulateMedia({ media: "screen" });
+    assert.equal(await page.locator('[data-pep-optional="challenge"]').getAttribute("open"), null);
+  } finally {
+    await browser.close();
+  }
+});
+
+test("optional disclosures do not change required timing inputs", async () => {
+  const original = (await readFile(path.join(fixtures, "good.html"), "utf8"))
+    .replace('data-interaction="practice"', 'data-interaction="mcq"');
+  const withoutOptional = original.replace(/<details\b[^>]*\bdata-pep-optional=["'][^"']+["'][^>]*>[\s\S]*?<\/details\s*>/gi, "");
+  const directory = await mkdtemp(path.join(os.tmpdir(), "pep-optional-time-"));
+  try {
+    const full = path.join(directory, "full.html");
+    const core = path.join(directory, "core.html");
+    await writeFile(full, original);
+    await writeFile(core, withoutOptional);
+    const estimator = path.resolve("authoring/tools/timing/estimate_reading.py");
+    const estimate = (file) => JSON.parse(spawnSync("python3", [estimator, file], { encoding: "utf8" }).stdout);
+    const fullResult = estimate(full);
+    const coreResult = estimate(core);
+    assert.deepEqual(
+      { words: fullResult.words, code_lines: fullResult.code_lines, interactions: fullResult.interactions },
+      { words: coreResult.words, code_lines: coreResult.code_lines, interactions: coreResult.interactions },
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 test("Markdown derivation preserves list items, table cells, and block boundaries", { timeout: 60000 }, async () => {
