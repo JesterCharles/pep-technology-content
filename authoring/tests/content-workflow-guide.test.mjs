@@ -416,6 +416,7 @@ test("the tab shell and both architectures work by keyboard, touch, URL history,
       mutedLoops: document.querySelectorAll("#detailed-view svg .is-loop-muted").length,
       happyPathMuted: document.querySelectorAll('#detailed-view svg [data-edge-role="main"].is-loop-muted').length,
       defaultPrompt: getComputedStyle(document.querySelector(".failure-default")).display,
+      visibleEdgeLabels: [...document.querySelectorAll('#detailed-view svg text[class^="t-edge-"]')].filter((element) => Number(getComputedStyle(element.parentElement).opacity) > 0).map((element) => element.textContent),
       diagramWidth: [document.querySelector(".detailed-architecture .diagram-scroll").clientWidth, document.querySelector(".detailed-architecture .diagram-scroll").scrollWidth],
       pageWidth: [document.documentElement.clientWidth, document.documentElement.scrollWidth]
     }));
@@ -429,6 +430,7 @@ test("the tab shell and both architectures work by keyboard, touch, URL history,
     assert.ok(state.mutedLoops > 0);
     assert.equal(state.happyPathMuted, 0);
     assert.equal(state.defaultPrompt, "block");
+    assert.deepEqual(state.visibleEdgeLabels, []);
     assert.ok(state.diagramWidth[1] > state.diagramWidth[0]);
     assert.deepEqual(state.pageWidth, [400, 400]);
     let edgeLabels = await edgeLabelState();
@@ -482,8 +484,9 @@ test("the tab shell and both architectures work by keyboard, touch, URL history,
         selected: document.querySelector('[data-failure-control][aria-pressed="true"]')?.getAttribute("data-failure-control"),
         visibleDetails: [...document.querySelectorAll(".failure-list details")].filter((element) => !element.hidden).map((element) => element.dataset.failureDetail),
         activeEdge: document.querySelector(`[data-edge-id="${edgeId}"]`).classList.contains("is-loop-active"),
+        inactiveHandoff: document.querySelector('[data-edge-id="deliver-handoff"]').classList.contains("is-loop-muted"),
         visibleExamples: [...document.querySelectorAll(".failure-list details")].filter((element) => getComputedStyle(element).display !== "none").length
-      }), { stageId, edgeId }), { selected: stageId, visibleDetails: [stageId], activeEdge: true, visibleExamples: 1 });
+      }), { stageId, edgeId }), { selected: stageId, visibleDetails: [stageId], activeEdge: true, inactiveHandoff: true, visibleExamples: 1 });
     }
 
     await page.goBack();
