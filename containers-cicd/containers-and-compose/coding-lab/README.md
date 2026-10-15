@@ -22,7 +22,7 @@ Finish these topic pages first, because the lab uses what they teach: image laye
 Plan about 75 minutes, split across the two days' guided-lab blocks.
 On S36 do phases 1 and 2 and the Dockerfile and `.dockerignore` parts of phase 3 (about 40 minutes); on S37 do the Compose part and phase 4 (about 35 minutes).
 If several tests fail more than once, allow up to 95 minutes.
-`authoring/evidence/containers-cicd/containers-and-compose/coding-lab-timing.json` records how these figures were estimated and measured.
+The setup and test commands themselves take about a second on a typical laptop once the packages are downloaded; the minutes above are the time to read, write and fix the files.
 
 ## Prerequisites
 
@@ -246,8 +246,3 @@ The lab creates no database, image, container or volume.
 - **`.env is tracked by Git`**: run `git rm --cached .env` in the project folder, then commit; the file stays on your disk.
 - **The URL test fails**: inside a container, `localhost` is that container itself, and the host port belongs to your laptop. Check the host name, the port and the database name.
 - **The healthcheck test fails**: check that `-U` and `-d` are both there and use `$$`, or literals equal to the database service's settings.
-
-## For maintainers
-
-`node tests/bypass.mjs`, run from this folder after Setup, checks that each deliberately wrong project fragment in `fixtures/bypass/` is rejected by its rule and still accepted by the neighbouring rules.
-It is not part of the learner's test command.

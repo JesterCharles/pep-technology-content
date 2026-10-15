@@ -88,9 +88,9 @@ Prediction (practice, not scored): api has depends_on: [db] and no healthcheck. 
 
 Activity: compare startup timelines. Plain depends_on: db container starts at 0 s; api starts at 1 s while PostgreSQL is still initialising; the API logs Connection to db:5432 refused and exits with code 1. With a pg_isready healthcheck and condition: service_healthy: db starts at 0 s with health: starting; the check passes at about 6 s and db is healthy; only then api starts and connects.
 
-### explore
+### terminal
 
-Activity: complete compose.yaml. db healthcheck test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"] with interval 10s, timeout 5s, retries 5, start_period 30s. api depends_on: db: condition: service_healthy. A curl test fails because the postgres image serves no HTTP; condition: service_started does not wait for healthy.
+Editor activity: complete compose.yaml. db healthcheck test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"] with interval 10s, timeout 5s, retries 5, start_period 30s. api depends_on: db: condition: service_healthy. A single $ lets Compose fill the variable from your machine; service_started does not wait for healthy; the short form depends_on: [db] only waits for running.
 
 ### explore
 

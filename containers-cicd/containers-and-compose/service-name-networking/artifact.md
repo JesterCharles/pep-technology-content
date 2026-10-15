@@ -64,6 +64,14 @@ Next topic: depends_on with health checks
 
 `SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/shop`
 
+Optional time: about 3 minutes, in addition to the topic time
+
+Success criteria: For a new service you write both addresses and can say which half of the port mapping each one uses.
+
+The team adds a Redis service named `cache` to the same `compose.yaml`. Redis listens on port 6379 in its container, and the service publishes `"127.0.0.1:16379:6379"`. Write the address the `api` container uses to reach Redis, and the address a Redis tool on your laptop uses. Nothing here is checked or counted.
+
+Your two addresses (optional) api uses: laptop tool uses:
+
 ## Sources
 
 Checked against these live official sources on 2026-10-14. Versions shown: Docker Compose 5.6 and Docker Engine 29 on the default bridge network. Connection results are simulated; real error text depends on the client (here the PostgreSQL JDBC driver).

@@ -74,6 +74,8 @@ Next topic: Reading: image layers and build caching
 | `podman machine init`, `podman machine start` | create and start the Linux VM (macOS, Windows) |
 | `podman run`, `ps`, `images`, `build` | same core commands as Docker |
 
+Why does a Mac need a Linux virtual machine for containers? A container is not a small virtual machine: it is an ordinary Linux process that the Linux kernel isolates and limits. macOS and Windows do not have a Linux kernel, so Podman starts a small Linux VM with `podman machine`, and the containers run as processes inside it. Docker Desktop does the same thing behind the scenes. On a Linux laptop there is no VM: containers are processes on the laptop itself.
+
 ## Sources
 
 Checked against these live official sources on 2026-10-13. Versions shown: Docker Engine 29 and Podman 6 (the course compatibility baseline). Terminal output is simulated and shortened where marked; IDs, times and some message wording differ on a real machine.

@@ -7,95 +7,61 @@
 <meta name="pep:module" content="containers-and-compose">
 <meta name="pep:topic" content="Compose: the Spring Boot service and its database">
 <meta name="pep:topic-id" content="compose-spring-boot-and-database">
-<meta name="pep:budget-minutes" content="10">
+<meta name="pep:budget-minutes" content="14">
 <meta name="pep:source" content="authoring/evidence/containers-cicd/containers-and-compose/compose-spring-boot-and-database/sources.json">
-<title>Compose: the Spring Boot service and its database · Containers and Compose</title>
+<title>Compose: the Spring Boot service and its database</title>
 <style>
-:root{
-  --bg:#eef2f0;--surface:#f8faf9;--ink:#1b2320;--muted:#47524e;--rule:#6b7873;--line:#c9d2ce;
-  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
-  --on-teal:#ffffff;--term:#e2e8e5;--focus:#1f4fbf;
-  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
-  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  color-scheme:light;
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
 }
-:root[data-theme="dark"]{
-  --bg:#121816;--surface:#1a2220;--ink:#e3ebe7;--muted:#a8b6b0;--rule:#71827c;--line:#2f3b37;
-  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
-  --on-teal:#0b1311;--term:#0c1110;--focus:#8fb4ff;
-  color-scheme:dark;
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
 }
-*{box-sizing:border-box}
-html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
-::selection{background:var(--teal);color:var(--on-teal)}
-code,kbd,.mono{font-family:var(--mono);font-size:.94em}
-a{color:var(--teal);text-underline-offset:3px}
-main{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
-.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
-.top{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title tools";column-gap:var(--s6);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
-.top .crumbs{grid-area:crumbs}.top h1{grid-area:title}.top .meta{grid-area:meta}.top .tools{grid-area:tools}
-.crumbs{margin:0 0 var(--s1);font-size:15px;color:var(--muted)}
-.crumbs ol{display:flex;flex-wrap:wrap;gap:0 var(--s2);margin:0;padding:0;list-style:none}
-.crumbs li+li::before{content:"/";margin-right:var(--s2);color:var(--rule)}
-.crumbs [aria-current]{color:var(--ink);font-weight:600}
-h1{margin:0;font-size:24px;line-height:30px;letter-spacing:-.01em}
-.meta{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s2) 0 0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
-.meta li:first-child{font-weight:700;color:var(--ink)}
-.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
-.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2);flex:0 0 auto}
-.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
-.pips{display:flex;gap:var(--s1)}
-.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
-.pip.on{background:var(--teal);border-color:var(--teal)}
-.pip.settled{background:var(--amber-soft);border:2px dashed var(--amber)}
-button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
-.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
-.ghost:hover{background:var(--surface);border-color:var(--ink)}
-.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
-.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
-.primary:hover{filter:brightness(1.08)}
-.primary:active{transform:translateY(1px)}
-button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
-:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-[tabindex="-1"]:focus{outline:none}
-[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s3);align-items:start}
-.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
-.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
-.teach p{margin:0 0 var(--s2);max-width:62ch}
-.teach ul{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
-.teach li{margin-bottom:var(--s1)}
-.teach code,.task code{white-space:nowrap}
-.task{padding:var(--s3) var(--s4);border-top:2px solid var(--teal);background:var(--surface)}
-.task p{margin:0;font-weight:600}
-.task p+p{margin-top:var(--s2)}
-.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
-.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
-.goals li:first-child{border-top:0}
-.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
-.goals li.done .st{color:var(--teal)}
-.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
-.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:var(--s2)}
-.model code{font-size:1em}
-.control{min-width:0}
-fieldset{margin:0;padding:0;border:0;min-width:0}
-legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
-.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
-.opts.one{grid-template-columns:minmax(0,1fr)}
-.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:6px var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer}
-.opt:hover{border-color:var(--ink)}
-.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
-.opt:has(input:disabled){cursor:default}
-.opt.right,.opt.right:has(input:checked){border-color:var(--teal);background:var(--teal-soft)}
-.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);background:var(--red-soft);box-shadow:inset 4px 0 0 var(--red)}
-.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
-.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
-.confrow{margin-top:var(--s2)}
-.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
-.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
-.conf .opt{min-width:96px}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
 /* pep:component terminal@1 css */
 .term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
 .term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
@@ -117,144 +83,232 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
 .simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 /* /pep:component terminal css */
-.fbrow{display:flex;flex-direction:column;gap:var(--s2);align-items:flex-start}
-.feedback{width:100%;min-width:0;line-height:1.4;font-size:15px;line-height:1.45}
-.feedback p{margin:0 0 var(--s1)}
-.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
-.feedback li{margin-bottom:2px}
-.verdict{font-weight:700}
-.feedback .on{font-weight:600}
-.badge{display:inline-block;margin:0 var(--s1) 0 0;padding:0 6px;border:2px solid currentColor;border-radius:3px;font:700 15px/1.4 var(--sans);vertical-align:baseline}
-.badge.ok{color:var(--teal)}.badge.no{color:var(--red)}.badge.me{color:var(--ink)}
-.opt .badges{display:block;margin-top:2px}
-.explain{list-style:none;padding:0;margin:var(--s1) 0 0}
-.explain li{margin:0;padding:var(--s1) 0 var(--s1) var(--s3);border-left:2px solid var(--line)}
-.explain li+li{margin-top:var(--s1)}
-.explain li.mine{border-left-color:var(--teal)}
-.explain .on,.explain .ex{display:block}
-.explain .ex::first-letter{text-transform:uppercase}
-.teach ul.chunks{list-style:none;padding:0}
-.teach ul.chunks li{margin-bottom:var(--s2)}
-.opt .why{display:block;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
-.opt .why code{font-size:.94em}
-.verdict.ok{color:var(--teal)}
-.verdict.no{color:var(--red)}
-.verdict.set{color:var(--amber)}
-.conf-report{color:var(--muted)}
-.fbrow .primary{flex:0 0 auto}
-.recap ul{padding-left:20px}
-.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
-.recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
-.feedback details{margin:var(--s1) 0}
-.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
-.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
-.next-topic{font-weight:700}
-.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
-[hidden]{display:none!important}
-@media (min-width:861px) and (max-height:720px){
-  main{padding-top:var(--s2)}
-  .stage{padding-top:var(--s2)}
-  .col{gap:var(--s2)}
-  .model{padding:var(--s2) var(--s4)}
-  .model figcaption{margin-bottom:var(--s1)}
-  .meta{margin-top:var(--s1)}
-  .opts{gap:6px}
-  legend{margin-bottom:var(--s1)}
-  .row{margin-top:var(--s2)}
-  .teach h2{margin-bottom:var(--s1)}
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
 }
-@media (max-width:860px){
-  main{padding:var(--s3) var(--s4) var(--s4)}
-  .top{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "tools";row-gap:var(--s2)}
-  .tools{justify-content:flex-start;flex-wrap:wrap}
-  .stage{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3)}
-  .col{display:contents}
-  #current-teaching{order:1}#current-task{order:2}#live-model{order:3}#current-control{order:4}.fbrow{order:5}
-  .fbrow{flex-direction:column}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.nojs { margin: 16px; padding: 12px 16px; border: 1px solid var(--pep-warning); border-radius: var(--pep-radius-md); background: var(--pep-warning-soft); color: var(--pep-text-strong); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
 }
-@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}
-  .cmdline{flex-wrap:wrap;row-gap:var(--s1)}
-  .cmdline label{flex:1 0 100%;max-width:none}}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
-
-.top .metaline{grid-column:1/-1}
-.objectives{grid-column:1/-1;margin:var(--s2) 0 0;padding-left:1.25em}
-.teach pre,.filecode{margin:0 0 var(--s2);padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--term);font:14px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
-.filecode .hl{background:var(--amber-soft);outline:1px solid var(--amber)}
-.filecode .bad{background:var(--red-soft);text-decoration:underline wavy var(--red)}
-.builder{display:flex;flex-direction:column;gap:var(--s2)}
-.builder .brow{display:grid;grid-template-columns:minmax(0,1fr);gap:2px}
-.builder .brow span{font-size:15px;font-weight:600}
-.builder select{font:15px var(--mono);min-height:44px;padding:var(--s1) var(--s2);color:var(--ink);background:var(--surface);border:2px solid var(--rule);border-radius:4px;max-width:100%;min-width:0}
-.builder select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-.orderlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--s1)}
-.orderlist li{display:flex;align-items:center;gap:var(--s2);padding:var(--s1) var(--s2);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
-.orderlist li code{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;white-space:normal}
-.orderlist button{min-height:44px;min-width:44px;padding:var(--s1) var(--s2)}
-.toggles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
-.toggles button{text-align:left;font-family:var(--mono);font-size:15px}
-.toggles button[aria-pressed="true"]::before{content:"\2713  "}
-.boxes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
-.box{padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--bg);min-width:0}
-.box h3{margin:0 0 var(--s1);font-size:15px}
-.box ul{margin:0;padding-left:18px;font-size:15px}
-.box p{margin:0;font-size:15px}
-.chip{display:inline-block;padding:0 6px;border:2px solid var(--rule);border-radius:3px;font:600 14px/1.5 var(--sans)}
-.chip.ok{border-color:var(--teal);color:var(--teal)}
-.chip.no{border-color:var(--red);color:var(--red);border-style:dashed}
-.chip.wait{border-color:var(--amber);color:var(--amber);border-style:dotted}
-.mtable{width:100%;border-collapse:collapse;font-size:15px}
-.mtable th,.mtable td{padding:var(--s1) var(--s2);border-bottom:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere}
-.mtable th{color:var(--muted);font-weight:700}
-.mnote{margin:var(--s2) 0 0;font-size:15px;color:var(--muted)}
-@media (max-width:480px){.boxes,.toggles{grid-template-columns:minmax(0,1fr)}}
-.goals li,.explain li{border-color:var(--rule)}
-.mtable th,.mtable td{border-bottom-color:var(--rule)}
-.teach code,.task code,.opt code,.recap code{white-space:normal;overflow-wrap:anywhere}
+button, .pep-option { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+/* topic bar */
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { display: flex; flex: 1 1 260px; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress .pep-progress { flex: 1 1 96px; width: 96px; max-width: 160px; }
+.pep-topicbar .pep-btn { flex: 0 0 auto; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.pep-progress > span { height: 8px; border-radius: var(--pep-radius-pill); background: var(--pep-control); border: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); border-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning-soft); border: 1px dashed var(--pep-warning); }
+/* regions */
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region > * { min-width: 0; }
+.pep-goals { margin: 0; padding: 12px 16px; list-style: none; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-goals > li:first-child { border-top: 0; }
+.pep-goals .state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; }
+.pep-goals .is-done .state { color: var(--pep-success); }
+.pep-goals-h { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0 0 -8px; }
+.pep-steps-list { margin: 0; padding-left: 24px; }
+.pep-steps-list > li + li { margin-top: 8px; }
+.pep-steps-list .state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-left: 8px; white-space: nowrap; }
+.pep-steps-list .is-done .state { color: var(--pep-success); }
+.pep-summary { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0; }
+.pep-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 4px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); background: var(--pep-control); color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); }
+.pep-chip--ok { border-color: var(--pep-success); color: var(--pep-success); background: var(--pep-success-soft); }
+.pep-chip--no { border-style: dashed; border-color: var(--pep-danger); color: var(--pep-danger); background: var(--pep-danger-soft); }
+.pep-chip--wait { border-style: dotted; border-color: var(--pep-warning); color: var(--pep-warning); background: var(--pep-warning-soft); }
+/* cards, callouts, buttons */
+.pep-card { background: var(--pep-card); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); padding: 16px; min-width: 0; }
+.pep-callout { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text); }
+.pep-callout p { margin: 0 0 8px; } .pep-callout p:last-child { margin: 0; }
+.pep-callout ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-callout--info { background: var(--pep-accent-soft); border-color: var(--pep-accent); }
+.pep-callout--success { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-callout--warning { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-callout--danger { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); max-width: 100%; text-align: center; }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+.pep-btn:disabled, .pep-btn[aria-disabled="true"] { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-btn[aria-pressed="true"] { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); }
+.pep-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+/* options, confidence, feedback */
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-options > legend, .pep-legend { padding: 0; margin: 0 0 8px; font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-option { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; min-width: 0; }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option.is-correct .pep-option__key { background: var(--pep-success); color: var(--pep-page); }
+.pep-option.is-wrong .pep-option__key { background: var(--pep-danger); color: var(--pep-page); }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+.pep-option input:disabled { cursor: default; }
+.pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-option:has(input:disabled) { cursor: default; }
+.pep-explain { display: block; margin: 4px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-tag { display: inline-block; margin: 4px 8px 0 0; padding: 0 8px; border: 1px solid currentColor; border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); }
+.pep-tag--ok { color: var(--pep-success); } .pep-tag--no { color: var(--pep-danger); } .pep-tag--me { color: var(--pep-text-strong); }
+.pep-conf { display: grid; grid-template-columns: repeat(3, minmax(96px, 1fr)); gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-conf > legend { grid-column: 1 / -1; padding: 0; margin: 0 0 8px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-conf .pep-option { grid-template-columns: minmax(0, 1fr); text-align: center; }
+@media (max-width: 480px) { .pep-conf { grid-template-columns: minmax(0, 1fr); } }
+.pep-verdict { font-weight: 700; }
+.pep-verdict--correct { color: var(--pep-success); } .pep-verdict--wrong { color: var(--pep-danger); } .pep-verdict--revealed { color: var(--pep-warning); }
+.feedback:empty { display: none; }
+.feedback ul { margin: 4px 0 0; padding-left: 20px; }
+.feedback li + li { margin-top: 4px; }
+.conf-report { color: var(--pep-text-muted); }
+/* model and code */
+.model { margin: 0; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-bottom: 8px; }
+.boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.box { padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.box h3 { font-size: 14px; line-height: 20px; margin: 0 0 4px; }
+.box ul { margin: 0; padding-left: 18px; font: 400 14px/20px var(--pep-font-sans); }
+.box p { margin: 0; font: 400 14px/20px var(--pep-font-sans); }
+.mnote { margin: 8px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-code, .teach pre, .recap pre { margin: 0 0 12px; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.outlog { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; margin: 8px 0 0; padding: 12px 16px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--pep-text-strong); }
+@media (max-width: 480px) { .outlog { max-height: 180px; } }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); }
+.pep-table td, .pep-table th { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; text-align: left; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.recap ul { padding-left: 20px; }
+.recap details, .sources { margin: 12px 0; padding: 0 0 0 0; border-block: 1px solid var(--pep-line-strong); }
+.recap summary, .sources summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-weight: 600; color: var(--pep-text-strong); }
+.next-topic { font-weight: 600; }
+.complete { margin: 0; }
+/* terminal@1 bridge: keep the drift-checked fragment, adapt sizes around it */
+.term { border-radius: var(--pep-radius-sm); }
+.term-top { font: 600 13px/20px var(--pep-font-sans); }
+.log { font: 400 14px/20px var(--pep-font-mono); max-height: 240px; overscroll-behavior: contain auto; }
+.cmdline .runbtn { min-height: 44px; min-width: 64px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); }
+.cmdline input { scroll-margin-block: 16px; }
+@media (max-width: 480px) { .log { height: 180px; } .cmdline { flex-wrap: wrap; row-gap: 4px; } .cmdline label { flex: 1 0 100%; max-width: none; } }
+/* editor shell */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__secondary { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { margin: 0; padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font: inherit; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; cursor: pointer; white-space: normal; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-editor noscript, .pep-noscript { display: block; padding: 12px; font: 400 14px/20px var(--pep-font-sans); }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__gutter { line-height: 24px; font-size: 16px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* optional disclosures */
+.pep-optional { min-width: 0; border-block: 1px solid var(--pep-line-strong); background: transparent; break-inside: avoid; }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+@media print { .pep-optional > summary { list-style: none; } .pep-optional > summary::-webkit-details-marker { display: none; } }
+/* figure */
+.pep-figure { margin: 0; }
+.pep-figure figcaption { margin-top: 8px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.state[data-state]::before { content: attr(data-state); }
+summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; }
+.feedback details { margin: 8px 0; }
+.pep-optional-area { display: flex; flex-direction: column; gap: 8px; }
+.chip { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text); background: var(--pep-control); }
+.chip.ok { border-color: var(--pep-success); color: var(--pep-success); background: var(--pep-success-soft); }
+.chip.no { border-style: dashed; border-color: var(--pep-danger); color: var(--pep-danger); background: var(--pep-danger-soft); }
+.chip.wait { border-style: dotted; border-color: var(--pep-warning); color: var(--pep-warning); background: var(--pep-warning-soft); }
+.pep-chal { display: block; width: 100%; min-height: 120px; margin: 4px 0 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); white-space: pre; overflow-wrap: normal; }
 </style>
 </head>
 <body>
-<noscript><p class="nojs">This topic needs JavaScript for its practice activities and checks. Turn JavaScript on to take part.</p></noscript>
-<main id="lesson">
-  <header class="top">
+<noscript><p class="nojs">The reading, task steps, file readings and recap below work without JavaScript. Turn JavaScript on to use the practice terminal, editor checks and answer feedback.</p></noscript>
+<main id="lesson" class="pep-main" data-pep-responsive>
+  <header class="pep-topicbar">
     <h1>Compose: the Spring Boot service and its database</h1>
-    <div class="tools">
-      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 4</span><span class="pips" aria-hidden="true"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></span></div>
-      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
-      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
-    </div>
-    <ul class="meta metaline"><li>About 10 minutes</li><li>Containers and Compose, topic 5 of 8</li><li>Simulated practice; no container engine runs</li></ul>
-    <ul class="objectives" data-pep-objectives aria-label="Objectives">
-      <li>Write a compose.yaml with a Spring Boot service built from its Dockerfile and a PostgreSQL service whose data lives in a named volume</li>
-      <li>Give the Spring Boot service its datasource URL, username and password through environment variables in compose.yaml, with the password kept out of the file</li>
-      <li>Start, inspect and stop the stack with docker compose up -d, ps and down, and state what down -v removes in addition</li>
-    </ul>
+    <div class="pep-topicbar__progress" data-pep-progress id="progress"><span id="prog-text">Activity 1 of 4 · 0 done</span><span>about 14 min</span><span class="pep-progress" id="progress-bar" aria-hidden="true"><span></span><span></span><span></span><span></span></span></div>
+    <button type="button" class="pep-btn" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+    <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
   </header>
-  <div class="stage" id="stage" data-step="1">
-    <div class="col">
-      <section id="current-teaching" class="teach" aria-label="Current teaching">
+  <div class="pep-regions" id="stage" data-step="1">
+    <section class="pep-region" id="panel" data-pep-instructions aria-label="Reading and instructions">
+      <div id="current-teaching" class="teach">
 <div data-step="1">
   <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
-  <p>Practice prediction, not scored.</p>
+<p>Practice prediction, not scored.</p>
 </div>
 <div data-step="2" data-pep-teaching>
   <h2 id="teach-2-h" tabindex="-1">One file describes the stack</h2>
-  <p><code>compose.yaml</code> lists <strong>services</strong>. <code>build: ./backend</code> builds the API from its Dockerfile; <code>image: postgres:18</code> uses a ready image. <code>ports</code> and <code>volumes</code> work like <code>-p</code> and <code>-v</code>; a named volume is also declared under the top-level <code>volumes:</code>.</p>
+<p><code>compose.yaml</code> lists <strong>services</strong>. <code>build: ./backend</code> builds the API from its Dockerfile; <code>image: postgres:18</code> uses a ready image. <code>ports</code> and <code>volumes</code> work like <code>-p</code> and <code>-v</code>; a named volume is also declared under the top-level <code>volumes:</code>.</p>
   <p><code>environment</code> sets variables. Spring Boot reads <code>SPRING_DATASOURCE_URL</code>, <code>_USERNAME</code> and <code>_PASSWORD</code>. Write <code>${DB_PASSWORD}</code> and Compose fills it from a <code>.env</code> file beside <code>compose.yaml</code>, listed in <code>.gitignore</code>.</p>
   <p>One networking rule now, the details next topic: inside a container, <code>localhost</code> is that container itself. Compose lets one service reach another by its <strong>service name</strong> and container port, so the API's URL names <code>db:5432</code>, then the database name.</p>
   <p>The password value is disposable and only wires local development; production uses Compose secrets.</p>
 </div>
 <div data-step="3" data-pep-teaching>
   <h2 id="teach-3-h" tabindex="-1">Up, ps, down</h2>
-  <ul><li><code>docker compose up -d</code> builds missing images, creates a network, the volume and the containers, and starts them in the background.</li><li><code>docker compose ps</code> lists the stack's containers.</li><li><code>docker compose down</code> stops and removes the containers and network. Named volumes stay, so the data stays.</li><li><code>docker compose down -v</code> also removes the named volumes: the data is gone.</li></ul>
+<ul><li><code>docker compose up -d</code> builds missing images, creates a network, the volume and the containers, and starts them in the background.</li><li><code>docker compose ps</code> lists the stack's containers.</li><li><code>docker compose down</code> stops and removes the containers and network. Named volumes stay, so the data stays.</li><li><code>docker compose down -v</code> also removes the named volumes: the data is gone.</li></ul>
 </div>
 <div data-step="4" data-pep-teaching>
   <h2 id="teach-4-h" tabindex="-1">Apply it: reset the database</h2>
-  <p>Which command removes the data on purpose?</p>
+<p>Which command removes the data on purpose?</p>
 </div>
-<div data-step="5" hidden data-pep-recap class="recap">
+<div data-step="5" data-pep-recap class="recap">
   <h2 id="teach-5-h" tabindex="-1">Recap</h2>
-  <ul><li>Services: the API with <code>build</code>, PostgreSQL with <code>image</code>; data in a declared named volume; ports on <code>127.0.0.1</code>.</li><li>Datasource settings through <code>environment</code>; the password as <code>${DB_PASSWORD}</code> from an untracked <code>.env</code>.</li><li><code>up -d</code> starts, <code>ps</code> lists, <code>down</code> removes containers and network, <code>down -v</code> also deletes named volumes.</li></ul>
+<ul><li>Services: the API with <code>build</code>, PostgreSQL with <code>image</code>; data in a declared named volume; ports on <code>127.0.0.1</code>.</li><li>Datasource settings through <code>environment</code>; the password as <code>${DB_PASSWORD}</code> from an untracked <code>.env</code>.</li><li><code>up -d</code> starts, <code>ps</code> lists, <code>down</code> removes containers and network, <code>down -v</code> also deletes named volumes.</li></ul>
   <details data-section-skip>
     <summary>Cheat sheet</summary>
     <pre>services:
@@ -281,63 +335,106 @@ volumes:
   <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live official sources on 2026-10-13. Versions shown: Docker Compose 5.6 (the docker compose plugin), Docker Engine 29, PostgreSQL 18, Spring Boot 4.1. The project folder is called shop, so names start with shop. Output is simulated and shortened.</p><ul><li><a href="https://docs.docker.com/compose/" rel="noopener">Docker Docs: Docker Compose overview</a></li><li><a href="https://docs.docker.com/reference/compose-file/services/" rel="noopener">Compose file reference: services (build, image, ports, environment, volumes)</a></li><li><a href="https://docs.docker.com/reference/compose-file/volumes/" rel="noopener">Compose file reference: top-level volumes</a></li><li><a href="https://docs.docker.com/compose/how-tos/environment-variables/set-environment-variables/" rel="noopener">Docker Docs: Set environment variables in containers (interpolation, .env)</a></li><li><a href="https://docs.docker.com/reference/cli/docker/compose/up/" rel="noopener">Docker CLI reference: docker compose up</a></li><li><a href="https://docs.docker.com/reference/cli/docker/compose/down/" rel="noopener">Docker CLI reference: docker compose down (-v)</a></li><li><a href="https://docs.docker.com/compose/how-tos/use-secrets/" rel="noopener">Docker Docs: Manage secrets securely in Docker Compose</a></li><li><a href="https://github.com/compose-spec/compose-spec/blob/main/spec.md" rel="noopener">Compose Specification</a></li><li><a href="https://docs.spring.io/spring-boot/reference/features/external-config.html" rel="noopener">Spring Boot reference: Externalized configuration (environment variables)</a></li><li><a href="https://hub.docker.com/_/postgres" rel="noopener">Docker Hub: postgres official image (POSTGRES_PASSWORD, POSTGRES_USER, POSTGRES_DB)</a></li></ul></details>
   <p class="next-topic">Next topic: <a href="../service-name-networking/artifact.html" rel="noopener">Service-name networking</a></p>
 </div>
-      </section>
-      <section id="current-task" class="task" aria-label="Current task">
-<div data-step="1"><p id="task-1">Your stack has an API and a PostgreSQL database with a named volume. You run <code>docker compose down</code>, then <code>docker compose up -d</code>. Are the database rows still there?</p></div>
-<div data-step="2"><p id="task-2">Complete <code>compose.yaml</code> for the Spring Boot API and its database, including the URL the API uses to reach PostgreSQL.</p>
-  <ul class="goals"><li data-goal="file"><span>compose.yaml passes the check</span><span class="st"></span></li></ul></div>
-<div data-step="3"><p id="task-3">Start the stack and list it. Take it down and check the volume, then take it down with <code>-v</code> and check again.</p>
-  <ul class="goals"><li data-goal="up"><span>Stack up and listed with <code>ps</code></span><span class="st"></span></li><li data-goal="keep"><span>After <code>down</code>: volume still listed</span><span class="st"></span></li><li data-goal="gone"><span>After <code>down -v</code>: volume gone</span><span class="st"></span></li></ul></div>
-<div data-step="4"><p id="task-apply">A teammate wants an empty database to retest a migration from scratch. Which commands do that?</p>
-  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same goal. Which single command deletes the <code>pgdata</code> volume?</p></div>
-<div data-step="5"><p>All activities finished.</p><p id="complete-msg" class="complete"></p></div>
-      </section>
-      <div class="fbrow">
-        <div id="current-feedback" class="feedback" aria-live="polite">
-<div data-step="1" data-pep-predict-feedback></div>
-<div data-step="2" data-pep-explore-feedback></div>
-<div data-step="3" data-pep-explore-feedback></div>
-<div data-step="4" data-pep-apply-feedback></div>
-<div data-step="5" ></div>
-        </div>
-        <button type="button" class="primary" id="next" hidden>Continue</button>
       </div>
-    </div>
-    <div class="col">
-<figure id="live-model" class="model" aria-labelledby="model-cap">
+      <p class="pep-goals-h" id="goals-h">Goals</p>
+      <ul class="pep-goals" data-pep-objectives aria-labelledby="goals-h">
+      <li data-obj="o1"><span>Write a compose.yaml with a Spring Boot service built from its Dockerfile and a PostgreSQL service whose data lives in a named volume</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o2"><span>Give the Spring Boot service its datasource URL, username and password through environment variables in compose.yaml, with the password kept out of the file</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o3"><span>Start, inspect and stop the stack with docker compose up -d, ps and down, and state what down -v removes in addition</span><span class="state" data-state="open"></span></li>
+      </ul>
+      <div id="current-task" class="task">
+<div data-step="1">
+<ol class="pep-steps-list" id="task-1"><li>Your stack has an API and a PostgreSQL database with a named volume. You run <code>docker compose down</code>, then <code>docker compose up -d</code>. Are the database rows still there?</li></ol>
+</div>
+<div data-step="2">
+<ol class="pep-steps-list" id="task-2"><li>Read the starter: the api build and port and the db image are done.</li><li>Under api, add <code>environment</code> with the datasource URL, username and password.</li><li>Under db, add the password and a named volume for the data, then declare that volume at the top level.</li><li>Press <strong>Run checks</strong>; fix each Problem until all checks pass.</li><li data-goal="file">compose.yaml passes the checks <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="3">
+<ol class="pep-steps-list" id="task-3"><li>Start the stack and list it. Take it down and check the volume, then take it down with <code>-v</code> and check again.</li><li data-goal="up">Stack up and listed with <code>ps</code> <span class="state" data-state="open"></span></li><li data-goal="keep">After <code>down</code>: volume still listed <span class="state" data-state="open"></span></li><li data-goal="gone">After <code>down -v</code>: volume gone <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="4">
+<p id="task-apply">A teammate wants an empty database to retest a migration from scratch. Which commands do that?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same goal. Which single command deletes the <code>pgdata</code> volume?</p>
+</div>
+<div data-step="5">
+<p>All activities finished.</p><div id="complete-msg" class="complete"></div>
+</div>
+      </div>
+      <p class="pep-summary" id="goal-summary" hidden></p>
+
+    </section>
+    <section class="pep-region" id="workspace" data-pep-workspace="activity" aria-label="Workspace">
+      <div id="current-head">
+<div data-step="1"><h2>Start with a guess</h2></div>
+<div data-step="2"><h2>One file describes the stack</h2></div>
+<div data-step="3"><h2>Up, ps, down</h2></div>
+<div data-step="4"><h2>Apply it: reset the database</h2></div>
+<div data-step="5"><h2>Finished</h2></div>
+      </div>
+      <figure id="live-model" class="model" aria-labelledby="model-cap">
 <figcaption id="model-cap">Project shop: what Compose creates (simulated)</figcaption>
   <div class="boxes">
     <div class="box"><h3>Containers</h3><ul id="m-ctr"><li>None yet</li></ul></div>
     <div class="box"><h3>Network and volume</h3><ul id="m-res"><li>None yet</li></ul></div>
   </div>
   <p class="mnote" id="m-note">Nothing created yet.</p>
-</figure>
-      <section id="current-control" class="control" aria-label="Your turn">
+      </figure>
+      <div id="current-control" class="control">
 <div data-step="1">
-  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): a stack with an API and PostgreSQL storing data in a named volume; docker compose down, then docker compose up -d. Answer: yes, the rows are still there, because down removes containers and the network but keeps named volumes. down -v would delete them; the data lives in the database volume, not the API container; rebuilding images does not matter.">
-    <legend>Prediction</legend>
-    <div class="opts one"><label class="opt"><input type="radio" name="predict" value="a"> <span>Yes: <code>down</code> keeps named volumes</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span>No: <code>down</code> deletes everything</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span>No: the rows lived in the API container</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span>Only if the API image is rebuilt</span></label></div>
+  <fieldset class="pep-options" data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): a stack with an API and PostgreSQL storing data in a named volume; docker compose down, then docker compose up -d. Answer: yes, the rows are still there, because down removes containers and the network but keeps named volumes. down -v would delete them; the data lives in the database volume, not the API container; rebuilding images does not matter.">
+    <legend>Your prediction</legend>
+    <label class="pep-option"><input type="radio" name="predict" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Yes: <code>down</code> keeps named volumes</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">No: <code>down</code> deletes everything</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">No: the rows lived in the API container</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Only if the API image is rebuilt</span></label>
   </fieldset>
-  <div class="row confrow">
-  <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
-    <legend id="pconf-help">Confidence, then check</legend>
-    <label class="opt"><input type="radio" name="pconf" value="low"> <span>Low</span></label>
-    <label class="opt"><input type="radio" name="pconf" value="medium"> <span>Medium</span></label>
-    <label class="opt"><input type="radio" name="pconf" value="high"> <span>High</span></label>
-  </fieldset>
-  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+  <fieldset class="pep-conf" id="pconf" aria-describedby="pconf-help"><legend id="pconf-help">How sure are you? Then check.</legend><label class="pep-option"><input type="radio" name="pconf" value="low"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="pconf" value="medium"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="pconf" value="high"><span class="pep-option__text">Certain</span></label></fieldset>
+  <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button></div>
+</div>
+<div data-step="2">
+  <div data-pep-workspace="code" data-interaction="terminal" data-steps="6" data-static-alt="Editor activity: complete compose.yaml. api: build ./backend, ports &quot;127.0.0.1:8080:8080&quot;, environment SPRING_DATASOURCE_URL jdbc:postgresql://db:5432/shop (db is the database service name, 5432 its container port, shop the database POSTGRES_DB creates; localhost would be the api container itself), SPRING_DATASOURCE_USERNAME shop, SPRING_DATASOURCE_PASSWORD ${DB_PASSWORD}. db: image postgres:18, POSTGRES_DB shop, POSTGRES_USER shop, POSTGRES_PASSWORD ${DB_PASSWORD}, volumes pgdata:/var/lib/postgresql. Top level: volumes: pgdata:. A literal password, a localhost URL or a missing volume declaration fail the checks.">
+  <div class="pep-editor" data-ed="2">
+    <div class="pep-editor__bar"><span class="pep-editor__file" id="ed-2-file">compose.yaml</span><span class="pep-editor__secondary">Practice editor · checks run offline</span><button type="button" class="pep-btn pep-btn--primary" id="ed-2-run" data-act="edrun" data-ed="2">Run checks</button><button type="button" class="pep-btn" id="ed-2-reset" data-act="edreset" data-ed="2">Reset code</button></div>
+    <div class="pep-editor__code"><pre class="pep-editor__gutter" id="ed-2-gutter" aria-hidden="true">1</pre><textarea class="pep-editor__input" id="ed-2-input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="compose.yaml editor" aria-describedby="task-2">services:
+  api:
+    build: ./backend
+    ports:
+      - &quot;127.0.0.1:8080:8080&quot;
+    # TODO: environment with the datasource URL,
+    # username and password
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: shop
+      POSTGRES_USER: shop
+    # TODO: the password from .env and a named
+    # volume for the data
+# TODO: declare the named volume
+</textarea></div>
+    <div class="pep-editor__tabs" role="tablist" aria-label="Results"><button type="button" role="tab" id="ed-2-tab-problems" aria-selected="true" aria-controls="ed-2-problems" data-act="edtab" data-ed="2" data-tab="problems">Problems</button><button type="button" role="tab" id="ed-2-tab-output" aria-selected="false" tabindex="-1" aria-controls="ed-2-output" data-act="edtab" data-ed="2" data-tab="output">Output</button></div>
+    <div class="pep-editor__panel" role="tabpanel" id="ed-2-problems" aria-labelledby="ed-2-tab-problems" tabindex="0">Not run yet.</div>
+    <div class="pep-editor__panel" role="tabpanel" id="ed-2-output" aria-labelledby="ed-2-tab-output" tabindex="0" hidden>(no output)</div>
+    <div class="pep-editor__status" id="ed-2-status" aria-live="polite">Not run yet.</div>
+  </div>
+  <noscript data-pep-no-js><div class="pep-noscript"><p><strong>Task:</strong> complete this <code>compose.yaml</code> so the API reaches its database and the data survives.</p><pre>services:
+  api:
+    build: ./backend
+    ports:
+      - &quot;127.0.0.1:8080:8080&quot;
+    # TODO: environment with the datasource URL,
+    # username and password
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: shop
+      POSTGRES_USER: shop
+    # TODO: the password from .env and a named
+    # volume for the data
+# TODO: declare the named volume
+</pre><p>A <code>.env</code> file next to it sets <code>DB_PASSWORD</code> to a disposable local value.</p><p><strong>Supported in the practice editor:</strong> maps, lists, quoted or plain values, <code>${NAME}</code> and comments; no anchors or multi-line values.</p><p><strong>How to compare:</strong> the URL host is the database service name and port 5432, its database name matches POSTGRES_DB, the username matches POSTGRES_USER, both passwords are <code>${DB_PASSWORD}</code>, and the data volume is named, mounted at <code>/var/lib/postgresql</code> and declared at the top level.</p></div></noscript>
   </div>
 </div>
-<div data-step="2" hidden>
-  <fieldset id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-2" data-static-alt="Activity: complete compose.yaml. api: build: ./backend; ports: &quot;127.0.0.1:8080:8080&quot;; environment SPRING_DATASOURCE_URL jdbc:postgresql://db:5432/shop (db is the database service name, 5432 its container port, shop the database POSTGRES_DB creates; localhost would be the api container itself), SPRING_DATASOURCE_USERNAME shop, SPRING_DATASOURCE_PASSWORD ${DB_PASSWORD}. db: image: postgres:18; environment POSTGRES_DB shop, POSTGRES_USER shop, POSTGRES_PASSWORD ${DB_PASSWORD}; volumes - pgdata:/var/lib/postgresql. Top level: volumes: pgdata:. Wrong choices: image: ./backend (image names a ready image, not a folder); &quot;8080:8080&quot; (every host address); a literal password in the file; no volume (data lost with the container)."><legend>compose.yaml</legend>
-  <div class="builder"><pre class="filecode">services:
-  api:</pre><fieldset class="brow" id="c-build" data-sel><legend>api: how to get the image</legend><div class="opts one"><label class="opt"><input type="radio" name="c-build" value="build"> <span><code>build: ./backend</code></span></label><label class="opt"><input type="radio" name="c-build" value="image"> <span><code>image: ./backend</code></span></label></div></fieldset><fieldset class="brow" id="c-ports" data-sel><legend>api: ports</legend><div class="opts one"><label class="opt"><input type="radio" name="c-ports" value="lo"> <span><code>- &quot;127.0.0.1:8080:8080&quot;</code></span></label><label class="opt"><input type="radio" name="c-ports" value="all"> <span><code>- &quot;8080:8080&quot;</code></span></label></div></fieldset><pre class="filecode">    environment:</pre><fieldset class="brow" id="c-url" data-sel><legend>api: datasource URL</legend><div class="opts one"><label class="opt"><input type="radio" name="c-url" value="db"> <span><code>SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/shop</code></span></label><label class="opt"><input type="radio" name="c-url" value="local"> <span><code>SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/shop</code></span></label><label class="opt"><input type="radio" name="c-url" value="pgdb"> <span><code>SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres</code></span></label></div></fieldset><pre class="filecode">      SPRING_DATASOURCE_USERNAME: shop</pre><fieldset class="brow" id="c-pass" data-sel><legend>Password, in both services</legend><div class="opts one"><label class="opt"><input type="radio" name="c-pass" value="var"> <span><code>..._PASSWORD: ${DB_PASSWORD}</code></span></label><label class="opt"><input type="radio" name="c-pass" value="lit"> <span><code>..._PASSWORD: devpass1</code></span></label></div></fieldset><pre class="filecode">  db:</pre><fieldset class="brow" id="c-img" data-sel><legend>db: how to get the image</legend><div class="opts one"><label class="opt"><input type="radio" name="c-img" value="pg"> <span><code>image: postgres:18</code></span></label><label class="opt"><input type="radio" name="c-img" value="bpg"> <span><code>build: postgres:18</code></span></label></div></fieldset><pre class="filecode">    environment:
-      POSTGRES_DB: shop
-      POSTGRES_USER: shop</pre><fieldset class="brow" id="c-vol" data-sel><legend>db: where the data lives</legend><div class="opts one"><label class="opt"><input type="radio" name="c-vol" value="named"> <span><code>volumes: [pgdata:/var/lib/postgresql] plus top-level volumes: pgdata:</code></span></label><label class="opt"><input type="radio" name="c-vol" value="none"> <span><code>no volumes</code></span></label></div></fieldset></div>
-  <div class="row"><button type="button" class="primary" id="c-check" data-act="ccheck">Check compose.yaml</button></div>
-  </fieldset>
-</div>
-<div data-step="3" hidden>
+<div data-step="3">
   <div class="term" data-interaction="terminal" data-steps="3" data-static-alt="Terminal activity in the shop folder: docker compose up -d builds the api image, creates network shop_default, volume shop_pgdata and containers shop-db-1 and shop-api-1, and starts them. docker compose ps lists both as Up. docker compose down removes the containers and the network; docker volume ls still lists shop_pgdata. docker compose down -v also removes the volume; docker volume ls no longer lists it.">
     <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-3">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
     <div class="log" id="log-3" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
@@ -350,36 +447,134 @@ volumes:
 </div>
 <div data-step="4">
   <div data-first>
-  <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: to get an empty database, run docker compose down -v, then docker compose up -d. -v removes the named volume pgdata, so PostgreSQL starts empty. Plain down keeps the volume; up -d twice changes nothing; ps only lists. Retry: the single command that deletes the pgdata volume is docker compose down -v.">
+  <fieldset class="pep-options" id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: to get an empty database, run docker compose down -v, then docker compose up -d. -v removes the named volume pgdata, so PostgreSQL starts empty. Plain down keeps the volume; up -d twice changes nothing; ps only lists. Retry: the single command that deletes the pgdata volume is docker compose down -v.">
     <legend>Choose the commands</legend>
-    <div class="opts one"><label class="opt"><input type="radio" name="apply-a" value="a"> <span><code>docker compose down -v</code>, then <code>docker compose up -d</code></span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span><code>docker compose down</code>, then <code>docker compose up -d</code></span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span><code>docker compose up -d</code> twice</span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span><code>docker compose ps</code>, then <code>docker compose up -d</code></span></label></div>
+    <label class="pep-option"><input type="radio" name="apply-a" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text"><code>docker compose down -v</code>, then <code>docker compose up -d</code></span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text"><code>docker compose down</code>, then <code>docker compose up -d</code></span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text"><code>docker compose up -d</code> twice</span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text"><code>docker compose ps</code>, then <code>docker compose up -d</code></span></label>
   </fieldset>
-  <div class="row confrow">
-  <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
-    <legend id="conf-help">Confidence, then check</legend>
-    <label class="opt"><input type="radio" name="conf" value="low"> <span>Low</span></label>
-    <label class="opt"><input type="radio" name="conf" value="medium"> <span>Medium</span></label>
-    <label class="opt"><input type="radio" name="conf" value="high"> <span>High</span></label>
-  </fieldset>
-  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
-  </div>
+  <fieldset class="pep-conf" id="conf" aria-describedby="conf-help"><legend id="conf-help">How sure are you? Then check.</legend><label class="pep-option"><input type="radio" name="conf" value="low"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="conf" value="medium"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="conf" value="high"><span class="pep-option__text">Certain</span></label></fieldset>
+  <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button></div>
   </div>
   <div data-retry hidden>
-    <fieldset id="apply-b" aria-describedby="task-apply-b">
+    <fieldset class="pep-options" id="apply-b" aria-describedby="task-apply-b">
       <legend>Choose one command</legend>
-      <div class="opts one"><label class="opt"><input type="radio" name="apply-b" value="a"> <span><code>docker compose down -v</code></span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span><code>docker compose down</code></span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span><code>docker compose ps</code></span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span><code>docker compose up -d</code></span></label></div>
+      <label class="pep-option"><input type="radio" name="apply-b" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text"><code>docker compose down -v</code></span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text"><code>docker compose down</code></span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text"><code>docker compose ps</code></span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text"><code>docker compose up -d</code></span></label>
     </fieldset>
-    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+    <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
   </div>
 </div>
 <div data-step="5"></div>
-      </section>
-    </div>
+      </div>
+      <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-apply-feedback></div>
+<div data-step="5"></div>
+      </div>
+      <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="next" hidden>Continue</button></div>
+
+    </section>
   </div>
 </main>
 <script>
+/* A small YAML reader for the Compose subset used in this practice editor:
+   block maps and lists, inline [a, b] lists, quoted or plain scalars and comments.
+   Anchors, aliases, tags and multi-line scalars are reported as not supported. */
+function yamlLite(text){
+  var lines=text.split('\n'),rows=[],P=[];
+  function strip(s){var out='',q=null;for(var i=0;i<s.length;i++){var c=s.charAt(i);if(q){out+=c;if(c===q){q=null;}continue;}if(c==='"'||c==="'"){q=c;out+=c;continue;}if(c==='#'&&(i===0||/\s/.test(s.charAt(i-1)))){break;}out+=c;}return out.replace(/\s+$/,'');}
+  lines.forEach(function(raw,i){if(/\t/.test(raw.match(/^\s*/)[0])){P.push({line:i+1,kind:'error',msg:'Indent with spaces, not tabs.'});}
+    var t=strip(raw);if(!t.trim()){return;}var ind=t.match(/^ */)[0].length;rows.push({ind:ind,txt:t.trim(),line:i+1});});
+  function scalar(v,line){v=v.trim();if(v===''){return null;}
+    if(/^[&*!|>]/.test(v)){P.push({line:line,kind:'limit',msg:'Anchors, aliases, tags and multi-line scalars are not supported in this practice editor.'});return v;}
+    if(v.charAt(0)==='['){var inner=v.replace(/^\[|\]$/g,'');var parts=[],cur='',q=null;for(var i=0;i<inner.length;i++){var c=inner.charAt(i);if(q){if(c===q){q=null;}else{cur+=c;}continue;}if(c==='"'||c==="'"){q=c;continue;}if(c===','){parts.push(cur.trim());cur='';continue;}cur+=c;}if(cur.trim()){parts.push(cur.trim());}return parts;}
+    if(v==='{}'){return {};}
+    var m=v.match(/^"(.*)"$/)||v.match(/^'(.*)'$/);return m?m[1]:v;}
+  var pos=0;
+  function block(ind){if(pos>=rows.length){return null;}var r=rows[pos];
+    if(r.txt.indexOf('- ')===0||r.txt==='-'){var arr=[];while(pos<rows.length&&rows[pos].ind===ind&&(rows[pos].txt.indexOf('- ')===0||rows[pos].txt==='-')){var it=rows[pos],body=it.txt.replace(/^-\s*/,'');
+        if(/^[A-Za-z0-9_.-]+:(\s|$)/.test(body)){rows[pos]={ind:ind+2,txt:body,line:it.line};arr.push(block(ind+2));}
+        else{pos++;arr.push(scalar(body,it.line));}}
+      return arr;}
+    var obj={};while(pos<rows.length&&rows[pos].ind===ind){var row=rows[pos],m=row.txt.match(/^("[^"]*"|'[^']*'|[^:\s][^:]*?):(?:\s+(.*))?$/);
+      if(!m){P.push({line:row.line,kind:'error',msg:'Expected "key: value" here.'});pos++;continue;}
+      var key=m[1].replace(/^["']|["']$/g,'');pos++;
+      if(m[2]!==undefined&&m[2]!==''){obj[key]=scalar(m[2],row.line);}
+      else if(pos<rows.length&&rows[pos].ind>ind){obj[key]=block(rows[pos].ind);}
+      else if(pos<rows.length&&rows[pos].ind===ind&&rows[pos].txt.indexOf('- ')===0){obj[key]=block(ind);}
+      else{obj[key]=null;}
+      obj.__line=obj.__line||{};obj.__line[key]=row.line;}
+    if(pos<rows.length&&rows[pos].ind>ind){P.push({line:rows[pos].line,kind:'error',msg:'This line is indented more than the lines around it.'});pos++;}
+    return obj;}
+  var doc=rows.length?block(rows[0].ind):{};
+  while(pos<rows.length){P.push({line:rows[pos].line,kind:'error',msg:'Indentation does not line up with the lines above.'});pos++;}
+  return {doc:doc||{},problems:P};}
+function cLine(o,k,def){return (o&&o.__line&&o.__line[k])||def||1;}
+function cEnv(svc){var e=svc&&svc.environment;if(Array.isArray(e)){var o={};e.forEach(function(x){var s=String(x),i=s.indexOf('=');if(i>0){o[s.slice(0,i)]=s.slice(i+1);}});return o;}return e&&typeof e==='object'?e:{};}
+var C_INTERP=/^\$\{([A-Za-z_][A-Za-z0-9_]*)(?::?\?[^}]*)?\}$/;
+var C_DOTENV={DB_PASSWORD:'dev-only-1'};
+function t5Check(text){var y=yamlLite(text),d=y.doc,P=y.problems.slice(),out=[];
+  var sv=d.services||{},api=sv.api,db=sv.db;
+  if(!api){P.push({line:1,kind:'error',msg:'Keep the api service under services.'});}
+  if(!db){P.push({line:1,kind:'error',msg:'Keep the db service under services.'});}
+  if(api&&String(api.build||'').replace(/^\.\//,'')!=='backend'){P.push({line:cLine(sv,'api'),kind:'error',msg:'api builds from its Dockerfile: build: ./backend.'});}
+  if(db&&!/^postgres:18\b/.test(String(db.image||''))){P.push({line:cLine(sv,'db'),kind:'error',msg:'db uses the ready-made image: image: postgres:18.'});}
+  var ae=cEnv(api),de=cEnv(db);
+  if(api){var url=String(ae.SPRING_DATASOURCE_URL||''),m=url.match(/^jdbc:postgresql:\/\/([^:\/]+)(?::(\d+))?\/(\w+)$/);
+    if(!url){P.push({line:cLine(api,'environment',cLine(sv,'api')),kind:'error',msg:'Give api SPRING_DATASOURCE_URL under environment.'});}
+    else if(!m){P.push({line:cLine(ae,'SPRING_DATASOURCE_URL'),kind:'error',msg:'Write the URL as jdbc:postgresql://HOST:PORT/DATABASE.'});}
+    else{if(m[1]==='localhost'||m[1]==='127.0.0.1'){P.push({line:cLine(ae,'SPRING_DATASOURCE_URL'),kind:'error',msg:'Inside the api container, localhost is api itself. Use the database service name, db.'});}
+      else if(m[1]!=='db'){P.push({line:cLine(ae,'SPRING_DATASOURCE_URL'),kind:'error',msg:'The host must be the database service name in this file: db.'});}
+      if((m[2]||'5432')!=='5432'){P.push({line:cLine(ae,'SPRING_DATASOURCE_URL'),kind:'error',msg:'Services reach PostgreSQL on its container port, 5432.'});}
+      if(m[3]!==String(de.POSTGRES_DB)){P.push({line:cLine(ae,'SPRING_DATASOURCE_URL'),kind:'error',msg:'The database name must match POSTGRES_DB ('+de.POSTGRES_DB+').'});}}
+    if(String(ae.SPRING_DATASOURCE_USERNAME||'')!==String(de.POSTGRES_USER)){P.push({line:cLine(ae,'SPRING_DATASOURCE_USERNAME',cLine(api,'environment',1)),kind:'error',msg:'SPRING_DATASOURCE_USERNAME must match POSTGRES_USER ('+de.POSTGRES_USER+').'});}
+    var ports=api.ports||[];if(!ports.length||!ports.every(function(p){return /^127\.0\.0\.1:\d+:\d+$/.test(String(p));})){P.push({line:cLine(api,'ports',cLine(sv,'api')),kind:'error',msg:'Publish the API on this machine only: "127.0.0.1:8080:8080".'});}}
+  var pv=[[api,ae,'SPRING_DATASOURCE_PASSWORD'],[db,de,'POSTGRES_PASSWORD']].map(function(x){if(!x[0]){return null;}var v=x[1][x[2]];
+    if(v===undefined||v===null){P.push({line:cLine(x[0],'environment',1),kind:'error',msg:'Set '+x[2]+' under environment, as ${DB_PASSWORD}.'});return null;}
+    var mm=String(v).match(C_INTERP);if(!mm){P.push({line:cLine(x[1],x[2]),kind:'error',msg:x[2]+' is written as a literal value. Use ${DB_PASSWORD}, filled from .env, so the password never sits in this file.'});return null;}
+    if(!C_DOTENV[mm[1]]){P.push({line:cLine(x[1],x[2]),kind:'error',msg:'The practice .env sets DB_PASSWORD only; ${'+mm[1]+'} would be empty.'});return null;}return mm[1];});
+  if(pv[0]&&pv[1]&&pv[0]!==pv[1]){P.push({line:cLine(ae,'SPRING_DATASOURCE_PASSWORD'),kind:'error',msg:'Both services must get the same variable, so they share one password.'});}
+  var declared=d.volumes&&typeof d.volumes==='object'?Object.keys(d.volumes).filter(function(k){return k!=='__line';}):[];
+  if(db){var mounts=(db.volumes||[]).map(function(v){return typeof v==='string'?{s:v.split(':')[0],t:v.split(':')[1]}:{s:v&&v.source,t:v&&v.target};});
+    var good=mounts.filter(function(m){return /^\/var\/lib\/postgresql\/?$/.test(m.t||'');})[0];
+    if(!good){P.push({line:cLine(db,'volumes',cLine(sv,'db')),kind:'error',msg:'Mount a named volume at /var/lib/postgresql on db, for example pgdata:/var/lib/postgresql.'});}
+    else if(/^[.\/~]/.test(good.s||'')){P.push({line:cLine(db,'volumes'),kind:'error',msg:'That is a bind mount of a folder. Database data belongs in a named volume, such as pgdata.'});}
+    else if(declared.indexOf(good.s)<0){P.push({line:cLine(db,'volumes'),kind:'error',msg:'Declare the volume '+good.s+' under a top-level volumes: key.'});}}
+  out.push('docker compose config (simulated, shortened)');
+  if(api){out.push('services.api: build ./backend, ports '+(api.ports||[]).join(', '));out.push('  SPRING_DATASOURCE_URL='+(ae.SPRING_DATASOURCE_URL||'(missing)'));out.push('  SPRING_DATASOURCE_PASSWORD='+(pv[0]?'(value from .env, not shown)':'(problem)'));}
+  if(db){out.push('services.db: image '+(db.image||'?')+', volumes '+((db.volumes||[]).join? (db.volumes||[]).map(String).join(', '):'?'));out.push('  POSTGRES_PASSWORD='+(pv[1]?'(value from .env, not shown)':'(problem)'));}
+  out.push('volumes: '+(declared.join(', ')||'(none)'));
+  return {problems:P,output:out,ok:!P.length,summary:'Two services, one named volume, a loopback port and no password in the file.',note:!P.length?'The URL works because Compose resolves the service name db to the database container, which listens on 5432 and created the database shop.':''};}
+function t7Check(text){var y=yamlLite(text),d=y.doc,P=y.problems.slice(),out=[];
+  var sv=d.services||{},api=sv.api,db=sv.db,de=cEnv(db);
+  if(!api||!db){P.push({line:1,kind:'error',msg:'Keep both services, api and db.'});return {problems:P,output:[],ok:false};}
+  var hc=db.healthcheck;
+  if(!hc||!hc.test){P.push({line:cLine(sv,'db'),kind:'error',msg:'Give db a healthcheck with a test that runs pg_isready.'});}
+  else{var t=hc.test,list=Array.isArray(t)?t:['CMD-SHELL',String(t)],shell=list[0]==='CMD-SHELL',argv=shell?String(list.slice(1).join(' ')).split(/\s+/):list.slice(1).map(String),at=argv.indexOf('pg_isready');
+    if(['CMD','CMD-SHELL'].indexOf(list[0])<0||at<0){P.push({line:cLine(hc,'test'),kind:'error',msg:'The test must run pg_isready, for example ["CMD-SHELL", "pg_isready -U ... -d ..."].'});}
+    else{var opt=function(f){var i=argv.indexOf(f,at);return i<0?undefined:argv[i+1];};
+      [['-U','POSTGRES_USER'],['-d','POSTGRES_DB']].forEach(function(p){var v=opt(p[0]);
+        if(v===undefined){P.push({line:cLine(hc,'test'),kind:'error',msg:'Pass pg_isready '+p[0]+' with the '+(p[0]==='-U'?'user':'database')+' (POSTGRES_'+(p[0]==='-U'?'USER':'DB')+').'});return;}
+        if(/^\$\{/.test(v)||(/^\$[A-Z]/.test(v))){P.push({line:cLine(hc,'test'),kind:'error',msg:'With one $, Compose fills '+v+' from your machine, where it is unset. Write $$ so the container expands it: $${'+p[1]+'}.'});return;}
+        if(shell&&(v==='$${'+p[1]+'}'||v==='$$'+p[1])){return;}
+        if(!/\$/.test(v)&&v===String(de[p[1]])){return;}
+        P.push({line:cLine(hc,'test'),kind:'error',msg:p[0]+' must be $${'+p[1]+'} or the same value as '+p[1]+' ('+de[p[1]]+').'});});}}
+  var dep=api.depends_on;
+  if(!dep){P.push({line:cLine(sv,'api'),kind:'error',msg:'Make api depend on db with depends_on.'});}
+  else if(Array.isArray(dep)){P.push({line:cLine(api,'depends_on'),kind:'error',msg:'The short form only waits for db to be running. Use the long form with condition: service_healthy.'});}
+  else if(!dep.db||dep.db.condition!=='service_healthy'){P.push({line:cLine(api,'depends_on'),kind:'error',msg:(dep.db&&dep.db.condition==='service_started')?'service_started only waits for the container to run. Use condition: service_healthy.':'Under depends_on, give db the condition: service_healthy.'});}
+  out.push('Startup with this file (simulated):');
+  if(!P.length){out.push('0 s  db   started (health: starting)');out.push('0 s  api  waiting: db must be healthy');out.push('6 s  db   pg_isready: accepting connections, so healthy');out.push('7 s  api  started, connects to db:5432');}
+  else{out.push('Fix the problems first; then the startup order appears here.');}
+  return {problems:P,output:out,ok:!P.length,summary:'db reports health with pg_isready, and api waits for healthy.',note:!P.length?'Compose now holds api back until the database answers.':''};}
 var TOPIC={
-steps:5,acts:["predict","file","lifecycle","apply"],
+steps:5,acts:["predict","file","lifecycle","apply"],objActs:{"o1":["file","lifecycle"],"o2":["file"],"o3":["lifecycle","apply"]},editors:{},
 prompt:function(){return 'shop$';},
 complete:function(v){var c=['docker compose up -d','docker compose ps','docker compose down','docker compose down -v','docker volume ls'];var m=c.filter(function(x){return x.indexOf(v)===0&&x!==v;});return m.length===1?m[0]:null;},
 init:function(){return {g:{},up:false,vol:false,net:false,built:false,downOnce:false};},
@@ -428,7 +623,8 @@ render:function(S,api){var t=S.t;function li(a){return a.map(function(x){return 
   api.$('m-res').innerHTML=li([(S.step===3?t.net:true)?'Network <code>shop_default</code>':'No network',(S.step===3?t.vol:true)?'Volume <code>shop_pgdata</code> <span class="chip ok">data</span>':'No volume: data deleted']);
   api.$('m-note').textContent=S.step===3?(t.up?'Running.':t.vol?'Stopped; the volume keeps the data.':'Nothing running, no data.'):'The running stack.';}
  if(S.step===2){api.$('m-note').textContent='Compose creates these from your file on up.';api.$('m-ctr').innerHTML=li(['api: built from <code>./backend</code>','db: <code>postgres:18</code>']);api.$('m-res').innerHTML=li(['A default network','Volume <code>pgdata</code>, if declared']);}
-}
+},
+editors:{2:{file:"compose.yaml",goal:"file",starter:"services:\n  api:\n    build: ./backend\n    ports:\n      - \"127.0.0.1:8080:8080\"\n    # TODO: environment with the datasource URL,\n    # username and password\n  db:\n    image: postgres:18\n    environment:\n      POSTGRES_DB: shop\n      POSTGRES_USER: shop\n    # TODO: the password from .env and a named\n    # volume for the data\n# TODO: declare the named volume\n",check:t5Check}}
 };
 
 (function(){
@@ -441,95 +637,115 @@ function $(id){return d.getElementById(id);}
 function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init()};}
-var api={$:$,qa:qa,esc:esc,say:say,complete:complete,goal:goal,left:left,get S(){return S;}};
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,goal:goal,left:left,editorText:editorText,get S(){return S;}};
 function need(step){return (TOPIC.goals&&TOPIC.goals[step])||[];}
 function left(step){var g=S.t.g||{};return need(step||S.step).filter(function(k){return !g[k];}).length;}
-function goal(k){var g=S.t.g||(S.t.g={});g[k]=1;var st=S.step,act=TOPIC.acts[st-1];if(need(st).length&&!left(st)&&!S.done[act]){complete(act);}}
-function goalStatus(){var st=S.step,n=need(st),l=left(st);return n.length?'<p>'+(l?l+' of '+n.length+' goals still open.':'<strong>All goals met.</strong> Continue when ready.')+'</p>':'';}
+function goal(k){var g=S.t.g||(S.t.g={});g[k]=1;var st=S.step,act=TOPIC.acts[st-1];if(need(st).length&&!left(st)&&!S.done[act]){complete(act);}renderGoals();}
+function goalStatus(){var st=S.step,n=need(st),l=left(st);return n.length?'<p>'+(l?l+' of '+n.length+' task goals still open.':'<strong>All task goals met.</strong> Continue when ready.')+'</p>':'';}
 api.goalStatus=goalStatus;
-function renderGoals(){var g=S.t.g||{};qa('.goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!g[k]);li.querySelector('.st').textContent=g[k]?'done':'open';});}
+function renderGoals(){var g=(S.t&&S.t.g)||{};
+  qa('[data-goal]').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('is-done',!!g[k]);var s=li.querySelector('.state');if(s){s.setAttribute('data-state',g[k]?'✓ done':'open');}});
+  var sum=$('goal-summary');if(sum){var n=need(S.step),l=left(S.step);sum.textContent=n.length?(l?l+' of '+n.length+' task goals still open':'All task goals met'):'';sum.hidden=!n.length;}
+  qa('[data-obj]').forEach(function(li){var acts=(TOPIC.objActs||{})[li.getAttribute('data-obj')]||[];var ok=acts.length&&acts.every(function(a){return S.done[a];});li.classList.toggle('is-done',!!ok);li.querySelector('.state').setAttribute('data-state',ok?'✓ done':'open');});}
 function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
 function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}if(S.t&&S.t.g){renderGoals();}}
 function progress(){
-  var acts=TOPIC.acts,n=0,set=0;
-  acts.forEach(function(a,i){var p=qa('.pip',$('progress'))[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
-    p.className='pip'+(on?(S.settled[a]?' settled':' on'):'');});
-  $('prog-text').textContent='Activities done: '+n+' of '+acts.length+(set?' ('+set+' answered, not marked correct)':'');
+  var acts=TOPIC.acts,n=0,set=0,cur=Math.min(S.step,acts.length);
+  acts.forEach(function(a,i){var p=qa('#progress-bar > span')[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
+    p.className=on?(S.settled[a]?'is-settled':'is-done'):'';});
+  $('prog-text').textContent='Activity '+cur+' of '+acts.length+' · '+n+' done'+(set?' ('+set+' settled, not marked correct)':'');
+  renderGoals();
 }
 function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
 function show(step,focus){
-  S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
+  S.step=step;stageEl.setAttribute('data-step',String(step));
   qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
   if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
     SNAP[step]={html:h,t:clone(S.t)};}
   var rb=$('reset');rb.disabled=(step===LAST);
   $('next').hidden=true;
   if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
-    c.textContent='All '+TOPIC.acts.length+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: review its explanation above before moving on.':'.');}}
+    c.innerHTML='<p><strong>All '+TOPIC.acts.length+' activities finished.</strong>'+(set?' '+set+' was answered without being marked correct. That is fine: review its explanation before moving on.':'')+'</p>';}}
   else{main.removeAttribute('data-pep-complete');}
-  TOPIC.render(S,api);renderGoals();progress();
+  initEditors();TOPIC.render(S,api);progress();
   if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
 }
 function optLabel(inp){return inp.closest('label');}
+function optText(inp){var t=optLabel(inp).querySelector('.pep-option__text');return t?t.firstChild.textContent.trim():optLabel(inp).textContent.trim();}
 function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
-function explainList(set,chosen,mark){
-  var html='<ul>';
-  Object.keys(set.why).forEach(function(k){
-    var txt=qa('input[value="'+k+'"]',$(set.fs))[0];var lab=txt?optLabel(txt).textContent.trim():k;
-    var tag=(k===set.correct)?'<strong>Correct: </strong>':'<strong>Not this: </strong>';
-    html+='<li>'+(mark?tag:'')+'<span class="on">'+esc(lab)+'</span>: '+set.why[k]+(k===chosen?' <em>(your choice)</em>':'')+'</li>';
-  });
-  return html+'</ul>';
-}
-function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
-  if(i.value===set.correct&&(chosen===set.correct)){l.classList.add('right');}
-  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
-function firstDetails(){return '<details><summary>First question: every option explained</summary>'+explainList(TOPIC.apply.A,null,true)+'</details>';}
-function badges(ok,mine,who){return '<span class="badges">'+(mine?'<span class="badge me">'+who+'</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
-function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
-  w.innerHTML=badges(i.value===set.correct,i.value===chosen,'Your answer')+set.why[i.value];sp.appendChild(w);});}
-function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function tag(cls,txt){return '<span class="pep-tag pep-tag--'+cls+'">'+txt+'</span>';}
+function annotate(name,correct,chosen,why,who){qa('input[name="'+name+'"]').forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===correct){l.classList.add('is-correct');}else if(i.value===chosen){l.classList.add('is-wrong');}
+  var t=l.querySelector('.pep-option__text');var w=d.createElement('span');w.className='pep-explain';
+  w.innerHTML=(i.value===chosen?tag('me',who):'')+(i.value===correct?tag('ok','✓ Correct answer'):(i.value===chosen?tag('no','✗ Not correct'):''))+'<span class="why">'+why[i.value]+'</span>';t.appendChild(w);});}
 function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
 function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
   var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
   var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function explainList(set){var html='<ul>';qa('input[name="'+set.fs+'"]').forEach(function(i){html+='<li><strong>'+(i.value===set.correct?'✓ Correct: ':'✗ Not this: ')+'</strong>'+esc(optText(i))+': '+set.why[i.value]+'</li>';});return html+'</ul>';}
 function checkApply(which){
   var A=TOPIC.apply.A,B=TOPIC.apply.B;
   if(which==='a'){
     var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
-    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
-    if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText());complete('apply');TOPIC.render(S,api);focusVerdict();return;}
-    S.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
-    say('<p class="verdict no">Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <span class="on">'+esc(S.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;
+    if(ch===A.correct){S.tries=2;annotate('apply-a',A.correct,ch,A.why,'Your answer');$('apply-check').hidden=true;
+      say('<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Correct.</p>'+A.okNote+'<p>Each option is explained above.</p>'+confText()+'</div>');complete('apply');TOPIC.render(S,api);focusVerdict();return;}
+    qa('input[name="apply-a"]').forEach(function(i){i.disabled=true;if(i.value===ch){optLabel(i).classList.add('is-wrong');}});
+    S.firstPick=optText(qa('input[name="apply-a"][value="'+ch+'"]')[0]);
+    say('<div class="pep-callout pep-callout--danger"><p class="pep-verdict pep-verdict--wrong">✗ Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <strong>'+esc(S.firstPick)+'</strong>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText()+'</div>');
     qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});TOPIC.render(S,api);
     var t=$('task-apply-b');if(t){t.focus();}
   } else {
     var c2=checked('apply-b');if(!c2){return;}
-    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
-    if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+firstDetails()+confText());}
-    else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
-      say('<p class="verdict set">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+firstDetails()+confText());}
+    S.tries=2;$('apply-check-b').hidden=true;annotate('apply-b',B.correct,c2,B.why,'Your answer');
+    var first='<details><summary>First question: every option explained</summary>'+explainList(A)+'</details>';
+    if(c2===B.correct){say('<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Correct on the second try.</p><p>Each option is explained above.</p>'+first+confText()+'</div>');}
+    else{S.settled.apply=true;say('<div class="pep-callout pep-callout--warning"><p class="pep-verdict pep-verdict--revealed">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained above.</p>'+first+confText()+'</div>');}
     complete('apply');TOPIC.render(S,api);focusVerdict();
   }
 }
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .pep-verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
 function checkPredict(){
   var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
   if(!ch||!pc){return;}
-  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
-  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
-    if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
-  var html='<p class="verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+' Each option, explained:</p><ul class="explain">';
-  Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
-    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
-  say(html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||''),1);complete('predict');
+  qa('input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  annotate('predict',P.correct,ch,P.why,'Your prediction');
+  say('<div class="pep-callout pep-callout--info"><p class="pep-verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+'</p><p>Each option is explained above.</p><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||'')+'</div>',1);complete('predict');
 }
+/* editor shell */
+var ED={};
+function editorText(step){var i=$('ed-'+step+'-input');return i?i.value:'';}
+function gutter(step){var i=$('ed-'+step+'-input'),g=$('ed-'+step+'-gutter');if(!i||!g){return;}var n=Math.max(1,i.value.split('\n').length),s=[];for(var k=1;k<=n;k++){s.push(k);}g.textContent=s.join('\n');}
+function initEditors(){qa('.pep-editor[data-ed]').forEach(function(box){var st=box.getAttribute('data-ed');var i=$('ed-'+st+'-input');if(i&&!i.getAttribute('data-wired')){i.setAttribute('data-wired','1');i.addEventListener('input',function(){gutter(st);});}gutter(st);});}
+function edTab(st,which){['problems','output'].forEach(function(w){var t=$('ed-'+st+'-tab-'+w),p=$('ed-'+st+'-'+w);if(t&&p){t.setAttribute('aria-selected',w===which?'true':'false');t.tabIndex=w===which?0:-1;p.hidden=w!==which;}});}
+function edRun(st){var E=TOPIC.editors[st];if(!E){return;}var r=E.check(editorText(st),S,api)||{};
+  var pp=$('ed-'+st+'-problems'),op=$('ed-'+st+'-output'),probs=r.problems||[];
+  pp.innerHTML='';if(!probs.length){pp.textContent='No problems found.';}
+  probs.forEach(function(p){var b=d.createElement('button');b.type='button';b.className='pep-editor__problem';b.setAttribute('data-line',String(p.line||1));
+    b.innerHTML='<span class="kind-'+(p.kind==='limit'?'limit':'error')+'">'+(p.kind==='limit'?'Not supported':'Problem')+'</span> line '+(p.line||1)+': '+esc(p.msg);pp.appendChild(b);});
+  op.textContent=(r.output||[]).join('\n')||'(no output)';
+  var stt=$('ed-'+st+'-status');stt.textContent=r.ok?'✓ All checks pass. '+(r.summary||''):(probs.length?'✗ '+probs.length+' problem'+(probs.length>1?'s':'')+' to fix. Open each one to jump to its line.':(r.summary||'Checked.'));
+  edTab(st,r.ok?'output':'problems');
+  if(r.ok&&E.goal){goal(E.goal);}
+  say((r.ok?'<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Your file passes every check.</p>':'<div class="pep-callout pep-callout--danger"><p class="pep-verdict pep-verdict--wrong">✗ Not yet: read the Problems tab, fix one thing, and run the checks again.</p>')+(r.note?'<p>'+r.note+'</p>':'')+'</div>'+goalStatus());}
+function edReset(st){var E=TOPIC.editors[st];var i=$('ed-'+st+'-input');if(!E||!i){return;}i.value=E.starter;gutter(st);$('ed-'+st+'-problems').textContent='Not run yet.';$('ed-'+st+'-output').textContent='(no output)';$('ed-'+st+'-status').textContent='Starter restored. Not run yet.';edTab(st,'problems');i.focus();}
+var userAct=TOPIC.act;
+TOPIC.act=function(a,b,Sx,apix){
+  if(a==='edrun'){edRun(+b.getAttribute('data-ed'));return;}
+  if(a==='edreset'){edReset(+b.getAttribute('data-ed'));return;}
+  if(a==='edtab'){edTab(+b.getAttribute('data-ed'),b.getAttribute('data-tab'));return;}
+  if(a==='edline'){return;}
+  if(userAct){userAct.call(TOPIC,a,b,Sx,apix);}
+};
+d.addEventListener('click',function(e){var p=e.target.closest&&e.target.closest('.pep-editor__problem');if(!p){return;}var box=p.closest('.pep-editor');var i=box.querySelector('textarea');var ln=+p.getAttribute('data-line');var lines=i.value.split('\n'),pos=0;for(var k=0;k<ln-1&&k<lines.length;k++){pos+=lines[k].length+1;}i.focus();i.setSelectionRange(pos,pos+((lines[ln-1]||'').length));});
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.getAttribute||t.getAttribute('role')!=='tab'){return;}if(e.key==='ArrowRight'||e.key==='ArrowLeft'){var st=t.getAttribute('data-ed');var nx=t.getAttribute('data-tab')==='problems'?'output':'problems';e.preventDefault();edTab(+st,nx);$('ed-'+st+'-tab-'+nx).focus();}});
 function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
 function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
   Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
   qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
   S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
   if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
-  show(step,false);syncPrompt();var h=$('teach-'+step+'-h');if(h){h.focus();}}
+  show(step,false);syncPrompt();say('<p>Activity restarted. Earlier activities keep their results.</p>'+goalStatus());var h=$('teach-'+step+'-h');if(h){h.focus();}}
 /* pep:component terminal@1 js */
 d.addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b){return;}
@@ -564,9 +780,11 @@ d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closes
 var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
 setTheme(mq&&mq.matches?'dark':'light');
 if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=qa('details[data-pep-optional]:not([open])');printOpened.forEach(function(x){x.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(x){x.open=false;});printOpened=[];});
 fresh();show(1,false);syncPrompt();
 })();
-
 </script>
 </body>
 </html>

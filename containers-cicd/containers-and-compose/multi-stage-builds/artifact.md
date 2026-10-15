@@ -44,15 +44,18 @@ Look at what the last stage copies.
 
 Two stages; only the last one ships (contents, not sizes)
 
-### Stage build (JDK)
+### Build stage (JDK)
 
-- Not chosen yet
+- JDK compiler and tools
+- Maven download cache
+- Java source in `src`
+- The jar in `target`
 
 ### Final stage: the image
 
-- Not chosen yet
+- Only what you copy in
 
-Left behind: everything in stage build that is not copied.
+Left behind: everything in the build stage that is not copied.
 
 ## Recap
 
@@ -115,13 +118,13 @@ Checked against these live official sources on 2026-10-13. Versions shown: Docke
 
 Prediction (practice, not scored): a one-stage image FROM eclipse-temurin:25-jdk copies the project and packages the jar. Answer: the JDK, the Maven download cache, the source and the jar all end up in the image, because everything a single stage creates ships. Not only the jar; not just a runtime and the jar (that needs a second stage); not only source.
 
-### explore
+### terminal
 
-Activity: complete the back-end Dockerfile. Stage 1: FROM eclipse-temurin:25-jdk AS build, WORKDIR /app, copy mvnw, pom.xml and .mvn, RUN ./mvnw -q dependency:go-offline, COPY src ./src, RUN ./mvnw -q package -DskipTests. Stage 2: FROM eclipse-temurin:25-jre, WORKDIR /app, COPY --from=build /app/target/*.jar app.jar, ENTRYPOINT ["java", "-jar", "app.jar"]. Copying /app or the whole folder would ship the source and caches; RUN java -jar would run during the build instead of when the container starts.
+Editor activity: complete the back-end Dockerfile. Stage 1 (given): FROM eclipse-temurin:25-jdk AS build, WORKDIR /app, copy mvnw, pom.xml and .mvn, RUN ./mvnw -q dependency:go-offline, COPY src ./src, RUN ./mvnw -q package -DskipTests. Stage 2 (written by the learner): FROM eclipse-temurin:25-jre, WORKDIR /app, COPY --from=build /app/target/*.jar app.jar, ENTRYPOINT ["java", "-jar", "app.jar"]. Copying /app or the whole folder would ship the source and caches; RUN java -jar would run during the build instead of when the container starts.
 
-### explore
+### terminal
 
-Activity: complete the front-end Dockerfile. Stage 1: FROM node:24-alpine AS build, WORKDIR /app, COPY package.json package-lock.json ./, RUN npm ci, COPY . ., RUN npm run build. Stage 2: FROM nginx:alpine, COPY --from=build /app/dist /usr/share/nginx/html. npm run dev starts a development server instead of writing dist; copying /app would ship node_modules and source; COPY dist without --from reads your own folder, not the build stage.
+Editor activity: complete the front-end Dockerfile. Stage 1 (given): FROM node:24-alpine AS build, WORKDIR /app, COPY package.json package-lock.json ./, RUN npm ci, COPY . ., RUN npm run build. Stage 2 (written by the learner): FROM nginx:alpine, COPY --from=build /app/dist /usr/share/nginx/html. Copying /app would ship node_modules and source; COPY dist without --from reads your own folder, not the build stage.
 
 ### explore
 

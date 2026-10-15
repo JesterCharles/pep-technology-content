@@ -9,93 +9,59 @@
 <meta name="pep:topic-id" content="ports-volumes-and-environment-variables">
 <meta name="pep:budget-minutes" content="11">
 <meta name="pep:source" content="authoring/evidence/containers-cicd/containers-and-compose/ports-volumes-and-environment-variables/sources.json">
-<title>Ports, volumes and environment variables · Containers and Compose</title>
+<title>Ports, volumes and environment variables</title>
 <style>
-:root{
-  --bg:#eef2f0;--surface:#f8faf9;--ink:#1b2320;--muted:#47524e;--rule:#6b7873;--line:#c9d2ce;
-  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
-  --on-teal:#ffffff;--term:#e2e8e5;--focus:#1f4fbf;
-  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
-  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  color-scheme:light;
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
 }
-:root[data-theme="dark"]{
-  --bg:#121816;--surface:#1a2220;--ink:#e3ebe7;--muted:#a8b6b0;--rule:#71827c;--line:#2f3b37;
-  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
-  --on-teal:#0b1311;--term:#0c1110;--focus:#8fb4ff;
-  color-scheme:dark;
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
 }
-*{box-sizing:border-box}
-html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
-::selection{background:var(--teal);color:var(--on-teal)}
-code,kbd,.mono{font-family:var(--mono);font-size:.94em}
-a{color:var(--teal);text-underline-offset:3px}
-main{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
-.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
-.top{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title tools";column-gap:var(--s6);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
-.top .crumbs{grid-area:crumbs}.top h1{grid-area:title}.top .meta{grid-area:meta}.top .tools{grid-area:tools}
-.crumbs{margin:0 0 var(--s1);font-size:15px;color:var(--muted)}
-.crumbs ol{display:flex;flex-wrap:wrap;gap:0 var(--s2);margin:0;padding:0;list-style:none}
-.crumbs li+li::before{content:"/";margin-right:var(--s2);color:var(--rule)}
-.crumbs [aria-current]{color:var(--ink);font-weight:600}
-h1{margin:0;font-size:24px;line-height:30px;letter-spacing:-.01em}
-.meta{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s2) 0 0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
-.meta li:first-child{font-weight:700;color:var(--ink)}
-.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
-.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2);flex:0 0 auto}
-.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
-.pips{display:flex;gap:var(--s1)}
-.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
-.pip.on{background:var(--teal);border-color:var(--teal)}
-.pip.settled{background:var(--amber-soft);border:2px dashed var(--amber)}
-button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
-.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
-.ghost:hover{background:var(--surface);border-color:var(--ink)}
-.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
-.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
-.primary:hover{filter:brightness(1.08)}
-.primary:active{transform:translateY(1px)}
-button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
-:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-[tabindex="-1"]:focus{outline:none}
-[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s3);align-items:start}
-.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
-.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
-.teach p{margin:0 0 var(--s2);max-width:62ch}
-.teach ul{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
-.teach li{margin-bottom:var(--s1)}
-.teach code,.task code{white-space:nowrap}
-.task{padding:var(--s3) var(--s4);border-top:2px solid var(--teal);background:var(--surface)}
-.task p{margin:0;font-weight:600}
-.task p+p{margin-top:var(--s2)}
-.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
-.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
-.goals li:first-child{border-top:0}
-.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
-.goals li.done .st{color:var(--teal)}
-.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
-.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:var(--s2)}
-.model code{font-size:1em}
-.control{min-width:0}
-fieldset{margin:0;padding:0;border:0;min-width:0}
-legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
-.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
-.opts.one{grid-template-columns:minmax(0,1fr)}
-.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:6px var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer}
-.opt:hover{border-color:var(--ink)}
-.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
-.opt:has(input:disabled){cursor:default}
-.opt.right,.opt.right:has(input:checked){border-color:var(--teal);background:var(--teal-soft)}
-.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);background:var(--red-soft);box-shadow:inset 4px 0 0 var(--red)}
-.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
-.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
-.confrow{margin-top:var(--s2)}
-.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
-.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
-.conf .opt{min-width:96px}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
 /* pep:component terminal@1 css */
 .term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
 .term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
@@ -117,148 +83,236 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
 .simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 /* /pep:component terminal css */
-.fbrow{display:flex;flex-direction:column;gap:var(--s2);align-items:flex-start}
-.feedback{width:100%;min-width:0;line-height:1.4;font-size:15px;line-height:1.45}
-.feedback p{margin:0 0 var(--s1)}
-.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
-.feedback li{margin-bottom:2px}
-.verdict{font-weight:700}
-.feedback .on{font-weight:600}
-.badge{display:inline-block;margin:0 var(--s1) 0 0;padding:0 6px;border:2px solid currentColor;border-radius:3px;font:700 15px/1.4 var(--sans);vertical-align:baseline}
-.badge.ok{color:var(--teal)}.badge.no{color:var(--red)}.badge.me{color:var(--ink)}
-.opt .badges{display:block;margin-top:2px}
-.explain{list-style:none;padding:0;margin:var(--s1) 0 0}
-.explain li{margin:0;padding:var(--s1) 0 var(--s1) var(--s3);border-left:2px solid var(--line)}
-.explain li+li{margin-top:var(--s1)}
-.explain li.mine{border-left-color:var(--teal)}
-.explain .on,.explain .ex{display:block}
-.explain .ex::first-letter{text-transform:uppercase}
-.teach ul.chunks{list-style:none;padding:0}
-.teach ul.chunks li{margin-bottom:var(--s2)}
-.opt .why{display:block;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
-.opt .why code{font-size:.94em}
-.verdict.ok{color:var(--teal)}
-.verdict.no{color:var(--red)}
-.verdict.set{color:var(--amber)}
-.conf-report{color:var(--muted)}
-.fbrow .primary{flex:0 0 auto}
-.recap ul{padding-left:20px}
-.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
-.recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
-.feedback details{margin:var(--s1) 0}
-.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
-.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
-.next-topic{font-weight:700}
-.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
-[hidden]{display:none!important}
-@media (min-width:861px) and (max-height:720px){
-  main{padding-top:var(--s2)}
-  .stage{padding-top:var(--s2)}
-  .col{gap:var(--s2)}
-  .model{padding:var(--s2) var(--s4)}
-  .model figcaption{margin-bottom:var(--s1)}
-  .meta{margin-top:var(--s1)}
-  .opts{gap:6px}
-  legend{margin-bottom:var(--s1)}
-  .row{margin-top:var(--s2)}
-  .teach h2{margin-bottom:var(--s1)}
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
 }
-@media (max-width:860px){
-  main{padding:var(--s3) var(--s4) var(--s4)}
-  .top{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "tools";row-gap:var(--s2)}
-  .tools{justify-content:flex-start;flex-wrap:wrap}
-  .stage{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3)}
-  .col{display:contents}
-  #current-teaching{order:1}#current-task{order:2}#live-model{order:3}#current-control{order:4}.fbrow{order:5}
-  .fbrow{flex-direction:column}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.nojs { margin: 16px; padding: 12px 16px; border: 1px solid var(--pep-warning); border-radius: var(--pep-radius-md); background: var(--pep-warning-soft); color: var(--pep-text-strong); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
 }
-@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}
-  .cmdline{flex-wrap:wrap;row-gap:var(--s1)}
-  .cmdline label{flex:1 0 100%;max-width:none}}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
-
-.top .metaline{grid-column:1/-1}
-.objectives{grid-column:1/-1;margin:var(--s2) 0 0;padding-left:1.25em}
-.teach pre,.filecode{margin:0 0 var(--s2);padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--term);font:14px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
-.filecode .hl{background:var(--amber-soft);outline:1px solid var(--amber)}
-.filecode .bad{background:var(--red-soft);text-decoration:underline wavy var(--red)}
-.builder{display:flex;flex-direction:column;gap:var(--s2)}
-.builder .brow{display:grid;grid-template-columns:minmax(0,1fr);gap:2px}
-.builder .brow span{font-size:15px;font-weight:600}
-.builder select{font:15px var(--mono);min-height:44px;padding:var(--s1) var(--s2);color:var(--ink);background:var(--surface);border:2px solid var(--rule);border-radius:4px;max-width:100%;min-width:0}
-.builder select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-.orderlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--s1)}
-.orderlist li{display:flex;align-items:center;gap:var(--s2);padding:var(--s1) var(--s2);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
-.orderlist li code{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;white-space:normal}
-.orderlist button{min-height:44px;min-width:44px;padding:var(--s1) var(--s2)}
-.toggles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
-.toggles button{text-align:left;font-family:var(--mono);font-size:15px}
-.toggles button[aria-pressed="true"]::before{content:"\2713  "}
-.boxes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
-.box{padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--bg);min-width:0}
-.box h3{margin:0 0 var(--s1);font-size:15px}
-.box ul{margin:0;padding-left:18px;font-size:15px}
-.box p{margin:0;font-size:15px}
-.chip{display:inline-block;padding:0 6px;border:2px solid var(--rule);border-radius:3px;font:600 14px/1.5 var(--sans)}
-.chip.ok{border-color:var(--teal);color:var(--teal)}
-.chip.no{border-color:var(--red);color:var(--red);border-style:dashed}
-.chip.wait{border-color:var(--amber);color:var(--amber);border-style:dotted}
-.mtable{width:100%;border-collapse:collapse;font-size:15px}
-.mtable th,.mtable td{padding:var(--s1) var(--s2);border-bottom:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere}
-.mtable th{color:var(--muted);font-weight:700}
-.mnote{margin:var(--s2) 0 0;font-size:15px;color:var(--muted)}
-@media (max-width:480px){.boxes,.toggles{grid-template-columns:minmax(0,1fr)}}
-.goals li,.explain li{border-color:var(--rule)}
-.mtable th,.mtable td{border-bottom-color:var(--rule)}
-.teach code,.task code,.opt code,.recap code{white-space:normal;overflow-wrap:anywhere}
+button, .pep-option { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+/* topic bar */
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { display: flex; flex: 1 1 260px; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress .pep-progress { flex: 1 1 96px; width: 96px; max-width: 160px; }
+.pep-topicbar .pep-btn { flex: 0 0 auto; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.pep-progress > span { height: 8px; border-radius: var(--pep-radius-pill); background: var(--pep-control); border: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); border-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning-soft); border: 1px dashed var(--pep-warning); }
+/* regions */
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region > * { min-width: 0; }
+.pep-goals { margin: 0; padding: 12px 16px; list-style: none; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-goals > li:first-child { border-top: 0; }
+.pep-goals .state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; }
+.pep-goals .is-done .state { color: var(--pep-success); }
+.pep-goals-h { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0 0 -8px; }
+.pep-steps-list { margin: 0; padding-left: 24px; }
+.pep-steps-list > li + li { margin-top: 8px; }
+.pep-steps-list .state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-left: 8px; white-space: nowrap; }
+.pep-steps-list .is-done .state { color: var(--pep-success); }
+.pep-summary { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0; }
+.pep-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 4px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); background: var(--pep-control); color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); }
+.pep-chip--ok { border-color: var(--pep-success); color: var(--pep-success); background: var(--pep-success-soft); }
+.pep-chip--no { border-style: dashed; border-color: var(--pep-danger); color: var(--pep-danger); background: var(--pep-danger-soft); }
+.pep-chip--wait { border-style: dotted; border-color: var(--pep-warning); color: var(--pep-warning); background: var(--pep-warning-soft); }
+/* cards, callouts, buttons */
+.pep-card { background: var(--pep-card); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); padding: 16px; min-width: 0; }
+.pep-callout { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text); }
+.pep-callout p { margin: 0 0 8px; } .pep-callout p:last-child { margin: 0; }
+.pep-callout ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-callout--info { background: var(--pep-accent-soft); border-color: var(--pep-accent); }
+.pep-callout--success { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-callout--warning { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-callout--danger { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); max-width: 100%; text-align: center; }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+.pep-btn:disabled, .pep-btn[aria-disabled="true"] { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-btn[aria-pressed="true"] { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); }
+.pep-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+/* options, confidence, feedback */
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-options > legend, .pep-legend { padding: 0; margin: 0 0 8px; font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-option { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; min-width: 0; }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option.is-correct .pep-option__key { background: var(--pep-success); color: var(--pep-page); }
+.pep-option.is-wrong .pep-option__key { background: var(--pep-danger); color: var(--pep-page); }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+.pep-option input:disabled { cursor: default; }
+.pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-option:has(input:disabled) { cursor: default; }
+.pep-explain { display: block; margin: 4px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-tag { display: inline-block; margin: 4px 8px 0 0; padding: 0 8px; border: 1px solid currentColor; border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); }
+.pep-tag--ok { color: var(--pep-success); } .pep-tag--no { color: var(--pep-danger); } .pep-tag--me { color: var(--pep-text-strong); }
+.pep-conf { display: grid; grid-template-columns: repeat(3, minmax(96px, 1fr)); gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-conf > legend { grid-column: 1 / -1; padding: 0; margin: 0 0 8px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-conf .pep-option { grid-template-columns: minmax(0, 1fr); text-align: center; }
+@media (max-width: 480px) { .pep-conf { grid-template-columns: minmax(0, 1fr); } }
+.pep-verdict { font-weight: 700; }
+.pep-verdict--correct { color: var(--pep-success); } .pep-verdict--wrong { color: var(--pep-danger); } .pep-verdict--revealed { color: var(--pep-warning); }
+.feedback:empty { display: none; }
+.feedback ul { margin: 4px 0 0; padding-left: 20px; }
+.feedback li + li { margin-top: 4px; }
+.conf-report { color: var(--pep-text-muted); }
+/* model and code */
+.model { margin: 0; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-bottom: 8px; }
+.boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.box { padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.box h3 { font-size: 14px; line-height: 20px; margin: 0 0 4px; }
+.box ul { margin: 0; padding-left: 18px; font: 400 14px/20px var(--pep-font-sans); }
+.box p { margin: 0; font: 400 14px/20px var(--pep-font-sans); }
+.mnote { margin: 8px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-code, .teach pre, .recap pre { margin: 0 0 12px; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.outlog { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; margin: 8px 0 0; padding: 12px 16px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--pep-text-strong); }
+@media (max-width: 480px) { .outlog { max-height: 180px; } }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); }
+.pep-table td, .pep-table th { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; text-align: left; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.recap ul { padding-left: 20px; }
+.recap details, .sources { margin: 12px 0; padding: 0 0 0 0; border-block: 1px solid var(--pep-line-strong); }
+.recap summary, .sources summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-weight: 600; color: var(--pep-text-strong); }
+.next-topic { font-weight: 600; }
+.complete { margin: 0; }
+/* terminal@1 bridge: keep the drift-checked fragment, adapt sizes around it */
+.term { border-radius: var(--pep-radius-sm); }
+.term-top { font: 600 13px/20px var(--pep-font-sans); }
+.log { font: 400 14px/20px var(--pep-font-mono); max-height: 240px; overscroll-behavior: contain auto; }
+.cmdline .runbtn { min-height: 44px; min-width: 64px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); }
+.cmdline input { scroll-margin-block: 16px; }
+@media (max-width: 480px) { .log { height: 180px; } .cmdline { flex-wrap: wrap; row-gap: 4px; } .cmdline label { flex: 1 0 100%; max-width: none; } }
+/* editor shell */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__secondary { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { margin: 0; padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font: inherit; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; cursor: pointer; white-space: normal; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-editor noscript, .pep-noscript { display: block; padding: 12px; font: 400 14px/20px var(--pep-font-sans); }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__gutter { line-height: 24px; font-size: 16px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* optional disclosures */
+.pep-optional { min-width: 0; border-block: 1px solid var(--pep-line-strong); background: transparent; break-inside: avoid; }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+@media print { .pep-optional > summary { list-style: none; } .pep-optional > summary::-webkit-details-marker { display: none; } }
+/* figure */
+.pep-figure { margin: 0; }
+.pep-figure figcaption { margin-top: 8px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.state[data-state]::before { content: attr(data-state); }
+summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; }
+.feedback details { margin: 8px 0; }
+.pep-optional-area { display: flex; flex-direction: column; gap: 8px; }
+.chip { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text); background: var(--pep-control); }
+.chip.ok { border-color: var(--pep-success); color: var(--pep-success); background: var(--pep-success-soft); }
+.chip.no { border-style: dashed; border-color: var(--pep-danger); color: var(--pep-danger); background: var(--pep-danger-soft); }
+.chip.wait { border-style: dotted; border-color: var(--pep-warning); color: var(--pep-warning); background: var(--pep-warning-soft); }
+.pep-chal { display: block; width: 100%; min-height: 120px; margin: 4px 0 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); white-space: pre; overflow-wrap: normal; }
 </style>
 </head>
 <body>
-<noscript><p class="nojs">This topic needs JavaScript for its practice activities and checks. Turn JavaScript on to take part.</p></noscript>
-<main id="lesson">
-  <header class="top">
+<noscript><p class="nojs">The reading, task steps, file readings and recap below work without JavaScript. Turn JavaScript on to use the practice terminal, editor checks and answer feedback.</p></noscript>
+<main id="lesson" class="pep-main" data-pep-responsive>
+  <header class="pep-topicbar">
     <h1>Ports, volumes and environment variables</h1>
-    <div class="tools">
-      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 5</span><span class="pips" aria-hidden="true"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></span></div>
-      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
-      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
-    </div>
-    <ul class="meta metaline"><li>About 11 minutes</li><li>Containers and Compose, topic 4 of 8</li><li>Simulated practice; no container engine runs</li></ul>
-    <ul class="objectives" data-pep-objectives aria-label="Objectives">
-      <li>Publish a container port with -p and predict who can reach it: 8080:80 listens on every host address, while 127.0.0.1:8080:80 is reachable only from the local machine, the default for development</li>
-      <li>Choose a named volume for database data and a bind mount for source files you edit, and predict what survives removing the container</li>
-      <li>Pass configuration into a container with -e or --env-file instead of writing the values into the image</li>
-    </ul>
+    <div class="pep-topicbar__progress" data-pep-progress id="progress"><span id="prog-text">Activity 1 of 5 · 0 done</span><span>about 11 min</span><span class="pep-progress" id="progress-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></div>
+    <button type="button" class="pep-btn" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+    <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
   </header>
-  <div class="stage" id="stage" data-step="1">
-    <div class="col">
-      <section id="current-teaching" class="teach" aria-label="Current teaching">
+  <div class="pep-regions" id="stage" data-step="1">
+    <section class="pep-region" id="panel" data-pep-instructions aria-label="Reading and instructions">
+      <div id="current-teaching" class="teach">
 <div data-step="1">
   <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
-  <p>Practice prediction, not scored.</p>
+<p>Practice prediction, not scored.</p>
 </div>
 <div data-step="2" data-pep-teaching>
   <h2 id="teach-2-h" tabindex="-1">Publish a port, and choose who can reach it</h2>
-  <p><code>-p HOST:CONTAINER</code> forwards a port on your machine to a port inside the container. <code>-p 8080:80</code> sends <code>localhost:8080</code> to nginx's port 80.</p>
+<p><code>-p HOST:CONTAINER</code> forwards a port on your machine to a port inside the container. <code>-p 8080:80</code> sends <code>localhost:8080</code> to nginx's port 80.</p>
   <p>Without an address, Docker listens on <strong>every</strong> host address, so other machines on your network may reach it too. <code>-p 127.0.0.1:8080:80</code> listens only on loopback: this machine only. Use that for development.</p>
 </div>
 <div data-step="3" data-pep-teaching>
   <h2 id="teach-3-h" tabindex="-1">Where data lives</h2>
-  <p>Files written inside a container vanish when the container is removed.</p>
+<p>Files written inside a container vanish when the container is removed.</p>
   <ul><li>A <strong>named volume</strong> (<code>-v pgdata:/var/lib/postgresql</code>) is storage Docker manages. It outlives any container: right for database data.</li><li>A <strong>bind mount</strong> (<code>-v ./site:/usr/share/nginx/html</code>) shows a folder from your machine inside the container: right for files you edit.</li></ul>
 </div>
 <div data-step="4" data-pep-teaching>
   <h2 id="teach-4-h" tabindex="-1">Configuration comes from outside</h2>
-  <p><code>-e NAME=value</code> sets an environment variable in the container; <code>--env-file .env</code> reads many <code>NAME=value</code> lines from a file.</p>
+<p><code>-e NAME=value</code> sets an environment variable in the container; <code>--env-file .env</code> reads many <code>NAME=value</code> lines from a file.</p>
   <p>Do not write settings or passwords into the image with <code>ENV</code>: anyone with the image can read them, and changing one needs a rebuild. Keep <code>.env</code> out of Git and out of the image.</p>
 </div>
 <div data-step="5" data-pep-teaching>
   <h2 id="teach-5-h" tabindex="-1">Apply it: one database command</h2>
-  <p>Check each flag in turn.</p>
+<p>Check each flag in turn.</p>
 </div>
-<div data-step="6" hidden data-pep-recap class="recap">
+<div data-step="6" data-pep-recap class="recap">
   <h2 id="teach-6-h" tabindex="-1">Recap</h2>
-  <ul><li><code>-p 8080:80</code> listens on every host address; <code>-p 127.0.0.1:8080:80</code> on this machine only, the development default.</li><li>Named volume for database data, bind mount for files you edit. Both survive removing the container.</li><li>Pass configuration with <code>-e</code> or <code>--env-file</code>, never baked into the image.</li></ul>
+<ul><li><code>-p 8080:80</code> listens on every host address; <code>-p 127.0.0.1:8080:80</code> on this machine only, the development default.</li><li>Named volume for database data, bind mount for files you edit. Both survive removing the container.</li><li>Pass configuration with <code>-e</code> or <code>--env-file</code>, never baked into the image.</li></ul>
   <details data-section-skip>
     <summary>Cheat sheet</summary>
     <table><tr><td><code>-p 127.0.0.1:8080:80</code></td><td>host port 8080, this machine only, to container port 80</td></tr><tr><td><code>-v pgdata:/var/lib/postgresql</code></td><td>named volume for PostgreSQL 18 data</td></tr><tr><td><code>-v ./site:/usr/share/nginx/html</code></td><td>bind mount a folder you edit</td></tr><tr><td><code>-e NAME=value</code></td><td>one environment variable</td></tr><tr><td><code>--env-file .env</code></td><td>variables from a file kept out of Git</td></tr><tr><td><code>docker volume ls</code></td><td>list volumes</td></tr></table>
@@ -266,56 +320,66 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
   <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live official sources on 2026-10-13. Versions shown: Docker Engine 29 with nginx:alpine and alpine images. Output is simulated and shortened where marked. Whether another machine can really connect also depends on its network and the host firewall.</p><ul><li><a href="https://docs.docker.com/get-started/docker-concepts/running-containers/publishing-ports/" rel="noopener">Docker Docs: Publishing and exposing ports</a></li><li><a href="https://docs.docker.com/engine/network/port-publishing/" rel="noopener">Docker Docs: Port publishing and mapping (publishing is insecure by default; 127.0.0.1)</a></li><li><a href="https://docs.docker.com/engine/storage/volumes/" rel="noopener">Docker Docs: Volumes (a volume outlives its container)</a></li><li><a href="https://docs.docker.com/engine/storage/bind-mounts/" rel="noopener">Docker Docs: Bind mounts</a></li><li><a href="https://docs.docker.com/get-started/docker-concepts/running-containers/overriding-container-defaults/" rel="noopener">Docker Docs: Overriding container defaults (-e, --env-file)</a></li><li><a href="https://docs.docker.com/reference/cli/docker/container/run/" rel="noopener">Docker CLI reference: docker container run (-p, -v, -e, --env-file)</a></li></ul></details>
   <p class="next-topic">Next topic: <a href="../compose-spring-boot-and-database/artifact.html" rel="noopener">Compose: the Spring Boot service and its database</a></p>
 </div>
-      </section>
-      <section id="current-task" class="task" aria-label="Current task">
-<div data-step="1"><p id="task-1">At a café, you run <code>docker run -d -p 8080:80 nginx:alpine</code> on your laptop. Someone on the same Wi-Fi opens port 8080 at your laptop's address. With no firewall in the way, what happens?</p></div>
-<div data-step="2"><p id="task-2">Run nginx as <code>web</code> so only your machine can reach it on port 8080, confirm the binding, then open it.</p>
-  <ul class="goals"><li data-goal="lo"><span>Published on <code>127.0.0.1:8080</code> and confirmed with <code>docker ps</code></span><span class="st"></span></li><li data-goal="curl"><span>Opened with <code>curl http://localhost:8080</code></span><span class="st"></span></li></ul></div>
-<div data-step="3"><p id="task-3">Choose storage for each kind of data, then remove the container and see what survives.</p>
-  <ul class="goals"><li data-goal="st"><span>Storage choices pass the check</span><span class="st"></span></li><li data-goal="rm"><span>Container removed: see what survived</span><span class="st"></span></li></ul></div>
-<div data-step="4"><p id="task-4">Pass configuration in from outside: one value with <code>-e</code>, then the file <code>.env</code>. The <code>alpine</code> image's <code>env</code> command prints what the container sees.</p>
-  <ul class="goals"><li data-goal="e"><span>A value passed with <code>-e</code></span><span class="st"></span></li><li data-goal="file"><span>Values passed with <code>--env-file .env</code></span><span class="st"></span></li></ul></div>
-<div data-step="5"><p id="task-apply">You run <code>docker run -d --name db --env-file .env -v pgdata:/var/lib/postgresql -p 127.0.0.1:5432:5432 postgres:18</code>, add some rows, then <code>docker rm -f db</code> and run the same command again. What is true?</p>
-  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same command. Which pair of facts holds?</p></div>
-<div data-step="6"><p>All activities finished.</p><p id="complete-msg" class="complete"></p></div>
-      </section>
-      <div class="fbrow">
-        <div id="current-feedback" class="feedback" aria-live="polite">
-<div data-step="1" data-pep-predict-feedback></div>
-<div data-step="2" data-pep-explore-feedback></div>
-<div data-step="3" data-pep-explore-feedback></div>
-<div data-step="4" data-pep-explore-feedback></div>
-<div data-step="5" data-pep-apply-feedback></div>
-<div data-step="6" ></div>
-        </div>
-        <button type="button" class="primary" id="next" hidden>Continue</button>
       </div>
-    </div>
-    <div class="col">
-<figure id="live-model" class="model" aria-labelledby="model-cap">
+      <p class="pep-goals-h" id="goals-h">Goals</p>
+      <ul class="pep-goals" data-pep-objectives aria-labelledby="goals-h">
+      <li data-obj="o1"><span>Publish a container port with -p and predict who can reach it: 8080:80 listens on every host address, while 127.0.0.1:8080:80 is reachable only from the local machine, the default for development</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o2"><span>Choose a named volume for database data and a bind mount for source files you edit, and predict what survives removing the container</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o3"><span>Pass configuration into a container with -e or --env-file instead of writing the values into the image</span><span class="state" data-state="open"></span></li>
+      </ul>
+      <div id="current-task" class="task">
+<div data-step="1">
+<ol class="pep-steps-list" id="task-1"><li>At a café, you run <code>docker run -d -p 8080:80 nginx:alpine</code> on your laptop. Someone on the same Wi-Fi opens port 8080 at your laptop's address. With no firewall in the way, what happens?</li></ol>
+</div>
+<div data-step="2">
+<ol class="pep-steps-list" id="task-2"><li>Run nginx as <code>web</code> so only your machine can reach it on port 8080, confirm the binding, then open it.</li><li data-goal="lo">Published on <code>127.0.0.1:8080</code> and confirmed with <code>docker ps</code> <span class="state" data-state="open"></span></li><li data-goal="curl">Opened with <code>curl http://localhost:8080</code> <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="3">
+<ol class="pep-steps-list" id="task-3"><li>Choose storage for each kind of data, then remove the container and see what survives.</li><li data-goal="st">Storage choices pass the check <span class="state" data-state="open"></span></li><li data-goal="rm">Container removed: see what survived <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="4">
+<ol class="pep-steps-list" id="task-4"><li>Pass configuration in from outside: one value with <code>-e</code>, then the file <code>.env</code>. The <code>alpine</code> image's <code>env</code> command prints what the container sees.</li><li data-goal="e">A value passed with <code>-e</code> <span class="state" data-state="open"></span></li><li data-goal="file">Values passed with <code>--env-file .env</code> <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="5">
+<p id="task-apply">You run <code>docker run -d --name db --env-file .env -v pgdata:/var/lib/postgresql -p 127.0.0.1:5432:5432 postgres:18</code>, add some rows, then <code>docker rm -f db</code> and run the same command again. What is true?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same command. Which pair of facts holds?</p>
+</div>
+<div data-step="6">
+<p>All activities finished.</p><div id="complete-msg" class="complete"></div>
+</div>
+      </div>
+      <p class="pep-summary" id="goal-summary" hidden></p>
+
+    </section>
+    <section class="pep-region" id="workspace" data-pep-workspace="activity" aria-label="Workspace">
+      <div id="current-head">
+<div data-step="1"><h2>Start with a guess</h2></div>
+<div data-step="2"><h2>Publish a port, and choose who can reach it</h2></div>
+<div data-step="3"><h2>Where data lives</h2></div>
+<div data-step="4"><h2>Configuration comes from outside</h2></div>
+<div data-step="5"><h2>Apply it: one database command</h2></div>
+<div data-step="6"><h2>Finished</h2></div>
+      </div>
+      <figure id="live-model" class="model" aria-labelledby="model-cap">
 <figcaption id="model-cap">Your laptop and one container (simulated)</figcaption>
   <div class="boxes">
     <div class="box"><h3>Published ports</h3><ul id="m-ports"><li>None</li></ul><h3>Who can connect</h3><ul id="m-reach"><li>Nobody yet: nothing is published</li></ul></div>
     <div class="box"><h3>Storage</h3><ul id="m-store"><li>Only the container's own writable layer</li></ul><h3>Environment</h3><ul id="m-env"><li>Image defaults only</li></ul></div>
   </div>
-</figure>
-      <section id="current-control" class="control" aria-label="Your turn">
+      </figure>
+      <div id="current-control" class="control">
 <div data-step="1">
-  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): docker run -d -p 8080:80 nginx:alpine on a laptop on café Wi-Fi; someone else opens port 8080 at the laptop address, with no firewall in the way. Answer: they see the nginx page, because -p without an address listens on every host address. Docker does not limit it to localhost by default; they do not reach their own machine; published ports are reachable from outside unless bound to 127.0.0.1.">
-    <legend>Prediction</legend>
-    <div class="opts one"><label class="opt"><input type="radio" name="predict" value="a"> <span>They see the nginx page: the port listens on every address</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span>Connection refused: Docker publishes only to <code>localhost</code></span></label><label class="opt"><input type="radio" name="predict" value="c"> <span>They reach port 80 on their own laptop</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span>Nothing: container ports never leave the laptop</span></label></div>
+  <fieldset class="pep-options" data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): docker run -d -p 8080:80 nginx:alpine on a laptop on café Wi-Fi; someone else opens port 8080 at the laptop address, with no firewall in the way. Answer: they see the nginx page, because -p without an address listens on every host address. Docker does not limit it to localhost by default; they do not reach their own machine; published ports are reachable from outside unless bound to 127.0.0.1.">
+    <legend>Your prediction</legend>
+    <label class="pep-option"><input type="radio" name="predict" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">They see the nginx page: the port listens on every address</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Connection refused: Docker publishes only to <code>localhost</code></span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">They reach port 80 on their own laptop</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Nothing: container ports never leave the laptop</span></label>
   </fieldset>
-  <div class="row confrow">
-  <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
-    <legend id="pconf-help">Confidence, then check</legend>
-    <label class="opt"><input type="radio" name="pconf" value="low"> <span>Low</span></label>
-    <label class="opt"><input type="radio" name="pconf" value="medium"> <span>Medium</span></label>
-    <label class="opt"><input type="radio" name="pconf" value="high"> <span>High</span></label>
-  </fieldset>
-  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
-  </div>
+  <fieldset class="pep-conf" id="pconf" aria-describedby="pconf-help"><legend id="pconf-help">How sure are you? Then check.</legend><label class="pep-option"><input type="radio" name="pconf" value="low"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="pconf" value="medium"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="pconf" value="high"><span class="pep-option__text">Certain</span></label></fieldset>
+  <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button></div>
 </div>
-<div data-step="2" hidden>
+<div data-step="2">
   <div class="term" data-interaction="terminal" data-steps="2" data-static-alt="Terminal activity: docker run -d --name web -p 127.0.0.1:8080:80 nginx:alpine publishes container port 80 on host port 8080 for this machine only. docker ps shows PORTS 127.0.0.1:8080-&gt;80/tcp. curl http://localhost:8080 returns the nginx welcome page. With -p 8080:80, docker ps shows 0.0.0.0:8080-&gt;80/tcp and [::]:8080-&gt;80/tcp: every host address. Publishing a host port that is already in use fails with port is already allocated.">
     <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-2">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
     <div class="log" id="log-2" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
@@ -326,13 +390,13 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
     </div>
   </div>
 </div>
-<div data-step="3" hidden>
-  <fieldset id="x3" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-static-alt="Activity: choose storage. PostgreSQL data files: a named volume, which Docker manages and keeps after the container is removed. Front-end source you edit: a bind mount of your project folder. Scratch files nobody needs later: no mount, the container layer is enough. After docker rm -f, the named volume and the bind-mounted folder survive; files only in the container layer are gone."><legend>Storage for each kind of data</legend>
-  <div class="builder"><fieldset class="brow" id="st-pg"><legend>PostgreSQL data files</legend><div class="opts"><label class="opt"><input type="radio" name="st-pg" value="named"> <span>Named volume</span></label><label class="opt"><input type="radio" name="st-pg" value="bind"> <span>Bind mount</span></label><label class="opt"><input type="radio" name="st-pg" value="none"> <span>No mount</span></label></div></fieldset><fieldset class="brow" id="st-src"><legend>Front-end source you edit</legend><div class="opts"><label class="opt"><input type="radio" name="st-src" value="named"> <span>Named volume</span></label><label class="opt"><input type="radio" name="st-src" value="bind"> <span>Bind mount</span></label><label class="opt"><input type="radio" name="st-src" value="none"> <span>No mount</span></label></div></fieldset><fieldset class="brow" id="st-tmp"><legend>Scratch files nobody needs later</legend><div class="opts"><label class="opt"><input type="radio" name="st-tmp" value="named"> <span>Named volume</span></label><label class="opt"><input type="radio" name="st-tmp" value="bind"> <span>Bind mount</span></label><label class="opt"><input type="radio" name="st-tmp" value="none"> <span>No mount</span></label></div></fieldset></div>
-  <div class="row"><button type="button" class="primary" id="st-check" data-act="stcheck">Check choices</button><button type="button" class="ghost" id="st-rm" data-act="strm">Run <code>docker rm -f app</code></button></div>
-  </fieldset>
+<div data-step="3">
+  <div id="x3" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-static-alt="Activity: choose storage. PostgreSQL data files: a named volume, which Docker manages and keeps after the container is removed. Front-end source you edit: a bind mount of your project folder. Scratch files nobody needs later: no mount, the container layer is enough. After docker rm -f, the named volume and the bind-mounted folder survive; files only in the container layer are gone."><p class="pep-legend">Storage for each kind of data</p>
+  <div class="pep-region"><fieldset class="pep-options" id="st-pg"><legend>PostgreSQL data files</legend><label class="pep-option"><input type="radio" name="st-pg" value="named"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Named volume</span></label><label class="pep-option"><input type="radio" name="st-pg" value="bind"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Bind mount</span></label><label class="pep-option"><input type="radio" name="st-pg" value="none"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">No mount</span></label></fieldset><fieldset class="pep-options" id="st-src"><legend>Front-end source you edit</legend><label class="pep-option"><input type="radio" name="st-src" value="named"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Named volume</span></label><label class="pep-option"><input type="radio" name="st-src" value="bind"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Bind mount</span></label><label class="pep-option"><input type="radio" name="st-src" value="none"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">No mount</span></label></fieldset><fieldset class="pep-options" id="st-tmp"><legend>Scratch files nobody needs later</legend><label class="pep-option"><input type="radio" name="st-tmp" value="named"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Named volume</span></label><label class="pep-option"><input type="radio" name="st-tmp" value="bind"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Bind mount</span></label><label class="pep-option"><input type="radio" name="st-tmp" value="none"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">No mount</span></label></fieldset></div>
+  <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="st-check" data-act="stcheck">Check choices</button><button type="button" class="pep-btn" id="st-rm" data-act="strm">Run <code>docker rm -f app</code></button></div>
+  </div>
 </div>
-<div data-step="4" hidden>
+<div data-step="4">
   <div class="term" data-interaction="terminal" data-steps="3" data-static-alt="Terminal activity: docker run --rm -e APP_MODE=dev alpine env prints the container environment, including APP_MODE=dev. cat .env shows two lines, APP_MODE=dev and DB_PASSWORD=dev-only-1, a disposable local value. docker run --rm --env-file .env alpine env prints both variables inside the container. Nothing was written into an image.">
     <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-4">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
     <div class="log" id="log-4" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
@@ -345,36 +409,45 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
 </div>
 <div data-step="5">
   <div data-first>
-  <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: docker run -d --name db --env-file .env -v pgdata:/var/lib/postgresql -p 127.0.0.1:5432:5432 postgres:18, add rows, docker rm -f db, run it again. Answer: the rows are still there because they live in the named volume pgdata, which outlives containers. The port is bound to 127.0.0.1, so only this machine can reach it; the password came from .env at run time and is not stored in the image. Retry as two facts: data kept in pgdata, reachable from this machine only.">
+  <fieldset class="pep-options" id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: docker run -d --name db --env-file .env -v pgdata:/var/lib/postgresql -p 127.0.0.1:5432:5432 postgres:18, add rows, docker rm -f db, run it again. Answer: the rows are still there because they live in the named volume pgdata, which outlives containers. The port is bound to 127.0.0.1, so only this machine can reach it; the password came from .env at run time and is not stored in the image. Retry as two facts: data kept in pgdata, reachable from this machine only.">
     <legend>Choose what is true</legend>
-    <div class="opts one"><label class="opt"><input type="radio" name="apply-a" value="a"> <span>The rows are still there: they live in the volume <code>pgdata</code></span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span>The rows are gone: removing the container removed its data</span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span>Other machines on the network can now reach port 5432</span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span>The password is now stored inside the <code>postgres:18</code> image</span></label></div>
+    <label class="pep-option"><input type="radio" name="apply-a" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">The rows are still there: they live in the volume <code>pgdata</code></span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">The rows are gone: removing the container removed its data</span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Other machines on the network can now reach port 5432</span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">The password is now stored inside the <code>postgres:18</code> image</span></label>
   </fieldset>
-  <div class="row confrow">
-  <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
-    <legend id="conf-help">Confidence, then check</legend>
-    <label class="opt"><input type="radio" name="conf" value="low"> <span>Low</span></label>
-    <label class="opt"><input type="radio" name="conf" value="medium"> <span>Medium</span></label>
-    <label class="opt"><input type="radio" name="conf" value="high"> <span>High</span></label>
-  </fieldset>
-  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
-  </div>
+  <fieldset class="pep-conf" id="conf" aria-describedby="conf-help"><legend id="conf-help">How sure are you? Then check.</legend><label class="pep-option"><input type="radio" name="conf" value="low"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="conf" value="medium"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="conf" value="high"><span class="pep-option__text">Certain</span></label></fieldset>
+  <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button></div>
   </div>
   <div data-retry hidden>
-    <fieldset id="apply-b" aria-describedby="task-apply-b">
+    <fieldset class="pep-options" id="apply-b" aria-describedby="task-apply-b">
       <legend>Choose the pair of facts</legend>
-      <div class="opts one"><label class="opt"><input type="radio" name="apply-b" value="a"> <span>Container removed, data removed · reachable from the network</span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span>Data kept in <code>pgdata</code> · reachable from this machine only</span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span>Data kept in the image · reachable from this machine only</span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span>Data kept in <code>pgdata</code> · reachable from every address</span></label></div>
+      <label class="pep-option"><input type="radio" name="apply-b" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Container removed, data removed · reachable from the network</span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Data kept in <code>pgdata</code> · reachable from this machine only</span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Data kept in the image · reachable from this machine only</span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Data kept in <code>pgdata</code> · reachable from every address</span></label>
     </fieldset>
-    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+    <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
   </div>
 </div>
 <div data-step="6"></div>
-      </section>
-    </div>
+      </div>
+      <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-explore-feedback></div>
+<div data-step="5" data-pep-apply-feedback></div>
+<div data-step="6"></div>
+      </div>
+      <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="next" hidden>Continue</button></div>
+
+    </section>
   </div>
 </main>
 <script>
 var TOPIC={
-steps:6,acts:["predict","ports","storage","config","apply"],
+steps:6,acts:["predict","ports","storage","config","apply"],objActs:{"o1":["ports","apply"],"o2":["storage","apply"],"o3":["config"]},editors:{},
 prompt:function(S){return 'laptop$';},
 complete:function(v){var c=['docker run -d --name web -p 127.0.0.1:8080:80 nginx:alpine','docker ps','curl http://localhost:8080','docker rm -f web','docker run --rm -e APP_MODE=dev alpine env','docker run --rm --env-file .env alpine env','cat .env'];var m=c.filter(function(x){return x.indexOf(v)===0&&x!==v;});return m.length===1?m[0]:null;},
 init:function(){return {g:{},ctr:[],env:null,removed:false};},
@@ -463,95 +536,115 @@ function $(id){return d.getElementById(id);}
 function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init()};}
-var api={$:$,qa:qa,esc:esc,say:say,complete:complete,goal:goal,left:left,get S(){return S;}};
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,goal:goal,left:left,editorText:editorText,get S(){return S;}};
 function need(step){return (TOPIC.goals&&TOPIC.goals[step])||[];}
 function left(step){var g=S.t.g||{};return need(step||S.step).filter(function(k){return !g[k];}).length;}
-function goal(k){var g=S.t.g||(S.t.g={});g[k]=1;var st=S.step,act=TOPIC.acts[st-1];if(need(st).length&&!left(st)&&!S.done[act]){complete(act);}}
-function goalStatus(){var st=S.step,n=need(st),l=left(st);return n.length?'<p>'+(l?l+' of '+n.length+' goals still open.':'<strong>All goals met.</strong> Continue when ready.')+'</p>':'';}
+function goal(k){var g=S.t.g||(S.t.g={});g[k]=1;var st=S.step,act=TOPIC.acts[st-1];if(need(st).length&&!left(st)&&!S.done[act]){complete(act);}renderGoals();}
+function goalStatus(){var st=S.step,n=need(st),l=left(st);return n.length?'<p>'+(l?l+' of '+n.length+' task goals still open.':'<strong>All task goals met.</strong> Continue when ready.')+'</p>':'';}
 api.goalStatus=goalStatus;
-function renderGoals(){var g=S.t.g||{};qa('.goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!g[k]);li.querySelector('.st').textContent=g[k]?'done':'open';});}
+function renderGoals(){var g=(S.t&&S.t.g)||{};
+  qa('[data-goal]').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('is-done',!!g[k]);var s=li.querySelector('.state');if(s){s.setAttribute('data-state',g[k]?'✓ done':'open');}});
+  var sum=$('goal-summary');if(sum){var n=need(S.step),l=left(S.step);sum.textContent=n.length?(l?l+' of '+n.length+' task goals still open':'All task goals met'):'';sum.hidden=!n.length;}
+  qa('[data-obj]').forEach(function(li){var acts=(TOPIC.objActs||{})[li.getAttribute('data-obj')]||[];var ok=acts.length&&acts.every(function(a){return S.done[a];});li.classList.toggle('is-done',!!ok);li.querySelector('.state').setAttribute('data-state',ok?'✓ done':'open');});}
 function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
 function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}if(S.t&&S.t.g){renderGoals();}}
 function progress(){
-  var acts=TOPIC.acts,n=0,set=0;
-  acts.forEach(function(a,i){var p=qa('.pip',$('progress'))[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
-    p.className='pip'+(on?(S.settled[a]?' settled':' on'):'');});
-  $('prog-text').textContent='Activities done: '+n+' of '+acts.length+(set?' ('+set+' answered, not marked correct)':'');
+  var acts=TOPIC.acts,n=0,set=0,cur=Math.min(S.step,acts.length);
+  acts.forEach(function(a,i){var p=qa('#progress-bar > span')[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
+    p.className=on?(S.settled[a]?'is-settled':'is-done'):'';});
+  $('prog-text').textContent='Activity '+cur+' of '+acts.length+' · '+n+' done'+(set?' ('+set+' settled, not marked correct)':'');
+  renderGoals();
 }
 function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
 function show(step,focus){
-  S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
+  S.step=step;stageEl.setAttribute('data-step',String(step));
   qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
   if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
     SNAP[step]={html:h,t:clone(S.t)};}
   var rb=$('reset');rb.disabled=(step===LAST);
   $('next').hidden=true;
   if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
-    c.textContent='All '+TOPIC.acts.length+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: review its explanation above before moving on.':'.');}}
+    c.innerHTML='<p><strong>All '+TOPIC.acts.length+' activities finished.</strong>'+(set?' '+set+' was answered without being marked correct. That is fine: review its explanation before moving on.':'')+'</p>';}}
   else{main.removeAttribute('data-pep-complete');}
-  TOPIC.render(S,api);renderGoals();progress();
+  initEditors();TOPIC.render(S,api);progress();
   if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
 }
 function optLabel(inp){return inp.closest('label');}
+function optText(inp){var t=optLabel(inp).querySelector('.pep-option__text');return t?t.firstChild.textContent.trim():optLabel(inp).textContent.trim();}
 function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
-function explainList(set,chosen,mark){
-  var html='<ul>';
-  Object.keys(set.why).forEach(function(k){
-    var txt=qa('input[value="'+k+'"]',$(set.fs))[0];var lab=txt?optLabel(txt).textContent.trim():k;
-    var tag=(k===set.correct)?'<strong>Correct: </strong>':'<strong>Not this: </strong>';
-    html+='<li>'+(mark?tag:'')+'<span class="on">'+esc(lab)+'</span>: '+set.why[k]+(k===chosen?' <em>(your choice)</em>':'')+'</li>';
-  });
-  return html+'</ul>';
-}
-function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
-  if(i.value===set.correct&&(chosen===set.correct)){l.classList.add('right');}
-  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
-function firstDetails(){return '<details><summary>First question: every option explained</summary>'+explainList(TOPIC.apply.A,null,true)+'</details>';}
-function badges(ok,mine,who){return '<span class="badges">'+(mine?'<span class="badge me">'+who+'</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
-function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
-  w.innerHTML=badges(i.value===set.correct,i.value===chosen,'Your answer')+set.why[i.value];sp.appendChild(w);});}
-function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function tag(cls,txt){return '<span class="pep-tag pep-tag--'+cls+'">'+txt+'</span>';}
+function annotate(name,correct,chosen,why,who){qa('input[name="'+name+'"]').forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===correct){l.classList.add('is-correct');}else if(i.value===chosen){l.classList.add('is-wrong');}
+  var t=l.querySelector('.pep-option__text');var w=d.createElement('span');w.className='pep-explain';
+  w.innerHTML=(i.value===chosen?tag('me',who):'')+(i.value===correct?tag('ok','✓ Correct answer'):(i.value===chosen?tag('no','✗ Not correct'):''))+'<span class="why">'+why[i.value]+'</span>';t.appendChild(w);});}
 function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
 function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
   var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
   var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function explainList(set){var html='<ul>';qa('input[name="'+set.fs+'"]').forEach(function(i){html+='<li><strong>'+(i.value===set.correct?'✓ Correct: ':'✗ Not this: ')+'</strong>'+esc(optText(i))+': '+set.why[i.value]+'</li>';});return html+'</ul>';}
 function checkApply(which){
   var A=TOPIC.apply.A,B=TOPIC.apply.B;
   if(which==='a'){
     var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
-    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
-    if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText());complete('apply');TOPIC.render(S,api);focusVerdict();return;}
-    S.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
-    say('<p class="verdict no">Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <span class="on">'+esc(S.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;
+    if(ch===A.correct){S.tries=2;annotate('apply-a',A.correct,ch,A.why,'Your answer');$('apply-check').hidden=true;
+      say('<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Correct.</p>'+A.okNote+'<p>Each option is explained above.</p>'+confText()+'</div>');complete('apply');TOPIC.render(S,api);focusVerdict();return;}
+    qa('input[name="apply-a"]').forEach(function(i){i.disabled=true;if(i.value===ch){optLabel(i).classList.add('is-wrong');}});
+    S.firstPick=optText(qa('input[name="apply-a"][value="'+ch+'"]')[0]);
+    say('<div class="pep-callout pep-callout--danger"><p class="pep-verdict pep-verdict--wrong">✗ Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <strong>'+esc(S.firstPick)+'</strong>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText()+'</div>');
     qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});TOPIC.render(S,api);
     var t=$('task-apply-b');if(t){t.focus();}
   } else {
     var c2=checked('apply-b');if(!c2){return;}
-    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
-    if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+firstDetails()+confText());}
-    else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
-      say('<p class="verdict set">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+firstDetails()+confText());}
+    S.tries=2;$('apply-check-b').hidden=true;annotate('apply-b',B.correct,c2,B.why,'Your answer');
+    var first='<details><summary>First question: every option explained</summary>'+explainList(A)+'</details>';
+    if(c2===B.correct){say('<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Correct on the second try.</p><p>Each option is explained above.</p>'+first+confText()+'</div>');}
+    else{S.settled.apply=true;say('<div class="pep-callout pep-callout--warning"><p class="pep-verdict pep-verdict--revealed">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained above.</p>'+first+confText()+'</div>');}
     complete('apply');TOPIC.render(S,api);focusVerdict();
   }
 }
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .pep-verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
 function checkPredict(){
   var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
   if(!ch||!pc){return;}
-  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
-  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
-    if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
-  var html='<p class="verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+' Each option, explained:</p><ul class="explain">';
-  Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
-    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
-  say(html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||''),1);complete('predict');
+  qa('input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  annotate('predict',P.correct,ch,P.why,'Your prediction');
+  say('<div class="pep-callout pep-callout--info"><p class="pep-verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+'</p><p>Each option is explained above.</p><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||'')+'</div>',1);complete('predict');
 }
+/* editor shell */
+var ED={};
+function editorText(step){var i=$('ed-'+step+'-input');return i?i.value:'';}
+function gutter(step){var i=$('ed-'+step+'-input'),g=$('ed-'+step+'-gutter');if(!i||!g){return;}var n=Math.max(1,i.value.split('\n').length),s=[];for(var k=1;k<=n;k++){s.push(k);}g.textContent=s.join('\n');}
+function initEditors(){qa('.pep-editor[data-ed]').forEach(function(box){var st=box.getAttribute('data-ed');var i=$('ed-'+st+'-input');if(i&&!i.getAttribute('data-wired')){i.setAttribute('data-wired','1');i.addEventListener('input',function(){gutter(st);});}gutter(st);});}
+function edTab(st,which){['problems','output'].forEach(function(w){var t=$('ed-'+st+'-tab-'+w),p=$('ed-'+st+'-'+w);if(t&&p){t.setAttribute('aria-selected',w===which?'true':'false');t.tabIndex=w===which?0:-1;p.hidden=w!==which;}});}
+function edRun(st){var E=TOPIC.editors[st];if(!E){return;}var r=E.check(editorText(st),S,api)||{};
+  var pp=$('ed-'+st+'-problems'),op=$('ed-'+st+'-output'),probs=r.problems||[];
+  pp.innerHTML='';if(!probs.length){pp.textContent='No problems found.';}
+  probs.forEach(function(p){var b=d.createElement('button');b.type='button';b.className='pep-editor__problem';b.setAttribute('data-line',String(p.line||1));
+    b.innerHTML='<span class="kind-'+(p.kind==='limit'?'limit':'error')+'">'+(p.kind==='limit'?'Not supported':'Problem')+'</span> line '+(p.line||1)+': '+esc(p.msg);pp.appendChild(b);});
+  op.textContent=(r.output||[]).join('\n')||'(no output)';
+  var stt=$('ed-'+st+'-status');stt.textContent=r.ok?'✓ All checks pass. '+(r.summary||''):(probs.length?'✗ '+probs.length+' problem'+(probs.length>1?'s':'')+' to fix. Open each one to jump to its line.':(r.summary||'Checked.'));
+  edTab(st,r.ok?'output':'problems');
+  if(r.ok&&E.goal){goal(E.goal);}
+  say((r.ok?'<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Your file passes every check.</p>':'<div class="pep-callout pep-callout--danger"><p class="pep-verdict pep-verdict--wrong">✗ Not yet: read the Problems tab, fix one thing, and run the checks again.</p>')+(r.note?'<p>'+r.note+'</p>':'')+'</div>'+goalStatus());}
+function edReset(st){var E=TOPIC.editors[st];var i=$('ed-'+st+'-input');if(!E||!i){return;}i.value=E.starter;gutter(st);$('ed-'+st+'-problems').textContent='Not run yet.';$('ed-'+st+'-output').textContent='(no output)';$('ed-'+st+'-status').textContent='Starter restored. Not run yet.';edTab(st,'problems');i.focus();}
+var userAct=TOPIC.act;
+TOPIC.act=function(a,b,Sx,apix){
+  if(a==='edrun'){edRun(+b.getAttribute('data-ed'));return;}
+  if(a==='edreset'){edReset(+b.getAttribute('data-ed'));return;}
+  if(a==='edtab'){edTab(+b.getAttribute('data-ed'),b.getAttribute('data-tab'));return;}
+  if(a==='edline'){return;}
+  if(userAct){userAct.call(TOPIC,a,b,Sx,apix);}
+};
+d.addEventListener('click',function(e){var p=e.target.closest&&e.target.closest('.pep-editor__problem');if(!p){return;}var box=p.closest('.pep-editor');var i=box.querySelector('textarea');var ln=+p.getAttribute('data-line');var lines=i.value.split('\n'),pos=0;for(var k=0;k<ln-1&&k<lines.length;k++){pos+=lines[k].length+1;}i.focus();i.setSelectionRange(pos,pos+((lines[ln-1]||'').length));});
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.getAttribute||t.getAttribute('role')!=='tab'){return;}if(e.key==='ArrowRight'||e.key==='ArrowLeft'){var st=t.getAttribute('data-ed');var nx=t.getAttribute('data-tab')==='problems'?'output':'problems';e.preventDefault();edTab(+st,nx);$('ed-'+st+'-tab-'+nx).focus();}});
 function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
 function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
   Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
   qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
   S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
   if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
-  show(step,false);syncPrompt();var h=$('teach-'+step+'-h');if(h){h.focus();}}
+  show(step,false);syncPrompt();say('<p>Activity restarted. Earlier activities keep their results.</p>'+goalStatus());var h=$('teach-'+step+'-h');if(h){h.focus();}}
 /* pep:component terminal@1 js */
 d.addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b){return;}
@@ -586,9 +679,11 @@ d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closes
 var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
 setTheme(mq&&mq.matches?'dark':'light');
 if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=qa('details[data-pep-optional]:not([open])');printOpened.forEach(function(x){x.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(x){x.open=false;});printOpened=[];});
 fresh();show(1,false);syncPrompt();
 })();
-
 </script>
 </body>
 </html>

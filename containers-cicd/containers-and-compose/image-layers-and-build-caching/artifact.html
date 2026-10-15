@@ -7,95 +7,61 @@
 <meta name="pep:module" content="containers-and-compose">
 <meta name="pep:topic" content="Reading: image layers and build caching">
 <meta name="pep:topic-id" content="image-layers-and-build-caching">
-<meta name="pep:budget-minutes" content="8">
+<meta name="pep:budget-minutes" content="13">
 <meta name="pep:source" content="authoring/evidence/containers-cicd/containers-and-compose/image-layers-and-build-caching/sources.json">
-<title>Reading: image layers and build caching · Containers and Compose</title>
+<title>Reading: image layers and build caching</title>
 <style>
-:root{
-  --bg:#eef2f0;--surface:#f8faf9;--ink:#1b2320;--muted:#47524e;--rule:#6b7873;--line:#c9d2ce;
-  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
-  --on-teal:#ffffff;--term:#e2e8e5;--focus:#1f4fbf;
-  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
-  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  color-scheme:light;
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
 }
-:root[data-theme="dark"]{
-  --bg:#121816;--surface:#1a2220;--ink:#e3ebe7;--muted:#a8b6b0;--rule:#71827c;--line:#2f3b37;
-  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
-  --on-teal:#0b1311;--term:#0c1110;--focus:#8fb4ff;
-  color-scheme:dark;
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
 }
-*{box-sizing:border-box}
-html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
-::selection{background:var(--teal);color:var(--on-teal)}
-code,kbd,.mono{font-family:var(--mono);font-size:.94em}
-a{color:var(--teal);text-underline-offset:3px}
-main{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
-.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
-.top{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title tools";column-gap:var(--s6);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
-.top .crumbs{grid-area:crumbs}.top h1{grid-area:title}.top .meta{grid-area:meta}.top .tools{grid-area:tools}
-.crumbs{margin:0 0 var(--s1);font-size:15px;color:var(--muted)}
-.crumbs ol{display:flex;flex-wrap:wrap;gap:0 var(--s2);margin:0;padding:0;list-style:none}
-.crumbs li+li::before{content:"/";margin-right:var(--s2);color:var(--rule)}
-.crumbs [aria-current]{color:var(--ink);font-weight:600}
-h1{margin:0;font-size:24px;line-height:30px;letter-spacing:-.01em}
-.meta{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s2) 0 0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
-.meta li:first-child{font-weight:700;color:var(--ink)}
-.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
-.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2);flex:0 0 auto}
-.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
-.pips{display:flex;gap:var(--s1)}
-.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
-.pip.on{background:var(--teal);border-color:var(--teal)}
-.pip.settled{background:var(--amber-soft);border:2px dashed var(--amber)}
-button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
-.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
-.ghost:hover{background:var(--surface);border-color:var(--ink)}
-.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
-.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
-.primary:hover{filter:brightness(1.08)}
-.primary:active{transform:translateY(1px)}
-button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
-:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-[tabindex="-1"]:focus{outline:none}
-[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s3);align-items:start}
-.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
-.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
-.teach p{margin:0 0 var(--s2);max-width:62ch}
-.teach ul{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
-.teach li{margin-bottom:var(--s1)}
-.teach code,.task code{white-space:nowrap}
-.task{padding:var(--s3) var(--s4);border-top:2px solid var(--teal);background:var(--surface)}
-.task p{margin:0;font-weight:600}
-.task p+p{margin-top:var(--s2)}
-.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
-.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
-.goals li:first-child{border-top:0}
-.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
-.goals li.done .st{color:var(--teal)}
-.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
-.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:var(--s2)}
-.model code{font-size:1em}
-.control{min-width:0}
-fieldset{margin:0;padding:0;border:0;min-width:0}
-legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
-.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
-.opts.one{grid-template-columns:minmax(0,1fr)}
-.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:6px var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer}
-.opt:hover{border-color:var(--ink)}
-.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
-.opt:has(input:disabled){cursor:default}
-.opt.right,.opt.right:has(input:checked){border-color:var(--teal);background:var(--teal-soft)}
-.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);background:var(--red-soft);box-shadow:inset 4px 0 0 var(--red)}
-.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
-.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
-.confrow{margin-top:var(--s2)}
-.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
-.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
-.conf .opt{min-width:96px}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
 /* pep:component terminal@1 css */
 .term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
 .term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
@@ -117,149 +83,237 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
 .simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
 /* /pep:component terminal css */
-.fbrow{display:flex;flex-direction:column;gap:var(--s2);align-items:flex-start}
-.feedback{width:100%;min-width:0;line-height:1.4;font-size:15px;line-height:1.45}
-.feedback p{margin:0 0 var(--s1)}
-.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
-.feedback li{margin-bottom:2px}
-.verdict{font-weight:700}
-.feedback .on{font-weight:600}
-.badge{display:inline-block;margin:0 var(--s1) 0 0;padding:0 6px;border:2px solid currentColor;border-radius:3px;font:700 15px/1.4 var(--sans);vertical-align:baseline}
-.badge.ok{color:var(--teal)}.badge.no{color:var(--red)}.badge.me{color:var(--ink)}
-.opt .badges{display:block;margin-top:2px}
-.explain{list-style:none;padding:0;margin:var(--s1) 0 0}
-.explain li{margin:0;padding:var(--s1) 0 var(--s1) var(--s3);border-left:2px solid var(--line)}
-.explain li+li{margin-top:var(--s1)}
-.explain li.mine{border-left-color:var(--teal)}
-.explain .on,.explain .ex{display:block}
-.explain .ex::first-letter{text-transform:uppercase}
-.teach ul.chunks{list-style:none;padding:0}
-.teach ul.chunks li{margin-bottom:var(--s2)}
-.opt .why{display:block;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
-.opt .why code{font-size:.94em}
-.verdict.ok{color:var(--teal)}
-.verdict.no{color:var(--red)}
-.verdict.set{color:var(--amber)}
-.conf-report{color:var(--muted)}
-.fbrow .primary{flex:0 0 auto}
-.recap ul{padding-left:20px}
-.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
-.recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
-.feedback details{margin:var(--s1) 0}
-.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
-.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
-.next-topic{font-weight:700}
-.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
-[hidden]{display:none!important}
-@media (min-width:861px) and (max-height:720px){
-  main{padding-top:var(--s2)}
-  .stage{padding-top:var(--s2)}
-  .col{gap:var(--s2)}
-  .model{padding:var(--s2) var(--s4)}
-  .model figcaption{margin-bottom:var(--s1)}
-  .meta{margin-top:var(--s1)}
-  .opts{gap:6px}
-  legend{margin-bottom:var(--s1)}
-  .row{margin-top:var(--s2)}
-  .teach h2{margin-bottom:var(--s1)}
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
 }
-@media (max-width:860px){
-  main{padding:var(--s3) var(--s4) var(--s4)}
-  .top{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "tools";row-gap:var(--s2)}
-  .tools{justify-content:flex-start;flex-wrap:wrap}
-  .stage{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3)}
-  .col{display:contents}
-  #current-teaching{order:1}#current-task{order:2}#live-model{order:3}#current-control{order:4}.fbrow{order:5}
-  .fbrow{flex-direction:column}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.nojs { margin: 16px; padding: 12px 16px; border: 1px solid var(--pep-warning); border-radius: var(--pep-radius-md); background: var(--pep-warning-soft); color: var(--pep-text-strong); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
 }
-@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}
-  .cmdline{flex-wrap:wrap;row-gap:var(--s1)}
-  .cmdline label{flex:1 0 100%;max-width:none}}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
-
-.top .metaline{grid-column:1/-1}
-.objectives{grid-column:1/-1;margin:var(--s2) 0 0;padding-left:1.25em}
-.teach pre,.filecode{margin:0 0 var(--s2);padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--term);font:14px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
-.filecode .hl{background:var(--amber-soft);outline:1px solid var(--amber)}
-.filecode .bad{background:var(--red-soft);text-decoration:underline wavy var(--red)}
-.builder{display:flex;flex-direction:column;gap:var(--s2)}
-.builder .brow{display:grid;grid-template-columns:minmax(0,1fr);gap:2px}
-.builder .brow span{font-size:15px;font-weight:600}
-.builder select{font:15px var(--mono);min-height:44px;padding:var(--s1) var(--s2);color:var(--ink);background:var(--surface);border:2px solid var(--rule);border-radius:4px;max-width:100%;min-width:0}
-.builder select:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-.orderlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--s1)}
-.orderlist li{display:flex;align-items:center;gap:var(--s2);padding:var(--s1) var(--s2);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
-.orderlist li code{flex:1 1 auto;min-width:0;overflow-wrap:anywhere;white-space:normal}
-.orderlist button{min-height:44px;min-width:44px;padding:var(--s1) var(--s2)}
-.toggles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
-.toggles button{text-align:left;font-family:var(--mono);font-size:15px}
-.toggles button[aria-pressed="true"]::before{content:"\2713  "}
-.boxes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
-.box{padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--bg);min-width:0}
-.box h3{margin:0 0 var(--s1);font-size:15px}
-.box ul{margin:0;padding-left:18px;font-size:15px}
-.box p{margin:0;font-size:15px}
-.chip{display:inline-block;padding:0 6px;border:2px solid var(--rule);border-radius:3px;font:600 14px/1.5 var(--sans)}
-.chip.ok{border-color:var(--teal);color:var(--teal)}
-.chip.no{border-color:var(--red);color:var(--red);border-style:dashed}
-.chip.wait{border-color:var(--amber);color:var(--amber);border-style:dotted}
-.mtable{width:100%;border-collapse:collapse;font-size:15px}
-.mtable th,.mtable td{padding:var(--s1) var(--s2);border-bottom:1px solid var(--line);text-align:left;vertical-align:top;overflow-wrap:anywhere}
-.mtable th{color:var(--muted);font-weight:700}
-.mnote{margin:var(--s2) 0 0;font-size:15px;color:var(--muted)}
-@media (max-width:480px){.boxes,.toggles{grid-template-columns:minmax(0,1fr)}}
-.goals li,.explain li{border-color:var(--rule)}
-.mtable th,.mtable td{border-bottom-color:var(--rule)}
-.teach code,.task code,.opt code,.recap code{white-space:normal;overflow-wrap:anywhere}
+button, .pep-option { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+/* topic bar */
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { display: flex; flex: 1 1 260px; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress .pep-progress { flex: 1 1 96px; width: 96px; max-width: 160px; }
+.pep-topicbar .pep-btn { flex: 0 0 auto; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.pep-progress > span { height: 8px; border-radius: var(--pep-radius-pill); background: var(--pep-control); border: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); border-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning-soft); border: 1px dashed var(--pep-warning); }
+/* regions */
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region > * { min-width: 0; }
+.pep-goals { margin: 0; padding: 12px 16px; list-style: none; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-goals > li:first-child { border-top: 0; }
+.pep-goals .state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; }
+.pep-goals .is-done .state { color: var(--pep-success); }
+.pep-goals-h { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0 0 -8px; }
+.pep-steps-list { margin: 0; padding-left: 24px; }
+.pep-steps-list > li + li { margin-top: 8px; }
+.pep-steps-list .state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-left: 8px; white-space: nowrap; }
+.pep-steps-list .is-done .state { color: var(--pep-success); }
+.pep-summary { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0; }
+.pep-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 4px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); background: var(--pep-control); color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); }
+.pep-chip--ok { border-color: var(--pep-success); color: var(--pep-success); background: var(--pep-success-soft); }
+.pep-chip--no { border-style: dashed; border-color: var(--pep-danger); color: var(--pep-danger); background: var(--pep-danger-soft); }
+.pep-chip--wait { border-style: dotted; border-color: var(--pep-warning); color: var(--pep-warning); background: var(--pep-warning-soft); }
+/* cards, callouts, buttons */
+.pep-card { background: var(--pep-card); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); padding: 16px; min-width: 0; }
+.pep-callout { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text); }
+.pep-callout p { margin: 0 0 8px; } .pep-callout p:last-child { margin: 0; }
+.pep-callout ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-callout--info { background: var(--pep-accent-soft); border-color: var(--pep-accent); }
+.pep-callout--success { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-callout--warning { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-callout--danger { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); max-width: 100%; text-align: center; }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+.pep-btn:disabled, .pep-btn[aria-disabled="true"] { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-btn[aria-pressed="true"] { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); }
+.pep-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+/* options, confidence, feedback */
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-options > legend, .pep-legend { padding: 0; margin: 0 0 8px; font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-option { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; min-width: 0; }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option.is-correct .pep-option__key { background: var(--pep-success); color: var(--pep-page); }
+.pep-option.is-wrong .pep-option__key { background: var(--pep-danger); color: var(--pep-page); }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+.pep-option input:disabled { cursor: default; }
+.pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-option:has(input:disabled) { cursor: default; }
+.pep-explain { display: block; margin: 4px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-tag { display: inline-block; margin: 4px 8px 0 0; padding: 0 8px; border: 1px solid currentColor; border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); }
+.pep-tag--ok { color: var(--pep-success); } .pep-tag--no { color: var(--pep-danger); } .pep-tag--me { color: var(--pep-text-strong); }
+.pep-conf { display: grid; grid-template-columns: repeat(3, minmax(96px, 1fr)); gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-conf > legend { grid-column: 1 / -1; padding: 0; margin: 0 0 8px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-conf .pep-option { grid-template-columns: minmax(0, 1fr); text-align: center; }
+@media (max-width: 480px) { .pep-conf { grid-template-columns: minmax(0, 1fr); } }
+.pep-verdict { font-weight: 700; }
+.pep-verdict--correct { color: var(--pep-success); } .pep-verdict--wrong { color: var(--pep-danger); } .pep-verdict--revealed { color: var(--pep-warning); }
+.feedback:empty { display: none; }
+.feedback ul { margin: 4px 0 0; padding-left: 20px; }
+.feedback li + li { margin-top: 4px; }
+.conf-report { color: var(--pep-text-muted); }
+/* model and code */
+.model { margin: 0; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-bottom: 8px; }
+.boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.box { padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.box h3 { font-size: 14px; line-height: 20px; margin: 0 0 4px; }
+.box ul { margin: 0; padding-left: 18px; font: 400 14px/20px var(--pep-font-sans); }
+.box p { margin: 0; font: 400 14px/20px var(--pep-font-sans); }
+.mnote { margin: 8px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-code, .teach pre, .recap pre { margin: 0 0 12px; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.outlog { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; margin: 8px 0 0; padding: 12px 16px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--pep-text-strong); }
+@media (max-width: 480px) { .outlog { max-height: 180px; } }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); }
+.pep-table td, .pep-table th { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; text-align: left; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.recap ul { padding-left: 20px; }
+.recap details, .sources { margin: 12px 0; padding: 0 0 0 0; border-block: 1px solid var(--pep-line-strong); }
+.recap summary, .sources summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-weight: 600; color: var(--pep-text-strong); }
+.next-topic { font-weight: 600; }
+.complete { margin: 0; }
+/* terminal@1 bridge: keep the drift-checked fragment, adapt sizes around it */
+.term { border-radius: var(--pep-radius-sm); }
+.term-top { font: 600 13px/20px var(--pep-font-sans); }
+.log { font: 400 14px/20px var(--pep-font-mono); max-height: 240px; overscroll-behavior: contain auto; }
+.cmdline .runbtn { min-height: 44px; min-width: 64px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); }
+.cmdline input { scroll-margin-block: 16px; }
+@media (max-width: 480px) { .log { height: 180px; } .cmdline { flex-wrap: wrap; row-gap: 4px; } .cmdline label { flex: 1 0 100%; max-width: none; } }
+/* editor shell */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__secondary { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { margin: 0; padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font: inherit; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; cursor: pointer; white-space: normal; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-editor noscript, .pep-noscript { display: block; padding: 12px; font: 400 14px/20px var(--pep-font-sans); }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__gutter { line-height: 24px; font-size: 16px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* optional disclosures */
+.pep-optional { min-width: 0; border-block: 1px solid var(--pep-line-strong); background: transparent; break-inside: avoid; }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+@media print { .pep-optional > summary { list-style: none; } .pep-optional > summary::-webkit-details-marker { display: none; } }
+/* figure */
+.pep-figure { margin: 0; }
+.pep-figure figcaption { margin-top: 8px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.state[data-state]::before { content: attr(data-state); }
+summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; }
+.feedback details { margin: 8px 0; }
+.pep-optional-area { display: flex; flex-direction: column; gap: 8px; }
+.chip { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text); background: var(--pep-control); }
+.chip.ok { border-color: var(--pep-success); color: var(--pep-success); background: var(--pep-success-soft); }
+.chip.no { border-style: dashed; border-color: var(--pep-danger); color: var(--pep-danger); background: var(--pep-danger-soft); }
+.chip.wait { border-style: dotted; border-color: var(--pep-warning); color: var(--pep-warning); background: var(--pep-warning-soft); }
+.pep-chal { display: block; width: 100%; min-height: 120px; margin: 4px 0 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); white-space: pre; overflow-wrap: normal; }
 </style>
 </head>
 <body>
-<noscript><p class="nojs">This topic needs JavaScript for its practice activities and checks. Turn JavaScript on to take part.</p></noscript>
-<main id="lesson">
-  <header class="top">
+<noscript><p class="nojs">The reading, task steps, file readings and recap below work without JavaScript. Turn JavaScript on to use the practice terminal, editor checks and answer feedback.</p></noscript>
+<main id="lesson" class="pep-main" data-pep-responsive>
+  <header class="pep-topicbar">
     <h1>Reading: image layers and build caching</h1>
-    <div class="tools">
-      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 5</span><span class="pips" aria-hidden="true"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></span></div>
-      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
-      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
-    </div>
-    <ul class="meta metaline"><li>About 8 minutes</li><li>Containers and Compose, topic 2 of 8</li><li>Simulated practice; no container engine runs</li></ul>
-    <ul class="objectives" data-pep-objectives aria-label="Objectives">
-      <li>Explain that RUN, COPY and ADD instructions each add an image layer and that a changed step invalidates the build cache for every later step</li>
-      <li>Reorder a Dockerfile so dependency files are copied and installed before application source, and predict which steps rebuild after a source-only change</li>
-      <li>Use a .dockerignore file to keep build output, version-control folders and local secret files out of the build context</li>
-    </ul>
+    <div class="pep-topicbar__progress" data-pep-progress id="progress"><span id="prog-text">Activity 1 of 5 · 0 done</span><span>about 13 min</span><span class="pep-progress" id="progress-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></div>
+    <button type="button" class="pep-btn" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+    <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
   </header>
-  <div class="stage" id="stage" data-step="1">
-    <div class="col">
-      <section id="current-teaching" class="teach" aria-label="Current teaching">
+  <div class="pep-regions" id="stage" data-step="1">
+    <section class="pep-region" id="panel" data-pep-instructions aria-label="Reading and instructions">
+      <div id="current-teaching" class="teach">
 <div data-step="1">
   <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
-  <p>Practice, not scored.</p>
+<p>Practice, not scored.</p>
 </div>
 <div data-step="2" data-pep-teaching>
   <h2 id="teach-2-h" tabindex="-1">Layers and the build cache</h2>
-  <p><code>RUN</code>, <code>COPY</code> and <code>ADD</code> change files, so each adds a layer to the image. Settings such as <code>ENV</code> or <code>CMD</code> add no files.</p>
+<p><code>RUN</code>, <code>COPY</code> and <code>ADD</code> change files, so each adds a layer to the image. Settings such as <code>ENV</code> or <code>CMD</code> add no files.</p>
   <p><code>docker build</code> reuses a stored layer, shown as <code>CACHED</code>, when the step and its copied files are unchanged.</p>
   <p>When one step changes, its cache is invalidated and <strong>every later step</strong> runs again.</p>
 </div>
 <div data-step="3" data-pep-teaching>
   <h2 id="teach-3-h" tabindex="-1">Slow, stable steps first</h2>
-  <p>Source changes often; dependency lists rarely. So copy the dependency files, install, then copy the source.</p>
+<p>Source changes often; dependency lists rarely. So copy only the dependency files, install, then copy the source.</p>
   <p>A source-only change then invalidates only the source copy and later steps; the slow install stays <code>CACHED</code>.</p>
 </div>
 <div data-step="4" data-pep-teaching>
   <h2 id="teach-4-h" tabindex="-1">Keep the build context small</h2>
-  <p><code>docker build .</code> sends the folder, the build context, to the builder; <code>COPY . .</code> copies it all.</p>
+<p><code>docker build .</code> sends the folder, the build context, to the builder; <code>COPY . .</code> copies it all.</p>
   <p>A <code>.dockerignore</code> file there lists what to leave out, like <code>.gitignore</code>: build output (<code>dist</code>), installed <code>node_modules</code>, <code>.git</code> and secret files such as <code>.env</code>. Ignored files never reach the image.</p>
 </div>
 <div data-step="5" data-pep-teaching>
   <h2 id="teach-5-h" tabindex="-1">Apply it: a dependency change</h2>
-  <p>Find the first changed step.</p>
+<p>Find the first changed step.</p>
 </div>
-<div data-step="6" hidden data-pep-recap class="recap">
+<div data-step="6" data-pep-recap class="recap">
   <h2 id="teach-6-h" tabindex="-1">Recap</h2>
-  <ul><li><code>RUN</code>, <code>COPY</code> and <code>ADD</code> add layers. A changed step invalidates every later step.</li><li>Dependency files, install, then source: a source change keeps the install cached.</li><li><code>.dockerignore</code> keeps output, <code>.git</code> and secrets out of the context.</li></ul>
+<ul><li><code>RUN</code>, <code>COPY</code> and <code>ADD</code> add layers. A changed step invalidates every later step.</li><li>Dependency files, install, then source: a source change keeps the install cached.</li><li><code>.dockerignore</code> keeps output, <code>.git</code> and secrets out of the context.</li></ul>
   <details data-section-skip>
     <summary>Cheat sheet</summary>
     <pre>FROM node:24-alpine
@@ -277,33 +331,47 @@ dist
   <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live official sources on 2026-10-13. Versions shown: Docker Engine 29 with BuildKit and the node:24-alpine image. Build output is simulated and shortened: timings and some lines are left out.</p><ul><li><a href="https://docs.docker.com/get-started/docker-concepts/building-images/understanding-image-layers/" rel="noopener">Docker Docs: Understanding the image layers</a></li><li><a href="https://docs.docker.com/build/cache/" rel="noopener">Docker Docs: Docker build cache</a></li><li><a href="https://docs.docker.com/build/cache/invalidation/" rel="noopener">Docker Docs: Build cache invalidation</a></li><li><a href="https://docs.docker.com/build/cache/optimize/" rel="noopener">Docker Docs: Optimize cache usage in builds (order your layers, keep the context small)</a></li><li><a href="https://docs.docker.com/build/concepts/context/" rel="noopener">Docker Docs: Build context and .dockerignore files</a></li><li><a href="https://docs.docker.com/reference/dockerfile/" rel="noopener">Dockerfile reference: RUN, COPY, ADD</a></li></ul></details>
   <p class="next-topic">Next topic: <a href="../multi-stage-builds/artifact.html" rel="noopener">Multi-stage builds</a></p>
 </div>
-      </section>
-      <section id="current-task" class="task" aria-label="Current task">
-<div data-step="1"><p id="task-1">With the Dockerfile shown, you edit <code>src/App.jsx</code> and build again. Which steps run again?</p></div>
-<div data-step="2"><p id="task-2">Build twice: unchanged, then after a source change. Watch for <code>CACHED</code>.</p>
-  <ul class="goals"><li data-goal="same"><span>Build with nothing changed</span><span class="st"></span></li><li data-goal="src"><span>Build after changing <code>src/App.jsx</code></span><span class="st"></span></li></ul></div>
-<div data-step="3"><p id="task-3">Reorder so a source change keeps <code>npm ci</code> cached; prove it with a build.</p>
-  <ul class="goals"><li data-goal="order"><span>Dependency files, install, source, build</span><span class="st"></span></li><li data-goal="fast"><span>Source change: <code>npm ci</code> stays <code>CACHED</code></span><span class="st"></span></li></ul></div>
-<div data-step="4"><p id="task-4">Choose <code>.dockerignore</code> entries: drop output, installed packages, version control and secrets; keep what the build needs.</p>
-  <ul class="goals"><li data-goal="ign"><span>A <code>.dockerignore</code> that passes the check</span><span class="st"></span></li></ul></div>
-<div data-step="5"><p id="task-apply">In the reordered Dockerfile, you add a dependency to <code>package.json</code>. Which steps run again?</p>
-  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same change. Which build output would you see?</p></div>
-<div data-step="6"><p>All activities finished.</p><p id="complete-msg" class="complete"></p></div>
-      </section>
-      <div class="fbrow">
-        <div id="current-feedback" class="feedback" aria-live="polite">
-<div data-step="1" data-pep-predict-feedback></div>
-<div data-step="2" data-pep-explore-feedback></div>
-<div data-step="3" data-pep-explore-feedback></div>
-<div data-step="4" data-pep-explore-feedback></div>
-<div data-step="5" data-pep-apply-feedback></div>
-<div data-step="6" ></div>
-        </div>
-        <button type="button" class="primary" id="next" hidden>Continue</button>
       </div>
-    </div>
-    <div class="col">
-<figure id="live-model" class="model" aria-labelledby="model-cap">
+      <p class="pep-goals-h" id="goals-h">Goals</p>
+      <ul class="pep-goals" data-pep-objectives aria-labelledby="goals-h">
+      <li data-obj="o1"><span>Explain that RUN, COPY and ADD instructions each add an image layer and that a changed step invalidates the build cache for every later step</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o2"><span>Reorder a Dockerfile so dependency files are copied and installed before application source, and predict which steps rebuild after a source-only change</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o3"><span>Use a .dockerignore file to keep build output, version-control folders and local secret files out of the build context</span><span class="state" data-state="open"></span></li>
+      </ul>
+      <div id="current-task" class="task">
+<div data-step="1">
+<p id="task-1">With the Dockerfile shown, you edit <code>src/App.jsx</code> and build again. Which steps run again?</p>
+</div>
+<div data-step="2">
+<ol class="pep-steps-list" id="task-2"><li>Press <strong>Run docker build</strong> once, then again without changing anything.</li><li>Press <strong>Change src/App.jsx</strong>, then build again.</li><li>Compare which steps say <code>CACHED</code>.</li><li data-goal="same">Build with nothing changed <span class="state" data-state="open"></span></li><li data-goal="src">Build after changing <code>src/App.jsx</code> <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="3">
+<ol class="pep-steps-list" id="task-3"><li>In the editor, split the copy: copy only <code>package.json</code> and <code>package-lock.json</code> first.</li><li>Put <code>RUN npm ci</code> after that copy, then <code>COPY . .</code>, then the build.</li><li>Press <strong>Run checks</strong>: the Output tab simulates a build after a source-only change.</li><li>Done when the checks pass and Output shows <code>npm ci</code> as <code>CACHED</code>.</li><li data-goal="order">Dockerfile passes, with <code>npm ci</code> cached <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="4">
+<ol class="pep-steps-list" id="task-4"><li>Write one pattern per line in <code>.dockerignore</code>.</li><li>Leave out build output, installed packages, version control and local secret files.</li><li>Keep everything the build needs: <code>package.json</code>, <code>package-lock.json</code>, <code>src</code>, <code>public</code>, <code>index.html</code>, <code>vite.config.js</code>.</li><li>Press <strong>Run checks</strong>; Output lists what is sent to the builder.</li><li data-goal="ign"><code>.dockerignore</code> passes the checks <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="5">
+<p id="task-apply">In the reordered Dockerfile, you add a dependency to <code>package.json</code>. Which steps run again?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same change. Which build output would you see?</p>
+</div>
+<div data-step="6">
+<p>All activities finished.</p><div id="complete-msg" class="complete"></div>
+</div>
+      </div>
+      <p class="pep-summary" id="goal-summary" hidden></p>
+
+    </section>
+    <section class="pep-region" id="workspace" data-pep-workspace="activity" aria-label="Workspace">
+      <div id="current-head">
+<div data-step="1"><h2>Start with a guess</h2></div>
+<div data-step="2"><h2>Layers and the build cache</h2></div>
+<div data-step="3"><h2>Slow, stable steps first</h2></div>
+<div data-step="4"><h2>Keep the build context small</h2></div>
+<div data-step="5"><h2>Apply it: a dependency change</h2></div>
+<div data-step="6"><h2>Finished</h2></div>
+      </div>
+      <figure id="live-model" class="model" aria-labelledby="model-cap">
 <figcaption id="model-cap">Front-end Dockerfile and last build (simulated)</figcaption>
   <pre class="filecode" id="m-file" aria-label="Dockerfile">FROM node:24-alpine
 WORKDIR /app
@@ -312,69 +380,158 @@ RUN npm ci
 RUN npm run build</pre>
   <p class="mnote" id="m-state">Nothing built yet.</p>
   <div class="log" id="m-out" role="status" aria-label="Last build output" hidden></div>
-</figure>
-      <section id="current-control" class="control" aria-label="Your turn">
+      </figure>
+      <div id="current-control" class="control">
 <div data-step="1">
-  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): with FROM node:24-alpine, WORKDIR /app, COPY . ., RUN npm ci, RUN npm run build, you change src/App.jsx and build again. Answer: COPY . . and every step after it, including npm ci, run again. The changed file invalidates COPY . ., and every later step is rebuilt. Not only the build step; not every step (FROM and WORKDIR stay cached); not none (a copied file changed).">
-    <legend>Prediction</legend>
-    <div class="opts one"><label class="opt"><input type="radio" name="predict" value="a"> <span>Only <code>RUN npm run build</code></span></label><label class="opt"><input type="radio" name="predict" value="b"> <span><code>COPY . .</code> and every later step</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span>Every step, <code>FROM</code> included</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span>None of them</span></label></div>
+  <fieldset class="pep-options" data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): with FROM node:24-alpine, WORKDIR /app, COPY . ., RUN npm ci, RUN npm run build, you change src/App.jsx and build again. Answer: COPY . . and every step after it, including npm ci, run again. The changed file invalidates COPY . ., and every later step is rebuilt. Not only the build step; not every step (FROM and WORKDIR stay cached); not none (a copied file changed).">
+    <legend>Your prediction</legend>
+    <label class="pep-option"><input type="radio" name="predict" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Only <code>RUN npm run build</code></span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text"><code>COPY . .</code> and every later step</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Every step, <code>FROM</code> included</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">None of them</span></label>
   </fieldset>
-  <div class="row confrow">
-  <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
-    <legend id="pconf-help">Confidence, then check</legend>
-    <label class="opt"><input type="radio" name="pconf" value="low"> <span>Low</span></label>
-    <label class="opt"><input type="radio" name="pconf" value="medium"> <span>Medium</span></label>
-    <label class="opt"><input type="radio" name="pconf" value="high"> <span>High</span></label>
-  </fieldset>
-  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+  <fieldset class="pep-conf" id="pconf" aria-describedby="pconf-help"><legend id="pconf-help">How sure are you? Then check.</legend><label class="pep-option"><input type="radio" name="pconf" value="low"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="pconf" value="medium"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="pconf" value="high"><span class="pep-option__text">Certain</span></label></fieldset>
+  <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button></div>
+</div>
+<div data-step="2">
+  <div data-interaction="explore" data-pep-explore id="x2" data-static-alt="Activity: build the Dockerfile twice. With nothing changed, every step after FROM shows CACHED. After changing src/App.jsx, COPY . . changes, so it and both later steps (npm ci and npm run build) run again: [3/5] COPY . ., [4/5] RUN npm ci, [5/5] RUN npm run build.">
+  <div class="pep-row"><button type="button" class="pep-btn" id="b-src" data-act="src">Change <code>src/App.jsx</code></button><button type="button" class="pep-btn pep-btn--primary" id="b-build" data-act="build">Run docker build</button></div>
   </div>
 </div>
-<div data-step="2" hidden>
-<fieldset id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-2" data-static-alt="Activity: build the Dockerfile twice. With nothing changed, every step after FROM shows CACHED. After changing src/App.jsx, COPY . . changes, so it and both later steps (npm ci and npm run build) run again: [3/5] COPY . ., [4/5] RUN npm ci, [5/5] RUN npm run build."><legend>Build controls</legend><div class="row"><button type="button" class="ghost" id="b-src" data-act="src">Change <code>src/App.jsx</code></button><button type="button" class="primary" id="b-build" data-act="build">Run <code>docker build -t shop-web .</code></button></div></fieldset>
+<div data-step="3">
+  <div data-pep-workspace="code" data-interaction="terminal" data-steps="2" data-static-alt="Editor activity: reorder the Dockerfile. A cache-friendly order after FROM node:24-alpine and WORKDIR /app is: COPY package.json package-lock.json ./, RUN npm ci, COPY . ., RUN npm run build. With that order, a build after a source-only change shows CACHED for the package copy and npm ci, and runs only COPY . . and npm run build.">
+  <div class="pep-editor" data-ed="3">
+    <div class="pep-editor__bar"><span class="pep-editor__file" id="ed-3-file">Dockerfile</span><span class="pep-editor__secondary">Practice editor · checks run offline</span><button type="button" class="pep-btn pep-btn--primary" id="ed-3-run" data-act="edrun" data-ed="3">Run checks</button><button type="button" class="pep-btn" id="ed-3-reset" data-act="edreset" data-ed="3">Reset code</button></div>
+    <div class="pep-editor__code"><pre class="pep-editor__gutter" id="ed-3-gutter" aria-hidden="true">1</pre><textarea class="pep-editor__input" id="ed-3-input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Dockerfile editor" aria-describedby="task-3">FROM node:24-alpine
+WORKDIR /app
+COPY . .
+RUN npm ci
+RUN npm run build
+# TODO: reorder and split the copy so a
+# source-only change keeps npm ci CACHED</textarea></div>
+    <div class="pep-editor__tabs" role="tablist" aria-label="Results"><button type="button" role="tab" id="ed-3-tab-problems" aria-selected="true" aria-controls="ed-3-problems" data-act="edtab" data-ed="3" data-tab="problems">Problems</button><button type="button" role="tab" id="ed-3-tab-output" aria-selected="false" tabindex="-1" aria-controls="ed-3-output" data-act="edtab" data-ed="3" data-tab="output">Output</button></div>
+    <div class="pep-editor__panel" role="tabpanel" id="ed-3-problems" aria-labelledby="ed-3-tab-problems" tabindex="0">Not run yet.</div>
+    <div class="pep-editor__panel" role="tabpanel" id="ed-3-output" aria-labelledby="ed-3-tab-output" tabindex="0" hidden>(no output)</div>
+    <div class="pep-editor__status" id="ed-3-status" aria-live="polite">Not run yet.</div>
+  </div>
+  <noscript data-pep-no-js><div class="pep-noscript"><p><strong>Task:</strong> change this Dockerfile so that a change to a source file keeps the <code>npm ci</code> step cached.</p><pre>FROM node:24-alpine
+WORKDIR /app
+COPY . .
+RUN npm ci
+RUN npm run build
+# TODO: reorder and split the copy so a
+# source-only change keeps npm ci CACHED</pre><p><strong>Supported in the practice editor:</strong> FROM, WORKDIR, COPY, RUN and comments.</p><p><strong>How to compare:</strong> list the steps in order and mark the first one whose copied files include <code>src/App.jsx</code>; that step and every later one run again. Your order is right when <code>npm ci</code> comes before that step.</p></div></noscript>
+  </div>
 </div>
-<div data-step="3" hidden>
-  <fieldset id="x3" data-interaction="drag" data-pep-explore aria-describedby="task-3" data-static-alt="Activity: reorder the Dockerfile. Correct order after FROM node:24-alpine and WORKDIR /app: COPY package.json package-lock.json ./, then RUN npm ci, then COPY . ., then RUN npm run build. After a source change, the build shows CACHED for the package copy and npm ci, and runs only COPY . . and npm run build."><legend>Steps after <code>WORKDIR /app</code> (use Up to move a step)</legend>
-  <ol class="orderlist" id="olist"></ol>
-  <div class="row"><button type="button" class="ghost" id="o-src" data-act="osrc">Change <code>src/App.jsx</code></button><button type="button" class="primary" id="o-build" data-act="obuild">Build</button></div>
-  </fieldset>
-</div>
-<div data-step="4" hidden>
-<fieldset id="x4" data-interaction="explore" data-pep-explore aria-describedby="task-4" data-static-alt="Activity: choose .dockerignore entries. Ignore node_modules (installed packages, rebuilt by npm ci), dist (build output), .git (version control) and .env (local secrets). Keep package.json, package-lock.json, src, public, index.html and vite.config.js, which the build needs."><legend>.dockerignore entries (press to ignore)</legend><div class="toggles" id="ig"></div><div class="row"><button type="button" class="primary" id="ig-check" data-act="igcheck">Check .dockerignore</button></div><p class="mnote" id="ig-size"></p></fieldset>
+<div data-step="4">
+  <div data-pep-workspace="code" data-interaction="terminal" data-steps="4" data-static-alt="Editor activity: write .dockerignore. Leave out node_modules (installed packages, rebuilt by npm ci), dist (build output), .git (version control) and .env (local secrets). Keep package.json, package-lock.json, src, public, index.html and vite.config.js, which the build needs.">
+  <div class="pep-editor" data-ed="4">
+    <div class="pep-editor__bar"><span class="pep-editor__file" id="ed-4-file">.dockerignore</span><span class="pep-editor__secondary">Practice editor · checks run offline</span><button type="button" class="pep-btn pep-btn--primary" id="ed-4-run" data-act="edrun" data-ed="4">Run checks</button><button type="button" class="pep-btn" id="ed-4-reset" data-act="edreset" data-ed="4">Reset code</button></div>
+    <div class="pep-editor__code"><pre class="pep-editor__gutter" id="ed-4-gutter" aria-hidden="true">1</pre><textarea class="pep-editor__input" id="ed-4-input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label=".dockerignore editor" aria-describedby="task-4"># TODO: one pattern per line: what the
+# build context must leave out
+</textarea></div>
+    <div class="pep-editor__tabs" role="tablist" aria-label="Results"><button type="button" role="tab" id="ed-4-tab-problems" aria-selected="true" aria-controls="ed-4-problems" data-act="edtab" data-ed="4" data-tab="problems">Problems</button><button type="button" role="tab" id="ed-4-tab-output" aria-selected="false" tabindex="-1" aria-controls="ed-4-output" data-act="edtab" data-ed="4" data-tab="output">Output</button></div>
+    <div class="pep-editor__panel" role="tabpanel" id="ed-4-problems" aria-labelledby="ed-4-tab-problems" tabindex="0">Not run yet.</div>
+    <div class="pep-editor__panel" role="tabpanel" id="ed-4-output" aria-labelledby="ed-4-tab-output" tabindex="0" hidden>(no output)</div>
+    <div class="pep-editor__status" id="ed-4-status" aria-live="polite">Not run yet.</div>
+  </div>
+  <noscript data-pep-no-js><div class="pep-noscript"><p><strong>Task:</strong> write a <code>.dockerignore</code> for the front-end folder, one pattern per line.</p><p>The folder holds: <code>package.json</code>, <code>package-lock.json</code>, <code>src/</code>, <code>public/</code>, <code>index.html</code>, <code>vite.config.js</code>, <code>node_modules/</code>, <code>dist/</code>, <code>.git/</code> and <code>.env</code>.</p><p><strong>Supported:</strong> plain names and folder names, one per line, and comments starting with #.</p><p><strong>How to compare:</strong> for each entry in the folder, ask whether the build needs it. Everything the build does not need, and every secret, belongs in the file.</p></div></noscript>
+  </div>
 </div>
 <div data-step="5">
   <div data-first>
-  <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: reordered Dockerfile (FROM, WORKDIR, COPY package.json package-lock.json ./, RUN npm ci, COPY . ., RUN npm run build); you change package.json. Answer: steps 3 to 6 run again, because the first changed step is the package copy and every later step is invalidated. Not only npm ci (later steps rebuild too); not only steps 5 and 6 (package.json is copied in step 3); not none (a copied file changed). Retry as build output: run 3/6, run 4/6, run 5/6, run 6/6.">
+  <fieldset class="pep-options" id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: reordered Dockerfile (FROM, WORKDIR, COPY package.json package-lock.json ./, RUN npm ci, COPY . ., RUN npm run build); you change package.json. Answer: steps 3 to 6 run again, because the first changed step is the package copy and every later step is invalidated. Not only npm ci (later steps rebuild too); not only steps 5 and 6 (package.json is copied in step 3); not none (a copied file changed). Retry as build output: run 3/6, run 4/6, run 5/6, run 6/6.">
     <legend>Choose the steps that run again</legend>
-    <div class="opts one"><label class="opt"><input type="radio" name="apply-a" value="a"> <span>Steps 3 to 6</span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span>Only <code>RUN npm ci</code></span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span>Only steps 5 and 6</span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span>None: <code>src</code> did not change</span></label></div>
+    <label class="pep-option"><input type="radio" name="apply-a" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Steps 3 to 6</span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Only <code>RUN npm ci</code></span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Only steps 5 and 6</span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">None: <code>src</code> did not change</span></label>
   </fieldset>
-  <div class="row confrow">
-  <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
-    <legend id="conf-help">Confidence, then check</legend>
-    <label class="opt"><input type="radio" name="conf" value="low"> <span>Low</span></label>
-    <label class="opt"><input type="radio" name="conf" value="medium"> <span>Medium</span></label>
-    <label class="opt"><input type="radio" name="conf" value="high"> <span>High</span></label>
-  </fieldset>
-  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
-  </div>
+  <fieldset class="pep-conf" id="conf" aria-describedby="conf-help"><legend id="conf-help">How sure are you? Then check.</legend><label class="pep-option"><input type="radio" name="conf" value="low"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="conf" value="medium"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="conf" value="high"><span class="pep-option__text">Certain</span></label></fieldset>
+  <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button></div>
   </div>
   <div data-retry hidden>
-    <fieldset id="apply-b" aria-describedby="task-apply-b">
+    <fieldset class="pep-options" id="apply-b" aria-describedby="task-apply-b">
       <legend>Choose the build output</legend>
-      <div class="opts one"><label class="opt"><input type="radio" name="apply-b" value="a"> <span><code>CACHED</code> 3/6 · <code>CACHED</code> 4/6 · run 5/6 · run 6/6</span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span>run 3/6 · run 4/6 · <code>CACHED</code> 5/6 · <code>CACHED</code> 6/6</span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span>run 3/6 · run 4/6 · run 5/6 · run 6/6</span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span><code>CACHED</code> 3/6 to 6/6</span></label></div>
+      <label class="pep-option"><input type="radio" name="apply-b" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text"><code>CACHED</code> 3/6 · <code>CACHED</code> 4/6 · run 5/6 · run 6/6</span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">run 3/6 · run 4/6 · <code>CACHED</code> 5/6 · <code>CACHED</code> 6/6</span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">run 3/6 · run 4/6 · run 5/6 · run 6/6</span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text"><code>CACHED</code> 3/6 to 6/6</span></label>
     </fieldset>
-    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+    <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
   </div>
 </div>
 <div data-step="6"></div>
-      </section>
-    </div>
+      </div>
+      <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-explore-feedback></div>
+<div data-step="5" data-pep-apply-feedback></div>
+<div data-step="6"></div>
+      </div>
+      <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="next" hidden>Continue</button></div>
+      <div class="pep-optional-area"><details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+  <summary>Challenge (optional)</summary>
+  <div class="pep-optional__body">
+    <p data-pep-optional-time><strong>Optional time:</strong> about 4 minutes, in addition to the topic time</p>
+    <p data-pep-success-criteria><strong>Success criteria:</strong> You write the cache-friendly order for a different project and can explain which steps a source-only change reruns.</p>
+    <p>A Python service has <code>requirements.txt</code> and an <code>app/</code> folder, and its Dockerfile today is <code>FROM python:3.13-slim</code>, <code>WORKDIR /srv</code>, <code>COPY . .</code>, <code>RUN pip install -r requirements.txt</code>, <code>CMD ["python", "-m", "app"]</code>. Write the reordered version below, then list which steps run again when only a file in <code>app/</code> changes. Nothing here is checked or counted.</p><label class="pep-legend" for="chal-input">Your reordered Dockerfile (optional)</label><textarea id="chal-input" class="pep-editor__input pep-chal" rows="6" spellcheck="false" autocapitalize="off">FROM python:3.13-slim
+WORKDIR /srv
+</textarea><div class="pep-row"><button type="button" class="pep-btn" id="chal-reset" data-act="chalreset">Reset optional starter</button></div>
+  </div>
+</details></div>
+    </section>
   </div>
 </main>
 <script>
+/* Dockerfile reader for the practice editor: instructions, stages and working directories. */
+function dfParse(text){var lines=text.split('\n'),out=[],buf='',start=0;
+  for(var i=0;i<lines.length;i++){var raw=lines[i],t=raw.trim();if(!buf){start=i+1;}
+    if(!buf&&(!t||t.charAt(0)==='#')){continue;}
+    if(/\\$/.test(t)){buf+=t.slice(0,-1)+' ';continue;}
+    buf+=t;var m=buf.match(/^(\S+)\s*(.*)$/);out.push({line:start,op:m[1].toUpperCase(),args:m[2],raw:buf});buf='';}
+  return out;}
+function dfWords(args){var a=args.trim();if(a.charAt(0)==='['){try{return JSON.parse(a).map(String);}catch(e){return null;}}return a.split(/\s+/).filter(Boolean);}
+var DF_OPS={FROM:1,WORKDIR:1,COPY:1,ADD:1,RUN:1,ENV:1,ARG:1,EXPOSE:1,CMD:1,ENTRYPOINT:1,USER:1,LABEL:1};
+function t2Check3(text){
+  var ins=dfParse(text),P=[],out=[];
+  ins.forEach(function(x){if(!DF_OPS[x.op]){P.push({line:x.line,kind:'limit',msg:x.op+' is not supported in this practice editor (FROM, WORKDIR, COPY, RUN are).'});}});
+  var from=ins[0];if(!from||from.op!=='FROM'||!/^node:24/.test(from.args.trim())){P.push({line:from?from.line:1,kind:'error',msg:'Start with FROM node:24-alpine, as in the starter.'});}
+  function idx(f){for(var i=0;i<ins.length;i++){if(f(ins[i])){return i;}}return -1;}
+  var pkg=idx(function(x){return x.op==='COPY'&&/\bpackage\.json\b/.test(x.args)&&/\bpackage-lock\.json\b/.test(x.args)&&!/(^|\s)\.(\s|$)/.test(x.args.replace(/\s\S+$/,''));});
+  var ci=idx(function(x){return x.op==='RUN'&&/\bnpm ci\b/.test(x.args);});
+  var all=idx(function(x){return x.op==='COPY'&&/^\.\s/.test(x.args.trim());});
+  var bld=idx(function(x){return x.op==='RUN'&&/\bnpm run build\b/.test(x.args);});
+  if(ci<0){P.push({line:ins.length?ins[ins.length-1].line:1,kind:'error',msg:'Keep RUN npm ci: it installs the dependencies.'});}
+  if(bld<0){P.push({line:ins.length?ins[ins.length-1].line:1,kind:'error',msg:'Keep RUN npm run build: it builds the site.'});}
+  if(all<0){P.push({line:1,kind:'error',msg:'Keep COPY . . so the source reaches the image.'});}
+  if(ci>=0&&pkg<0){P.push({line:ins[ci].line,kind:'error',msg:'npm ci needs package.json and package-lock.json copied first: add a COPY of just those two files before it.'});}
+  if(pkg>=0&&ci>=0&&pkg>ci){P.push({line:ins[pkg].line,kind:'error',msg:'Copy the package files before RUN npm ci, not after.'});}
+  if(ci>=0&&all>=0&&all<ci){P.push({line:ins[all].line,kind:'error',msg:'COPY . . comes before npm ci, so any source change reruns npm ci. Move COPY . . after it.'});}
+  if(all>=0&&bld>=0&&bld<all){P.push({line:ins[bld].line,kind:'error',msg:'npm run build needs the source: put it after COPY . .'});}
+  var n=ins.filter(function(x){return x.op!=='FROM';}).length+1,hit=false,k=1,ciCached=false;
+  out.push('Simulated: docker build after changing only src/App.jsx (shortened)');
+  ins.forEach(function(x){if(!DF_OPS[x.op]){return;}var touches=x.op==='COPY'&&(/^\.\s/.test(x.args.trim())||/\bsrc\b/.test(x.args));if(touches){hit=true;}var cached=x.op!=='FROM'&&!hit;if(x.op==='RUN'&&/npm ci/.test(x.args)&&cached){ciCached=true;}
+   out.push(' => '+(cached?'CACHED ':'')+'['+(k++)+'/'+n+'] '+x.op+' '+x.args);});
+  var ok=!P.length&&ciCached;
+  return {problems:P,output:out,ok:ok,summary:ok?'npm ci stayed CACHED after a source-only change.':'',note:ok?'Only the source copy and the build ran; the slow install was reused.':''};}
+function t2Check4(text){
+  var P=[],have={},lines=text.split('\n');
+  var FILES=['package.json','package-lock.json','src','public','index.html','vite.config.js','node_modules','dist','.git','.env'];
+  var NEED={'node_modules':'installed packages; npm ci recreates them inside the image','dist':'old build output; the build makes it fresh','.git':'version control history the image never needs','.env':'local secrets must never reach the image'};
+  lines.forEach(function(l,i){var t=l.trim();if(!t||t.charAt(0)==='#'){return;}if(/[*?!\[]/.test(t)){P.push({line:i+1,kind:'limit',msg:'Patterns with *, ?, ! or [ are not supported in this practice editor; write plain names.'});return;}
+   var n=t.replace(/^\.\//,'').replace(/^\/+/,'').replace(/\/+$/,'');have[n]=i+1;if(FILES.indexOf(n)<0&&n!=='.'){P.push({line:i+1,kind:'limit',msg:n+' is not in this folder; this practice folder has '+FILES.join(', ')+'.'});}
+   if(n==='.'){P.push({line:i+1,kind:'error',msg:'"." would leave out the whole context, so nothing could be copied.'});}});
+  Object.keys(NEED).forEach(function(k){if(!have[k]){P.push({line:lines.length,kind:'error',msg:k+' is missing: '+NEED[k]+'.'});}});
+  ['package.json','package-lock.json','src','public','index.html','vite.config.js'].forEach(function(k){if(have[k]){P.push({line:have[k],kind:'error',msg:k+': the build needs it. Remove this line.'});}});
+  var sent=FILES.filter(function(f){return !have[f];});
+  return {problems:P,output:['Sent to the builder: '+sent.join(', '),'Left out: '+(FILES.filter(function(f){return have[f];}).join(', ')||'nothing')],ok:!P.length,summary:'Only what the build needs is sent.',note:!P.length?'The context now holds only what the build needs; secrets and old output stay out.':''};}
 var TOPIC={
-steps:6,acts:["predict","cache","order","ignore","apply"],
-init:function(){return {g:{},built:0,srcChanged:false,order:['all','pkg','ci','build'],oChanged:false,ig:{}};},
-goals:{2:['same','src'],3:['order','fast'],4:['ign']},
+steps:6,acts:["predict","cache","order","ignore","apply"],objActs:{"o1":["cache","apply"],"o2":["order","apply"],"o3":["ignore"]},editors:{},
+init:function(){return {g:{},built:0,srcChanged:false};},
+goals:{2:['same','src'],3:['order'],4:['ign']},
 predict:{correct:'b',why:{
  a:'COPY . . is the first step whose input changed, so it and every later step run again, not just the last.',
  b:'the changed file invalidates COPY . ., and every later step rebuilds, including the slow npm ci.',
@@ -386,7 +543,11 @@ apply:{A:{fs:'apply-a',correct:'a',okNote:'<p>The package copy is the first chan
   hint:'Find the first step that copies the changed file. That step and every later one run again.'},
  B:{fs:'apply-b',correct:'c',reveal:'The package copy in step 3 changed, so steps 3, 4, 5 and 6 all run: <code>run 3/6 · run 4/6 · run 5/6 · run 6/6</code>.',
   why:{a:'that is a source-only change, not a package.json change.',b:'steps 5 and 6 come after the changed step 3, so they cannot stay cached.',c:'step 3 changed, so it and every later step run.',d:'a copied file changed, so step 3 cannot be cached.'}}},
-act:function(a,b,S,api){var t=S.t,self=this;
+editors:{
+ 3:{file:'Dockerfile',goal:'order',starter:"FROM node:24-alpine\nWORKDIR /app\nCOPY . .\nRUN npm ci\nRUN npm run build\n# TODO: reorder and split the copy so a\n# source-only change keeps npm ci CACHED",check:t2Check3},
+ 4:{file:'.dockerignore',goal:'ign',starter:"# TODO: one pattern per line: what the\n# build context must leave out\n",check:t2Check4}
+},
+act:function(a,b,S,api){var t=S.t;
  function show(lines){var o=api.$('m-out');o.hidden=false;o.innerHTML='';lines.forEach(function(l){var d=document.createElement('div');d.textContent=l;o.appendChild(d);});}
  function head(n){return ['[+] Building (simulated, shortened)',' => [internal] load build definition from Dockerfile',' => [internal] load .dockerignore',' => [1/'+n+'] FROM docker.io/library/node:24-alpine'];}
  if(a==='src'){t.srcChanged=true;api.say('<p>You changed <code>src/App.jsx</code>. Nothing is rebuilt until you run the build.</p>'+api.goalStatus());}
@@ -395,34 +556,13 @@ act:function(a,b,S,api){var t=S.t,self=this;
   else if(!t.srcChanged){L.push(' => CACHED [3/5] COPY . .',' => CACHED [4/5] RUN npm ci',' => CACHED [5/5] RUN npm run build');msg='Nothing changed, so every step reused its stored layer: CACHED.';api.goal('same');}
   else{L.push(' => [3/5] COPY . .',' => [4/5] RUN npm ci',' => [5/5] RUN npm run build');msg='src/App.jsx changed, so COPY . . ran again, and so did every step after it, including the slow npm ci, although the dependencies did not change.';t.srcChanged=false;api.goal('src');}
   L.push(' => exporting to image');show(L);api.say('<p>'+msg+'</p>'+api.goalStatus());}
- if(a==='up'){var i=+b.getAttribute('data-i');if(i>0){var o=t.order;var x=o[i];o[i]=o[i-1];o[i-1]=x;}t.oChanged=false;var ok=self.okOrder(t);if(ok){api.goal('order');}
-  api.say('<p>'+(ok?'Good order: dependency files, install, then source and build.':'Order changed. Check it against the rule: dependency files and install before the source copy.')+'</p>'+api.goalStatus());}
- if(a==='osrc'){t.oChanged=true;api.say('<p>You changed <code>src/App.jsx</code>. Now build.</p>'+api.goalStatus());}
- if(a==='obuild'){var N={all:'COPY . .',pkg:'COPY package.json package-lock.json ./',ci:'RUN npm ci',build:'RUN npm run build'};var L2=head(6);L2.push(' => CACHED [2/6] WORKDIR /app');var hit=false,ciCached=true,m2;
-  t.order.forEach(function(k,j){var changed=t.oChanged&&(k==='all');if(changed){hit=true;}var cached=t.oChanged&&!hit;if(k==='ci'&&!cached){ciCached=false;}L2.push(' => '+(cached?'CACHED ':'')+'['+(j+3)+'/6] '+N[k]);});
-  L2.push(' => exporting to image');show(L2);
-  if(!t.oChanged){m2='Build done. Change src/App.jsx, then build again to test the order.';}
-  else if(ciCached&&self.okOrder(t)){m2='Only COPY . . and the build ran. npm ci stayed CACHED because package.json did not change.';api.goal('fast');}
-  else{m2='npm ci ran again: it comes after the source copy, so the source change invalidated it.';}
-  t.oChanged=false;api.say('<p>'+m2+'</p>'+api.goalStatus());}
- if(a==='ig'){var k=b.getAttribute('data-f');t.ig[k]=!t.ig[k];b.setAttribute('aria-pressed',t.ig[k]?'true':'false');self.render(S,api);}
- if(a==='igcheck'){var need={'node_modules/':1,'dist/':1,'.git/':1,'.env':1},issues=[];
-  ["package.json","package-lock.json","src/","public/","index.html","vite.config.js","node_modules/","dist/",".git/",".env"].forEach(function(f){if(need[f]&&!t.ig[f]){issues.push(f+': '+({'node_modules/':'installed packages; npm ci recreates them inside the image','dist/':'old build output; the build makes it fresh','.git/':'version control history the image never needs','.env':'local secrets must never reach the image'})[f]+'. Ignore it.');}
-   if(!need[f]&&t.ig[f]){issues.push(f+': the build needs it. Keep it.');}});
-  if(!issues.length){api.goal('ign');api.say('<p class="verdict ok">Correct.</p><p>The context now holds only what the build needs; secrets and old output stay out.</p>'+api.goalStatus());}
-  else{api.say('<p class="verdict no">Not yet. Check these:</p><ul>'+issues.map(function(x){return '<li>'+api.esc(x)+'</li>';}).join('')+'</ul>'+api.goalStatus());}}
- if(a==='up'){self.render(S,api);var nb=api.$('up-'+Math.max(1,+b.getAttribute('data-i')-1));if(nb&&!nb.disabled){nb.focus();}}
+ if(a==='chalreset'){var c=api.$('chal-input');if(c){c.value='FROM python:3.13-slim\nWORKDIR /srv\n';}}
+ this.render(S,api);
 },
-okOrder:function(t){return t.order.join()==='pkg,ci,all,build';},
 render:function(S,api){var t=S.t,f=api.$('m-file'),st=api.$('m-state');
- if(S.step===2||S.step===1){f.textContent='FROM node:24-alpine\nWORKDIR /app\nCOPY . .\nRUN npm ci\nRUN npm run build';}
- else{var N={all:'COPY . .',pkg:'COPY package.json package-lock.json ./',ci:'RUN npm ci',build:'RUN npm run build'};var ord=S.step===3?t.order:['pkg','ci','all','build'];f.textContent='FROM node:24-alpine\nWORKDIR /app\n'+ord.map(function(k){return N[k];}).join('\n');}
- if(S.step!==2&&S.step!==3){api.$('m-out').hidden=true;}
- st.textContent=S.step===4?'.dockerignore decides what COPY . . can see.':(S.step>=5?'The reordered Dockerfile.':(t.built||S.step===3?'Build output below.':'Nothing built yet.'));
- var ol=api.$('olist');if(ol){var N2={all:'COPY . .',pkg:'COPY package.json package-lock.json ./',ci:'RUN npm ci',build:'RUN npm run build'};ol.innerHTML='';t.order.forEach(function(k,i){var li=document.createElement('li');li.innerHTML='<code>'+api.esc(N2[k])+'</code>';var bt=document.createElement('button');bt.type='button';bt.className='ghost';bt.id='up-'+i;bt.setAttribute('data-act','up');bt.setAttribute('data-i',String(i));bt.textContent='Up';bt.setAttribute('aria-label','Move '+N2[k]+' up');if(i===0){bt.disabled=true;}li.appendChild(bt);ol.appendChild(li);});}
- var ig=api.$('ig');if(ig&&!ig.firstChild){["package.json","package-lock.json","src/","public/","index.html","vite.config.js","node_modules/","dist/",".git/",".env"].forEach(function(f){var b=document.createElement('button');b.type='button';b.className='ghost';b.id='ig-'+f.replace(/[^a-z_]/g,'').replace(/^(package)lock/,'$1lock');b.setAttribute('data-act','ig');b.setAttribute('data-f',f);b.setAttribute('aria-pressed','false');b.textContent=f;ig.appendChild(b);});}
- if(ig){api.qa('#ig button').forEach(function(b){var f=b.getAttribute('data-f');b.setAttribute('aria-pressed',t.ig[f]?'true':'false');});
-  var kept=["package.json","package-lock.json","src/","public/","index.html","vite.config.js","node_modules/","dist/",".git/",".env"].filter(function(f){return !t.ig[f];});api.$('ig-size').textContent='Sent to the builder: '+kept.join(', ');}
+ f.textContent=S.step<=2?'FROM node:24-alpine\nWORKDIR /app\nCOPY . .\nRUN npm ci\nRUN npm run build':(S.step===3?'Your Dockerfile is in the editor below.':(S.step===4?'Context folder: package.json, package-lock.json, src/, public/, index.html, vite.config.js, node_modules/, dist/, .git/, .env':'FROM node:24-alpine\nWORKDIR /app\nCOPY package.json package-lock.json ./\nRUN npm ci\nCOPY . .\nRUN npm run build'));
+ if(S.step!==2){api.$('m-out').hidden=true;}
+ st.textContent=S.step===4?'.dockerignore decides what COPY . . can see.':(S.step>=5?'The reordered Dockerfile.':(S.step===3?'Run the checks to see a simulated build after a source-only change.':(t.built?'Build output below.':'Nothing built yet.')));
 }
 };
 
@@ -436,95 +576,115 @@ function $(id){return d.getElementById(id);}
 function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init()};}
-var api={$:$,qa:qa,esc:esc,say:say,complete:complete,goal:goal,left:left,get S(){return S;}};
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,goal:goal,left:left,editorText:editorText,get S(){return S;}};
 function need(step){return (TOPIC.goals&&TOPIC.goals[step])||[];}
 function left(step){var g=S.t.g||{};return need(step||S.step).filter(function(k){return !g[k];}).length;}
-function goal(k){var g=S.t.g||(S.t.g={});g[k]=1;var st=S.step,act=TOPIC.acts[st-1];if(need(st).length&&!left(st)&&!S.done[act]){complete(act);}}
-function goalStatus(){var st=S.step,n=need(st),l=left(st);return n.length?'<p>'+(l?l+' of '+n.length+' goals still open.':'<strong>All goals met.</strong> Continue when ready.')+'</p>':'';}
+function goal(k){var g=S.t.g||(S.t.g={});g[k]=1;var st=S.step,act=TOPIC.acts[st-1];if(need(st).length&&!left(st)&&!S.done[act]){complete(act);}renderGoals();}
+function goalStatus(){var st=S.step,n=need(st),l=left(st);return n.length?'<p>'+(l?l+' of '+n.length+' task goals still open.':'<strong>All task goals met.</strong> Continue when ready.')+'</p>':'';}
 api.goalStatus=goalStatus;
-function renderGoals(){var g=S.t.g||{};qa('.goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!g[k]);li.querySelector('.st').textContent=g[k]?'done':'open';});}
+function renderGoals(){var g=(S.t&&S.t.g)||{};
+  qa('[data-goal]').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('is-done',!!g[k]);var s=li.querySelector('.state');if(s){s.setAttribute('data-state',g[k]?'✓ done':'open');}});
+  var sum=$('goal-summary');if(sum){var n=need(S.step),l=left(S.step);sum.textContent=n.length?(l?l+' of '+n.length+' task goals still open':'All task goals met'):'';sum.hidden=!n.length;}
+  qa('[data-obj]').forEach(function(li){var acts=(TOPIC.objActs||{})[li.getAttribute('data-obj')]||[];var ok=acts.length&&acts.every(function(a){return S.done[a];});li.classList.toggle('is-done',!!ok);li.querySelector('.state').setAttribute('data-state',ok?'✓ done':'open');});}
 function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
 function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}if(S.t&&S.t.g){renderGoals();}}
 function progress(){
-  var acts=TOPIC.acts,n=0,set=0;
-  acts.forEach(function(a,i){var p=qa('.pip',$('progress'))[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
-    p.className='pip'+(on?(S.settled[a]?' settled':' on'):'');});
-  $('prog-text').textContent='Activities done: '+n+' of '+acts.length+(set?' ('+set+' answered, not marked correct)':'');
+  var acts=TOPIC.acts,n=0,set=0,cur=Math.min(S.step,acts.length);
+  acts.forEach(function(a,i){var p=qa('#progress-bar > span')[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
+    p.className=on?(S.settled[a]?'is-settled':'is-done'):'';});
+  $('prog-text').textContent='Activity '+cur+' of '+acts.length+' · '+n+' done'+(set?' ('+set+' settled, not marked correct)':'');
+  renderGoals();
 }
 function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
 function show(step,focus){
-  S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
+  S.step=step;stageEl.setAttribute('data-step',String(step));
   qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
   if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
     SNAP[step]={html:h,t:clone(S.t)};}
   var rb=$('reset');rb.disabled=(step===LAST);
   $('next').hidden=true;
   if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
-    c.textContent='All '+TOPIC.acts.length+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: review its explanation above before moving on.':'.');}}
+    c.innerHTML='<p><strong>All '+TOPIC.acts.length+' activities finished.</strong>'+(set?' '+set+' was answered without being marked correct. That is fine: review its explanation before moving on.':'')+'</p>';}}
   else{main.removeAttribute('data-pep-complete');}
-  TOPIC.render(S,api);renderGoals();progress();
+  initEditors();TOPIC.render(S,api);progress();
   if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
 }
 function optLabel(inp){return inp.closest('label');}
+function optText(inp){var t=optLabel(inp).querySelector('.pep-option__text');return t?t.firstChild.textContent.trim():optLabel(inp).textContent.trim();}
 function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
-function explainList(set,chosen,mark){
-  var html='<ul>';
-  Object.keys(set.why).forEach(function(k){
-    var txt=qa('input[value="'+k+'"]',$(set.fs))[0];var lab=txt?optLabel(txt).textContent.trim():k;
-    var tag=(k===set.correct)?'<strong>Correct: </strong>':'<strong>Not this: </strong>';
-    html+='<li>'+(mark?tag:'')+'<span class="on">'+esc(lab)+'</span>: '+set.why[k]+(k===chosen?' <em>(your choice)</em>':'')+'</li>';
-  });
-  return html+'</ul>';
-}
-function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
-  if(i.value===set.correct&&(chosen===set.correct)){l.classList.add('right');}
-  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
-function firstDetails(){return '<details><summary>First question: every option explained</summary>'+explainList(TOPIC.apply.A,null,true)+'</details>';}
-function badges(ok,mine,who){return '<span class="badges">'+(mine?'<span class="badge me">'+who+'</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
-function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
-  w.innerHTML=badges(i.value===set.correct,i.value===chosen,'Your answer')+set.why[i.value];sp.appendChild(w);});}
-function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function tag(cls,txt){return '<span class="pep-tag pep-tag--'+cls+'">'+txt+'</span>';}
+function annotate(name,correct,chosen,why,who){qa('input[name="'+name+'"]').forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===correct){l.classList.add('is-correct');}else if(i.value===chosen){l.classList.add('is-wrong');}
+  var t=l.querySelector('.pep-option__text');var w=d.createElement('span');w.className='pep-explain';
+  w.innerHTML=(i.value===chosen?tag('me',who):'')+(i.value===correct?tag('ok','✓ Correct answer'):(i.value===chosen?tag('no','✗ Not correct'):''))+'<span class="why">'+why[i.value]+'</span>';t.appendChild(w);});}
 function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
 function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
   var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
   var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function explainList(set){var html='<ul>';qa('input[name="'+set.fs+'"]').forEach(function(i){html+='<li><strong>'+(i.value===set.correct?'✓ Correct: ':'✗ Not this: ')+'</strong>'+esc(optText(i))+': '+set.why[i.value]+'</li>';});return html+'</ul>';}
 function checkApply(which){
   var A=TOPIC.apply.A,B=TOPIC.apply.B;
   if(which==='a'){
     var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
-    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
-    if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText());complete('apply');TOPIC.render(S,api);focusVerdict();return;}
-    S.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
-    say('<p class="verdict no">Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <span class="on">'+esc(S.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;
+    if(ch===A.correct){S.tries=2;annotate('apply-a',A.correct,ch,A.why,'Your answer');$('apply-check').hidden=true;
+      say('<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Correct.</p>'+A.okNote+'<p>Each option is explained above.</p>'+confText()+'</div>');complete('apply');TOPIC.render(S,api);focusVerdict();return;}
+    qa('input[name="apply-a"]').forEach(function(i){i.disabled=true;if(i.value===ch){optLabel(i).classList.add('is-wrong');}});
+    S.firstPick=optText(qa('input[name="apply-a"][value="'+ch+'"]')[0]);
+    say('<div class="pep-callout pep-callout--danger"><p class="pep-verdict pep-verdict--wrong">✗ Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <strong>'+esc(S.firstPick)+'</strong>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText()+'</div>');
     qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});TOPIC.render(S,api);
     var t=$('task-apply-b');if(t){t.focus();}
   } else {
     var c2=checked('apply-b');if(!c2){return;}
-    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
-    if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+firstDetails()+confText());}
-    else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
-      say('<p class="verdict set">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+firstDetails()+confText());}
+    S.tries=2;$('apply-check-b').hidden=true;annotate('apply-b',B.correct,c2,B.why,'Your answer');
+    var first='<details><summary>First question: every option explained</summary>'+explainList(A)+'</details>';
+    if(c2===B.correct){say('<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Correct on the second try.</p><p>Each option is explained above.</p>'+first+confText()+'</div>');}
+    else{S.settled.apply=true;say('<div class="pep-callout pep-callout--warning"><p class="pep-verdict pep-verdict--revealed">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained above.</p>'+first+confText()+'</div>');}
     complete('apply');TOPIC.render(S,api);focusVerdict();
   }
 }
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .pep-verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
 function checkPredict(){
   var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
   if(!ch||!pc){return;}
-  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
-  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
-    if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
-  var html='<p class="verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+' Each option, explained:</p><ul class="explain">';
-  Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
-    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
-  say(html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||''),1);complete('predict');
+  qa('input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  annotate('predict',P.correct,ch,P.why,'Your prediction');
+  say('<div class="pep-callout pep-callout--info"><p class="pep-verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+'</p><p>Each option is explained above.</p><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||'')+'</div>',1);complete('predict');
 }
+/* editor shell */
+var ED={};
+function editorText(step){var i=$('ed-'+step+'-input');return i?i.value:'';}
+function gutter(step){var i=$('ed-'+step+'-input'),g=$('ed-'+step+'-gutter');if(!i||!g){return;}var n=Math.max(1,i.value.split('\n').length),s=[];for(var k=1;k<=n;k++){s.push(k);}g.textContent=s.join('\n');}
+function initEditors(){qa('.pep-editor[data-ed]').forEach(function(box){var st=box.getAttribute('data-ed');var i=$('ed-'+st+'-input');if(i&&!i.getAttribute('data-wired')){i.setAttribute('data-wired','1');i.addEventListener('input',function(){gutter(st);});}gutter(st);});}
+function edTab(st,which){['problems','output'].forEach(function(w){var t=$('ed-'+st+'-tab-'+w),p=$('ed-'+st+'-'+w);if(t&&p){t.setAttribute('aria-selected',w===which?'true':'false');t.tabIndex=w===which?0:-1;p.hidden=w!==which;}});}
+function edRun(st){var E=TOPIC.editors[st];if(!E){return;}var r=E.check(editorText(st),S,api)||{};
+  var pp=$('ed-'+st+'-problems'),op=$('ed-'+st+'-output'),probs=r.problems||[];
+  pp.innerHTML='';if(!probs.length){pp.textContent='No problems found.';}
+  probs.forEach(function(p){var b=d.createElement('button');b.type='button';b.className='pep-editor__problem';b.setAttribute('data-line',String(p.line||1));
+    b.innerHTML='<span class="kind-'+(p.kind==='limit'?'limit':'error')+'">'+(p.kind==='limit'?'Not supported':'Problem')+'</span> line '+(p.line||1)+': '+esc(p.msg);pp.appendChild(b);});
+  op.textContent=(r.output||[]).join('\n')||'(no output)';
+  var stt=$('ed-'+st+'-status');stt.textContent=r.ok?'✓ All checks pass. '+(r.summary||''):(probs.length?'✗ '+probs.length+' problem'+(probs.length>1?'s':'')+' to fix. Open each one to jump to its line.':(r.summary||'Checked.'));
+  edTab(st,r.ok?'output':'problems');
+  if(r.ok&&E.goal){goal(E.goal);}
+  say((r.ok?'<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Your file passes every check.</p>':'<div class="pep-callout pep-callout--danger"><p class="pep-verdict pep-verdict--wrong">✗ Not yet: read the Problems tab, fix one thing, and run the checks again.</p>')+(r.note?'<p>'+r.note+'</p>':'')+'</div>'+goalStatus());}
+function edReset(st){var E=TOPIC.editors[st];var i=$('ed-'+st+'-input');if(!E||!i){return;}i.value=E.starter;gutter(st);$('ed-'+st+'-problems').textContent='Not run yet.';$('ed-'+st+'-output').textContent='(no output)';$('ed-'+st+'-status').textContent='Starter restored. Not run yet.';edTab(st,'problems');i.focus();}
+var userAct=TOPIC.act;
+TOPIC.act=function(a,b,Sx,apix){
+  if(a==='edrun'){edRun(+b.getAttribute('data-ed'));return;}
+  if(a==='edreset'){edReset(+b.getAttribute('data-ed'));return;}
+  if(a==='edtab'){edTab(+b.getAttribute('data-ed'),b.getAttribute('data-tab'));return;}
+  if(a==='edline'){return;}
+  if(userAct){userAct.call(TOPIC,a,b,Sx,apix);}
+};
+d.addEventListener('click',function(e){var p=e.target.closest&&e.target.closest('.pep-editor__problem');if(!p){return;}var box=p.closest('.pep-editor');var i=box.querySelector('textarea');var ln=+p.getAttribute('data-line');var lines=i.value.split('\n'),pos=0;for(var k=0;k<ln-1&&k<lines.length;k++){pos+=lines[k].length+1;}i.focus();i.setSelectionRange(pos,pos+((lines[ln-1]||'').length));});
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.getAttribute||t.getAttribute('role')!=='tab'){return;}if(e.key==='ArrowRight'||e.key==='ArrowLeft'){var st=t.getAttribute('data-ed');var nx=t.getAttribute('data-tab')==='problems'?'output':'problems';e.preventDefault();edTab(+st,nx);$('ed-'+st+'-tab-'+nx).focus();}});
 function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
 function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
   Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
   qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
   S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
   if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
-  show(step,false);syncPrompt();var h=$('teach-'+step+'-h');if(h){h.focus();}}
+  show(step,false);syncPrompt();say('<p>Activity restarted. Earlier activities keep their results.</p>'+goalStatus());var h=$('teach-'+step+'-h');if(h){h.focus();}}
 /* pep:component terminal@1 js */
 d.addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b){return;}
@@ -559,9 +719,11 @@ d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closes
 var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
 setTheme(mq&&mq.matches?'dark':'light');
 if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=qa('details[data-pep-optional]:not([open])');printOpened.forEach(function(x){x.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(x){x.open=false;});printOpened=[];});
 fresh();show(1,false);syncPrompt();
 })();
-
 </script>
 </body>
 </html>

@@ -22,7 +22,7 @@ When one step changes, its cache is invalidated and every later step runs again.
 
 ### Slow, stable steps first
 
-Source changes often; dependency lists rarely. So copy the dependency files, install, then copy the source.
+Source changes often; dependency lists rarely. So copy only the dependency files, install, then copy the source.
 
 A source-only change then invalidates only the source copy and later steps; the slow install stays `CACHED`.
 
@@ -77,6 +77,16 @@ dist
 .env
 ```
 
+Optional time: about 4 minutes, in addition to the topic time
+
+Success criteria: You write the cache-friendly order for a different project and can explain which steps a source-only change reruns.
+
+A Python service has `requirements.txt` and an `app/` folder, and its Dockerfile today is `FROM python:3.13-slim`, `WORKDIR /srv`, `COPY . .`, `RUN pip install -r requirements.txt`, `CMD ["python", "-m", "app"]`. Write the reordered version below, then list which steps run again when only a file in `app/` changes. Nothing here is checked or counted.
+
+Your reordered Dockerfile (optional) FROM python:3.13-slim WORKDIR /srv
+
+Reset optional starter
+
 ## Sources
 
 Checked against these live official sources on 2026-10-13. Versions shown: Docker Engine 29 with BuildKit and the node:24-alpine image. Build output is simulated and shortened: timings and some lines are left out.
@@ -98,13 +108,13 @@ Prediction (practice, not scored): with FROM node:24-alpine, WORKDIR /app, COPY 
 
 Activity: build the Dockerfile twice. With nothing changed, every step after FROM shows CACHED. After changing src/App.jsx, COPY . . changes, so it and both later steps (npm ci and npm run build) run again: [3/5] COPY . ., [4/5] RUN npm ci, [5/5] RUN npm run build.
 
-### drag
+### terminal
 
-Activity: reorder the Dockerfile. Correct order after FROM node:24-alpine and WORKDIR /app: COPY package.json package-lock.json ./, then RUN npm ci, then COPY . ., then RUN npm run build. After a source change, the build shows CACHED for the package copy and npm ci, and runs only COPY . . and npm run build.
+Editor activity: reorder the Dockerfile. A cache-friendly order after FROM node:24-alpine and WORKDIR /app is: COPY package.json package-lock.json ./, RUN npm ci, COPY . ., RUN npm run build. With that order, a build after a source-only change shows CACHED for the package copy and npm ci, and runs only COPY . . and npm run build.
 
-### explore
+### terminal
 
-Activity: choose .dockerignore entries. Ignore node_modules (installed packages, rebuilt by npm ci), dist (build output), .git (version control) and .env (local secrets). Keep package.json, package-lock.json, src, public, index.html and vite.config.js, which the build needs.
+Editor activity: write .dockerignore. Leave out node_modules (installed packages, rebuilt by npm ci), dist (build output), .git (version control) and .env (local secrets). Keep package.json, package-lock.json, src, public, index.html and vite.config.js, which the build needs.
 
 ### mcq
 

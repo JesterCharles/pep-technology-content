@@ -102,9 +102,9 @@ Checked against these live official sources on 2026-10-13. Versions shown: Docke
 
 Prediction (practice, not scored): a stack with an API and PostgreSQL storing data in a named volume; docker compose down, then docker compose up -d. Answer: yes, the rows are still there, because down removes containers and the network but keeps named volumes. down -v would delete them; the data lives in the database volume, not the API container; rebuilding images does not matter.
 
-### explore
+### terminal
 
-Activity: complete compose.yaml. api: build: ./backend; ports: "127.0.0.1:8080:8080"; environment SPRING_DATASOURCE_URL jdbc:postgresql://db:5432/shop (db is the database service name, 5432 its container port, shop the database POSTGRES_DB creates; localhost would be the api container itself), SPRING_DATASOURCE_USERNAME shop, SPRING_DATASOURCE_PASSWORD ${DB_PASSWORD}. db: image: postgres:18; environment POSTGRES_DB shop, POSTGRES_USER shop, POSTGRES_PASSWORD ${DB_PASSWORD}; volumes - pgdata:/var/lib/postgresql. Top level: volumes: pgdata:. Wrong choices: image: ./backend (image names a ready image, not a folder); "8080:8080" (every host address); a literal password in the file; no volume (data lost with the container).
+Editor activity: complete compose.yaml. api: build ./backend, ports "127.0.0.1:8080:8080", environment SPRING_DATASOURCE_URL jdbc:postgresql://db:5432/shop (db is the database service name, 5432 its container port, shop the database POSTGRES_DB creates; localhost would be the api container itself), SPRING_DATASOURCE_USERNAME shop, SPRING_DATASOURCE_PASSWORD ${DB_PASSWORD}. db: image postgres:18, POSTGRES_DB shop, POSTGRES_USER shop, POSTGRES_PASSWORD ${DB_PASSWORD}, volumes pgdata:/var/lib/postgresql. Top level: volumes: pgdata:. A literal password, a localhost URL or a missing volume declaration fail the checks.
 
 ### terminal
 

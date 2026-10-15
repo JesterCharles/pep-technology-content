@@ -1,13 +1,14 @@
-// Maintainer regression runner, not a learner test: `node tests/bypass.mjs` from the lab folder.
-// Each folder in fixtures/bypass holds a deliberately wrong project fragment and case.json naming
+// Maintainer regression evidence, not part of the learner bundle. After `npm ci` in the lab's tests folder, run
+// `node authoring/evidence/containers-cicd/containers-and-compose/coding-lab-bypass/run-bypass.mjs` from the repository root.
+// Each folder in cases/ holds a deliberately wrong project fragment and case.json naming
 // the rule that must reject it and the rules on the same files that must still accept it.
 // A file named dotenv is copied as .env into a temporary copy, because .env files are never committed.
 import { readdirSync, readFileSync, cpSync, renameSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { RULES } from './lab.mjs';
+import { RULES } from '../../../../../containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs';
 
-const root = path.join(import.meta.dirname, '..', 'fixtures', 'bypass');
+const root = path.join(import.meta.dirname, 'cases');
 let failed = 0;
 for (const name of readdirSync(root).sort()) {
   const dir = path.join(root, name);
