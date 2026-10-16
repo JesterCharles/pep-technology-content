@@ -120,7 +120,7 @@ Question: What does the program print? Option A: 1210 — Not quite. That would 
 
 ### explore
 
-Code editor task: Refactor three repeated price calculations into one well-named static method with a non-void return type and a typed quantity parameter. Return the calculation, call the method three times from main and print each result. Compare the three results with the original expressions. Starter code: public class Main { // Declare the extracted method above main. public static void main(String[] args) { System.out.println(2 * 3 + 5); System.out.println(4 * 3 + 5); System.out.println(7 * 3 + 5); } }
+Code editor task: Refactor three repeated price calculations into one well-named static method with a non-void return type and a typed quantity parameter. Return the calculation, call the method from main for quantities 2, 4 and 7, and verify that it still produces 11, 17 and 26. Starter code: public class Main { // Declare the extracted method above main. public static void main(String[] args) { System.out.println(2 * 3 + 5); System.out.println(4 * 3 + 5); System.out.println(7 * 3 + 5); } }
 
 ### mcq
 

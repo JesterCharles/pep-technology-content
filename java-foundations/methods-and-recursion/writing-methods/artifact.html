@@ -495,9 +495,9 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 </div>
 <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2">
 <h3 id="checks-2">What success looks like</h3>
-<ul><li>The program compiles with no Problems.</li><li>A well-named <code>static</code> method has a non-<code>void</code> return type, a typed quantity parameter and a returned calculation.</li><li><code>main</code> calls that method three times with the three quantities and prints three results; the repeated arithmetic is no longer in <code>main</code>.</li></ul>
+<ul><li>The program compiles with no Problems.</li><li>A well-named <code>static</code> method has a non-<code>void</code> return type, a typed quantity parameter and a returned calculation.</li><li><code>main</code> calls that method three times with quantities 2, 4 and 7; the repeated arithmetic is no longer in <code>main</code>, and the method still produces 11, 17 and 26.</li></ul>
 </section>
-<div class="pep-editor" data-interaction="explore" data-static-alt="Code editor task: Refactor three repeated price calculations into one well-named static method with a non-void return type and a typed quantity parameter. Return the calculation, call the method three times from main and print each result. Compare the three results with the original expressions. Starter code: public class Main { // Declare the extracted method above main. public static void main(String[] args) { System.out.println(2 * 3 + 5); System.out.println(4 * 3 + 5); System.out.println(7 * 3 + 5); } }">
+<div class="pep-editor" data-interaction="explore" data-static-alt="Code editor task: Refactor three repeated price calculations into one well-named static method with a non-void return type and a typed quantity parameter. Return the calculation, call the method from main for quantities 2, 4 and 7, and verify that it still produces 11, 17 and 26. Starter code: public class Main { // Declare the extracted method above main. public static void main(String[] args) { System.out.println(2 * 3 + 5); System.out.println(4 * 3 + 5); System.out.println(7 * 3 + 5); } }">
 <div class="pep-editor__bar">
 <span class="pep-editor__file">Main.java</span>
 <span class="pep-editor__secondary">Practice Java subset · runs offline in this page</span>
@@ -687,19 +687,26 @@ window.PEP_PAGE.checks = {
     var notes = [];
     if (!res.compiled) return { pass: false, notes: ['<strong>Missing:</strong> the program must compile first. Open Problems and fix the line it names.'] };
     var a = res.analysis;
-    var own = a.methods.filter(function (m) { return m.cls === 'Main' && m.name !== 'main' && m.stat && m.type !== 'void' && m.params.length === 1; });
+    var own = a.methods.filter(function (m) { return m.cls === 'Main' && m.name !== 'main' && m.stat && m.type !== 'void' && m.params.length === 1 && m.params[0] === 'int'; });
     var method = own[0], declared = !!method;
-    notes.push((declared ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'one static, non-void extracted method with one typed parameter' + (declared ? ' (' + method.type + ' ' + method.name + ')' : '') + '.');
+    notes.push((declared ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'one static, non-void extracted method with one int parameter' + (declared ? ' (' + method.type + ' ' + method.name + ')' : '') + '.');
     var calls = method ? a.calls.filter(function (c) { return c.from === 'main' && c.toNode === method.node; }) : [];
     var threeCalls = calls.length >= 3;
     notes.push((threeCalls ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'main calls the extracted method for all three original quantities.');
     var mainText = (src.match(/public\s+static\s+void\s+main[\s\S]*?\{([\s\S]*)\}\s*\}/) || [,''])[1];
     var arithmeticRemoved = !/\b(?:2|4|7)\s*\*\s*3\s*\+\s*5\b/.test(mainText);
     notes.push((arithmeticRemoved ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the repeated arithmetic is removed from main.');
+    var behavior = false;
+    if (method) {
+      var probeSrc = 'class PepBehaviorCheck { public static void main(String[] args) { System.out.println(Main.' + method.name + '(2)); System.out.println(Main.' + method.name + '(4)); System.out.println(Main.' + method.name + '(7)); } }\n' + src;
+      var probe = PepJava.run(probeSrc, { maxDepth: 1000 });
+      behavior = probe.compiled && !probe.exception && !probe.stopped && (probe.out || '').trim() === '11\n17\n26';
+    }
+    notes.push((behavior ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the extracted method preserves the visible results for quantities 2, 4 and 7: 11, 17 and 26.');
     var lines = (res.out || '').split('\n').filter(function (line) { return line.trim(); }).length;
     var printed = lines === 3 && !res.exception && !res.stopped;
-    notes.push((printed ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the run finishes and prints three results to compare with the originals.');
-    return { pass: declared && threeCalls && arithmeticRemoved && printed, notes: notes };
+    notes.push((printed ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'main finishes and prints three results.');
+    return { pass: declared && threeCalls && arithmeticRemoved && behavior && printed, notes: notes };
   }
 };
 </script>

@@ -59,15 +59,15 @@ Where to act: Compare the two lines in Output with each other and with the claim
 
 Next step: Ask what differs between the two expressions, and whether the claim says `/` behaves the same in both.
 
-Where to act: Start with the first field, What I asked.
+Where to act: Start with the first field, What I asked for.
 
-Next step: Write a request that uses a word such as explain or why and names the exact thing you were unsure about, such as `7 / 2`.
+Next step: Choose the option that requests an explanation while explicitly leaving the finished code to you.
 
 Another hint Another hint, 2 of 2 for Activity 3
 
-Where to act: Then the last field, What I verified and how.
+Where to act: Then complete the verification method, two observed-output fields and comparison field.
 
-Next step: Name the check you used, then state the result you observed and whether it supported or contradicted the assistant’s claim.
+Next step: Copy the two outputs you observed in Activity 2, then compare them with the sample assistant’s exact-division claim.
 
 Explain-not-answer request template: “Explain what [exact error or line] means in this code and where the problem is. Don’t write the fixed code.”
 
@@ -96,4 +96,4 @@ Question: What does your run show about the claim? Option A: The claim is right:
 
 ### explore
 
-Record form: three text fields. 1. What I asked: an explain-not-answer request. 2. What the assistant produced: a short summary, not pasted code. 3. What I verified and how: the experiment run or documentation read, and its result.
+Structured record form: select an explain-not-answer request, the sample assistant claim that Java division is always exact, a run or official source as the verification method, the observed results for 7 / 2 and 7 / 2.0, and whether those observations supported or contradicted the claim. The page validates only these objective fields and relationships, not free-form prose meaning.

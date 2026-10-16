@@ -639,7 +639,7 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 </div>
 <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3">
 <h3 id="checks-3">What success looks like</h3>
-<ul><li>The program compiles and prints two results.</li><li>One <code>static int</code> method has two typed inputs, applies the original strict boundary rule and returns the price.</li><li><code>main</code> calls that method twice; the duplicated calculations and decisions are gone from <code>main</code>.</li></ul>
+<ul><li>The program compiles and prints two results.</li><li>One <code>static int</code> method has two <code>int</code> inputs, applies the original strict boundary rule and returns the price.</li><li><code>main</code> calls that method for (3, 4) and (5, 2); the duplicated calculations and decisions are gone, and both calls still produce 10.</li></ul>
 </section>
 <div class="pep-editor" data-interaction="explore" data-static-alt="Code editor task: Refactor two duplicated price calculations into one static int method with typed quantity and unit-price parameters. Move the multiplication and strict boundary decision into the method, return the price, and replace both blocks with printed calls. Compare the two results with the starter behavior: it prints 10 and then 10. Starter code contains two duplicated calculation and discount blocks in main.">
 <div class="pep-editor__bar"><span class="pep-editor__file">Main.java</span><span class="pep-editor__secondary">Practice Java subset · runs offline in this page</span><button type="button" class="pep-btn" data-run id="run-3">Run</button><button type="button" class="pep-btn" data-reset-code id="reset-code-3">Reset code</button></div>
@@ -748,9 +748,9 @@ window.PEP_PAGE.checks = {
   'activity-3': function (res, src) {
     if (!res.compiled) return { pass: false, notes: ['<strong>Missing:</strong> the program must compile first. Open Problems and fix the named line.'] };
     var a = res.analysis, notes = [];
-    var own = a.methods.filter(function (m) { return m.cls === 'Main' && m.name !== 'main' && m.stat && m.type === 'int' && m.params.length === 2; });
+    var own = a.methods.filter(function (m) { return m.cls === 'Main' && m.name !== 'main' && m.stat && m.type === 'int' && m.params.length === 2 && m.params[0] === 'int' && m.params[1] === 'int'; });
     var method = own[0], declared = !!method;
-    notes.push((declared ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'one static int method with two typed inputs.');
+    notes.push((declared ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'one static int method with two int inputs.');
     var calls = method ? a.calls.filter(function (c) { return c.from === 'main' && c.toNode === method.node; }) : [];
     var calledTwice = calls.length >= 2;
     notes.push((calledTwice ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'main calls the refactored method twice.');
@@ -759,10 +759,17 @@ window.PEP_PAGE.checks = {
     notes.push((duplicateGone ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the duplicated local calculations and decisions are removed from main.');
     var strictRule = method && method.node && JSON.stringify(method.node.body).indexOf('\"op\":\">\"') >= 0;
     notes.push((strictRule ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the extracted method keeps a strict greater-than boundary.');
+    var behavior = false;
+    if (method) {
+      var probeSrc = 'class PepBehaviorCheck { public static void main(String[] args) { System.out.println(Main.' + method.name + '(3, 4)); System.out.println(Main.' + method.name + '(5, 2)); } }\n' + src;
+      var probe = PepJava.run(probeSrc, { maxDepth: 1000 });
+      behavior = probe.compiled && !probe.exception && !probe.stopped && (probe.out || '').trim() === '10\n10';
+    }
+    notes.push((behavior ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the refactored method preserves the two visible results: 10 and 10.');
     var lines = (res.out || '').split('\n').filter(function (line) { return line.trim(); }).length;
     var printed = lines === 2 && !res.exception && !res.stopped;
-    notes.push((printed ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the run finishes and prints two results.');
-    return { pass: declared && calledTwice && duplicateGone && strictRule && printed, notes: notes };
+    notes.push((printed ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'main finishes and prints two results.');
+    return { pass: declared && calledTwice && duplicateGone && strictRule && behavior && printed, notes: notes };
   }
 };
 </script>

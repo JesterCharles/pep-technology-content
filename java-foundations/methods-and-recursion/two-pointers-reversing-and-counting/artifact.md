@@ -37,7 +37,7 @@ Put index `i` on the first character and `j` on the last. Swap the two character
 
 ### Activity 3 of 3: Count mirrored pairs without nested loops
 
-The same two indexes can count instead of swap. Each pass compares the character at `i` with its mirror at `j`, adds 1 when they match your rule, then moves both indexes inward. One loop visits each mirrored pair once, so there is no need for a loop inside a loop that compares every character with every other one.
+The same two indexes can count instead of swap. Here the rule is to add 1 when the character at `i` equals its mirror at `j`, then move both indexes inward. One loop visits each mirrored pair once, so there is no need for a loop inside a loop that compares every character with every other one.
 
 Keep the condition `i < j`: `i <= j` would pair the middle character of an odd-length word with itself.
 
@@ -130,4 +130,4 @@ Question: For "drawer", what are i and j when the loop stops? Option A: i = 3, j
 
 ### explore
 
-Code editor task: Build and return a reversed String with a character array and two indexes under the strict condition i < j. Also count mirrored pairs with a second two-index method that compares both characters inside an if and conditionally changes a count. Call and print both methods, then compare both results by hand. Starter code provides comments for the two methods and their calls, but no completed method.
+Code editor task: Build and return a reversed String by exchanging two indexed array characters with a temporary variable under the strict condition i < j. Also count equal mirrored pairs with a second two-index method. Check both methods with the visible even input drawer (reward and 0) and odd input level (level and 2). Starter code provides comments for the two methods and their calls, but no completed method.

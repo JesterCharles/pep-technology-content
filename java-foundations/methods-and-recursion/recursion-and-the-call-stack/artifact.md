@@ -39,7 +39,7 @@ Calls push frames upward until the base case; each return pops one frame and han
 
 ### Activity 3 of 3: Write a recursive method with a base case
 
-To write a recursive method, first decide the base case: the simplest input you can answer directly. Then write the recursive step so that every call moves toward the base case, for example by passing `n - 1`.
+To write a recursive method, first decide the base case: the simplest input you can answer directly. Then write the recursive step so that every call moves toward it. In this bounded activity, use an `int n` parameter, the equality base `n == 0`, and the step `n - 1`; that relationship makes the direction observable.
 
 If the base case is missing, or the step never reaches it (such as passing `n + 1`), every call pushes another frame. The stack has a limited size, so the program ends with `java.lang.StackOverflowError`, which Java throws when an application recurses too deeply.
 
@@ -135,4 +135,4 @@ Question: When sum(1) is about to return 1, how many sum frames are on the stack
 
 ### explore
 
-Code editor task: Write a static method that calls itself, with a base case that returns without a recursive call and a recursive step that moves toward that base case. Call it from main with a small value of 3 or more and print the result. Compare: the program finishes and prints, and removing the base case produces java.lang.StackOverflowError. Starter code: public class Main { // Write your recursive method here. // Base case first: when should it stop calling itself? public static void main(String[] args) { // Call your method with a small value and print the result. } }
+Code editor task: Write a static method with one int n parameter that calls itself. Return directly when n == 0, recurse with n - 1, then call it from main with a whole-number literal of 3 or more and print the result. Compare: the trace reaches n equal to 0 and the program finishes; changing the step to n + 1 produces java.lang.StackOverflowError. Starter code: public class Main { // Write your recursive method here. // Base case first: when should it stop calling itself? public static void main(String[] args) { // Call your method with a small value and print the result. } }
