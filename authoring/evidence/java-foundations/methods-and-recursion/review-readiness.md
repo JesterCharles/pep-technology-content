@@ -1,6 +1,6 @@
 # Review readiness: java-foundations/methods-and-recursion
 
-Author-side quarantine-correction receipt, 2026-10-16. It routes review; it does not approve the work, replace education or Java-SME review, waive checks, or mark the module upload-safe.
+Author-side quarantine-correction receipt, 2026-10-16, updated after full exact-byte validation of quarantine head `554925b514b4f4535bddf67d31fca294fea05c08`. It routes review; it does not approve the work, replace education or Java-SME review, waive checks, or mark the module upload-safe.
 
 ## Scope
 
@@ -13,24 +13,23 @@ Author-side quarantine-correction receipt, 2026-10-16. It routes review; it does
 | Component | Score | Evidence | Uncertainty | Hard blockers |
 | --- | ---: | --- | --- | --- |
 | Curriculum/objective coverage | 2 | Actual-page checker smokes accepted one private valid route and rejected the reproduced behavior-changing extraction, behavior-changing refactor, no-swap reversal, wrong-direction/unrelated-state recursion, and incoherent AI-record routes. Writing/refactor checks execute the visible cases; two-pointer checks inspect a method-local indexed exchange and execute odd/even cases; recursion traces the parameter to its equality base; the AI record uses objective structured fields and explicitly disclaims prose-semantic validation. | Independent education review has not assessed the corrected bytes. | Fresh education re-review of the five corrected pages. |
-| Official-source freshness | 1 | Existing official-source receipts remain bound to the unchanged claims; this correction changes practice observability, not sourced Java rules. | Java claims and checker constraints still need independent SME judgment. | Fresh Java-SME review. |
-| Standalone/offline tests | 1 | T08 and T10 pass the corrected scope from actual standalone pages; T10 covers strict sandbox negative routes. T18 passes deterministic companions. | T09/no-JavaScript and T11 were not rerun after this quarantine correction. | Focused final validation after independent review. |
-| Responsive/accessibility proof | 1 | The frozen shared layout was not changed; the AI replacement uses labeled native selects with 44 px minimum height. Prior T12/T13 evidence passed the same page shell. | T12/T13 do not yet bind the five corrected exact bytes. | Focused exact-byte accessibility/responsive rerun. |
+| Official-source freshness | 1 | Full `npm run check` found the five corrected pages' `sources.json` receipts still bound to pre-correction bytes (T15). The author rebound `reviewedSha256` to the current HTML without changing sources, because the correction changed practice checkers, not sourced Java rules; focused T15 then passed. | The rebinding is an author attestation; Java claims and checker constraints still need independent SME judgment. | Fresh Java-SME review. |
+| Standalone/offline tests | 1 | Full `npm test` passed 248/248. Full `npm run check` passed every gate except T11, T15 (fixed above) and T25; T09 and T10 pass from actual standalone pages, and T18 passes deterministic companions. | T11 times out on all nine pages, including the four individually approved pages, on the already-declared current-base mismatch (the harness clicks an optional disclosure inside a hidden future activity); it is not reproduced as a learner-page defect. | Focused final validation after independent review. |
+| Responsive/accessibility proof | 2 | T12 and T13 pass in the full run on the exact corrected bytes; the frozen shared layout was not changed and the AI replacement uses labeled native selects with 44 px minimum height. | Automated checks do not replace a human screen-reader pass. | None beyond independent review. |
 | Answer safety/private-material exclusion | 2 | T07 passes. Public QA contains negative inputs only. Private successful inputs, derivatives, encodings, hashes, screenshots and logs are absent from committed files; the receipt records outcomes only. | Machine scanning cannot prove semantic non-leakage. | Independent education and Java-SME review. |
 | Exact-byte identity | 1 | The corrected HTML hashes are listed below; the four approved pages match the re-review hashes byte-for-byte. The module lock is regenerated from this receipt and learner/catalog/evidence bytes. | No critic evidence exists for the corrected exact bytes. | T25 remains blocked until fresh education and SME evidence exists. |
 
-Sum: **8/12**. Overall: **floor(8 / 12 × 100) = 66**. Route: **deep review**. Hard blockers force **review/rework** regardless of score.
+Sum: **9/12**. Overall: **floor(9 / 12 × 100) = 75**. Route: **focused review**. Hard blockers force **review/rework** regardless of score.
 
 ## Focused author evidence
 
-Passed on the quarantine-correction scope:
+Full exact-byte validation of quarantine head `554925b`:
 
-- T01 schema, T07 answer safety, T08 static HTML/JavaScript, T10 sandbox behavior, T14 timing and T18 deterministic Markdown.
+- `npm test`: 248/248 passed.
+- `npm run check`: every gate passed except T11 (declared current-base harness mismatch on all nine pages), T15 (stale receipts on the five corrected pages, rebound in this update and passing focused T15) and T25 (expected hold pending fresh critics).
 - Direct execution in each actual page accepted a private valid route and rejected the relevant adversarial route; only boolean outcomes were retained.
-- The two-pointer and AI-record T10 routes were rerun after their final checker/UI edits.
+- Committed QA and evidence were audited: they contain negative routes and outcomes only, with no successful learner input, derivative encoding, hash of an answer, obfuscation or log.
 - `git diff --check` passes.
-
-Not run in this bounded correction handoff: T09, T11-T13, T15, T19-T20, T24-T25 and the full repository suite. T25 is expected to hold pending fresh critics.
 
 ## Corrected HTML identity
 
