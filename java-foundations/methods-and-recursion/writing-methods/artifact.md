@@ -33,7 +33,7 @@ A method declaration names a job once so the program can call it many times. Rea
 - `computeArea` is the name; by convention it starts with a lowercase verb.
 - `(int width, int height)` is the parameter list: each parameter has its own type and name.
 
-A call such as `computeArea(3, 4)` must pass one argument per parameter, in order, of a compatible type. Inside the body, `return width * height;` ends the method and sends the value back. A method that sends nothing back uses `void` as its return type. Java requires every path through a non-`void` method to reach a `return`; otherwise javac reports `missing return statement`.
+A call such as `computeArea(3, 4)` must pass one argument per parameter, in order, of a compatible type. Inside the body, `return width * height;` ends the method and sends the value back. A method that sends nothing back, such as one that only prints, uses `void` as its return type. In a non-`void` method, every path that can finish normally must reach a `return` with a compatible value; otherwise javac reports `missing return statement`. A path that ends by throwing an exception, or that can never finish, needs no `return`.
 
 ### Activity 3 of 3: Extract a repeated block, returning on every path
 
@@ -51,7 +51,7 @@ Each line multiplies a quantity by a price of 3 and adds a fee of 5. Only the qu
 
 - A method header gives the return type, the name and a typed parameter list; a call passes matching arguments in order.
 - `return` ends the method and hands a value back; `void` means nothing is handed back.
-- Every path through a non-`void` method must reach a `return`, or javac reports `missing return statement`.
+- In a non-`void` method, every path that can finish normally must return a compatible value, or javac reports `missing return statement`; a path that throws or never finishes needs no `return`.
 - Extract repeated steps into one well-named method: what varies becomes parameters, and behavior stays the same.
 
 ## Cheat sheet
@@ -76,13 +76,13 @@ Next step: Write the pieces in this order: `static`, a return type such as `int`
 
 Another hint Another hint, 2 of 2 for Activity 2
 
-Where to act: Inside the method braces, then on each of the three print lines in `main`.
+Where to act: Inside each method’s braces, then on the three lines in `main`.
 
-Next step: Return the shared calculation using the parameter, then replace each calculation with a call whose argument is that line’s quantity.
+Next step: Return the shared calculation from the first method, print a call of it inside the `void` method, then call the `void` method with each line’s quantity.
 
 Optional time: about 4 minutes, in addition to the required activity.
 
-Success criteria: In the same editor, add a `void` method that prints a labelled line, call it from `main` with the value your first method returned, and keep the program compiling.
+Success criteria: In your own IDE, not this graded editor, write an `int` method whose only statement throws an exception, confirm that javac accepts it without a `return`, and explain why in one sentence.
 
 Where to act: Compare each candidate’s header with the call `computeTotal(2)`.
 
@@ -120,7 +120,7 @@ Question: What does the program print? Option A: 1210 — Not quite. That would 
 
 ### explore
 
-Code editor task: Refactor three repeated price calculations into one well-named static method with a non-void return type and a typed quantity parameter. Return the calculation, call the method from main for quantities 2, 4 and 7, and verify that it still produces 11, 17 and 26. Starter code: public class Main { // Declare the extracted method above main. public static void main(String[] args) { System.out.println(2 * 3 + 5); System.out.println(4 * 3 + 5); System.out.println(7 * 3 + 5); } }
+Code editor task: Refactor three repeated price calculations. Declare one well-named static method with a non-void return type and a typed quantity parameter that returns the calculation, and one static void method with an int quantity parameter that prints what the first method returns. In main, call the void method for quantities 2, 4 and 7, and verify that Output is still 11, 17 and 26. Starter code: public class Main { // Declare your two methods above main. public static void main(String[] args) { System.out.println(2 * 3 + 5); System.out.println(4 * 3 + 5); System.out.println(7 * 3 + 5); } }
 
 ### mcq
 
