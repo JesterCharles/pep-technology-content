@@ -631,7 +631,7 @@ test("T12 catches low contrast in forced dark mode", { timeout: 60000 }, async (
   assertPreciseFailure(errors, "T12", /dark contrast|color-contrast|axe serious\/critical/);
 });
 
-test("T12 enforces stable semantic surface roles, contrast and non-color cues", { timeout: 120000 }, async () => {
+test("T12 enforces stable semantic surface roles, contrast and non-color cues", { timeout: 240000 }, async () => {
   const mutations = [
     ["fit token role", (html) => html.replace(
       "[data-pep-where-fits] { background:var(--pep-card); border:1px solid var(--pep-line); border-block-start:4px solid var(--pep-accent);",
@@ -651,6 +651,42 @@ test("T12 enforces stable semantic surface roles, contrast and non-color cues", 
       "[data-pep-workspace] { background:var(--pep-card); border:1px solid var(--pep-line-strong);",
       "[data-pep-workspace] { background:var(--pep-card); border:0;",
     ), /interactive workspace.*lacks its non-color boundary/],
+    ["instruction success surface", (html) => html.replace(
+      "</style>",
+      "[data-pep-instructions] { background:#ebf4f0!important; }</style>",
+    ), /instructions 1 does not resolve to --pep-page/],
+    ["instruction success rail", (html) => html.replace(
+      "</style>",
+      "[data-pep-instructions] { border-block-start:4px solid #067647!important; }</style>",
+    ), /instructions 1 has a decorative status surface\/rail/],
+    ["instruction warning surface", (html) => html.replace(
+      "</style>",
+      "[data-pep-instructions] { background:#f9f0eb!important; }</style>",
+    ), /instructions 1 does not resolve to --pep-page/],
+    ["instruction warning rail", (html) => html.replace(
+      "</style>",
+      "[data-pep-instructions] { border-block-start:4px solid #b54708!important; }</style>",
+    ), /instructions 1 has a decorative status surface\/rail/],
+    ["instruction danger surface", (html) => html.replace(
+      "</style>",
+      "[data-pep-instructions] { background:#f9eded!important; }</style>",
+    ), /instructions 1 does not resolve to --pep-page/],
+    ["instruction danger rail", (html) => html.replace(
+      "</style>",
+      "[data-pep-instructions] { border-block-start:4px solid #b42318!important; }</style>",
+    ), /instructions 1 has a decorative status surface\/rail/],
+    ["forced-color transparent rail", (html) => html.replace(
+      "</style>",
+      "@media (forced-colors:active) { [data-pep-where-fits] { forced-color-adjust:none; border-block-start-color:transparent!important; } }</style>",
+    ), /Where this fits.*invisible semantic rail\/boundary/],
+    ["forced-color same-surface rail", (html) => html.replace(
+      "</style>",
+      "@media (forced-colors:active) { [data-pep-where-fits] { forced-color-adjust:none; background:#fff!important; border-block-start-color:#fff!important; } }</style>",
+    ), /Where this fits.*indistinguishable semantic rail\/boundary/],
+    ["forced-color all-transparent boundaries", (html) => html.replace(
+      "</style>",
+      "@media (forced-colors:active) { [data-pep-workspace] { forced-color-adjust:none; border-color:transparent!important; } }</style>",
+    ), /interactive workspace.*invisible semantic rail\/boundary/],
   ];
   for (const [name, transformHtml, pattern] of mutations) {
     const errors = await runFixture("T12", "good.html", { transformHtml });

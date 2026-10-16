@@ -197,8 +197,11 @@ later public drift. Rebase/squash requires a fresh run. No private value or answ
 - **T12:** permits no serious or critical axe findings; runs the keyboard and reduced-motion success routes; requires
   `aria-live`; checks direct body text at 4.5:1 and rendered borders at 3:1 in forced light and dark themes. Fully
   transparent borders are not rendered and are excluded. Enrolled guidance also preserves exact canonical semantic
-  surface/rail roles, 3:1 rail contrast under common color-vision-deficiency transforms, visible non-color labels and
-  boundaries, and forced-colors operation without using status colors as decoration.
+  surface/rail roles, keeps instruction sections unadorned on the effective page surface, rejects decorative instruction
+  status surfaces and rails, requires 3:1 rail contrast under common color-vision-deficiency transforms, and preserves
+  visible non-color labels and boundaries. In forced colors, computed boundaries must remain nontransparent and visibly
+  distinct from their composited adjacent surface; author colors retained with `forced-color-adjust:none` must remain at
+  least 3:1, while valid system-color remapping under `auto` is accepted without author-token RGB equality.
 - **T13:** for pages whose root main carries `data-pep-responsive`, checks 1366×768 and short desktop; 320×568 and
   390×844 phone portraits; 844×390 phone landscape; 768×1024 tablet portrait; and an equivalent 200% zoom CSS
   viewport. Light and dark contexts are represented. Unmigrated pages retain the previous desktop, short desktop,

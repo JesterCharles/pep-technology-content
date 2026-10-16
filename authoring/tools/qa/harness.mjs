@@ -1086,10 +1086,30 @@ async function semanticSurfaceAudit(page, { forcedColors = false } = {}) {
       probe.remove();
       return value;
     };
-    const sameColor = (actual, expected) => {
-      const first = parse(actual);
-      const second = parse(expected);
-      return first && second && first.every((value, index) => Math.abs(value - second[index]) < 0.6);
+    const sameChannels = (first, second) => first && second
+      && first.every((value, index) => Math.abs(value - second[index]) < 0.6);
+    const sameColor = (actual, expected) => sameChannels(parse(actual), parse(expected));
+    const composite = (front, back) => {
+      const alpha = front[3] + back[3] * (1 - front[3]);
+      if (!alpha) return [0, 0, 0, 0];
+      return [0, 1, 2].map((index) =>
+        (front[index] * front[3] + back[index] * back[3] * (1 - front[3])) / alpha,
+      ).concat(alpha);
+    };
+    const effectiveBackground = (element) => {
+      const layers = [];
+      for (let node = element; node; node = node.parentElement) {
+        const color = parse(getComputedStyle(node).backgroundColor);
+        if (color) layers.push(color);
+      }
+      return layers.reverse().reduce((result, color) => composite(color, result), [255, 255, 255, 1]);
+    };
+    const visibleBorder = (style, side, surface) => {
+      const width = Number.parseFloat(style[`border${side}Width`]);
+      const borderStyle = style[`border${side}Style`];
+      const color = parse(style[`border${side}Color`]);
+      if (!(width > 0) || borderStyle === "none" || borderStyle === "hidden" || !color || color[3] === 0) return false;
+      return !sameChannels(composite(color, surface), surface);
     };
     const luminance = (color) => {
       const rgb = color.slice(0, 3).map((value) => {
@@ -1110,6 +1130,7 @@ async function semanticSurfaceAudit(page, { forcedColors = false } = {}) {
     const transform = (color, matrix) => matrix.map((row) =>
       row.reduce((sum, coefficient, index) => sum + coefficient * color[index], 0));
     const definitions = [
+      { name: "instructions", nodes: [...root.querySelectorAll("[data-pep-instructions]")], instruction: true },
       { name: "topic bar", nodes: [...root.querySelectorAll(".pep-topicbar")], label: "h1", labelPattern: /\S/u, surface: "--pep-accent-soft", border: "--pep-accent", edge: "block" },
       { name: "interactive workspace", nodes: [...root.querySelectorAll("[data-pep-workspace]")], label: "[data-pep-task]", labelPattern: /\S/u, surface: "--pep-card", border: "--pep-line-strong", edge: "box" },
       { name: "Where this fits", nodes: [...root.querySelectorAll("[data-pep-where-fits]")], label: ":scope > h2, :scope > h3", labelPattern: /^Where this fits$/u, surface: "--pep-card", border: "--pep-accent", edge: "block" },
@@ -1124,6 +1145,15 @@ async function semanticSurfaceAudit(page, { forcedColors = false } = {}) {
         const style = getComputedStyle(node);
         const hiddenActivity = node.closest("[data-pep-activity][hidden]");
         if (!hiddenActivity && !node.getClientRects().length) problems.push(`${definition.name} ${index + 1} is not rendered`);
+        const surface = effectiveBackground(node);
+        if (definition.instruction) {
+          const pageSurface = effectiveBackground(document.body);
+          if (!sameChannels(surface, pageSurface)) problems.push(`${definition.name} ${index + 1} does not resolve to --pep-page`);
+          if (["Top", "Right", "Bottom", "Left"].some((side) => visibleBorder(style, side, surface))) {
+            problems.push(`${definition.name} ${index + 1} has a decorative status surface/rail`);
+          }
+          continue;
+        }
         const label = node.querySelector(definition.label);
         if (!label || !definition.labelPattern.test(normalize(label.textContent))) {
           problems.push(`${definition.name} ${index + 1} lacks its visible non-color label`);
@@ -1133,24 +1163,33 @@ async function semanticSurfaceAudit(page, { forcedColors = false } = {}) {
           : definition.edge === "block"
             ? { width: style.borderBlockStartWidth, style: style.borderBlockStartStyle, color: style.borderBlockStartColor, minimum: 4 }
             : { width: style.borderTopWidth, style: style.borderTopStyle, color: style.borderTopColor, minimum: 1 };
-        if (edge.style === "none" || Number.parseFloat(edge.width) < edge.minimum) {
+        if (edge.style === "none" || edge.style === "hidden" || Number.parseFloat(edge.width) < edge.minimum) {
           problems.push(`${definition.name} ${index + 1} lacks its non-color ${definition.edge === "box" ? "boundary" : "rail"}`);
           continue;
         }
-        if (forcedColors) continue;
+        const border = parse(edge.color);
+        if (!border || border[3] === 0) {
+          problems.push(`${definition.name} ${index + 1} has an invisible semantic rail/boundary`);
+          continue;
+        }
+        const compositedBorder = composite(border, surface);
+        if (sameChannels(compositedBorder, surface)) {
+          problems.push(`${definition.name} ${index + 1} has an indistinguishable semantic rail/boundary`);
+          continue;
+        }
+        if (forcedColors) {
+          if (style.forcedColorAdjust === "none" && ratio(surface, compositedBorder) < 3) {
+            problems.push(`${definition.name} ${index + 1} forced-color rail/boundary contrast is below 3:1`);
+          }
+          continue;
+        }
         const expectedSurface = token(definition.surface);
         const expectedBorder = token(definition.border);
         if (!sameColor(style.backgroundColor, expectedSurface)) problems.push(`${definition.name} ${index + 1} does not use ${definition.surface}`);
         if (!sameColor(edge.color, expectedBorder)) problems.push(`${definition.name} ${index + 1} does not use ${definition.border}`);
-        const surface = parse(style.backgroundColor);
-        const border = parse(edge.color);
-        if (!surface || !border) {
-          problems.push(`${definition.name} ${index + 1} has an unreadable semantic color`);
-          continue;
-        }
-        if (ratio(surface, border) < 3) problems.push(`${definition.name} ${index + 1} rail/boundary contrast is below 3:1`);
+        if (ratio(surface, compositedBorder) < 3) problems.push(`${definition.name} ${index + 1} rail/boundary contrast is below 3:1`);
         for (const [kind, matrix] of Object.entries(deficiencyMatrices)) {
-          if (ratio(transform(surface, matrix), transform(border, matrix)) < 3) {
+          if (ratio(transform(surface, matrix), transform(compositedBorder, matrix)) < 3) {
             problems.push(`${definition.name} ${index + 1} loses 3:1 rail/boundary contrast under ${kind}`);
           }
         }
