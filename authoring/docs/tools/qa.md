@@ -47,7 +47,11 @@ they compare the complete root/control/per-activity snapshot and reject vacuous 
 pointer and keyboard desktop plus 320/390 touch, both top-level and in `sandbox="allow-scripts"`.
 The harness requires visible focus at each keyboard activation and verifies the same completion assertion. A focus
 indicator may be on the control or a `:focus-within` ancestor, but it must appear on focus and its outline or shadow
-must contrast at least 3:1 with the adjacent background.
+must contrast at least 3:1 with the adjacent background. T12 also resolves the canonical topic-bar, workspace,
+Where-this-fits, anecdote, top-level hint, activity-check and challenge token roles in light/dark themes; checks their
+rail/boundary contrast under protanopia, deuteranopia and tritanopia transforms; requires visible non-color labels and
+boundaries; and repeats the structural cue check in forced-colors mode. T09 repeats role visibility in print, while
+T13 repeats it at every responsive/zoom viewport.
 
 ### Actions
 
@@ -145,8 +149,9 @@ Git `tNN.json` files, and the reusable route roles of AI `spec.js`. No course-1 
 
 An answer-sensitive task and `qa-paths.json` declare the same task selector, supported language scanner and target
 names. Committed paths contain only public-safe starter, incomplete, malformed, wrong-result, unsupported-shape,
-reset and no-premature-credit routes. The target-aware scanner inventories decoded text and attributes across the
-whole enrolled document, comments, no-JavaScript/templates/static alternatives and all QA strings. Its bounded JS
+reset and no-premature-credit routes. The target-aware scanner inventories decoded text and attributes from the
+document element and every descendant—including head, styles and body content outside the enrolled main—plus
+document-wide comments, no-JavaScript/templates/static alternatives and all QA strings. Its bounded JS
 parser cooks escapes/templates and folds all-literal `+` chains without execution. CPython `tokenize` extracts
 balanced candidates from prose; `ast` recursively checks declared targets through wrappers and positional destructuring.
 Target assignments fail anywhere, while standalone comprehensions fail only on answer-bearing task/activity/workspace
@@ -176,8 +181,11 @@ later public drift. Rebase/squash requires a fresh run. No private value or answ
   navigation-only controls are absent, and `afterprint` exactly restores the prior disclosure states.
 - **T10:** runs all three routes and every mandatory guidance route inside an iframe whose only sandbox token is
   `allow-scripts`. Its opaque origin makes unguarded Web Storage access fail naturally. Enrolled pages also run the
-  full harness-owned navigation/state/Restart procedure in sandbox pointer, keyboard and both phone-touch contexts,
-  including action-boundary setup checkpoints, visibly rendered current task/check content and authored-control Restart restoration.
+  full harness-owned navigation/state/Restart procedure in sandbox pointer, keyboard and both phone-touch contexts.
+  The iframe content viewport must equal each configured desktop or 320/390 phone size before invariants run. Those
+  invariants include action-boundary setup checkpoints, authored-control Restart restoration and current task/check
+  rendering against structural hiding, ordinary zero opacity and computed zero-valued `filter: opacity()` components;
+  the latter is bounded full-element-transparency coverage, not arbitrary paint proof.
 - **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion. Enrolled
   pages additionally run navigation and objectives by pointer, keyboard and 320/390 px touch; nested hints by pointer,
   keyboard and phone touch; every locked future activation and fragment; explicit destination focus; monotonic
@@ -185,17 +193,19 @@ later public drift. Rebase/squash requires a fresh run. No private value or answ
   page completion; history without focus movement; current-only Restart after wrong and completed attempts while other
   populated activities stay exact; exact restoration of every current text/check/selection to its pre-setup authored value;
   immutable required time and harness-validated completion across every setup action; visible current task/direct check
-  heading/criteria at each transition; one-credit re-completion; and unchanged accounting while optional guidance is used.
+  heading/criteria at each transition with the same bounded zero-opacity-filter rejection; one-credit re-completion; and unchanged accounting while optional guidance is used.
 - **T12:** permits no serious or critical axe findings; runs the keyboard and reduced-motion success routes; requires
   `aria-live`; checks direct body text at 4.5:1 and rendered borders at 3:1 in forced light and dark themes. Fully
-  transparent borders are not rendered and are excluded.
+  transparent borders are not rendered and are excluded. Enrolled guidance also preserves exact canonical semantic
+  surface/rail roles, 3:1 rail contrast under common color-vision-deficiency transforms, visible non-color labels and
+  boundaries, and forced-colors operation without using status colors as decoration.
 - **T13:** for pages whose root main carries `data-pep-responsive`, checks 1366×768 and short desktop; 320×568 and
   390×844 phone portraits; 844×390 phone landscape; 768×1024 tablet portrait; and an equivalent 200% zoom CSS
   viewport. Light and dark contexts are represented. Unmigrated pages retain the previous desktop, short desktop,
   400×860 and 200% zoom matrix until they are re-authored; add the marker only with the responsive migration.
   Touch contexts execute the required wrong-twice route with real tap events and reject visible buttons, fields,
-  summaries, role controls and ordinary anchors below 44×44 CSS px. At every viewport the harness opens Objectives and
-  every nested hint in sequence, rerunning overflow, clipping and target checks after each reveal. Every context rejects
+  summaries, role controls and ordinary anchors below 44×44 CSS px. At every viewport the harness verifies semantic
+  section roles, opens Objectives and every nested hint in sequence, then reruns overflow, clipping and target checks. Every context rejects
   page-level horizontal overflow and clipped essential controls or text.
   Non-rendered content—including descendants of closed `details`, CSS-hidden content, and zero-size live regions with
   no visible descendants—is excluded.

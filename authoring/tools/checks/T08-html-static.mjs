@@ -459,10 +459,15 @@ async function inspectHtml(html, browser, spec) {
           const activityScope = sensitive[0].closest("[data-pep-activity]") ?? sensitive[0];
           const bearing = (node) => activityScope.contains(node) || sensitive[0].contains(node) ||
             Boolean(node.closest?.("noscript, [data-static-alt]") || node.matches?.("noscript, [data-static-alt]"));
-          for (const node of [root, ...root.querySelectorAll("*")]) {
+          const documentRoot = document.documentElement;
+          for (const node of [documentRoot, ...documentRoot.querySelectorAll("*")]) {
             for (const child of node.childNodes) {
               if (child.nodeType === Node.TEXT_NODE && normalize(child.textContent)) {
-                answerSources.push({ value: child.textContent, answerBearing: bearing(node), source: "html-text" });
+                answerSources.push({
+                  value: child.textContent,
+                  answerBearing: bearing(node),
+                  source: node.tagName === "STYLE" ? "style-text" : "html-text",
+                });
               }
             }
             for (const attribute of node.attributes ?? []) {
@@ -551,8 +556,18 @@ export async function validateHtmlContracts(html, options = {}) {
         ...parsed.comments.map((value) => ({ value, answerBearing: false, source: "script-comment" })),
       ];
     });
+    const styleSources = snapshot.answerSources
+      .filter(({ source }) => source === "style-text")
+      .flatMap(({ value, answerBearing }) => {
+        const parsed = staticJsSources(value);
+        return [
+          ...parsed.strings.map((item) => ({ value: item, answerBearing, source: "style-literal" })),
+          ...parsed.comments.map((item) => ({ value: item, answerBearing, source: "style-comment" })),
+        ];
+      });
     const sources = [
       ...snapshot.answerSources,
+      ...styleSources,
       ...scriptSources,
       ...recursiveSources(options.spec ?? {}, snapshot.answerSelectors),
     ];

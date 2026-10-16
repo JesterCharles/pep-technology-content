@@ -287,6 +287,7 @@ async function perform(target, action, options = {}) {
     }
   }
   if (action.do === "click") {
+    await locator.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }));
     if (options.touch) await locator.tap();
     else await locator.click();
   }
@@ -388,10 +389,12 @@ async function expectRenderedCurrentGuidance(target) {
     const normalize = (value) => (value ?? "").replace(/\s+/gu, " ").trim();
     const rendered = (node) => {
       if (!node?.getClientRects().length) return false;
+      const hasZeroOpacityFilter = (filter) => [...filter.matchAll(/\bopacity\(\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))(%?)\s*\)/giu)]
+        .some((match) => Number(match[1]) === 0);
       for (let current = node; current && current !== document; current = current.parentElement) {
         const style = getComputedStyle(current);
         if (style.display === "none" || style.visibility === "hidden" || style.visibility === "collapse" ||
-            style.contentVisibility === "hidden" || Number(style.opacity) === 0) return false;
+            style.contentVisibility === "hidden" || Number(style.opacity) === 0 || hasZeroOpacityFilter(style.filter)) return false;
       }
       return true;
     };
@@ -489,8 +492,11 @@ async function activateGuidance(locator, mode) {
       throw new Error(`guidance navigation ${identity} has no visible focus indicator`);
     }
     await locator.press("Enter");
-  } else if (mode === "touch") await locator.tap();
-  else await locator.click();
+  } else {
+    await locator.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }));
+    if (mode === "touch") await locator.tap();
+    else await locator.click();
+  }
 }
 
 async function expectDestination(target, number, before, { history = false } = {}) {
@@ -666,6 +672,7 @@ async function withPage(browser, topic, options, callback) {
     colorScheme: options.theme ?? "light",
     reducedMotion: options.reducedMotion ? "reduce" : "no-preference",
     hasTouch: options.touch ?? false,
+    forcedColors: options.forcedColors ?? "none",
     javaScriptEnabled: options.javaScriptEnabled ?? true,
   });
   const page = await context.newPage();
@@ -692,20 +699,27 @@ async function withPage(browser, topic, options, callback) {
   }
 }
 
-async function sandboxFrame(page, topic) {
+async function sandboxFrame(page, topic, expectedViewport) {
+  const viewportStyle = expectedViewport
+    ? "<style>html,body{width:100%;height:100%;margin:0;overflow:hidden}#lesson{display:block;width:100%;height:100%;border:0}</style>"
+    : "";
   await page.setContent(
-    '<!doctype html><meta charset="utf-8"><iframe id="lesson" sandbox="allow-scripts"></iframe>',
+    `<!doctype html><meta charset="utf-8">${viewportStyle}<iframe id="lesson" sandbox="allow-scripts"></iframe>`,
   );
   const html = await readFile(topic.html, "utf8");
-  await page.locator("#lesson").evaluate((iframe, source) => {
+  await page.locator("#lesson").evaluate((iframe, source) => new Promise((resolve) => {
+    iframe.addEventListener("load", resolve, { once: true });
     iframe.srcdoc = source;
-  }, html);
-  await page.waitForFunction(() => {
-    const iframe = document.querySelector("#lesson");
-    return iframe?.contentWindow;
-  });
+  }), html);
   const frame = page.frames()[1];
   if (!frame) throw new Error("sandbox iframe did not load");
+  await frame.waitForFunction(() => document.readyState === "complete" && Boolean(document.body?.childElementCount));
+  if (expectedViewport) {
+    const actual = await frame.evaluate(() => ({ width: innerWidth, height: innerHeight }));
+    if (actual.width !== expectedViewport.width || actual.height !== expectedViewport.height) {
+      throw new Error(`sandbox child viewport ${actual.width}x${actual.height} does not match configured ${expectedViewport.width}x${expectedViewport.height}`);
+    }
+  }
   return frame;
 }
 
@@ -720,7 +734,7 @@ async function checkSandboxGuidanceMatrix(browser, topic, spec) {
     const context = await browser.newContext({ viewport: configuration.viewport, hasTouch: configuration.touch ?? false });
     const page = await context.newPage();
     try {
-      const frame = await sandboxFrame(page, topic);
+      const frame = await sandboxFrame(page, topic, configuration.viewport);
       await checkGuidanceInvariants(frame, configuration.setup, configuration.mode);
     } finally {
       await context.close();
@@ -736,6 +750,7 @@ async function checkPrint(browser, topic) {
     const before = await details.evaluateAll((items) => items.map((item) => item.open));
     await page.evaluate(() => dispatchEvent(new Event("beforeprint")));
     await page.emulateMedia({ media: "print" });
+    await semanticSurfaceAudit(page);
     const visibleText = async (locator, label) => {
       if (!(await locator.count()) || !(await locator.isVisible()) || !(await locator.innerText()).trim()) {
         throw new Error(`print hides required ${label} content`);
@@ -1052,6 +1067,100 @@ async function checkBehavior(browser, topic) {
   });
 }
 
+async function semanticSurfaceAudit(page, { forcedColors = false } = {}) {
+  const failures = await page.evaluate(({ forcedColors }) => {
+    const root = document.querySelector("[data-pep-guidance-contract]");
+    if (!root) return [];
+    const normalize = (value) => (value ?? "").replace(/\s+/gu, " ").trim();
+    const parse = (value) => {
+      const match = value.match(/rgba?\(([^)]+)\)/u);
+      if (!match) return null;
+      const parts = match[1].split(/[ ,/]+/u).filter(Boolean).map(Number);
+      return [parts[0], parts[1], parts[2], parts[3] ?? 1];
+    };
+    const token = (name) => {
+      const probe = document.createElement("span");
+      probe.style.color = `var(${name})`;
+      document.body.append(probe);
+      const value = getComputedStyle(probe).color;
+      probe.remove();
+      return value;
+    };
+    const sameColor = (actual, expected) => {
+      const first = parse(actual);
+      const second = parse(expected);
+      return first && second && first.every((value, index) => Math.abs(value - second[index]) < 0.6);
+    };
+    const luminance = (color) => {
+      const rgb = color.slice(0, 3).map((value) => {
+        const channel = value / 255;
+        return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+    };
+    const ratio = (first, second) => {
+      const values = [luminance(first), luminance(second)].sort((a, b) => b - a);
+      return (values[0] + 0.05) / (values[1] + 0.05);
+    };
+    const deficiencyMatrices = {
+      protanopia: [[0.567, 0.433, 0], [0.558, 0.442, 0], [0, 0.242, 0.758]],
+      deuteranopia: [[0.625, 0.375, 0], [0.7, 0.3, 0], [0, 0.3, 0.7]],
+      tritanopia: [[0.95, 0.05, 0], [0, 0.433, 0.567], [0, 0.475, 0.525]],
+    };
+    const transform = (color, matrix) => matrix.map((row) =>
+      row.reduce((sum, coefficient, index) => sum + coefficient * color[index], 0));
+    const definitions = [
+      { name: "topic bar", nodes: [...root.querySelectorAll(".pep-topicbar")], label: "h1", labelPattern: /\S/u, surface: "--pep-accent-soft", border: "--pep-accent", edge: "block" },
+      { name: "interactive workspace", nodes: [...root.querySelectorAll("[data-pep-workspace]")], label: "[data-pep-task]", labelPattern: /\S/u, surface: "--pep-card", border: "--pep-line-strong", edge: "box" },
+      { name: "Where this fits", nodes: [...root.querySelectorAll("[data-pep-where-fits]")], label: ":scope > h2, :scope > h3", labelPattern: /^Where this fits$/u, surface: "--pep-card", border: "--pep-accent", edge: "block" },
+      { name: "Another way to think about it", nodes: [...root.querySelectorAll('.pep-optional--anecdote[data-pep-optional="anecdote"]')], label: ":scope > summary", labelPattern: /^Another way to think about it/u, surface: "--pep-card", border: "--pep-line-strong", edge: "block" },
+      { name: "Need a hint?", nodes: [...root.querySelectorAll("details[data-pep-hint]")].filter((node) => !node.parentElement?.closest("details[data-pep-hint]")), label: ":scope > summary", labelPattern: /^Need a hint\?/u, surface: "--pep-accent-soft", border: "--pep-accent", edge: "block" },
+      { name: "activity checks", nodes: [...root.querySelectorAll("[data-pep-activity-checks]")], label: ":scope > h2, :scope > h3", labelPattern: /^(What success looks like|Activity checks)$/u, surface: "--pep-accent-soft", border: "--pep-accent", edge: "block" },
+      { name: "Challenge (optional)", nodes: [...root.querySelectorAll('.pep-optional--challenge[data-pep-optional="challenge"]')], label: ":scope > summary", labelPattern: /^Challenge \(optional\)$/u, surface: "--pep-control", border: "--pep-line-strong", edge: "block" },
+    ];
+    const problems = [];
+    for (const definition of definitions) {
+      for (const [index, node] of definition.nodes.entries()) {
+        const style = getComputedStyle(node);
+        const hiddenActivity = node.closest("[data-pep-activity][hidden]");
+        if (!hiddenActivity && !node.getClientRects().length) problems.push(`${definition.name} ${index + 1} is not rendered`);
+        const label = node.querySelector(definition.label);
+        if (!label || !definition.labelPattern.test(normalize(label.textContent))) {
+          problems.push(`${definition.name} ${index + 1} lacks its visible non-color label`);
+        }
+        const edge = definition.edge === "inline"
+          ? { width: style.borderInlineStartWidth, style: style.borderInlineStartStyle, color: style.borderInlineStartColor, minimum: 4 }
+          : definition.edge === "block"
+            ? { width: style.borderBlockStartWidth, style: style.borderBlockStartStyle, color: style.borderBlockStartColor, minimum: 4 }
+            : { width: style.borderTopWidth, style: style.borderTopStyle, color: style.borderTopColor, minimum: 1 };
+        if (edge.style === "none" || Number.parseFloat(edge.width) < edge.minimum) {
+          problems.push(`${definition.name} ${index + 1} lacks its non-color ${definition.edge === "box" ? "boundary" : "rail"}`);
+          continue;
+        }
+        if (forcedColors) continue;
+        const expectedSurface = token(definition.surface);
+        const expectedBorder = token(definition.border);
+        if (!sameColor(style.backgroundColor, expectedSurface)) problems.push(`${definition.name} ${index + 1} does not use ${definition.surface}`);
+        if (!sameColor(edge.color, expectedBorder)) problems.push(`${definition.name} ${index + 1} does not use ${definition.border}`);
+        const surface = parse(style.backgroundColor);
+        const border = parse(edge.color);
+        if (!surface || !border) {
+          problems.push(`${definition.name} ${index + 1} has an unreadable semantic color`);
+          continue;
+        }
+        if (ratio(surface, border) < 3) problems.push(`${definition.name} ${index + 1} rail/boundary contrast is below 3:1`);
+        for (const [kind, matrix] of Object.entries(deficiencyMatrices)) {
+          if (ratio(transform(surface, matrix), transform(border, matrix)) < 3) {
+            problems.push(`${definition.name} ${index + 1} loses 3:1 rail/boundary contrast under ${kind}`);
+          }
+        }
+      }
+    }
+    return problems;
+  }, { forcedColors });
+  if (failures.length) throw new Error(`semantic guidance surfaces: ${failures.slice(0, 8).join("; ")}`);
+}
+
 function contrastAudit(page) {
   return page.evaluate(() => {
     const parse = (value) => {
@@ -1129,9 +1238,16 @@ async function checkAccessibility(browser, topic) {
       if (severe.length) throw new Error(`axe serious/critical: ${severe.map((item) => item.id).join(", ")}`);
       const contrast = await contrastAudit(page);
       if (contrast.length) throw new Error(`${theme} contrast: ${contrast.slice(0, 8).join("; ")}`);
+      await semanticSurfaceAudit(page);
       if ((await page.locator("[aria-live]").count()) === 0) throw new Error("aria-live region is required");
     });
   }
+  await withPage(browser, topic, { label: "forced-colors", forcedColors: "active" }, async (page) => {
+    await semanticSurfaceAudit(page, { forcedColors: true });
+    const axe = await new AxeBuilder({ page }).analyze();
+    const severe = axe.violations.filter((item) => ["serious", "critical"].includes(item.impact));
+    if (severe.length) throw new Error(`forced-colors axe serious/critical: ${severe.map((item) => item.id).join(", ")}`);
+  });
   await withPage(browser, topic, {}, async (page) => {
     await execute(page, spec.keyboard, { keyboard: true });
     await assertState(page, spec.completion);
@@ -1163,6 +1279,7 @@ async function checkResponsive(browser, topic) {
       },
       async (page) => {
         const inspect = async () => {
+          if (spec.guidance) await semanticSurfaceAudit(page);
           const geometry = await page.evaluate(() => {
             const root = document.documentElement;
             const essentialSelector = [

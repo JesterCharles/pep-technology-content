@@ -158,6 +158,7 @@ It is not a dashboard or an admin tool: a compact topic bar, a reading and instr
 - One topic bar, then two regions: instructions on the left, the interactive workspace on the right, stacked on narrow screens. [R][A]
 - The interaction is the real task: learners who must write code write it in an editor. [R][A]
 - Tonal layering (page → card → control) with 1 px lines; no shadows. [T][S]
+- Repeatable semantic sections use the same restrained surface, border and rail roles on every activity; labels and placement still identify them without color. [A]
 - One accent: violet `#5B3FD6` fills, `#8B78FF` highlights. [T]
 - Green, red and amber mean correct, wrong and warning, and nothing else. [T]
 - A six-step type scale (12, 13, 14, 16, 20, 28 px), body at 16 px. [T]
@@ -435,21 +436,31 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 ```css
 .pep-topicbar {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
-  padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line);
+  padding: 12px 16px; margin: 0 0 24px;
+  border: 1px solid var(--pep-line); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
 }
 .pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
-.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
 .pep-objectives { position: relative; break-inside: avoid; }
 .pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; }
 .pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
 .pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
 @media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
 .pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.pep-activity-checks { padding: 12px 16px; border: 1px solid var(--pep-line); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-region--workspace, [data-pep-workspace] {
+  padding: 24px; border: 1px solid var(--pep-line-strong);
+  border-radius: var(--pep-radius-lg); background: var(--pep-card);
+}
+.pep-activity-checks, [data-pep-activity-checks] {
+  padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px;
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
 @media print { .pep-objectives > div { display: block !important; width: auto; } }
 ```
 
-Native `<details>` is the required no-JavaScript fallback. If script adds hover for a fine pointer, focus and click/tap MUST still open it; Escape closes and returns focus to the summary, outside click closes, and `aria-controls` keeps the visible relationship. The print helper opens objectives before print and restores only what it opened. Restart remains a secondary 44 px button and clears only the current activity. [A]
+The topic/progress bar is the clearest brand-accent surface; the interactive workspace is one quiet elevated card, while reading and instructions remain on the page surface. Required checks use the accent tint and rail, but never success green before success exists. Native `<details>` is the required no-JavaScript fallback. If script adds hover for a fine pointer, focus and click/tap MUST still open it; Escape closes and returns focus to the summary, outside click closes, and `aria-controls` keeps the visible relationship. The print helper opens objectives before print and restores only what it opened. Restart remains a secondary 44 px button and clears only the current activity. [A]
 
 ### Where this fits
 
@@ -462,6 +473,13 @@ Use this pattern after the core explanation and before task instructions **only 
   <p data-pep-fit-good><strong>Good fit:</strong> Name the bounded situation where this concept helps.</p>
   <p data-pep-fit-boundary><strong>Choose something else when:</strong> Name one important boundary.</p>
 </section>
+```
+
+```css
+[data-pep-where-fits] {
+  padding: 12px 16px; border: 1px solid var(--pep-line); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-card);
+}
 ```
 
 The decision is authentic rather than rhetorical. The good fit describes actual scale and purpose. The boundary names a materially different tool or structure, not merely “when it is hard.” This section may use necessary domain terms, but contains no answer to the activity. It is a peer—not a descendant—of teaching, task, workspace, hints and optional content. Topic-level placement uses the nearest preceding topic teaching and following task/workspace; an activity-local instance belongs to that activity, follows its local/applicable teaching and precedes its own task. Structural QA checks direct ownership, order, non-empty fields and placement; independent education and technology-SME review judges whether the choice is meaningful, authentic and technically true. [A]
@@ -487,6 +505,20 @@ Put a native disclosure inside each `data-pep-task data-pep-may-stall` task; thi
     </details>
   </div>
 </details>
+```
+
+```css
+.pep-hint, details[data-pep-hint] {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line);
+  border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md);
+  background: var(--pep-accent-soft); break-inside: avoid;
+}
+.pep-hint > summary { min-height: 44px; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint .pep-hint {
+  margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line);
+  border-radius: 0; background: transparent;
+}
 ```
 
 Use one hint when one reasoning step is enough. Every task has a unique non-empty `id`, and every contained hint's `data-pep-hint-for` resolves to that exact task in the same activity. Multiple hints use `1..N` in source order and nest each later disclosure inside its predecessor. Visible and browser-computed summary names begin with **Need a hint?** / **Another hint**, include activity and ordinal, and remain unique even with ARIA naming attributes. Closing an ancestor makes later hints unavailable without deleting them. Each hint owns exactly one non-empty target and step; normalized clues cannot duplicate. A hint never supplies the final answer, finished expression, reference implementation, private test or exact required output. It carries no objective, interaction, progress, grade or completion hook, is excluded from required time with `data-section-skip`, and remains keyboard/touch/screen-reader operable without JavaScript. Machine checks establish structure, sequence, naming and high-confidence answer safety; independent education and SME review decides whether each clue genuinely adds reasoning help and remains semantically answer-safe. [A]
@@ -523,8 +555,12 @@ These are optional authoring patterns, not required page furniture. Use at most 
 
 ```css
 .pep-optional {
-  min-width: 0; border-block: 1px solid var(--pep-line); background: transparent;
-  break-inside: avoid;
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line);
+  border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-card); break-inside: avoid;
+}
+.pep-optional--challenge {
+  border-color: var(--pep-line-strong); background: var(--pep-control);
 }
 .pep-optional > summary {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
@@ -538,11 +574,20 @@ These are optional authoring patterns, not required page furniture. Use at most 
 .pep-optional__body { padding: 4px 0 16px; }
 .pep-optional__body > :first-child { margin-top: 0; }
 .pep-optional__body > :last-child { margin-bottom: 0; }
+@media forced-colors {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+}
 @media print {
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
   .pep-optional > summary { list-style: none; }
   .pep-optional > summary::-webkit-details-marker { display: none; }
 }
 ```
+
+These role treatments are stable, not author-selected decoration: the same section type uses the same tokens everywhere. Required fit/check content remains primary; anecdote, help and challenge remain visibly secondary. Green, amber and red are reserved for actual success, warning and error states. Every region keeps its literal label, border/rail and consistent placement so forced-colors users and people with common color-vision deficiencies receive the same hierarchy. Do not create per-activity hues, a rainbow card grid, neon outlines or an accent on every paragraph. [A]
 
 ```html
 <script>
@@ -700,7 +745,7 @@ function go(number, mode = 'push', moveFocus = true) {
 addEventListener('popstate', () => go(Number(location.hash.match(/activity-(\d+)/)?.[1]), 'replace', false));
 ```
 
-A production page also binds Previous/Next and ordinary back links, guards timeline clicks, sets disabled states and reflects the stable state hooks above. Completion advances `unlockedThrough`; revisiting does not. Locked activation and every future fragment change neither current activity nor frontier; a disallowed fragment normalizes to the canonical allowed fragment. Back/Forward restores an unlocked activity without changing state or moving focus. Author QA arrays establish a nonzero attempt, meaningful inputs in at least two activities, prior completion/credit and a later unlocked current activity; they never choose the assertions. The harness preserves pre-setup authored controls and required time, checkpoints every setup action, accepts page completion only with a coherent observed activity-completion transition, and prevents later setup navigation from redefining that checkpoint. It requires the current task and directly owned check heading/criteria to stay visibly rendered at initial load, every setup boundary and every harness destination. It then activates all navigation and Restart and compares complete root/control/activity snapshots across top-level and sandbox pointer, keyboard and 320/390 touch. Before both wrong-attempt and completed Restart it changes the current controls away from their authored values; Restart must restore every current text/check/selection value exactly, clear only current state, preserve other activities, page completion, frontier and required time, and award exactly one credit after re-completion. Because state lives entirely in the standalone page and guarded storage is optional, navigation works offline and in the sandbox. [A]
+A production page also binds Previous/Next and ordinary back links, guards timeline clicks, sets disabled states and reflects the stable state hooks above. Completion advances `unlockedThrough`; revisiting does not. Locked activation and every future fragment change neither current activity nor frontier; a disallowed fragment normalizes to the canonical allowed fragment. Back/Forward restores an unlocked activity without changing state or moving focus. Author QA arrays establish a nonzero attempt, meaningful inputs in at least two activities, prior completion/credit and a later unlocked current activity; they never choose the assertions. The harness preserves pre-setup authored controls and required time, checkpoints every setup action, accepts page completion only with a coherent observed activity-completion transition, and prevents later setup navigation from redefining that checkpoint. It requires the current task and directly owned check heading/criteria to stay visibly rendered at initial load, every setup boundary and every harness destination, rejecting structural hiding, ordinary zero opacity and computed `filter: opacity(0)` (including percentage or combined-filter serialization). This is bounded full-element-transparency coverage, not pixel, contrast, clipping, blending or arbitrary-paint proof. It then activates all navigation and Restart and compares complete root/control/activity snapshots across top-level and sandbox pointer, keyboard and 320/390 touch; the sandbox child viewport is asserted as the exact configured desktop or phone dimensions before those invariants run. Before both wrong-attempt and completed Restart it changes the current controls away from their authored values; Restart must restore every current text/check/selection value exactly, clear only current state, preserve other activities, page completion, frontier and required time, and award exactly one credit after re-completion. Because state lives entirely in the standalone page and guarded storage is optional, navigation works offline and in the sandbox. [A]
 
 ### Figures, diagrams, charts and tables
 
@@ -775,7 +820,7 @@ For Python Slicing and Comprehensions Activity 3, keep the bounded editor but re
 - Keep **Problems**, **Output**, Run, Reset code and the bounded editor visible. Problems identifies an unsupported shape or a location to fix; Output compares the learner's resulting values with the shown loop behavior. Never embed a complete expression, answer key, hidden solution, reference implementation or private test in HTML, JavaScript, static alternatives or hint copy.
 - Consolidate the existing applicable **Where this fits** teaching rather than adding a duplicate: comprehensions fit a bounded iterable already in memory when the transform/filter remains clear as one expression and the whole result is needed. Consider a generator or iterator approach for large or streaming inputs. Prefer an ordinary loop for side effects, multi-step branching, per-item exception handling, early exit, or whenever it states the control flow more clearly.
 - Supply nested progressive hints in this order: identify the **collected value**; identify the `for` **source**; decide whether the optional **filter** is needed; then, for the second placeholder, distinguish set uniqueness from dict key-to-value association. Each later disclosure is nested in its predecessor and cannot provide a final expression.
-- Declare the task and its two targets through the answer-sensitive hooks shown below. QA inventories decoded text, attributes and comments across the whole page, no-JavaScript/templates/static alternatives, embedded JavaScript strings/escapes/literal concatenation and every QA string. It decodes canonical UTF-8 base64, percent and hex-byte forms, rejects target-associated decoders/digests, then uses CPython `tokenize` and recursive `ast` target/value pairing (including prose spans, wrappers and tuple targets). Target assignments fail anywhere; standalone comprehensions fail only on answer-bearing surfaces so unrelated teaching remains legal. This scanner does not prove semantic equivalence or opaque provenance; an independent Python SME still judges leakage.
+- Declare the task and its two targets through the answer-sensitive hooks shown below. QA inventories decoded text and attributes from the document element and every descendant—including the head, styles and body content outside the enrolled main—plus document-wide comments, no-JavaScript/templates/static alternatives, embedded JavaScript strings/escapes/literal concatenation and every QA string. It decodes canonical UTF-8 base64, percent and hex-byte forms, rejects target-associated decoders/digests, then uses CPython `tokenize` and recursive `ast` target/value pairing (including prose spans, wrappers and tuple targets). Target assignments fail anywhere; standalone comprehensions fail only on answer-bearing surfaces so unrelated teaching remains legal. This scanner does not prove semantic equivalence or opaque provenance; an independent Python SME still judges leakage.
 
 ```html
 <section id="task-3" data-pep-task data-pep-may-stall data-pep-instructions

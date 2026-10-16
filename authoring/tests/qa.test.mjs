@@ -302,11 +302,12 @@ test("T09 catches every no-JavaScript anchor pair and per-page print restoration
   const mutations = [
     ["timeline", (html) => html.replace('href="#activity-2" data-pep-activity-link', 'href="#activity-3" data-pep-activity-link'), /timeline href\/id order mismatch/],
     ["back link", (html) => html.replace('href="#activity-1" data-pep-back-link', 'href="#activity-3" data-pep-back-link'), /back link does not resolve/],
-    ["print completeness", (html) => html.replace("@media print {", "@media print { .activity-checks { display:none!important; }"), /print hides required/],
+    ["print completeness", (html) => html.replace("@media print {", "@media print { .activity-checks { display:none!important; }"), /print hides required|semantic guidance surfaces/],
     ["print objective body", (html) => html.replace("@media print {", "@media print { #objectives-body { display:none!important; }"), /objectives body/],
     ["print hint step", (html) => html.replace("@media print {", "@media print { [data-pep-hint-step] { display:none!important; }"), /hint reasoning step/],
     ["print optional cue", (html) => html.replace("@media print {", "@media print { .pep-optional__cue { display:none!important; }"), /pep-optional__cue/],
     ["print static alternative", (html) => html.replace("@media print {", "@media print { [data-static-alt] { display:none!important; }"), /static alternative/],
+    ["print semantic rail", (html) => html.replace("</style>", "@media print { [data-pep-where-fits] { border-block-start-width:0!important; } }</style>"), /semantic guidance surfaces.*non-color rail/],
     ["print restoration", (html) => html.replace("printOpened.forEach(details => { details.open = false; });", "printOpened.forEach(details => { details.open = true; });"), /did not restore exact disclosure state/],
   ];
   for (const [name, transformHtml, pattern] of mutations) {
@@ -355,24 +356,35 @@ test("T11 harness-owned guidance invariants catch accepted state mutations", { t
   }
 });
 
-test("T10/T11 enforce rendered current guidance in every owned environment", { timeout: 240000 }, async () => {
+test("T10/T11 enforce rendered current guidance in every owned environment", { timeout: 600000 }, async () => {
   const mutations = [
-    ["task", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-task] { display:none!important; }", /current task is hidden/],
-    ["check block", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] { display:none!important; }", /activity-check block is not rendered/],
-    ["check heading", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > h2, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > h3 { display:none!important; }", /activity-check heading is hidden/],
-    ["check criteria", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > p, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > ul > li, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > ol > li { display:none!important; }", /activity-check criteria are hidden/],
+    ["task display", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-task] { display:none!important; }", /current task is hidden/],
+    ["check block display", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] { display:none!important; }", /activity-check block is not rendered/],
+    ["check heading display", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > h2, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > h3 { display:none!important; }", /activity-check heading is hidden/],
+    ["check criteria display", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > p, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > ul > li, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > ol > li { display:none!important; }", /activity-check criteria are hidden/],
+    ["task filter opacity", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-task] { filter:opacity(0)!important; }", /current task is hidden/],
+    ["check block filter opacity", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] { filter:opacity(0)!important; }", /activity-check block is not rendered/],
+    ["check heading filter opacity", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > h2, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > h3 { filter:opacity(0)!important; }", /activity-check heading is hidden/],
+    ["check criteria filter opacity", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > p, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > ul > li, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > ol > li { filter:opacity(0)!important; }", /activity-check criteria are hidden/],
+    ["percentage filter opacity", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-task] { filter:opacity(0%)!important; }", /current task is hidden/],
+    ["combined filter opacity", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] { filter:blur(0) opacity(0)!important; }", /activity-check block is not rendered/],
   ];
+  const transform = (css) => (html) => html
+    .replace("</style>", `@media screen { ${css} }</style>`)
+    .replace(
+      "previous.addEventListener('click', () => renderActivity(current - 1, 'push', true));",
+      "previous.addEventListener('click', () => { renderActivity(current - 1, 'push', true); lesson.dataset.testHide = 'true'; });",
+    );
   for (const rule of ["T10", "T11"]) {
     for (const [name, css, pattern] of mutations) {
-      const errors = await runFixture(rule, "good.html", {
-        transformHtml: (html) => html
-          .replace("</style>", `@media screen { ${css} }</style>`)
-          .replace(
-            "previous.addEventListener('click', () => renderActivity(current - 1, 'push', true));",
-            "previous.addEventListener('click', () => { renderActivity(current - 1, 'push', true); lesson.dataset.testHide = 'true'; });",
-          ),
-      });
+      const errors = await runFixture(rule, "good.html", { transformHtml: transform(css) });
       assertPreciseFailure(errors, rule, pattern);
+    }
+    for (const [name, css] of [
+      ["non-opacity filter", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-task] { filter:blur(0)!important; }"],
+      ["nonzero opacity filter", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-task] { filter:opacity(.5)!important; }"],
+    ]) {
+      assert.deepEqual(await runFixture(rule, "good.html", { transformHtml: transform(css) }), [], `${rule} rejected ${name}`);
     }
   }
 });
@@ -403,6 +415,41 @@ test("T10/T11 checkpoint setup navigation against authored time and validated co
       ),
     });
     assertPreciseFailure(errors, rule, /without a coherent activity completion transition/);
+  }
+});
+
+test("T10 strict sandbox uses each configured child viewport for guidance, setup and Restart", { timeout: 300000 }, async () => {
+  const listener = "previous.addEventListener('click', () => renderActivity(current - 1, 'push', true));";
+  const inputRestore = `          if (initial.control.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) initial.control.value = initial.value;`;
+  for (const width of [320, 390]) {
+    const hidden = await runFixture("T10", "good.html", {
+      transformHtml: (html) => html.replace(
+        "</style>",
+        `@media screen and (width: ${width}px) { [data-pep-activity]:not([hidden]) [data-pep-task] { display:none!important; } }</style>`,
+      ),
+    });
+    assertPreciseFailure(hidden, "T10", /current task is hidden/);
+
+    const staleRestart = await runFixture("T10", "good.html", {
+      transformHtml: (html) => html.replace(
+        inputRestore,
+        `          if (innerWidth !== ${width} && initial.control.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) initial.control.value = initial.value;`,
+      ),
+    });
+    assertPreciseFailure(staleRestart, "T10", /did not restore authored current controls/);
+
+    for (const [property, value, pattern] of [
+      ["pepRequiredMinutes", "99", /changed authored required time/],
+      ["pepComplete", "false", /setup navigation changed non-navigation state/],
+    ]) {
+      const setupCorruption = await runFixture("T10", "good.html", {
+        transformHtml: (html) => html.replace(
+          listener,
+          `previous.addEventListener('click', () => { renderActivity(current - 1, 'push', true); if (window.top !== window && innerWidth === ${width}) lesson.dataset.${property} = '${value}'; });`,
+        ),
+      });
+      assertPreciseFailure(setupCorruption, "T10", pattern);
+    }
   }
 });
 
@@ -582,6 +629,43 @@ test("T12 catches low contrast in forced dark mode", { timeout: 60000 }, async (
   simple.progress = simple.completion;
   const errors = await runFixture("T12", "low-contrast-dark.html", { spec: simple });
   assertPreciseFailure(errors, "T12", /dark contrast|color-contrast|axe serious\/critical/);
+});
+
+test("T12 enforces stable semantic surface roles, contrast and non-color cues", { timeout: 120000 }, async () => {
+  const mutations = [
+    ["fit token role", (html) => html.replace(
+      "[data-pep-where-fits] { background:var(--pep-card); border:1px solid var(--pep-line); border-block-start:4px solid var(--pep-accent);",
+      "[data-pep-where-fits] { background:var(--pep-card); border:1px solid var(--pep-line); border-block-start:4px solid var(--pep-line-strong);",
+    ), /does not use --pep-accent/],
+    ["repeated check role", (html) => html.replace(
+      "</style>",
+      "#activity-2 [data-pep-activity-checks] { background:var(--pep-card)!important; }</style>",
+    ), /activity checks 2 does not use --pep-accent-soft/],
+    ["color-vision contrast", (html) => html.replace("--focus:#5b3fd6", "--focus:#f2f0fc"), /light contrast|contrast is below 3:1|loses 3:1/],
+    ["non-color label", (html) => html.replace(">Where this fits</h2>", "></h2>"), /lacks its visible non-color label/],
+    ["forced-color rail", (html) => html.replace(
+      "</style>",
+      "@media (forced-colors:active) { [data-pep-where-fits] { border-block-start-width:0!important; } }</style>",
+    ), /lacks its non-color rail/],
+    ["workspace hierarchy", (html) => html.replace(
+      "[data-pep-workspace] { background:var(--pep-card); border:1px solid var(--pep-line-strong);",
+      "[data-pep-workspace] { background:var(--pep-card); border:0;",
+    ), /interactive workspace.*lacks its non-color boundary/],
+  ];
+  for (const [name, transformHtml, pattern] of mutations) {
+    const errors = await runFixture("T12", "good.html", { transformHtml });
+    assertPreciseFailure(errors, "T12", pattern);
+  }
+});
+
+test("T13 keeps semantic rails through phone, tablet and zoom layouts", { timeout: 60000 }, async () => {
+  const errors = await runFixture("T13", "good.html", {
+    transformHtml: (html) => html.replace(
+      "</style>",
+      "@media (max-width:390px) { [data-pep-where-fits] { border-block-start-width:0!important; } }</style>",
+    ),
+  });
+  assertPreciseFailure(errors, "T13", /semantic guidance surfaces.*non-color rail/);
 });
 
 test("T13 skips zero-size hidden live text and controls in closed details", { timeout: 60000 }, async () => {
@@ -800,6 +884,13 @@ test("target-aware Python AST scanning rejects complete generic answers in every
   const percent = encodeURIComponent(expression);
   const hex = [...Buffer.from(expression)].map((value) => `0x${value.toString(16).padStart(2, "0")}`).join(",");
   const mutations = [
+    baseHtml.replace("<style>", `<style>/* ${expression} */`),
+    baseHtml.replace("<style>", `<style>.answer::before { content: ${JSON.stringify(expression)}; }`),
+    baseHtml.replace("<title>", `<meta data-answer=${JSON.stringify(expression)}><title>`),
+    baseHtml.replace("  <script>", `  <p hidden>${expression}</p>\n  <script>`),
+    baseHtml.replace("  <script>", `  <p>${expression}</p>\n  <script>`),
+    baseHtml.replace("  <script>", `  <div data-answer=${JSON.stringify(expression)}>Outside the lesson</div>\n  <script>`),
+    baseHtml.replace("Choose the safe action below your note", `<style>/* ${expression} */</style>Choose the safe action below your note`),
     baseHtml.replace("Choose the safe action below your note", `${expression}. Choose the safe action below your note`),
     baseHtml.replace("Choose the safe action below your note", "picked = &#91;entry for entry in records&#93;. Choose the safe action below your note"),
     baseHtml.replace("Decide whether each effect remains in this page or crosses a boundary.", `Use ${bare}.`),
@@ -821,8 +912,12 @@ test("target-aware Python AST scanning rejects complete generic answers in every
     baseHtml.replace("Choose the safe action below your note", `${percent}. Choose the safe action below your note`),
     baseHtml.replace("Choose the safe action below your note", `${hex}. Choose the safe action below your note`),
   ];
-  for (const mutation of mutations) {
-    assert.match((await validateLearnerGuidance(mutation, baseSpec)).join("; "), /complete target comprehension expression/);
+  for (const [index, mutation] of mutations.entries()) {
+    assert.match(
+      (await validateLearnerGuidance(mutation, baseSpec)).join("; "),
+      /complete target comprehension expression/,
+      `answer-source mutation ${index} unexpectedly passed`,
+    );
   }
   const qaMutation = structuredClone(baseSpec);
   qaMutation.simulatorEdges[0].actions[0].value = expression;
@@ -852,6 +947,12 @@ test("target-aware Python AST scanning rejects complete generic answers in every
     "other = [entry for entry in records]. Choose the safe action below your note",
   );
   assert.deepEqual(await validateLearnerGuidance(unrelatedAssignment, baseSpec), []);
+  for (const ordinary of [
+    baseHtml.replace("<style>", '<style>.status::before { content: "inventory ready"; }'),
+    baseHtml.replace("  <script>", "  <p>Inventory remains ready outside the lesson.</p>\n  <script>"),
+  ]) {
+    assert.deepEqual(await validateLearnerGuidance(ordinary, baseSpec), []);
+  }
 });
 
 test("Python Activity 3 recipe is bounded and delegates semantic transfer proof to reviewers", async () => {
