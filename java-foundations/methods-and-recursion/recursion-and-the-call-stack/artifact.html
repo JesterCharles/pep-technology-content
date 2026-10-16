@@ -719,7 +719,9 @@ window.PEP_PAGE = {"correct":{"activity-1":"a","activity-2":"c"},"explain":{"act
 window.PEP_PAGE.checks = {
   'activity-3': function (res, src) {
     if (!res.compiled) return { pass: false, notes: ['<strong>Missing:</strong> the program must compile first. Open Problems and fix the line it names.'] };
-    var a = res.analysis, notes = [];
+    var traced = PepJava.run(src, { maxDepth: 600, trace: true, maxTrace: 4000, returnMarks: true });
+    if (!traced.compiled) return { pass: false, notes: ['<strong>Missing:</strong> the program must compile first. Open Problems and fix the line it names.'] };
+    var a = traced.analysis, notes = [];
     var candidate = null, base = null, selfCalls = [];
     a.methods.forEach(function (m) {
       if (candidate || m.cls !== 'Main' || m.name === 'main' || !m.stat || m.params.length !== 1 || m.params[0] !== 'int') return;
@@ -738,7 +740,7 @@ window.PEP_PAGE.checks = {
         PepJava.walk(node.then, function (part) {
           if (part.k === 'call' && part.target === m) recursiveInside = true;
         });
-        if (directReturn && !recursiveInside) { node.pepReturnLine = first.line; bases.push(node); }
+        if (directReturn && !recursiveInside) { node.pepReturn = first; bases.push(node); }
       });
       if (!bases.length) return;
       var everyStep = calls.every(function (call) {
@@ -756,23 +758,28 @@ window.PEP_PAGE.checks = {
       return arg.k === 'lit' && arg.type === 'int' && Number(arg.v) >= 3;
     });
     notes.push((calledFromMain ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'main calls the recursive method with a whole-number literal of 3 or more.');
-    var traced = candidate ? PepJava.run(src, { maxDepth: 600, trace: true, maxTrace: 4000 }) : null;
     var reachedBase = false;
-    if (traced && traced.compiled && traced.trace) {
+    if (candidate && traced.trace && traced.returnMarks) {
       var label = candidate.cls + '.' + candidate.name, events = traced.trace;
-      reachedBase = events.some(function (event, k) {
-        if (event.kind !== 'line' || event.line !== base.line || !event.frames.length) return false;
-        var frame = event.frames[event.frames.length - 1];
-        if (frame.name !== label) return false;
-        if (!frame.vars.some(function (v) { return v.name === candidate.node.params[0].name && v.value === '0'; })) return false;
-        for (var j = k + 1; j < events.length; j++) {
-          var next = events[j];
-          if (next.depth > event.depth) continue;
-          if (next.depth === event.depth && next.kind === 'line' && next.line === base.pepReturnLine) continue;
-          return next.kind === 'return' && next.depth === event.depth && next.frames[next.frames.length - 1].name === label;
+      var k = -1;
+      for (var e = 0; e < events.length && k < 0; e++) {
+        var ev = events[e], top = ev.frames[ev.frames.length - 1];
+        if (ev.kind === 'line' && ev.line === base.line && top && top.name === label && top.vars.some(function (v) { return v.name === candidate.node.params[0].name && v.value === '0'; })) k = e;
+      }
+      reachedBase = k >= 0 && (function (event) {
+        var mark = traced.returnMarks.filter(function (r) { return r.depth === event.depth && r.at > k; })[0];
+        if (!mark || mark.node !== base.pepReturn) return false;
+        var ownTicks = 0;
+        for (var j = k + 1; j < mark.at; j++) {
+          var between = events[j];
+          if (between.kind === 'exception') return false;
+          if (between.depth > event.depth) continue;
+          if (between.depth === event.depth && between.kind === 'line' && between.line === base.pepReturn.line && ++ownTicks === 1) continue;
+          return false;
         }
-        return false;
-      });
+        var after = events[mark.at];
+        return !!after && after.kind === 'return' && after.depth === event.depth && after.frames[after.frames.length - 1].name === label;
+      })(events[k]);
     }
     notes.push((reachedBase ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the execution trace takes the base-case return when the recursive parameter equals 0, before any further call or other exit.');
     var noOverflow = res.exception !== 'StackOverflowError' && !res.stopped;
@@ -1635,7 +1642,7 @@ var PepJava = (function () {
   function Interp(unit, checker, opts) {
     this.unit = unit; this.classes = checker.classes; this.opts = opts || {};
     this.out = []; this.steps = 0; this.maxSteps = this.opts.maxSteps || 200000; this.maxDepth = this.opts.maxDepth || 1000;
-    this.frames = []; this.statics = {}; this.depthNow = {}; this.depthMax = {}; this.trace = this.opts.trace ? [] : null; this.maxTrace = this.opts.maxTrace || 3000;
+    this.frames = []; this.statics = {}; this.depthNow = {}; this.depthMax = {}; this.trace = this.opts.trace ? [] : null; this.maxTrace = this.opts.maxTrace || 3000; this.returnMarks = this.opts.returnMarks ? [] : null;
   }
   Interp.prototype = {
     print: function (s) { this.out.push(s); if (this.out.join('').length > 20000) throw new Stop('output limit reached: the practice editor stops after about 20,000 characters of output'); },
@@ -1750,7 +1757,7 @@ var PepJava = (function () {
           }
           return;
         }
-        case 'return': throw new Signal('return', s.e ? this.value(s.e, f.method.type) : undefined);
+        case 'return': { var rv = s.e ? this.value(s.e, f.method.type) : undefined; if (this.returnMarks) this.returnMarks.push({ node: s, depth: this.frames.length, at: this.trace ? this.trace.length : 0 }); throw new Signal('return', rv); }
         case 'break': throw new Signal('break');
         case 'continue': throw new Signal('continue');
         case 'throw': {
@@ -1979,7 +1986,7 @@ var PepJava = (function () {
     if (c.errors.length) return { compiled: false, errors: c.errors, unit: c.unit };
     var it = new Interp(c.unit, c.checker, opts);
     var r = it.run(c.mainClass);
-    r.depthMax = it.depthMax; r.statics = it.statics; r.analysis = analyze(c.unit);
+    r.depthMax = it.depthMax; r.statics = it.statics; r.returnMarks = it.returnMarks; r.analysis = analyze(c.unit);
     r.compiled = true; r.errors = []; r.unit = c.unit; r.checker = c.checker;
     return r;
   }
