@@ -109,11 +109,11 @@ Question: What is the last line printed? Option A: 3 3 — Not quite. local is d
 
 ### explore
 
-Code editor task: Inside main, call Temperature.toFahrenheit twice through the class name with Celsius values you choose, print each result, then print Temperature.conversions. Compare: the last line equals the number of calls, because the static field is shared by every call. Starter code: class Temperature { static int conversions = 0; static double toFahrenheit(double celsius) { conversions++; return celsius * 9 / 5 + 32; } } public class Main { public static void main(String[] args) { // 1. Call Temperature.toFahrenheit twice and print each result. // 2. Then print Temperature.conversions. } }
+Code editor task: Inside main, call Temperature.toFahrenheit twice through the class name with Celsius values you choose, print each result, then print Temperature.conversions. Compare: the last line equals the number of calls, because the static field is shared by every call. Starter code: class Temperature { static int conversions = 0; static double toFahrenheit(double celsius) { conversions++; return celsius * 9 / 5 + 32; } } public class Main { public static void main(String[] args) { // 1. Print two Temperature.toFahrenheit results. // 2. Then print Temperature.conversions. } }
 
 ### explore
 
-Explanation questions: Question 1, why can the launcher call a traditional static main? Options: static methods run faster, so the program starts sooner; main belongs to the class, so the launcher can call Main.main without first creating a Main object; no objects of any kind exist until main returns; the launcher must create a Main object first and call main on it. Question 2, how do conversions and the parameter celsius of toFahrenheit differ? Options: both keep their values between calls; each call gets its own conversions while celsius is shared by every call; conversions is one shared copy that keeps counting across calls, while celsius is created fresh for each call and is gone when that call returns; both reset to 0 at the start of every call.
+Explanation questions: Question 1, why can the launcher call a traditional static main? Options: static methods run faster; no Main object is needed to call it; no objects exist until main returns; the launcher first creates a Main object. Question 2, how do conversions and the parameter celsius differ? Options: both keep their values between calls; each call gets its own conversions, while celsius is shared; conversions is one shared count, while celsius, like a local, belongs to one call; both reset to 0 on every call.
 
 ### mcq
 

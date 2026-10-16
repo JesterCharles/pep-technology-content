@@ -639,7 +639,7 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 </div>
 <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3">
 <h3 id="checks-3">What success looks like</h3>
-<ul><li>The program compiles and prints two results.</li><li>One <code>static int</code> method has two <code>int</code> inputs, applies the original strict boundary rule and returns the price.</li><li><code>main</code> calls that method for (3, 4) and (5, 2); the duplicated calculations and decisions are gone, and both calls still produce 10.</li></ul>
+<ul><li>The program compiles and prints two results.</li><li>One <code>static int</code> method has two <code>int</code> inputs, applies the original strict boundary rule and returns the price.</li><li><code>main</code> prints calls of that method for (3, 4) and then (5, 2); the duplicated calculations and decisions are gone, and Output is still 10, then 10.</li></ul>
 </section>
 <div class="pep-editor" data-interaction="explore" data-static-alt="Code editor task: Refactor two duplicated price calculations into one static int method with typed quantity and unit-price parameters. Move the multiplication and strict boundary decision into the method, return the price, and replace both blocks with printed calls. Compare the two results with the starter behavior: it prints 10 and then 10. Starter code contains two duplicated calculation and discount blocks in main.">
 <div class="pep-editor__bar"><span class="pep-editor__file">Main.java</span><span class="pep-editor__secondary">Practice Java subset · runs offline in this page</span><button type="button" class="pep-btn" data-run id="run-3">Run</button><button type="button" class="pep-btn" data-reset-code id="reset-code-3">Reset code</button></div>
@@ -751,9 +751,13 @@ window.PEP_PAGE.checks = {
     var own = a.methods.filter(function (m) { return m.cls === 'Main' && m.name !== 'main' && m.stat && m.type === 'int' && m.params.length === 2 && m.params[0] === 'int' && m.params[1] === 'int'; });
     var method = own[0], declared = !!method;
     notes.push((declared ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'one static int method with two int inputs.');
+    function intLit(e) { var neg = false; if (e && e.k === 'unary' && e.op === '-') { neg = true; e = e.e; } return e && e.k === 'lit' && e.type === 'int' ? (neg ? -1 : 1) * Number(e.v) : null; }
     var calls = method ? a.calls.filter(function (c) { return c.from === 'main' && c.toNode === method.node; }) : [];
-    var calledTwice = calls.length >= 2;
-    notes.push((calledTwice ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'main calls the refactored method twice.');
+    var mainNode = a.methods.filter(function (m) { return m.cls === 'Main' && m.name === 'main'; })[0];
+    var printedPairs = [];
+    if (method && mainNode) PepJava.walk(mainNode.node.body, function (n) { if (n.k === 'call' && n.print === 'out' && n.args.length === 1 && n.args[0].k === 'call' && n.args[0].target === method.node && n.args[0].args.length === 2) printedPairs.push(intLit(n.args[0].args[0]) + ',' + intLit(n.args[0].args[1])); });
+    var calledTwice = calls.length === 2 && printedPairs.join(';') === '3,4;5,2';
+    notes.push((calledTwice ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'main prints exactly two calls to the refactored method, with (3, 4) and then (5, 2).');
     var mainText = (src.match(/public\s+static\s+void\s+main[\s\S]*?\{([\s\S]*)\}\s*\}/) || [,''])[1];
     var duplicateGone = !/priceA|priceB/.test(mainText) && (mainText.match(/if\s*\(/g) || []).length === 0;
     notes.push((duplicateGone ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the duplicated local calculations and decisions are removed from main.');
@@ -767,8 +771,8 @@ window.PEP_PAGE.checks = {
     }
     notes.push((behavior ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the refactored method preserves the two visible results: 10 and 10.');
     var lines = (res.out || '').split('\n').filter(function (line) { return line.trim(); }).length;
-    var printed = lines === 2 && !res.exception && !res.stopped;
-    notes.push((printed ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'main finishes and prints two results.');
+    var printed = lines === 2 && (res.out || '').trim() === '10\n10' && !res.exception && !res.stopped;
+    notes.push((printed ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'main finishes and prints the starter results in order: 10, then 10.');
     return { pass: declared && calledTwice && duplicateGone && strictRule && behavior && printed, notes: notes };
   }
 };

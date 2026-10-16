@@ -612,7 +612,7 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 </div>
 <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3">
 <h3 id="checks-3">What success looks like</h3>
-<ul><li>The program compiles with no Problems.</li><li>A method other than <code>main</code> has one <code>int</code> parameter, returns directly at <code>n == 0</code>, and every recursive call passes <code>n - 1</code>.</li><li>A call from <code>main</code> starts at 3 or more; the trace reaches that method with <code>n</code> equal to 0, goes at least 3 calls deep, finishes without <code>StackOverflowError</code>, and prints output.</li></ul>
+<ul><li>The program compiles with no Problems.</li><li>A method other than <code>main</code> has one <code>int</code> parameter, returns as the first statement of its <code>n == 0</code> branch, and every recursive call passes <code>n - 1</code>.</li><li>A call from <code>main</code> starts at 3 or more; the trace takes that base-case return with <code>n</code> equal to 0, goes at least 3 calls deep, finishes without <code>StackOverflowError</code>, and prints output.</li></ul>
 </section>
 <div class="pep-editor" data-interaction="explore" data-static-alt="Code editor task: Write a static method with one int n parameter that calls itself. Return directly when n == 0, recurse with n - 1, then call it from main with a whole-number literal of 3 or more and print the result. Compare: the trace reaches n equal to 0 and the program finishes; changing the step to n + 1 produces java.lang.StackOverflowError. Starter code: public class Main { // Write your recursive method here. // Base case first: when should it stop calling itself? public static void main(String[] args) { // Call your method with a small value and print the result. } }">
 <div class="pep-editor__bar">
@@ -733,12 +733,12 @@ window.PEP_PAGE.checks = {
         var matches = left && left.k === 'name' && left.name === param && right && right.k === 'lit' && Number(right.v) === 0;
         matches = matches || (right && right.k === 'name' && right.name === param && left && left.k === 'lit' && Number(left.v) === 0);
         if (!matches) return;
-        var directReturn = false, recursiveInside = false;
+        var first = node.then && node.then.k === 'block' ? node.then.body[0] : node.then;
+        var directReturn = !!first && first.k === 'return', recursiveInside = false;
         PepJava.walk(node.then, function (part) {
-          if (part.k === 'return') directReturn = true;
           if (part.k === 'call' && part.target === m) recursiveInside = true;
         });
-        if (directReturn && !recursiveInside) bases.push(node);
+        if (directReturn && !recursiveInside) { node.pepReturnLine = first.line; bases.push(node); }
       });
       if (!bases.length) return;
       var everyStep = calls.every(function (call) {
@@ -749,7 +749,7 @@ window.PEP_PAGE.checks = {
       candidate = m; base = bases[0]; selfCalls = calls;
     });
     var canonical = !!candidate;
-    notes.push((canonical ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'one static recursive method has one int parameter, returns directly at equality with zero, and every self-call passes that parameter minus 1.');
+    notes.push((canonical ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'one static recursive method has one int parameter, returns as the first statement of its equality-with-zero branch, and every self-call passes that parameter minus 1.');
     var calledFromMain = candidate && a.calls.some(function (call) {
       if (call.from !== 'main' || call.toNode !== candidate.node || !call.args.length) return false;
       var arg = call.args[0];
@@ -759,14 +759,22 @@ window.PEP_PAGE.checks = {
     var traced = candidate ? PepJava.run(src, { maxDepth: 600, trace: true, maxTrace: 4000 }) : null;
     var reachedBase = false;
     if (traced && traced.compiled && traced.trace) {
-      reachedBase = traced.trace.some(function (event) {
-        if (event.line !== base.line || !event.frames.length) return false;
+      var label = candidate.cls + '.' + candidate.name, events = traced.trace;
+      reachedBase = events.some(function (event, k) {
+        if (event.kind !== 'line' || event.line !== base.line || !event.frames.length) return false;
         var frame = event.frames[event.frames.length - 1];
-        if (frame.name !== candidate.cls + '.' + candidate.name) return false;
-        return frame.vars.some(function (v) { return v.name === candidate.node.params[0].name && v.value === '0'; });
+        if (frame.name !== label) return false;
+        if (!frame.vars.some(function (v) { return v.name === candidate.node.params[0].name && v.value === '0'; })) return false;
+        for (var j = k + 1; j < events.length; j++) {
+          var next = events[j];
+          if (next.depth > event.depth) continue;
+          if (next.depth === event.depth && next.kind === 'line' && next.line === base.pepReturnLine) continue;
+          return next.kind === 'return' && next.depth === event.depth && next.frames[next.frames.length - 1].name === label;
+        }
+        return false;
       });
     }
-    notes.push((reachedBase ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the execution trace reaches the authored equality base with the recursive parameter equal to 0.');
+    notes.push((reachedBase ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the execution trace takes the base-case return when the recursive parameter equals 0, before any further call or other exit.');
     var noOverflow = res.exception !== 'StackOverflowError' && !res.stopped;
     notes.push((noOverflow ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the run finishes without StackOverflowError or a practice-editor stop.');
     var deep = candidate && (res.depthMax[candidate.cls + '.' + candidate.name] || 0) >= 3;

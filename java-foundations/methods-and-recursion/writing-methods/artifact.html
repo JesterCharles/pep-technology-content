@@ -495,7 +495,7 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 </div>
 <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2">
 <h3 id="checks-2">What success looks like</h3>
-<ul><li>The program compiles with no Problems.</li><li>A well-named <code>static</code> method has a non-<code>void</code> return type, a typed quantity parameter and a returned calculation.</li><li><code>main</code> calls that method three times with quantities 2, 4 and 7; the repeated arithmetic is no longer in <code>main</code>, and the method still produces 11, 17 and 26.</li></ul>
+<ul><li>The program compiles with no Problems.</li><li>A well-named <code>static</code> method has a non-<code>void</code> return type, a typed quantity parameter and a returned calculation.</li><li><code>main</code> prints three calls of that method with quantities 2, 4 and 7, in that order; the repeated arithmetic is no longer in <code>main</code>, and Output is still 11, 17 and 26.</li></ul>
 </section>
 <div class="pep-editor" data-interaction="explore" data-static-alt="Code editor task: Refactor three repeated price calculations into one well-named static method with a non-void return type and a typed quantity parameter. Return the calculation, call the method from main for quantities 2, 4 and 7, and verify that it still produces 11, 17 and 26. Starter code: public class Main { // Declare the extracted method above main. public static void main(String[] args) { System.out.println(2 * 3 + 5); System.out.println(4 * 3 + 5); System.out.println(7 * 3 + 5); } }">
 <div class="pep-editor__bar">
@@ -690,9 +690,13 @@ window.PEP_PAGE.checks = {
     var own = a.methods.filter(function (m) { return m.cls === 'Main' && m.name !== 'main' && m.stat && m.type !== 'void' && m.params.length === 1 && m.params[0] === 'int'; });
     var method = own[0], declared = !!method;
     notes.push((declared ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'one static, non-void extracted method with one int parameter' + (declared ? ' (' + method.type + ' ' + method.name + ')' : '') + '.');
+    function intLit(e) { var neg = false; if (e && e.k === 'unary' && e.op === '-') { neg = true; e = e.e; } return e && e.k === 'lit' && e.type === 'int' ? (neg ? -1 : 1) * Number(e.v) : null; }
     var calls = method ? a.calls.filter(function (c) { return c.from === 'main' && c.toNode === method.node; }) : [];
-    var threeCalls = calls.length >= 3;
-    notes.push((threeCalls ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'main calls the extracted method for all three original quantities.');
+    var mainNode = a.methods.filter(function (m) { return m.cls === 'Main' && m.name === 'main'; })[0];
+    var printedArgs = [];
+    if (method && mainNode) PepJava.walk(mainNode.node.body, function (n) { if (n.k === 'call' && n.print === 'out' && n.args.length === 1 && n.args[0].k === 'call' && n.args[0].target === method.node && n.args[0].args.length === 1) printedArgs.push(intLit(n.args[0].args[0])); });
+    var threeCalls = calls.length === 3 && printedArgs.join(',') === '2,4,7';
+    notes.push((threeCalls ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'main prints exactly three calls to the extracted method, with quantities 2, 4 and 7 in that order.');
     var mainText = (src.match(/public\s+static\s+void\s+main[\s\S]*?\{([\s\S]*)\}\s*\}/) || [,''])[1];
     var arithmeticRemoved = !/\b(?:2|4|7)\s*\*\s*3\s*\+\s*5\b/.test(mainText);
     notes.push((arithmeticRemoved ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the repeated arithmetic is removed from main.');
@@ -704,8 +708,8 @@ window.PEP_PAGE.checks = {
     }
     notes.push((behavior ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the extracted method preserves the visible results for quantities 2, 4 and 7: 11, 17 and 26.');
     var lines = (res.out || '').split('\n').filter(function (line) { return line.trim(); }).length;
-    var printed = lines === 3 && !res.exception && !res.stopped;
-    notes.push((printed ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'main finishes and prints three results.');
+    var printed = lines === 3 && (res.out || '').trim() === '11\n17\n26' && !res.exception && !res.stopped;
+    notes.push((printed ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'main finishes and prints the starter results in order: 11, 17, 26.');
     return { pass: declared && threeCalls && arithmeticRemoved && behavior && printed, notes: notes };
   }
 };
