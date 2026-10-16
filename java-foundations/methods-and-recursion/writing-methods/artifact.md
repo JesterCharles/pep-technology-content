@@ -3,7 +3,7 @@
 ## Objectives
 
 - Declare a method with typed parameters and a return type, and call it with matching arguments Open
-- Return a value from every path of a method, and use void when nothing is returned Open
+- Return a compatible value on every path that can finish normally, and use void when nothing is returned Open
 - Extract a repeated block of code into a well-named method Open
 
 ## Teaching
@@ -35,7 +35,7 @@ A method declaration names a job once so the program can call it many times. Rea
 
 A call such as `computeArea(3, 4)` must pass one argument per parameter, in order, of a compatible type. Inside the body, `return width * height;` ends the method and sends the value back. A method that sends nothing back, such as one that only prints, uses `void` as its return type. In a non-`void` method, every path that can finish normally must reach a `return` with a compatible value; otherwise javac reports `missing return statement`. A path that ends by throwing an exception, or that can never finish, needs no `return`.
 
-### Activity 3 of 3: Extract a repeated block, returning on every path
+### Activity 3 of 3: Extract a repeated block that returns a value
 
 When the same steps appear in several places, extract them into one well-named method and call it from each place. The behavior must not change: the extracted method receives what varies as parameters and returns what the caller needs. This code repeats one calculation three times:
 
@@ -45,7 +45,7 @@ System.out.println(4 * 3 + 5);
 System.out.println(7 * 3 + 5);
 ```
 
-Each line multiplies a quantity by a price of 3 and adds a fee of 5. Only the quantity changes, so it becomes the parameter. If the method contains an `if`, every branch still has to return a value.
+Each line multiplies a quantity by a price of 3 and adds a fee of 5. Only the quantity changes, so it becomes the parameter. A value-returning method must not finish by running off the end of its body; a path that throws, or never finishes, needs no `return`. In the candidate below that returns only when `qty > 0`, the other path falls off the end, so it still needs one.
 
 ## Recap
 
@@ -92,7 +92,7 @@ Another hint Another hint, 2 of 2 for Activity 3
 
 Where to act: Now read the body of each remaining candidate.
 
-Next step: Check two things: the body computes quantity × 3 + 5, and every path through the body reaches a `return`.
+Next step: Check two things: the body computes quantity × 3 + 5, and no path can reach the end of the body without a `return`.
 
 ```
 // return type, name, typed parameters
@@ -124,4 +124,4 @@ Code editor task: Refactor three repeated price calculations. Declare one well-n
 
 ### mcq
 
-Question: Which extracted method keeps the behavior? Option A: static void computeTotal(int qty) { return qty * 3 + 5; } — Not quite. A void method cannot return a value: javac reports incompatible types: unexpected return value, and println(computeTotal(2)) would have nothing to print. Option B: static int computeTotal(int qty) { if (qty > 0) { return qty * 3 + 5; } } — Not quite. When qty > 0 is false, no return runs, so javac reports missing return statement even though the three calls use positive quantities. Option C: static int computeTotal(int qty) { return qty * 3 + 5; } — Correct. One int parameter carries the part that changes, the body keeps the calculation, and every path returns, so the program still prints 11, 17 and 26. Option D: static int computeTotal(int qty, int fee) { return qty * 3 + fee; } — Not quite. This method needs two arguments, so the one-argument call computeTotal(2) does not compile: javac reports that the method cannot be applied to the given types. Before feedback, the learner rates confidence: Guessing, Fairly sure or Certain.
+Question: Which extracted method keeps the behavior? Option A: static void computeTotal(int qty) { return qty * 3 + 5; } — Not quite. A void method cannot return a value: javac reports incompatible types: unexpected return value, and println(computeTotal(2)) would have nothing to print. Option B: static int computeTotal(int qty) { if (qty > 0) { return qty * 3 + 5; } } — Not quite. When qty > 0 is false, no return runs, so javac reports missing return statement even though the three calls use positive quantities. Option C: static int computeTotal(int qty) { return qty * 3 + 5; } — Correct. One int parameter carries the part that changes, the body keeps the calculation, and its only path returns the value, so the program still prints 11, 17 and 26. Option D: static int computeTotal(int qty, int fee) { return qty * 3 + fee; } — Not quite. This method needs two arguments, so the one-argument call computeTotal(2) does not compile: javac reports that the method cannot be applied to the given types. Before feedback, the learner rates confidence: Guessing, Fairly sure or Certain.

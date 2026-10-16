@@ -639,7 +639,7 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 </div>
 <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3">
 <h3 id="checks-3">What success looks like</h3>
-<ul><li>The program compiles and prints two results.</li><li>One <code>static int</code> method multiplies its two <code>int</code> inputs, subtracts 2 only when that total is <code>&gt; 10</code>, and returns the price.</li><li><code>main</code> prints calls of that method for (3, 4) and then (5, 2); the duplicated calculations and decisions are gone, and Output is still 10, then 10.</li></ul>
+<ul><li>The program compiles and prints two results.</li><li>One <code>static int</code> method stores its two inputs’ product in a total, subtracts 2 from it only when it is <code>&gt; 10</code>, and returns it.</li><li><code>main</code> prints calls of that method for (3, 4) and then (5, 2); the duplicated calculations and decisions are gone, and Output is still 10, then 10.</li></ul>
 </section>
 <div class="pep-editor" data-interaction="explore" data-static-alt="Code editor task: Refactor two duplicated price calculations into one static int method with typed quantity and unit-price parameters. Move the multiplication and strict boundary decision into the method, return the price, and replace both blocks with printed calls. Compare the two results with the starter behavior: it prints 10 and then 10. Starter code contains two duplicated calculation and discount blocks in main.">
 <div class="pep-editor__bar"><span class="pep-editor__file">Main.java</span><span class="pep-editor__secondary">Practice Java subset · runs offline in this page</span><button type="button" class="pep-btn" data-run id="run-3">Run</button><button type="button" class="pep-btn" data-reset-code id="reset-code-3">Reset code</button></div>
@@ -784,19 +784,23 @@ window.PEP_PAGE.checks = {
     notes.push((duplicateGone ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the duplicated local calculations and decisions are removed from main.');
     var strictRule = false;
     if (method) {
-      var qa = method.node.params[0].name, qb = method.node.params[1].name, product = false, decision = null, minus = 0, guarded = 0;
-      var isName = function (e, n) { return e && e.k === 'name' && e.name === n; };
-      var isTwo = function (e) { return e && e.k === 'lit' && e.type === 'int' && Number(e.v) === 2; };
-      var isMinus = function (n) { return n.k === 'bin' && n.op === '-' && isTwo(n.b) || n.k === 'assign' && n.op === '-=' && isTwo(n.value); };
-      PepJava.walk(method.node.body, function (n) {
-        if (n.k === 'bin' && n.op === '*' && (isName(n.a, qa) && isName(n.b, qb) || isName(n.a, qb) && isName(n.b, qa))) product = true;
-        if ((n.k === 'if' || n.k === 'cond') && n.cond && n.cond.k === 'bin' && n.cond.op === '>' && n.cond.b && n.cond.b.k === 'lit' && Number(n.cond.b.v) === 10) decision = n;
-        if (isMinus(n)) minus++;
-      });
-      if (decision) PepJava.walk(decision.k === 'if' ? decision.then : decision.a, function (n) { if (isMinus(n)) guarded++; });
-      strictRule = product && !!decision && minus === 1 && guarded === 1;
+      var qa = method.node.params[0].name, qb = method.node.params[1].name;
+      var isName = function (e, n) { return !!e && e.k === 'name' && e.name === n; };
+      var isLit = function (e, v) { return !!e && e.k === 'lit' && e.type === 'int' && Number(e.v) === v; };
+      var only = function (st) { return st && st.k === 'block' ? (st.body.length === 1 ? st.body[0] : null) : st; };
+      var body = method.node.body.body, decl = body[0] && body[0].k === 'local' && body[0].decls.length === 1 ? body[0].decls[0] : null;
+      var t = decl && decl.type === 'int' && decl.init && decl.init.k === 'bin' && decl.init.op === '*' && (isName(decl.init.a, qa) && isName(decl.init.b, qb) || isName(decl.init.a, qb) && isName(decl.init.b, qa)) ? decl.name : null;
+      var tests = function (c) { return !!c && c.k === 'bin' && c.op === '>' && isName(c.a, t) && isLit(c.b, 10); };
+      var minusTwo = function (e) { return !!e && e.k === 'bin' && e.op === '-' && isName(e.a, t) && isLit(e.b, 2); };
+      if (t && body.length === 3 && body[1].k === 'if' && !body[1].els && tests(body[1].cond) && body[2].k === 'return' && isName(body[2].e, t)) {
+        var step = only(body[1].then), e = step && step.k === 'expr' ? step.e : null;
+        strictRule = !!e && e.k === 'assign' && isName(e.target, t) && (e.op === '=' && minusTwo(e.value) || e.op === '-=' && isLit(e.value, 2)) || !!step && step.k === 'return' && minusTwo(step.e);
+      } else if (t && body.length === 2 && body[1].k === 'return' && body[1].e && body[1].e.k === 'cond') {
+        var c = body[1].e;
+        strictRule = tests(c.cond) && minusTwo(c.a) && isName(c.b, t);
+      }
     }
-    notes.push((strictRule ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the method multiplies its two parameters, tests the total with > 10, and subtracts 2 only on that path.');
+    notes.push((strictRule ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the method stores the product of its two parameters in one int total, tests that total with > 10, subtracts 2 from it only on that path, and returns the adjusted total.');
     var behavior = false;
     if (method) {
       var probeSrc = 'class PepBehaviorCheck { public static void main(String[] args) { ' + [[3, 4], [5, 2], [2, 3], [4, 4], [1, 11], [0, 7]].map(function (q) { return 'System.out.println(Main.' + method.name + '(' + q[0] + ', ' + q[1] + '));'; }).join(' ') + ' } }\n' + src;
