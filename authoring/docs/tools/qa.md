@@ -38,13 +38,14 @@ The three required routes must independently finish the topic:
 activity; `restart.credit` proves credit was not duplicated. `keyboard` is the complete success route using semantic
 keyboard activation. `data-pep-guidance-contract` and `spec.guidance` are mandatory together. Enrolled specs require
 `activityNavigation`, `activityNavigationKeyboard`, `activityNavigationTouch`, `objectives` and `objectivesTouch`;
-`hints` is required exactly when parsed HTML contains hints. Empty, partial or author-selected omission fails before
-browser execution. The contract fixture demonstrates the exact shape. Navigation arrays are setup/smoke paths, not
-self-selected evidence: they must leave a nonzero attempt, meaningful live inputs in at least two activities, a prior
-completed/credited activity and a later unlocked current activity. Harness-owned postconditions then activate
-Previous/Next, current/completed timeline and back links, every future link and fragment, browser history and Restart;
-they compare the complete root/control/per-activity snapshot and reject vacuous setup. The same procedure runs
-pointer and keyboard desktop plus 320/390 touch, both top-level and in `sandbox="allow-scripts"`.
+`hints: true` is required exactly when parsed HTML contains hints; it is an enrollment flag, not an author-controlled
+click path. Empty, partial or author-selected omission fails before browser execution. The contract fixture demonstrates
+the exact shape. Navigation arrays are setup/smoke paths, not self-selected evidence: they must leave meaningful live
+inputs in at least two activities, a prior honestly settled/completed activity with one credit, and a later unlocked,
+attempted but incomplete current activity. Harness-owned postconditions then activate Previous/Next,
+current/completed timeline and back links, every future link and fragment, browser history and Restart; they compare
+the complete root/control/per-activity snapshot and reject vacuous setup. The same procedure runs pointer and keyboard
+desktop plus 320/390 touch, both top-level and in `sandbox="allow-scripts"`.
 The harness requires visible focus at each keyboard activation and verifies the same completion assertion. A focus
 indicator may be on the control or a `:focus-within` ancestor, but it must appear on focus and its outline or shadow
 must contrast at least 3:1 with the adjacent background. T12 also resolves the canonical topic-bar, workspace,
@@ -148,8 +149,10 @@ Git `tNN.json` files, and the reusable route roles of AI `spec.js`. No course-1 
 ### Answer-sensitive routes and private proof
 
 An answer-sensitive task and `qa-paths.json` declare the same task selector, supported language scanner and target
-names. Committed paths contain only public-safe starter, incomplete, malformed, wrong-result, unsupported-shape,
-reset and no-premature-credit routes. The target-aware scanner inventories decoded text and attributes from the
+names. Committed paths contain only public-safe starter, incomplete, malformed, unsupported-shape, reset and
+no-premature-credit routes. An incorrect observed or expected result may use starter, incomplete, malformed or
+unsupported-shape input; it never includes a completed declared-target assignment. Complete bare comprehension
+syntax in an inline script literal is conservatively answer-bearing because static QA cannot prove where it will render. The target-aware scanner inventories decoded text and attributes from the
 document element and every descendant—including head, styles and body content outside the enrolled main—plus
 document-wide comments, no-JavaScript/templates/static alternatives and all QA strings. Its bounded JS
 parser cooks escapes/templates and folds all-literal `+` chains without execution. CPython `tokenize` extracts
@@ -187,13 +190,17 @@ later public drift. Rebase/squash requires a fresh run. No private value or answ
   rendering against structural hiding, ordinary zero opacity and computed zero-valued `filter: opacity()` components;
   the latter is bounded full-element-transparency coverage, not arbitrary paint proof.
 - **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion. Enrolled
-  pages additionally run navigation and objectives by pointer, keyboard and 320/390 px touch; nested hints by pointer,
-  keyboard and phone touch; every locked future activation and fragment; explicit destination focus; monotonic
-  frontier/no-navigation-credit; complete root, live-control and per-activity preservation including required time and
-  page completion; history without focus movement; current-only Restart after wrong and completed attempts while other
-  populated activities stay exact; exact restoration of every current text/check/selection to its pre-setup authored value;
-  immutable required time and harness-validated completion across every setup action; visible current task/direct check
-  heading/criteria at each transition with the same bounded zero-opacity-filter rejection; one-credit re-completion; and unchanged accounting while optional guidance is used.
+  pages additionally run navigation and objectives by pointer, keyboard and 320/390 px touch; owner/activity-aware
+  nested hints by pointer, keyboard and phone touch after a public-safe wrong-twice route unlocks their activities;
+  every locked future activation and fragment; explicit destination focus; monotonic frontier/no-navigation-credit;
+  complete root, live-control and per-activity preservation including required time and page completion; history
+  without focus movement; and current-only Restart while other populated activities stay exact. Restart divergence is
+  type-aware for text/editor, checkbox, select and radio groups but is never submitted for credit. The wrong-attempt
+  Restart uses the setup-established incomplete activity. The completed Restart replays only the recorded public-safe
+  settlement segment after exact authored restoration, permits exactly one credit, keeps grade separate from
+  settlement/completion, and never reactivates a settled disabled control. Current task/direct check headings and
+  criteria remain visible at every transition with the same bounded zero-opacity-filter rejection. Optional guidance
+  uses the same unlocked owner traversal and cannot change required accounting.
 - **T12:** permits no serious or critical axe findings; runs the keyboard and reduced-motion success routes; requires
   `aria-live`; checks direct body text at 4.5:1 and rendered borders at 3:1 in forced light and dark themes. Fully
   transparent borders are not rendered and are excluded. Enrolled guidance also preserves exact canonical semantic
@@ -208,7 +215,8 @@ later public drift. Rebase/squash requires a fresh run. No private value or answ
   400×860 and 200% zoom matrix until they are re-authored; add the marker only with the responsive migration.
   Touch contexts execute the required wrong-twice route with real tap events and reject visible buttons, fields,
   summaries, role controls and ordinary anchors below 44×44 CSS px. At every viewport the harness verifies semantic
-  section roles, opens Objectives and every nested hint in sequence, then reruns overflow, clipping and target checks. Every context rejects
+  section roles, runs the public-safe wrong-twice route, opens Objectives and every activity-owned nested hint in
+  sequence, then reruns overflow, clipping and target checks. Every context rejects
   page-level horizontal overflow and clipped essential controls or text.
   Non-rendered content—including descendants of closed `details`, CSS-hidden content, and zero-size live regions with
   no visible descendants—is excluded.
