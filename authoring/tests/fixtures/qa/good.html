@@ -11,10 +11,10 @@
     html { overflow-x: clip; }
     body { background:var(--bg); color:var(--ink); font:16px/1.5 system-ui,sans-serif; margin:0 auto; max-width:50rem; padding:1rem; }
     h1,h2,h3,p { overflow-wrap:anywhere; }
-    button,input,textarea,summary,.activity-link,.back-link { font:inherit; }
-    button,input,textarea { background:var(--bg); border:2px solid var(--line); color:var(--ink); margin:.25rem; min-height:44px; padding:.5rem; }
+    button,input,textarea,select,summary,.activity-link,.back-link { font:inherit; }
+    button,input,textarea,select { background:var(--bg); border:2px solid var(--line); color:var(--ink); margin:.25rem; min-height:44px; padding:.5rem; }
     button,summary,.activity-link,.back-link { min-height:44px; }
-    button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-visible,a:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
+    button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible,a:focus-visible { outline:3px solid var(--focus); outline-offset:2px; }
     a { color:var(--ink); text-underline-offset:.2em; }
     .pep-topicbar { align-items:center; border-bottom:1px solid var(--line); display:flex; flex-wrap:wrap; gap:.5rem 1rem; margin-bottom:1rem; padding-bottom:.75rem; }
     .pep-topicbar h1 { flex:1 1 15rem; margin:0; }
@@ -116,7 +116,7 @@
 
       <section class="activity" id="activity-2" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
         <h2 id="activity-2-title" tabindex="-1">Activity 2 — Your task: explain your choice</h2>
-        <div id="task-explain" data-pep-task><p>Explain in the field below why your first action stays local.</p><label for="activity-two-input">Your explanation</label><textarea id="activity-two-input"></textarea></div>
+        <div id="task-explain" data-pep-task><p>Explain in the field below why your first action stays local.</p><label for="activity-two-input">Your explanation</label><textarea id="activity-two-input"></textarea><label><input id="activity-two-confirm" type="checkbox"> I checked the boundary</label><label for="activity-two-scope">Effect scope</label><select id="activity-two-scope"><option value="local">This page</option><option value="external">Another system</option></select></div>
         <section class="activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">Activity checks</h3><p>Your explanation names the boundary that keeps the action safe.</p></section>
         <button type="button" id="wrong-two" data-pep-wrong-attempt>Try an incomplete explanation</button>
         <button type="button" id="complete-two" data-pep-complete-activity>Complete activity 2</button>
@@ -232,7 +232,11 @@
       }));
       document.querySelector('#restart').addEventListener('click', () => {
         const index = current - 1;
-        for (const initial of controls[index]) { initial.control.value = initial.value; initial.control.checked = initial.checked; if (initial.control.tagName === 'SELECT') initial.control.selectedIndex = initial.selectedIndex; }
+        for (const initial of controls[index]) {
+          if (initial.control.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) initial.control.value = initial.value;
+          if (initial.control.matches('input[type="checkbox"], input[type="radio"]')) initial.control.checked = initial.checked;
+          if (initial.control.tagName === 'SELECT') initial.control.selectedIndex = initial.selectedIndex;
+        }
         state[index] = { attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false };
         reflect(current);
         activities[index].querySelectorAll('[data-pep-feedback]').forEach(node => { node.textContent = ''; });

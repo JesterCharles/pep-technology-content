@@ -300,6 +300,15 @@ async function execute(target, actions, options = {}) {
   for (const action of actions) await perform(target, action, options);
 }
 
+async function setupActionKind(target, action) {
+  if (action.do === "goBack" || action.do === "goForward") return "navigation";
+  if (!action.selector || action.do.startsWith("expect")) return "other";
+  return target.locator(action.selector).evaluate((element) =>
+    element.closest("[data-pep-previous], [data-pep-next], [data-pep-activity-link], [data-pep-back-link]")
+      ? "navigation"
+      : "other");
+}
+
 async function exerciseSequentialHints(target, options = {}) {
   const hints = target.locator("details[data-pep-hint]");
   const count = await hints.count();
@@ -374,6 +383,98 @@ function sameState(actual, expected, message) {
   if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(message);
 }
 
+async function expectRenderedCurrentGuidance(target) {
+  const result = await target.locator("[data-pep-guidance-contract]").evaluate((root) => {
+    const normalize = (value) => (value ?? "").replace(/\s+/gu, " ").trim();
+    const rendered = (node) => {
+      if (!node?.getClientRects().length) return false;
+      for (let current = node; current && current !== document; current = current.parentElement) {
+        const style = getComputedStyle(current);
+        if (style.display === "none" || style.visibility === "hidden" || style.visibility === "collapse" ||
+            style.contentVisibility === "hidden" || Number(style.opacity) === 0) return false;
+      }
+      return true;
+    };
+    const visibleOwnedText = (owner, excluded) => {
+      const walker = document.createTreeWalker(owner, NodeFilter.SHOW_TEXT);
+      const values = [];
+      while (walker.nextNode()) {
+        const parent = walker.currentNode.parentElement;
+        if (!parent || parent.closest(excluded) || !rendered(parent)) continue;
+        const value = normalize(walker.currentNode.textContent);
+        if (value) values.push(value);
+      }
+      return normalize(values.join(" "));
+    };
+    const current = root.querySelector("[data-pep-activity]:not([hidden])");
+    if (!current) return "current activity is not rendered";
+    const tasks = [...current.querySelectorAll("[data-pep-task]")]
+      .filter((task) => task.closest("[data-pep-activity]") === current);
+    if (!tasks.length || tasks.some((task) => !rendered(task) ||
+        !visibleOwnedText(task, "details[data-pep-hint], template, script, style"))) {
+      return "current task is hidden or has no rendered instructional text";
+    }
+    const checks = [...current.querySelectorAll("[data-pep-activity-checks]")]
+      .filter((check) => check.closest("[data-pep-activity]") === current);
+    if (checks.length !== 1 || !rendered(checks[0])) return "current activity-check block is not rendered";
+    const check = checks[0];
+    const headings = [...check.querySelectorAll(":scope > h2, :scope > h3")]
+      .filter((heading) => rendered(heading) && /^(What success looks like|Activity checks)$/u.test(normalize(heading.innerText)));
+    if (headings.length !== 1) return "current activity-check heading is hidden or empty";
+    const criteria = [...check.querySelectorAll(":scope > p, :scope > ul > li, :scope > ol > li")]
+      .filter((criterion) => criterion.closest("[data-pep-activity-checks]") === check &&
+        rendered(criterion) && normalize(criterion.innerText));
+    if (!criteria.length) return "current activity-check criteria are hidden or empty";
+    return "";
+  });
+  if (result) throw new Error(result);
+}
+
+async function divergeCurrentControls(target, current, authored, label, mode) {
+  const controls = target.locator("[data-pep-activity]:not([hidden]) input, [data-pep-activity]:not([hidden]) textarea, [data-pep-activity]:not([hidden]) select");
+  for (let index = 0; index < await controls.count(); index++) {
+    const control = controls.nth(index);
+    const metadata = await control.evaluate((element) => ({
+      disabled: element.disabled,
+      readOnly: element.readOnly,
+      tag: element.tagName,
+      type: element.type,
+      checked: element.checked,
+      value: element.value,
+      options: element.tagName === "SELECT"
+        ? [...element.options].map((option, optionIndex) => ({ optionIndex, disabled: option.disabled }))
+        : [],
+    }));
+    if (metadata.disabled || metadata.readOnly || metadata.type === "hidden" || metadata.type === "file") continue;
+    if (metadata.type === "checkbox") {
+      if (mode === "keyboard") { await control.focus(); await control.press("Space"); }
+      else if (metadata.checked) await control.uncheck(); else await control.check();
+    } else if (metadata.type === "radio") {
+      if (!metadata.checked) {
+        if (mode === "keyboard") { await control.focus(); await control.press("Space"); }
+        else await control.check();
+      }
+    } else if (metadata.tag === "SELECT") {
+      const alternative = metadata.options.find((option) => !option.disabled && option.optionIndex !== authored[index]?.selectedIndex);
+      if (alternative && mode === "keyboard") {
+        await control.focus();
+        await control.press("Home");
+        for (let step = 0; step < alternative.optionIndex; step++) await control.press("ArrowDown");
+      } else if (alternative) await control.selectOption({ index: alternative.optionIndex });
+    } else if (mode === "keyboard") {
+      await control.focus();
+      await control.press("ControlOrMeta+A");
+      await control.pressSequentially(`pep-restart-${label}-${index}`);
+    } else {
+      await control.fill(`pep-restart-${label}-${index}`);
+    }
+  }
+  const changed = (await guidanceState(target)).controls.filter((control) => control.activity === current);
+  if (JSON.stringify(changed) === JSON.stringify(authored)) {
+    throw new Error(`Restart ${label} check could not establish non-authored current controls`);
+  }
+}
+
 async function activateGuidance(locator, mode) {
   if (await locator.getAttribute("aria-disabled") === "true") {
     if (mode === "keyboard") {
@@ -383,7 +484,10 @@ async function activateGuidance(locator, mode) {
     return;
   }
   if (mode === "keyboard") {
-    if (!(await focusVisible(locator))) throw new Error("guidance navigation has no visible focus indicator");
+    if (!(await focusVisible(locator))) {
+      const identity = await locator.evaluate((element) => `${element.tagName.toLowerCase()}#${element.id || "(no-id)"}`);
+      throw new Error(`guidance navigation ${identity} has no visible focus indicator`);
+    }
     await locator.press("Enter");
   } else if (mode === "touch") await locator.tap();
   else await locator.click();
@@ -396,6 +500,7 @@ async function expectDestination(target, number, before, { history = false } = {
     throw new Error(`navigation did not select canonical activity ${number}`);
   }
   sameState(preservedGuidance(after), preservedGuidance(before), "navigation changed non-navigation state");
+  await expectRenderedCurrentGuidance(target);
   if (history) {
     if (after.focused !== before.focused) throw new Error("browser history moved focus");
   } else {
@@ -426,6 +531,7 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
   const count = await activities.count();
   const initial = await guidanceState(target);
   if (!initial.current || !initial.frontier || !initial.requiredMinutes || count < 2) throw new Error("guidance state hooks are incomplete");
+  await expectRenderedCurrentGuidance(target);
 
   for (let index = Number(initial.frontier); index < count; index++) {
     const before = await guidanceState(target);
@@ -444,8 +550,30 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
     sameState(preservedGuidance(after), preservedGuidance(before), "future fragment changed preserved state");
   }
 
-  await execute(target, setupActions, { keyboard: mode === "keyboard", touch: mode === "touch" });
+  let completionCheckpoint = initial.complete;
+  for (const action of setupActions) {
+    const before = await guidanceState(target);
+    const kind = await setupActionKind(target, action);
+    await perform(target, action, { keyboard: mode === "keyboard", touch: mode === "touch" });
+    const after = await guidanceState(target);
+    if (after.requiredMinutes !== initial.requiredMinutes) throw new Error("guidance setup changed authored required time");
+    if (kind === "navigation") {
+      sameState(preservedGuidance(after), preservedGuidance(before), "guidance setup navigation changed non-navigation state");
+    }
+    if (after.complete !== completionCheckpoint) {
+      const transitions = after.activities.filter((activity, index) =>
+        before.activities[index]?.completed !== "true" && activity.completed === "true" &&
+        activity.settled === "true" && activity.credit === "1" && activity.canContinue === "true");
+      if (kind === "navigation" || transitions.length !== 1 || after.complete !== "true") {
+        throw new Error("guidance setup changed page completion without a coherent activity completion transition");
+      }
+      completionCheckpoint = after.complete;
+    }
+    await expectRenderedCurrentGuidance(target);
+  }
   let prepared = await guidanceState(target);
+  if (prepared.complete !== completionCheckpoint) throw new Error("guidance setup page completion drifted from its validated checkpoint");
+  await expectRenderedCurrentGuidance(target);
   const populatedActivities = prepared.activities.filter((activity, index) =>
     prepared.controls.some((control) => control.activity === index + 1 && control.value));
   if (!prepared.activities.some((activity) => Number(activity.attempts) > 0) ||
@@ -483,8 +611,11 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
   await activateGuidance(target.locator("[data-pep-next]"), mode);
   prepared = await expectDestination(target, current, state);
 
+  const authoredCurrentControls = initial.controls.filter((control) => control.activity === current);
+  if (!authoredCurrentControls.length) throw new Error("current activity has no authored controls for Restart verification");
   const otherBefore = prepared.activities.filter((_, index) => index !== current - 1);
   const controlsBefore = prepared.controls.filter((control) => control.activity !== current);
+  await divergeCurrentControls(target, current, authoredCurrentControls, "wrong", mode);
   await activateGuidance(target.locator("[data-pep-activity]:not([hidden]) [data-pep-wrong-attempt]"), mode);
   const wrong = await guidanceState(target);
   if (Number(wrong.activities[current - 1].attempts) < 1) throw new Error("wrong-attempt setup did not increment attempts");
@@ -497,10 +628,15 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
   }
   sameState(restartedWrong.activities.filter((_, index) => index !== current - 1), otherBefore, "Restart changed another activity");
   sameState(restartedWrong.controls.filter((control) => control.activity !== current), controlsBefore, "Restart changed another activity input");
-  if (restartedWrong.frontier !== prepared.frontier || restartedWrong.requiredMinutes !== prepared.requiredMinutes || restartedWrong.complete !== prepared.complete) {
+  sameState(restartedWrong.controls.filter((control) => control.activity === current), authoredCurrentControls, "Restart after a wrong attempt did not restore authored current controls");
+  if (restartedWrong.frontier !== prepared.frontier || restartedWrong.requiredMinutes !== initial.requiredMinutes || restartedWrong.complete !== completionCheckpoint) {
     throw new Error("Restart changed frontier, required time or page completion");
   }
+  await expectRenderedCurrentGuidance(target);
 
+  await divergeCurrentControls(target, current, authoredCurrentControls, "completed", mode);
+  const otherBeforeComplete = (await guidanceState(target)).activities.filter((_, index) => index !== current - 1);
+  const controlsBeforeComplete = (await guidanceState(target)).controls.filter((control) => control.activity !== current);
   await activateGuidance(target.locator("[data-pep-activity]:not([hidden]) [data-pep-complete-activity]"), mode);
   const completed = await guidanceState(target);
   if (completed.activities[current - 1].credit !== "1") throw new Error("completion did not award exactly one credit");
@@ -509,6 +645,13 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
   if (restartedComplete.activities[current - 1].completed !== "false" || restartedComplete.activities[current - 1].credit !== "0") {
     throw new Error("Restart after completion left stale current state");
   }
+  sameState(restartedComplete.activities.filter((_, index) => index !== current - 1), otherBeforeComplete, "completed Restart changed another activity");
+  sameState(restartedComplete.controls.filter((control) => control.activity !== current), controlsBeforeComplete, "completed Restart changed another activity input");
+  sameState(restartedComplete.controls.filter((control) => control.activity === current), authoredCurrentControls, "Restart after completion did not restore authored current controls");
+  if (restartedComplete.frontier !== prepared.frontier || restartedComplete.requiredMinutes !== initial.requiredMinutes || restartedComplete.complete !== completionCheckpoint) {
+    throw new Error("completed Restart changed frontier, required time or page completion");
+  }
+  await expectRenderedCurrentGuidance(target);
   await activateGuidance(target.locator("[data-pep-activity]:not([hidden]) [data-pep-complete-activity]"), mode);
   const recompleted = await guidanceState(target);
   if (recompleted.activities[current - 1].credit !== "1") throw new Error("re-completion after Restart did not award exactly one credit");

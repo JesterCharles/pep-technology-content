@@ -355,6 +355,84 @@ test("T11 harness-owned guidance invariants catch accepted state mutations", { t
   }
 });
 
+test("T10/T11 enforce rendered current guidance in every owned environment", { timeout: 240000 }, async () => {
+  const mutations = [
+    ["task", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-task] { display:none!important; }", /current task is hidden/],
+    ["check block", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] { display:none!important; }", /activity-check block is not rendered/],
+    ["check heading", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > h2, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > h3 { display:none!important; }", /activity-check heading is hidden/],
+    ["check criteria", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > p, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > ul > li, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > ol > li { display:none!important; }", /activity-check criteria are hidden/],
+  ];
+  for (const rule of ["T10", "T11"]) {
+    for (const [name, css, pattern] of mutations) {
+      const errors = await runFixture(rule, "good.html", {
+        transformHtml: (html) => html
+          .replace("</style>", `@media screen { ${css} }</style>`)
+          .replace(
+            "previous.addEventListener('click', () => renderActivity(current - 1, 'push', true));",
+            "previous.addEventListener('click', () => { renderActivity(current - 1, 'push', true); lesson.dataset.testHide = 'true'; });",
+          ),
+      });
+      assertPreciseFailure(errors, rule, pattern);
+    }
+  }
+});
+
+test("T10/T11 checkpoint setup navigation against authored time and validated completion", { timeout: 300000 }, async () => {
+  const listener = "previous.addEventListener('click', () => renderActivity(current - 1, 'push', true));";
+  const mutation = (property, condition = "true") => (html) => html.replace(
+    listener,
+    `previous.addEventListener('click', event => { renderActivity(current - 1, 'push', true); if (${condition}) lesson.dataset.${property} = '${property === "pepRequiredMinutes" ? "99" : "false"}'; });`,
+  );
+  for (const property of ["pepRequiredMinutes", "pepComplete"]) {
+    for (const [rule, condition] of [
+      ["T10", "true"],
+      ["T11", "true"],
+      ["T10", "window.top !== window"],
+      ["T11", "event.detail === 0"],
+      ["T11", "innerWidth <= 390"],
+    ]) {
+      const errors = await runFixture(rule, "good.html", { transformHtml: mutation(property, condition) });
+      assertPreciseFailure(errors, rule, property === "pepRequiredMinutes" ? /changed authored required time/ : /setup navigation changed non-navigation state/);
+    }
+  }
+  for (const rule of ["T10", "T11"]) {
+    const errors = await runFixture(rule, "good.html", {
+      transformHtml: (html) => html.replace(
+        "document.querySelector('#success').addEventListener",
+        "document.querySelector('#activity-input').addEventListener('input', () => { lesson.dataset.pepComplete = 'true'; });\n      document.querySelector('#success').addEventListener",
+      ),
+    });
+    assertPreciseFailure(errors, rule, /without a coherent activity completion transition/);
+  }
+});
+
+test("T10/T11 restore every current control from the authored snapshot on both Restart paths", { timeout: 240000 }, async () => {
+  const loop = `        for (const initial of controls[index]) {
+          if (initial.control.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) initial.control.value = initial.value;
+          if (initial.control.matches('input[type="checkbox"], input[type="radio"]')) initial.control.checked = initial.checked;
+          if (initial.control.tagName === 'SELECT') initial.control.selectedIndex = initial.selectedIndex;
+        }`;
+  const noOp = "        for (const initial of controls[index]) { void initial; }";
+  for (const rule of ["T10", "T11"]) {
+    const errors = await runFixture(rule, "good.html", { transformHtml: (html) => html.replace(loop, noOp) });
+    assertPreciseFailure(errors, rule, /did not restore authored current controls/);
+  }
+  for (const line of [
+    `          if (initial.control.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) initial.control.value = initial.value;`,
+    `          if (initial.control.matches('input[type="checkbox"], input[type="radio"]')) initial.control.checked = initial.checked;`,
+    "          if (initial.control.tagName === 'SELECT') initial.control.selectedIndex = initial.selectedIndex;",
+  ]) {
+    const errors = await runFixture("T11", "good.html", { transformHtml: (html) => html.replace(line, "") });
+    assertPreciseFailure(errors, "T11", /did not restore authored current controls/);
+  }
+  const completedOnly = (html) => html.replaceAll("if (initial.control.matches(", "if ((state[index].attempts > 0 || !state[index].completed) && initial.control.matches(")
+    .replace("if (initial.control.tagName === 'SELECT')", "if ((state[index].attempts > 0 || !state[index].completed) && initial.control.tagName === 'SELECT')");
+  for (const rule of ["T10", "T11"]) {
+    const errors = await runFixture(rule, "good.html", { transformHtml: completedOnly });
+    assertPreciseFailure(errors, rule, /Restart after completion did not restore authored current controls/);
+  }
+});
+
 test("T10/T11 reject vacuous author guidance routes because semantic postconditions are harness-owned", { timeout: 120000 }, async () => {
   const spec = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
   for (const name of ["activityNavigation", "activityNavigationKeyboard", "activityNavigationTouch"]) {
@@ -607,8 +685,17 @@ test("optional anecdotes use balanced parsed validation without magic cue words"
   assert.match((await validateOptionalDisclosures(commandBlock)).join("; "), /must be code-free/);
   for (const technical of [
     "A clerk uses list.append(parcel) before lunch.",
+    "A clerk writes sorted(parcels) on the wall.",
+    "A clerk writes open(ledger) on the wall.",
     "A traveler runs curl https://example.invalid from a kiosk.",
     "A stocker types ls -la beside the shelf.",
+    "A stocker types git status beside the shelf.",
+    "A stocker types npm test beside the shelf.",
+    "A stocker types python script.py beside the shelf.",
+    "A stocker types pip install requests beside the shelf.",
+    `A label reads ${Buffer.from("list.append(parcel)").toString("base64")}.`,
+    `A label reads ${[...Buffer.from("git status")].map((value) => `%${value.toString(16).padStart(2, "0")}`).join("")}.`,
+    `A label reads ${[...Buffer.from("NameError: missing")].map((value) => `0x${value.toString(16).padStart(2, "0")}`).join(",")}.`,
     "The sign reads NameError: name parcel is not defined.",
     "Traceback (most recent call last) appeared on the board.",
   ]) {
@@ -620,6 +707,15 @@ test("optional anecdotes use balanced parsed validation without magic cue words"
     "At the airport terminal, a curled ribbon marks a parcel (fragile: keep upright) before the clerk prints its label.",
   );
   assert.deepEqual(await validateOptionalDisclosures(ordinary), []);
+  for (const plain of [
+    "A guide sorted parcels beside an open window before checking the garden status.",
+    "A shopper asks arrange(items) while a clerk prints a label at the airport terminal.",
+    `A label reads ${Buffer.from("A shopper uses a blue basket.").toString("base64")}.`,
+  ]) {
+    assert.deepEqual(await validateOptionalDisclosures(
+      html.replace("A shopper walks one aisle and places only useful items into a fresh basket.", plain),
+    ), []);
+  }
 });
 
 test("guidance contract parses objectives, conditional fit, checks and nested sequential hints", async () => {

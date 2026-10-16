@@ -155,9 +155,21 @@ function decodedSources(source) {
     try { values.push(decodeURIComponent(trimmed)); } catch {}
   }
   for (const match of trimmed.matchAll(/(?:0x[0-9a-f]{2}[\s,]*){2,}/giu)) {
-    values.push(String.fromCharCode(...[...match[0].matchAll(/0x([0-9a-f]{2})/giu)].map((part) => Number.parseInt(part[1], 16))));
+    const bytes = [...match[0].matchAll(/0x([0-9a-f]{2})/giu)].map((part) => Number.parseInt(part[1], 16));
+    try { values.push(new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(bytes))); } catch {}
   }
   return values;
+}
+
+function containsAnecdoteTechnical(value) {
+  const syntax = /(?:=>|===|\+\+|--|\[[^\]]+\bfor\b[^\]]+\]|\b(?:print|console\.log)\s*\()/u;
+  const apiCall = /\b[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+\s*\([^)]*\)/u;
+  const pythonBuiltin = /\b(?:sorted|open)\s*\([^)]*\)/u;
+  const flaggedCommand = /(?:[$>]\s*)?\b(?:curl|wget)\s+(?:https?:\/\/|--?\w|\.?\/)|(?:[$>]\s*)?\b(?:ls|git|npm|python3?|pip3?)\s+(?:--?\w|\.?\/)/iu;
+  const commonCommand = /(?:[$>]\s*)?\b(?:git\s+status|npm\s+test|python3?\s+[A-Za-z0-9_.-]+\.py\b|pip3?\s+install\s+[A-Za-z0-9_.-]+\b)/iu;
+  const exception = /\b(?:Traceback \(most recent call last\)|Exception in thread|File [“"'][^”"']+[”"'], line \d+|[A-Za-z_]\w*(?:Error|Exception):\s+\S)/u;
+  return syntax.test(value) || apiCall.test(value) || pythonBuiltin.test(value) ||
+    flaggedCommand.test(value) || commonCommand.test(value) || exception.test(value);
 }
 
 function scanPythonAnswers(sources, targets) {
@@ -189,6 +201,7 @@ async function inspectHtml(html, browser, spec) {
       };
       const problems = { optional: [], guidance: [] };
       const answerSources = [];
+      const anecdoteProse = [];
       const nearestActivity = (node) => node?.closest("[data-pep-activity]") ?? null;
       const hiddenByStructure = (node, boundary) => {
         for (let current = node; current && current !== boundary; current = current.parentElement) {
@@ -241,14 +254,7 @@ async function inspectHtml(html, browser, spec) {
           if (disclosure.querySelector("pre, code, kbd, samp, textarea, output, [data-code-block], [data-command], [data-output]")) {
             problems.optional.push("optional anecdote must be code-free");
           }
-          const prose = normalize([...stories, ...maps].map((item) => item.textContent).join(" "));
-          const syntax = /(?:=>|===|\+\+|--|\[[^\]]+\bfor\b[^\]]+\]|\b(?:print|console\.log)\s*\()/u;
-          const apiCall = /\b[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+\s*\([^)]*\)/u;
-          const command = /(?:[$>]\s*)?\b(?:curl|wget)\s+(?:https?:\/\/|--?\w|\.?\/)|(?:[$>]\s*)?\b(?:ls|git|npm|python3?|pip)\s+(?:--?\w|\.?\/)/iu;
-          const exception = /\b(?:Traceback \(most recent call last\)|Exception in thread|File [“"'][^”"']+[”"'], line \d+|[A-Za-z_]\w*(?:Error|Exception):\s+\S)/u;
-          if (syntax.test(prose) || apiCall.test(prose) || command.test(prose) || exception.test(prose)) {
-            problems.optional.push("optional anecdote must not contain code, API calls, commands or exact exception/output text");
-          }
+          anecdoteProse.push(normalize([...stories, ...maps].map((item) => item.textContent).join(" ")));
         }
         if (kind === "challenge" && label !== "Challenge (optional)") problems.optional.push("optional challenge summary must be exactly “Challenge (optional)”");
         if (kind === "challenge" && (!disclosure.querySelector("[data-pep-optional-time]") || !disclosure.querySelector("[data-pep-success-criteria]"))) {
@@ -276,7 +282,7 @@ async function inspectHtml(html, browser, spec) {
 
       const enrolled = [...document.querySelectorAll("main[data-pep-guidance-contract]")];
       if (!enrolled.length) {
-        return { ...problems, answerSources, hasGuidanceMarker: false, hintCount: 0, answerDeclaration: null, scripts: [] };
+        return { ...problems, anecdoteProse, answerSources, hasGuidanceMarker: false, hintCount: 0, answerDeclaration: null, scripts: [] };
       }
       if (enrolled.length !== 1) problems.guidance.push("guidance-contract pages require exactly one enrolled root main");
       const root = enrolled[0];
@@ -475,8 +481,11 @@ async function inspectHtml(html, browser, spec) {
         }
       }
       const scripts = [...document.scripts].map((script) => script.textContent ?? "");
-      return { ...problems, answerSources, answerSelectors, hasGuidanceMarker: true, hintCount: hints.length, answerDeclaration, scripts };
+      return { ...problems, anecdoteProse, answerSources, answerSelectors, hasGuidanceMarker: true, hintCount: hints.length, answerDeclaration, scripts };
     });
+    if (snapshot.anecdoteProse.some((prose) => decodedSources(prose).some(containsAnecdoteTechnical))) {
+      snapshot.optional.push("optional anecdote must not contain code, API calls, commands or exact exception/output text");
+    }
     if (snapshot.answerDeclaration && spec) {
       for (const selector of recursiveSelectors(spec)) {
         const resolvesInsideAnswerSurface = await page.locator(selector).evaluateAll((nodes) => {

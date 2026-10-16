@@ -176,13 +176,16 @@ later public drift. Rebase/squash requires a fresh run. No private value or answ
   navigation-only controls are absent, and `afterprint` exactly restores the prior disclosure states.
 - **T10:** runs all three routes and every mandatory guidance route inside an iframe whose only sandbox token is
   `allow-scripts`. Its opaque origin makes unguarded Web Storage access fail naturally. Enrolled pages also run the
-  full harness-owned navigation/state/Restart procedure in sandbox pointer, keyboard and both phone-touch contexts.
+  full harness-owned navigation/state/Restart procedure in sandbox pointer, keyboard and both phone-touch contexts,
+  including action-boundary setup checkpoints, visibly rendered current task/check content and authored-control Restart restoration.
 - **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion. Enrolled
   pages additionally run navigation and objectives by pointer, keyboard and 320/390 px touch; nested hints by pointer,
   keyboard and phone touch; every locked future activation and fragment; explicit destination focus; monotonic
   frontier/no-navigation-credit; complete root, live-control and per-activity preservation including required time and
   page completion; history without focus movement; current-only Restart after wrong and completed attempts while other
-  populated activities stay exact; one-credit re-completion; and unchanged accounting while optional guidance is used.
+  populated activities stay exact; exact restoration of every current text/check/selection to its pre-setup authored value;
+  immutable required time and harness-validated completion across every setup action; visible current task/direct check
+  heading/criteria at each transition; one-credit re-completion; and unchanged accounting while optional guidance is used.
 - **T12:** permits no serious or critical axe findings; runs the keyboard and reduced-motion success routes; requires
   `aria-live`; checks direct body text at 4.5:1 and rendered borders at 3:1 in forced light and dark themes. Fully
   transparent borders are not rendered and are excluded.
