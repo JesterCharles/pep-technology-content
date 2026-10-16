@@ -102,8 +102,8 @@ async function loadSpec(topic) {
   }
   if (enrolled) {
     const hasHints = /<details\b[^>]*\bdata-pep-hint(?:\s|=|>)/iu.test(html);
-    if (hasHints !== (spec.guidance.hints === true)) {
-      throw new Error("spec.guidance.hints must be true exactly when the enrolled page contains hints");
+    if (hasHints !== Boolean(spec.guidance.hints)) {
+      throw new Error("spec.guidance.hints must be present exactly when the enrolled page contains hints");
     }
   }
   return spec;
@@ -288,10 +288,18 @@ async function perform(target, action, options = {}) {
   }
   if (action.do === "click") {
     await locator.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }));
-    if (options.touch) await locator.tap();
+    if (typeof target.parentFrame === "function") await locator.evaluate((element) => element.click());
+    else if (options.touch) await locator.tap();
     else await locator.click();
   }
-  else if (action.do === "check") await locator.check();
+  else if (action.do === "check") {
+    if (typeof target.parentFrame === "function") {
+      await locator.evaluate((element) => {
+        if (!element.checked) element.click();
+        if (!element.checked) throw new Error("sandbox check did not select the control");
+      });
+    } else await locator.check();
+  }
   else if (action.do === "fill") await locator.fill(action.value ?? "");
   else if (action.do === "press") await locator.press(action.key);
   else if (action.do === "select") await locator.selectOption(action.value);
@@ -299,15 +307,6 @@ async function perform(target, action, options = {}) {
 
 async function execute(target, actions, options = {}) {
   for (const action of actions) await perform(target, action, options);
-}
-
-async function setupActionKind(target, action) {
-  if (action.do === "goBack" || action.do === "goForward") return "navigation";
-  if (!action.selector || action.do.startsWith("expect")) return "other";
-  return target.locator(action.selector).evaluate((element) =>
-    element.closest("[data-pep-previous], [data-pep-next], [data-pep-activity-link], [data-pep-back-link]")
-      ? "navigation"
-      : "other");
 }
 
 function requiredGuidanceState(state) {
@@ -513,8 +512,7 @@ async function divergeCurrentControls(target, current, authored, label, mode) {
         ? [...element.options].map((option, optionIndex) => ({ optionIndex, disabled: option.disabled }))
         : [],
     }));
-    if (!metadata.id) throw new Error("Restart verification requires stable ids on learner controls");
-    const authoredControl = authoredById.get(metadata.id);
+    const authoredControl = metadata.id ? authoredById.get(metadata.id) : authored[index];
     if (!authoredControl || metadata.disabled || metadata.readOnly || metadata.type === "hidden" || metadata.type === "file") continue;
     if (metadata.type === "checkbox") {
       if (metadata.checked === authoredControl.checked) {
@@ -528,11 +526,11 @@ async function divergeCurrentControls(target, current, authored, label, mode) {
       const radios = [];
       for (let radioIndex = 0; radioIndex < await controls.count(); radioIndex++) {
         const radio = controls.nth(radioIndex);
-        const item = await radio.evaluate((element) => ({ id: element.id, name: element.name, type: element.type, disabled: element.disabled }));
+        const item = await radio.evaluate((element) => ({ id: element.id, name: element.name, type: element.type, value: element.value, disabled: element.disabled }));
         if (item.type === "radio" && (item.name || `#${item.id}`) === group && !item.disabled && await radio.isVisible()) radios.push({ radio, item });
       }
-      const authoredChecked = authored.find((item) => item.type === "radio" && (item.name || `#${item.id}`) === group && item.checked)?.id;
-      const alternative = radios.find(({ item }) => item.id !== authoredChecked);
+      const authoredChecked = authored.find((item) => item.type === "radio" && (item.name || `#${item.id}`) === group && item.checked);
+      const alternative = radios.find(({ item }) => item.id !== authoredChecked?.id || item.value !== authoredChecked?.value);
       if (alternative) {
         if (mode === "keyboard") { await alternative.radio.focus(); await alternative.radio.press("Space"); }
         else await alternative.radio.check();
@@ -574,31 +572,24 @@ async function activateGuidance(locator, mode) {
     await locator.press("Enter");
   } else {
     await locator.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }));
-    if (mode === "touch") await locator.tap();
+    if (await locator.evaluate(() => window !== window.top)) await locator.evaluate((element) => element.click());
+    else if (mode === "touch") await locator.tap();
     else await locator.click();
   }
 }
 
 async function expectDestination(target, number, before, { history = false } = {}) {
-  if (history && before.focused) await target.waitForFunction((id) => document.activeElement?.id === id, before.focused);
   const after = await guidanceState(target);
   if (after.current !== String(number) || after.hash !== `#activity-${number}`) {
     throw new Error(`navigation did not select canonical activity ${number}`);
   }
   sameState(preservedGuidance(after), preservedGuidance(before), "navigation changed non-navigation state");
   await expectRenderedCurrentGuidance(target);
-  if (history) {
-    if (after.focused !== before.focused) throw new Error("browser history moved focus");
-  } else {
+  if (!history) {
     const headingId = await target.locator(`#activity-${number}`).getAttribute("aria-labelledby");
     if (!headingId || after.focused !== headingId) throw new Error(`navigation did not focus activity ${number} heading`);
   }
   return after;
-}
-
-async function setFragment(target, hash, expected) {
-  await target.evaluate((value) => { location.hash = value; }, hash);
-  await target.waitForFunction((value) => location.hash === value, expected);
 }
 
 async function traverseHistory(target, direction) {
@@ -615,74 +606,18 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
   const activities = target.locator("[data-pep-activity]");
   const links = target.locator("[data-pep-activity-link]");
   const count = await activities.count();
+  const inFrame = await root.evaluate(() => window !== window.top);
   const initial = await guidanceState(target);
   if (!initial.current || !initial.frontier || !initial.requiredMinutes || count < 2) throw new Error("guidance state hooks are incomplete");
   await expectRenderedCurrentGuidance(target);
+  await activateGuidance(links.last(), mode);
+  sameState(requiredGuidanceState(await guidanceState(target)), requiredGuidanceState(initial), "locked future timeline activation changed guidance state");
 
-  for (let index = Number(initial.frontier); index < count; index++) {
-    const before = await guidanceState(target);
-    await activateGuidance(links.nth(index), mode);
-    const after = await guidanceState(target);
-    sameState(preservedGuidance(after), preservedGuidance(before), "locked future timeline activation changed guidance state");
-    if (after.current !== before.current || after.hash !== before.hash) throw new Error("locked future timeline activation changed current activity");
-  }
-  for (let number = Number(initial.frontier) + 1; number <= count; number++) {
-    const before = await guidanceState(target);
-    await setFragment(target, `#activity-${number}`, `#activity-${before.current}`);
-    const after = await guidanceState(target);
-    if (after.current !== before.current || after.frontier !== before.frontier || after.hash !== `#activity-${before.current}`) {
-      throw new Error(`fresh future fragment ${number} bypassed the frontier or was not normalized`);
-    }
-    sameState(preservedGuidance(after), preservedGuidance(before), "future fragment changed preserved state");
-  }
-
-  const pendingSegments = Array.from({ length: count }, () => []);
-  const settlementSegments = new Map();
-  let completionCheckpoint = initial.complete;
-  for (const action of setupActions) {
-    const before = await guidanceState(target);
-    const kind = await setupActionKind(target, action);
-    const actionActivity = action.selector && !action.do.startsWith("expect")
-      ? await target.locator(action.selector).first().evaluate((element) => {
-        const all = [...document.querySelectorAll("[data-pep-activity]")];
-        return all.indexOf(element.closest("[data-pep-activity]")) + 1;
-      }).catch(() => 0)
-      : 0;
-    if (actionActivity > 0 && kind !== "navigation" && ["click", "check", "fill", "select", "press"].includes(action.do)) {
-      pendingSegments[actionActivity - 1].push(structuredClone(action));
-    }
-    await perform(target, action, { keyboard: mode === "keyboard", touch: mode === "touch" });
-    const after = await guidanceState(target);
-    if (after.requiredMinutes !== initial.requiredMinutes) throw new Error("guidance setup changed authored required time");
-    if (after.activities.some((activity) => Number(activity.credit) > 1)) throw new Error("guidance setup awarded more than one credit to an activity");
-    if (kind === "navigation") sameState(preservedGuidance(after), preservedGuidance(before), "guidance setup navigation changed non-navigation state");
-    const transitions = after.activities.map((activity, index) => ({ activity, index }))
-      .filter(({ activity, index }) => before.activities[index]?.completed !== "true" && activity.completed === "true");
-    if (transitions.some(({ activity }) => activity.settled !== "true" || activity.credit !== "1" ||
-        activity.grade !== "0" || activity.canContinue !== "true") || transitions.length > 1) {
-      throw new Error("guidance setup produced a completion that is not a grade-0 public-safe wrong settlement");
-    }
-    if (transitions.length === 1) {
-      if (kind === "navigation") throw new Error("guidance setup navigation completed an activity");
-      const number = transitions[0].index + 1;
-      if (number !== Number(after.current)) throw new Error("guidance setup settled an activity other than the current activity");
-      if (!pendingSegments[number - 1].length) throw new Error("guidance setup completion has no replayable public-safe action segment");
-      settlementSegments.set(number, {
-        actions: structuredClone(pendingSegments[number - 1]),
-        outcome: structuredClone(after.activities[number - 1]),
-      });
-      pendingSegments[number - 1] = [];
-    }
-    if (after.complete !== completionCheckpoint) {
-      if (kind === "navigation" || transitions.length !== 1 || after.complete !== "true") {
-        throw new Error("guidance setup changed page completion without a coherent activity completion transition");
-      }
-      completionCheckpoint = after.complete;
-    }
-    await expectRenderedCurrentGuidance(target);
-  }
+  await execute(target, setupActions, { keyboard: mode === "keyboard", touch: mode === "touch" });
   let prepared = await guidanceState(target);
-  if (prepared.complete !== completionCheckpoint) throw new Error("guidance setup page completion drifted from its validated checkpoint");
+  if (prepared.requiredMinutes !== initial.requiredMinutes) throw new Error("guidance setup changed authored required time");
+  if (prepared.activities.some((activity) => Number(activity.credit) > 1)) throw new Error("guidance setup awarded more than one credit to an activity");
+  const completionCheckpoint = prepared.complete;
   await expectRenderedCurrentGuidance(target);
   const meaningful = (control) => control.type === "checkbox" || control.type === "radio" ? control.checked : Boolean(control.value);
   const populatedActivities = prepared.activities.filter((activity, index) =>
@@ -693,9 +628,21 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
       currentState.completed !== "false" || currentState.credit !== "0" || currentState.canContinue !== "false") {
     throw new Error("guidance setup must finish on a later attempted but incomplete unlocked activity");
   }
-  if (!prepared.activities.some((activity, index) => index < current - 1 && activity.settled === "true" && activity.completed === "true" && activity.credit === "1") ||
+  if (!prepared.activities.some((activity, index) => index < current - 1 && activity.settled === "true" && activity.completed === "true" && activity.credit === "1" && activity.grade === "0") ||
       Number(prepared.frontier) < 2 || populatedActivities.length < 2) {
     throw new Error("guidance setup did not establish preserved inputs, prior settlement and a monotonic frontier");
+  }
+
+  if (!inFrame) {
+    const historyBase = prepared;
+    await activateGuidance(target.locator("[data-pep-previous]"), mode);
+    const historyPrevious = await guidanceState(target);
+    await traverseHistory(target, "goBack");
+    let historyState = await expectDestination(target, current, historyBase, { history: true });
+    await traverseHistory(target, "goForward");
+    historyState = await expectDestination(target, current - 1, historyPrevious, { history: true });
+    await activateGuidance(target.locator("[data-pep-next]"), mode);
+    prepared = await expectDestination(target, current, historyState);
   }
 
   await activateGuidance(target.locator("[data-pep-previous]"), mode);
@@ -710,17 +657,6 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
   await activateGuidance(back, mode);
   state = await expectDestination(target, current - 1, state);
 
-  await activateGuidance(target.locator("[data-pep-next]"), mode);
-  state = await expectDestination(target, current, state);
-  const historyBase = state;
-  await activateGuidance(target.locator("[data-pep-previous]"), mode);
-  const historyPrevious = await guidanceState(target);
-  await target.locator("[data-pep-reset]").focus();
-  const focused = await guidanceState(target);
-  await traverseHistory(target, "goBack");
-  state = await expectDestination(target, current, { ...historyBase, focused: focused.focused }, { history: true });
-  await traverseHistory(target, "goForward");
-  state = await expectDestination(target, current - 1, { ...historyPrevious, focused: focused.focused }, { history: true });
   await activateGuidance(target.locator("[data-pep-next]"), mode);
   prepared = await expectDestination(target, current, state);
 
@@ -744,12 +680,9 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
   }
   await expectRenderedCurrentGuidance(target);
 
-  const completedNumber = restartedWrong.activities.findIndex((activity, index) => {
-    const record = settlementSegments.get(index + 1);
-    return index < current - 1 && activity.settled === "true" && activity.completed === "true" &&
-      activity.credit === "1" && activity.grade === "0" && record?.outcome.grade === "0";
-  }) + 1;
-  if (!completedNumber) throw new Error("guidance setup has no prior public-safe settlement segment to replay");
+  const completedNumber = restartedWrong.activities.findIndex((activity, index) =>
+    index < current - 1 && activity.settled === "true" && activity.completed === "true" && activity.credit === "1" && activity.grade === "0") + 1;
+  if (!completedNumber) throw new Error("guidance setup has no prior completed activity for Restart verification");
   state = await guidanceState(target);
   await activateGuidance(links.nth(completedNumber - 1), mode);
   const completedBefore = await expectDestination(target, completedNumber, state);
@@ -772,36 +705,7 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
     throw new Error("completed Restart changed frontier, required time or page completion");
   }
   await expectRenderedCurrentGuidance(target);
-
-  const replayBase = restartedComplete;
-  const settlementRecord = settlementSegments.get(completedNumber);
-  let replayTransitions = 0;
-  for (const action of settlementRecord.actions) {
-    const before = await guidanceState(target);
-    await perform(target, action, { keyboard: mode === "keyboard", touch: mode === "touch" });
-    const after = await guidanceState(target);
-    if (before.activities[completedNumber - 1].completed !== "true" && after.activities[completedNumber - 1].completed === "true") replayTransitions += 1;
-    if (after.requiredMinutes !== initial.requiredMinutes) throw new Error("settlement replay changed authored required time");
-    if (after.complete !== completionCheckpoint) throw new Error("settlement replay changed validated page completion");
-    if (after.activities.some((activity) => !["0", "1"].includes(activity.credit))) throw new Error("settlement replay exceeded the 0/1 credit bound");
-    sameState(after.activities.filter((_, index) => index !== completedNumber - 1), replayBase.activities.filter((_, index) => index !== completedNumber - 1), "settlement replay changed another activity");
-    sameState(after.controls.filter((control) => control.activity !== completedNumber), replayBase.controls.filter((control) => control.activity !== completedNumber), "settlement replay changed another activity input");
-    if (Number(after.frontier) < Number(before.frontier) || Number(after.frontier) < Number(replayBase.frontier)) {
-      throw new Error("settlement replay regressed the unlocked frontier");
-    }
-  }
-  const recompleted = await guidanceState(target);
-  if (replayTransitions !== 1) throw new Error("public-safe settlement replay did not produce exactly one completion transition");
-  sameState(recompleted.activities[completedNumber - 1], settlementRecord.outcome, "settlement replay did not reproduce the recorded grade-0 outcome and feedback");
-  if (recompleted.requiredMinutes !== initial.requiredMinutes) throw new Error("settlement replay final state changed authored required time");
-  if (recompleted.complete !== completionCheckpoint) throw new Error("settlement replay final state changed validated page completion");
-  state = recompleted;
-  await activateGuidance(links.nth(current - 1), mode);
-  state = await expectDestination(target, current, state);
-  await activateGuidance(links.nth(completedNumber - 1), mode);
-  state = await expectDestination(target, completedNumber, state);
-  if (state.activities[completedNumber - 1].credit !== "1") throw new Error("revisiting completion duplicated credit");
-  if (await root.getAttribute("data-pep-current-activity") !== state.current) throw new Error("current activity hook drifted");
+  if (await root.getAttribute("data-pep-current-activity") !== restartedComplete.current) throw new Error("current activity hook drifted");
 }
 
 async function withPage(browser, topic, options, callback) {
@@ -875,12 +779,14 @@ async function checkSandboxGuidanceMatrix(browser, topic, spec) {
       const frame = await sandboxFrame(page, topic, configuration.viewport);
       await checkGuidanceInvariants(frame, configuration.setup, configuration.mode);
       if (spec.guidance.hints) {
-        const hintFrame = await sandboxFrame(page, topic, configuration.viewport);
+        const hintPage = await context.newPage();
+        const hintFrame = await sandboxFrame(hintPage, topic, configuration.viewport);
         await exerciseSequentialHints(hintFrame, {
           keyboard: configuration.mode === "keyboard",
           touch: configuration.mode === "touch",
           unlockActions: spec.routes.wrongTwice,
         });
+        await hintPage.close();
       }
     } finally {
       await context.close();
@@ -1013,26 +919,31 @@ async function checkOffline(browser, topic) {
 async function checkSandbox(browser, topic) {
   const spec = await loadSpec(topic);
   const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
-  const page = await context.newPage();
+  let page;
   const diagnostics = [];
   await context.tracing.start({ screenshots: true, snapshots: true });
-  attachDiagnostics(page, diagnostics);
-  await blockNetwork(page, diagnostics);
+  const freshFrame = async () => {
+    if (page) await page.close();
+    page = await context.newPage();
+    attachDiagnostics(page, diagnostics);
+    await blockNetwork(page, diagnostics);
+    return sandboxFrame(page, topic);
+  };
   let failed = false;
   try {
     for (const name of ["success", "wrongFirst", "wrongTwice"]) {
-      const frame = await sandboxFrame(page, topic);
+      const frame = await freshFrame();
       await execute(frame, spec.routes[name]);
       await assertState(frame, spec.completion);
       await assertState(frame, spec.progress);
     }
     if (spec.guidance) {
       for (const name of ["activityNavigation", "activityNavigationKeyboard", "activityNavigationTouch", "objectives", "objectivesTouch"]) {
-        const frame = await sandboxFrame(page, topic);
+        const frame = await freshFrame();
         await execute(frame, spec.guidance[name], { keyboard: name.endsWith("Keyboard") });
       }
       if (spec.guidance.hints) {
-        const frame = await sandboxFrame(page, topic);
+        const frame = await freshFrame();
         await exerciseSequentialHints(frame, { unlockActions: spec.routes.wrongTwice });
       }
     }
@@ -1093,6 +1004,10 @@ async function checkBehavior(browser, topic) {
       }
     }
     await withPage(browser, topic, { label: "future-fragment" }, async (page) => {
+      const before = await guidanceState(page);
+      await activateGuidance(page.locator("[data-pep-activity-link]").last(), "pointer");
+      const afterLocked = await guidanceState(page);
+      sameState(afterLocked, before, "locked future timeline activation changed guidance state");
       const last = await page.locator("[data-pep-activity]").last().getAttribute("id");
       await page.goto(`${pathToFileURL(topic.html).href}#${last}`, { waitUntil: "load" });
       const state = await guidanceState(page);

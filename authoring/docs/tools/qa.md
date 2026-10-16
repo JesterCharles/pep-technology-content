@@ -38,8 +38,9 @@ The three required routes must independently finish the topic:
 activity; `restart.credit` proves credit was not duplicated. `keyboard` is the complete success route using semantic
 keyboard activation. `data-pep-guidance-contract` and `spec.guidance` are mandatory together. Enrolled specs require
 `activityNavigation`, `activityNavigationKeyboard`, `activityNavigationTouch`, `objectives` and `objectivesTouch`;
-`hints: true` is required exactly when parsed HTML contains hints; it is an enrollment flag, not an author-controlled
-click path. Empty, partial or author-selected omission fails before browser execution. The contract fixture demonstrates
+`hints` is required exactly when parsed HTML contains hints. Existing non-empty action arrays and the simpler `true`
+enrollment are both accepted, while owner-aware traversal and assertions remain harness-controlled rather than limited
+by author selectors. Empty, partial or author-selected omission fails before browser execution. The contract fixture demonstrates
 the exact shape. Navigation arrays are setup/smoke paths, not self-selected evidence: they must leave meaningful live
 inputs in at least two activities, a prior honestly settled/completed **grade-0 wrong settlement** with one credit, and
 a later unlocked, attempted but incomplete current activity. Harness-owned postconditions then activate Previous/Next,
@@ -186,24 +187,22 @@ later public drift. Rebase/squash requires a fresh run. No private value or answ
   `allow-scripts`. Its opaque origin makes unguarded Web Storage access fail naturally. Enrolled pages also run the
   full harness-owned navigation/state/Restart procedure in sandbox pointer, keyboard and both phone-touch contexts.
   The iframe content viewport must equal each configured desktop or 320/390 phone size before invariants run. Those
-  invariants include action-boundary setup checkpoints, authored-control Restart restoration and current task/check
-  rendering against structural hiding, ordinary zero opacity and computed zero-valued `filter: opacity()` components;
+  invariants include direct setup-state validation, authored-control Restart restoration and current task/check rendering
+  against structural hiding, ordinary zero opacity and computed zero-valued `filter: opacity()` components;
   the latter is bounded full-element-transparency coverage, not arbitrary paint proof.
 - **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion. Enrolled
   pages additionally run navigation and objectives by pointer, keyboard and 320/390 px touch; owner/activity-aware
   nested hints by pointer, keyboard and phone touch after a public-safe wrong-twice route unlocks their activities;
-  every locked future activation and fragment; explicit destination focus; monotonic frontier/no-navigation-credit;
-  complete root, live-control and per-activity preservation including required time and page completion; history
-  without focus movement; and current-only Restart while other populated activities stay exact. Restart divergence is
-  type-aware for text/editor, checkbox, select and radio groups but is never submitted for credit. The wrong-attempt
-  Restart uses the setup-established incomplete activity. Setup records only a grade-0 public-safe wrong settlement,
-  including its complete activity and feedback snapshot. After exact authored restoration, completed Restart replays
-  only that recorded segment and must reproduce the retained snapshot exactly. Every replay action preserves original
-  required time, the validated page-completion checkpoint, the 0/1 credit bound, exact non-current activities and
-  controls, and a monotonic frontier. Grade stays separate from settlement/completion, and QA never reactivates a
-  settled disabled control. Current task/direct check headings and criteria remain visible at every transition with
-  the same bounded zero-opacity-filter rejection. Optional guidance uses the same unlocked owner traversal and cannot
-  change required accounting.
+  a direct locked-future activation and guarded future fragment; explicit destination focus; monotonic frontier/no-navigation-credit;
+  complete root, live-control and per-activity preservation including required time and page completion; state-preserving
+  browser history; and current-only Restart while other populated activities stay exact. Restart divergence is
+  type-aware for text/editor, checkbox, select and radio groups but is never submitted for credit. The setup-established
+  attempted activity and one prior completed activity each reset directly to authored controls and clean local state;
+  required time, validated page completion, the monotonic frontier and every non-current activity/control stay exact.
+  QA does not force a fresh completion or reactivate a settled disabled control. The authored Restart route remains the
+  direct bounded re-completion/no-duplicate-credit proof, with grade separate from settlement/completion. Current
+  task/direct check headings and criteria remain visible at every transition with the same bounded zero-opacity-filter
+  rejection. Optional guidance uses the same unlocked owner traversal and cannot change required accounting.
 - **T12:** permits no serious or critical axe findings; runs the keyboard and reduced-motion success routes; requires
   `aria-live`; checks direct body text at 4.5:1 and rendered borders at 3:1 in forced light and dark themes. Fully
   transparent borders are not rendered and are excluded. Enrolled guidance also preserves exact canonical semantic

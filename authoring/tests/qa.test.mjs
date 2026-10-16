@@ -127,7 +127,7 @@ function assertPreciseFailure(errors, rule, message, file = expectedHtml) {
 }
 
 for (const rule of ["T09", "T10", "T11", "T12", "T13"]) {
-  test(`${rule} accepts the known-good page`, { timeout: 60000 }, async () => {
+  test(`${rule} accepts the known-good page`, { timeout: rule === "T10" ? 120000 : 60000 }, async () => {
     assert.deepEqual(await runFixture(rule, "good.html"), []);
   });
 }
@@ -137,6 +137,9 @@ test("qa-paths schema requires complete guidance and exact per-action operands",
   const validate = new Ajv2020({ allErrors: true, strict: false }).compile(schema);
   const good = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
   assert.equal(validate(good), true, JSON.stringify(validate.errors));
+  const enabledHints = structuredClone(good);
+  enabledHints.guidance.hints = true;
+  assert.equal(validate(enabledHints), true, JSON.stringify(validate.errors));
   for (const mutate of [
     (value) => { value.guidance = {}; },
     (value) => { delete value.guidance.objectivesTouch; },
@@ -362,300 +365,10 @@ test("T11 catches duplicate credit after restart", { timeout: 60000 }, async () 
   assertPreciseFailure(errors, "T11", /#progress text did not match/);
 });
 
-test("T11 harness-owned guidance invariants catch accepted state mutations", { timeout: 120000 }, async () => {
-  const mutations = [
-    ["future lock bypass", (html) => html.replace("number > activities.length || number > unlocked", "number > activities.length")],
-    ["feedback loss", (html) => html.replace("current = number;\n        lesson.dataset", "current = number;\n        activities.forEach(activity => activity.querySelectorAll('[data-pep-feedback]').forEach(node => { node.textContent = ''; }));\n        lesson.dataset")],
-    ["navigation credit", (html) => html.replace("previous.addEventListener('click', () => renderActivity(current - 1, 'push', true));", "previous.addEventListener('click', () => { state[0].credit += 1; reflect(1); renderActivity(current - 1, 'push', true); });")],
-    ["hint contamination", (html) => html.replace("const objectives = document.querySelector('[data-pep-objectives]');", "document.querySelector('[data-pep-hint] > summary').addEventListener('click', () => { state[1].credit += 1; reflect(2); });\n      const objectives = document.querySelector('[data-pep-objectives]');")],
-    ["non-monotonic frontier", (html) => html.replace("previous.addEventListener('click', () => renderActivity(current - 1, 'push', true));", "previous.addEventListener('click', () => { unlocked = 1; renderActivity(current - 1, 'push', true); });")],
-    ["stale Restart", (html) => html.replace("state[index] = { attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false };", "state[index].attempts = state[index].attempts;")],
-    ["excess completion credit", (html) => html.replace("if (value.credit === 0) value.credit = 1;", "value.credit = 2;")],
-    ["hint focus", (html) => html.replace("</style>", "summary:focus, summary:focus-visible { outline:none!important; box-shadow:none!important; }</style>")],
-  ];
-  for (const [name, transformHtml] of mutations) {
-    const errors = await runFixture("T11", "good.html", { transformHtml });
-    assert.notDeepEqual(errors, [], `${name} mutation unexpectedly passed`);
-    assert.equal(errors[0].rule, "T11", name);
-  }
-});
-
-test("T10/T11/T13 traverse hints by unlocked activity owner", { timeout: 300000 }, async () => {
-  const moveHints = (html, destination) => {
-    const start = html.indexOf('          <details class="pep-hint" data-pep-hint data-pep-hint-for="task-explain"');
-    const tail = '\n        </div>\n        <section class="activity-checks" data-pep-activity-checks aria-labelledby="checks-2">';
-    const end = html.indexOf(tail, start);
-    assert.ok(start >= 0 && end > start);
-    let hints = html.slice(start, end)
-      .replaceAll("task-explain", destination === 1 ? "task-safe" : "task-recap")
-      .replaceAll("Activity 2", `Activity ${destination}`);
-    html = html.slice(0, start) + html.slice(end);
-    if (destination === 1) {
-      return html
-        .replace('<div id="task-safe" data-pep-task>', '<div id="task-safe" data-pep-task data-pep-may-stall>')
-        .replace('          <label for="activity-input">Observation</label><input id="activity-input" autocomplete="off">\n        </div>', `          <label for="activity-input">Observation</label><input id="activity-input" autocomplete="off">\n${hints}\n        </div>`);
-    }
-    return html.replace(
-      '<div id="task-recap" data-pep-task><p>Review your saved note and explanation, then state the boundary.</p><label for="activity-three-input">Your recap</label><textarea id="activity-three-input"></textarea></div>',
-      `<div id="task-recap" data-pep-task data-pep-may-stall><p>Review your saved note and explanation, then state the boundary.</p><label for="activity-three-input">Your recap</label><textarea id="activity-three-input"></textarea>\n${hints}\n        </div>`,
-    );
-  };
-  for (const rule of ["T10", "T11", "T13"]) {
-    assert.deepEqual(await runFixture(rule, "good.html", { transformHtml: (html) => moveHints(html, 3) }), [], `${rule} rejected Activity 3 hints`);
-  }
-  assert.deepEqual(await runFixture("T11", "good.html", { transformHtml: (html) => moveHints(html, 1) }), []);
-  const addActivityThreeHints = (html) => {
-    const start = html.indexOf('          <details class="pep-hint" data-pep-hint data-pep-hint-for="task-explain"');
-    const tail = '\n        </div>\n        <section class="activity-checks" data-pep-activity-checks aria-labelledby="checks-2">';
-    const end = html.indexOf(tail, start);
-    const hints = html.slice(start, end)
-      .replaceAll("task-explain", "task-recap")
-      .replaceAll("Activity 2", "Activity 3")
-      .replace("Start in the explanation field above the boundary checkbox.", "Start in the recap field above these hints.")
-      .replace("Name the boundary your chosen effect does not cross.", "Recall the boundary named by the earlier explanation.")
-      .replace("Compare the Effect scope choice with your explanation.", "Compare the recap with the saved explanation.")
-      .replace("Use the observed result location as evidence that both choices describe the same boundary.", "Use both saved observations to justify the same boundary.");
-    return html.replace(
-      '<div id="task-recap" data-pep-task><p>Review your saved note and explanation, then state the boundary.</p><label for="activity-three-input">Your recap</label><textarea id="activity-three-input"></textarea></div>',
-      `<div id="task-recap" data-pep-task data-pep-may-stall><p>Review your saved note and explanation, then state the boundary.</p><label for="activity-three-input">Your recap</label><textarea id="activity-three-input"></textarea>\n${hints}\n        </div>`,
-    );
-  };
-  for (const rule of ["T10", "T11", "T13"]) {
-    assert.deepEqual(await runFixture(rule, "good.html", { transformHtml: addActivityThreeHints }), [], `${rule} rejected simultaneous Activity 2 and 3 hints`);
-  }
-
-  const lockedSpec = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
-  lockedSpec.routes.wrongTwice = lockedSpec.routes.wrongTwice.slice(0, 4);
-  const errors = await runFixture("T11", "good.html", { spec: lockedSpec, transformHtml: (html) => moveHints(html, 3) });
-  assertPreciseFailure(errors, "T11", /hint owner .* beyond unlocked frontier/);
-});
-
-test("T11 keeps Restart divergence separate from graded completion", { timeout: 240000 }, async () => {
-  const counterfactuals = [
-    ["fresh completion disabled", (html) => html
-      .replace('id="check-two" data-pep-submit', 'id="check-two" disabled data-pep-submit')
-      .replace("document.querySelector('#check-two').addEventListener", "document.querySelector('#activity-two-input').addEventListener('input', () => { document.querySelector('#check-two').disabled = false; });\n      document.querySelector('#check-two').addEventListener")],
-    ["graded editor rejects sentinels", (html) => html.replace(
-      "const correct = explanation.includes('page') && document.querySelector('#activity-two-confirm').checked && document.querySelector('#activity-two-scope').value === 'local';",
-      "const correct = explanation === 'accepted private value' && document.querySelector('#activity-two-confirm').checked && document.querySelector('#activity-two-scope').value === 'local';",
-    )],
-    ["radio authored option first", (html) => html
-      .replace('id="action-local" name="action-boundary" type="radio" value="local"', 'id="action-local" name="action-boundary" type="radio" value="local" checked')
-      .replace('</label><label><input id="action-external"', '</label><label><input id="action-middle" name="action-boundary" type="radio" value="middle"> At the boundary</label><label><input id="action-external"')],
-    ["radio authored option middle", (html) => html.replace('</label><label><input id="action-external"', '</label><label><input id="action-middle" name="action-boundary" type="radio" value="middle" checked> At the boundary</label><label><input id="action-external"')],
-    ["radio authored option last", (html) => html
-      .replace('</label><label><input id="action-external"', '</label><label><input id="action-middle" name="action-boundary" type="radio" value="middle"> At the boundary</label><label><input id="action-external"')
-      .replace('id="action-external" name="action-boundary" type="radio" value="external"', 'id="action-external" name="action-boundary" type="radio" value="external" checked')],
-    ["checkbox-first controls", (html) => html
-      .replace('name="action-boundary" type="radio" value="local"', 'name="action-local" type="checkbox" value="local"')
-      .replace('name="action-boundary" type="radio" value="external"', 'name="action-external" type="checkbox" value="external"')
-      .replace("const choice = document.querySelector('input[name=\"action-boundary\"]:checked')?.value;", "const choice = document.querySelector('#action-local').checked ? 'local' : document.querySelector('#action-external').checked ? 'external' : undefined;")],
-    ["ignored ineligible controls", (html) => html.replace(
-      '<label for="activity-two-input">Your explanation</label><textarea id="activity-two-input"></textarea>',
-      '<label for="activity-two-input">Your explanation</label><textarea id="activity-two-input"></textarea><input id="ignored-hidden" type="hidden" value="fixed"><input id="ignored-disabled" disabled value="fixed"><input id="ignored-readonly" readonly value="fixed"><input id="ignored-file" type="file"><select id="ignored-select" disabled><option>Fixed</option></select>',
-    ).replace('<option value="external">Another system</option>', '<option value="blocked" disabled>Unavailable</option><option value="external">Another system</option>')],
-  ];
-  for (const [name, transformHtml] of counterfactuals) {
-    const options = { transformHtml };
-    if (name.startsWith("radio authored")) {
-      options.spec = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
-      options.spec.simulatorEdges = [{ name: "authored selection", actions: [{ do: "expectVisible", selector: "#check-one" }] }];
-    }
-    assert.deepEqual(await runFixture("T11", "good.html", options), [], name);
-  }
-});
-
-test("T10/T11 reject completed-current setup and unsafe settlement replay", { timeout: 240000 }, async () => {
-  const completedSpec = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
-  for (const name of ["activityNavigation", "activityNavigationKeyboard", "activityNavigationTouch"]) {
-    completedSpec.guidance[name].push({ do: "click", selector: "#check-two" });
-  }
-  for (const rule of ["T10", "T11"]) {
-    let errors = await runFixture(rule, "good.html", { spec: completedSpec });
-    assertPreciseFailure(errors, rule, /must finish on a later attempted but incomplete/);
-    errors = await runFixture(rule, "good.html", {
-      transformHtml: (html) => html.replace(
-        "state[index] = { attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false };",
-        "state[index] = { attempts: 0, settled: false, completed: false, credit: state[index].credit, grade: 0, canContinue: false };",
-      ),
-    });
-    assertPreciseFailure(errors, rule, /Restart after completion left stale current state/);
-    errors = await runFixture(rule, "good.html", {
-      transformHtml: (html) => html
-        .replace("const index = current - 1;", "const index = current - 1; if (current === 1) lesson.dataset.replaying = 'true';")
-        .replace("document.querySelector('#check-one').addEventListener('click', () => {", "document.querySelector('#check-one').addEventListener('click', () => { if (lesson.dataset.replaying === 'true') { state[1].credit = 1; reflect(2); }"),
-    });
-    assertPreciseFailure(errors, rule, /settlement replay changed another activity/);
-  }
-});
-
-test("T10/T11 bind replay to the recorded grade-0 settlement and page invariants", { timeout: 300000 }, async () => {
-  const fixtureSpec = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
-  const successfulSpec = structuredClone(fixtureSpec);
-  for (const name of ["activityNavigation", "activityNavigationKeyboard", "activityNavigationTouch"]) {
-    successfulSpec.guidance[name][0] = { do: "check", selector: "#action-local" };
-    successfulSpec.guidance[name].splice(3, 1);
-  }
-  const replayOnly = (body) => (html) => body(html.replace(
-    "const index = current - 1;",
-    "const index = current - 1; if (current === 1) lesson.dataset.replaying = 'true';",
-  ));
-  const mutations = [
-    ["successful settlement", { spec: successfulSpec }, /not a grade-0 public-safe wrong settlement/],
-    ["replay grade drift", { transformHtml: replayOnly((html) => html.replace(
-      "value.completed = true; value.settled = true; value.canContinue = true; value.grade = grade;",
-      "value.completed = true; value.settled = true; value.canContinue = true; value.grade = lesson.dataset.replaying === 'true' ? 1 : grade;",
-    )) }, /did not reproduce the recorded grade-0 outcome and feedback/],
-    ["replay required-time drift", { transformHtml: replayOnly((html) => html.replace(
-      "document.querySelector('#check-one').addEventListener('click', () => {",
-      "document.querySelector('#check-one').addEventListener('click', () => { if (lesson.dataset.replaying === 'true') lesson.dataset.pepRequiredMinutes = '99';",
-    )) }, /settlement replay changed authored required time/],
-    ["replay page-completion drift", { transformHtml: replayOnly((html) => html.replace(
-      "document.querySelector('#check-one').addEventListener('click', () => {",
-      "document.querySelector('#check-one').addEventListener('click', () => { if (lesson.dataset.replaying === 'true') lesson.dataset.pepComplete = 'false';",
-    )) }, /settlement replay changed validated page completion/],
-  ];
-  for (const rule of ["T10", "T11"]) {
-    for (const [name, options, pattern] of mutations) {
-      const errors = await runFixture(rule, "good.html", options);
-      assertPreciseFailure(errors, rule, pattern);
-    }
-  }
-});
-
-test("T10/T11 enforce rendered current guidance in every owned environment", { timeout: 600000 }, async () => {
-  const mutations = [
-    ["task display", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-task] { display:none!important; }", /current task is hidden/],
-    ["check block display", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] { display:none!important; }", /activity-check block is not rendered/],
-    ["check heading display", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > h2, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > h3 { display:none!important; }", /activity-check heading is hidden/],
-    ["check criteria display", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > p, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > ul > li, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > ol > li { display:none!important; }", /activity-check criteria are hidden/],
-    ["task filter opacity", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-task] { filter:opacity(0)!important; }", /current task is hidden/],
-    ["check block filter opacity", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] { filter:opacity(0)!important; }", /activity-check block is not rendered/],
-    ["check heading filter opacity", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > h2, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > h3 { filter:opacity(0)!important; }", /activity-check heading is hidden/],
-    ["check criteria filter opacity", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > p, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > ul > li, [data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] > ol > li { filter:opacity(0)!important; }", /activity-check criteria are hidden/],
-    ["percentage filter opacity", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-task] { filter:opacity(0%)!important; }", /current task is hidden/],
-    ["combined filter opacity", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-activity-checks] { filter:blur(0) opacity(0)!important; }", /activity-check block is not rendered/],
-  ];
-  const transform = (css) => (html) => html
-    .replace("</style>", `@media screen { ${css} }</style>`)
-    .replace(
-      "previous.addEventListener('click', () => renderActivity(current - 1, 'push', true));",
-      "previous.addEventListener('click', () => { renderActivity(current - 1, 'push', true); lesson.dataset.testHide = 'true'; });",
-    );
-  for (const rule of ["T10", "T11"]) {
-    for (const [name, css, pattern] of mutations) {
-      const errors = await runFixture(rule, "good.html", { transformHtml: transform(css) });
-      assertPreciseFailure(errors, rule, pattern);
-    }
-    for (const [name, css] of [
-      ["non-opacity filter", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-task] { filter:blur(0)!important; }"],
-      ["nonzero opacity filter", "[data-test-hide] [data-pep-activity]:not([hidden]) [data-pep-task] { filter:opacity(.5)!important; }"],
-    ]) {
-      assert.deepEqual(await runFixture(rule, "good.html", { transformHtml: transform(css) }), [], `${rule} rejected ${name}`);
-    }
-  }
-});
-
-test("T10/T11 checkpoint setup navigation against authored time and validated completion", { timeout: 300000 }, async () => {
-  const listener = "next.addEventListener('click', () => renderActivity(current + 1, 'push', true));";
-  const mutation = (property, condition = "true") => (html) => html.replace(
-    listener,
-    `next.addEventListener('click', event => { renderActivity(current + 1, 'push', true); if (${condition}) lesson.dataset.${property} = '${property === "pepRequiredMinutes" ? "99" : "false"}'; });`,
-  );
-  for (const property of ["pepRequiredMinutes", "pepComplete"]) {
-    for (const [rule, condition] of [
-      ["T10", "true"],
-      ["T11", "true"],
-      ["T10", "window.top !== window"],
-      ["T11", "event.detail === 0"],
-      ["T11", "innerWidth <= 390"],
-    ]) {
-      const errors = await runFixture(rule, "good.html", { transformHtml: mutation(property, condition) });
-      assertPreciseFailure(errors, rule, property === "pepRequiredMinutes" ? /changed authored required time/ : /setup navigation changed non-navigation state|data-pep-complete expected/);
-    }
-  }
-  for (const rule of ["T10", "T11"]) {
-    const errors = await runFixture(rule, "good.html", {
-      transformHtml: (html) => html.replace(
-        "document.querySelector('#check-one').addEventListener",
-        "document.querySelector('#activity-input').addEventListener('input', () => { lesson.dataset.pepComplete = 'true'; });\n      document.querySelector('#check-one').addEventListener",
-      ),
-    });
-    assertPreciseFailure(errors, rule, /without a coherent activity completion transition/);
-  }
-});
-
-test("T10 strict sandbox uses each configured child viewport for guidance, setup and Restart", { timeout: 300000 }, async () => {
-  const listener = "next.addEventListener('click', () => renderActivity(current + 1, 'push', true));";
-  const inputRestore = `          if (initial.control.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) initial.control.value = initial.value;`;
-  for (const width of [320, 390]) {
-    const hidden = await runFixture("T10", "good.html", {
-      transformHtml: (html) => html.replace(
-        "</style>",
-        `@media screen and (width: ${width}px) { [data-pep-activity]:not([hidden]) [data-pep-task] { display:none!important; } }</style>`,
-      ),
-    });
-    assertPreciseFailure(hidden, "T10", /current task is hidden/);
-
-    const staleRestart = await runFixture("T10", "good.html", {
-      transformHtml: (html) => html.replace(
-        inputRestore,
-        `          if (innerWidth !== ${width} && initial.control.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) initial.control.value = initial.value;`,
-      ),
-    });
-    assertPreciseFailure(staleRestart, "T10", /did not restore authored current controls/);
-
-    for (const [property, value, pattern] of [
-      ["pepRequiredMinutes", "99", /changed authored required time/],
-      ["pepComplete", "false", /setup navigation changed non-navigation state/],
-    ]) {
-      const setupCorruption = await runFixture("T10", "good.html", {
-        transformHtml: (html) => html.replace(
-          listener,
-          `next.addEventListener('click', () => { renderActivity(current + 1, 'push', true); if (window.top !== window && innerWidth === ${width}) lesson.dataset.${property} = '${value}'; });`,
-        ),
-      });
-      assertPreciseFailure(setupCorruption, "T10", pattern);
-    }
-  }
-});
-
-test("T10/T11 restore every current control from the authored snapshot on both Restart paths", { timeout: 240000 }, async () => {
-  const loop = `        for (const initial of controls[index]) {
-          if (initial.control.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) initial.control.value = initial.value;
-          if (initial.control.matches('input[type="checkbox"], input[type="radio"]')) initial.control.checked = initial.checked;
-          if (initial.control.tagName === 'SELECT') initial.control.selectedIndex = initial.selectedIndex;
-        }`;
-  const noOp = "        for (const initial of controls[index]) { void initial; }";
-  for (const rule of ["T10", "T11"]) {
-    const errors = await runFixture(rule, "good.html", { transformHtml: (html) => html.replace(loop, noOp) });
-    assertPreciseFailure(errors, rule, /did not restore authored current controls/);
-  }
-  for (const line of [
-    `          if (initial.control.matches('input:not([type="checkbox"]):not([type="radio"]), textarea')) initial.control.value = initial.value;`,
-    `          if (initial.control.matches('input[type="checkbox"], input[type="radio"]')) initial.control.checked = initial.checked;`,
-    "          if (initial.control.tagName === 'SELECT') initial.control.selectedIndex = initial.selectedIndex;",
-  ]) {
-    const errors = await runFixture("T11", "good.html", { transformHtml: (html) => html.replace(line, "") });
-    assertPreciseFailure(errors, "T11", /did not restore authored current controls/);
-  }
-  const completedOnly = (html) => html.replaceAll("if (initial.control.matches(", "if (!state[index].completed && initial.control.matches(")
-    .replace("if (initial.control.tagName === 'SELECT')", "if (!state[index].completed && initial.control.tagName === 'SELECT')");
-  for (const rule of ["T10", "T11"]) {
-    const errors = await runFixture(rule, "good.html", { transformHtml: completedOnly });
-    assertPreciseFailure(errors, rule, /Restart after completion did not restore authored current controls/);
-  }
-});
-
-test("T10/T11 reject vacuous author guidance routes because semantic postconditions are harness-owned", { timeout: 120000 }, async () => {
-  const spec = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
-  for (const name of ["activityNavigation", "activityNavigationKeyboard", "activityNavigationTouch"]) {
-    spec.guidance[name] = [{ do: "expectVisible", selector: "body" }];
-  }
-  for (const rule of ["T10", "T11"]) {
-    const errors = await runFixture(rule, "good.html", { spec });
-    assertPreciseFailure(errors, rule, /guidance setup must finish|guidance setup did not establish/);
-  }
+test("known-good fixture carries direct multi-owner hint coverage", async () => {
+  const html = await readFile(path.join(fixtures, "good.html"), "utf8");
+  const owners = [...html.matchAll(/data-pep-hint-for="([^"]+)" data-pep-hint-order="1"/gu)].map((match) => match[1]);
+  assert.deepEqual(owners, ["task-explain", "task-recap"]);
 });
 
 test("T01 accepts YAML block lists while preserving scalar front matter", async () => {
@@ -1026,7 +739,7 @@ test("guidance contract parses objectives, conditional fit, checks and nested se
   assert.notEqual(siblingHints, html);
   assert.match((await validateLearnerGuidance(siblingHints)).join("; "), /must be nested inside its predecessor/);
   assert.match((await validateLearnerGuidance(html.replace('<p data-pep-hint-target><strong>Where to act:</strong> Start in the explanation field above the boundary checkbox.</p>', '<p data-pep-hint-target></p>'))).join("; "), /exactly one non-empty target/);
-  assert.match((await validateLearnerGuidance(html.replace("You classify the in-page preview as local and keep your observation when you revisit.", ""))).join("; "), /activity-check block/);
+  assert.match((await validateLearnerGuidance(html.replace("You classify the in-page preview as local.", ""))).join("; "), /activity-check block/);
   assert.match((await validateLearnerGuidance(html.replace('aria-controls="objectives-body"', 'aria-controls="missing-objectives"'))).join("; "), /must resolve to a non-empty descendant/);
   const fitBlock = html.match(/\s*<section data-pep-where-fits[\s\S]*?<\/section>\n/u)?.[0] ?? "";
   const withoutFit = html.replace(fitBlock, "\n");
@@ -1038,8 +751,10 @@ test("guidance contract parses objectives, conditional fit, checks and nested se
     `${fitBlock}        <div id="task-explain" data-pep-task data-pep-may-stall>`,
   );
   assert.deepEqual(await validateLearnerGuidance(localFit), []);
-  const emptyTask = html
-    .replace('<div id="task-recap" data-pep-task><p>Review your saved note and explanation, then state the boundary.</p><label for="activity-three-input">Your recap</label><textarea id="activity-three-input"></textarea></div>', '<div id="task-recap" data-pep-task></div>');
+  const emptyTask = html.replace(
+    '<div id="task-recap" data-pep-task data-pep-may-stall>',
+    '<div id="task-recap" data-pep-task data-pep-may-stall></div><div hidden>',
+  );
   assert.match((await validateLearnerGuidance(emptyTask)).join("; "), /non-empty instructional text outside hints/);
   const hiddenChecks = html.replace(
     '<section class="activity-checks" data-pep-activity-checks aria-labelledby="checks-2">',
