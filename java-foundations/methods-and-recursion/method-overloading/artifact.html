@@ -104,12 +104,15 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 .pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; flex: 1 1 96px; width: 96px; max-width: 160px; }
 .pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-line-strong); opacity: 0.45; }
 .pep-progress > span.is-done { background: var(--pep-accent); opacity: 1; }
-.pep-objectives { position: relative; break-inside: avoid; min-width: 0; }
-.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; border-radius: var(--pep-radius-sm); }
-.pep-objectives > div { width: min(360px, 100%); margin-top: 4px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text); }
-.pep-objectives[open] { flex: 1 1 100%; }
+.pep-goals-panel { flex: 1 1 100%; min-width: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-goals-panel h2 { margin-bottom: 8px; font-size: 16px; line-height: 24px; }
+.pep-goals { margin: 0; padding: 0; list-style: none; }
+.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pep-line-strong); }
+.pep-goals > li:first-child { border-top: 0; }
+.pep-goals .state { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-goals .is-done .state { color: var(--pep-success); }
 .pep-topicbar .pep-btn { flex: 0 0 auto; }
-@media print { .pep-objectives > div { display: block !important; width: auto; } }
+@media forced-colors { .pep-goals-panel { border-color: CanvasText; } .pep-goals .is-done .state { color: CanvasText; } }
 
 /* timeline */
 .pep-timeline { margin: 0 0 24px; }
@@ -274,8 +277,8 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 
 /* editor */
 .pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); min-width: 0; }
-.pep-editor__bar { border-radius: 11px 11px 0 0; }
-.pep-editor__status { border-radius: 0 0 11px 11px; }
+.pep-editor__bar { border-radius: var(--pep-radius-sm) var(--pep-radius-sm) 0 0; }
+.pep-editor__status { border-radius: 0 0 var(--pep-radius-sm) var(--pep-radius-sm); }
 .pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
 .pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
 .pep-editor__secondary { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
@@ -360,10 +363,14 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 <header class="pep-topicbar">
 <h1 id="page-title">Method overloading</h1>
 <span class="pep-topicbar__progress" data-pep-progress><span id="progress-text">Activity 1 of 3 · 0 of 3 done · about 15 min</span><span class="pep-progress" aria-hidden="true"><span></span><span></span><span></span></span></span>
-<details class="pep-objectives" data-pep-objectives>
-<summary aria-controls="objectives-body">Objectives</summary>
-<div id="objectives-body"><ul><li>Overload a method by changing its parameter list</li><li>Predict which overload the compiler picks for a given call, including a widening conversion</li><li>Explain why a different return type alone cannot overload a method</li></ul></div>
-</details>
+<section class="pep-goals-panel" data-pep-objectives aria-labelledby="goals-title">
+<h2 id="goals-title">Goals</h2>
+<ul class="pep-goals">
+<li data-pep-goal-activity="2"><span>Overload a method by changing its parameter list</span><span class="state">Open</span></li>
+<li data-pep-goal-activity="1"><span>Predict which overload the compiler picks for a given call, including a widening conversion</span><span class="state">Open</span></li>
+<li data-pep-goal-activity="3"><span>Explain why a different return type alone cannot overload a method</span><span class="state">Open</span></li>
+</ul>
+</section>
 <button class="pep-btn" type="button" id="restart" data-pep-reset>Restart activity</button>
 </header>
 <nav class="pep-timeline" aria-label="Activities"><ol class="pep-steps">
@@ -438,7 +445,6 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 </fieldset>
 <div class="pep-actions">
 <button type="button" class="pep-btn pep-btn--primary" id="check-1" data-pep-wrong-attempt>Check</button>
-<button type="button" class="pep-btn" id="reveal-1" data-pep-complete-activity>Show the explained answer</button>
 </div>
 <div class="pep-feedback" id="feedback-1" data-pep-feedback aria-live="polite"></div>
 
@@ -549,9 +555,16 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
         <span class="tok-com">// Call your overload here.</span>
     }
 }</code><p>The interactive editor supports a small Java subset (static methods, simple classes, int, long, double, boolean, char, String, arrays, if, loops and System.out.println). Copy the starter into your IDE, make the change, run it, and compare what it prints with the activity checks.</p></div></noscript>
+<fieldset class="pep-q pep-confidence" data-confidence>
+<legend>How sure are you?</legend>
+<div class="pep-options">
+<label class="pep-option" for="a2-conf-0"><input type="radio" id="a2-conf-0" name="a2-conf" value="guess"><span class="pep-option__text">Guessing</span></label>
+<label class="pep-option" for="a2-conf-1"><input type="radio" id="a2-conf-1" name="a2-conf" value="fair"><span class="pep-option__text">Fairly sure</span></label>
+<label class="pep-option" for="a2-conf-2"><input type="radio" id="a2-conf-2" name="a2-conf" value="certain"><span class="pep-option__text">Certain</span></label>
+</div>
+</fieldset>
 <div class="pep-actions">
 <button type="button" class="pep-btn pep-btn--primary" id="check-2" data-pep-wrong-attempt>Check my code</button>
-<button type="button" class="pep-btn" id="reveal-2" data-pep-complete-activity>Show what passing needs</button>
 </div>
 <div class="pep-feedback" id="feedback-2" data-pep-feedback aria-live="polite"></div>
 <details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
@@ -627,7 +640,6 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 </fieldset>
 <div class="pep-actions">
 <button type="button" class="pep-btn pep-btn--primary" id="check-3" data-pep-wrong-attempt>Check</button>
-<button type="button" class="pep-btn" id="reveal-3" data-pep-complete-activity>Show the explained answer</button>
 </div>
 <div class="pep-feedback" id="feedback-3" data-pep-feedback aria-live="polite"></div>
 
@@ -1936,6 +1948,13 @@ var PepJava = (function () {
     if (progressText) progressText.textContent = 'Activity ' + current + ' of ' + activities.length + ' · ' + done + ' of ' + activities.length + ' done · about ' + minutes + ' min';
     if (progressBar) [].slice.call(progressBar.children).forEach(function (seg, i) { seg.className = state[i] && state[i].completed ? 'is-done' : ''; });
     lesson.setAttribute('data-pep-complete', String(done === activities.length));
+    [].slice.call(lesson.querySelectorAll('[data-pep-goal-activity]')).forEach(function (goal) {
+      var activity = Number(goal.getAttribute('data-pep-goal-activity')) - 1;
+      var isDone = !!(state[activity] && state[activity].completed);
+      goal.classList.toggle('is-done', isDone);
+      var label = goal.querySelector('.state');
+      if (label) label.textContent = isDone ? '✓ Done' : 'Open';
+    });
     links.forEach(function (link, i) {
       var st = link.querySelector('.pep-step__state');
       if (st) st.textContent = state[i].completed ? '(done)' : (i + 1 > unlocked ? '(locked)' : (i + 1 === current ? '(current)' : '(open)'));
@@ -1975,6 +1994,15 @@ var PepJava = (function () {
     unlocked = Math.max(unlocked, Math.min(i + 2, activities.length));
     render(current);
   }
+  function settleWithoutCredit(i, html) {
+    var s = state[i];
+    if (s.settled) return;
+    s.settled = true; s.completed = false; s.canContinue = true; s.grade = 0; s.credit = 0;
+    reflect(i);
+    if (html !== undefined) feedback(i, html);
+    unlocked = Math.max(unlocked, Math.min(i + 2, activities.length));
+    render(current);
+  }
   function feedback(i, html) { var f = activities[i].querySelector('[data-pep-feedback]'); if (f) f.innerHTML = html; }
   function verdict(kind, text) {
     var cls = kind === 'ok' ? 'pep-verdict--correct' : kind === 'no' ? 'pep-verdict--wrong' : 'pep-verdict--revealed';
@@ -1984,9 +2012,9 @@ var PepJava = (function () {
   /* ---- choice activities ---- */
   function setupChoice(i) {
     var a = activities[i], w = widgets[i];
+    w.conf = a.querySelector('fieldset.pep-confidence');
     w.q = a.querySelector('fieldset[data-pep-q]');
     if (!w.q) return;
-    w.conf = a.querySelector('fieldset.pep-confidence');
     w.correct = (PAGE.correct || {})[a.id];
     w.options = [].slice.call(w.q.querySelectorAll('.pep-option'));
     w.options.forEach(function (o) { var ex = o.querySelector('.pep-explain'); if (ex) ex.hidden = true; });
@@ -2023,15 +2051,8 @@ var PepJava = (function () {
     } else {
       lockChoice(i, picked);
       w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Answered and settled, not correct') + confNote + '<p>' + why + '</p><p>The correct answer is marked above, and every option is explained.</p></div>';
-      settle(i, 0, w.lastHtml);
+      settleWithoutCredit(i, w.lastHtml);
     }
-  }
-  function revealChoice(i) {
-    var s = state[i], w = widgets[i];
-    if (s.settled) { feedback(i, verdict('info', 'This activity is already settled.') + (w.lastHtml || '')); return; }
-    lockChoice(i, null);
-    w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Explained answer shown — settled without a grade') + '<p>The correct answer is marked above, and every option is explained. Restart activity if you want to try it yourself.</p></div>';
-    settle(i, 0, w.lastHtml);
   }
 
   /* ---- code editor ---- */
@@ -2090,6 +2111,11 @@ var PepJava = (function () {
   function checkCode(i) {
     var s = state[i], w = widgets[i], a = activities[i];
     if (s.settled) { feedback(i, verdict('info', 'This activity is settled. Run still works for practice; use Restart activity to be checked again.') + (w.lastHtml || '')); return; }
+    var confidence = chosen(w.conf);
+    if (w.input.value.trim() === w.starter.trim() || !confidence) {
+      feedback(i, '<div class="pep-callout pep-callout--danger"><p><strong>Not checked yet.</strong> Make a meaningful edit and choose how sure you are before feedback.</p></div>');
+      return;
+    }
     var res = runCode(i, true);
     s.attempts += 1; reflect(i);
     var fn = (PAGE.checks || {})[a.id];
@@ -2102,27 +2128,26 @@ var PepJava = (function () {
       feedback(i, '<div class="pep-callout pep-callout--danger">' + verdict('no', 'Not yet — one more check before the explanation appears') + list + '<p>Edit the code, press Run to look at Output, then press Check again.</p></div>');
     } else {
       w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Checked twice and settled, not passing yet') + list + (PAGE.explain && PAGE.explain[a.id] ? '<p>' + PAGE.explain[a.id] + '</p>' : '') + '<p>You can keep editing and running for practice.</p></div>';
-      settle(i, 0, w.lastHtml);
+      settleWithoutCredit(i, w.lastHtml);
     }
-  }
-  function revealCode(i) {
-    var s = state[i], w = widgets[i], a = activities[i];
-    if (s.settled) { feedback(i, verdict('info', 'This activity is already settled.') + (w.lastHtml || '')); return; }
-    w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Explanation shown — settled without a grade') + '<p>' + ((PAGE.explain || {})[a.id] || '') + '</p><p>You can keep editing and running for practice.</p></div>';
-    settle(i, 0, w.lastHtml);
   }
 
   /* ---- form activities (written records) ---- */
   function checkForm(i) {
     var s = state[i], a = activities[i], w = widgets[i];
     if (s.settled) { feedback(i, verdict('info', 'This activity is settled. Use Restart activity to be checked again.') + (w.lastHtml || '')); return; }
+    var fields = [].slice.call(a.querySelectorAll('.pep-form textarea, .pep-form input[type="text"]'));
+    if (!chosen(w.conf) || !fields.length || fields.some(function (field) { return !field.value.trim(); })) {
+      feedback(i, '<div class="pep-callout pep-callout--danger"><p><strong>Not checked yet.</strong> Complete every record field and choose how sure you are before feedback.</p></div>');
+      return;
+    }
     s.attempts += 1; reflect(i);
     var fn = (PAGE.checks || {})[a.id];
     var v = fn ? fn(a) : { pass: false, notes: [] };
     var list = '<ul>' + v.notes.map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul>';
     if (v.pass) { w.lastHtml = '<div class="pep-callout pep-callout--success">' + verdict('ok', 'Record complete') + list + '</div>'; settle(i, 1, w.lastHtml); }
     else if (s.attempts < 2) feedback(i, '<div class="pep-callout pep-callout--danger">' + verdict('no', 'Not yet — one more check before the explanation appears') + list + '</div>');
-    else { w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Checked twice and settled, not complete yet') + list + '<p>' + ((PAGE.explain || {})[a.id] || '') + '</p></div>'; settle(i, 0, w.lastHtml); }
+    else { w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Checked twice and settled, not complete yet') + list + '<p>' + ((PAGE.explain || {})[a.id] || '') + '</p></div>'; settleWithoutCredit(i, w.lastHtml); }
   }
 
   /* ---- traces and the practice debugger ---- */
@@ -2203,10 +2228,8 @@ var PepJava = (function () {
   activities.forEach(function (a, i) {
     setupChoice(i); setupEditor(i); setupTrace(i);
     var check = a.querySelector('[data-pep-wrong-attempt]');
-    var reveal = a.querySelector('[data-pep-complete-activity]');
     var kind = a.getAttribute('data-kind');
     if (check) check.addEventListener('click', function () { if (kind === 'code') checkCode(i); else if (kind === 'form') checkForm(i); else checkChoice(i); });
-    if (reveal) reveal.addEventListener('click', function () { if (kind === 'code') revealCode(i); else if (kind === 'form') { var s = state[i]; if (s.settled) { feedback(i, verdict('info', 'This activity is already settled.') + (widgets[i].lastHtml || '')); return; } widgets[i].lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Explanation shown — settled without a grade') + '<p>' + ((PAGE.explain || {})[a.id] || '') + '</p></div>'; settle(i, 0, widgets[i].lastHtml); } else revealChoice(i); });
     reflect(i);
   });
   restartBtn.addEventListener('click', function () {
@@ -2243,12 +2266,6 @@ var PepJava = (function () {
   addEventListener('popstate', fromHistory);
   addEventListener('hashchange', fromHistory);
 
-  /* ---- objectives disclosure ---- */
-  var objectives = lesson.querySelector('details[data-pep-objectives]');
-  if (objectives) {
-    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); } });
-    document.addEventListener('click', function (ev) { if (objectives.open && !objectives.contains(ev.target)) objectives.open = false; });
-  }
   /* ---- print: open every disclosure, then restore exact prior states ---- */
   var printStates = null;
   addEventListener('beforeprint', function () {

@@ -104,12 +104,15 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 .pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; flex: 1 1 96px; width: 96px; max-width: 160px; }
 .pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-line-strong); opacity: 0.45; }
 .pep-progress > span.is-done { background: var(--pep-accent); opacity: 1; }
-.pep-objectives { position: relative; break-inside: avoid; min-width: 0; }
-.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; border-radius: var(--pep-radius-sm); }
-.pep-objectives > div { width: min(360px, 100%); margin-top: 4px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text); }
-.pep-objectives[open] { flex: 1 1 100%; }
+.pep-goals-panel { flex: 1 1 100%; min-width: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-goals-panel h2 { margin-bottom: 8px; font-size: 16px; line-height: 24px; }
+.pep-goals { margin: 0; padding: 0; list-style: none; }
+.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pep-line-strong); }
+.pep-goals > li:first-child { border-top: 0; }
+.pep-goals .state { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-goals .is-done .state { color: var(--pep-success); }
 .pep-topicbar .pep-btn { flex: 0 0 auto; }
-@media print { .pep-objectives > div { display: block !important; width: auto; } }
+@media forced-colors { .pep-goals-panel { border-color: CanvasText; } .pep-goals .is-done .state { color: CanvasText; } }
 
 /* timeline */
 .pep-timeline { margin: 0 0 24px; }
@@ -274,8 +277,8 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 
 /* editor */
 .pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); min-width: 0; }
-.pep-editor__bar { border-radius: 11px 11px 0 0; }
-.pep-editor__status { border-radius: 0 0 11px 11px; }
+.pep-editor__bar { border-radius: var(--pep-radius-sm) var(--pep-radius-sm) 0 0; }
+.pep-editor__status { border-radius: 0 0 var(--pep-radius-sm) var(--pep-radius-sm); }
 .pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
 .pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
 .pep-editor__secondary { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
@@ -360,10 +363,14 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 <header class="pep-topicbar">
 <h1 id="page-title">Method practice</h1>
 <span class="pep-topicbar__progress" data-pep-progress><span id="progress-text">Activity 1 of 3 · 0 of 3 done · about 15 min</span><span class="pep-progress" aria-hidden="true"><span></span><span></span><span></span></span></span>
-<details class="pep-objectives" data-pep-objectives>
-<summary aria-controls="objectives-body">Objectives</summary>
-<div id="objectives-body"><ul><li>Decompose a small problem into methods with clear inputs and outputs</li><li>Test a method by calling it with ordinary, boundary and invalid inputs and checking the results</li><li>Refactor duplicated code into one reusable method without changing behavior</li></ul></div>
-</details>
+<section class="pep-goals-panel" data-pep-objectives aria-labelledby="goals-title">
+<h2 id="goals-title">Goals</h2>
+<ul class="pep-goals">
+<li data-pep-goal-activity="3"><span>Decompose a small problem into methods with clear inputs and outputs</span><span class="state">Open</span></li>
+<li data-pep-goal-activity="2"><span>Test a method by calling it with ordinary, boundary and invalid inputs and checking the results</span><span class="state">Open</span></li>
+<li data-pep-goal-activity="3"><span>Refactor duplicated code into one reusable method without changing behavior</span><span class="state">Open</span></li>
+</ul>
+</section>
 <button class="pep-btn" type="button" id="restart" data-pep-reset>Restart activity</button>
 </header>
 <nav class="pep-timeline" aria-label="Activities"><ol class="pep-steps">
@@ -432,7 +439,6 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 </fieldset>
 <div class="pep-actions">
 <button type="button" class="pep-btn pep-btn--primary" id="check-1" data-pep-wrong-attempt>Check</button>
-<button type="button" class="pep-btn" id="reveal-1" data-pep-complete-activity>Show the explained answer</button>
 </div>
 <div class="pep-feedback" id="feedback-1" data-pep-feedback aria-live="polite"></div>
 
@@ -574,9 +580,16 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
         <span class="tok-com">// and an invalid score. Print each result.</span>
     }
 }</code><p>The interactive editor supports a small Java subset (static methods, simple classes, int, long, double, boolean, char, String, arrays, if, loops and System.out.println). Copy the starter into your IDE, make the change, run it, and compare what it prints with the activity checks.</p></div></noscript>
+<fieldset class="pep-q pep-confidence" data-confidence>
+<legend>How sure are you?</legend>
+<div class="pep-options">
+<label class="pep-option" for="a2-conf-0"><input type="radio" id="a2-conf-0" name="a2-conf" value="guess"><span class="pep-option__text">Guessing</span></label>
+<label class="pep-option" for="a2-conf-1"><input type="radio" id="a2-conf-1" name="a2-conf" value="fair"><span class="pep-option__text">Fairly sure</span></label>
+<label class="pep-option" for="a2-conf-2"><input type="radio" id="a2-conf-2" name="a2-conf" value="certain"><span class="pep-option__text">Certain</span></label>
+</div>
+</fieldset>
 <div class="pep-actions">
 <button type="button" class="pep-btn pep-btn--primary" id="check-2" data-pep-wrong-attempt>Check my code</button>
-<button type="button" class="pep-btn" id="reveal-2" data-pep-complete-activity>Show what passing needs</button>
 </div>
 <div class="pep-feedback" id="feedback-2" data-pep-feedback aria-live="polite"></div>
 <details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
@@ -591,98 +604,82 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 </div>
 <p class="pep-back"><a class="pep-back-link" href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
 </section>
-<section class="pep-activity" id="activity-3" data-pep-activity data-kind="choice" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<section class="pep-activity" id="activity-3" data-pep-activity data-kind="code" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
 <div class="pep-regions">
 <div class="pep-region" data-pep-instructions>
 <div class="pep-teach" data-pep-teaching>
 <h2 id="activity-3-title" tabindex="-1">Activity 3 of 3: Refactor duplication without changing behavior</h2>
 <p>Decomposing a problem means giving each part its own method with clear inputs and one output. When the same steps are duplicated, extract them into one method and call it twice. A refactor must keep the behavior: the same inputs must still print the same results, so run your tests before and after.</p>
-<p>This code duplicates a price rule. It prints <code>10</code> and then <code>10</code>:</p>
-<pre class="pep-code"><code><span class="tok-key">int</span> priceA = 3 * 4;
-<span class="tok-key">if</span> (priceA &gt; 10) {
-    priceA = priceA - 2;
-}
-System.out.println(priceA);
-<span class="tok-key">int</span> priceB = 5 * 2;
-<span class="tok-key">if</span> (priceB &gt; 10) {
-    priceB = priceB - 2;
-}
-System.out.println(priceB);</code></pre>
+<p>The starter repeats that price rule for two input pairs and prints <code>10</code> twice. You will move the shared steps into one method, then compare the refactored output with those two known results.</p>
 
 
 </div>
 
 </div>
-<div class="pep-region pep-region--workspace" data-pep-workspace="choice">
+<div class="pep-region pep-region--workspace" data-pep-workspace="code">
 <div class="pep-task" id="task-3" data-pep-task data-pep-may-stall>
 <h3>Your task</h3>
-<p>Each option is a refactor that replaces the duplicated code with a method <code>discounted(qty, unit)</code>, called as <code>System.out.println(discounted(3, 4));</code> and <code>System.out.println(discounted(5, 2));</code>. Choose the one that still prints <code>10</code> and <code>10</code>, rate your confidence, then press <strong>Check</strong>.</p>
+<p>Refactor the duplicated price rule in <code>Main.java</code> without changing its two printed results:</p>
+<ol>
+<li>Decompose the calculation and discount decision into one well-named <code>static int</code> method with typed inputs for quantity and unit price.</li>
+<li>Move the shared steps into that method, return the result, and replace both duplicated blocks in <code>main</code> with calls.</li>
+<li>Press <strong>Run</strong> and compare both outputs with the starter’s stated behavior, then choose your confidence and press <strong>Check my refactor</strong>.</li>
+</ol>
 <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
 <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 3</span></summary>
 <div class="pep-hint__body">
-<p data-pep-hint-target><strong>Where to act:</strong> Trace each candidate with the second call, <code>discounted(5, 2)</code>.</p>
-<p data-pep-hint-step><strong>Next step:</strong> Compute the price, then check whether the discount condition is true for exactly 10.</p>
+<p data-pep-hint-target><strong>Where to act:</strong> Add a method above <code>main</code>.</p>
+<p data-pep-hint-step><strong>Next step:</strong> The two values that vary between the blocks are the quantity and unit price, so make them typed parameters.</p>
 <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="2" data-section-skip>
 <summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 3</span></summary>
 <div class="pep-hint__body">
-<p data-pep-hint-target><strong>Where to act:</strong> Look for anything a candidate keeps between calls, or a return type that cannot be printed.</p>
-<p data-pep-hint-step><strong>Next step:</strong> Rule out a candidate whose second result depends on the first call, or that cannot appear inside <code>println</code>.</p>
-</div>
-</details></div>
-</details>
+<p data-pep-hint-target><strong>Where to act:</strong> Move the multiplication, boundary decision and returned price into the new method.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Replace each old block with one printed call, preserving the original argument pairs and strict boundary rule.</p>
+</div></details></div></details>
 </div>
 <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3">
 <h3 id="checks-3">What success looks like</h3>
-<ul><li>You chose one refactor and a confidence rating, then pressed Check.</li><li>You can say how each rejected refactor changes the output or fails to compile.</li></ul>
+<ul><li>The program compiles and prints two results.</li><li>One <code>static int</code> method has two typed inputs, applies the original strict boundary rule and returns the price.</li><li><code>main</code> calls that method twice; the duplicated calculations and decisions are gone from <code>main</code>.</li></ul>
 </section>
-<fieldset class="pep-q" data-pep-q data-interaction="mcq" data-confidence data-static-alt="Question: Which refactor keeps the behavior? Option A: static int discounted(int qty, int unit) { int price = qty * unit; if (price &gt; 10) { price = price - 2; } return price; } — Correct. Inputs are parameters, the result is returned, and the rule is unchanged: 12 becomes 10, and 10 stays 10. Option B: static int discounted(int qty, int unit) { int price = qty * unit; if (price &gt;= 10) { price = price - 2; } return price; } — Not quite. Changing &gt; to &gt;= changes the boundary: discounted(5, 2) now prints 8 instead of 10. Option C: static int price = 0; static int discounted(int qty, int unit) { price = price + qty * unit; if (price &gt; 10) { price = price - 2; } return price; } — Not quite. The static field keeps the first call’s total, so the second call starts from 10 and prints 18. Option D: static void discounted(int qty, int unit) { int price = qty * unit; if (price &gt; 10) { price = price - 2; } System.out.println(price); } — Not quite. A void method returns nothing, so System.out.println(discounted(3, 4)) does not compile: javac reports 'void' type not allowed here. Before feedback, the learner rates confidence: Guessing, Fairly sure or Certain.">
-<legend>Which refactor keeps the behavior?</legend>
-<div class="pep-options">
-<label class="pep-option" for="a3-a"><input type="radio" id="a3-a" name="a3" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text"><code class="pep-optcode"><span class="tok-key">static</span> <span class="tok-key">int</span> discounted(<span class="tok-key">int</span> qty, <span class="tok-key">int</span> unit) {
-    <span class="tok-key">int</span> price = qty * unit;
-    <span class="tok-key">if</span> (price &gt; 10) {
-        price = price - 2;
-    }
-    <span class="tok-key">return</span> price;
-}</code></span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Correct. Inputs are parameters, the result is returned, and the rule is unchanged: 12 becomes 10, and 10 stays 10.</span></label>
-<label class="pep-option" for="a3-b"><input type="radio" id="a3-b" name="a3" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text"><code class="pep-optcode"><span class="tok-key">static</span> <span class="tok-key">int</span> discounted(<span class="tok-key">int</span> qty, <span class="tok-key">int</span> unit) {
-    <span class="tok-key">int</span> price = qty * unit;
-    <span class="tok-key">if</span> (price &gt;= 10) {
-        price = price - 2;
-    }
-    <span class="tok-key">return</span> price;
-}</code></span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. Changing <code>></code> to <code>>=</code> changes the boundary: <code>discounted(5, 2)</code> now prints 8 instead of 10.</span></label>
-<label class="pep-option" for="a3-c"><input type="radio" id="a3-c" name="a3" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text"><code class="pep-optcode"><span class="tok-key">static</span> <span class="tok-key">int</span> price = 0;
-<span class="tok-key">static</span> <span class="tok-key">int</span> discounted(<span class="tok-key">int</span> qty, <span class="tok-key">int</span> unit) {
-    price = price + qty * unit;
-    <span class="tok-key">if</span> (price &gt; 10) {
-        price = price - 2;
-    }
-    <span class="tok-key">return</span> price;
-}</code></span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. The static field keeps the first call’s total, so the second call starts from 10 and prints 18.</span></label>
-<label class="pep-option" for="a3-d"><input type="radio" id="a3-d" name="a3" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text"><code class="pep-optcode"><span class="tok-key">static</span> <span class="tok-key">void</span> discounted(<span class="tok-key">int</span> qty, <span class="tok-key">int</span> unit) {
-    <span class="tok-key">int</span> price = qty * unit;
-    <span class="tok-key">if</span> (price &gt; 10) {
-        price = price - 2;
-    }
-    System.out.println(price);
-}</code></span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. A <code>void</code> method returns nothing, so <code>System.out.println(discounted(3, 4))</code> does not compile: javac reports <code>'void' type not allowed here</code>.</span></label>
-</div>
-</fieldset>
-<fieldset class="pep-q pep-confidence" data-confidence>
-<legend>How sure are you?</legend>
-<div class="pep-options">
-<label class="pep-option" for="a3-conf-0"><input type="radio" id="a3-conf-0" name="a3-conf" value="guess"><span class="pep-option__text">Guessing</span></label>
-<label class="pep-option" for="a3-conf-1"><input type="radio" id="a3-conf-1" name="a3-conf" value="fair"><span class="pep-option__text">Fairly sure</span></label>
-<label class="pep-option" for="a3-conf-2"><input type="radio" id="a3-conf-2" name="a3-conf" value="certain"><span class="pep-option__text">Certain</span></label>
-</div>
-</fieldset>
-<div class="pep-actions">
-<button type="button" class="pep-btn pep-btn--primary" id="check-3" data-pep-wrong-attempt>Check</button>
-<button type="button" class="pep-btn" id="reveal-3" data-pep-complete-activity>Show the explained answer</button>
-</div>
-<div class="pep-feedback" id="feedback-3" data-pep-feedback aria-live="polite"></div>
+<div class="pep-editor" data-interaction="explore" data-static-alt="Code editor task: Refactor two duplicated price calculations into one static int method with typed quantity and unit-price parameters. Move the multiplication and strict boundary decision into the method, return the price, and replace both blocks with printed calls. Compare the two results with the starter behavior: it prints 10 and then 10. Starter code contains two duplicated calculation and discount blocks in main.">
+<div class="pep-editor__bar"><span class="pep-editor__file">Main.java</span><span class="pep-editor__secondary">Practice Java subset · runs offline in this page</span><button type="button" class="pep-btn" data-run id="run-3">Run</button><button type="button" class="pep-btn" data-reset-code id="reset-code-3">Reset code</button></div>
+<div class="pep-editor__code"><pre class="pep-editor__gutter" aria-hidden="true">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17</pre><textarea class="pep-editor__input" id="code-3" aria-label="Main.java code editor for Activity 3" spellcheck="false" autocapitalize="off" autocomplete="off">public class Main {
+    public static void main(String[] args) {
+        int priceA = 3 * 4;
+        if (priceA &gt; 10) {
+            priceA = priceA - 2;
+        }
+        System.out.println(priceA);
 
+        int priceB = 5 * 2;
+        if (priceB &gt; 10) {
+            priceB = priceB - 2;
+        }
+        System.out.println(priceB);
+    }
+}</textarea></div>
+<div class="pep-editor__tabs" role="tablist" aria-label="Results for Activity 3"><button type="button" role="tab" id="tab-problems-3" data-tab="problems" aria-controls="problems-3" aria-selected="false">Problems</button><button type="button" role="tab" id="tab-output-3" data-tab="output" aria-controls="output-3" aria-selected="true">Output</button></div>
+<div class="pep-editor__panel" role="tabpanel" id="problems-3" aria-labelledby="tab-problems-3" data-panel="problems" tabindex="0"></div><pre class="pep-editor__panel" role="tabpanel" id="output-3" aria-labelledby="tab-output-3" data-panel="output" tabindex="0"></pre><p class="pep-editor__status" aria-live="polite">Ready. Press Run to compile and run; problems and output appear above.</p>
+</div>
+<noscript data-pep-no-js><div class="pep-callout"><p><strong>Reading without JavaScript.</strong> Refactor the two duplicated price blocks into one <code>static int</code> method with typed quantity and unit-price parameters. Move the multiplication and strict boundary decision into the method, return the result, and replace both blocks with printed calls. Compare with the starter behavior: 10, then 10.</p><p>Starter code declares <code>priceA</code> from 3 × 4 and <code>priceB</code> from 5 × 2, subtracting 2 only when a price is greater than 10, then prints each price.</p><p>The interactive editor supports a small Java subset. Copy the starter into your IDE, make the refactor, run it, and compare the results with the activity checks.</p></div></noscript>
+<fieldset class="pep-q pep-confidence" data-confidence><legend>How sure are you?</legend><div class="pep-options"><label class="pep-option" for="a3-conf-0"><input type="radio" id="a3-conf-0" name="a3-conf" value="guess"><span class="pep-option__text">Guessing</span></label><label class="pep-option" for="a3-conf-1"><input type="radio" id="a3-conf-1" name="a3-conf" value="fair"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option" for="a3-conf-2"><input type="radio" id="a3-conf-2" name="a3-conf" value="certain"><span class="pep-option__text">Certain</span></label></div></fieldset>
+<div class="pep-actions"><button type="button" class="pep-btn pep-btn--primary" id="check-3" data-pep-wrong-attempt>Check my refactor</button></div><div class="pep-feedback" id="feedback-3" data-pep-feedback aria-live="polite"></div>
 </div>
 </div>
 <p class="pep-back"><a class="pep-back-link" href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
@@ -722,7 +719,7 @@ System.out.println("101 -&gt; " + letterGrade(101));</code></pre>
 </section>
 </main>
 <script>
-window.PEP_PAGE = {"correct":{"activity-1":"b","activity-3":"a"},"explain":{"activity-2":"A passing version has three or more <code>System.out.println(letterGrade(…))</code> lines in <code>main</code>: one with an ordinary score such as 75, one with a boundary such as 80 or 100, and one with an invalid score such as −5 or 101. Each printed line can then be compared with what the comments above the method promise."},"maxDepth":1000};
+window.PEP_PAGE = {"correct":{"activity-1":"b"},"explain":{"activity-2":"A passing version has three or more printed calls to <code>letterGrade</code>: one ordinary, one boundary and one invalid input.","activity-3":"A passing refactor moves the duplicated calculation and strict greater-than boundary into one <code>static int</code> method with quantity and unit-price parameters. <code>main</code> prints two calls and no longer repeats either block."},"maxDepth":1000};
 window.PEP_PAGE.checks = {
   'activity-2': function (res, src) {
     if (!res.compiled) return { pass: false, notes: ['<strong>Missing:</strong> the program must compile first. Open Problems and fix the line it names.'] };
@@ -747,6 +744,25 @@ window.PEP_PAGE.checks = {
     var printed = lines >= 3 && !res.exception && !res.stopped;
     notes.push((printed ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'a printed line for each test.');
     return { pass: unchanged && ordinary && boundary && invalid && printed, notes: notes };
+  },
+  'activity-3': function (res, src) {
+    if (!res.compiled) return { pass: false, notes: ['<strong>Missing:</strong> the program must compile first. Open Problems and fix the named line.'] };
+    var a = res.analysis, notes = [];
+    var own = a.methods.filter(function (m) { return m.cls === 'Main' && m.name !== 'main' && m.stat && m.type === 'int' && m.params.length === 2; });
+    var method = own[0], declared = !!method;
+    notes.push((declared ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'one static int method with two typed inputs.');
+    var calls = method ? a.calls.filter(function (c) { return c.from === 'main' && c.toNode === method.node; }) : [];
+    var calledTwice = calls.length >= 2;
+    notes.push((calledTwice ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'main calls the refactored method twice.');
+    var mainText = (src.match(/public\s+static\s+void\s+main[\s\S]*?\{([\s\S]*)\}\s*\}/) || [,''])[1];
+    var duplicateGone = !/priceA|priceB/.test(mainText) && (mainText.match(/if\s*\(/g) || []).length === 0;
+    notes.push((duplicateGone ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the duplicated local calculations and decisions are removed from main.');
+    var strictRule = method && method.node && JSON.stringify(method.node.body).indexOf('\"op\":\">\"') >= 0;
+    notes.push((strictRule ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the extracted method keeps a strict greater-than boundary.');
+    var lines = (res.out || '').split('\n').filter(function (line) { return line.trim(); }).length;
+    var printed = lines === 2 && !res.exception && !res.stopped;
+    notes.push((printed ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the run finishes and prints two results.');
+    return { pass: declared && calledTwice && duplicateGone && strictRule && printed, notes: notes };
   }
 };
 </script>
@@ -1994,6 +2010,13 @@ var PepJava = (function () {
     if (progressText) progressText.textContent = 'Activity ' + current + ' of ' + activities.length + ' · ' + done + ' of ' + activities.length + ' done · about ' + minutes + ' min';
     if (progressBar) [].slice.call(progressBar.children).forEach(function (seg, i) { seg.className = state[i] && state[i].completed ? 'is-done' : ''; });
     lesson.setAttribute('data-pep-complete', String(done === activities.length));
+    [].slice.call(lesson.querySelectorAll('[data-pep-goal-activity]')).forEach(function (goal) {
+      var activity = Number(goal.getAttribute('data-pep-goal-activity')) - 1;
+      var isDone = !!(state[activity] && state[activity].completed);
+      goal.classList.toggle('is-done', isDone);
+      var label = goal.querySelector('.state');
+      if (label) label.textContent = isDone ? '✓ Done' : 'Open';
+    });
     links.forEach(function (link, i) {
       var st = link.querySelector('.pep-step__state');
       if (st) st.textContent = state[i].completed ? '(done)' : (i + 1 > unlocked ? '(locked)' : (i + 1 === current ? '(current)' : '(open)'));
@@ -2033,6 +2056,15 @@ var PepJava = (function () {
     unlocked = Math.max(unlocked, Math.min(i + 2, activities.length));
     render(current);
   }
+  function settleWithoutCredit(i, html) {
+    var s = state[i];
+    if (s.settled) return;
+    s.settled = true; s.completed = false; s.canContinue = true; s.grade = 0; s.credit = 0;
+    reflect(i);
+    if (html !== undefined) feedback(i, html);
+    unlocked = Math.max(unlocked, Math.min(i + 2, activities.length));
+    render(current);
+  }
   function feedback(i, html) { var f = activities[i].querySelector('[data-pep-feedback]'); if (f) f.innerHTML = html; }
   function verdict(kind, text) {
     var cls = kind === 'ok' ? 'pep-verdict--correct' : kind === 'no' ? 'pep-verdict--wrong' : 'pep-verdict--revealed';
@@ -2042,9 +2074,9 @@ var PepJava = (function () {
   /* ---- choice activities ---- */
   function setupChoice(i) {
     var a = activities[i], w = widgets[i];
+    w.conf = a.querySelector('fieldset.pep-confidence');
     w.q = a.querySelector('fieldset[data-pep-q]');
     if (!w.q) return;
-    w.conf = a.querySelector('fieldset.pep-confidence');
     w.correct = (PAGE.correct || {})[a.id];
     w.options = [].slice.call(w.q.querySelectorAll('.pep-option'));
     w.options.forEach(function (o) { var ex = o.querySelector('.pep-explain'); if (ex) ex.hidden = true; });
@@ -2081,15 +2113,8 @@ var PepJava = (function () {
     } else {
       lockChoice(i, picked);
       w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Answered and settled, not correct') + confNote + '<p>' + why + '</p><p>The correct answer is marked above, and every option is explained.</p></div>';
-      settle(i, 0, w.lastHtml);
+      settleWithoutCredit(i, w.lastHtml);
     }
-  }
-  function revealChoice(i) {
-    var s = state[i], w = widgets[i];
-    if (s.settled) { feedback(i, verdict('info', 'This activity is already settled.') + (w.lastHtml || '')); return; }
-    lockChoice(i, null);
-    w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Explained answer shown — settled without a grade') + '<p>The correct answer is marked above, and every option is explained. Restart activity if you want to try it yourself.</p></div>';
-    settle(i, 0, w.lastHtml);
   }
 
   /* ---- code editor ---- */
@@ -2148,6 +2173,11 @@ var PepJava = (function () {
   function checkCode(i) {
     var s = state[i], w = widgets[i], a = activities[i];
     if (s.settled) { feedback(i, verdict('info', 'This activity is settled. Run still works for practice; use Restart activity to be checked again.') + (w.lastHtml || '')); return; }
+    var confidence = chosen(w.conf);
+    if (w.input.value.trim() === w.starter.trim() || !confidence) {
+      feedback(i, '<div class="pep-callout pep-callout--danger"><p><strong>Not checked yet.</strong> Make a meaningful edit and choose how sure you are before feedback.</p></div>');
+      return;
+    }
     var res = runCode(i, true);
     s.attempts += 1; reflect(i);
     var fn = (PAGE.checks || {})[a.id];
@@ -2160,27 +2190,26 @@ var PepJava = (function () {
       feedback(i, '<div class="pep-callout pep-callout--danger">' + verdict('no', 'Not yet — one more check before the explanation appears') + list + '<p>Edit the code, press Run to look at Output, then press Check again.</p></div>');
     } else {
       w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Checked twice and settled, not passing yet') + list + (PAGE.explain && PAGE.explain[a.id] ? '<p>' + PAGE.explain[a.id] + '</p>' : '') + '<p>You can keep editing and running for practice.</p></div>';
-      settle(i, 0, w.lastHtml);
+      settleWithoutCredit(i, w.lastHtml);
     }
-  }
-  function revealCode(i) {
-    var s = state[i], w = widgets[i], a = activities[i];
-    if (s.settled) { feedback(i, verdict('info', 'This activity is already settled.') + (w.lastHtml || '')); return; }
-    w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Explanation shown — settled without a grade') + '<p>' + ((PAGE.explain || {})[a.id] || '') + '</p><p>You can keep editing and running for practice.</p></div>';
-    settle(i, 0, w.lastHtml);
   }
 
   /* ---- form activities (written records) ---- */
   function checkForm(i) {
     var s = state[i], a = activities[i], w = widgets[i];
     if (s.settled) { feedback(i, verdict('info', 'This activity is settled. Use Restart activity to be checked again.') + (w.lastHtml || '')); return; }
+    var fields = [].slice.call(a.querySelectorAll('.pep-form textarea, .pep-form input[type="text"]'));
+    if (!chosen(w.conf) || !fields.length || fields.some(function (field) { return !field.value.trim(); })) {
+      feedback(i, '<div class="pep-callout pep-callout--danger"><p><strong>Not checked yet.</strong> Complete every record field and choose how sure you are before feedback.</p></div>');
+      return;
+    }
     s.attempts += 1; reflect(i);
     var fn = (PAGE.checks || {})[a.id];
     var v = fn ? fn(a) : { pass: false, notes: [] };
     var list = '<ul>' + v.notes.map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul>';
     if (v.pass) { w.lastHtml = '<div class="pep-callout pep-callout--success">' + verdict('ok', 'Record complete') + list + '</div>'; settle(i, 1, w.lastHtml); }
     else if (s.attempts < 2) feedback(i, '<div class="pep-callout pep-callout--danger">' + verdict('no', 'Not yet — one more check before the explanation appears') + list + '</div>');
-    else { w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Checked twice and settled, not complete yet') + list + '<p>' + ((PAGE.explain || {})[a.id] || '') + '</p></div>'; settle(i, 0, w.lastHtml); }
+    else { w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Checked twice and settled, not complete yet') + list + '<p>' + ((PAGE.explain || {})[a.id] || '') + '</p></div>'; settleWithoutCredit(i, w.lastHtml); }
   }
 
   /* ---- traces and the practice debugger ---- */
@@ -2261,10 +2290,8 @@ var PepJava = (function () {
   activities.forEach(function (a, i) {
     setupChoice(i); setupEditor(i); setupTrace(i);
     var check = a.querySelector('[data-pep-wrong-attempt]');
-    var reveal = a.querySelector('[data-pep-complete-activity]');
     var kind = a.getAttribute('data-kind');
     if (check) check.addEventListener('click', function () { if (kind === 'code') checkCode(i); else if (kind === 'form') checkForm(i); else checkChoice(i); });
-    if (reveal) reveal.addEventListener('click', function () { if (kind === 'code') revealCode(i); else if (kind === 'form') { var s = state[i]; if (s.settled) { feedback(i, verdict('info', 'This activity is already settled.') + (widgets[i].lastHtml || '')); return; } widgets[i].lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Explanation shown — settled without a grade') + '<p>' + ((PAGE.explain || {})[a.id] || '') + '</p></div>'; settle(i, 0, widgets[i].lastHtml); } else revealChoice(i); });
     reflect(i);
   });
   restartBtn.addEventListener('click', function () {
@@ -2301,12 +2328,6 @@ var PepJava = (function () {
   addEventListener('popstate', fromHistory);
   addEventListener('hashchange', fromHistory);
 
-  /* ---- objectives disclosure ---- */
-  var objectives = lesson.querySelector('details[data-pep-objectives]');
-  if (objectives) {
-    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); } });
-    document.addEventListener('click', function (ev) { if (objectives.open && !objectives.contains(ev.target)) objectives.open = false; });
-  }
   /* ---- print: open every disclosure, then restore exact prior states ---- */
   var printStates = null;
   addEventListener('beforeprint', function () {

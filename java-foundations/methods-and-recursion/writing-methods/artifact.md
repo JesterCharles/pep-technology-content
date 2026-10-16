@@ -2,9 +2,9 @@
 
 ## Objectives
 
-- Declare a method with typed parameters and a return type, and call it with matching arguments
-- Return a value from every path of a method, and use void when nothing is returned
-- Extract a repeated block of code into a well-named method
+- Declare a method with typed parameters and a return type, and call it with matching arguments Open
+- Return a value from every path of a method, and use void when nothing is returned Open
+- Extract a repeated block of code into a well-named method Open
 
 ## Teaching
 
@@ -25,7 +25,7 @@ public class Main {
 }
 ```
 
-### Activity 2 of 3: Declare a method and call it
+### Activity 2 of 3: Extract, declare and call a method
 
 A method declaration names a job once so the program can call it many times. Read `static int computeArea(int width, int height)` from left to right:
 
@@ -70,15 +70,15 @@ A café keeps one recipe card called “flat white”. A barista follows the car
 
 A method is that card: arguments go in, the body runs, and one returned value comes back.
 
-Where to act: Start on the blank line under the comment that says to declare your method.
+Where to act: Start on the blank line above `main`.
 
 Next step: Write the pieces in this order: `static`, a return type such as `int`, a name, then parentheses holding one type-and-name pair.
 
 Another hint Another hint, 2 of 2 for Activity 2
 
-Where to act: Inside the method braces, and then inside `main`.
+Where to act: Inside the method braces, then on each of the three print lines in `main`.
 
-Next step: End the body with a `return` of a value that matches the return type, then put your call inside `System.out.println(…)` with one argument per parameter.
+Next step: Return the shared calculation using the parameter, then replace each calculation with a call whose argument is that line’s quantity.
 
 Optional time: about 4 minutes, in addition to the required activity.
 
@@ -120,7 +120,7 @@ Question: What does the program print? Option A: 1210 — Not quite. That would 
 
 ### explore
 
-Code editor task: Declare a static method with a non-void return type and at least one typed parameter above main, then call it from main with matching arguments and print the returned value. Compare: the program compiles and prints the value your method returns. Starter code: public class Main { // Declare your method here: static, return type, name, typed parameters. public static void main(String[] args) { // Call your method and print what it returns. } }
+Code editor task: Refactor three repeated price calculations into one well-named static method with a non-void return type and a typed quantity parameter. Return the calculation, call the method three times from main and print each result. Compare the three results with the original expressions. Starter code: public class Main { // Declare the extracted method above main. public static void main(String[] args) { System.out.println(2 * 3 + 5); System.out.println(4 * 3 + 5); System.out.println(7 * 3 + 5); } }
 
 ### mcq
 

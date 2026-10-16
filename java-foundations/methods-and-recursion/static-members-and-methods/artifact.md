@@ -2,9 +2,9 @@
 
 ## Objectives
 
-- Call a static method through its class name and explain why main is static
-- Use a static field shared by all calls and tell it from a local variable
-- Explain why a static method cannot use an instance field without an object
+- Call a static method through its class name and explain why main is static Open
+- Use a static field shared by all calls and tell it from a local variable Open
+- Explain why a static method cannot use an instance field without an object Open
 
 ## Teaching
 

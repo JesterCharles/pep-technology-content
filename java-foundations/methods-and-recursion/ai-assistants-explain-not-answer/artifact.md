@@ -2,9 +2,9 @@
 
 ## Objectives
 
-- Ask an AI assistant to explain an error or a piece of code without asking for the finished solution
-- Check an assistant's explanation against the official documentation or by running the code
-- Record what the assistant produced and what you verified yourself
+- Ask an AI assistant to explain an error or a piece of code without asking for the finished solution Open
+- Check an assistant's explanation against the official documentation or by running the code Open
+- Record what the assistant produced and what you verified yourself Open
 
 ## Teaching
 
@@ -67,7 +67,7 @@ Another hint Another hint, 2 of 2 for Activity 3
 
 Where to act: Then the last field, What I verified and how.
 
-Next step: Name the check you used, such as running two print lines or reading the specification, and state the outputs you saw.
+Next step: Name the check you used, then state the result you observed and whether it supported or contradicted the assistant’s claim.
 
 Explain-not-answer request template: “Explain what [exact error or line] means in this code and where the problem is. Don’t write the fixed code.”
 

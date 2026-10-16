@@ -2,9 +2,9 @@
 
 ## Objectives
 
-- Set a breakpoint and run a program in the IDE debugger
-- Step over, step into and step out while watching variable values change
-- Locate the line where a variable first takes a wrong value
+- Set a breakpoint and run a program in the IDE debugger Open
+- Step over, step into and step out while watching variable values change Open
+- Locate the line where a variable first takes a wrong value Open
 
 ## Teaching
 
@@ -62,13 +62,13 @@ A breakpoint is that jump-and-pause; stepping is playing one step at a time.
 
 Where to act: The round markers sit in the left column of the listing, one per line.
 
-Next step: Press the marker on line 7 so its label says the breakpoint is set, then press Debug once.
+Next step: Press the marker on line 16 so its label says the breakpoint is set, then press Debug once.
 
 Another hint Another hint, 2 of 2 for Activity 2
 
-Where to act: Read the Variables pane while the listing highlights line 7.
+Where to act: At line 16, Step Into; inside `total`, Step Over until line 7.
 
-Next step: Note the value shown for `sum` at that pause, before `return` runs.
+Next step: Note `sum` before `return` runs, then Step Out and observe that the top frame changes back to `main`.
 
 Where to act: Pause on line 5, `sum += prices[i];`, the first time.
 

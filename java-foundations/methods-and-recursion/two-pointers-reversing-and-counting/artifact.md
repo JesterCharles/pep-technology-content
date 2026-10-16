@@ -2,9 +2,9 @@
 
 ## Objectives
 
-- Build and return a reversed String by reading characters with two indexes that move toward each other
-- Count matching characters or pairs in a String with two indexes instead of nested loops
-- Choose the loop condition that stops two indexes exactly when they meet or cross
+- Build and return a reversed String by reading characters with two indexes that move toward each other Open
+- Count matching characters or pairs in a String with two indexes instead of nested loops Open
+- Choose the loop condition that stops two indexes exactly when they meet or cross Open
 
 ## Teaching
 
@@ -73,15 +73,15 @@ Where to act: Compare that pair with the condition on line 6.
 
 Next step: Check that `i < j` is false for it, and notice whether the indexes are equal or have crossed for this 6-letter word.
 
-Where to act: Begin the method body with three `int` variables.
+Where to act: Start in the reversal method, then reuse the two-index shape in the counting method.
 
-Next step: Declare a count at 0, `i` at 0 and `j` at `s.length() - 1`, then open a `while (i < j)` loop.
+Next step: For each method, put one index at each end and open a loop whose strict comparison stops when they meet or cross.
 
 Another hint Another hint, 2 of 2 for Activity 3
 
-Where to act: Inside the loop, compare `s.charAt(i)` with `s.charAt(j)`.
+Where to act: Inside the reversal loop, swap the indexed array characters; inside the counting loop, read both indexed string characters.
 
-Next step: Wrap your rule in an `if` that adds 1 to the count, then end the loop body with `i++` and `j--`; return the count after the loop.
+Next step: Move both indexes after the swap or comparison. Only the counting method needs an `if` that conditionally adds 1.
 
 Optional time: about 5 minutes, in addition to the required activity.
 
@@ -107,7 +107,7 @@ Claims on this page were checked against these official sources, retrieved 2026-
 
 ### predict
 
-Question: What does the program print? Option A: 5 — Not quite. Each pass moves both indexes, so they cover the word from both ends at once and meet after far fewer passes. Option B: 3 — Not quite. That would count the middle pass (2, 2) too, which happens only with i . With i , the loop stops when both reach 2. Option C: 2 — Correct. The loop runs for (0, 4) and (1, 3). Then i and j are both 2, i is false, and the loop stops. Option D: 4 — Not quite. 4 is the starting value of j, not the number of passes. Before feedback, the learner rates confidence: Guessing, Fairly sure or Certain.
+Question: What does the program print? Option A: 5 — Not quite. Each pass moves both indexes, so they cover the word from both ends at once and meet after far fewer passes. Option B: 3 — Not quite. That would count the middle pass (2, 2) too, which happens only with i <= j. With i < j, the loop stops when both reach 2. Option C: 2 — Correct. The loop runs for (0, 4) and (1, 3). Then i and j are both 2, i < j is false, and the loop stops. Option D: 4 — Not quite. 4 is the starting value of j, not the number of passes. Before feedback, the learner rates confidence: Guessing, Fairly sure or Certain.
 
 ### explore
 
@@ -126,8 +126,8 @@ Printed output: `reward`
 
 ### mcq
 
-Question: For "drawer", what are i and j when the loop stops? Option A: i = 3, j = 3 — Not quite. With an even length the indexes never sit on the same character: after (2, 3) they move to (3, 2). Option B: i = 3, j = 2 — Correct. The swaps use (0, 5), (1, 4) and (2, 3). Then i becomes 3 and j becomes 2; they have crossed, so i is false. Option C: i = 6, j = -1 — Not quite. That is where indexes would end if each walked the whole word; this loop stops in the middle. Option D: i = 2, j = 3 — Not quite. At (2, 3) the condition is still true, so that pair is swapped and both indexes move once more. Before feedback, the learner rates confidence: Guessing, Fairly sure or Certain.
+Question: For "drawer", what are i and j when the loop stops? Option A: i = 3, j = 3 — Not quite. With an even length the indexes never sit on the same character: after (2, 3) they move to (3, 2). Option B: i = 3, j = 2 — Correct. The swaps use (0, 5), (1, 4) and (2, 3). Then i becomes 3 and j becomes 2; they have crossed, so i < j is false. Option C: i = 6, j = -1 — Not quite. That is where indexes would end if each walked the whole word; this loop stops in the middle. Option D: i = 2, j = 3 — Not quite. At (2, 3) the condition is still true, so that pair is swapped and both indexes move once more. Before feedback, the learner rates confidence: Guessing, Fairly sure or Certain.
 
 ### explore
 
-Code editor task: Write a static int method with a String parameter that starts index i at 0 and index j at the last index, loops while i < j, adds to a count when the mirrored characters match a rule you choose, moves i up and j down, and returns the count. Call it from main and print the result. Compare the printed count with a count you make by hand. Starter code: public class Main { // Write a method that takes a String, walks index i from the // start and index j from the end toward each other, and // returns how many mirrored pairs match your rule. public static void main(String[] args) { // Call your method on a word and print the count. } }
+Code editor task: Build and return a reversed String with a character array and two indexes under the strict condition i < j. Also count mirrored pairs with a second two-index method that compares both characters inside an if and conditionally changes a count. Call and print both methods, then compare both results by hand. Starter code provides comments for the two methods and their calls, but no completed method.

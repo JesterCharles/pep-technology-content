@@ -2,9 +2,9 @@
 
 ## Objectives
 
-- Overload a method by changing its parameter list
-- Predict which overload the compiler picks for a given call, including a widening conversion
-- Explain why a different return type alone cannot overload a method
+- Overload a method by changing its parameter list Open
+- Predict which overload the compiler picks for a given call, including a widening conversion Open
+- Explain why a different return type alone cannot overload a method Open
 
 ## Teaching
 
