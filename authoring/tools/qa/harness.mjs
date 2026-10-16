@@ -375,8 +375,10 @@ async function exerciseSequentialHints(target, options = {}) {
       if (options.keyboard) {
         if (!(await focusVisible(summary))) throw new Error(`hint ${ordinal} for ${owner.taskId} has no visible focus indicator`);
         await summary.press("Enter");
-      } else if (options.touch) await summary.tap();
-      else await summary.click();
+      } else if (options.touch) {
+        await summary.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }));
+        await summary.tap();
+      } else await summary.click();
       if (!(await summary.evaluate((element) => element === document.activeElement))) throw new Error(`hint ${ordinal} for ${owner.taskId} lost focus after activation`);
       if ((await hint.getAttribute("open")) === null) throw new Error(`hint ${ordinal} for ${owner.taskId} did not open`);
       const targetClue = hint.locator(":scope > .pep-hint__body > [data-pep-hint-target]");
@@ -656,14 +658,19 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
     if (kind === "navigation") sameState(preservedGuidance(after), preservedGuidance(before), "guidance setup navigation changed non-navigation state");
     const transitions = after.activities.map((activity, index) => ({ activity, index }))
       .filter(({ activity, index }) => before.activities[index]?.completed !== "true" && activity.completed === "true");
-    if (transitions.some(({ activity }) => activity.settled !== "true" || activity.credit !== "1" || activity.canContinue !== "true") || transitions.length > 1) {
-      throw new Error("guidance setup produced an incoherent activity completion transition");
+    if (transitions.some(({ activity }) => activity.settled !== "true" || activity.credit !== "1" ||
+        activity.grade !== "0" || activity.canContinue !== "true") || transitions.length > 1) {
+      throw new Error("guidance setup produced a completion that is not a grade-0 public-safe wrong settlement");
     }
     if (transitions.length === 1) {
       if (kind === "navigation") throw new Error("guidance setup navigation completed an activity");
       const number = transitions[0].index + 1;
+      if (number !== Number(after.current)) throw new Error("guidance setup settled an activity other than the current activity");
       if (!pendingSegments[number - 1].length) throw new Error("guidance setup completion has no replayable public-safe action segment");
-      settlementSegments.set(number, structuredClone(pendingSegments[number - 1]));
+      settlementSegments.set(number, {
+        actions: structuredClone(pendingSegments[number - 1]),
+        outcome: structuredClone(after.activities[number - 1]),
+      });
       pendingSegments[number - 1] = [];
     }
     if (after.complete !== completionCheckpoint) {
@@ -737,8 +744,11 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
   }
   await expectRenderedCurrentGuidance(target);
 
-  const completedNumber = restartedWrong.activities.findIndex((activity, index) =>
-    index < current - 1 && activity.settled === "true" && activity.completed === "true" && activity.credit === "1" && settlementSegments.has(index + 1)) + 1;
+  const completedNumber = restartedWrong.activities.findIndex((activity, index) => {
+    const record = settlementSegments.get(index + 1);
+    return index < current - 1 && activity.settled === "true" && activity.completed === "true" &&
+      activity.credit === "1" && activity.grade === "0" && record?.outcome.grade === "0";
+  }) + 1;
   if (!completedNumber) throw new Error("guidance setup has no prior public-safe settlement segment to replay");
   state = await guidanceState(target);
   await activateGuidance(links.nth(completedNumber - 1), mode);
@@ -764,23 +774,27 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
   await expectRenderedCurrentGuidance(target);
 
   const replayBase = restartedComplete;
+  const settlementRecord = settlementSegments.get(completedNumber);
   let replayTransitions = 0;
-  for (const action of settlementSegments.get(completedNumber)) {
+  for (const action of settlementRecord.actions) {
     const before = await guidanceState(target);
     await perform(target, action, { keyboard: mode === "keyboard", touch: mode === "touch" });
     const after = await guidanceState(target);
     if (before.activities[completedNumber - 1].completed !== "true" && after.activities[completedNumber - 1].completed === "true") replayTransitions += 1;
-    if (after.activities.some((activity) => Number(activity.credit) > 1)) throw new Error("settlement replay duplicated credit");
+    if (after.requiredMinutes !== initial.requiredMinutes) throw new Error("settlement replay changed authored required time");
+    if (after.complete !== completionCheckpoint) throw new Error("settlement replay changed validated page completion");
+    if (after.activities.some((activity) => !["0", "1"].includes(activity.credit))) throw new Error("settlement replay exceeded the 0/1 credit bound");
     sameState(after.activities.filter((_, index) => index !== completedNumber - 1), replayBase.activities.filter((_, index) => index !== completedNumber - 1), "settlement replay changed another activity");
     sameState(after.controls.filter((control) => control.activity !== completedNumber), replayBase.controls.filter((control) => control.activity !== completedNumber), "settlement replay changed another activity input");
-    if (Number(after.frontier) < Number(before.frontier)) throw new Error("settlement replay regressed the unlocked frontier");
+    if (Number(after.frontier) < Number(before.frontier) || Number(after.frontier) < Number(replayBase.frontier)) {
+      throw new Error("settlement replay regressed the unlocked frontier");
+    }
   }
   const recompleted = await guidanceState(target);
-  const recompletedActivity = recompleted.activities[completedNumber - 1];
-  if (replayTransitions !== 1 || recompletedActivity.settled !== "true" || recompletedActivity.completed !== "true" ||
-      recompletedActivity.credit !== "1" || recompletedActivity.canContinue !== "true") {
-    throw new Error("public-safe settlement replay did not award exactly one completion credit");
-  }
+  if (replayTransitions !== 1) throw new Error("public-safe settlement replay did not produce exactly one completion transition");
+  sameState(recompleted.activities[completedNumber - 1], settlementRecord.outcome, "settlement replay did not reproduce the recorded grade-0 outcome and feedback");
+  if (recompleted.requiredMinutes !== initial.requiredMinutes) throw new Error("settlement replay final state changed authored required time");
+  if (recompleted.complete !== completionCheckpoint) throw new Error("settlement replay final state changed validated page completion");
   state = recompleted;
   await activateGuidance(links.nth(current - 1), mode);
   state = await expectDestination(target, current, state);

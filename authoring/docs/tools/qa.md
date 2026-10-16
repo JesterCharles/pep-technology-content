@@ -41,8 +41,8 @@ keyboard activation. `data-pep-guidance-contract` and `spec.guidance` are mandat
 `hints: true` is required exactly when parsed HTML contains hints; it is an enrollment flag, not an author-controlled
 click path. Empty, partial or author-selected omission fails before browser execution. The contract fixture demonstrates
 the exact shape. Navigation arrays are setup/smoke paths, not self-selected evidence: they must leave meaningful live
-inputs in at least two activities, a prior honestly settled/completed activity with one credit, and a later unlocked,
-attempted but incomplete current activity. Harness-owned postconditions then activate Previous/Next,
+inputs in at least two activities, a prior honestly settled/completed **grade-0 wrong settlement** with one credit, and
+a later unlocked, attempted but incomplete current activity. Harness-owned postconditions then activate Previous/Next,
 current/completed timeline and back links, every future link and fragment, browser history and Restart; they compare
 the complete root/control/per-activity snapshot and reject vacuous setup. The same procedure runs pointer and keyboard
 desktop plus 320/390 touch, both top-level and in `sandbox="allow-scripts"`.
@@ -196,11 +196,14 @@ later public drift. Rebase/squash requires a fresh run. No private value or answ
   complete root, live-control and per-activity preservation including required time and page completion; history
   without focus movement; and current-only Restart while other populated activities stay exact. Restart divergence is
   type-aware for text/editor, checkbox, select and radio groups but is never submitted for credit. The wrong-attempt
-  Restart uses the setup-established incomplete activity. The completed Restart replays only the recorded public-safe
-  settlement segment after exact authored restoration, permits exactly one credit, keeps grade separate from
-  settlement/completion, and never reactivates a settled disabled control. Current task/direct check headings and
-  criteria remain visible at every transition with the same bounded zero-opacity-filter rejection. Optional guidance
-  uses the same unlocked owner traversal and cannot change required accounting.
+  Restart uses the setup-established incomplete activity. Setup records only a grade-0 public-safe wrong settlement,
+  including its complete activity and feedback snapshot. After exact authored restoration, completed Restart replays
+  only that recorded segment and must reproduce the retained snapshot exactly. Every replay action preserves original
+  required time, the validated page-completion checkpoint, the 0/1 credit bound, exact non-current activities and
+  controls, and a monotonic frontier. Grade stays separate from settlement/completion, and QA never reactivates a
+  settled disabled control. Current task/direct check headings and criteria remain visible at every transition with
+  the same bounded zero-opacity-filter rejection. Optional guidance uses the same unlocked owner traversal and cannot
+  change required accounting.
 - **T12:** permits no serious or critical axe findings; runs the keyboard and reduced-motion success routes; requires
   `aria-live`; checks direct body text at 4.5:1 and rendered borders at 3:1 in forced light and dark themes. Fully
   transparent borders are not rendered and are excluded. Enrolled guidance also preserves exact canonical semantic
@@ -214,9 +217,10 @@ later public drift. Rebase/squash requires a fresh run. No private value or answ
   viewport. Light and dark contexts are represented. Unmigrated pages retain the previous desktop, short desktop,
   400×860 and 200% zoom matrix until they are re-authored; add the marker only with the responsive migration.
   Touch contexts execute the required wrong-twice route with real tap events and reject visible buttons, fields,
-  summaries, role controls and ordinary anchors below 44×44 CSS px. At every viewport the harness verifies semantic
-  section roles, runs the public-safe wrong-twice route, opens Objectives and every activity-owned nested hint in
-  sequence, then reruns overflow, clipping and target checks. Every context rejects
+  summaries, role controls and ordinary anchors below 44×44 CSS px. Before tapping each activity-owned hint summary,
+  the harness centers it within the owning context, then retains the same focus, open-state and accounting checks. At
+  every viewport the harness verifies semantic section roles, runs the public-safe wrong-twice route, opens Objectives
+  and every activity-owned nested hint in sequence, then reruns overflow, clipping and target checks. Every context rejects
   page-level horizontal overflow and clipped essential controls or text.
   Non-rendered content—including descendants of closed `details`, CSS-hidden content, and zero-size live regions with
   no visible descendants—is excluded.
