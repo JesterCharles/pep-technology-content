@@ -27,9 +27,9 @@ Imagine the program is paused at line 16 before that line runs.
 
 A breakpoint marks a line where the program pauses before that line runs. In IntelliJ IDEA you click the gutter next to the line number, then start the program with Debug instead of Run. While paused, the Variables view shows the current values, and the Frames view shows the call stack.
 
-- Step Over runs the current line, including any method it calls, and pauses at the next line.
+- Step Over runs the current line, including any method it calls, and pauses at the next line. If an enabled breakpoint inside a called method is reached first, it pauses there instead.
 - Step Into enters a method called on the current line.
-- Step Out finishes the current method and pauses back in its caller.
+- Step Out finishes the current method and pauses back in its caller, unless an enabled breakpoint is reached first.
 - Resume lets the program continue until it reaches the next breakpoint.
 
 ### Activity 3 of 3: Locate where a value first goes wrong

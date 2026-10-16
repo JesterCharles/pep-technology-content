@@ -35,7 +35,7 @@ public class Main {
 
 A `static` field belongs to the class itself: there is exactly one copy, shared by every call and every object. A local variable belongs to one call of a method and disappears when that call returns.
 
-A `static` method also belongs to the class, so you call it through the class name, such as `Math.max(3, 7)` or `Temperature.toFahrenheit(20)`; inside the same class the name may be left out. That is why `main` is classically `static`: when a program starts, no object exists yet, so the launcher calls `Main.main` through the class. (Since Java 25 a `main` method may also be an instance method; the launcher then first creates an object with a no-argument constructor. This course uses the static form.)
+A `static` method also belongs to the class, so you call it through the class name, such as `Math.max(3, 7)` or `Temperature.toFahrenheit(20)`; inside the same class the name may be left out. That is why `main` is classically `static`: no `Main` object is required, so the launcher calls `Main.main` through the class. (Since Java 25 a `main` method may also be an instance method; the launcher then first creates an object with a no-argument constructor. This course uses the static form.)
 
 ### Activity 3 of 3: Why static code needs an object for instance fields
 
@@ -44,7 +44,7 @@ A field declared without `static` is an instance field: every object made with `
 ## Recap
 
 - A `static` field has one copy for the whole class, shared by every call; a local variable is new on every call.
-- Call a static method through its class name, such as `Math.max(3, 7)`; `main` is static so the program can start before any object exists.
+- Call a static method through its class name, such as `Math.max(3, 7)`; a traditional `main` is static so the launcher can call it without first creating a `Main` object.
 - An instance field belongs to each object, so static code reaches it only through an object such as `new Main().score`.
 
 ## Cheat sheet
@@ -110,6 +110,10 @@ Question: What is the last line printed? Option A: 3 3 — Not quite. local is d
 ### explore
 
 Code editor task: Inside main, call Temperature.toFahrenheit twice through the class name with Celsius values you choose, print each result, then print Temperature.conversions. Compare: the last line equals the number of calls, because the static field is shared by every call. Starter code: class Temperature { static int conversions = 0; static double toFahrenheit(double celsius) { conversions++; return celsius * 9 / 5 + 32; } } public class Main { public static void main(String[] args) { // 1. Call Temperature.toFahrenheit twice and print each result. // 2. Then print Temperature.conversions. } }
+
+### explore
+
+Explanation questions: Question 1, why can the launcher call a traditional static main? Options: static methods run faster, so the program starts sooner; main belongs to the class, so the launcher can call Main.main without first creating a Main object; no objects of any kind exist until main returns; the launcher must create a Main object first and call main on it. Question 2, how do conversions and the parameter celsius of toFahrenheit differ? Options: both keep their values between calls; each call gets its own conversions while celsius is shared by every call; conversions is one shared copy that keeps counting across calls, while celsius is created fresh for each call and is gone when that call returns; both reset to 0 at the start of every call.
 
 ### mcq
 

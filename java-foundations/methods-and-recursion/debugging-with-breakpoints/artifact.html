@@ -451,9 +451,9 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 <h2 id="activity-2-title" tabindex="-1">Activity 2 of 3: Set a breakpoint and step while watching variables</h2>
 <p>A <strong>breakpoint</strong> marks a line where the program pauses before that line runs. In IntelliJ IDEA you click the gutter next to the line number, then start the program with <strong>Debug</strong> instead of Run. While paused, the Variables view shows the current values, and the Frames view shows the call stack.</p>
 <ul>
-<li><strong>Step Over</strong> runs the current line, including any method it calls, and pauses at the next line.</li>
+<li><strong>Step Over</strong> runs the current line, including any method it calls, and pauses at the next line. If an enabled breakpoint inside a called method is reached first, it pauses there instead.</li>
 <li><strong>Step Into</strong> enters a method called on the current line.</li>
-<li><strong>Step Out</strong> finishes the current method and pauses back in its caller.</li>
+<li><strong>Step Out</strong> finishes the current method and pauses back in its caller, unless an enabled breakpoint is reached first.</li>
 <li><strong>Resume</strong> lets the program continue until it reaches the next breakpoint.</li>
 </ul>
 
@@ -2178,11 +2178,7 @@ var PepJava = (function () {
     var events = [];
     (res.trace || []).forEach(function (ev, k) {
       if (debug) {
-        if (ev.kind === 'line' || ev.kind === 'loop') events.push(ev);
-        else if (ev.kind === 'return' && ev.frames.length > 1) {
-          var caller = ev.frames.slice(0, -1);
-          events.push({ kind: 'after-call', line: caller[caller.length - 1].line, depth: ev.depth - 1, frames: caller, out: ev.out, note: ev.frames[ev.frames.length - 1].name.replace(/^.*\./, '') + ' returned' + (ev.ret ? ' ' + ev.ret : '') });
-        } else if (ev.kind === 'exception') events.push(ev);
+        if (ev.kind === 'line' || ev.kind === 'loop' || ev.kind === 'exception') events.push(ev);
       } else events.push(ev);
     });
     w.events = events; w.pos = debug ? -1 : 0; w.debug = debug; w.box = box; w.src = src; w.debugActions = {};
@@ -2197,9 +2193,9 @@ var PepJava = (function () {
     on('[data-step="next"]', function () { if (w.pos < w.events.length - 1) { w.pos++; drawTrace(w); } else traceStatus(w, 'End of the program: there are no more steps.'); });
     on('[data-step="restart"]', function () { w.pos = w.debug ? -1 : 0; drawTrace(w); });
     on('[data-dbg="debug"]', function () { w.debugActions.debug = true; w.pos = -1; dbgMove(w, function () { return true; }, true); });
-    on('[data-dbg="over"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); w.debugActions.over = true; var d = w.events[w.pos].depth; dbgMove(w, function (ev) { return ev.depth <= d; }); });
+    on('[data-dbg="over"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); w.debugActions.over = true; var d = w.events[w.pos].depth; dbgMove(w, function (ev) { return ev.depth <= d || !!w.bps[ev.line]; }); });
     on('[data-dbg="into"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); w.debugActions.into = true; dbgMove(w, function () { return true; }); });
-    on('[data-dbg="out"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); w.debugActions.out = true; var d = w.events[w.pos].depth; dbgMove(w, function (ev) { return ev.depth < d; }); });
+    on('[data-dbg="out"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); w.debugActions.out = true; var d = w.events[w.pos].depth; dbgMove(w, function (ev) { return ev.depth < d || !!w.bps[ev.line]; }); });
     on('[data-dbg="resume"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); dbgMove(w, function () { return true; }, true); });
     on('[data-dbg="stop"]', function () { w.pos = -1; drawTrace(w); traceStatus(w, 'Debug session stopped.'); });
     drawTrace(w);
@@ -2207,7 +2203,7 @@ var PepJava = (function () {
   function dbgMove(w, ok, toBreakpoint) {
     for (var k = w.pos + 1; k < w.events.length; k++) {
       var ev = w.events[k];
-      if (toBreakpoint ? (w.bps[ev.line] && ev.kind !== 'after-call') : ok(ev)) { w.pos = k; drawTrace(w); return; }
+      if (toBreakpoint ? w.bps[ev.line] : ok(ev)) { w.pos = k; drawTrace(w); return; }
     }
     w.pos = w.events.length; drawTrace(w);
   }
@@ -2235,7 +2231,6 @@ var PepJava = (function () {
     if (counter) counter.textContent = 'Step ' + (w.pos + 1) + ' of ' + w.events.length;
     var what = ev.kind === 'call' ? 'Entered ' + top.name.replace(/^Main\./, '') + ' — a new frame was pushed.' :
       ev.kind === 'return' ? top.name.replace(/^Main\./, '') + (ev.ret ? ' returns ' + ev.ret : ' finishes') + ' — its frame is popped next.' :
-      ev.kind === 'after-call' ? 'Back on line ' + ev.line + ' in ' + top.name.replace(/^Main\./, '') + ': ' + ev.note + '.' :
       ev.kind === 'exception' ? 'An exception was thrown on line ' + ev.line + '.' :
       (w.debug ? 'Paused before line ' + ev.line + ' runs.' : 'About to run line ' + ev.line + '.');
     traceStatus(w, what + ' ' + (top.vars.filter(function (v) { return v.name !== 'args'; }).map(function (v) { return v.name + ' = ' + v.value; }).join(', ')));
