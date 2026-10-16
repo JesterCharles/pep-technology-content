@@ -34,7 +34,7 @@
     .activity-actions { display:flex; flex-wrap:wrap; gap:.5rem; }
     textarea { display:block; font-size:16px; min-height:5rem; width:100%; }
     @media (prefers-reduced-motion: reduce) { * { animation:none!important; transition:none!important; } }
-    @media print { .activity { display:block!important; } .activity-actions,.activity-timeline { display:none!important; } .objectives-body,.pep-hint,.pep-optional,.activity-checks { break-inside:avoid; } }
+    @media print { .activity { display:block!important; } .activity-actions,.activity-timeline,.back-link { display:none!important; } .objectives-body,.pep-hint,.pep-optional,.activity-checks { break-inside:avoid; } }
   </style>
 </head>
 <body>
@@ -83,13 +83,13 @@
           <details class="pep-hint" data-pep-hint data-pep-hint-for="task-safe" data-pep-hint-order="1" data-section-skip>
             <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 1</span></summary>
             <div class="pep-hint__body">
-              <p data-pep-hint-target><strong>Where to act:</strong> Look at the result controls below your note.</p>
-              <p data-pep-hint-step><strong>Next step:</strong> Rule out any action that sends information elsewhere.</p>
+              <p data-pep-hint-target><strong>Where to act:</strong> Classify each result control below your note.</p>
+              <p data-pep-hint-step><strong>Next step:</strong> Decide whether each effect remains in this page or crosses a boundary.</p>
               <details class="pep-hint" data-pep-hint data-pep-hint-for="task-safe" data-pep-hint-order="2" data-section-skip>
                 <summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 1</span></summary>
                 <div class="pep-hint__body">
-                  <p data-pep-hint-target><strong>Where to act:</strong> Compare the two result buttons below your note.</p>
-                  <p data-pep-hint-step><strong>Next step:</strong> Prefer the action whose effect stays inside this page.</p>
+                  <p data-pep-hint-target><strong>Where to act:</strong> Inspect the on-page feedback region after trying a control.</p>
+                  <p data-pep-hint-step><strong>Next step:</strong> Use where its result appears as evidence for your boundary classification.</p>
                 </div>
               </details>
             </div>
@@ -118,6 +118,7 @@
         <h2 id="activity-2-title" tabindex="-1">Activity 2 — Your task: explain your choice</h2>
         <div id="task-explain" data-pep-task><p>Explain in the field below why your first action stays local.</p><label for="activity-two-input">Your explanation</label><textarea id="activity-two-input"></textarea></div>
         <section class="activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">Activity checks</h3><p>Your explanation names the boundary that keeps the action safe.</p></section>
+        <button type="button" id="wrong-two" data-pep-wrong-attempt>Try an incomplete explanation</button>
         <button type="button" id="complete-two" data-pep-complete-activity>Complete activity 2</button>
         <p data-pep-feedback aria-live="polite"></p>
         <p><a class="back-link" href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
@@ -127,6 +128,7 @@
         <h2 id="activity-3-title" tabindex="-1">Activity 3 — Your task: recap</h2>
         <div id="task-recap" data-pep-task><p>Review your saved note and explanation, then state the boundary.</p><label for="activity-three-input">Your recap</label><textarea id="activity-three-input"></textarea></div>
         <section class="activity-checks" data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>You can state which action is safe and why.</p></section>
+        <button type="button" id="wrong-three" data-pep-wrong-attempt>Try an incomplete recap</button>
         <button type="button" id="complete-three" data-pep-complete-activity>Complete activity 3</button>
         <p data-pep-feedback aria-live="polite"></p>
         <p><a class="back-link" href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
@@ -138,6 +140,7 @@
       <button type="button" id="next-activity" data-pep-next>Next activity</button>
     </div>
     <section data-pep-recap><h2>Recap</h2><p>Use direct controls and check resulting state.</p></section>
+    <div data-static-alt><p>Printed alternative: choose a local control, then explain the observed in-page result.</p></div>
     <section data-pep-sources><h2>Sources</h2><p>Fixture source, reviewed 2026-10-08.</p></section>
   </main>
   <script>
@@ -221,6 +224,12 @@
       document.querySelector('#sim').addEventListener('click', () => completeActivity(1, 'Simulator completed.'));
       document.querySelector('#complete-two').addEventListener('click', () => completeActivity(2, 'Explanation saved.'));
       document.querySelector('#complete-three').addEventListener('click', () => completeActivity(3, 'Recap saved.'));
+      document.querySelectorAll('#wrong-two, #wrong-three').forEach((button, index) => button.addEventListener('click', () => {
+        const number = index + 2;
+        state[number - 1].attempts += 1;
+        reflect(number);
+        activities[number - 1].querySelector('[data-pep-feedback]').textContent = 'Try again with a complete explanation.';
+      }));
       document.querySelector('#restart').addEventListener('click', () => {
         const index = current - 1;
         for (const initial of controls[index]) { initial.control.value = initial.value; initial.control.checked = initial.checked; if (initial.control.tagName === 'SELECT') initial.control.selectedIndex = initial.selectedIndex; }

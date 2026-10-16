@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
@@ -327,8 +327,10 @@ async function exerciseSequentialHints(target, options = {}) {
 
 async function guidanceState(target) {
   return target.locator("[data-pep-guidance-contract]").evaluate((root) => {
+    const allActivities = [...root.querySelectorAll("[data-pep-activity]")];
     const controls = [...root.querySelectorAll("input, textarea, select")].map((control) => ({
       id: control.id,
+      activity: allActivities.findIndex((activity) => activity.contains(control)) + 1,
       value: control.value,
       checked: control.checked,
       selectedIndex: control.selectedIndex,
@@ -358,6 +360,161 @@ async function guidanceState(target) {
       disclosures: [...root.querySelectorAll("details")].map((item) => item.open),
     };
   });
+}
+
+function preservedGuidance(state) {
+  const copy = structuredClone(state);
+  delete copy.current;
+  delete copy.hash;
+  delete copy.focused;
+  return copy;
+}
+
+function sameState(actual, expected, message) {
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(message);
+}
+
+async function activateGuidance(locator, mode) {
+  if (await locator.getAttribute("aria-disabled") === "true") {
+    if (mode === "keyboard") {
+      await locator.focus();
+      await locator.press("Enter");
+    } else await locator.dispatchEvent("click");
+    return;
+  }
+  if (mode === "keyboard") {
+    if (!(await focusVisible(locator))) throw new Error("guidance navigation has no visible focus indicator");
+    await locator.press("Enter");
+  } else if (mode === "touch") await locator.tap();
+  else await locator.click();
+}
+
+async function expectDestination(target, number, before, { history = false } = {}) {
+  if (history && before.focused) await target.waitForFunction((id) => document.activeElement?.id === id, before.focused);
+  const after = await guidanceState(target);
+  if (after.current !== String(number) || after.hash !== `#activity-${number}`) {
+    throw new Error(`navigation did not select canonical activity ${number}`);
+  }
+  sameState(preservedGuidance(after), preservedGuidance(before), "navigation changed non-navigation state");
+  if (history) {
+    if (after.focused !== before.focused) throw new Error("browser history moved focus");
+  } else {
+    const headingId = await target.locator(`#activity-${number}`).getAttribute("aria-labelledby");
+    if (!headingId || after.focused !== headingId) throw new Error(`navigation did not focus activity ${number} heading`);
+  }
+  return after;
+}
+
+async function setFragment(target, hash, expected) {
+  await target.evaluate((value) => { location.hash = value; }, hash);
+  await target.waitForFunction((value) => location.hash === value, expected);
+}
+
+async function traverseHistory(target, direction) {
+  const before = await target.evaluate(() => location.href);
+  if (typeof target[direction] === "function") await target[direction]();
+  else {
+    await target.evaluate((method) => history[method](), direction === "goBack" ? "back" : "forward");
+    await target.waitForFunction((value) => location.href !== value, before);
+  }
+}
+
+async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
+  const root = target.locator("[data-pep-guidance-contract]");
+  const activities = target.locator("[data-pep-activity]");
+  const links = target.locator("[data-pep-activity-link]");
+  const count = await activities.count();
+  const initial = await guidanceState(target);
+  if (!initial.current || !initial.frontier || !initial.requiredMinutes || count < 2) throw new Error("guidance state hooks are incomplete");
+
+  for (let index = Number(initial.frontier); index < count; index++) {
+    const before = await guidanceState(target);
+    await activateGuidance(links.nth(index), mode);
+    const after = await guidanceState(target);
+    sameState(preservedGuidance(after), preservedGuidance(before), "locked future timeline activation changed guidance state");
+    if (after.current !== before.current || after.hash !== before.hash) throw new Error("locked future timeline activation changed current activity");
+  }
+  for (let number = Number(initial.frontier) + 1; number <= count; number++) {
+    const before = await guidanceState(target);
+    await setFragment(target, `#activity-${number}`, `#activity-${before.current}`);
+    const after = await guidanceState(target);
+    if (after.current !== before.current || after.frontier !== before.frontier || after.hash !== `#activity-${before.current}`) {
+      throw new Error(`fresh future fragment ${number} bypassed the frontier or was not normalized`);
+    }
+    sameState(preservedGuidance(after), preservedGuidance(before), "future fragment changed preserved state");
+  }
+
+  await execute(target, setupActions, { keyboard: mode === "keyboard", touch: mode === "touch" });
+  let prepared = await guidanceState(target);
+  const populatedActivities = prepared.activities.filter((activity, index) =>
+    prepared.controls.some((control) => control.activity === index + 1 && control.value));
+  if (!prepared.activities.some((activity) => Number(activity.attempts) > 0) ||
+      !prepared.controls.some((control) => control.value) ||
+      !prepared.activities.some((activity) => activity.completed === "true" && activity.credit === "1") ||
+      Number(prepared.frontier) < 2 || populatedActivities.length < 2) {
+    throw new Error("guidance setup did not establish attempts, preserved inputs, completion, frontier and another populated activity");
+  }
+
+  const current = Number(prepared.current);
+  if (current < 2) throw new Error("guidance setup must finish on a later unlocked activity");
+  await activateGuidance(target.locator("[data-pep-previous]"), mode);
+  let state = await expectDestination(target, current - 1, prepared);
+  await activateGuidance(target.locator("[data-pep-next]"), mode);
+  state = await expectDestination(target, current, state);
+  await activateGuidance(links.first(), mode);
+  state = await expectDestination(target, 1, state);
+  await activateGuidance(links.nth(current - 1), mode);
+  state = await expectDestination(target, current, state);
+  const back = target.locator(`#activity-${current} [data-pep-back-link]`);
+  await activateGuidance(back, mode);
+  state = await expectDestination(target, current - 1, state);
+
+  await activateGuidance(target.locator("[data-pep-next]"), mode);
+  state = await expectDestination(target, current, state);
+  const historyBase = state;
+  await activateGuidance(target.locator("[data-pep-previous]"), mode);
+  const historyPrevious = await guidanceState(target);
+  await target.locator("[data-pep-reset]").focus();
+  const focused = await guidanceState(target);
+  await traverseHistory(target, "goBack");
+  state = await expectDestination(target, current, { ...historyBase, focused: focused.focused }, { history: true });
+  await traverseHistory(target, "goForward");
+  state = await expectDestination(target, current - 1, { ...historyPrevious, focused: focused.focused }, { history: true });
+  await activateGuidance(target.locator("[data-pep-next]"), mode);
+  prepared = await expectDestination(target, current, state);
+
+  const otherBefore = prepared.activities.filter((_, index) => index !== current - 1);
+  const controlsBefore = prepared.controls.filter((control) => control.activity !== current);
+  await activateGuidance(target.locator("[data-pep-activity]:not([hidden]) [data-pep-wrong-attempt]"), mode);
+  const wrong = await guidanceState(target);
+  if (Number(wrong.activities[current - 1].attempts) < 1) throw new Error("wrong-attempt setup did not increment attempts");
+  await activateGuidance(target.locator("[data-pep-reset]"), mode);
+  const restartedWrong = await guidanceState(target);
+  const clean = restartedWrong.activities[current - 1];
+  if (clean.attempts !== "0" || clean.settled !== "false" || clean.completed !== "false" || clean.credit !== "0" ||
+      clean.grade !== "0" || clean.canContinue !== "false" || clean.feedback.some((item) => item.text.trim())) {
+    throw new Error("Restart after a wrong attempt left stale current-activity state");
+  }
+  sameState(restartedWrong.activities.filter((_, index) => index !== current - 1), otherBefore, "Restart changed another activity");
+  sameState(restartedWrong.controls.filter((control) => control.activity !== current), controlsBefore, "Restart changed another activity input");
+  if (restartedWrong.frontier !== prepared.frontier || restartedWrong.requiredMinutes !== prepared.requiredMinutes || restartedWrong.complete !== prepared.complete) {
+    throw new Error("Restart changed frontier, required time or page completion");
+  }
+
+  await activateGuidance(target.locator("[data-pep-activity]:not([hidden]) [data-pep-complete-activity]"), mode);
+  const completed = await guidanceState(target);
+  if (completed.activities[current - 1].credit !== "1") throw new Error("completion did not award exactly one credit");
+  await activateGuidance(target.locator("[data-pep-reset]"), mode);
+  const restartedComplete = await guidanceState(target);
+  if (restartedComplete.activities[current - 1].completed !== "false" || restartedComplete.activities[current - 1].credit !== "0") {
+    throw new Error("Restart after completion left stale current state");
+  }
+  await activateGuidance(target.locator("[data-pep-activity]:not([hidden]) [data-pep-complete-activity]"), mode);
+  const recompleted = await guidanceState(target);
+  if (recompleted.activities[current - 1].credit !== "1") throw new Error("re-completion after Restart did not award exactly one credit");
+  await activateGuidance(target.locator("[data-pep-activity]:not([hidden]) [data-pep-complete-activity]"), mode);
+  if ((await guidanceState(target)).activities[current - 1].credit !== "1") throw new Error("revisiting completion duplicated credit");
+  if (await root.getAttribute("data-pep-current-activity") !== (await guidanceState(target)).current) throw new Error("current activity hook drifted");
 }
 
 async function withPage(browser, topic, options, callback) {
@@ -409,6 +566,25 @@ async function sandboxFrame(page, topic) {
   return frame;
 }
 
+async function checkSandboxGuidanceMatrix(browser, topic, spec) {
+  const configurations = [
+    { label: "sandbox-guidance-pointer", mode: "pointer", setup: spec.guidance.activityNavigation, viewport: { width: 1366, height: 768 } },
+    { label: "sandbox-guidance-keyboard", mode: "keyboard", setup: spec.guidance.activityNavigationKeyboard, viewport: { width: 1366, height: 768 } },
+    { label: "sandbox-guidance-touch-320", mode: "touch", setup: spec.guidance.activityNavigationTouch, viewport: { width: 320, height: 568 }, touch: true },
+    { label: "sandbox-guidance-touch-390", mode: "touch", setup: spec.guidance.activityNavigationTouch, viewport: { width: 390, height: 844 }, touch: true },
+  ];
+  for (const configuration of configurations) {
+    const context = await browser.newContext({ viewport: configuration.viewport, hasTouch: configuration.touch ?? false });
+    const page = await context.newPage();
+    try {
+      const frame = await sandboxFrame(page, topic);
+      await checkGuidanceInvariants(frame, configuration.setup, configuration.mode);
+    } finally {
+      await context.close();
+    }
+  }
+}
+
 async function checkPrint(browser, topic) {
   await withPage(browser, topic, { label: "print" }, async (page) => {
     if (!(await page.locator("[data-pep-guidance-contract]").count())) return;
@@ -417,13 +593,60 @@ async function checkPrint(browser, topic) {
     const before = await details.evaluateAll((items) => items.map((item) => item.open));
     await page.evaluate(() => dispatchEvent(new Event("beforeprint")));
     await page.emulateMedia({ media: "print" });
-    for (const selector of ["[data-pep-activity]", "[data-pep-teaching]", "[data-pep-activity-checks]", "details[data-pep-objectives]", "details[data-pep-hint]", "details[data-pep-optional]"]) {
+    const visibleText = async (locator, label) => {
+      if (!(await locator.count()) || !(await locator.isVisible()) || !(await locator.innerText()).trim()) {
+        throw new Error(`print hides required ${label} content`);
+      }
+    };
+    for (const selector of ["[data-pep-activity]", "[data-pep-teaching]"]) {
       const items = page.locator(selector);
-      for (let index = 0; index < await items.count(); index++) {
-        if (!(await items.nth(index).isVisible())) throw new Error(`print hides required ${selector} content`);
+      for (let index = 0; index < await items.count(); index++) await visibleText(items.nth(index), selector);
+    }
+    const checks = page.locator("[data-pep-activity-checks]");
+    for (let index = 0; index < await checks.count(); index++) {
+      await visibleText(checks.nth(index).locator(":scope > h2, :scope > h3"), "activity-check heading");
+      await visibleText(checks.nth(index).locator(":scope > p, :scope > ul > li, :scope > ol > li").first(), "activity-check criteria");
+    }
+    const objectives = page.locator("details[data-pep-objectives]");
+    for (let index = 0; index < await objectives.count(); index++) {
+      const objective = objectives.nth(index);
+      const summary = objective.locator(":scope > summary");
+      await visibleText(summary, "objectives label");
+      const controlled = await summary.getAttribute("aria-controls");
+      if (!controlled) throw new Error("print objectives label has no controlled body");
+      await visibleText(page.locator(`#${controlled}`), "objectives body");
+      const items = page.locator(`#${controlled} li`);
+      for (let item = 0; item < await items.count(); item++) await visibleText(items.nth(item), "objective item");
+    }
+    const hints = page.locator("details[data-pep-hint]");
+    for (let index = 0; index < await hints.count(); index++) {
+      const hint = hints.nth(index);
+      await visibleText(hint.locator(":scope > summary"), "hint label");
+      await visibleText(hint.locator(":scope > .pep-hint__body > [data-pep-hint-target]"), "hint target");
+      await visibleText(hint.locator(":scope > .pep-hint__body > [data-pep-hint-step]"), "hint reasoning step");
+    }
+    const optionals = page.locator("details[data-pep-optional]");
+    for (let index = 0; index < await optionals.count(); index++) {
+      const optional = optionals.nth(index);
+      await visibleText(optional.locator(":scope > summary"), "optional label");
+      await visibleText(optional.locator(":scope > .pep-optional__body"), "optional body");
+      for (const selector of [".pep-optional__cue", "[data-pep-anecdote-story]", "[data-pep-anecdote-map]", "[data-pep-success-criteria]", "[data-pep-optional-time]"]) {
+        const items = optional.locator(selector);
+        for (let item = 0; item < await items.count(); item++) await visibleText(items.nth(item), selector);
       }
     }
-    const navigation = page.locator('[aria-label="Activities"], [aria-label="Activity navigation"]');
+    const alternatives = page.locator("[data-static-alt]");
+    for (let index = 0; index < await alternatives.count(); index++) {
+      const alternative = alternatives.nth(index);
+      const rendered = await alternative.evaluate((node) => {
+        if (!node.getClientRects().length || getComputedStyle(node).visibility === "hidden") return "";
+        const pseudo = ["::before", "::after"].map((kind) => getComputedStyle(node, kind).content)
+          .filter((value) => value && value !== "none" && value !== "normal").join(" ");
+        return `${node.innerText} ${pseudo}`.replace(/(?:^|\s)["']|["'](?:\s|$)/gu, " ").trim();
+      });
+      if (!rendered) throw new Error("print hides required static alternative representation");
+    }
+    const navigation = page.locator('[data-pep-activity-link], [data-pep-previous], [data-pep-next], [data-pep-back-link], [aria-label="Activities"], [aria-label="Activity navigation"]');
     for (let index = 0; index < await navigation.count(); index++) {
       if (await navigation.nth(index).isVisible()) throw new Error("print must hide navigation-only controls");
     }
@@ -519,6 +742,7 @@ async function checkSandbox(browser, topic) {
     if (!failed) await context.tracing.stop();
     await context.close();
   }
+  if (spec.guidance) await checkSandboxGuidanceMatrix(browser, topic, spec);
 }
 
 async function checkBehavior(browser, topic) {
@@ -577,7 +801,7 @@ async function checkBehavior(browser, topic) {
         delete after.focused;
         if (JSON.stringify(after) !== JSON.stringify(before)) throw new Error("locked future timeline activation changed guidance state");
       }
-      await page.locator("[data-pep-wrong-attempt]").click();
+      await page.locator("[data-pep-activity]:not([hidden]) [data-pep-wrong-attempt]").click();
       const afterWrong = await guidanceState(page);
       const otherBefore = afterWrong.activities.slice(1);
       const frontierBeforeRestart = afterWrong.frontier;
@@ -634,6 +858,16 @@ async function checkBehavior(browser, topic) {
       const state = await guidanceState(page);
       if (state.frontier !== "1" || state.current !== "1" || state.hash !== "#activity-1") throw new Error("fresh future fragment unlocked or selected a future activity");
     });
+    for (const configuration of [
+      { label: "owned-guidance-pointer", mode: "pointer", setup: spec.guidance.activityNavigation, viewport: { width: 1366, height: 768 } },
+      { label: "owned-guidance-keyboard", mode: "keyboard", setup: spec.guidance.activityNavigationKeyboard, viewport: { width: 1366, height: 768 } },
+      { label: "owned-guidance-touch-320", mode: "touch", setup: spec.guidance.activityNavigationTouch, viewport: { width: 320, height: 568 }, touch: true },
+      { label: "owned-guidance-touch-390", mode: "touch", setup: spec.guidance.activityNavigationTouch, viewport: { width: 390, height: 844 }, touch: true },
+    ]) {
+      await withPage(browser, topic, configuration, async (page) => {
+        await checkGuidanceInvariants(page, configuration.setup, configuration.mode);
+      });
+    }
   }
   await withPage(browser, topic, { label: "optional-accounting" }, async (page) => {
     const disclosures = page.locator("details[data-pep-optional], details[data-pep-hint]");
@@ -907,6 +1141,7 @@ const CHECKERS = {
 
 export async function validateQaPrivateProofs(repoRoot, evidenceRoot) {
   const out = [];
+  const git = (args) => spawnSync("git", args, { cwd: repoRoot, encoding: "utf8" });
   const privateName = /(^|[-_.\/])(?:answer[-_ ]?key|rubric|(?:reference|instructor|private)[-_ ]?solution|hidden[-_ ]?tests?)([-_.\/]|$)/iu;
   for (const receiptFile of (await walk(evidenceRoot)).files.filter((file) => path.basename(file) === "qa-receipt.json")) {
     const receipt = await readJson(receiptFile).catch(() => null);
@@ -914,33 +1149,64 @@ export async function validateQaPrivateProofs(repoRoot, evidenceRoot) {
     if (!proof) continue;
     const display = relative(repoRoot, receiptFile);
     if (proof.record !== `validated at ${proof.commit} by run ${proof.runId}`) out.push(error("T06", display, "private success record must match commit and runId"));
-    const commit = spawnSync("git", ["cat-file", "-e", `${proof.commit}^{commit}`], { cwd: repoRoot, encoding: "utf8" });
-    if (commit.status !== 0) out.push(error("T06", display, "private success proof commit does not exist in this repository"));
-    const evidenceRelative = relative(repoRoot, receiptFile).split("/");
+    const commit = git(["cat-file", "-e", `${proof.commit}^{commit}`]);
+    if (commit.status !== 0) {
+      out.push(error("T06", display, "private success proof commit does not exist in this repository"));
+      continue;
+    }
+    const evidenceRelative = display.split("/");
     const evidenceIndex = evidenceRelative.indexOf("evidence");
     const owner = evidenceIndex >= 0 ? evidenceRelative.slice(evidenceIndex + 1, -1) : [];
+    const ownerPath = owner.join("/");
     const required = new Set([
-      `${owner.join("/")}/artifact.html`,
-      `authoring/evidence/${owner.join("/")}/qa-paths.json`,
+      `${ownerPath}/artifact.html`,
+      `authoring/evidence/${ownerPath}/qa-paths.json`,
       "authoring/tools/qa/harness.mjs",
       "authoring/tools/qa/python-answer-scan.py",
       "authoring/tools/checks/T08-html-static.mjs",
     ]);
-    const seen = new Set();
-    for (const binding of proof.publicBindings ?? []) {
-      if (seen.has(binding.file)) out.push(error("T06", display, `duplicate private-success public binding: ${binding.file}`));
-      seen.add(binding.file);
+    const bindings = proof.publicBindings ?? [];
+    const seen = new Set(bindings.map((binding) => binding.file));
+    if (bindings.length !== 5 || seen.size !== 5 || [...seen].some((file) => !required.has(file)) || [...required].some((file) => !seen.has(file))) {
+      out.push(error("T06", display, "private-success public bindings must equal the exact five approved public paths"));
+    }
+    for (const binding of bindings) {
       if (privateName.test(binding.file)) out.push(error("T06", display, `private material cannot be bound: ${binding.file}`));
-      const file = path.join(repoRoot, ...binding.file.split("/"));
+      const blob = git(["show", `${proof.commit}:${binding.file}`]);
+      if (blob.status !== 0) {
+        out.push(error("T06", display, `private-success public binding is missing from proof commit: ${binding.file}`));
+        continue;
+      }
+      const blobHash = sha256(Buffer.from(blob.stdout, "utf8"));
+      if (blobHash !== binding.reviewedSha256) out.push(error("T06", display, `private-success commit blob differs from receipt: ${binding.file}`));
       try {
-        const actual = sha256(await readFile(file));
-        if (actual !== binding.reviewedSha256) out.push(error("T06", display, `stale private-success public binding: ${binding.file}`));
+        const currentHash = sha256(await readFile(path.join(repoRoot, ...binding.file.split("/"))));
+        if (currentHash !== blobHash) out.push(error("T06", display, `stale private-success public binding: ${binding.file}`));
       } catch (cause) {
         if (cause.code === "ENOENT") out.push(error("T06", display, `private-success public binding is missing: ${binding.file}`));
         else throw cause;
       }
     }
-    for (const file of required) if (!seen.has(file)) out.push(error("T06", display, `missing private-success public binding: ${file}`));
+    if (git(["merge-base", "--is-ancestor", proof.commit, "HEAD"]).status !== 0) {
+      out.push(error("T06", display, "private success proof commit must be an ancestor of current HEAD"));
+    }
+    const introduction = git(["log", "--all", "--format=%H", "-S", proof.runId, "--", display]);
+    const introductions = introduction.stdout.trim().split(/\s+/u).filter(Boolean);
+    if (introductions.length !== 1) {
+      out.push(error("T06", display, "private success runId must be introduced by exactly one evidence commit"));
+      continue;
+    }
+    const receiptCommit = introductions[0];
+    const parents = git(["rev-list", "--parents", "-n", "1", receiptCommit]).stdout.trim().split(/\s+/u).slice(1);
+    if (parents.length !== 1 || parents[0] !== proof.commit) {
+      out.push(error("T06", display, "private success receipt must be introduced in the immediate child of its proof commit"));
+      continue;
+    }
+    const allowedLock = owner.length >= 2 ? `authoring/catalog/${owner[0]}/${owner[1]}/module.lock.json` : "";
+    const changed = git(["diff-tree", "--no-commit-id", "--name-only", "-r", receiptCommit]).stdout.trim().split(/\n/u).filter(Boolean);
+    if (changed.some((file) => file !== display && file !== allowedLock)) {
+      out.push(error("T06", display, "private success receipt commit may change only its receipt and generated module lock"));
+    }
   }
   return out;
 }
@@ -991,6 +1257,12 @@ export async function updateReceipt(ctx, topic, rule, passed, detail, writeEvide
 }
 
 export async function runPrivateOverlay(ctx, overlayFile) {
+  const git = (args) => spawnSync("git", args, { cwd: ctx.root, encoding: "utf8" });
+  const top = git(["rev-parse", "--show-toplevel"]);
+  if (top.status !== 0 || await realpath(top.stdout.trim()) !== await realpath(ctx.root)) throw new Error("private overlay repository root is invalid");
+  const commit = git(["rev-parse", "HEAD"]).stdout.trim();
+  if (!/^[a-f0-9]{40}$/u.test(commit)) throw new Error("private overlay requires a public commit");
+  if (git(["status", "--porcelain=v1", "--untracked-files=all"]).stdout.trim()) throw new Error("private overlay requires a clean public commit");
   const absolute = path.resolve(overlayFile);
   const outside = path.relative(ctx.root, absolute);
   if (!outside.startsWith(`..${path.sep}`) && outside !== "..") throw new Error("private overlay must be outside the repository");
@@ -1011,6 +1283,20 @@ export async function runPrivateOverlay(ctx, overlayFile) {
   const topic = (await findHtmlTopics(ctx)).find((item) => `${item.courseId}/${item.moduleId}/${item.topicId}` === overlay.topic);
   if (!topic) throw new Error("private overlay topic does not resolve to one HTML topic");
   const spec = await loadSpec(topic);
+  const approved = [
+    relative(ctx.root, topic.html),
+    relative(ctx.root, topic.spec),
+    "authoring/tools/qa/harness.mjs",
+    "authoring/tools/qa/python-answer-scan.py",
+    "authoring/tools/checks/T08-html-static.mjs",
+  ];
+  const beforeHashes = new Map();
+  for (const file of approved) {
+    const working = sha256(await readFile(path.join(ctx.root, ...file.split("/"))));
+    const blob = git(["show", `${commit}:${file}`]);
+    if (blob.status !== 0 || sha256(Buffer.from(blob.stdout, "utf8")) !== working) throw new Error("private overlay public files must equal the captured commit");
+    beforeHashes.set(file, working);
+  }
   for (const name of routeNames) {
     const candidate = structuredClone(spec);
     candidate.routes.success = overlay.routes[name];
@@ -1059,8 +1345,20 @@ export async function runPrivateOverlay(ctx, overlayFile) {
   } finally {
     await browser.close();
   }
-  const commit = spawnSync("git", ["rev-parse", "HEAD"], { cwd: ctx.root, encoding: "utf8" }).stdout.trim();
-  return { commit, runId: overlay.runId, result: "pass" };
+  if (git(["rev-parse", "HEAD"]).stdout.trim() !== commit ||
+      git(["status", "--porcelain=v1", "--untracked-files=all"]).stdout.trim()) {
+    throw new Error("private overlay changed the captured clean public commit");
+  }
+  const publicBindings = [];
+  for (const file of approved) {
+    const working = sha256(await readFile(path.join(ctx.root, ...file.split("/"))));
+    const blob = git(["show", `${commit}:${file}`]);
+    if (blob.status !== 0 || working !== beforeHashes.get(file) || sha256(Buffer.from(blob.stdout, "utf8")) !== working) {
+      throw new Error("private overlay public files changed during validation");
+    }
+    publicBindings.push({ file, reviewedSha256: working });
+  }
+  return { commit, runId: overlay.runId, result: "pass", publicBindings };
 }
 
 export async function runBrowserGate(ctx, rule, options = {}) {

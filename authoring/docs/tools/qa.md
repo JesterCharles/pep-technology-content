@@ -39,9 +39,12 @@ activity; `restart.credit` proves credit was not duplicated. `keyboard` is the c
 keyboard activation. `data-pep-guidance-contract` and `spec.guidance` are mandatory together. Enrolled specs require
 `activityNavigation`, `activityNavigationKeyboard`, `activityNavigationTouch`, `objectives` and `objectivesTouch`;
 `hints` is required exactly when parsed HTML contains hints. Empty, partial or author-selected omission fails before
-browser execution. The contract fixture demonstrates the exact shape. Author paths reach authored states, while
-harness-owned checks observe preservation, every future lock, a fresh future fragment, browser history, state and
-credit invariants, Restart after wrong and completed attempts, disclosure accounting and sequential native hints.
+browser execution. The contract fixture demonstrates the exact shape. Navigation arrays are setup/smoke paths, not
+self-selected evidence: they must leave a nonzero attempt, meaningful live inputs in at least two activities, a prior
+completed/credited activity and a later unlocked current activity. Harness-owned postconditions then activate
+Previous/Next, current/completed timeline and back links, every future link and fragment, browser history and Restart;
+they compare the complete root/control/per-activity snapshot and reject vacuous setup. The same procedure runs
+pointer and keyboard desktop plus 320/390 touch, both top-level and in `sandbox="allow-scripts"`.
 The harness requires visible focus at each keyboard activation and verifies the same completion assertion. A focus
 indicator may be on the control or a `:focus-within` ancestor, but it must appear on focus and its outline or shadow
 must contrast at least 3:1 with the adjacent background.
@@ -142,19 +145,24 @@ Git `tNN.json` files, and the reusable route roles of AI `spec.js`. No course-1 
 
 An answer-sensitive task and `qa-paths.json` declare the same task selector, supported language scanner and target
 names. Committed paths contain only public-safe starter, incomplete, malformed, wrong-result, unsupported-shape,
-reset and no-premature-credit routes. The target-aware scanner covers decoded HTML prose and attributes, hidden and
-no-JavaScript/static alternatives, hints, fit/anecdote copy, embedded script strings/templates, fixtures and all QA
-JSON strings. Python comprehension targets are analyzed with CPython `tokenize` and `ast`, not a spelling regex.
+reset and no-premature-credit routes. The target-aware scanner inventories decoded text and attributes across the
+whole enrolled document, comments, no-JavaScript/templates/static alternatives and all QA strings. Its bounded JS
+parser cooks escapes/templates and folds all-literal `+` chains without execution. CPython `tokenize` extracts
+balanced candidates from prose; `ast` recursively checks declared targets through wrappers and positional destructuring.
+Target assignments fail anywhere, while standalone comprehensions fail only on answer-bearing task/activity/workspace
+or selector-associated QA surfaces, preserving unrelated teaching. Canonical UTF-8 base64, percent and hex-byte
+forms are decoded; target-associated decoder/character assembly and 40/64-hex digests fail. Arbitrary semantic
+leakage and opaque provenance remain explicit education/SME review boundaries.
 
-Completed inputs run only from an absolute authorized uncommitted overlay outside the repository, against the exact
-public commit, with required `success`, `wrongFirst`, `keyboard` and `sandbox` action routes. The private runner uses
-the same strict public action schema but disables tracing, screenshots, value logging and `build/` output; errors are
-generic so completed values do not enter logs. It never writes evidence. After the operator retires staging, the existing committed
-`qa-receipt.json` may add `privateSuccessProof`: a commit/run statement, time/environment/pass result,
-`stagingRetired: true`, and bindings for only the current public artifact, QA path, harness, T08 parser/scanner and
-Python AST scanner. It never records private values or hashes. T01 validates the receipt shape and T06 rejects stale,
-missing or private-material bindings. CI continues to execute only public-safe routes. See the exact field shape in
-`authoring/schemas/qa-receipt.schema.json`.
+Completed inputs run only from an absolute authorized uncommitted overlay outside the repository. The private runner
+captures clean commit **P** before loading the topic, verifies the exact five approved public working files equal P's
+blobs before and after `success`, `wrongFirst`, `keyboard` and `sandbox`, and rejects dirty tracked/untracked bytes,
+HEAD movement or file drift. It disables tracing, screenshots, value logging and `build/` output; generic errors keep
+completed values out of logs. After staging is retired, immediate evidence-only child **R** may add the existing
+`qa-receipt.json` and generated module lock. The proof still names P and contains exactly five bindings: artifact,
+public QA path, harness, T08 scanner and Python scanner. T06 locates the unique runId introduction, requires R's first
+parent to be P, hashes each P blob and current file, and rejects extra/missing bindings, old/non-parent identity or
+later public drift. Rebase/squash requires a fresh run. No private value or answer-derived hash is recorded.
 
 ## Gate behavior
 
@@ -167,13 +175,14 @@ missing or private-material bindings. CI continues to execute only public-safe r
   printed: all activities, teaching, checks, objectives, hints, optional labels and static alternatives are visible,
   navigation-only controls are absent, and `afterprint` exactly restores the prior disclosure states.
 - **T10:** runs all three routes and every mandatory guidance route inside an iframe whose only sandbox token is
-  `allow-scripts`. Its opaque origin makes unguarded Web Storage access fail naturally.
+  `allow-scripts`. Its opaque origin makes unguarded Web Storage access fail naturally. Enrolled pages also run the
+  full harness-owned navigation/state/Restart procedure in sandbox pointer, keyboard and both phone-touch contexts.
 - **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion. Enrolled
   pages additionally run navigation and objectives by pointer, keyboard and 320/390 px touch; nested hints by pointer,
-  keyboard and phone touch; every locked future activation; a fresh future fragment; monotonic frontier/no-navigation-
-  credit checks; preserved input/attempt/feedback/completion/credit/grade/Continue state; current-only Restart after a
-  wrong attempt and after completion; exact one-credit re-completion; and unchanged required accounting while hints or
-  optional disclosures are used.
+  keyboard and phone touch; every locked future activation and fragment; explicit destination focus; monotonic
+  frontier/no-navigation-credit; complete root, live-control and per-activity preservation including required time and
+  page completion; history without focus movement; current-only Restart after wrong and completed attempts while other
+  populated activities stay exact; one-credit re-completion; and unchanged accounting while optional guidance is used.
 - **T12:** permits no serious or critical axe findings; runs the keyboard and reduced-motion success routes; requires
   `aria-live`; checks direct body text at 4.5:1 and rendered borders at 3:1 in forced light and dark themes. Fully
   transparent borders are not rendered and are excluded.

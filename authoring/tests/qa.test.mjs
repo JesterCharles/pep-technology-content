@@ -158,12 +158,20 @@ test("QA private-success proof binds only current public bytes", async () => {
     const receiptRoot = path.join(root, "authoring/evidence/course");
     const receiptFile = path.join(root, `authoring/evidence/${owner}/qa-receipt.json`);
     await writeFile(receiptFile, `${JSON.stringify({ privateSuccessProof: proof })}\n`);
+    for (const args of [["add", path.relative(root, receiptFile)], ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit", "-qm", "record private proof"]]) {
+      const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+      assert.equal(result.status, 0, result.stderr);
+    }
     assert.deepEqual(await validateQaPrivateProofs(root, receiptRoot), []);
     await writeFile(path.join(root, `${owner}/artifact.html`), "changed public artifact\n");
     assert.match((await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "), /stale private-success public binding/);
-    proof.publicBindings.push({ file: `${owner}/private-solution.txt`, reviewedSha256: "0".repeat(64) });
+    proof.publicBindings.push({ file: `${owner}/correct-input.json`, reviewedSha256: "0".repeat(64) });
     await writeFile(receiptFile, `${JSON.stringify({ privateSuccessProof: proof })}\n`);
-    assert.match((await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "), /private material cannot be bound/);
+    assert.match((await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "), /exact five approved public paths/);
+    proof.publicBindings.pop();
+    proof.publicBindings.pop();
+    await writeFile(receiptFile, `${JSON.stringify({ privateSuccessProof: proof })}\n`);
+    assert.match((await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "), /exact five approved public paths/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -186,6 +194,9 @@ test("qa-receipt schema records public-only private success metadata", async () 
   assert.equal(validate(proof), true, JSON.stringify(validate.errors));
   proof.privateSuccessProof.privateInputHash = "3".repeat(64);
   assert.equal(validate(proof), false);
+  delete proof.privateSuccessProof.privateInputHash;
+  proof.privateSuccessProof.publicBindings.push({ file: "public/correct-input.json", reviewedSha256: "3".repeat(64) });
+  assert.equal(validate(proof), false);
 });
 
 test("private overlay runs success, retry, keyboard and sandbox without repository output", { timeout: 60000 }, async () => {
@@ -193,6 +204,10 @@ test("private overlay runs success, retry, keyboard and sandbox without reposito
   const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-"));
   const overlayFile = path.join(staging, "overlay.json");
   try {
+    for (const file of ["authoring/tools/qa/harness.mjs", "authoring/tools/qa/python-answer-scan.py", "authoring/tools/checks/T08-html-static.mjs"]) {
+      await mkdir(path.dirname(path.join(repository.root, file)), { recursive: true });
+      await writeFile(path.join(repository.root, file), await readFile(path.resolve(file)));
+    }
     for (const args of [["init", "-q", "-b", "main"], ["add", "."], ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit", "-qm", "public fixture"]]) {
       const result = spawnSync("git", args, { cwd: repository.root, encoding: "utf8" });
       assert.equal(result.status, 0, result.stderr);
@@ -209,6 +224,14 @@ test("private overlay runs success, retry, keyboard and sandbox without reposito
       },
     };
     await writeFile(overlayFile, `${JSON.stringify(overlay)}\n`);
+    await writeFile(path.join(repository.root, "untracked-private-proof.txt"), "dirty\n");
+    await assert.rejects(runPrivateOverlay(context(repository.root), overlayFile), /clean public commit/);
+    await rm(path.join(repository.root, "untracked-private-proof.txt"));
+    const artifactFile = path.join(repository.root, "course/module/topic/artifact.html");
+    const artifactBytes = await readFile(artifactFile);
+    await writeFile(artifactFile, Buffer.concat([artifactBytes, Buffer.from("<!-- dirty -->\n")]));
+    await assert.rejects(runPrivateOverlay(context(repository.root), overlayFile), /clean public commit/);
+    await writeFile(artifactFile, artifactBytes);
     const result = await runPrivateOverlay(context(repository.root), overlayFile);
     assert.match(result.commit, /^[a-f0-9]{40}$/u);
     assert.equal(result.result, "pass");
@@ -280,12 +303,25 @@ test("T09 catches every no-JavaScript anchor pair and per-page print restoration
     ["timeline", (html) => html.replace('href="#activity-2" data-pep-activity-link', 'href="#activity-3" data-pep-activity-link'), /timeline href\/id order mismatch/],
     ["back link", (html) => html.replace('href="#activity-1" data-pep-back-link', 'href="#activity-3" data-pep-back-link'), /back link does not resolve/],
     ["print completeness", (html) => html.replace("@media print {", "@media print { .activity-checks { display:none!important; }"), /print hides required/],
+    ["print objective body", (html) => html.replace("@media print {", "@media print { #objectives-body { display:none!important; }"), /objectives body/],
+    ["print hint step", (html) => html.replace("@media print {", "@media print { [data-pep-hint-step] { display:none!important; }"), /hint reasoning step/],
+    ["print optional cue", (html) => html.replace("@media print {", "@media print { .pep-optional__cue { display:none!important; }"), /pep-optional__cue/],
+    ["print static alternative", (html) => html.replace("@media print {", "@media print { [data-static-alt] { display:none!important; }"), /static alternative/],
     ["print restoration", (html) => html.replace("printOpened.forEach(details => { details.open = false; });", "printOpened.forEach(details => { details.open = true; });"), /did not restore exact disclosure state/],
   ];
   for (const [name, transformHtml, pattern] of mutations) {
     const errors = await runFixture("T09", "good.html", { transformHtml });
     assertPreciseFailure(errors, "T09", pattern);
   }
+});
+
+test("T09 prints a singleton hint as concrete learner content", { timeout: 60000 }, async () => {
+  const errors = await runFixture("T09", "good.html", {
+    transformHtml: (html) => html
+      .replace(/\s*<details class="pep-hint" data-pep-hint data-pep-hint-for="task-safe" data-pep-hint-order="2"[\s\S]*?<\/details>/u, "")
+      .replaceAll("1 of 2", "1 of 1"),
+  });
+  assert.deepEqual(errors, []);
 });
 
 test("T10 catches a form-submission dependency in the strict sandbox", { timeout: 60000 }, async () => {
@@ -316,6 +352,17 @@ test("T11 harness-owned guidance invariants catch accepted state mutations", { t
     const errors = await runFixture("T11", "good.html", { transformHtml });
     assert.notDeepEqual(errors, [], `${name} mutation unexpectedly passed`);
     assert.equal(errors[0].rule, "T11", name);
+  }
+});
+
+test("T10/T11 reject vacuous author guidance routes because semantic postconditions are harness-owned", { timeout: 120000 }, async () => {
+  const spec = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
+  for (const name of ["activityNavigation", "activityNavigationKeyboard", "activityNavigationTouch"]) {
+    spec.guidance[name] = [{ do: "expectVisible", selector: "body" }];
+  }
+  for (const rule of ["T10", "T11"]) {
+    const errors = await runFixture(rule, "good.html", { spec });
+    assertPreciseFailure(errors, rule, /guidance setup did not establish/);
   }
 });
 
@@ -509,8 +556,8 @@ test("T13 catches touch targets below 44 by 44 CSS pixels", { timeout: 60000 }, 
 test("T13 opens guidance disclosures and sizes ordinary anchors on phones", { timeout: 60000 }, async () => {
   let errors = await runFixture("T13", "good.html", {
     transformHtml: (html) => html.replace(
-      "Rule out any action that sends information elsewhere.</p>",
-      "Rule out any action that sends information elsewhere.</p><span data-essential style=\"display:block;width:1000px\">Revealed overflow</span>",
+      "Decide whether each effect remains in this page or crosses a boundary.</p>",
+      "Decide whether each effect remains in this page or crosses a boundary.</p><span data-essential style=\"display:block;width:1000px\">Revealed overflow</span>",
     ),
   });
   assertPreciseFailure(errors, "T13", /horizontal overflow|clipped essentials/);
@@ -558,6 +605,21 @@ test("optional anecdotes use balanced parsed validation without magic cue words"
   assert.match((await validateOptionalDisclosures(syntaxMap)).join("; "), /must not contain code/);
   const commandBlock = html.replace("data-pep-anecdote-story", "data-pep-anecdote-story data-command");
   assert.match((await validateOptionalDisclosures(commandBlock)).join("; "), /must be code-free/);
+  for (const technical of [
+    "A clerk uses list.append(parcel) before lunch.",
+    "A traveler runs curl https://example.invalid from a kiosk.",
+    "A stocker types ls -la beside the shelf.",
+    "The sign reads NameError: name parcel is not defined.",
+    "Traceback (most recent call last) appeared on the board.",
+  ]) {
+    const mutation = html.replace("A shopper walks one aisle and places only useful items into a fresh basket.", technical);
+    assert.match((await validateOptionalDisclosures(mutation)).join("; "), /must not contain code, API calls, commands or exact exception/);
+  }
+  const ordinary = html.replace(
+    "A shopper walks one aisle and places only useful items into a fresh basket.",
+    "At the airport terminal, a curled ribbon marks a parcel (fragile: keep upright) before the clerk prints its label.",
+  );
+  assert.deepEqual(await validateOptionalDisclosures(ordinary), []);
 });
 
 test("guidance contract parses objectives, conditional fit, checks and nested sequential hints", async () => {
@@ -570,23 +632,60 @@ test("guidance contract parses objectives, conditional fit, checks and nested se
   assert.match((await validateLearnerGuidance(html.replace('data-pep-hint-order="2"', 'data-pep-hint-order="3"'))).join("; "), /1\.\.N in DOM order/);
   assert.match((await validateLearnerGuidance(html.replace("Another hint, 2 of 2 for Activity 1", "Hint 1 of 2 for Activity 1"))).join("; "), /requires a unique ordinal|accessible names/);
   const duplicateClue = html
-    .replace("Compare the two result buttons below your note.", "Look at the result controls below your note.")
-    .replace("Prefer the action whose effect stays inside this page.", "Rule out any action that sends information elsewhere.");
+    .replace("Inspect the on-page feedback region after trying a control.", "Classify each result control below your note.")
+    .replace("Use where its result appears as evidence for your boundary classification.", "Decide whether each effect remains in this page or crosses a boundary.");
   assert.match((await validateLearnerGuidance(duplicateClue)).join("; "), /must not duplicate normalized clue text/);
   const siblingHints = html.replace(
-    /(<p data-pep-hint-step><strong>Next step:<\/strong> Rule out any action that sends information elsewhere\.<\/p>)\s*(<details class="pep-hint" data-pep-hint data-pep-hint-for="task-safe" data-pep-hint-order="2"[\s\S]*?<\/details>)\s*<\/div>\s*<\/details>/u,
+    /(<p data-pep-hint-step><strong>Next step:<\/strong> Decide whether each effect remains in this page or crosses a boundary\.<\/p>)\s*(<details class="pep-hint" data-pep-hint data-pep-hint-for="task-safe" data-pep-hint-order="2"[\s\S]*?<\/details>)\s*<\/div>\s*<\/details>/u,
     "$1\n            </div>\n          </details>\n          $2",
   );
   assert.notEqual(siblingHints, html);
   assert.match((await validateLearnerGuidance(siblingHints)).join("; "), /must be nested inside its predecessor/);
-  assert.match((await validateLearnerGuidance(html.replace('<p data-pep-hint-target><strong>Where to act:</strong> Look at the result controls below your note.</p>', '<p data-pep-hint-target></p>'))).join("; "), /exactly one non-empty target/);
-  assert.match((await validateLearnerGuidance(html.replace("Your note remains when you leave and return, and the local result is explained.", ""))).join("; "), /non-empty accepted activity-check/);
+  assert.match((await validateLearnerGuidance(html.replace('<p data-pep-hint-target><strong>Where to act:</strong> Classify each result control below your note.</p>', '<p data-pep-hint-target></p>'))).join("; "), /exactly one non-empty target/);
+  assert.match((await validateLearnerGuidance(html.replace("Your note remains when you leave and return, and the local result is explained.", ""))).join("; "), /activity-check block/);
   assert.match((await validateLearnerGuidance(html.replace('aria-controls="objectives-body"', 'aria-controls="missing-objectives"'))).join("; "), /must resolve to a non-empty descendant/);
   const fitBlock = html.match(/\s*<section data-pep-where-fits[\s\S]*?<\/section>\n/u)?.[0] ?? "";
   const withoutFit = html.replace(fitBlock, "\n");
   assert.deepEqual(await validateLearnerGuidance(withoutFit), []);
   const misplacedFit = withoutFit.replace("    <section data-pep-recap>", `${fitBlock}    <section data-pep-recap>`);
   assert.match((await validateLearnerGuidance(misplacedFit)).join("; "), /must follow its teaching and precede/);
+  const localFit = withoutFit.replace(' data-pep-workspace="activity"', "").replace(
+    '        <div id="task-explain" data-pep-task>',
+    `${fitBlock}        <div id="task-explain" data-pep-task>`,
+  );
+  assert.deepEqual(await validateLearnerGuidance(localFit), []);
+  const emptyTask = html
+    .replace("          <p>Choose the safe action below your note, then compare it with the explained result.</p>", "")
+    .replace('          <label for="activity-input">Your note</label><input id="activity-input" autocomplete="off">', "");
+  assert.match((await validateLearnerGuidance(emptyTask)).join("; "), /non-empty instructional text outside hints/);
+  const hiddenChecks = html.replace(
+    '<section class="activity-checks" data-pep-activity-checks aria-labelledby="checks-2">',
+    '<details><summary>Other material</summary><section class="activity-checks" data-pep-activity-checks aria-labelledby="checks-2">',
+  ).replace('</p></section>\n        <button type="button" id="wrong-two"', '</p></section></details>\n        <button type="button" id="wrong-two"');
+  assert.match((await validateLearnerGuidance(hiddenChecks)).join("; "), /visible peer activity-check block/);
+  const crossActivityHint = html.replaceAll('data-pep-hint-for="task-safe"', 'data-pep-hint-for="task-explain"');
+  assert.match((await validateLearnerGuidance(crossActivityHint)).join("; "), /same activity|requires a native hint/);
+  const detachedHint = html.replace(
+    '          <details class="pep-hint" data-pep-hint data-pep-hint-for="task-safe"',
+    '        </div>\n          <details class="pep-hint" data-pep-hint data-pep-hint-for="task-safe"',
+  ).replace(
+    '          </details>\n        </div>\n        <section class="activity-checks" data-pep-activity-checks aria-labelledby="checks-1">',
+    '          </details>\n        <section class="activity-checks" data-pep-activity-checks aria-labelledby="checks-1">',
+  );
+  assert.match((await validateLearnerGuidance(detachedHint)).join("; "), /contained by its owning task/);
+  const nestedFit = withoutFit.replace("    </section>\n\n    <div data-pep-workspace", `${fitBlock}    </section>\n\n    <div data-pep-workspace`);
+  assert.match((await validateLearnerGuidance(nestedFit)).join("; "), /peer region/);
+  const duplicateAria = html
+    .replace("<summary><span>Need a hint?</span>", '<summary aria-label="Shared hint"><span>Need a hint?</span>')
+    .replace("<summary><span>Another hint</span>", '<summary aria-label="Shared hint"><span>Another hint</span>');
+  assert.match((await validateLearnerGuidance(duplicateAria)).join("; "), /browser-computed hint names/);
+  const labelledCollision = html
+    .replace("<body>", '<body><span id="shared-hint-name">Shared hint</span>')
+    .replace("<summary><span>Need a hint?</span>", '<summary aria-labelledby="shared-hint-name"><span>Need a hint?</span>')
+    .replace("<summary><span>Another hint</span>", '<summary aria-labelledby="shared-hint-name"><span>Another hint</span>');
+  assert.match((await validateLearnerGuidance(labelledCollision)).join("; "), /browser-computed hint names/);
+  const wrongPrefix = html.replace("<span>Need a hint?</span>", "<span>Help first. Need a hint?</span>");
+  assert.match((await validateLearnerGuidance(wrongPrefix)).join("; "), /unique ordinal|visible prefix/);
   const commentOnly = html.replace('<details class="objectives" data-pep-objectives>', '<!-- <details data-pep-objectives><summary>Objectives</summary></details> -->\n      <details class="objectives">');
   assert.match((await validateLearnerGuidance(commentOnly)).join("; "), /one native objectives disclosure/);
 });
@@ -600,17 +699,31 @@ test("target-aware Python AST scanning rejects complete generic answers in every
   baseSpec.answerSafety = { task: "#task-safe", language: "python-comprehension", targets: ["picked"] };
   assert.deepEqual(await validateLearnerGuidance(baseHtml, baseSpec), []);
   const expression = "picked = [entry for entry in records]";
+  const bare = "[entry for entry in records]";
+  const encoded = Buffer.from(expression).toString("base64");
+  const percent = encodeURIComponent(expression);
+  const hex = [...Buffer.from(expression)].map((value) => `0x${value.toString(16).padStart(2, "0")}`).join(",");
   const mutations = [
     baseHtml.replace("Choose the safe action below your note", `${expression}. Choose the safe action below your note`),
     baseHtml.replace("Choose the safe action below your note", "picked = &#91;entry for entry in records&#93;. Choose the safe action below your note"),
-    baseHtml.replace("<script>", `<script>const publicExample = ${JSON.stringify(expression)};`),
+    baseHtml.replace("Decide whether each effect remains in this page or crosses a boundary.", `Use ${bare}.`),
+    baseHtml.replace("<script>", `<script>// ${expression}\n`),
+    baseHtml.replace("<script>", `<script>const publicExample = "picked = [entry " + "for entry in records]";`),
+    baseHtml.replace("<script>", '<script>const escaped = "\\u0070icked = [entry for entry in records]";'),
     baseHtml.replace("<script>", `<script>const publicTemplate = \`${expression}\`;`),
-    baseHtml.replace("Rule out any action that sends information elsewhere.", expression),
+    baseHtml.replace("Explain in the field below why your first action stays local.", `${expression}. Explain in the field below why your first action stays local.`),
+    baseHtml.replace('<textarea id="activity-two-input"></textarea>', `<textarea id="activity-two-input" data-answer=${JSON.stringify(expression)}></textarea>`),
     baseHtml.replace("The work must contact another system or coordinate several dependent steps.", expression),
-    baseHtml.replace("A shopper walks one aisle and places only useful items into a fresh basket.", expression),
+    baseHtml.replace("    <section data-pep-recap>", `    <section data-pep-recap><h2>Recap answer</h2><p>${expression}</p></section>\n    <section data-pep-recap>`),
+    baseHtml.replace("    <section data-pep-recap>", `    <!-- ${expression} -->\n    <section data-pep-recap>`),
     baseHtml.replace("    <section data-pep-recap>", `    <noscript>${expression}</noscript>\n    <section data-pep-recap>`),
     baseHtml.replace("    <section data-pep-recap>", `    <template>${expression}</template>\n    <section data-pep-recap>`),
     baseHtml.replace("    <section data-pep-recap>", `    <div data-static-alt=${JSON.stringify(expression)}>Static alternative</div>\n    <section data-pep-recap>`),
+    baseHtml.replace("Choose the safe action below your note", `picked = list(${bare}). Choose the safe action below your note`),
+    baseHtml.replace("Choose the safe action below your note", `(picked, spare) = (${bare}, 1). Choose the safe action below your note`),
+    baseHtml.replace("Choose the safe action below your note", `${encoded}. Choose the safe action below your note`),
+    baseHtml.replace("Choose the safe action below your note", `${percent}. Choose the safe action below your note`),
+    baseHtml.replace("Choose the safe action below your note", `${hex}. Choose the safe action below your note`),
   ];
   for (const mutation of mutations) {
     assert.match((await validateLearnerGuidance(mutation, baseSpec)).join("; "), /complete target comprehension expression/);
@@ -618,8 +731,31 @@ test("target-aware Python AST scanning rejects complete generic answers in every
   const qaMutation = structuredClone(baseSpec);
   qaMutation.simulatorEdges[0].actions[0].value = expression;
   assert.match((await validateLearnerGuidance(baseHtml, qaMutation)).join("; "), /complete target comprehension expression/);
+  const qaBare = structuredClone(baseSpec);
+  qaBare.simulatorEdges[0].actions[0] = { do: "fill", selector: "#activity-input", value: bare };
+  assert.match((await validateLearnerGuidance(baseHtml, qaBare)).join("; "), /complete target comprehension expression/);
+  const qaUnrelated = structuredClone(baseSpec);
+  qaUnrelated.simulatorEdges[0].actions[0] = { do: "fill", selector: "#page-title", value: bare };
+  assert.deepEqual(await validateLearnerGuidance(baseHtml, qaUnrelated), []);
+  for (const obscured of [
+    "picked = atob(encodedAnswer)",
+    `picked digest ${"a".repeat(64)}`,
+  ]) {
+    const mutation = baseHtml.replace("Choose the safe action below your note", `${obscured}. Choose the safe action below your note`);
+    assert.match((await validateLearnerGuidance(mutation, baseSpec)).join("; "), /must not encode, assemble or hash/);
+  }
   const scriptNearMiss = baseHtml.replace("<script>", '<script>const publicNearMiss = "picked = [entry for entry in records";');
   assert.deepEqual(await validateLearnerGuidance(scriptNearMiss, baseSpec), []);
+  const unrelatedTeaching = baseHtml.replace(
+    "Direct controls work without network access.",
+    "A generic example is [item for item in values]. Direct controls work without network access.",
+  );
+  assert.deepEqual(await validateLearnerGuidance(unrelatedTeaching, baseSpec), []);
+  const unrelatedAssignment = baseHtml.replace(
+    "Choose the safe action below your note",
+    "other = [entry for entry in records]. Choose the safe action below your note",
+  );
+  assert.deepEqual(await validateLearnerGuidance(unrelatedAssignment, baseSpec), []);
 });
 
 test("Python Activity 3 recipe is bounded and delegates semantic transfer proof to reviewers", async () => {
