@@ -11,22 +11,22 @@ It is not critic or reconciliation evidence: independent education and Java-SME 
 
 | Topic | Kind | Objectives | Activities | P50 / worst path / budget (min) | Page sha256 (prefix) |
 | --- | --- | --- | --- | --- | --- |
-| `access-modifiers` | core | 3 | predict → lanes → code → mcq | 7.45 / 14.03 / 15 | `3777641582f8d04c` |
-| `classes-and-objects` | core | 3 | predict → lanes → code → mcq | 8.32 / 14.65 / 15 | `e905025e1224c649` |
-| `constructors` | core | 3 | predict → lanes → code → mcq | 8.42 / 14.75 / 15 | `1f277247134456d6` |
-| `double-equals-vs-equals` | core | 3 | predict → lanes → code → mcq | 8.24 / 14.57 / 15 | `5dd9161d2567fda8` |
-| `encapsulation-with-getters-and-setters` | core | 3 | predict → lanes → code → mcq | 7.81 / 14.14 / 15 | `caf5bca0896b8806` |
-| `enums` | core | 3 | predict → lanes → code → mcq | 8.63 / 14.71 / 15 | `589549dfbd49f6c7` |
-| `final-and-tostring` | reading | 3 | predict → lanes → code → mcq | 7.95 / 14.53 / 15 | `3daa2b5b20b2bbda` |
-| `stack-vs-heap-and-object-references` | core | 3 | predict → lanes → mselect → mcq | 9.64 / 13.72 / 14 | `0c0c546356c6062a` |
-| `string-immutability` | core | 3 | predict → lanes → code → mcq | 7.58 / 14.16 / 15 | `f4dcde6911ed238d` |
+| `access-modifiers` | core | 3 | predict → lanes → code → mcq | 7.45 / 14.03 / 15 | `7acfc37840c4bf86` |
+| `classes-and-objects` | core | 3 | predict → lanes → code → mcq | 8.32 / 14.65 / 15 | `bd43efa5f6b02bf3` |
+| `constructors` | core | 3 | predict → lanes → code → mcq | 8.42 / 14.75 / 15 | `f2c637b37b65f391` |
+| `double-equals-vs-equals` | core | 3 | predict → lanes → code → mcq | 8.24 / 14.57 / 15 | `ed33f92a8a8bd2b2` |
+| `encapsulation-with-getters-and-setters` | core | 3 | predict → lanes → code → mcq | 7.81 / 14.14 / 15 | `2e24812095df1a3e` |
+| `enums` | core | 3 | predict → lanes → code → mcq | 8.63 / 14.71 / 15 | `23f2bcde3df45e8c` |
+| `final-and-tostring` | reading | 3 | predict → lanes → code → mcq | 7.95 / 14.53 / 15 | `0f8eca3608ea9048` |
+| `stack-vs-heap-and-object-references` | core | 3 | predict → lanes → mselect → mcq | 9.64 / 13.72 / 14 | `71354d66e5677c0b` |
+| `string-immutability` | core | 3 | predict → lanes → code → mcq | 7.58 / 14.16 / 15 | `14e9b2418f7e1efa` |
 
 ## 2. Template and engine provenance
 
 - Design source: root `DESIGN.md` and the guidance contract in candidate `885207e034695aaf109ef0afe61fb1de50af9468` (topic bar with Objectives disclosure and Restart, reversible Previous/Next with locked future steps, activity checks, nested progressive hints, Where this fits, optional Anecdote and Challenge, bounded editor workspace). No shared tooling, schema or component was changed.
 - Every page embeds the same shell bytes, so the shell is proven once and reused by hash:
-  - shell CSS sha256 `03e97961b2c532d178e22b7bc54a648381b7cd5b6c4106a0588ef0106548baef`
-  - activity engine JS sha256 `1dcb593c029273eee1ee7770ad641f84b2b167aedfe0b54781be70847824aa7f`
+  - shell CSS sha256 `5e59bb286dc42fa465ac0d64972bae066e009af56b7b5edd129e6f122ca2c804`
+  - activity engine JS sha256 `92e841c836358666cf295bd8cc4c7ff30642b0095eec178f29a705e2f5803792`
 - Page-specific bytes are the activity HTML and the `window.PEP_PAGE` data block (options, explanations, lane items and per-task structural checks).
 - `data-pep-guidance-contract` is set on each page. `qa-paths.json` follows the schema on `main`, which has no `guidance` object; when the candidate tooling lands, each page needs that object added (generalized-validator item, non-blocking per captain intent).
 
@@ -60,5 +60,6 @@ For all nine pages:
 ## 6. Status and hard blockers
 
 - Hard blockers found and fixed before checkpoint: the answer exposure through cheat sheets; and a code check that counted an unchanged starter as a try (it no longer does).
+- Correction after checkpoint `ff961d7` (firstmate inbox 003): T13 reported `ed-3` clipped on access-modifiers (desktop) and classes-and-objects (phone-320). Cause: the editor's line-number gutter grew past the textarea's height cap (400 px, or 240 px on narrow screens), so the code region scrolled and moved the textarea outside its box. The shared shell now caps the gutter at the same height, hides its overflow and keeps it scrolled in step with the textarea. Only those shell CSS and JS lines changed; page content, `artifact.md`, timing and QA routes are byte-identical to the checkpoint.
 - Open, owned by the next steps: independent Codex education and Java-SME exact-byte reviews of all nine pages (T25 critic coverage is expected to fail until they land); the GIFT, video and PDF companions; and the `guidance` QA object once the candidate tooling merges.
 
