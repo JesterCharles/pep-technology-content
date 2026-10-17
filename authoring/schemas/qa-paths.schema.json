@@ -49,7 +49,46 @@
         "credit": { "$ref": "#/$defs/assertion" }
       }
     },
-    "keyboard": { "$ref": "#/$defs/actions" }
+    "keyboard": { "$ref": "#/$defs/actions" },
+    "guidance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "activityNavigation",
+        "activityNavigationKeyboard",
+        "activityNavigationTouch",
+        "objectives",
+        "objectivesTouch"
+      ],
+      "properties": {
+        "activityNavigation": { "$ref": "#/$defs/actions" },
+        "activityNavigationKeyboard": { "$ref": "#/$defs/actions" },
+        "activityNavigationTouch": { "$ref": "#/$defs/actions" },
+        "objectives": { "$ref": "#/$defs/actions" },
+        "objectivesTouch": { "$ref": "#/$defs/actions" },
+        "hints": {
+          "oneOf": [
+            { "$ref": "#/$defs/actions" },
+            { "const": true }
+          ]
+        }
+      }
+    },
+    "answerSafety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task", "language", "targets"],
+      "properties": {
+        "task": { "type": "string", "pattern": "^#[A-Za-z][A-Za-z0-9_-]*$" },
+        "language": { "const": "python-comprehension" },
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[A-Za-z_]\\w*$" }
+        }
+      }
+    }
   },
   "$defs": {
     "actions": {
@@ -58,52 +97,106 @@
       "items": { "$ref": "#/$defs/action" }
     },
     "assertion": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["selector"],
-      "properties": {
-        "selector": { "type": "string", "minLength": 1 },
-        "text": { "type": "string" },
-        "value": { "type": "string" },
-        "attribute": { "type": "string", "minLength": 1 },
-        "equals": { "type": "string" }
-      },
-      "anyOf": [
-        { "required": ["text"] },
-        { "required": ["value"] },
-        { "required": ["attribute", "equals"] }
+      "oneOf": [
+        { "$ref": "#/$defs/textAssertion" },
+        { "$ref": "#/$defs/valueAssertion" },
+        { "$ref": "#/$defs/attributeAssertion" }
       ]
     },
-    "action": {
+    "textAssertion": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["do", "selector"],
+      "required": ["selector", "text"],
       "properties": {
-        "do": {
-          "enum": [
-            "click",
-            "check",
-            "fill",
-            "press",
-            "select",
-            "expectText",
-            "expectValue",
-            "expectAttribute",
-            "expectVisible",
-            "expectHidden",
-            "expectEnabled",
-            "expectDisabled",
-            "expectFocus"
-          ]
-        },
-        "selector": { "type": "string", "minLength": 1 },
-        "value": { "type": "string" },
-        "key": { "type": "string", "minLength": 1 },
-        "attribute": { "type": "string", "minLength": 1 },
-        "equals": { "type": "string" },
-        "text": { "type": "string" },
-        "timeoutMs": { "type": "integer", "minimum": 1, "maximum": 30000 }
+        "selector": { "$ref": "#/$defs/selector" },
+        "text": { "type": "string", "minLength": 1 }
       }
+    },
+    "valueAssertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selector", "value"],
+      "properties": {
+        "selector": { "$ref": "#/$defs/selector" },
+        "value": { "type": "string" }
+      }
+    },
+    "attributeAssertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selector", "attribute", "equals"],
+      "properties": {
+        "selector": { "$ref": "#/$defs/selector" },
+        "attribute": { "type": "string", "minLength": 1 },
+        "equals": { "type": "string" }
+      }
+    },
+    "selector": { "type": "string", "minLength": 1 },
+    "timeout": { "type": "integer", "minimum": 1, "maximum": 30000 },
+    "action": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["do"],
+          "properties": { "do": { "enum": ["goBack", "goForward"] } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["do", "selector"],
+          "properties": {
+            "do": { "enum": ["click", "check", "expectVisible", "expectHidden", "expectEnabled", "expectDisabled", "expectFocus"] },
+            "selector": { "$ref": "#/$defs/selector" },
+            "timeoutMs": { "$ref": "#/$defs/timeout" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["do", "selector", "value"],
+          "properties": {
+            "do": { "enum": ["fill", "select", "expectValue"] },
+            "selector": { "$ref": "#/$defs/selector" },
+            "value": { "type": "string" },
+            "timeoutMs": { "$ref": "#/$defs/timeout" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["do", "selector", "key"],
+          "properties": {
+            "do": { "const": "press" },
+            "selector": { "$ref": "#/$defs/selector" },
+            "key": { "type": "string", "minLength": 1 },
+            "timeoutMs": { "$ref": "#/$defs/timeout" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["do", "selector", "text"],
+          "properties": {
+            "do": { "const": "expectText" },
+            "selector": { "$ref": "#/$defs/selector" },
+            "text": { "type": "string", "minLength": 1 },
+            "timeoutMs": { "$ref": "#/$defs/timeout" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["do", "selector", "attribute", "equals"],
+          "properties": {
+            "do": { "const": "expectAttribute" },
+            "selector": { "$ref": "#/$defs/selector" },
+            "attribute": { "type": "string", "minLength": 1 },
+            "equals": { "type": "string" },
+            "timeoutMs": { "$ref": "#/$defs/timeout" }
+          }
+        }
+      ]
     }
   }
 }
