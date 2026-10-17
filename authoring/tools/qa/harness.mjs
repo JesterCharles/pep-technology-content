@@ -1,10 +1,12 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { spawnSync } from "node:child_process";
+import { mkdir, readFile, realpath, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
+import Ajv2020 from "ajv/dist/2020.js";
 import { chromium } from "playwright";
-import { evidencePath, findCourses, loadCourse, readJson } from "../lib/common.mjs";
+import { error, evidencePath, findCourses, loadCourse, readJson, relative, sha256, walk } from "../lib/common.mjs";
 
 export const VIEWPORTS = [
   { name: "desktop", width: 1366, height: 768, theme: "light", zoom: 1 },
@@ -24,6 +26,10 @@ const LEGACY_VIEWPORTS = [
 const PACKAGE = JSON.parse(
   await readFile(new URL("../../../package.json", import.meta.url), "utf8"),
 );
+const QA_PATH_SCHEMA = JSON.parse(
+  await readFile(new URL("../../schemas/qa-paths.schema.json", import.meta.url), "utf8"),
+);
+const validateQaPath = new Ajv2020({ allErrors: true, strict: false }).compile(QA_PATH_SCHEMA);
 
 function digest(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -77,11 +83,30 @@ function issue(rule, topic, detail) {
 }
 
 async function loadSpec(topic) {
+  let spec;
   try {
-    return await readJson(topic.spec);
+    spec = await readJson(topic.spec);
   } catch (error) {
     throw new Error(`${topic.displaySpec} is required and must be valid JSON: ${error.message}`);
   }
+  if (!validateQaPath(spec)) {
+    const detail = (validateQaPath.errors ?? [])
+      .map((item) => `${item.instancePath || "/"} ${item.message}`)
+      .join("; ");
+    throw new Error(`${topic.displaySpec} does not match qa-paths.schema.json: ${detail}`);
+  }
+  const html = await readFile(topic.html, "utf8");
+  const enrolled = /<main\b[^>]*\bdata-pep-guidance-contract(?:\s|=|>)/iu.test(html);
+  if (enrolled !== Boolean(spec.guidance)) {
+    throw new Error("data-pep-guidance-contract and spec.guidance must be present together");
+  }
+  if (enrolled) {
+    const hasHints = /<details\b[^>]*\bdata-pep-hint(?:\s|=|>)/iu.test(html);
+    if (hasHints !== Boolean(spec.guidance.hints)) {
+      throw new Error("spec.guidance.hints must be present exactly when the enrolled page contains hints");
+    }
+  }
+  return spec;
 }
 
 function attachDiagnostics(page, log) {
@@ -197,6 +222,24 @@ async function focusVisible(locator) {
 }
 
 async function perform(target, action, options = {}) {
+  if (action.do === "goBack") {
+    if (typeof target.goBack === "function") await target.goBack();
+    else {
+      const before = await target.evaluate(() => location.href);
+      await target.evaluate(() => history.back());
+      await target.waitForFunction((value) => location.href !== value, before);
+    }
+    return;
+  }
+  if (action.do === "goForward") {
+    if (typeof target.goForward === "function") await target.goForward();
+    else {
+      const before = await target.evaluate(() => location.href);
+      await target.evaluate(() => history.forward());
+      await target.waitForFunction((value) => location.href !== value, before);
+    }
+    return;
+  }
   const locator = target.locator(action.selector);
   const timeout = action.timeoutMs ?? 5000;
   if (action.do.startsWith("expect")) {
@@ -244,10 +287,19 @@ async function perform(target, action, options = {}) {
     }
   }
   if (action.do === "click") {
-    if (options.touch) await locator.tap();
+    await locator.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }));
+    if (typeof target.parentFrame === "function") await locator.evaluate((element) => element.click());
+    else if (options.touch) await locator.tap();
     else await locator.click();
   }
-  else if (action.do === "check") await locator.check();
+  else if (action.do === "check") {
+    if (typeof target.parentFrame === "function") {
+      await locator.evaluate((element) => {
+        if (!element.checked) element.click();
+        if (!element.checked) throw new Error("sandbox check did not select the control");
+      });
+    } else await locator.check();
+  }
   else if (action.do === "fill") await locator.fill(action.value ?? "");
   else if (action.do === "press") await locator.press(action.key);
   else if (action.do === "select") await locator.selectOption(action.value);
@@ -257,12 +309,412 @@ async function execute(target, actions, options = {}) {
   for (const action of actions) await perform(target, action, options);
 }
 
+function requiredGuidanceState(state) {
+  const copy = structuredClone(state);
+  delete copy.focused;
+  delete copy.disclosures;
+  return copy;
+}
+
+async function exerciseSequentialHints(target, options = {}) {
+  if (options.unlockActions && !options.prepared) {
+    await execute(target, options.unlockActions, { keyboard: options.keyboard, touch: options.touch });
+  }
+  const owners = await target.locator('details[data-pep-hint][data-pep-hint-order="1"]').evaluateAll((nodes) => {
+    const activities = [...document.querySelectorAll("[data-pep-activity]")];
+    return nodes.map((hint, index) => {
+      const activity = hint.closest("[data-pep-activity]");
+      const task = hint.closest("[data-pep-task]");
+      return {
+        index,
+        activity: activities.indexOf(activity) + 1,
+        taskId: task?.id ?? "",
+        hintFor: hint.getAttribute("data-pep-hint-for") ?? "",
+      };
+    });
+  });
+  const names = new Set();
+  for (const owner of owners) {
+    const state = await guidanceState(target);
+    if (owner.activity < 1 || owner.activity > Number(state.frontier)) {
+      throw new Error(`hint owner ${owner.taskId || owner.index + 1} remains beyond unlocked frontier ${state.frontier}`);
+    }
+    if (owner.taskId !== owner.hintFor) throw new Error(`hint owner ${owner.taskId || owner.index + 1} does not match its task`);
+    if (state.current !== String(owner.activity)) {
+      await activateGuidance(target.locator("[data-pep-activity-link]").nth(owner.activity - 1), options.keyboard ? "keyboard" : options.touch ? "touch" : "pointer");
+      await expectDestination(target, owner.activity, state);
+    }
+    const activity = target.locator("[data-pep-activity]").nth(owner.activity - 1);
+    const task = activity.locator(`#${owner.taskId}`);
+    const hints = task.locator("details[data-pep-hint]");
+    const count = await hints.count();
+    for (let index = 0; index < count; index++) {
+      const hint = hints.nth(index);
+      const summary = hint.locator(":scope > summary");
+      if (index > 0 && await summary.isVisible()) throw new Error("a later hint is visible before its predecessor opens");
+    }
+    for (let index = 0; index < count; index++) {
+      const hint = hints.nth(index);
+      const summary = hint.locator(":scope > summary");
+      if (!(await summary.isVisible())) throw new Error(`hint ${index + 1} for ${owner.taskId} is unavailable after its predecessor opens`);
+      const name = await summary.evaluate((element) => {
+        const normalize = (value) => (value ?? "").replace(/\s+/gu, " ").trim();
+        const labelled = (element.getAttribute("aria-labelledby") ?? "").split(/\s+/u).filter(Boolean)
+          .map((id) => document.getElementById(id)?.textContent ?? "").join(" ");
+        return normalize(labelled || element.getAttribute("aria-label") || element.innerText);
+      });
+      const ordinal = index + 1;
+      const prefix = ordinal === 1 ? "Need a hint?" : "Another hint";
+      if (!name.startsWith(prefix) || !name.includes(`${ordinal} of ${count}`) || !name.includes(`Activity ${owner.activity}`)) {
+        throw new Error(`hint ${ordinal} for ${owner.taskId} has incomplete accessible name ${JSON.stringify(name)}`);
+      }
+      if (names.has(name)) throw new Error(`hint accessible name is not unique: ${JSON.stringify(name)}`);
+      names.add(name);
+      const before = requiredGuidanceState(await guidanceState(target));
+      if (options.keyboard) {
+        if (!(await focusVisible(summary))) throw new Error(`hint ${ordinal} for ${owner.taskId} has no visible focus indicator`);
+        await summary.press("Enter");
+      } else if (options.touch) {
+        await summary.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }));
+        await summary.tap();
+      } else await summary.click();
+      if (!(await summary.evaluate((element) => element === document.activeElement))) throw new Error(`hint ${ordinal} for ${owner.taskId} lost focus after activation`);
+      if ((await hint.getAttribute("open")) === null) throw new Error(`hint ${ordinal} for ${owner.taskId} did not open`);
+      const targetClue = hint.locator(":scope > .pep-hint__body > [data-pep-hint-target]");
+      const step = hint.locator(":scope > .pep-hint__body > [data-pep-hint-step]");
+      if (!(await targetClue.isVisible()) || !(await targetClue.innerText()).trim()) throw new Error(`hint ${ordinal} target is not visible`);
+      if (!(await step.isVisible()) || !(await step.innerText()).trim()) throw new Error(`hint ${ordinal} next step is not visible`);
+      const after = requiredGuidanceState(await guidanceState(target));
+      sameState(after, before, `opening hint ${ordinal} for ${owner.taskId} changed required state`);
+      if (options.afterOpen) await options.afterOpen(index, hint);
+    }
+  }
+}
+
+async function guidanceState(target) {
+  return target.locator("[data-pep-guidance-contract]").evaluate((root) => {
+    const allActivities = [...root.querySelectorAll("[data-pep-activity]")];
+    const controls = [...root.querySelectorAll("input, textarea, select")].map((control) => ({
+      id: control.id,
+      name: control.name,
+      tag: control.tagName,
+      type: control.type,
+      activity: allActivities.findIndex((activity) => activity.contains(control)) + 1,
+      value: control.value,
+      checked: control.checked,
+      selectedIndex: control.selectedIndex,
+    }));
+    const activities = [...root.querySelectorAll("[data-pep-activity]")].map((activity) => ({
+      id: activity.id,
+      attempts: activity.dataset.pepAttempts,
+      settled: activity.dataset.pepSettled,
+      completed: activity.dataset.pepCompleted,
+      credit: activity.dataset.pepCredit,
+      grade: activity.dataset.pepGrade,
+      canContinue: activity.dataset.pepContinue,
+      feedback: [...activity.querySelectorAll("[data-pep-feedback]")].map((node) => ({
+        text: node.textContent,
+        hidden: node.hidden,
+      })),
+    }));
+    return {
+      current: root.dataset.pepCurrentActivity,
+      frontier: root.dataset.pepUnlockedThrough,
+      requiredMinutes: root.dataset.pepRequiredMinutes,
+      complete: root.dataset.pepComplete,
+      controls,
+      activities,
+      hash: location.hash,
+      focused: document.activeElement?.id ?? "",
+      disclosures: [...root.querySelectorAll("details")].map((item) => item.open),
+    };
+  });
+}
+
+function preservedGuidance(state) {
+  const copy = structuredClone(state);
+  delete copy.current;
+  delete copy.hash;
+  delete copy.focused;
+  return copy;
+}
+
+function sameState(actual, expected, message) {
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error(message);
+}
+
+async function expectRenderedCurrentGuidance(target) {
+  const result = await target.locator("[data-pep-guidance-contract]").evaluate((root) => {
+    const normalize = (value) => (value ?? "").replace(/\s+/gu, " ").trim();
+    const rendered = (node) => {
+      if (!node?.getClientRects().length) return false;
+      const hasZeroOpacityFilter = (filter) => [...filter.matchAll(/\bopacity\(\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))(%?)\s*\)/giu)]
+        .some((match) => Number(match[1]) === 0);
+      for (let current = node; current && current !== document; current = current.parentElement) {
+        const style = getComputedStyle(current);
+        if (style.display === "none" || style.visibility === "hidden" || style.visibility === "collapse" ||
+            style.contentVisibility === "hidden" || Number(style.opacity) === 0 || hasZeroOpacityFilter(style.filter)) return false;
+      }
+      return true;
+    };
+    const visibleOwnedText = (owner, excluded) => {
+      const walker = document.createTreeWalker(owner, NodeFilter.SHOW_TEXT);
+      const values = [];
+      while (walker.nextNode()) {
+        const parent = walker.currentNode.parentElement;
+        if (!parent || parent.closest(excluded) || !rendered(parent)) continue;
+        const value = normalize(walker.currentNode.textContent);
+        if (value) values.push(value);
+      }
+      return normalize(values.join(" "));
+    };
+    const current = root.querySelector("[data-pep-activity]:not([hidden])");
+    if (!current) return "current activity is not rendered";
+    const tasks = [...current.querySelectorAll("[data-pep-task]")]
+      .filter((task) => task.closest("[data-pep-activity]") === current);
+    if (!tasks.length || tasks.some((task) => !rendered(task) ||
+        !visibleOwnedText(task, "details[data-pep-hint], template, script, style"))) {
+      return "current task is hidden or has no rendered instructional text";
+    }
+    const checks = [...current.querySelectorAll("[data-pep-activity-checks]")]
+      .filter((check) => check.closest("[data-pep-activity]") === current);
+    if (checks.length !== 1 || !rendered(checks[0])) return "current activity-check block is not rendered";
+    const check = checks[0];
+    const headings = [...check.querySelectorAll(":scope > h2, :scope > h3")]
+      .filter((heading) => rendered(heading) && /^(What success looks like|Activity checks)$/u.test(normalize(heading.innerText)));
+    if (headings.length !== 1) return "current activity-check heading is hidden or empty";
+    const criteria = [...check.querySelectorAll(":scope > p, :scope > ul > li, :scope > ol > li")]
+      .filter((criterion) => criterion.closest("[data-pep-activity-checks]") === check &&
+        rendered(criterion) && normalize(criterion.innerText));
+    if (!criteria.length) return "current activity-check criteria are hidden or empty";
+    return "";
+  });
+  if (result) throw new Error(result);
+}
+
+async function divergeCurrentControls(target, current, authored, label, mode) {
+  const authoredById = new Map(authored.map((control) => [control.id, control]));
+  const controls = target.locator("[data-pep-activity]:not([hidden]) input, [data-pep-activity]:not([hidden]) textarea, [data-pep-activity]:not([hidden]) select");
+  const handledRadioGroups = new Set();
+  for (let index = 0; index < await controls.count(); index++) {
+    const control = controls.nth(index);
+    if (!(await control.isVisible())) continue;
+    const metadata = await control.evaluate((element) => ({
+      id: element.id,
+      name: element.name,
+      disabled: element.disabled,
+      readOnly: element.readOnly,
+      tag: element.tagName,
+      type: element.type,
+      checked: element.checked,
+      value: element.value,
+      options: element.tagName === "SELECT"
+        ? [...element.options].map((option, optionIndex) => ({ optionIndex, disabled: option.disabled }))
+        : [],
+    }));
+    const authoredControl = metadata.id ? authoredById.get(metadata.id) : authored[index];
+    if (!authoredControl || metadata.disabled || metadata.readOnly || metadata.type === "hidden" || metadata.type === "file") continue;
+    if (metadata.type === "checkbox") {
+      if (metadata.checked === authoredControl.checked) {
+        if (mode === "keyboard") { await control.focus(); await control.press("Space"); }
+        else if (metadata.checked) await control.uncheck(); else await control.check();
+      }
+    } else if (metadata.type === "radio") {
+      const group = metadata.name || `#${metadata.id}`;
+      if (handledRadioGroups.has(group)) continue;
+      handledRadioGroups.add(group);
+      const radios = [];
+      for (let radioIndex = 0; radioIndex < await controls.count(); radioIndex++) {
+        const radio = controls.nth(radioIndex);
+        const item = await radio.evaluate((element) => ({ id: element.id, name: element.name, type: element.type, value: element.value, disabled: element.disabled }));
+        if (item.type === "radio" && (item.name || `#${item.id}`) === group && !item.disabled && await radio.isVisible()) radios.push({ radio, item });
+      }
+      const authoredChecked = authored.find((item) => item.type === "radio" && (item.name || `#${item.id}`) === group && item.checked);
+      const alternative = radios.find(({ item }) => item.id !== authoredChecked?.id || item.value !== authoredChecked?.value);
+      if (alternative) {
+        if (mode === "keyboard") { await alternative.radio.focus(); await alternative.radio.press("Space"); }
+        else await alternative.radio.check();
+      }
+    } else if (metadata.tag === "SELECT") {
+      const alternative = metadata.options.find((option) => !option.disabled && option.optionIndex !== authoredControl.selectedIndex);
+      if (alternative && metadata.value === authoredControl.value && mode === "keyboard") {
+        await control.focus();
+        await control.press("Home");
+        for (let step = 0; step < alternative.optionIndex; step++) await control.press("ArrowDown");
+      } else if (alternative && metadata.value === authoredControl.value) await control.selectOption({ index: alternative.optionIndex });
+    } else if (mode === "keyboard") {
+      await control.focus();
+      await control.press("ControlOrMeta+A");
+      await control.pressSequentially(`pep-restart-${label}-${index}`);
+    } else if (await control.isEditable()) {
+      await control.fill(`pep-restart-${label}-${index}`);
+    }
+  }
+  const changed = (await guidanceState(target)).controls.filter((control) => control.activity === current);
+  if (JSON.stringify(changed) === JSON.stringify(authored)) {
+    throw new Error(`Restart ${label} check could not establish non-authored current controls`);
+  }
+}
+
+async function activateGuidance(locator, mode) {
+  if (await locator.getAttribute("aria-disabled") === "true") {
+    if (mode === "keyboard") {
+      await locator.focus();
+      await locator.press("Enter");
+    } else await locator.dispatchEvent("click");
+    return;
+  }
+  if (mode === "keyboard") {
+    if (!(await focusVisible(locator))) {
+      const identity = await locator.evaluate((element) => `${element.tagName.toLowerCase()}#${element.id || "(no-id)"}`);
+      throw new Error(`guidance navigation ${identity} has no visible focus indicator`);
+    }
+    await locator.press("Enter");
+  } else {
+    await locator.evaluate((element) => element.scrollIntoView({ block: "center", inline: "nearest" }));
+    if (await locator.evaluate(() => window !== window.top)) await locator.evaluate((element) => element.click());
+    else if (mode === "touch") await locator.tap();
+    else await locator.click();
+  }
+}
+
+async function expectDestination(target, number, before, { history = false } = {}) {
+  const after = await guidanceState(target);
+  if (after.current !== String(number) || after.hash !== `#activity-${number}`) {
+    throw new Error(`navigation did not select canonical activity ${number}`);
+  }
+  sameState(preservedGuidance(after), preservedGuidance(before), "navigation changed non-navigation state");
+  await expectRenderedCurrentGuidance(target);
+  if (!history) {
+    const headingId = await target.locator(`#activity-${number}`).getAttribute("aria-labelledby");
+    if (!headingId || after.focused !== headingId) throw new Error(`navigation did not focus activity ${number} heading`);
+  }
+  return after;
+}
+
+async function traverseHistory(target, direction) {
+  const before = await target.evaluate(() => location.href);
+  if (typeof target[direction] === "function") await target[direction]();
+  else {
+    await target.evaluate((method) => history[method](), direction === "goBack" ? "back" : "forward");
+    await target.waitForFunction((value) => location.href !== value, before);
+  }
+}
+
+async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
+  const root = target.locator("[data-pep-guidance-contract]");
+  const activities = target.locator("[data-pep-activity]");
+  const links = target.locator("[data-pep-activity-link]");
+  const count = await activities.count();
+  const inFrame = await root.evaluate(() => window !== window.top);
+  const initial = await guidanceState(target);
+  if (!initial.current || !initial.frontier || !initial.requiredMinutes || count < 2) throw new Error("guidance state hooks are incomplete");
+  await expectRenderedCurrentGuidance(target);
+  await activateGuidance(links.last(), mode);
+  sameState(requiredGuidanceState(await guidanceState(target)), requiredGuidanceState(initial), "locked future timeline activation changed guidance state");
+
+  await execute(target, setupActions, { keyboard: mode === "keyboard", touch: mode === "touch" });
+  let prepared = await guidanceState(target);
+  if (prepared.requiredMinutes !== initial.requiredMinutes) throw new Error("guidance setup changed authored required time");
+  if (prepared.activities.some((activity) => Number(activity.credit) > 1)) throw new Error("guidance setup awarded more than one credit to an activity");
+  const completionCheckpoint = prepared.complete;
+  await expectRenderedCurrentGuidance(target);
+  const meaningful = (control) => control.type === "checkbox" || control.type === "radio" ? control.checked : Boolean(control.value);
+  const populatedActivities = prepared.activities.filter((activity, index) =>
+    prepared.controls.some((control) => control.activity === index + 1 && meaningful(control)));
+  const current = Number(prepared.current);
+  const currentState = prepared.activities[current - 1];
+  if (current < 2 || !currentState || Number(currentState.attempts) < 1 || currentState.settled !== "false" ||
+      currentState.completed !== "false" || currentState.credit !== "0" || currentState.canContinue !== "false") {
+    throw new Error("guidance setup must finish on a later attempted but incomplete unlocked activity");
+  }
+  if (!prepared.activities.some((activity, index) => index < current - 1 && activity.settled === "true" && activity.completed === "true" && activity.credit === "1" && activity.grade === "0") ||
+      Number(prepared.frontier) < 2 || populatedActivities.length < 2) {
+    throw new Error("guidance setup did not establish preserved inputs, prior settlement and a monotonic frontier");
+  }
+
+  if (!inFrame) {
+    const historyBase = prepared;
+    await activateGuidance(target.locator("[data-pep-previous]"), mode);
+    const historyPrevious = await guidanceState(target);
+    await traverseHistory(target, "goBack");
+    let historyState = await expectDestination(target, current, historyBase, { history: true });
+    await traverseHistory(target, "goForward");
+    historyState = await expectDestination(target, current - 1, historyPrevious, { history: true });
+    await activateGuidance(target.locator("[data-pep-next]"), mode);
+    prepared = await expectDestination(target, current, historyState);
+  }
+
+  await activateGuidance(target.locator("[data-pep-previous]"), mode);
+  let state = await expectDestination(target, current - 1, prepared);
+  await activateGuidance(target.locator("[data-pep-next]"), mode);
+  state = await expectDestination(target, current, state);
+  await activateGuidance(links.first(), mode);
+  state = await expectDestination(target, 1, state);
+  await activateGuidance(links.nth(current - 1), mode);
+  state = await expectDestination(target, current, state);
+  const back = target.locator(`#activity-${current} [data-pep-back-link]`);
+  await activateGuidance(back, mode);
+  state = await expectDestination(target, current - 1, state);
+
+  await activateGuidance(target.locator("[data-pep-next]"), mode);
+  prepared = await expectDestination(target, current, state);
+
+  const authoredCurrentControls = initial.controls.filter((control) => control.activity === current);
+  if (!authoredCurrentControls.length) throw new Error("current activity has no authored controls for Restart verification");
+  const otherBefore = prepared.activities.filter((_, index) => index !== current - 1);
+  const controlsBefore = prepared.controls.filter((control) => control.activity !== current);
+  await divergeCurrentControls(target, current, authoredCurrentControls, "wrong", mode);
+  await activateGuidance(target.locator("[data-pep-reset]"), mode);
+  const restartedWrong = await guidanceState(target);
+  const clean = restartedWrong.activities[current - 1];
+  if (clean.attempts !== "0" || clean.settled !== "false" || clean.completed !== "false" || clean.credit !== "0" ||
+      clean.grade !== "0" || clean.canContinue !== "false" || clean.feedback.some((item) => item.text.trim())) {
+    throw new Error("Restart after a wrong attempt left stale current-activity state");
+  }
+  sameState(restartedWrong.activities.filter((_, index) => index !== current - 1), otherBefore, "Restart changed another activity");
+  sameState(restartedWrong.controls.filter((control) => control.activity !== current), controlsBefore, "Restart changed another activity input");
+  sameState(restartedWrong.controls.filter((control) => control.activity === current), authoredCurrentControls, "Restart after a wrong attempt did not restore authored current controls");
+  if (restartedWrong.frontier !== prepared.frontier || restartedWrong.requiredMinutes !== initial.requiredMinutes || restartedWrong.complete !== completionCheckpoint) {
+    throw new Error("Restart changed frontier, required time or page completion");
+  }
+  await expectRenderedCurrentGuidance(target);
+
+  const completedNumber = restartedWrong.activities.findIndex((activity, index) =>
+    index < current - 1 && activity.settled === "true" && activity.completed === "true" && activity.credit === "1" && activity.grade === "0") + 1;
+  if (!completedNumber) throw new Error("guidance setup has no prior completed activity for Restart verification");
+  state = await guidanceState(target);
+  await activateGuidance(links.nth(completedNumber - 1), mode);
+  const completedBefore = await expectDestination(target, completedNumber, state);
+  const authoredCompletedControls = initial.controls.filter((control) => control.activity === completedNumber);
+  if (!authoredCompletedControls.length) throw new Error("prior completed activity has no authored controls for Restart verification");
+  await divergeCurrentControls(target, completedNumber, authoredCompletedControls, "completed", mode);
+  const beforeCompletedRestart = await guidanceState(target);
+  await activateGuidance(target.locator("[data-pep-reset]"), mode);
+  const restartedComplete = await guidanceState(target);
+  const resetActivity = restartedComplete.activities[completedNumber - 1];
+  if (resetActivity.attempts !== "0" || resetActivity.settled !== "false" || resetActivity.completed !== "false" ||
+      resetActivity.credit !== "0" || resetActivity.grade !== "0" || resetActivity.canContinue !== "false" ||
+      resetActivity.feedback.some((item) => item.text.trim())) {
+    throw new Error("Restart after completion left stale current state");
+  }
+  sameState(restartedComplete.activities.filter((_, index) => index !== completedNumber - 1), beforeCompletedRestart.activities.filter((_, index) => index !== completedNumber - 1), "completed Restart changed another activity");
+  sameState(restartedComplete.controls.filter((control) => control.activity !== completedNumber), beforeCompletedRestart.controls.filter((control) => control.activity !== completedNumber), "completed Restart changed another activity input");
+  sameState(restartedComplete.controls.filter((control) => control.activity === completedNumber), authoredCompletedControls, "Restart after completion did not restore authored current controls");
+  if (restartedComplete.frontier !== completedBefore.frontier || restartedComplete.requiredMinutes !== initial.requiredMinutes || restartedComplete.complete !== completionCheckpoint) {
+    throw new Error("completed Restart changed frontier, required time or page completion");
+  }
+  await expectRenderedCurrentGuidance(target);
+  if (await root.getAttribute("data-pep-current-activity") !== restartedComplete.current) throw new Error("current activity hook drifted");
+}
+
 async function withPage(browser, topic, options, callback) {
   const context = await browser.newContext({
     viewport: options.viewport ?? { width: 1366, height: 768 },
     colorScheme: options.theme ?? "light",
     reducedMotion: options.reducedMotion ? "reduce" : "no-preference",
     hasTouch: options.touch ?? false,
+    forcedColors: options.forcedColors ?? "none",
     javaScriptEnabled: options.javaScriptEnabled ?? true,
   });
   const page = await context.newPage();
@@ -289,61 +741,211 @@ async function withPage(browser, topic, options, callback) {
   }
 }
 
-async function sandboxFrame(page, topic) {
+async function sandboxFrame(page, topic, expectedViewport) {
+  const viewportStyle = expectedViewport
+    ? "<style>html,body{width:100%;height:100%;margin:0;overflow:hidden}#lesson{display:block;width:100%;height:100%;border:0}</style>"
+    : "";
   await page.setContent(
-    '<!doctype html><meta charset="utf-8"><iframe id="lesson" sandbox="allow-scripts"></iframe>',
+    `<!doctype html><meta charset="utf-8">${viewportStyle}<iframe id="lesson" sandbox="allow-scripts"></iframe>`,
   );
   const html = await readFile(topic.html, "utf8");
-  await page.locator("#lesson").evaluate((iframe, source) => {
+  await page.locator("#lesson").evaluate((iframe, source) => new Promise((resolve) => {
+    iframe.addEventListener("load", resolve, { once: true });
     iframe.srcdoc = source;
-  }, html);
-  await page.waitForFunction(() => {
-    const iframe = document.querySelector("#lesson");
-    return iframe?.contentWindow;
-  });
+  }), html);
   const frame = page.frames()[1];
   if (!frame) throw new Error("sandbox iframe did not load");
+  await frame.waitForFunction(() => document.readyState === "complete" && Boolean(document.body?.childElementCount));
+  if (expectedViewport) {
+    const actual = await frame.evaluate(() => ({ width: innerWidth, height: innerHeight }));
+    if (actual.width !== expectedViewport.width || actual.height !== expectedViewport.height) {
+      throw new Error(`sandbox child viewport ${actual.width}x${actual.height} does not match configured ${expectedViewport.width}x${expectedViewport.height}`);
+    }
+  }
   return frame;
 }
 
+async function checkSandboxGuidanceMatrix(browser, topic, spec) {
+  const configurations = [
+    { label: "sandbox-guidance-pointer", mode: "pointer", setup: spec.guidance.activityNavigation, viewport: { width: 1366, height: 768 } },
+    { label: "sandbox-guidance-keyboard", mode: "keyboard", setup: spec.guidance.activityNavigationKeyboard, viewport: { width: 1366, height: 768 } },
+    { label: "sandbox-guidance-touch-320", mode: "touch", setup: spec.guidance.activityNavigationTouch, viewport: { width: 320, height: 568 }, touch: true },
+    { label: "sandbox-guidance-touch-390", mode: "touch", setup: spec.guidance.activityNavigationTouch, viewport: { width: 390, height: 844 }, touch: true },
+  ];
+  for (const configuration of configurations) {
+    const context = await browser.newContext({ viewport: configuration.viewport, hasTouch: configuration.touch ?? false });
+    const page = await context.newPage();
+    try {
+      const frame = await sandboxFrame(page, topic, configuration.viewport);
+      await checkGuidanceInvariants(frame, configuration.setup, configuration.mode);
+      if (spec.guidance.hints) {
+        const hintPage = await context.newPage();
+        const hintFrame = await sandboxFrame(hintPage, topic, configuration.viewport);
+        await exerciseSequentialHints(hintFrame, {
+          keyboard: configuration.mode === "keyboard",
+          touch: configuration.mode === "touch",
+          unlockActions: spec.routes.wrongTwice,
+        });
+        await hintPage.close();
+      }
+    } finally {
+      await context.close();
+    }
+  }
+}
+
+async function checkPrint(browser, topic) {
+  await withPage(browser, topic, { label: "print" }, async (page) => {
+    if (!(await page.locator("[data-pep-guidance-contract]").count())) return;
+    const details = page.locator("details[data-pep-objectives], details[data-pep-hint], details[data-pep-optional]");
+    if (await details.count()) await details.first().locator(":scope > summary").click();
+    const before = await details.evaluateAll((items) => items.map((item) => item.open));
+    await page.evaluate(() => dispatchEvent(new Event("beforeprint")));
+    await page.emulateMedia({ media: "print" });
+    await semanticSurfaceAudit(page);
+    const visibleText = async (locator, label) => {
+      if (!(await locator.count()) || !(await locator.isVisible()) || !(await locator.innerText()).trim()) {
+        throw new Error(`print hides required ${label} content`);
+      }
+    };
+    for (const selector of ["[data-pep-activity]", "[data-pep-teaching]"]) {
+      const items = page.locator(selector);
+      for (let index = 0; index < await items.count(); index++) await visibleText(items.nth(index), selector);
+    }
+    const checks = page.locator("[data-pep-activity-checks]");
+    for (let index = 0; index < await checks.count(); index++) {
+      await visibleText(checks.nth(index).locator(":scope > h2, :scope > h3"), "activity-check heading");
+      await visibleText(checks.nth(index).locator(":scope > p, :scope > ul > li, :scope > ol > li").first(), "activity-check criteria");
+    }
+    const objectives = page.locator("details[data-pep-objectives]");
+    for (let index = 0; index < await objectives.count(); index++) {
+      const objective = objectives.nth(index);
+      const summary = objective.locator(":scope > summary");
+      await visibleText(summary, "objectives label");
+      const controlled = await summary.getAttribute("aria-controls");
+      if (!controlled) throw new Error("print objectives label has no controlled body");
+      await visibleText(page.locator(`#${controlled}`), "objectives body");
+      const items = page.locator(`#${controlled} li`);
+      for (let item = 0; item < await items.count(); item++) await visibleText(items.nth(item), "objective item");
+    }
+    const hints = page.locator("details[data-pep-hint]");
+    for (let index = 0; index < await hints.count(); index++) {
+      const hint = hints.nth(index);
+      await visibleText(hint.locator(":scope > summary"), "hint label");
+      await visibleText(hint.locator(":scope > .pep-hint__body > [data-pep-hint-target]"), "hint target");
+      await visibleText(hint.locator(":scope > .pep-hint__body > [data-pep-hint-step]"), "hint reasoning step");
+    }
+    const optionals = page.locator("details[data-pep-optional]");
+    for (let index = 0; index < await optionals.count(); index++) {
+      const optional = optionals.nth(index);
+      await visibleText(optional.locator(":scope > summary"), "optional label");
+      await visibleText(optional.locator(":scope > .pep-optional__body"), "optional body");
+      for (const selector of [".pep-optional__cue", "[data-pep-anecdote-story]", "[data-pep-anecdote-map]", "[data-pep-success-criteria]", "[data-pep-optional-time]"]) {
+        const items = optional.locator(selector);
+        for (let item = 0; item < await items.count(); item++) await visibleText(items.nth(item), selector);
+      }
+    }
+    const alternatives = page.locator("[data-static-alt]");
+    for (let index = 0; index < await alternatives.count(); index++) {
+      const alternative = alternatives.nth(index);
+      const rendered = await alternative.evaluate((node) => {
+        if (!node.getClientRects().length || getComputedStyle(node).visibility === "hidden") return "";
+        const pseudo = ["::before", "::after"].map((kind) => getComputedStyle(node, kind).content)
+          .filter((value) => value && value !== "none" && value !== "normal").join(" ");
+        return `${node.innerText} ${pseudo}`.replace(/(?:^|\s)["']|["'](?:\s|$)/gu, " ").trim();
+      });
+      if (!rendered) throw new Error("print hides required static alternative representation");
+    }
+    const navigation = page.locator('[data-pep-activity-link], [data-pep-previous], [data-pep-next], [data-pep-back-link], [aria-label="Activities"], [aria-label="Activity navigation"]');
+    for (let index = 0; index < await navigation.count(); index++) {
+      if (await navigation.nth(index).isVisible()) throw new Error("print must hide navigation-only controls");
+    }
+    await page.evaluate(() => dispatchEvent(new Event("afterprint")));
+    await page.emulateMedia({ media: "screen" });
+    const after = await details.evaluateAll((items) => items.map((item) => item.open));
+    if (JSON.stringify(after) !== JSON.stringify(before)) throw new Error("print did not restore exact disclosure state");
+  });
+}
+
 async function checkOffline(browser, topic) {
+  await loadSpec(topic);
   await withPage(browser, topic, {}, async () => {});
   await withPage(browser, topic, { javaScriptEnabled: false, label: "no-js" }, async (page) => {
     if (!(await page.locator("body").innerText()).trim()) throw new Error("no-JavaScript reading is empty");
-    const disclosures = page.locator("details[data-pep-optional]");
+    const laterHints = page.locator('details[data-pep-hint]:not([data-pep-hint-order="1"])');
+    for (let index = 0; index < await laterHints.count(); index++) {
+      if (await laterHints.nth(index).locator(":scope > summary").isVisible()) throw new Error("a later hint is operable before its predecessor opens");
+    }
+    const disclosures = page.locator("details[data-pep-optional], details[data-pep-hint], details[data-pep-objectives]");
     for (let index = 0; index < await disclosures.count(); index++) {
       const disclosure = disclosures.nth(index);
       const summary = disclosure.locator(":scope > summary");
-      if (!(await summary.innerText()).trim()) throw new Error("optional disclosure has no no-JavaScript summary");
+      if (!(await summary.innerText()).trim()) throw new Error("native disclosure has no no-JavaScript summary");
       await summary.click();
-      if ((await disclosure.getAttribute("open")) === null) throw new Error("optional disclosure did not open without JavaScript");
-      if (!(await disclosure.innerText()).trim()) throw new Error("optional disclosure has no no-JavaScript content");
+      if ((await disclosure.getAttribute("open")) === null) throw new Error("native disclosure did not open without JavaScript");
+      if (!(await disclosure.innerText()).trim()) throw new Error("native disclosure has no no-JavaScript content");
+    }
+    if (await page.locator("[data-pep-guidance-contract]").count()) {
+      const activities = page.locator("[data-pep-activity]");
+      const links = page.locator("a[data-pep-activity-link]");
+      const count = await activities.count();
+      if (count < 2 || await links.count() !== count) throw new Error("guided no-JavaScript reading requires one timeline anchor per activity");
+      for (let index = 0; index < count; index++) {
+        const activity = activities.nth(index);
+        const id = await activity.getAttribute("id");
+        if (!(await activity.isVisible())) throw new Error("no-JavaScript activity section is hidden");
+        if (await links.nth(index).getAttribute("href") !== `#${id}`) throw new Error("no-JavaScript timeline href/id order mismatch");
+        await links.nth(index).evaluate((link) => link.click());
+        if (await page.evaluate(() => location.hash) !== `#${id}`) throw new Error("no-JavaScript timeline anchor did not reach its activity");
+        const back = activity.locator("a[data-pep-back-link]");
+        if (index === 0 && await back.count()) throw new Error("first activity has an unexpected no-JavaScript back link");
+        if (index > 0) {
+          const priorId = await activities.nth(index - 1).getAttribute("id");
+          if (await back.count() !== 1 || await back.getAttribute("href") !== `#${priorId}`) throw new Error("no-JavaScript back link does not resolve to the predecessor");
+          await back.evaluate((link) => link.click());
+          if (await page.evaluate(() => location.hash) !== `#${priorId}`) throw new Error("no-JavaScript back link did not reach its predecessor");
+        }
+      }
     }
     const codeWorkspaces = page.locator('[data-pep-workspace="code"]');
     for (let index = 0; index < await codeWorkspaces.count(); index++) {
       const reading = codeWorkspaces.nth(index).locator("noscript[data-pep-no-js]");
-      if ((await reading.count()) !== 1 || !(await reading.innerText()).trim()) {
-        throw new Error("code workspace requires a complete noscript[data-pep-no-js] reading");
-      }
+      if ((await reading.count()) !== 1 || !(await reading.innerText()).trim()) throw new Error("code workspace requires a complete noscript[data-pep-no-js] reading");
     }
   });
+  await checkPrint(browser, topic);
 }
 
 async function checkSandbox(browser, topic) {
   const spec = await loadSpec(topic);
   const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
-  const page = await context.newPage();
+  let page;
   const diagnostics = [];
   await context.tracing.start({ screenshots: true, snapshots: true });
-  attachDiagnostics(page, diagnostics);
-  await blockNetwork(page, diagnostics);
+  const freshFrame = async () => {
+    if (page) await page.close();
+    page = await context.newPage();
+    attachDiagnostics(page, diagnostics);
+    await blockNetwork(page, diagnostics);
+    return sandboxFrame(page, topic);
+  };
   let failed = false;
   try {
     for (const name of ["success", "wrongFirst", "wrongTwice"]) {
-      const frame = await sandboxFrame(page, topic);
+      const frame = await freshFrame();
       await execute(frame, spec.routes[name]);
       await assertState(frame, spec.completion);
       await assertState(frame, spec.progress);
+    }
+    if (spec.guidance) {
+      for (const name of ["activityNavigation", "activityNavigationKeyboard", "activityNavigationTouch", "objectives", "objectivesTouch"]) {
+        const frame = await freshFrame();
+        await execute(frame, spec.guidance[name], { keyboard: name.endsWith("Keyboard") });
+      }
+      if (spec.guidance.hints) {
+        const frame = await freshFrame();
+        await exerciseSequentialHints(frame, { unlockActions: spec.routes.wrongTwice });
+      }
     }
     if (diagnostics.length) throw new Error(diagnostics.join("; "));
   } catch (error) {
@@ -356,6 +958,7 @@ async function checkSandbox(browser, topic) {
     if (!failed) await context.tracing.stop();
     await context.close();
   }
+  if (spec.guidance) await checkSandboxGuidanceMatrix(browser, topic, spec);
 }
 
 async function checkBehavior(browser, topic) {
@@ -374,20 +977,91 @@ async function checkBehavior(browser, topic) {
     await execute(page, spec.restart.actions);
     await assertState(page, spec.restart.credit);
   });
-  await withPage(browser, topic, { label: "optional-accounting" }, async (page) => {
-    const disclosures = page.locator("details[data-pep-optional]");
-    if ((await disclosures.count()) === 0) return;
-    const snapshot = async () => ({
-      completion: spec.completion.attribute
-        ? await page.locator(spec.completion.selector).getAttribute(spec.completion.attribute)
-        : await page.locator(spec.completion.selector).innerText(),
-      progress: spec.progress.attribute
-        ? await page.locator(spec.progress.selector).getAttribute(spec.progress.attribute)
-        : await page.locator(spec.progress.selector).innerText(),
+  if (spec.guidance) {
+    await withPage(browser, topic, { label: "activity-navigation" }, async (page) => execute(page, spec.guidance.activityNavigation));
+    await withPage(browser, topic, { label: "activity-navigation-keyboard" }, async (page) => execute(page, spec.guidance.activityNavigationKeyboard, { keyboard: true }));
+    for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
+      await withPage(browser, topic, { label: `activity-navigation-touch-${viewport.width}`, viewport, touch: true }, async (page) => execute(page, spec.guidance.activityNavigationTouch, { touch: true }));
+    }
+    await withPage(browser, topic, { label: "objectives" }, async (page) => execute(page, spec.guidance.objectives));
+    await withPage(browser, topic, { label: "objectives-keyboard" }, async (page) => {
+      const summary = page.locator("details[data-pep-objectives] > summary");
+      if (!(await focusVisible(summary))) throw new Error("objectives summary has no visible focus indicator");
+      await summary.press("Enter");
+      if ((await page.locator("details[data-pep-objectives]").getAttribute("open")) === null) throw new Error("keyboard did not open objectives");
+      await summary.press("Escape");
+      if ((await page.locator("details[data-pep-objectives]").getAttribute("open")) !== null) throw new Error("Escape did not close objectives");
+      if (!(await summary.evaluate((element) => element === document.activeElement))) throw new Error("Escape did not return focus to objectives summary");
     });
-    const before = await snapshot();
-    for (let index = 0; index < await disclosures.count(); index++) {
-      const disclosure = disclosures.nth(index);
+    for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
+      await withPage(browser, topic, { label: `objectives-touch-${viewport.width}`, viewport, touch: true }, async (page) => execute(page, spec.guidance.objectivesTouch, { touch: true }));
+    }
+    if (spec.guidance.hints) {
+      await withPage(browser, topic, { label: "hints-pointer" }, async (page) => exerciseSequentialHints(page, { unlockActions: spec.routes.wrongTwice }));
+      await withPage(browser, topic, { label: "hints-keyboard" }, async (page) => exerciseSequentialHints(page, { keyboard: true, unlockActions: spec.routes.wrongTwice }));
+      for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
+        await withPage(browser, topic, { label: `hints-touch-${viewport.width}`, viewport, touch: true }, async (page) => exerciseSequentialHints(page, { touch: true, unlockActions: spec.routes.wrongTwice }));
+      }
+    }
+    await withPage(browser, topic, { label: "future-fragment" }, async (page) => {
+      const before = await guidanceState(page);
+      await activateGuidance(page.locator("[data-pep-activity-link]").last(), "pointer");
+      const afterLocked = await guidanceState(page);
+      sameState(afterLocked, before, "locked future timeline activation changed guidance state");
+      const last = await page.locator("[data-pep-activity]").last().getAttribute("id");
+      await page.goto(`${pathToFileURL(topic.html).href}#${last}`, { waitUntil: "load" });
+      const state = await guidanceState(page);
+      if (state.frontier !== "1" || state.current !== "1" || state.hash !== "#activity-1") throw new Error("fresh future fragment unlocked or selected a future activity");
+    });
+    for (const configuration of [
+      { label: "owned-guidance-pointer", mode: "pointer", setup: spec.guidance.activityNavigation, viewport: { width: 1366, height: 768 } },
+      { label: "owned-guidance-keyboard", mode: "keyboard", setup: spec.guidance.activityNavigationKeyboard, viewport: { width: 1366, height: 768 } },
+      { label: "owned-guidance-touch-320", mode: "touch", setup: spec.guidance.activityNavigationTouch, viewport: { width: 320, height: 568 }, touch: true },
+      { label: "owned-guidance-touch-390", mode: "touch", setup: spec.guidance.activityNavigationTouch, viewport: { width: 390, height: 844 }, touch: true },
+    ]) {
+      await withPage(browser, topic, configuration, async (page) => {
+        await checkGuidanceInvariants(page, configuration.setup, configuration.mode);
+      });
+    }
+  }
+  await withPage(browser, topic, { label: "optional-accounting" }, async (page) => {
+    const optionals = page.locator("details[data-pep-optional]");
+    if ((await optionals.count()) === 0 && !spec.guidance?.hints) return;
+    if (spec.guidance) await execute(page, spec.routes.wrongTwice);
+    const snapshot = async () => {
+      const required = {
+        completion: spec.completion.attribute
+          ? await page.locator(spec.completion.selector).getAttribute(spec.completion.attribute)
+          : await page.locator(spec.completion.selector).innerText(),
+        progress: spec.progress.attribute
+          ? await page.locator(spec.progress.selector).getAttribute(spec.progress.attribute)
+          : await page.locator(spec.progress.selector).innerText(),
+      };
+      if (spec.guidance) {
+        const state = await guidanceState(page);
+        required.current = state.current;
+        required.frontier = state.frontier;
+        required.requiredMinutes = state.requiredMinutes;
+        required.complete = state.complete;
+        required.activities = state.activities;
+      }
+      return required;
+    };
+    for (let index = 0; index < await optionals.count(); index++) {
+      const disclosure = optionals.nth(index);
+      if (spec.guidance) {
+        const activityNumber = await disclosure.evaluate((element) => {
+          const activities = [...document.querySelectorAll("[data-pep-activity]")];
+          return activities.indexOf(element.closest("[data-pep-activity]")) + 1;
+        });
+        const state = await guidanceState(page);
+        if (activityNumber > 0 && state.current !== String(activityNumber)) {
+          if (activityNumber > Number(state.frontier)) throw new Error(`optional disclosure owner remains beyond unlocked frontier ${state.frontier}`);
+          await activateGuidance(page.locator("[data-pep-activity-link]").nth(activityNumber - 1), "pointer");
+          await expectDestination(page, activityNumber, state);
+        }
+      }
+      const before = await snapshot();
       await disclosure.locator(":scope > summary").click();
       const fields = disclosure.locator("input:not([type=hidden]), textarea");
       for (let field = 0; field < await fields.count(); field++) {
@@ -396,12 +1070,146 @@ async function checkBehavior(browser, topic) {
       }
       const buttons = disclosure.locator("button:not([disabled])");
       for (let button = 0; button < await buttons.count(); button++) await buttons.nth(button).click();
+      const after = await snapshot();
+      if (JSON.stringify(after) !== JSON.stringify(before)) {
+        throw new Error(`optional disclosure changed required state from ${JSON.stringify(before)} to ${JSON.stringify(after)}`);
+      }
     }
-    const after = await snapshot();
-    if (JSON.stringify(after) !== JSON.stringify(before)) {
-      throw new Error(`optional disclosures changed required state from ${JSON.stringify(before)} to ${JSON.stringify(after)}`);
-    }
+    if (spec.guidance?.hints) await exerciseSequentialHints(page, { prepared: true });
   });
+}
+
+async function semanticSurfaceAudit(page, { forcedColors = false } = {}) {
+  const failures = await page.evaluate(({ forcedColors }) => {
+    const root = document.querySelector("[data-pep-guidance-contract]");
+    if (!root) return [];
+    const normalize = (value) => (value ?? "").replace(/\s+/gu, " ").trim();
+    const parse = (value) => {
+      const match = value.match(/rgba?\(([^)]+)\)/u);
+      if (!match) return null;
+      const parts = match[1].split(/[ ,/]+/u).filter(Boolean).map(Number);
+      return [parts[0], parts[1], parts[2], parts[3] ?? 1];
+    };
+    const token = (name) => {
+      const probe = document.createElement("span");
+      probe.style.color = `var(${name})`;
+      document.body.append(probe);
+      const value = getComputedStyle(probe).color;
+      probe.remove();
+      return value;
+    };
+    const sameChannels = (first, second) => first && second
+      && first.every((value, index) => Math.abs(value - second[index]) < 0.6);
+    const sameColor = (actual, expected) => sameChannels(parse(actual), parse(expected));
+    const composite = (front, back) => {
+      const alpha = front[3] + back[3] * (1 - front[3]);
+      if (!alpha) return [0, 0, 0, 0];
+      return [0, 1, 2].map((index) =>
+        (front[index] * front[3] + back[index] * back[3] * (1 - front[3])) / alpha,
+      ).concat(alpha);
+    };
+    const effectiveBackground = (element) => {
+      const layers = [];
+      for (let node = element; node; node = node.parentElement) {
+        const color = parse(getComputedStyle(node).backgroundColor);
+        if (color) layers.push(color);
+      }
+      return layers.reverse().reduce((result, color) => composite(color, result), [255, 255, 255, 1]);
+    };
+    const visibleBorder = (style, side, surface) => {
+      const width = Number.parseFloat(style[`border${side}Width`]);
+      const borderStyle = style[`border${side}Style`];
+      const color = parse(style[`border${side}Color`]);
+      if (!(width > 0) || borderStyle === "none" || borderStyle === "hidden" || !color || color[3] === 0) return false;
+      return !sameChannels(composite(color, surface), surface);
+    };
+    const luminance = (color) => {
+      const rgb = color.slice(0, 3).map((value) => {
+        const channel = value / 255;
+        return channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+    };
+    const ratio = (first, second) => {
+      const values = [luminance(first), luminance(second)].sort((a, b) => b - a);
+      return (values[0] + 0.05) / (values[1] + 0.05);
+    };
+    const deficiencyMatrices = {
+      protanopia: [[0.567, 0.433, 0], [0.558, 0.442, 0], [0, 0.242, 0.758]],
+      deuteranopia: [[0.625, 0.375, 0], [0.7, 0.3, 0], [0, 0.3, 0.7]],
+      tritanopia: [[0.95, 0.05, 0], [0, 0.433, 0.567], [0, 0.475, 0.525]],
+    };
+    const transform = (color, matrix) => matrix.map((row) =>
+      row.reduce((sum, coefficient, index) => sum + coefficient * color[index], 0));
+    const definitions = [
+      { name: "instructions", nodes: [...root.querySelectorAll("[data-pep-instructions]")], instruction: true },
+      { name: "topic bar", nodes: [...root.querySelectorAll(".pep-topicbar")], label: "h1", labelPattern: /\S/u, surface: "--pep-accent-soft", border: "--pep-accent", edge: "block" },
+      { name: "interactive workspace", nodes: [...root.querySelectorAll("[data-pep-workspace]")], label: "[data-pep-task]", labelPattern: /\S/u, surface: "--pep-card", border: "--pep-line-strong", edge: "box" },
+      { name: "Where this fits", nodes: [...root.querySelectorAll("[data-pep-where-fits]")], label: ":scope > h2, :scope > h3", labelPattern: /^Where this fits$/u, surface: "--pep-card", border: "--pep-accent", edge: "block" },
+      { name: "Another way to think about it", nodes: [...root.querySelectorAll('.pep-optional--anecdote[data-pep-optional="anecdote"]')], label: ":scope > summary", labelPattern: /^Another way to think about it/u, surface: "--pep-card", border: "--pep-line-strong", edge: "block" },
+      { name: "Need a hint?", nodes: [...root.querySelectorAll("details[data-pep-hint]")].filter((node) => !node.parentElement?.closest("details[data-pep-hint]")), label: ":scope > summary", labelPattern: /^Need a hint\?/u, surface: "--pep-accent-soft", border: "--pep-accent", edge: "block" },
+      { name: "activity checks", nodes: [...root.querySelectorAll("[data-pep-activity-checks]")], label: ":scope > h2, :scope > h3", labelPattern: /^(What success looks like|Activity checks)$/u, surface: "--pep-accent-soft", border: "--pep-accent", edge: "block" },
+      { name: "Challenge (optional)", nodes: [...root.querySelectorAll('.pep-optional--challenge[data-pep-optional="challenge"]')], label: ":scope > summary", labelPattern: /^Challenge \(optional\)$/u, surface: "--pep-control", border: "--pep-line-strong", edge: "block" },
+    ];
+    const problems = [];
+    for (const definition of definitions) {
+      for (const [index, node] of definition.nodes.entries()) {
+        const style = getComputedStyle(node);
+        const hiddenActivity = node.closest("[data-pep-activity][hidden]");
+        if (!hiddenActivity && !node.getClientRects().length) problems.push(`${definition.name} ${index + 1} is not rendered`);
+        const surface = effectiveBackground(node);
+        if (definition.instruction) {
+          const pageSurface = effectiveBackground(document.body);
+          if (!sameChannels(surface, pageSurface)) problems.push(`${definition.name} ${index + 1} does not resolve to --pep-page`);
+          if (["Top", "Right", "Bottom", "Left"].some((side) => visibleBorder(style, side, surface))) {
+            problems.push(`${definition.name} ${index + 1} has a decorative status surface/rail`);
+          }
+          continue;
+        }
+        const label = node.querySelector(definition.label);
+        if (!label || !definition.labelPattern.test(normalize(label.textContent))) {
+          problems.push(`${definition.name} ${index + 1} lacks its visible non-color label`);
+        }
+        const edge = definition.edge === "inline"
+          ? { width: style.borderInlineStartWidth, style: style.borderInlineStartStyle, color: style.borderInlineStartColor, minimum: 4 }
+          : definition.edge === "block"
+            ? { width: style.borderBlockStartWidth, style: style.borderBlockStartStyle, color: style.borderBlockStartColor, minimum: 4 }
+            : { width: style.borderTopWidth, style: style.borderTopStyle, color: style.borderTopColor, minimum: 1 };
+        if (edge.style === "none" || edge.style === "hidden" || Number.parseFloat(edge.width) < edge.minimum) {
+          problems.push(`${definition.name} ${index + 1} lacks its non-color ${definition.edge === "box" ? "boundary" : "rail"}`);
+          continue;
+        }
+        const border = parse(edge.color);
+        if (!border || border[3] === 0) {
+          problems.push(`${definition.name} ${index + 1} has an invisible semantic rail/boundary`);
+          continue;
+        }
+        const compositedBorder = composite(border, surface);
+        if (sameChannels(compositedBorder, surface)) {
+          problems.push(`${definition.name} ${index + 1} has an indistinguishable semantic rail/boundary`);
+          continue;
+        }
+        if (forcedColors) {
+          if (style.forcedColorAdjust === "none" && ratio(surface, compositedBorder) < 3) {
+            problems.push(`${definition.name} ${index + 1} forced-color rail/boundary contrast is below 3:1`);
+          }
+          continue;
+        }
+        const expectedSurface = token(definition.surface);
+        const expectedBorder = token(definition.border);
+        if (!sameColor(style.backgroundColor, expectedSurface)) problems.push(`${definition.name} ${index + 1} does not use ${definition.surface}`);
+        if (!sameColor(edge.color, expectedBorder)) problems.push(`${definition.name} ${index + 1} does not use ${definition.border}`);
+        if (ratio(surface, compositedBorder) < 3) problems.push(`${definition.name} ${index + 1} rail/boundary contrast is below 3:1`);
+        for (const [kind, matrix] of Object.entries(deficiencyMatrices)) {
+          if (ratio(transform(surface, matrix), transform(compositedBorder, matrix)) < 3) {
+            problems.push(`${definition.name} ${index + 1} loses 3:1 rail/boundary contrast under ${kind}`);
+          }
+        }
+      }
+    }
+    return problems;
+  }, { forcedColors });
+  if (failures.length) throw new Error(`semantic guidance surfaces: ${failures.slice(0, 8).join("; ")}`);
 }
 
 function contrastAudit(page) {
@@ -481,9 +1289,16 @@ async function checkAccessibility(browser, topic) {
       if (severe.length) throw new Error(`axe serious/critical: ${severe.map((item) => item.id).join(", ")}`);
       const contrast = await contrastAudit(page);
       if (contrast.length) throw new Error(`${theme} contrast: ${contrast.slice(0, 8).join("; ")}`);
+      await semanticSurfaceAudit(page);
       if ((await page.locator("[aria-live]").count()) === 0) throw new Error("aria-live region is required");
     });
   }
+  await withPage(browser, topic, { label: "forced-colors", forcedColors: "active" }, async (page) => {
+    await semanticSurfaceAudit(page, { forcedColors: true });
+    const axe = await new AxeBuilder({ page }).analyze();
+    const severe = axe.violations.filter((item) => ["serious", "critical"].includes(item.impact));
+    if (severe.length) throw new Error(`forced-colors axe serious/critical: ${severe.map((item) => item.id).join(", ")}`);
+  });
   await withPage(browser, topic, {}, async (page) => {
     await execute(page, spec.keyboard, { keyboard: true });
     await assertState(page, spec.completion);
@@ -515,6 +1330,7 @@ async function checkResponsive(browser, topic) {
       },
       async (page) => {
         const inspect = async () => {
+          if (spec.guidance) await semanticSurfaceAudit(page);
           const geometry = await page.evaluate(() => {
             const root = document.documentElement;
             const essentialSelector = [
@@ -585,6 +1401,7 @@ async function checkResponsive(browser, topic) {
               '[role="tab"]',
               '[role="checkbox"]',
               '[role="radio"]',
+              'a[href]',
             ].join(",");
             const undersized = [...document.querySelectorAll(targetSelector)]
               .filter(isVisible)
@@ -614,6 +1431,13 @@ async function checkResponsive(browser, topic) {
         }
         await assertState(page, spec.completion);
         await assertState(page, spec.progress);
+        if (spec.guidance) {
+          const objectives = page.locator("details[data-pep-objectives]");
+          await objectives.locator(":scope > summary").click();
+          await inspect();
+          await objectives.locator(":scope > summary").click();
+          if (spec.guidance.hints) await exerciseSequentialHints(page, { touch: viewport.touch, prepared: true, afterOpen: inspect });
+        }
       },
     );
   }
@@ -626,6 +1450,78 @@ const CHECKERS = {
   T12: checkAccessibility,
   T13: checkResponsive,
 };
+
+export async function validateQaPrivateProofs(repoRoot, evidenceRoot) {
+  const out = [];
+  const git = (args) => spawnSync("git", args, { cwd: repoRoot, encoding: "utf8" });
+  const privateName = /(^|[-_.\/])(?:answer[-_ ]?key|rubric|(?:reference|instructor|private)[-_ ]?solution|hidden[-_ ]?tests?)([-_.\/]|$)/iu;
+  for (const receiptFile of (await walk(evidenceRoot)).files.filter((file) => path.basename(file) === "qa-receipt.json")) {
+    const receipt = await readJson(receiptFile).catch(() => null);
+    const proof = receipt?.privateSuccessProof;
+    if (!proof) continue;
+    const display = relative(repoRoot, receiptFile);
+    if (proof.record !== `validated at ${proof.commit} by run ${proof.runId}`) out.push(error("T06", display, "private success record must match commit and runId"));
+    const commit = git(["cat-file", "-e", `${proof.commit}^{commit}`]);
+    if (commit.status !== 0) {
+      out.push(error("T06", display, "private success proof commit does not exist in this repository"));
+      continue;
+    }
+    const evidenceRelative = display.split("/");
+    const evidenceIndex = evidenceRelative.indexOf("evidence");
+    const owner = evidenceIndex >= 0 ? evidenceRelative.slice(evidenceIndex + 1, -1) : [];
+    const ownerPath = owner.join("/");
+    const required = new Set([
+      `${ownerPath}/artifact.html`,
+      `authoring/evidence/${ownerPath}/qa-paths.json`,
+      "authoring/tools/qa/harness.mjs",
+      "authoring/tools/qa/python-answer-scan.py",
+      "authoring/tools/checks/T08-html-static.mjs",
+    ]);
+    const bindings = proof.publicBindings ?? [];
+    const seen = new Set(bindings.map((binding) => binding.file));
+    if (bindings.length !== 5 || seen.size !== 5 || [...seen].some((file) => !required.has(file)) || [...required].some((file) => !seen.has(file))) {
+      out.push(error("T06", display, "private-success public bindings must equal the exact five approved public paths"));
+    }
+    for (const binding of bindings) {
+      if (privateName.test(binding.file)) out.push(error("T06", display, `private material cannot be bound: ${binding.file}`));
+      const blob = git(["show", `${proof.commit}:${binding.file}`]);
+      if (blob.status !== 0) {
+        out.push(error("T06", display, `private-success public binding is missing from proof commit: ${binding.file}`));
+        continue;
+      }
+      const blobHash = sha256(Buffer.from(blob.stdout, "utf8"));
+      if (blobHash !== binding.reviewedSha256) out.push(error("T06", display, `private-success commit blob differs from receipt: ${binding.file}`));
+      try {
+        const currentHash = sha256(await readFile(path.join(repoRoot, ...binding.file.split("/"))));
+        if (currentHash !== blobHash) out.push(error("T06", display, `stale private-success public binding: ${binding.file}`));
+      } catch (cause) {
+        if (cause.code === "ENOENT") out.push(error("T06", display, `private-success public binding is missing: ${binding.file}`));
+        else throw cause;
+      }
+    }
+    if (git(["merge-base", "--is-ancestor", proof.commit, "HEAD"]).status !== 0) {
+      out.push(error("T06", display, "private success proof commit must be an ancestor of current HEAD"));
+    }
+    const introduction = git(["log", "--all", "--format=%H", "-S", proof.runId, "--", display]);
+    const introductions = introduction.stdout.trim().split(/\s+/u).filter(Boolean);
+    if (introductions.length !== 1) {
+      out.push(error("T06", display, "private success runId must be introduced by exactly one evidence commit"));
+      continue;
+    }
+    const receiptCommit = introductions[0];
+    const parents = git(["rev-list", "--parents", "-n", "1", receiptCommit]).stdout.trim().split(/\s+/u).slice(1);
+    if (parents.length !== 1 || parents[0] !== proof.commit) {
+      out.push(error("T06", display, "private success receipt must be introduced in the immediate child of its proof commit"));
+      continue;
+    }
+    const allowedLock = owner.length >= 2 ? `authoring/catalog/${owner[0]}/${owner[1]}/module.lock.json` : "";
+    const changed = git(["diff-tree", "--no-commit-id", "--name-only", "-r", receiptCommit]).stdout.trim().split(/\n/u).filter(Boolean);
+    if (changed.some((file) => file !== display && file !== allowedLock)) {
+      out.push(error("T06", display, "private success receipt commit may change only its receipt and generated module lock"));
+    }
+  }
+  return out;
+}
 
 export async function updateReceipt(ctx, topic, rule, passed, detail, writeEvidence = false) {
   writeEvidence ||= process.env.PEP_QA_WRITE_EVIDENCE === "1";
@@ -670,6 +1566,111 @@ export async function updateReceipt(ctx, topic, rule, passed, detail, writeEvide
   receipt.passCount = receipt.checks.filter((check) => check.status === "pass").length;
   await mkdir(outputRoot, { recursive: true });
   await writeFile(receiptFile, `${JSON.stringify(receipt, null, 2)}\n`);
+}
+
+export async function runPrivateOverlay(ctx, overlayFile) {
+  const git = (args) => spawnSync("git", args, { cwd: ctx.root, encoding: "utf8" });
+  const top = git(["rev-parse", "--show-toplevel"]);
+  if (top.status !== 0 || await realpath(top.stdout.trim()) !== await realpath(ctx.root)) throw new Error("private overlay repository root is invalid");
+  const commit = git(["rev-parse", "HEAD"]).stdout.trim();
+  if (!/^[a-f0-9]{40}$/u.test(commit)) throw new Error("private overlay requires a public commit");
+  if (git(["status", "--porcelain=v1", "--untracked-files=all"]).stdout.trim()) throw new Error("private overlay requires a clean public commit");
+  const absolute = path.resolve(overlayFile);
+  const outside = path.relative(ctx.root, absolute);
+  if (!outside.startsWith(`..${path.sep}`) && outside !== "..") throw new Error("private overlay must be outside the repository");
+  let overlay;
+  try {
+    overlay = JSON.parse(await readFile(absolute, "utf8"));
+  } catch {
+    throw new Error("private overlay is required and must be valid JSON");
+  }
+  if (overlay?.schemaVersion !== 1 || !/^[A-Za-z0-9._-]+$/u.test(overlay?.runId ?? "") ||
+      !/^[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*\/[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(overlay?.topic ?? "")) {
+    throw new Error("private overlay metadata is invalid");
+  }
+  const routeNames = ["success", "wrongFirst", "keyboard", "sandbox"];
+  if (!overlay.routes || routeNames.some((name) => !Array.isArray(overlay.routes[name]) || !overlay.routes[name].length)) {
+    throw new Error("private overlay requires success, wrongFirst, keyboard and sandbox routes");
+  }
+  const topic = (await findHtmlTopics(ctx)).find((item) => `${item.courseId}/${item.moduleId}/${item.topicId}` === overlay.topic);
+  if (!topic) throw new Error("private overlay topic does not resolve to one HTML topic");
+  const spec = await loadSpec(topic);
+  const approved = [
+    relative(ctx.root, topic.html),
+    relative(ctx.root, topic.spec),
+    "authoring/tools/qa/harness.mjs",
+    "authoring/tools/qa/python-answer-scan.py",
+    "authoring/tools/checks/T08-html-static.mjs",
+  ];
+  const beforeHashes = new Map();
+  for (const file of approved) {
+    const working = sha256(await readFile(path.join(ctx.root, ...file.split("/"))));
+    const blob = git(["show", `${commit}:${file}`]);
+    if (blob.status !== 0 || sha256(Buffer.from(blob.stdout, "utf8")) !== working) throw new Error("private overlay public files must equal the captured commit");
+    beforeHashes.set(file, working);
+  }
+  for (const name of routeNames) {
+    const candidate = structuredClone(spec);
+    candidate.routes.success = overlay.routes[name];
+    if (!validateQaPath(candidate)) throw new Error(`private overlay ${name} route does not match the public action schema`);
+  }
+  const browser = await launchChromium();
+  const runTopLevel = async (actions, keyboard = false) => {
+    const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
+    const page = await context.newPage();
+    let attemptedExternalLoad = false;
+    await page.route("**/*", async (route) => {
+      const url = route.request().url();
+      if (url.split(/[?#]/u)[0] === pathToFileURL(topic.html).href) return route.continue();
+      attemptedExternalLoad = true;
+      return route.abort("blockedbyclient");
+    });
+    try {
+      await page.goto(pathToFileURL(topic.html).href, { waitUntil: "load" });
+      await execute(page, actions, { keyboard });
+      await assertState(page, spec.completion);
+      await assertState(page, spec.progress);
+      if (attemptedExternalLoad) throw new Error("external load");
+    } finally {
+      await context.close();
+    }
+  };
+  try {
+    await runTopLevel(overlay.routes.success);
+    await runTopLevel(overlay.routes.wrongFirst);
+    await runTopLevel(overlay.routes.keyboard, true);
+    const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
+    const page = await context.newPage();
+    let sandboxExternalLoad = false;
+    await page.route("**/*", async (route) => { sandboxExternalLoad = true; await route.abort("blockedbyclient"); });
+    try {
+      const frame = await sandboxFrame(page, topic);
+      await execute(frame, overlay.routes.sandbox);
+      await assertState(frame, spec.completion);
+      await assertState(frame, spec.progress);
+      if (sandboxExternalLoad) throw new Error("external load");
+    } finally {
+      await context.close();
+    }
+  } catch {
+    throw new Error("private success route failed; no private values were recorded");
+  } finally {
+    await browser.close();
+  }
+  if (git(["rev-parse", "HEAD"]).stdout.trim() !== commit ||
+      git(["status", "--porcelain=v1", "--untracked-files=all"]).stdout.trim()) {
+    throw new Error("private overlay changed the captured clean public commit");
+  }
+  const publicBindings = [];
+  for (const file of approved) {
+    const working = sha256(await readFile(path.join(ctx.root, ...file.split("/"))));
+    const blob = git(["show", `${commit}:${file}`]);
+    if (blob.status !== 0 || working !== beforeHashes.get(file) || sha256(Buffer.from(blob.stdout, "utf8")) !== working) {
+      throw new Error("private overlay public files changed during validation");
+    }
+    publicBindings.push({ file, reviewedSha256: working });
+  }
+  return { commit, runId: overlay.runId, result: "pass", publicBindings };
 }
 
 export async function runBrowserGate(ctx, rule, options = {}) {

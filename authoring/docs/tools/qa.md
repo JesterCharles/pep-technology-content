@@ -10,6 +10,7 @@ npm run check
 node authoring/tools/qa/run.mjs
 node authoring/tools/qa/run.mjs java-foundations/basics/a-topic
 node authoring/tools/qa/run.mjs --write-evidence java-foundations/basics/a-topic
+node authoring/tools/qa/run.mjs --private-overlay /absolute/outside-repo/private-qa.json
 ```
 
 Normal runs write receipts and failure diagnostics under gitignored `build/qa/`.
@@ -35,22 +36,40 @@ The three required routes must independently finish the topic:
 `simulatorEdges` records realistic unsupported, partial, or look-alike states and their assertions.
 `progress` separately asserts that each route reached 100%. `restart.actions` completes, restarts, and repeats an
 activity; `restart.credit` proves credit was not duplicated. `keyboard` is the complete success route using semantic
-keyboard activation. The harness requires visible focus at each
-keyboard activation and verifies the same completion assertion. A focus indicator may be on the control or a
-`:focus-within` ancestor, but it must appear on focus and its outline or shadow must contrast at least 3:1 with the
-adjacent background.
+keyboard activation. `data-pep-guidance-contract` and `spec.guidance` are mandatory together. Enrolled specs require
+`activityNavigation`, `activityNavigationKeyboard`, `activityNavigationTouch`, `objectives` and `objectivesTouch`;
+`hints` is required exactly when parsed HTML contains hints. Existing non-empty action arrays and the simpler `true`
+enrollment are both accepted, while owner-aware traversal and assertions remain harness-controlled rather than limited
+by author selectors. Empty, partial or author-selected omission fails before browser execution. The contract fixture demonstrates
+the exact shape. Navigation arrays are setup/smoke paths, not self-selected evidence: they must leave meaningful live
+inputs in at least two activities, a prior honestly settled/completed **grade-0 wrong settlement** with one credit, and
+a later unlocked, attempted but incomplete current activity. Harness-owned postconditions then activate Previous/Next,
+current/completed timeline and back links, every future link and fragment, browser history and Restart; they compare
+the complete root/control/per-activity snapshot and reject vacuous setup. The same procedure runs pointer and keyboard
+desktop plus 320/390 touch, both top-level and in `sandbox="allow-scripts"`.
+The harness requires visible focus at each keyboard activation and verifies the same completion assertion. A focus
+indicator may be on the control or a `:focus-within` ancestor, but it must appear on focus and its outline or shadow
+must contrast at least 3:1 with the adjacent background. T12 also resolves the canonical topic-bar, workspace,
+Where-this-fits, anecdote, top-level hint, activity-check and challenge token roles in light/dark themes; checks their
+rail/boundary contrast under protanopia, deuteranopia and tritanopia transforms; requires visible non-color labels and
+boundaries; and repeats the structural cue check in forced-colors mode. T09 repeats role visibility in print, while
+T13 repeats it at every responsive/zoom viewport.
 
 ### Actions
 
-Each action has `do` and `selector`. Supported actions are:
+Actions use strict per-action schema branches; missing or irrelevant operands are rejected. Supported actions are:
 
-- input: `click`, `check`, `fill` (`value`), `press` (`key`), and `select` (`value`);
-- assertions: `expectText` (`text`, a regular expression), `expectValue` (`value`, a regular expression),
-  `expectAttribute` (`attribute` and `equals`), `expectVisible`, `expectHidden`, `expectEnabled`,
-  `expectDisabled`, and `expectFocus`.
+- `click` and `check`: `do` plus `selector` only;
+- `fill` and `select`: `do`, `selector` and `value`;
+- `press`: `do`, `selector` and `key`;
+- `goBack` and `goForward`: `do` only, with no selector;
+- `expectText`: `selector` and non-empty regular-expression `text`;
+- `expectValue`: `selector` and regular-expression `value`;
+- `expectAttribute`: `selector`, `attribute` and `equals`;
+- `expectVisible`, `expectHidden`, `expectEnabled`, `expectDisabled` and `expectFocus`: `selector` only.
 
-Assertions are part of the path. Put an assertion immediately after the state change it checks so a failure names the
-exact selector and route.
+Selector actions may also carry `timeoutMs`; history actions may not. Assertions are part of the path. Put one
+immediately after the state change it checks so a failure names the exact selector and route.
 
 ### Worked example
 
@@ -128,25 +147,80 @@ exact selector and route.
 This format preserves the action-and-assertion expressiveness of Linux `paths.js`, the compact per-topic data of the
 Git `tNN.json` files, and the reusable route roles of AI `spec.js`. No course-1 page content is copied.
 
+### Answer-sensitive routes and private proof
+
+An answer-sensitive task and `qa-paths.json` declare the same task selector, supported language scanner and target
+names. Committed paths contain only public-safe starter, incomplete, malformed, unsupported-shape, reset and
+no-premature-credit routes. An incorrect observed or expected result may use starter, incomplete, malformed or
+unsupported-shape input; it never includes a completed declared-target assignment. Complete bare comprehension
+syntax in an inline script literal is conservatively answer-bearing because static QA cannot prove where it will render. The target-aware scanner inventories decoded text and attributes from the
+document element and every descendant—including head, styles and body content outside the enrolled main—plus
+document-wide comments, no-JavaScript/templates/static alternatives and all QA strings. Its bounded JS
+parser cooks escapes/templates and folds all-literal `+` chains without execution. CPython `tokenize` extracts
+balanced candidates from prose; `ast` recursively checks declared targets through wrappers and positional destructuring.
+Target assignments fail anywhere, while standalone comprehensions fail only on answer-bearing task/activity/workspace
+or selector-associated QA surfaces, preserving unrelated teaching. Canonical UTF-8 base64, percent and hex-byte
+forms are decoded; target-associated decoder/character assembly and 40/64-hex digests fail. Arbitrary semantic
+leakage and opaque provenance remain explicit education/SME review boundaries.
+
+Completed inputs run only from an absolute authorized uncommitted overlay outside the repository. The private runner
+captures clean commit **P** before loading the topic, verifies the exact five approved public working files equal P's
+blobs before and after `success`, `wrongFirst`, `keyboard` and `sandbox`, and rejects dirty tracked/untracked bytes,
+HEAD movement or file drift. It disables tracing, screenshots, value logging and `build/` output; generic errors keep
+completed values out of logs. After staging is retired, immediate evidence-only child **R** may add the existing
+`qa-receipt.json` and generated module lock. The proof still names P and contains exactly five bindings: artifact,
+public QA path, harness, T08 scanner and Python scanner. T06 locates the unique runId introduction, requires R's first
+parent to be P, hashes each P blob and current file, and rejects extra/missing bindings, old/non-parent identity or
+later public drift. Rebase/squash requires a fresh run. No private value or answer-derived hash is recorded.
+
 ## Gate behavior
 
 - **T09:** loads the exact `artifact.html` through `file://`, blocks network and sibling `file:` requests (only the
   page itself may load), and fails console errors, uncaught exceptions, and attempted network or sibling-file access.
-  It also loads with JavaScript disabled: the document must remain non-empty, native optional disclosures must open
-  and expose their content, and each `[data-pep-workspace="code"]` must expose one non-empty
-  `<noscript data-pep-no-js>` reading.
-- **T10:** runs all three routes inside an iframe whose only sandbox token is `allow-scripts`. Its opaque origin makes
-  unguarded Web Storage access fail naturally.
-- **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion.
+  It also loads with JavaScript disabled: the document must remain non-empty; later nested hints start unavailable and
+  every native optional, hint and objective disclosure opens in sequence; one ordered timeline anchor resolves to each
+  visible activity; every activity after the first has exactly one working predecessor back link; and each
+  `[data-pep-workspace="code"]` exposes one non-empty `<noscript data-pep-no-js>` reading. Each enrolled page is also
+  printed: all activities, teaching, checks, objectives, hints, optional labels and static alternatives are visible,
+  navigation-only controls are absent, and `afterprint` exactly restores the prior disclosure states.
+- **T10:** runs all three routes and every mandatory guidance route inside an iframe whose only sandbox token is
+  `allow-scripts`. Its opaque origin makes unguarded Web Storage access fail naturally. Enrolled pages also run the
+  full harness-owned navigation/state/Restart procedure in sandbox pointer, keyboard and both phone-touch contexts.
+  The iframe content viewport must equal each configured desktop or 320/390 phone size before invariants run. Those
+  invariants include direct setup-state validation, authored-control Restart restoration and current task/check rendering
+  against structural hiding, ordinary zero opacity and computed zero-valued `filter: opacity()` components;
+  the latter is bounded full-element-transparency coverage, not arbitrary paint proof.
+- **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion. Enrolled
+  pages additionally run navigation and objectives by pointer, keyboard and 320/390 px touch; owner/activity-aware
+  nested hints by pointer, keyboard and phone touch after a public-safe wrong-twice route unlocks their activities;
+  a direct locked-future activation and guarded future fragment; explicit destination focus; monotonic frontier/no-navigation-credit;
+  complete root, live-control and per-activity preservation including required time and page completion; state-preserving
+  browser history; and current-only Restart while other populated activities stay exact. Restart divergence is
+  type-aware for text/editor, checkbox, select and radio groups but is never submitted for credit. The setup-established
+  attempted activity and one prior completed activity each reset directly to authored controls and clean local state;
+  required time, validated page completion, the monotonic frontier and every non-current activity/control stay exact.
+  QA does not force a fresh completion or reactivate a settled disabled control. The authored Restart route remains the
+  direct bounded re-completion/no-duplicate-credit proof, with grade separate from settlement/completion. Current
+  task/direct check headings and criteria remain visible at every transition with the same bounded zero-opacity-filter
+  rejection. Optional guidance uses the same unlocked owner traversal and cannot change required accounting.
 - **T12:** permits no serious or critical axe findings; runs the keyboard and reduced-motion success routes; requires
   `aria-live`; checks direct body text at 4.5:1 and rendered borders at 3:1 in forced light and dark themes. Fully
-  transparent borders are not rendered and are excluded.
+  transparent borders are not rendered and are excluded. Enrolled guidance also preserves exact canonical semantic
+  surface/rail roles, keeps instruction sections unadorned on the effective page surface, rejects decorative instruction
+  status surfaces and rails, requires 3:1 rail contrast under common color-vision-deficiency transforms, and preserves
+  visible non-color labels and boundaries. In forced colors, computed boundaries must remain nontransparent and visibly
+  distinct from their composited adjacent surface; author colors retained with `forced-color-adjust:none` must remain at
+  least 3:1, while valid system-color remapping under `auto` is accepted without author-token RGB equality.
 - **T13:** for pages whose root main carries `data-pep-responsive`, checks 1366×768 and short desktop; 320×568 and
   390×844 phone portraits; 844×390 phone landscape; 768×1024 tablet portrait; and an equivalent 200% zoom CSS
   viewport. Light and dark contexts are represented. Unmigrated pages retain the previous desktop, short desktop,
   400×860 and 200% zoom matrix until they are re-authored; add the marker only with the responsive migration.
-  Touch contexts execute the required wrong-twice route with real tap events and reject visible semantic action targets
-  below 44×44 CSS px. Every context rejects page-level horizontal overflow and clipped essential controls or text.
+  Touch contexts execute the required wrong-twice route with real tap events and reject visible buttons, fields,
+  summaries, role controls and ordinary anchors below 44×44 CSS px. Before tapping each activity-owned hint summary,
+  the harness centers it within the owning context, then retains the same focus, open-state and accounting checks. At
+  every viewport the harness verifies semantic section roles, runs the public-safe wrong-twice route, opens Objectives
+  and every activity-owned nested hint in sequence, then reruns overflow, clipping and target checks. Every context rejects
+  page-level horizontal overflow and clipped essential controls or text.
   Non-rendered content—including descendants of closed `details`, CSS-hidden content, and zero-size live regions with
   no visible descendants—is excluded.
 - **T18:** regenerates Markdown in memory and requires byte equality. A declared PDF must load as PDF and contain an
