@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="sql-jdbc-foundations">
+<meta name="pep:module" content="reporting-indexes-and-review">
+<meta name="pep:topic" content="Indexes">
+<meta name="pep:topic-id" content="indexes">
+<meta name="pep:budget-minutes" content="11">
+<meta name="pep:source" content="authoring/evidence/sql-jdbc-foundations/reporting-indexes-and-review/indexes/sources.json">
+<title>Indexes · Reporting Queries, Indexes and Review</title>
+<style>
+/* pep:component predict@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+/* /pep:component predict css */
+/* pep:component mcq-with-confidence@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start}
+.feedback{width:100%;min-width:0;font-size:15px;line-height:1.35}
+.feedback:empty{display:none}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin:0}
+.feedback .verdict{font-weight:700}
+.feedback .ok{color:var(--teal)}
+.feedback .no{color:var(--red)}
+.feedback .set{color:var(--amber)}
+.feedback .info{color:var(--ink)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+/* /pep:component mcq-with-confidence css */
+/* DESIGN.md token reference */
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* Components bridge: embedded components/*@1 fragments read these older names */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+/* Base, focus and motion */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+pre { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; max-width: 100%; }
+pre code { font-size: 1em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+/* Buttons */
+button { cursor: pointer; min-height: 44px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); padding: 10px 20px; }
+.pep-btn, .ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.ghost:hover, .pep-btn:hover { border-color: var(--pep-accent); }
+.ghost[aria-pressed="true"] { background: var(--pep-accent-soft); border: 2px solid var(--pep-accent); }
+.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+button:disabled, .primary:disabled, .pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); color: var(--pep-text-muted); border: 1px solid var(--pep-line-strong); }
+/* Topic bar: the clearest accent surface */
+.pep-topicbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding: 12px 16px; margin: 0;
+  border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 4px; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress p { max-width: none; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; max-width: 220px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); outline: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); outline-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning); outline-color: var(--pep-warning); }
+.pep-progress > span.is-current { outline: 2px solid var(--pep-accent); }
+.pep-objectives { position: relative; break-inside: avoid; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; border-radius: var(--pep-radius-sm); }
+.pep-objectives > summary::marker { color: var(--pep-accent-text); }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; padding-left: 20px; }
+.pep-objectives li + li { margin-top: 8px; }
+@media (min-width: 640px) { .pep-objectives[open] > div { position: absolute; right: 0; z-index: 2; width: 360px; } }
+/* Activity timeline */
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px 6px 6px; border: 1px solid transparent; border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; }
+.pep-steps { counter-reset: pep-step; }
+.pep-step__n::before { counter-increment: pep-step; content: counter(pep-step); }
+.pep-step__n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--pep-control); color: var(--pep-text); font-size: 13px; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-current="step"] .pep-step__n { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-step.is-done .pep-step__n { background: var(--pep-accent-soft); color: var(--pep-accent-text); outline: 1px solid var(--pep-accent); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-step__state { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+/* Activities and regions */
+.pep-activity { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-activity > h2 { padding-bottom: 8px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region--workspace, [data-pep-workspace] {
+  padding: 24px; border: 1px solid var(--pep-line-strong);
+  border-radius: var(--pep-radius-lg); background: var(--pep-card);
+}
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
+.teach { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.teach ul, .teach ol { margin: 0; padding-left: 24px; }
+.task { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task .pep-task-q { font-weight: 600; color: var(--pep-text-strong); }
+/* Required activity checks: accent tint and rail, never success green */
+.pep-activity-checks, [data-pep-activity-checks] {
+  padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px;
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-activity-checks h3 { margin-bottom: 4px; }
+.pep-activity-checks ul { margin: 0; padding-left: 20px; }
+/* Where this fits */
+[data-pep-where-fits] {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-card);
+}
+[data-pep-where-fits] strong { color: var(--pep-text-strong); }
+/* Progressive optional hints */
+.pep-hint, details[data-pep-hint] {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md);
+  background: var(--pep-accent-soft); break-inside: avoid;
+}
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
+.pep-hint .pep-hint {
+  margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong);
+  border-radius: 0; background: transparent;
+}
+/* Optional Anecdote and Challenge disclosures */
+.pep-optional {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-card); break-inside: avoid;
+}
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer;
+  color: var(--pep-text-strong); font-weight: 600;
+}
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 16px; }
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+  .pep-step[aria-current="step"] { border-color: Highlight; }
+}
+/* Model, cells and lanes */
+.model { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-lists { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 600px) { .pep-lists { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pep-list { padding: 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.pep-list h3 { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 4px; }
+.pep-list__state { font-weight: 600; }
+.lk { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.sub { margin: 0 0 8px; font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.cells { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; padding: 0; list-style: none; min-height: 32px; }
+.cells li { font: 400 14px/20px var(--pep-font-mono); padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.lanebtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.lanebtns button { min-width: 120px; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.lane { padding: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); min-height: 80px; background: var(--pep-page); min-width: 0; }
+.lane .lk { overflow-wrap: anywhere; color: var(--pep-text-strong); }
+.cards { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.cards li { font-size: 14px; line-height: 20px; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); overflow-wrap: anywhere; }
+.cards li.revealed { border-style: dashed; border-color: var(--pep-warning); }
+.tag { display: inline-block; margin-left: 4px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--pep-warning); }
+/* Component overrides: DESIGN.md look for the embedded @1 fragments (their bytes stay unchanged) */
+legend { font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 8px; }
+.opts { gap: 8px; }
+.opt { position: relative; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); font-size: 16px; line-height: 24px; box-shadow: none; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; box-shadow: none; }
+.opt:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; box-shadow: none; }
+.opt.mine { border-color: var(--pep-accent); }
+.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.opt input:disabled { cursor: default; }
+.opt::before { content: ""; flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); }
+.opt:has(input:checked)::before { border: 6px solid var(--pep-accent); }
+.opt:has(input:disabled)::before { opacity: 0.6; }
+.opts.explained .opt { padding: 8px 16px; align-items: flex-start; }
+.opts.explained .opt::before { margin-top: 2px; }
+.oexp { font-size: 14px; line-height: 20px; color: var(--pep-text); border-top-color: var(--pep-line-strong); }
+.badge { font-size: 13px; line-height: 20px; font-weight: 600; border-radius: var(--pep-radius-pill); padding: 0 8px; }
+.badge.ok-b { color: var(--pep-success); border-color: var(--pep-success); }
+.badge.no-b { color: var(--pep-danger); border-color: var(--pep-danger); }
+.badge.mine-b { color: var(--pep-text-strong); border-color: var(--pep-line-strong); }
+.conf legend { line-height: 44px; }
+.conf .opt { min-width: 96px; }
+.row, .fbrow { gap: 12px; }
+.feedback { font-size: 14px; line-height: 20px; color: var(--pep-text); }
+.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.feedback .verdict { font-size: 16px; line-height: 24px; font-weight: 700; }
+.feedback .ok { color: var(--pep-success); }
+.feedback .no { color: var(--pep-danger); }
+.feedback .set { color: var(--pep-warning); }
+.feedback .info { color: var(--pep-text-strong); }
+.feedback .conf-report { color: var(--pep-text-muted); }
+.feedback ul { padding-left: 24px; }
+@media (max-width: 480px) { .opts, .lanes { grid-template-columns: minmax(0, 1fr); } }
+/* Editor workspace */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__scope { padding: 8px 12px; font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); background: var(--pep-sunken); }
+.pep-editor__panel pre { border: 0; padding: 0; background: transparent; }
+.pep-editor__empty { font-family: var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 700; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 700; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); max-width: none; }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn, .pep-editor__bar button { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__code { font-size: 16px; line-height: 24px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* Navigation */
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 0 1 auto; } }
+.pep-back a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+/* Recap */
+.recap { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--pep-line-strong); }
+.recap ul { margin: 0; padding-left: 24px; }
+.recap li + li { margin-top: 4px; }
+.recap details { padding: 0 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.recap details > summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: flex; align-items: center; }
+.recap details > :last-child { margin-bottom: 12px; }
+.recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+.sources ul { margin: 8px 0; padding-left: 24px; font-size: 14px; line-height: 20px; }
+.sources li { margin-bottom: 4px; overflow-wrap: anywhere; }
+.sources p { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.next-topic { font-weight: 600; color: var(--pep-text-strong); }
+.complete { padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete.settled { border-color: var(--pep-warning); background: var(--pep-warning-soft); }
+.complete:empty { display: none; }
+/* Static expected results: no-JavaScript reading only */
+.pep-expected { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.pep-expected ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-nojs-note { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text-strong); }
+.pep-nojs-code { display: flex; flex-direction: column; gap: 12px; }
+@media print {
+  [data-pep-activity][hidden], [data-pep-recap][hidden] { display: flex !important; }
+  .pep-nav, .pep-activity-actions, .pep-back, #reset, .pep-progress { display: none !important; }
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .pep-objectives[open] > div { position: static; width: auto; }
+  .pep-activity { break-before: auto; }
+}
+</style>
+<noscript><style>.pep-js-only{display:none!important}</style></noscript>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="11">
+<header class="pep-topicbar">
+  <h1 id="page-title">Indexes</h1>
+  <div class="pep-topicbar__progress progress">
+    <p><span class="pep-js-only"><span id="pos-text">Activity 1 of 4</span> · <span id="prog-text">Activities done: 0 of 4</span> · </span>about 11 min</p>
+    <div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  </div>
+  <details class="pep-objectives" data-pep-objectives>
+    <summary aria-controls="objectives-body">Objectives</summary>
+    <div id="objectives-body"><ul>
+      <li>Explain how an index speeds up a lookup and what it costs on writes and storage</li>
+      <li>Create a B-tree index, including a multicolumn index, that matches a described query</li>
+      <li>Identify the indexes PostgreSQL creates automatically for PRIMARY KEY and UNIQUE constraints</li>
+    </ul></div>
+  </details>
+  <button type="button" class="pep-btn pep-js-only" id="reset" data-pep-reset>Restart activity</button>
+  <p class="vh" id="restart-status" role="status" aria-live="polite"></p>
+</header>
+<nav class="pep-nav" aria-label="Activities"><ol class="pep-steps">
+  <li><a class="pep-step" id="tl-1" href="#activity-1" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Guess</a></li>
+  <li><a class="pep-step" id="tl-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Create one</a></li>
+  <li><a class="pep-step" id="tl-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Automatic</a></li>
+  <li><a class="pep-step" id="tl-4" href="#activity-4" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>The cost</a></li>
+</ol></nav>
+<noscript data-section-skip><p class="pep-nojs-note"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. All four activities follow in order, each with its expected results and why.</p></noscript>
+
+<section id="activity-1" class="pep-activity" data-pep-activity aria-labelledby="a1-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a1-h" tabindex="-1">Activity 1: Guess first</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>A <code>users</code> table holds a million rows. Its <code>email</code> column has no index and no constraint. Predict before any explanation.</p>
+<pre><code>SELECT * FROM users WHERE email = 'ana@example.com';</code></pre>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-1" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <p>Under <strong>Your prediction</strong>, choose how PostgreSQL finds the matching row and how sure you are, then press <strong>Check prediction</strong>.</p>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to a guess, then read why each option is right or wrong.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict data-static-alt="Prediction (practice, not scored): finding one email in a million-row users table with no index on email. Options: it reads the table row by row and checks every email (correct: with no index, a sequential scan is the only way to find every match); it jumps straight to the row because the table is sorted by email (wrong: a table has no order PostgreSQL can rely on); it stops at the first match (wrong: another row could have the same email, because nothing makes it unique); it refuses to run without an index (wrong: an index is never required to run a query).">
+            <legend>Your prediction</legend>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="predict" id="p-scan" value="scan" aria-describedby="task-1"><span class="ot">Reads every row and checks each email</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-jump" value="jump" aria-describedby="task-1"><span class="ot">Jumps straight to the row, because tables are kept sorted</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-first" value="first" aria-describedby="task-1"><span class="ot">Reads rows until the first match, then stops</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-refuse" value="refuse" aria-describedby="task-1"><span class="ot">Refuses to run the query without an index</span></label>
+            </div>
+            <div class="row"><fieldset class="conf" id="conf0" data-pep-confidence aria-describedby="conf0-instr"><legend id="conf0-instr">How sure are you?</legend><label class="opt"><input type="radio" name="conf0" id="conf0-low" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-medium" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-high" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check aria-describedby="conf0-instr" disabled>Check prediction</button></div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-1" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> How does PostgreSQL find the row?</p><ul><li>Reads every row: correct. With no index on <code>email</code>, a sequential scan checks all million rows.</li><li>Jumps straight to the row: wrong. Table rows are not kept in an order PostgreSQL can search.</li><li>Stops at the first match: wrong. Nothing makes <code>email</code> unique, so another row could match.</li><li>Refuses to run: wrong. Indexes only make queries faster; no query requires one.</li></ul></div></noscript>
+    </div>
+  </div>
+</section>
+
+<section id="activity-2" class="pep-activity" data-pep-activity aria-labelledby="a2-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a2-h" tabindex="-1">Activity 2: Create an index for a query</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <p data-pep-model>The model: an index is a separate, sorted lookup structure that points to table rows, like the index at the back of a book. The default kind is a B-tree, which handles <code>=</code>, <code>&lt;</code>, <code>&gt;</code>, <code>BETWEEN</code> and sorting.</p>
+      <div class="teach" data-pep-teaching>
+<pre><code>CREATE INDEX users_email_idx ON users (email);</code></pre>
+        <p>The planner then uses the index when it judges that cheaper than a sequential scan. The cost: PostgreSQL keeps every index synchronized with its table, so each <code>INSERT</code>, <code>UPDATE</code> and <code>DELETE</code> does extra work, and each index takes disk space. Remove indexes no query uses.</p>
+        <p>A multicolumn index lists several columns. It is most efficient when the query constrains the leading, leftmost columns: equality tests on leading columns, plus a range test on the first column without an equality test, limit how much of the index is read.</p>
+      </div>
+      <details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+        <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+        <div class="pep-optional__body">
+          <p data-pep-anecdote-story>A phone book is sorted by surname, then first name. Finding every Garcia whose first name starts with M is quick: open at Garcia, then read only that run. Finding everyone named Maria is slow, because the Marias are scattered across every surname. And every new listing must be slotted into its place before the book is reprinted.</p>
+          <p data-pep-anecdote-map>A sorted lookup helps most when your search fixes its first sort key, and keeping it sorted costs work on every change.</p>
+        </div>
+      </details>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="code">
+      <div id="task-2" class="task" data-pep-task data-pep-may-stall>
+        <h3>Your task</h3>
+        <p>In <strong>indexes.sql</strong>, replace the comment line with one <code>CREATE INDEX</code> statement on <code>orders</code> that suits this query, then press <strong>Run</strong>:</p>
+<pre><code>SELECT * FROM orders
+WHERE customer_id = 42
+  AND created_at &gt;= '2026-01-01';</code></pre>
+        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip>
+          <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 2</span></summary>
+          <div class="pep-hint__body">
+            <p data-pep-hint-target><strong>Where to act:</strong> The parentheses after <code>ON orders</code> in your statement, where the column list goes.</p>
+            <p data-pep-hint-step><strong>Next step:</strong> Sort the query's two conditions into an equality test and a range test; an index on only one of them leaves the other to be checked row by row.</p>
+            <details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="2" data-section-skip>
+              <summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 2</span></summary>
+              <div class="pep-hint__body">
+                <p data-pep-hint-target><strong>Where to act:</strong> The order of the columns inside those parentheses.</p>
+                <p data-pep-hint-step><strong>Next step:</strong> Apply the leading-column rule from the teaching: which kind of test should the first column carry so the range test can still narrow the read?</p>
+              </div>
+            </details>
+          </div>
+        </details>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>Run reports <code>CREATE INDEX</code>, and the analysis shows that both conditions narrow the part of the index that is read. Two runs that create a different index settle the activity.</p></section>
+      <noscript data-pep-no-js data-section-skip><div class="pep-nojs-code pep-expected"><p><strong>Practice editor, reading version.</strong> JavaScript is off, so the editor cannot run here. Work on paper or on your own PostgreSQL database.</p><p><strong>Task:</strong> write one <code>CREATE INDEX</code> statement on <code>orders</code> for <code>WHERE customer_id = 42 AND created_at &gt;= '2026-01-01'</code>.</p><p><strong>Starter, indexes.sql:</strong></p><pre><code>-- orders(id PRIMARY KEY, customer_id, created_at, status, total)
+-- Write one CREATE INDEX statement for:
+--   WHERE customer_id = 42 AND created_at &gt;= '2026-01-01'
+-- your statement here</code></pre><p><strong>What the practice editor accepts:</strong> one <code>CREATE INDEX</code> statement, with an optional index name, on a table of this page, with an optional <code>USING btree</code> and a list of that table's columns, each optionally followed by <code>ASC</code> or <code>DESC</code>.</p><p><strong>How to compare:</strong> for each column of your index, from the left, ask whether the query tests it with <code>=</code>, with a range, or not at all. The index suits the query when equality-tested columns lead and the range-tested column follows them, so both conditions narrow the part of the index that is read. An index whose first column has a range test, or no test, still works, but more of it must be read and checked.</p></div></noscript>
+      <div class="pep-js-only">
+          <fieldset id="x1" data-interaction="explore" data-pep-explore aria-describedby="task-2" data-static-alt="SQL practice editor for one CREATE INDEX statement on orders(id PRIMARY KEY, customer_id, created_at, status, total), for the query WHERE customer_id = 42 AND created_at >= '2026-01-01'. Run reports CREATE INDEX, PostgreSQL's default index name when none is given (table, columns, then idx, joined by underscores), and an analysis of each indexed column from the left: an equality-tested leading column and the range-tested column after it both narrow the part of the index read; a leading range-tested column narrows the read, but the equality test on a later column is then only checked inside that range; an index on only one of the two columns leaves the other condition to be checked on table rows; a first column the query does not test makes the index a poor fit. An unknown table gives ERROR: relation does not exist, and an unknown column gives ERROR: column does not exist.">
+            <legend>Write the index</legend>
+            <div class="pep-editor">
+              <div class="pep-editor__bar"><span class="pep-editor__file">indexes.sql</span><button type="button" class="primary" id="run">Run</button><button type="button" class="ghost" id="ed-reset">Reset code</button></div>
+              <div class="pep-editor__code"><div class="pep-editor__gutter" id="ed-gutter" aria-hidden="true"></div><textarea id="ed" class="pep-editor__input" rows="5" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="SQL editor, indexes.sql" aria-describedby="task-2 ed-scope"></textarea></div>
+              <p class="pep-editor__scope" id="ed-scope">Checks one <code>CREATE INDEX</code> statement against this page's tables, offline. It does not run other SQL.</p>
+              <div class="pep-editor__tabs" role="tablist" aria-label="Results"><button type="button" role="tab" id="tab-prob" aria-controls="ed-prob" aria-selected="true">Problems</button><button type="button" role="tab" id="tab-out" aria-controls="ed-out" aria-selected="false" tabindex="-1">Output</button></div>
+              <div class="pep-editor__panel" id="ed-prob" role="tabpanel" aria-labelledby="tab-prob" tabindex="0"></div>
+              <div class="pep-editor__panel" id="ed-out" role="tabpanel" aria-labelledby="tab-out" tabindex="0" hidden><pre class="out" id="ed-print">(no output yet)</pre></div>
+              <p class="pep-editor__status" id="ed-status"></p>
+            </div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-2" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <p class="pep-back"><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-3" class="pep-activity" data-pep-activity aria-labelledby="a3-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a3-h" tabindex="-1">Activity 3: Indexes you get automatically</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>Declaring a <code>PRIMARY KEY</code> or a <code>UNIQUE</code> constraint makes PostgreSQL create a unique B-tree index on those columns, which it uses to enforce the constraint. Declaring a <code>FOREIGN KEY</code> does not create an index on the referencing columns; add one yourself when deletes on the referenced table or joins need it. <code>NOT NULL</code> and <code>CHECK</code> create no index.</p>
+      </div>
+      <section data-pep-where-fits aria-labelledby="where-fits-3">
+        <h2 id="where-fits-3">Where this fits</h2>
+        <p data-pep-fit-decision><strong>Decision:</strong> add an index, or leave the table without one?</p>
+        <p data-pep-fit-good><strong>Good fit:</strong> a column that frequent queries filter, join or sort on, in a table large enough that reading every row is slow, such as a foreign key column used in joins.</p>
+        <p data-pep-fit-boundary><strong>Choose something else when:</strong> the table is small or written far more often than it is read, or the column already leads a <code>PRIMARY KEY</code> or <code>UNIQUE</code> index: a duplicate index only adds write cost.</p>
+      </section>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-3" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <p>For each declaration shown after <strong>Declaration:</strong>, press whether PostgreSQL creates an index for it automatically.</p>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>All five declarations sit in the right lanes; a second miss on any declaration settles the activity.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="x2" data-interaction="drag" data-pep-explore aria-describedby="task-3" data-static-alt="Sorting activity. id integer PRIMARY KEY: index created automatically (a unique B-tree index). email text UNIQUE: index created automatically (a unique B-tree index). customer_id integer REFERENCES customers (id): no index created automatically on the referencing column. name text NOT NULL: no index. total numeric CHECK (total >= 0): no index.">
+            <legend id="ln-legend">Declaration: <span id="ln-name"></span></legend>
+            <div class="lanebtns" id="ln-btns"></div>
+            <p class="sub" id="ln-count"></p>
+          </fieldset>
+          <figure class="model" aria-label="Lanes so far">
+            <div class="lanes" id="m-lanes"></div>
+          </figure>
+      </div>
+      <div class="feedback" id="fb-3" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong></p><ul><li><code>id integer PRIMARY KEY</code>: index created automatically, a unique B-tree.</li><li><code>email text UNIQUE</code>: index created automatically, a unique B-tree.</li><li><code>customer_id integer REFERENCES customers (id)</code>: no index on the referencing column.</li><li><code>name text NOT NULL</code>: no index.</li><li><code>total numeric CHECK (total &gt;= 0)</code>: no index.</li></ul></div></noscript>
+      <p class="pep-back"><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-4" class="pep-activity" data-pep-activity aria-labelledby="a4-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a4-h" tabindex="-1">Activity 4: What an index costs</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>A <code>sensor_readings</code> table receives thousands of new rows every minute and is queried once a night. Someone has added eight indexes to it, "to be safe".</p>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-apply" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <p>Under <strong>Which statement is true</strong>, choose one and your confidence, then press <strong>Check answer</strong>.</p>
+        <div id="task-4"><p class="pep-task-q">Which statement about the eight indexes is true?</p></div>
+        <div id="task-4b" tabindex="-1" hidden><p class="pep-task-q">Retry: a nightly report filters <code>sensor_readings</code> by <code>sensor_id</code>, and nothing ever filters by <code>note</code>. Which change is sensible?</p></div>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>You pick the true statement; a second miss settles the check.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="apply2" data-interaction="mcq" data-confidence data-pep-apply data-static-alt="Apply question: a table with frequent inserts, rare reads and eight indexes. True: every INSERT must also add an entry to each of the eight indexes, which slows writes and uses disk space. Wrong: indexes make inserts faster (they add work); unused indexes cost nothing (they are still maintained and stored); PostgreSQL drops unused indexes on its own (it never does). Retry form: keep an index on sensor_id, which the report filters, and drop the index on note, which no query uses.">
+            <legend>Which statement is true</legend>
+            <div class="opts one" id="g4a">
+              <label class="opt"><input type="radio" name="g4a" id="g4a-fast" value="fast" aria-describedby="task-4"><span class="ot">The indexes make each insert faster, because rows are placed in order</span></label>
+              <label class="opt"><input type="radio" name="g4a" id="g4a-right" value="right" aria-describedby="task-4"><span class="ot">Each insert must also update all eight indexes, which slows writes and uses disk space</span></label>
+              <label class="opt"><input type="radio" name="g4a" id="g4a-free" value="free" aria-describedby="task-4"><span class="ot">Indexes that no query uses cost nothing</span></label>
+              <label class="opt"><input type="radio" name="g4a" id="g4a-auto" value="auto" aria-describedby="task-4"><span class="ot">PostgreSQL drops indexes that no query uses</span></label>
+            </div>
+            <div class="opts one" id="g4b" hidden>
+              <label class="opt"><input type="radio" name="g4b" id="g4b-all" value="all" aria-describedby="task-4b"><span class="ot">Keep all eight; more indexes are always safer</span></label>
+              <label class="opt"><input type="radio" name="g4b" id="g4b-none" value="none" aria-describedby="task-4b"><span class="ot">Drop every index, including the one on <code>sensor_id</code></span></label>
+              <label class="opt"><input type="radio" name="g4b" id="g4b-right" value="right" aria-describedby="task-4b"><span class="ot">Keep the index on <code>sensor_id</code> and drop the one on <code>note</code></span></label>
+              <label class="opt"><input type="radio" name="g4b" id="g4b-note" value="note" aria-describedby="task-4b"><span class="ot">Keep the index on <code>note</code> and drop the one on <code>sensor_id</code></span></label>
+            </div>
+          </fieldset>
+          <div class="row">
+            <fieldset class="conf" id="conf4" data-pep-confidence aria-describedby="conf4-instr">
+              <legend id="conf4-instr">How sure are you?</legend>
+              <label class="opt"><input type="radio" name="conf4" id="conf4-low" value="low"><span class="ot">Low</span></label>
+              <label class="opt"><input type="radio" name="conf4" id="conf4-medium" value="medium"><span class="ot">Medium</span></label>
+              <label class="opt"><input type="radio" name="conf4" id="conf4-high" value="high"><span class="ot">High</span></label>
+            </fieldset>
+            <button type="button" class="primary" id="check-4" data-pep-apply-check aria-describedby="conf4-instr" disabled>Check answer</button>
+          </div>
+      </div>
+      <div class="feedback" id="fb-4" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> True: each insert must also update all eight indexes, which slows writes and uses disk space.</p><ul><li>Faster inserts: wrong; every index adds work to each insert.</li><li>Unused indexes cost nothing: wrong; they are still maintained on every change and stored on disk.</li><li>PostgreSQL drops unused indexes: wrong; removing them is your job.</li></ul><p><strong>Retry form:</strong> keep the index on <code>sensor_id</code>, which the report filters, and drop the one on <code>note</code>, which no query uses.</p></div></noscript>
+      <details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+        <summary>Challenge (optional)</summary>
+        <div class="pep-optional__body">
+          <p data-pep-optional-time><strong>Optional time:</strong> about 5 minutes, in addition to this topic's time.</p>
+          <p>On your own PostgreSQL database, create a small table with a <code>PRIMARY KEY</code>, a <code>UNIQUE</code> column and a column that references another table. In <code>psql</code>, run <code>\d</code> followed by the table name and read the <strong>Indexes:</strong> section of its description.</p>
+          <p data-pep-success-criteria><strong>Success criteria:</strong> you can point to the index behind the primary key and the one behind the unique constraint, and you can say why the referencing column has none until you create it.</p>
+        </div>
+      </details>
+      <p class="pep-back"><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+    </div>
+  </div>
+</section>
+
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+  <button type="button" class="pep-btn" id="prev" data-pep-previous>Previous activity</button>
+  <button type="button" class="primary" id="next" data-pep-next>Next activity</button>
+</div>
+
+<section id="recap" class="recap" data-pep-recap aria-labelledby="recap-h">
+  <h2 id="recap-h" tabindex="-1">Recap</h2>
+  <p id="complete" class="complete" data-pep-completion></p>
+  <ul>
+    <li>Without an index, PostgreSQL must read every row; a B-tree index lets it find matching rows directly.</li>
+    <li>Every index is kept in step with its table, so it slows <code>INSERT</code>, <code>UPDATE</code> and <code>DELETE</code> and takes disk space.</li>
+    <li>In a multicolumn index, put equality-tested columns first and the range-tested column after them.</li>
+    <li><code>PRIMARY KEY</code> and <code>UNIQUE</code> create a unique B-tree index automatically; a foreign key does not.</li>
+  </ul>
+  <details data-section-skip data-pep-cheat-sheet>
+    <summary>Cheat sheet</summary>
+    <table>
+      <tr><td>One column</td><td><code>CREATE INDEX users_email_idx ON users (email);</code></td></tr>
+      <tr><td>Several columns</td><td><code>CREATE INDEX name ON table (equality_col, range_col);</code></td></tr>
+      <tr><td>Automatic</td><td><code>PRIMARY KEY</code>, <code>UNIQUE</code></td></tr>
+      <tr><td>Remove</td><td><code>DROP INDEX name;</code></td></tr>
+    </table>
+  </details>
+  <details data-section-skip data-pep-sources class="sources">
+    <summary>Sources and review date</summary>
+    <p>Claims on this page were checked against the live official PostgreSQL documentation below on 16 October 2026 (UTC). Default index names were confirmed on PostgreSQL 17.5. Links open outside this lesson.</p>
+    <ul>
+      <li><a href="https://www.postgresql.org/docs/current/indexes-intro.html" rel="noopener">11.1 Introduction</a>: without an index the whole table is scanned; indexes add overhead to data manipulation and unused ones should be removed.</li>
+      <li><a href="https://www.postgresql.org/docs/current/indexes-types.html" rel="noopener">11.2.1 B-Tree</a>: the default index type and the operators it supports.</li>
+      <li><a href="https://www.postgresql.org/docs/current/indexes-multicolumn.html" rel="noopener">11.3 Multicolumn Indexes</a>: the leading-column rule.</li>
+      <li><a href="https://www.postgresql.org/docs/current/sql-createindex.html" rel="noopener">CREATE INDEX</a>: synopsis, optional name and default name.</li>
+      <li><a href="https://www.postgresql.org/docs/current/ddl-constraints.html" rel="noopener">5.5 Constraints</a>: unique and primary-key constraints create a unique B-tree index; a foreign key does not create one.</li>
+    </ul>
+  </details>
+  <p class="next-topic">Next: Reading: Query plans with EXPLAIN</p>
+</section>
+</main>
+<script>
+window.PEP_PAGE={
+keys:['predict','x1','x2','apply2'],
+kinds:{predict:'predict',x1:'editor',x2:'lanes',apply2:'check'},
+labels:{x1:'Index for the query',x2:'Automatic indexes',apply2:'Final check'},
+predict:{ok:'scan',lead:'With no index on `email`, the only way to find every matching row is a sequential scan: read each of the million rows and test its email.',expl:{
+  scan:'Right: a sequential scan reads every row, because nothing else can locate the matches.',
+  jump:'Not quite: table rows are not kept in a searchable order. That is what an index adds.',
+  first:'Not quite: nothing makes `email` unique, so a later row could match too.',
+  refuse:'Not quite: an index only speeds a query up; no query requires one.'}},
+lanesets:[{key:'x2',model:'#m-lanes',btns:'#ln-btns',name:'#ln-name',count:'#ln-count',legend:'ln-legend',
+ lanes:[{id:'auto',label:'Index created automatically'},{id:'none',label:'No index created'}],
+ done:'Only constraints that must check uniqueness, `PRIMARY KEY` and `UNIQUE`, come with an index.',
+ items:[
+  {n:'`id integer PRIMARY KEY`',lane:'auto',ok:'A primary key creates a unique B-tree index on `id`.',w:{none:'Enforcing uniqueness needs a fast lookup, so PostgreSQL creates a unique B-tree index.'}},
+  {n:'`email text UNIQUE`',lane:'auto',ok:'A unique constraint creates a unique B-tree index on `email`.',w:{none:'A unique constraint is enforced through a unique B-tree index created with it.'}},
+  {n:'`customer_id integer REFERENCES customers (id)`',lane:'none',ok:'A foreign key does not index the referencing column; create one yourself when needed.',w:{auto:'The referenced `customers.id` is indexed by its key, but the referencing `customer_id` is not.'}},
+  {n:'`name text NOT NULL`',lane:'none',ok:'`NOT NULL` is checked on each row and needs no index.',w:{auto:'Checking for a missing value needs no lookup across rows.'}},
+  {n:'`total numeric CHECK (total >= 0)`',lane:'none',ok:'A `CHECK` constraint tests each row on its own and needs no index.',w:{auto:'A check looks at one row at a time, so no index is created.'}}
+ ]}],
+checks:[
+ {key:'apply2',fs:'#apply2',g1:'g4a',g2:'g4b',t1:'#task-4',t2:'#task-4b',conf:'#conf4',confName:'conf4',btn:'#check-4',data:{
+  r1:{ok:'right',expl:{
+    fast:'Every index must receive an entry for each new row, so indexes add work to inserts.',
+    right:'PostgreSQL keeps every index synchronized with the table, so eight indexes mean eight extra updates per insert, plus their disk space.',
+    free:'An unused index is still updated on every change and still takes disk space.',
+    auto:'PostgreSQL never drops an index by itself; removing unused ones is your job.'},
+    mis:{fast:'Indexes add work to every write.',free:'Unused indexes still cost writes and space.',auto:'Nothing removes them for you.'}},
+  r2:{ok:'right',answer:'Keep the index on `sensor_id`, which the nightly report filters, and drop the one on `note`, which no query uses.',expl:{
+    all:'Each extra index slows every insert; an index no query uses buys nothing.',
+    none:'The report filters by `sensor_id`, so that index can save a full scan every night.',
+    right:'Keep what a query uses and drop what none does.',
+    note:'That keeps the index no query uses and drops the one the report needs.'},
+    mis:{all:'Unused indexes only add cost.',none:'The report still needs one index.',note:'That is the wrong way round.'}}}}
+]};
+/* SQL practice editor: a bounded checker for one CREATE INDEX statement on this page's tables */
+(function(){var P=window.PEP_PAGE;
+var TABLES={orders:['id','customer_id','created_at','status','total'],customers:['id','name','email'],users:['id','email','name']};
+var QUERY={table:'orders',eq:['customer_id'],range:['created_at']};
+var STARTER='-- orders(id PRIMARY KEY, customer_id, created_at, status, total)\n-- Write one CREATE INDEX statement for:\n--   WHERE customer_id = 42 AND created_at >= \'2026-01-01\'\n-- your statement here';
+function Problem(kind,msg,pos){this.kind=kind;this.msg=msg;this.pos=pos;}
+function lex(src){var t=[],re=/\s+|--[^\n]*|\/\*[\s\S]*?\*\/|("(?:[^"]|"")*"|[A-Za-z_][\w$]*|\d+|'(?:[^']|'')*'|.)/g,m;
+  while((m=re.exec(src))){if(m[1]!==undefined)t.push({v:m[1],p:m.index});}return t;}
+function parse(src){var Tk=lex(src),i=0;
+  function pk(o){var x=Tk[i+(o||0)];return x?x.v:'';}
+  function lw(o){return pk(o).toLowerCase();}
+  function at(){return Tk[i]?Tk[i].p:src.length;}
+  function syntax(){throw new Problem('error','ERROR:  syntax error at '+(Tk[i]?'or near "'+Tk[i].v+'"':'end of input'),at());}
+  function word(w){if(lw()===w){i++;return;}syntax();}
+  function ident(){var v=pk();if(/^"/.test(v)){i++;return v.slice(1,-1).replace(/""/g,'"');}
+    if(!/^[A-Za-z_][\w$]*$/.test(v)||['on','using','index','create','table','unique','asc','desc'].indexOf(v.toLowerCase())>=0)syntax();i++;return v.toLowerCase();}
+  if(!Tk.length)throw new Problem('error','the editor is empty: write one CREATE INDEX statement',0);
+  var p0=at();
+  if(lw()!=='create')throw new Problem('limit','not supported in this practice editor: write one statement that starts CREATE INDEX',p0);
+  i++;var unique=false;if(lw()==='unique'){unique=true;i++;}
+  if(lw()!=='index'){if(lw()==='table')throw new Problem('limit','not supported in this practice editor: this task needs CREATE INDEX, not CREATE TABLE',at());syntax();}
+  i++;
+  if(lw()==='concurrently'||(lw()==='if'&&lw(1)==='not'))throw new Problem('limit','not supported in this practice editor: write CREATE INDEX [name] ON table (columns)',at());
+  var name=null;if(lw()!=='on')name=ident();
+  word('on');var tp=at(),table=ident();
+  var method='btree';if(lw()==='using'){i++;var mp=at();method=ident();if(method!=='btree')throw new Problem('limit','not supported in this practice editor: it checks B-tree indexes only, the default kind; remove USING '+method,mp);}
+  if(pk()!=='(')syntax();i++;
+  var cols=[],cps=[];
+  for(;;){cps.push(at());var c=ident();cols.push(c);
+    if(lw()==='asc'||lw()==='desc')i++;
+    if(lw()==='nulls')throw new Problem('limit','not supported in this practice editor: NULLS FIRST or LAST',at());
+    if(pk()===','){i++;continue;}if(pk()===')'){i++;break;}syntax();}
+  if(lw()==='include'||lw()==='where'||lw()==='with')throw new Problem('limit','not supported in this practice editor: '+pk().toUpperCase()+' after the column list',at());
+  if(pk()===';')i++;
+  if(i<Tk.length)throw new Problem('limit','not supported in this practice editor: write only one statement',at());
+  if(!TABLES[table])throw new Problem('error','ERROR:  relation "'+table+'" does not exist',tp);
+  for(var k=0;k<cols.length;k++){if(TABLES[table].indexOf(cols[k])<0)throw new Problem('error','ERROR:  column "'+cols[k]+'" does not exist',cps[k]);}
+  if(unique)throw new Problem('limit','not supported in this practice editor: UNIQUE would also forbid two orders with the same values, which the orders table allows; this task needs a plain index',p0);
+  return {name:name||(table+'_'+cols.join('_')+'_idx'),table:table,cols:cols};}
+function analyse(ix){var lines=[],narrowed={},open=true,first=ix.cols[0];
+  if(ix.table!==QUERY.table)return {ok:false,lines:['This index is on '+ix.table+', but the query reads orders, so it cannot help.']};
+  ix.cols.forEach(function(c,n){var pos='Column '+(n+1)+', '+c+': ';
+    if(open&&QUERY.eq.indexOf(c)>=0){narrowed[c]=true;lines.push(pos+'tested with = in the query, so it narrows the part of the index that is read.');}
+    else if(open&&QUERY.range.indexOf(c)>=0){narrowed[c]=true;open=false;lines.push(pos+'tested with a range, so it narrows the read; columns after it are only checked inside that range.');}
+    else if(QUERY.eq.indexOf(c)>=0||QUERY.range.indexOf(c)>=0){open=false;lines.push(pos+'tested by the query, but an earlier column has a range test, so this test is checked inside the index rather than narrowing the read.');}
+    else{open=false;lines.push(pos+'not tested by the query'+(n===0?', so the index does not fit this query well.':', so it only adds write cost here.'));}});
+  QUERY.eq.concat(QUERY.range).forEach(function(c){if(ix.cols.indexOf(c)<0)lines.push(c+' is not in the index, so that condition is checked on table rows.');});
+  var ok=QUERY.eq.concat(QUERY.range).every(function(c){return narrowed[c];});
+  return {ok:ok,lines:lines};}
+var A,ed,miss=0,settled=false,matched=false;
+function $(s){return A.$(s);}
+function gutter(){var n=ed.value.split('\n').length,g=[];for(var k=1;k<=n;k++)g.push(k);$('#ed-gutter').textContent=g.join('\n');ed.rows=Math.max(5,Math.min(20,n));}
+function tab(which){[['prob','#tab-prob','#ed-prob'],['out','#tab-out','#ed-out']].forEach(function(t){var on=t[0]===which;$(t[1]).setAttribute('aria-selected',on?'true':'false');$(t[1]).tabIndex=on?0:-1;$(t[2]).hidden=!on;});}
+function lineOf(src,pos){return src.slice(0,pos).split('\n').length;}
+function goLine(n){var ls=ed.value.split('\n'),pos=0;for(var k=0;k<n-1&&k<ls.length;k++)pos+=ls[k].length+1;ed.focus();ed.setSelectionRange(pos,pos);}
+function showProblem(src,pr){var box=$('#ed-prob'),ln=lineOf(src,pr.pos),b=A.el('button','pep-editor__problem');b.type='button';
+  b.appendChild(A.el('span',pr.kind==='error'?'kind-error':'kind-limit',pr.kind==='error'?'Error':'Not supported'));b.appendChild(A.T(' line '+ln+': '+pr.msg));
+  b.addEventListener('click',function(){goLine(ln);});box.textContent='';box.appendChild(b);tab('prob');
+  $('#ed-status').textContent=(pr.kind==='error'?'1 error: PostgreSQL would reject this statement':'1 problem: outside what this practice editor checks')+'. Select the problem to jump to line '+ln+'.';}
+function run(){var src=ed.value,ix,n=A.stepOf('x1');A.attempt(n);
+  try{ix=parse(src);}catch(pr){if(!(pr instanceof Problem))throw pr;showProblem(src,pr);
+    A.say([{c:'verdict info',s:pr.kind==='error'?'Not created: PostgreSQL would reject this statement. Read the problem under the editor, fix it and run again.':'Not checked: this practice editor cannot check that form. Read the problem under the editor.'}]);return;}
+  $('#ed-prob').textContent='';$('#ed-prob').appendChild(A.el('p','pep-editor__empty','No problems.'));
+  var r=analyse(ix);$('#ed-print').textContent='CREATE INDEX\n\nIndex: '+ix.name+' on '+ix.table+' ('+ix.cols.join(', ')+')\n'+r.lines.join('\n');tab('out');
+  $('#ed-status').textContent=r.ok?'Created: both conditions narrow the index read':'Created: the index does not fit both conditions';
+  var msg=[{c:r.ok?'verdict ok':'verdict info',s:r.ok?'This index suits the query: the equality test and then the range test both narrow the part of the index that is read.':'PostgreSQL would create this index, but it does not let both conditions narrow the read. Read the analysis in Output.'}];
+  if(A.S.done.x1){if(r.ok&&!matched){matched=true;msg.push({s:'This run matches; the activity was already settled, so its result stays as recorded.'});}A.say(msg);return;}
+  if(r.ok){A.S.results.x1=miss?'correct-retry':'correct';A.say(msg,true);A.complete('x1');return;}
+  miss++;
+  if(miss>=2){settled=true;A.S.results.x1='settled';msg.push({c:'verdict set',s:'Answered and settled: two runs created an index that does not fit both conditions, so this activity is not marked correct. The editor stays open: compare the analysis with the leading-column rule and try again for practice.'});A.say(msg,true);A.complete('x1');return;}
+  msg.push({s:'One more run that misses settles this activity. Use the analysis and the hints, then run again.'});A.say(msg);}
+function resetCode(){ed.value=STARTER;gutter();$('#ed-prob').textContent='';$('#ed-prob').appendChild(A.el('p','pep-editor__empty','Not run yet. Edit the statement, then press Run.'));$('#ed-print').textContent='(no output yet)';tab('prob');$('#ed-status').textContent='Not run yet';}
+P.init=function(api){A=api;ed=$('#ed');
+  ed.addEventListener('input',gutter);$('#run').addEventListener('click',run);$('#ed-reset').addEventListener('click',resetCode);
+  $('#tab-prob').addEventListener('click',function(){tab('prob');});$('#tab-out').addEventListener('click',function(){tab('out');});
+  A.$$('[role="tab"]').forEach(function(t){t.addEventListener('keydown',function(ev){if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){var o=t.id==='tab-prob'?'out':'prob';tab(o);$('#tab-'+o).focus();ev.preventDefault();}});});
+  resetCode();};
+P.reset={x1:function(){miss=0;settled=false;matched=false;resetCode();}};
+})();
+</script>
+<script>
+(function(){
+'use strict';
+var D=document;
+function $(s,r){return (r||D).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||D).querySelectorAll(s));}
+function md(s){var f=D.createDocumentFragment(),re=/(`[^`]+`|\*\*[^*]+\*\*)/g,last=0,m;s=String(s);
+  while((m=re.exec(s))){if(m.index>last)f.appendChild(D.createTextNode(s.slice(last,m.index)));
+    var t=m[0],e=D.createElement(t.charAt(0)==='`'?'code':'strong');e.textContent=t.charAt(0)==='`'?t.slice(1,-1):t.slice(2,-2);f.appendChild(e);last=re.lastIndex;}
+  if(last<s.length)f.appendChild(D.createTextNode(s.slice(last)));return f;}
+function el(tag,cls,txt){var e=D.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.appendChild(typeof txt==='string'?md(txt):txt);return e;}
+function T(t){return D.createTextNode(t);}
+/* Page data (questions, lanes, labels and any page simulator) comes from the page's own data script */
+var P=window.PEP_PAGE;
+
+/* Guidance state: current activity, a monotonic unlocked frontier and per-activity results kept apart */
+var main=$('#lesson'),ACTS=$$('[data-pep-activity]'),LINKS=$$('[data-pep-activity-link]'),prevBtn=$('#prev'),next=$('#next'),resetBtn=$('#reset'),recap=$('#recap');
+var KEYS=P.keys,N=KEYS.length,KIND=P.kinds;
+function stepOf(k){return KEYS.indexOf(k)+1;}
+var S={step:1,done:{},results:{}};
+function freshAct(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,cont:false};}
+var G={current:1,unlocked:1,complete:false,acts:KEYS.map(freshAct)};
+function fbOf(n){return $('[data-pep-feedback]',ACTS[n-1]);}
+function say(parts,focus){var fb=fbOf(G.current);fb.textContent='';(parts||[]).forEach(function(p){
+  if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li',it[2]||'');li.appendChild(el('strong',null,it[0]));li.appendChild(T(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
+  else if(p.pre){var pr=el('pre','out');pr.textContent=p.pre;fb.appendChild(pr);}
+  else{var q=el('p',p.c||'',p.s);if(p.attr)q.setAttribute(p.attr,'');fb.appendChild(q);}});
+  if(focus)fb.focus();}
+function optText(i){var l=i.closest('label');return l?l.textContent.replace(/\s+/g,' ').trim():i.value;}
+var WORD={'correct':'correct on the first try','correct-retry':'correct on the second try','settled':'answered and settled, not marked correct'};
+function reflect(){ACTS.forEach(function(sec,i){var a=G.acts[i];sec.setAttribute('data-pep-attempts',String(a.attempts));sec.setAttribute('data-pep-settled',String(a.settled));
+    sec.setAttribute('data-pep-completed',String(a.completed));sec.setAttribute('data-pep-credit',String(a.credit));sec.setAttribute('data-pep-grade',String(a.grade));sec.setAttribute('data-pep-continue',String(a.cont));});
+  main.setAttribute('data-pep-current-activity',String(G.current));main.setAttribute('data-pep-unlocked-through',String(G.unlocked));main.setAttribute('data-pep-complete',String(G.complete));}
+function progress(){var n=0,set=0,segs=$$('.pep-progress > span');KEYS.forEach(function(k,i){var s=segs[i];s.className='';
+    if(S.done[k]){n++;if(S.results[k]==='settled'){set++;s.className='is-settled';}else s.className='is-done';}
+    if(i+1===G.current)s.className+=(s.className?' ':'')+'is-current';});
+  $('#prog-text').textContent='Activities done: '+n+' of '+N+(set?' ('+set+(set>1?' checks':' check')+' settled, not correct)':'');}
+function attempt(n){G.acts[n-1].attempts++;reflect();}
+function finishPage(){var c=$('#complete'),labels=P.labels,parts=[],anySet=false;
+  KEYS.forEach(function(k){if(S.results[k]&&labels[k]){parts.push(labels[k]+': '+WORD[S.results[k]]+'.');if(S.results[k]==='settled')anySet=true;}});
+  c.className='complete'+(anySet?' settled':'');c.textContent='Topic complete. '+parts.join(' ')+(anySet?' Review the explanations before you move on.':'');}
+function complete(k){var n=stepOf(k),a=G.acts[n-1];S.done[k]=true;
+  a.completed=true;a.settled=true;a.cont=true;
+  if(a.credit===0){a.credit=1;a.grade=(KIND[k]==='predict'||KIND[k]==='explore'||S.results[k]==='settled')?0:1;}
+  G.unlocked=Math.max(G.unlocked,Math.min(n+1,N));
+  if(!G.complete&&KEYS.every(function(x){return !!S.done[x];})){G.complete=true;finishPage();}
+  progress();render(G.current);}
+function render(number,mode,moveFocus){
+  if(!(number>=1&&number<=N&&number<=G.unlocked))return false;
+  G.current=number;S.step=number;
+  ACTS.forEach(function(sec,i){sec.hidden=i+1!==number;});
+  LINKS.forEach(function(link,i){var n=i+1;
+    if(n===number)link.setAttribute('aria-current','step');else link.removeAttribute('aria-current');
+    if(n>G.unlocked)link.setAttribute('aria-disabled','true');else link.removeAttribute('aria-disabled');
+    link.classList.toggle('is-done',!!S.done[KEYS[i]]);});
+  prevBtn.disabled=number===1;
+  next.disabled=number===N||number>=G.unlocked||!G.acts[number-1].cont;
+  recap.hidden=!G.complete;
+  $('#pos-text').textContent='Activity '+number+' of '+N;
+  reflect();progress();
+  try{if(mode==='push')history.pushState({activity:number},'','#activity-'+number);
+    else if(mode==='replace')history.replaceState({activity:number},'','#activity-'+number);}
+  catch(e){if(mode&&location.hash!=='#activity-'+number)location.hash='activity-'+number;}
+  if(moveFocus){var h=$('#a'+number+'-h');if(h)h.focus();}
+  return true;}
+/* pep:component predict@1 js */
+/* predict */
+var pf=$('#predict'),pc=$('#predict-check');
+function pReady(){pc.disabled=!!S.done.predict||!($('input[name="predict"]:checked')&&$('input[name="conf0"]:checked'));}
+pf.addEventListener('change',pReady);
+function badges(l,arr){var b=l.querySelector('.badges');if(!b){b=el('span','badges');l.appendChild(b);}arr.forEach(function(x){b.appendChild(el('span','badge '+x[1],x[0]));});}
+pc.addEventListener('click',function(){var c=$('input[name="predict"]:checked'),cv=$('input[name="conf0"]:checked');if(!c||!cv)return;var okv=P.predict.ok,match=c.value===okv;
+  $$('input',pf).forEach(function(i){i.disabled=true;});pc.disabled=true;
+  $$('input[name="predict"]',pf).forEach(function(i){var l=i.closest('label');if(i===c){l.classList.add('mine');badges(l,[['Your prediction','mine-b'],[match?'Correct':'Not correct',match?'ok-b':'no-b']]);}else if(i.value===okv){badges(l,[[P.predict.okLabel||'Correct answer','ok-b']]);}if(i.value===okv)l.classList.add('right');l.appendChild(el('span','oexp',P.predict.expl[i.value]));});
+  pf.querySelector('.opts').classList.add('explained');pc.hidden=true;$('#conf0').closest('.row').hidden=true;
+  if(P.onPredict)P.onPredict();
+  say([{c:'verdict info',s:'Practice prediction, not scored. '+(match?'Your prediction matches the answer.':'Your prediction differs from the answer; nothing is lost.')},{c:'conf-report',s:'Your confidence: '+cv.value+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:P.predict.lead},{s:'Each option now shows its label and why, directly under it.'}],true);
+  complete('predict');});
+/* /pep:component predict js */
+/* pep:component mcq-with-confidence@1 js */
+/* graded checks: confidence first, retry in a second representation, settle after two misses */
+var checks={};
+function check(o){var st={att:0,conf:[],result:null,step:{x1:2,x2:3,apply:4}[o.key]},btn=$(o.btn),cf=$(o.conf),fs=$(o.fs),cn=o.confName||'conf';checks[o.key]=st;
+  function grp(){return st.att===0?o.g1:o.g2;}
+  function ready(){btn.disabled=!!st.result||!($('input[name="'+grp()+'"]:checked')&&$('input[name="'+cn+'"]:checked'));}
+  function lockConf(){$$('input[name="'+cn+'"]').forEach(function(i){i.disabled=true;});btn.disabled=true;}
+  function done(){S.results[o.key]=st.result;if(P.onCheck)P.onCheck(o.key,st.result);complete(o.key,o.label);}
+  fs.addEventListener('change',ready);cf.addEventListener('change',ready);
+  btn.addEventListener('click',function(){var g=grp(),r=st.att===0?o.data.r1:o.data.r2,c=$('input[name="'+g+'"]:checked'),cv=$('input[name="'+cn+'"]:checked');
+    if(!c||!cv||st.result)return;var ok=c.value===r.ok;st.conf.push(cv.value);
+    var confLine='Your confidence: '+cv.value+'. Confidence is your own read on how sure you were; it is reported, never scored.';
+    var expl=$$('input[name="'+g+'"]').map(function(i){return [optText(i)+(i===c?' (your answer):':':'),r.expl[i.value]];});
+    $$('input[name="'+g+'"]').forEach(function(i){i.disabled=true;});c.closest('label').classList.add(ok?'right':'wrong');badges(c.closest('label'),[['Your answer','mine-b'],[ok?'Correct':'Not correct',ok?'ok-b':'no-b']]);
+    if(ok){st.result=st.att===0?'correct':'correct-retry';lockConf();
+      say([{c:'verdict ok',s:st.att===0?'Correct.':'Correct on your second try.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}],true);done();}
+    else if(st.att===0){st.att=1;$('#'+o.g1).hidden=true;$('#'+o.g2).hidden=false;$(o.t1).hidden=true;$(o.t2).hidden=false;$$('input[name="'+cn+'"]').forEach(function(i){i.checked=false;});
+      say([{c:'verdict no',s:'Not yet. '+r.mis[c.value]+' Try again below: same idea, different form, with your confidence again.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}]);
+      ready();$(o.t2).focus();}
+    else{st.result='settled';lockConf();$$('input[name="'+o.g2+'"]').forEach(function(i){if(i.value===r.ok){i.closest('label').classList.add('right');badges(i.closest('label'),[['Correct answer','ok-b']]);}});
+      say([{c:'verdict set',s:'Answered and settled: this check is not marked correct. '+r.mis[c.value]},{c:'conf-report',s:'Confidence on each try: '+st.conf.join(', then ')+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:'The answer: '+r.answer},{list:expl}],true);done();}});
+  st.reset=function(){st.att=0;st.conf=[];st.result=null;$('#'+o.g1).hidden=false;$('#'+o.g2).hidden=true;$(o.t1).hidden=false;$(o.t2).hidden=true;btn.disabled=true;};
+  return st;}
+/* /pep:component mcq-with-confidence js */
+/* lane sort: each item gets one retry, then its lane is revealed; any reveal settles the activity */
+var lanesets={};
+function lanes(o){var st={idx:0,tries:{},placed:{},revealed:{}},box=$(o.model),btns=$(o.btns);lanesets[o.key]=st;
+  function laneName(id){for(var i=0;i<o.lanes.length;i++)if(o.lanes[i].id===id)return o.lanes[i].label;return id;}
+  function draw(){box.textContent='';var cnt=0;
+    o.lanes.forEach(function(ln){var d=el('div','lane'),h=el('p','lk',ln.label),u=el('ul','cards');h.id=o.key+'-lk-'+ln.id;u.setAttribute('aria-labelledby',h.id);d.appendChild(h);d.appendChild(u);box.appendChild(d);
+      o.items.forEach(function(it,i){if(st.placed[i]!==ln.id)return;cnt++;var li=el('li',st.revealed[i]?'revealed':'',it.n);if(st.revealed[i])li.appendChild(el('span','tag','shown after two tries'));u.appendChild(li);});});
+    var it=o.items[st.idx];$(o.name).textContent=it?'':'all sorted';$(o.name).appendChild(it?md(it.n):T(''));
+    $(o.count).textContent=cnt+' of '+o.items.length+' sorted';}
+  function finish(msg){var anyRev=Object.keys(st.revealed).length,anyRetry=Object.keys(st.tries).some(function(k){return st.tries[k]>0;});
+    var res=anyRev?'settled':(anyRetry?'correct-retry':'correct');S.results[o.key]=res;
+    $$('button',btns).forEach(function(b){b.disabled=true;});
+    msg.push({c:anyRev?'verdict set':'verdict ok',s:anyRev?'All sorted. Answered and settled: '+anyRev+(anyRev>1?' items were':' item was')+' shown after two tries, so this activity is not marked correct.':(anyRetry?'All sorted, some on a second try.':'All sorted on the first try.')});
+    if(o.done)msg.push({s:o.done});say(msg,true);complete(o.key);}
+  o.lanes.forEach(function(ln){var b=el('button','ghost',ln.label);b.type='button';b.id=o.key+'-to-'+ln.id;b.setAttribute('data-lane',ln.id);b.setAttribute('aria-describedby',o.legend);
+    b.addEventListener('click',function(){var i=st.idx,it=o.items[i];if(!it||S.done[o.key])return;attempt(stepOf(o.key));
+      if(ln.id===it.lane){st.placed[i]=ln.id;st.idx++;var msg=[{c:'verdict ok',s:'Yes: '+laneName(ln.id)+'.'},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(msg);else say(msg);}
+      else{st.tries[i]=(st.tries[i]||0)+1;
+        if(st.tries[i]<2){say([{c:'verdict no',s:'Not '+laneName(ln.id)+'. '+it.w[ln.id]},{s:'Try another button for the same item.'}]);}
+        else{st.placed[i]=it.lane;st.revealed[i]=true;st.idx++;var m2=[{c:'verdict set',s:'Shown after two tries: '+laneName(it.lane)+'. '+it.w[ln.id]},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(m2);else say(m2);}}});
+    btns.appendChild(b);});
+  st.reset=function(){st.idx=0;st.tries={};st.placed={};st.revealed={};$$('button',btns).forEach(function(b){b.disabled=false;});draw();};
+  draw();return st;}
+
+/* Wire the activities declared by the page data */
+var API={$:$,$$:$$,el:el,md:md,T:T,say:say,attempt:attempt,complete:complete,stepOf:stepOf,S:S,G:G};
+if(KIND.predict)P.onPredict=function(){attempt(stepOf('predict'));};
+(P.lanesets||[]).forEach(function(o){lanes(o);});
+(P.checks||[]).forEach(function(o){check(o);$(o.btn).addEventListener('click',function(){var n=stepOf(o.key),c=checks[o.key].conf.length;if(c!==G.acts[n-1].attempts){G.acts[n-1].attempts=c;reflect();}});});
+if(P.init)P.init(API);
+
+/* Restart: only the current activity returns to its authored start; other work, the frontier and page completion stay */
+function clearChoices(scope){$$('input',scope).forEach(function(i){i.checked=false;i.disabled=false;});$$('.opt',scope).forEach(function(o){o.classList.remove('right','wrong','mine');});
+  $$('.oexp,.badges',scope).forEach(function(e){e.remove();});$$('.opts.explained',scope).forEach(function(o){o.classList.remove('explained');});}
+function restart(){var n=G.current,k=KEYS[n-1],sec=ACTS[n-1],kind=KIND[k];
+  if(kind==='predict'){clearChoices(sec);pc.hidden=false;pc.disabled=true;$('#conf0').closest('.row').hidden=false;}
+  if(kind==='lanes')lanesets[k].reset();
+  if(kind==='check'){clearChoices(sec);checks[k].reset();}
+  if(P.reset&&P.reset[k])P.reset[k](API);
+  delete S.done[k];delete S.results[k];G.acts[n-1]=freshAct();
+  $$('[data-pep-feedback]',sec).forEach(function(f){f.textContent='';});
+  render(n);
+  $('#restart-status').textContent='Activity '+n+' restarted. Other activities keep their work.';}
+resetBtn.addEventListener('click',restart);
+
+/* Reversible navigation: buttons, timeline, back links and browser history change only the current activity */
+function numberOf(hash){var m=/^#activity-(\d+)$/.exec(hash||'');return m?Number(m[1]):0;}
+prevBtn.addEventListener('click',function(){render(G.current-1,'push',true);});
+next.addEventListener('click',function(){render(G.current+1,'push',true);});
+LINKS.forEach(function(link,i){link.addEventListener('click',function(ev){ev.preventDefault();render(i+1,'push',true);});});
+$$('[data-pep-back-link]').forEach(function(link){link.addEventListener('click',function(ev){ev.preventDefault();render(numberOf(link.getAttribute('href')),'push',true);});});
+var lastFocused=null;D.addEventListener('focusin',function(ev){lastFocused=ev.target;});
+function fromHistory(){var keep=lastFocused,n=numberOf(location.hash);
+  if(!render(n,null,false))render(G.current,'replace',false);
+  if(keep&&keep.isConnected&&!keep.closest('[hidden]'))keep.focus({preventScroll:true});}
+addEventListener('popstate',fromHistory);addEventListener('hashchange',fromHistory);
+
+/* Objectives: native disclosure; Escape and an outside click close it */
+var obj=$('[data-pep-objectives]');
+D.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&obj.open){obj.open=false;obj.querySelector('summary').focus();}});
+D.addEventListener('click',function(ev){if(obj.open&&!obj.contains(ev.target))obj.open=false;});
+
+/* Print: expand closed disclosures, then restore only those */
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=$$('details:not([open])');printOpened.forEach(function(d){d.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(d){d.open=false;});printOpened=[];});
+
+var first=numberOf(location.hash);
+render(first>=1&&first<=G.unlocked?first:1,'replace',false);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="sql-jdbc-foundations">
+<meta name="pep:module" content="crud-aggregates-and-joins">
+<meta name="pep:topic" content="Handling NULLs: COALESCE and CASE">
+<meta name="pep:topic-id" content="handling-nulls-coalesce-and-case">
+<meta name="pep:budget-minutes" content="12">
+<meta name="pep:source" content="authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/sources.json">
+<meta name="lesson-editor-fragment" content="shell.js sha256:8464aa8cd0f62e9d3306c497486159bf5dc0efd5e625947f0bd245b5c7134ef9">
+<meta name="lesson-editor-fragment" content="sql-practice-adapter.js sha256:a47cbd40c8dd09f8d133665bb7d1fb01391d16359d643747d331d51f5829ed83">
+<meta name="lesson-editor-fragment" content="sql-practice-controller.js sha256:2ac600a4b22b5828f64473ba3f810f35ca5fc70e67ab9dd7ea188da2925fbcfb">
+<title>Handling NULLs: COALESCE and CASE · SQL &amp; JDBC Foundations</title>
+<script>document.documentElement.classList.add('pep-js');</script>
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* Components bridge: embedded components/*@1 and editor fragments read these older names. */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+/* Base, focus and motion */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp, .mono { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  #lesson :is(input, select, textarea) { font-size: 16px; scroll-margin-block: 16px; }
+}
+button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+/* Progressive enhancement: without JavaScript every activity is an ordinary section; inert controls are hidden. */
+html:not(.pep-js) .pep-js-only { display: none !important; }
+.nojs { display: block; margin: 16px; padding: 12px 16px; border: 1px solid var(--pep-warning); border-radius: var(--pep-radius-md); background: var(--pep-warning-soft); color: var(--pep-text-strong); }
+.nojs p { margin: 0; }
+.nojs-static { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.nojs-static h3 { margin: 0; }
+.nojs-static p, .nojs-static ul { margin: 0; }
+.nojs-static ul { padding-left: 24px; }
+/* Topic bar: the clearest brand-accent region */
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; margin: 0 0 24px; border: 1px solid var(--pep-accent); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { display: flex; flex: 1 1 240px; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; flex: 1 1 96px; max-width: 160px; }
+.pep-progress > .seg { height: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); background: var(--pep-page); }
+.pep-progress > .seg.is-current { border-color: var(--pep-accent); }
+.pep-progress > .seg.is-done { border-color: var(--pep-accent); background: var(--pep-accent); }
+.pep-progress > .seg.is-settled { border-color: var(--pep-warning); background: var(--pep-warning); }
+.pep-topicbar__actions { display: flex; flex: 1 1 100%; flex-wrap: wrap; align-items: flex-start; gap: 8px; min-width: 0; }
+.pep-objectives { position: relative; min-width: 0; max-width: 100%; break-inside: avoid; }
+.pep-objectives > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-accent); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-accent-text); font-weight: 600; cursor: pointer; list-style: none; }
+.pep-objectives > summary::-webkit-details-marker { display: none; }
+.pep-objectives > summary::after { content: "\25BE"; font-size: 13px; }
+.pep-objectives[open] > summary::after { content: "\25B4"; }
+.pep-objectives > div { width: min(360px, 100%); margin-top: 8px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives > div p { margin: 0 0 8px; color: var(--pep-text-muted); font: 400 14px/20px var(--pep-font-sans); }
+.pep-objectives ul { margin: 0; padding-left: 20px; }
+.pep-objectives li { margin: 0 0 4px; }
+.pep-topicbar nav { flex: 1 1 100%; min-width: 0; }
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px 6px 6px; border: 1px solid transparent; border-radius: var(--pep-radius-md); color: var(--pep-text); font: 600 14px/20px var(--pep-font-sans); text-decoration: none; }
+.pep-step__n { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); color: var(--pep-text-strong); font-size: 13px; }
+.pep-step[aria-current="step"] { background: var(--pep-page); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-current="step"] .pep-step__n { border-color: var(--pep-accent); background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-step.is-done .pep-step__n::before { content: "\2713"; }
+.pep-step.is-done .pep-step__n span { display: none; }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-step__state { font-weight: 400; color: var(--pep-text-muted); }
+/* Activities: one current activity at a time when enhanced */
+.pep-activity { margin: 0; min-width: 0; }
+.pep-activity + .pep-activity { margin-top: 48px; }
+html.pep-js .pep-activity + .pep-activity { margin-top: 0; }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+/* Reading and instructions stay on the quiet page surface */
+.pep-region--reading h2 { margin: 0; }
+.pep-region--reading [data-pep-teaching] p { margin: 0 0 12px; }
+.pep-region--reading [data-pep-teaching] > :last-child { margin-bottom: 0; }
+.pep-kicker { display: block; margin: 0 0 4px; color: var(--pep-accent-text); font: 600 13px/20px var(--pep-font-sans); }
+/* Elevated interactive workspace */
+.pep-region--workspace, [data-pep-workspace] { padding: 24px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
+[data-pep-task] { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+[data-pep-task] > h2 { margin: 0; }
+[data-pep-task] p { margin: 0; }
+.steps { margin: 0; padding-left: 24px; }
+.steps li { margin: 0; padding-left: 4px; }
+.steps li + li { margin-top: 8px; }
+/* Required activity checks: accent help/requirement surface */
+.pep-activity-checks, [data-pep-activity-checks] { padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] h3 { margin: 0 0 4px; }
+[data-pep-activity-checks] p { margin: 0; }
+.checks { list-style: none; margin: 0; padding: 0; }
+.checks li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 4px 0; max-width: none; }
+html.pep-js .checks li::after { content: "open"; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; text-align: right; }
+html.pep-js .checks li.done::after { content: "\2713\00a0 done"; color: var(--pep-success); }
+/* Where this fits: required practitioner context */
+[data-pep-where-fits] { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+[data-pep-where-fits] h2 { margin: 0 0 8px; font-size: 16px; line-height: 24px; }
+[data-pep-where-fits] p { margin: 0 0 8px; }
+[data-pep-where-fits] p:last-child { margin-bottom: 0; }
+[data-pep-where-fits] strong { color: var(--pep-text-strong); }
+/* Progressive optional hints */
+.pep-hint, details[data-pep-hint] { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-accent); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); break-inside: avoid; }
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
+.pep-hint__body p { margin: 0; }
+.pep-hint .pep-hint { margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-accent); border-radius: 0; background: transparent; }
+/* Optional Anecdote and Challenge disclosures (never required, never counted) */
+.pep-optional { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body p { margin: 0 0 8px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+@media forced-colors {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+}
+/* Models, code and output */
+.model { margin: 0; min-width: 0; }
+.model figcaption, .pep-label { margin: 0 0 8px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+pre.code { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; }
+pre.code .cm { color: var(--pep-text-muted); }
+.simnote { margin: 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.out { margin: 8px 0 0; min-height: 44px; max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.out:empty { display: none; }
+.mtable { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); }
+.mtable th, .mtable td { padding: 8px 12px; text-align: left; vertical-align: top; overflow-wrap: anywhere; border-bottom: 1px solid var(--pep-line-strong); }
+.mtable tr:last-child > td, .mtable tr:last-child > th { border-bottom: 0; }
+.mtable th { font-weight: 600; color: var(--pep-text-strong); }
+.mtable td.mono { font-family: var(--pep-font-mono); color: var(--pep-text-strong); }
+.mtable.positions th, .mtable.positions td { padding: 4px 8px; text-align: center; }
+.mtable.positions th[scope="row"] { text-align: left; }
+.mtable.positions td.took { background: var(--pep-accent-soft); font-weight: 600; }
+/* Buttons */
+button { font: 600 16px/24px var(--pep-font-sans); min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); cursor: pointer; }
+.ghost { background: var(--pep-control); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); }
+.ghost:hover { border-color: var(--pep-accent); }
+.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+button:disabled, .primary:disabled, .ghost:disabled { cursor: not-allowed; background: var(--pep-control); border: 1px solid var(--pep-line-strong); color: var(--pep-text-muted); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+/* Options and confidence */
+fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+legend { padding: 0; margin-bottom: 8px; font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
+.opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.opts.one { grid-template-columns: minmax(0, 1fr); }
+.opts.one .opt span { font-family: var(--pep-font-mono); font-size: 14px; line-height: 20px; white-space: pre-wrap; }
+.opt { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; min-width: 0; }
+.opt > span { min-width: 0; overflow-wrap: anywhere; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.opt:has(input:disabled) { cursor: default; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.opt input { appearance: none; -webkit-appearance: none; flex: 0 0 auto; width: 44px; height: 44px; margin: -12px; border: 0; border-radius: 50%; background: radial-gradient(circle, var(--pep-page) 0 8px, var(--pep-line-strong) 8.5px 10px, transparent 10.5px); cursor: pointer; }
+.opt input:checked { background: radial-gradient(circle, var(--pep-accent-fill) 0 5px, var(--pep-page) 5.5px 7.5px, var(--pep-accent-fill) 8px 10px, transparent 10.5px); }
+.opt input:disabled { cursor: default; }
+.opt input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -8px; }
+.opt .why { display: block; margin-top: 4px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.opt .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.rg { margin: 0 0 12px; }
+.rg legend { font: 600 14px/20px var(--pep-font-sans); margin-bottom: 8px; }
+.rg .opts { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+.rg .opt span { font: 400 14px/20px var(--pep-font-mono); }
+.conf { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.conf legend { float: left; margin: 0 8px 0 0; font: 600 14px/44px var(--pep-font-sans); }
+.conf .opt { min-width: 96px; }
+@media (max-width: 480px) { .opts { grid-template-columns: minmax(0, 1fr); } }
+/* Feedback beside the control that produced it */
+.feedback { width: 100%; min-width: 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.feedback p { margin: 0 0 4px; }
+.feedback p:last-child { margin-bottom: 0; }
+.feedback ul { margin: 4px 0 0; padding-left: 20px; }
+.feedback li { margin-bottom: 4px; }
+.feedback details { margin: 4px 0; }
+.feedback summary, .recap summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: list-item; padding: 10px 0; }
+.verdict { font: 700 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
+.verdict.ok { color: var(--pep-success); }
+.verdict.no { color: var(--pep-danger); }
+.verdict.set { color: var(--pep-warning); }
+.feedback .on { font-weight: 600; color: var(--pep-text-strong); }
+.badge { display: inline-flex; align-items: center; margin: 0 4px 0 0; padding: 0 8px; min-height: 24px; border: 1px solid currentColor; border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); vertical-align: baseline; }
+.badge.ok { color: var(--pep-success); background: var(--pep-success-soft); }
+.badge.ok::before { content: "\2713\00a0"; }
+.badge.no { color: var(--pep-danger); background: var(--pep-danger-soft); }
+.badge.no::before { content: "\2717\00a0"; }
+.badge.me { color: var(--pep-accent-text); background: var(--pep-accent-soft); }
+.explain { list-style: none; padding: 0; margin: 4px 0 0; }
+.explain li { margin: 0; padding: 4px 0 4px 12px; border-left: 2px solid var(--pep-line-strong); }
+.explain li + li { margin-top: 4px; }
+.explain li.mine { border-left-color: var(--pep-accent); }
+.explain .on, .explain .ex { display: block; }
+.conf-report { color: var(--pep-text-muted); }
+/* Reversible activity navigation */
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 0; }
+.pep-activity-actions button { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions button { flex: 0 1 auto; } }
+.pep-back { margin: 0; }
+.pep-back a { display: inline-flex; align-items: center; min-height: 44px; }
+/* Recap closes the required path */
+.recap { margin: 48px 0 0; padding: 24px 0 0; border-top: 1px solid var(--pep-line-strong); }
+html.pep-js .recap.is-pending { display: none; }
+.recap h2 { margin: 0 0 8px; }
+.recap ul { padding-left: 24px; }
+.recap details { margin: 8px 0; padding: 0 16px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.recap table { border-collapse: collapse; margin-top: 8px; font: 400 14px/20px var(--pep-font-sans); }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; }
+.complete { margin: 0; padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete:empty { display: none; }
+.next-topic { font-weight: 600; }
+/* Embedded editor skin (bridge rules; the stamped fragment bytes stay unchanged) */
+#lesson .le { --line: var(--pep-line-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+#lesson .le legend { padding: 12px 12px 0; font: 600 16px/24px var(--pep-font-sans); }
+#lesson .le .le-gutter, #lesson .le .le-code { font: 400 14px/20px var(--pep-font-mono); height: 20em; }
+#lesson .le .le-status { border-radius: 0 0 var(--pep-radius-md) var(--pep-radius-md); background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+#lesson .le .le-jump { border-radius: var(--pep-radius-sm); }
+#lesson .le .le-output pre { font: 400 14px/20px var(--pep-font-mono); }
+#lesson .le .le-limits { font: 400 14px/20px var(--pep-font-sans); }
+#lesson .le [role=tabpanel], #lesson .le .le-code { overscroll-behavior: contain auto; }
+@media (max-width: 620px) { #lesson .le .le-gutter, #lesson .le .le-code { font-size: 16px; line-height: 24px; height: 16em; } }
+@media (max-width: 480px) {
+  #lesson .le .le-badge, #lesson .le .le-keys { display: none; }
+  #lesson .le .le-file { flex: 1 1 100%; overflow-wrap: anywhere; }
+  #lesson .le .le-actions button { flex: 1 1 calc(50% - 4px); }
+  #lesson .le .le-gutter, #lesson .le .le-code { height: 15em; }
+  #lesson .le .le-tabs { flex-wrap: wrap; }
+  #lesson .le [role=tab] { flex: 1 1 120px; }
+  #lesson .le [role=tabpanel], #lesson .out { max-height: 180px; }
+  .row > button { flex: 1 1 auto; }
+}
+/* Every disclosure summary is a 44 px touch target */
+#lesson summary { min-height: 44px; }
+@media print {
+  [data-pep-activity][hidden], .pep-activity { display: block !important; }
+  html.pep-js .recap.is-pending { display: block; }
+  .pep-topicbar nav, .pep-activity-actions, .pep-back, [data-pep-back-link] { display: none !important; }
+  .pep-objectives > div { display: block !important; width: auto; }
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .pep-optional > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker { display: none; }
+  .pep-activity + .pep-activity { margin-top: 32px; }
+}
+/* lesson-editor@3 shell.css head */
+/* lesson-editor shell, version 1 (VS Code-inspired). Language-neutral. Uses the page tokens --surface, --term, --ink, --muted, --rule, --line, --teal, --red, --amber, --focus, --mono. */
+.le{margin:0;padding:0;border:1px solid var(--rule);border-radius:6px;background:var(--surface);min-width:0}
+.le legend{padding:var(--s2) var(--s3) 0;font-weight:700}
+.le-bar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);justify-content:space-between;padding:var(--s1) var(--s3);border-bottom:1px solid var(--line)}
+.le-file{font:600 14px/1.4 var(--mono);padding:var(--s1) var(--s2);border-bottom:2px solid var(--teal)}
+.le-badge{font-size:13px;color:var(--muted)}
+.le-main{display:flex;min-width:0;background:var(--term)}
+.le .le-gutter{flex:0 0 auto;margin:0;padding:var(--s2) var(--s2) var(--s2) var(--s3);min-width:3.2em;text-align:right;color:var(--muted);font:15px/1.5 var(--mono);white-space:pre;overflow:hidden;height:21.5em;user-select:none;border-right:1px solid var(--line)}
+.le .le-gutter span{display:inline-block;min-width:2ch}
+.le .le-gutter .g-error{color:var(--red);font-weight:700;text-decoration:underline wavy}
+.le .le-gutter .g-limit{color:var(--amber);font-weight:700}
+.le .le-code{flex:1 1 auto;min-width:0;margin:0;padding:var(--s2) var(--s3);height:21.5em;border:0;border-radius:0;background:var(--term);color:var(--ink);font:15px/1.5 var(--mono);white-space:pre;overflow:auto;resize:none;tab-size:4}
+.le .le-code:focus-visible{outline:3px solid var(--focus);outline-offset:-3px}
+.le-actions{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center;padding:var(--s2) var(--s3);border-top:1px solid var(--line)}
+.le-keys{margin:0;font-size:13px;color:var(--muted)}
+.le-tabs{display:flex;gap:var(--s1);padding:0 var(--s3);border-top:1px solid var(--line)}
+.le [role=tab]{min-height:44px;padding:var(--s1) var(--s3);border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--muted);font:600 13px/1.2 var(--sans);letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
+.le [role=tab][aria-selected=true]{color:var(--ink);border-bottom-color:var(--teal)}
+.le [role=tabpanel]{max-height:13em;overflow:auto;padding:var(--s2) var(--s3);border-top:1px solid var(--line)}
+.le .le-problems ul{list-style:none;margin:0;padding:0}
+.le .le-problems li{margin:0 0 var(--s1)}
+.le .le-jump{display:block;width:100%;min-height:44px;padding:var(--s1) var(--s2);text-align:left;border:1px solid var(--line);border-radius:4px;background:transparent;color:var(--ink);font:14px/1.4 var(--sans);overflow-wrap:anywhere;cursor:pointer}
+.le .le-jump:hover{border-color:var(--ink)}
+.le .le-ln{font-family:var(--mono);color:var(--muted)}
+.le .le-kind{font-weight:700}
+.le .p-error .le-kind{color:var(--red)}
+.le .p-limit .le-kind{color:var(--amber)}
+.le .p-none{color:var(--muted);font-size:14px}
+.le .le-output pre{margin:0;font:14px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.le .le-status{border-radius:0 0 5px 5px;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);padding:var(--s1) var(--s3);background:var(--teal);color:var(--on-teal);font:13px/1.5 var(--sans)}
+.le .le-status .le-escnote{display:none;font-weight:700}
+.le .le-status .le-live{font-weight:700}
+.le .le-status[data-esc] .le-escnote{display:inline}
+.le .le-fallback{padding:var(--s2) var(--s3)}
+@media (max-width:620px){.le .le-code,.le .le-gutter{font-size:16px;height:18em}}
+.le[data-le-state=loading] .le-run,.le[data-le-state=error] .le-run{opacity:.6}
+.le .le-limits{margin:0;padding:var(--s1) var(--s3) var(--s2);border-top:1px solid var(--line);font-size:14px}
+.le .le-limits summary{display:list-item;padding:var(--s2) 0;cursor:pointer;font-weight:600}
+.le .le-limits ul{margin:0;padding-left:1.25em}
+@media (prefers-reduced-motion:reduce){.le,.le *{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+/* /lesson-editor shell.css */
+/* sql-practice@1 page additions: sample-data tables and psql-style output */
+.datafig { margin: 0; min-width: 0; }
+.datafig figcaption { margin: 0 0 8px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.datafig + .datafig { margin-top: 12px; }
+.mtable.data th, .mtable.data td { padding: 4px 8px; }
+.mtable.data thead th { font-family: var(--pep-font-mono); font-size: 13px; border-bottom: 1px solid var(--pep-line-strong); }
+.mtable.data td { font-family: var(--pep-font-mono); color: var(--pep-text-strong); }
+.mtable.data td.null { color: var(--pep-text-muted); font-style: italic; }
+#lesson .le .le-output pre { white-space: pre; overflow-wrap: normal; }
+#lesson .le .le-output { overflow-x: auto; }
+.nojs-editor pre.code { white-space: pre-wrap; }
+.mtable.data td { overflow-wrap: normal; word-break: normal; }
+.mtable.data thead th { overflow-wrap: anywhere; }
+@media (max-width: 480px) { .mtable.data th, .mtable.data td { padding: 4px; font-size: 12px; line-height: 16px; } .mtable.data thead th { font-size: 12px; } }
+</style>
+</head>
+<body>
+<noscript><div class="nojs"><p>JavaScript is off. Every activity below is still readable in order, with its task, sample data, static alternative and recap; checks and SQL editors do not run.</p></div></noscript>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="12"><header class="pep-topicbar"><h1 id="page-title">Handling NULLs: COALESCE and CASE</h1><div class="pep-topicbar__progress" id="progress" data-pep-progress><span id="prog-text">Activity 1 of 4 · 0 of 4 done · about 12 min</span><span class="pep-progress" aria-hidden="true"><span class="seg is-current"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span></span></div><div class="pep-topicbar__actions"><details class="pep-objectives" data-pep-objectives><summary aria-controls="objectives-body">Objectives</summary><div id="objectives-body"><ul><li>Predict the result of comparing a value with NULL, and filter missing values with IS NULL and IS NOT NULL</li><li>Replace NULL with a fallback value using COALESCE</li><li>Derive a labelled column from conditions with a CASE expression</li></ul></div></details><button type="button" class="ghost pep-js-only" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button><span class="vh" id="reset-help">Clears only the current activity; other activities keep their work.</span></div><nav aria-label="Activities"><ol class="pep-steps"><li><a class="pep-step" id="step-link-1" href="#activity-1" data-pep-activity-link aria-current="step"><span class="pep-step__n" aria-hidden="true"><span>1</span></span>Activity 1<span class="pep-step__state vh"></span></a></li><li><a class="pep-step" id="step-link-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"><span>2</span></span>Activity 2<span class="pep-step__state vh"></span></a></li><li><a class="pep-step" id="step-link-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"><span>3</span></span>Activity 3<span class="pep-step__state vh"></span></a></li><li><a class="pep-step" id="step-link-4" href="#activity-4" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"><span>4</span></span>Activity 4<span class="pep-step__state vh"></span></a></li></ol></nav></header>
+<section class="pep-activity" id="activity-1" data-kind="predict" data-pep-activity aria-labelledby="a1-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false"><div class="pep-regions"><div class="pep-region pep-region--reading teach" data-pep-instructions><h2 id="a1-h" tabindex="-1"><span class="pep-kicker">Activity 1 of 4:</span> Start with a guess</h2><div data-pep-teaching><p>Practice prediction, not scored. Chen has a NULL city. Predict whether this WHERE condition finds Chen before learning PostgreSQL’s three-valued logic.</p></div></div><div class="pep-region pep-region--workspace" data-pep-workspace="activity"><div id="task-1" class="teach" data-pep-task><h2>Your task</h2><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> The query below.</li><li><strong>What to do:</strong> Choose one prediction.</li><li><strong>What to expect:</strong> Pick confidence, then press <em>Check my prediction</em>.</li><li><strong>How to know it's done:</strong> Feedback explains every option; a wrong guess is fine.</li></ol></div><section class="pep-activity-checks teach" data-pep-activity-checks aria-labelledby="a1-checks"><h3 id="a1-checks">What success looks like</h3><p>You made a prediction and read why each option is right or wrong.</p></section><figure class="model" data-pep-model aria-labelledby="a1-model"><figcaption id="a1-model">The query</figcaption><pre class="code">SELECT name FROM students WHERE city = NULL;</pre></figure><div class="pep-js-only" data-restore="a1"><fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction options: Chen only; Chen and Femi, because both cities are NULL; No rows; An ERROR, because NULL cannot appear in WHERE"><legend>Prediction</legend><div class="opts"><label class="opt"><input type="radio" name="predict" value="a"> <span>Chen only</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span>Chen and Femi, because both cities are NULL</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span>No rows</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span>An ERROR, because NULL cannot appear in WHERE</span></label></div></fieldset><div class="row"><fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help"><legend id="pconf-help">Confidence, then check</legend><label class="opt"><input type="radio" name="pconf" value="low"> <span>Low</span></label><label class="opt"><input type="radio" name="pconf" value="medium"> <span>Medium</span></label><label class="opt"><input type="radio" name="pconf" value="high"> <span>High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button></div></div><noscript data-section-skip><div class="nojs-static"><h3>Prediction, with its result</h3><p>Options: Chen only; Chen and Femi, because both cities are NULL; No rows; An ERROR, because NULL cannot appear in WHERE.</p><p>Result: <code>city = NULL</code> evaluates to unknown for every row, and WHERE keeps only true.</p></div></noscript><div class="feedback" id="fb-1" data-pep-feedback aria-live="polite"></div></div></div></section>
+<section class="pep-activity" id="activity-2" data-kind="sql" data-pep-activity aria-labelledby="a2-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false"><div class="pep-regions"><div class="pep-region pep-region--reading teach" data-pep-instructions><h2 id="a2-h" tabindex="-1"><span class="pep-kicker">Activity 2 of 4:</span> Test missing values, then supply display text</h2><div data-pep-teaching><p><code>NULL</code> means no known value. Ordinary comparisons with NULL produce an unknown result, so use <code>IS NULL</code> to find missing values and <code>IS NOT NULL</code> to find present ones.</p><p><code>COALESCE(a, b, c)</code> returns the first argument that is not NULL. It is useful at the display boundary:</p><pre class="code">SELECT name, COALESCE(city, 'Not recorded') AS city_label
+FROM students;</pre><p>The stored city remains NULL; only the query result gets the fallback label.</p></div><section data-pep-where-fits aria-labelledby="a2-fits"><h2 id="a2-fits">Where this fits</h2><p data-pep-fit-decision><strong>Decision:</strong> A report needs readable text for optional data while the database must preserve “unknown.”</p><p data-pep-fit-good><strong>Good fit:</strong> Keep NULL in storage, test it with IS NULL, and use COALESCE for a report or API field that needs a fallback.</p><p data-pep-fit-boundary><strong>Choose something else when:</strong> Use a real default or NOT NULL constraint when the business meaning is genuinely “this value always exists”; a display fallback should not disguise required missing data.</p></section><details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip><summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary><div class="pep-optional__body"><p data-pep-anecdote-story>A coat-check ticket with no number is not ticket number zero and not an empty numbered ticket; the number is unknown. A clerk may write “not recorded” on a display list without inventing a number.</p><p data-pep-anecdote-map>NULL is the unknown ticket number; COALESCE supplies display text without changing what is stored.</p></div></details></div><div class="pep-region pep-region--workspace" data-pep-workspace="code"><div id="task-2" class="teach" data-pep-task data-pep-may-stall><h2>Your task</h2><p>List every student’s student_id, name and a column named <code>city_label</code>. Show the stored city when present and <code>Not recorded</code> when it is NULL. Sort by student_id.</p><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> The sample rows and <em>student-cities.sql</em> editor below.</li><li><strong>What to type:</strong> Write one SELECT on the empty line under the comment.</li><li><strong>What to expect:</strong> Press <em>Run</em>; Output shows the result rows or an honest lesson limit.</li><li><strong>How to know it's done:</strong> Every local check below reads <em>done</em>. Two counted runs settle the activity without penalty.</li></ol><details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 2</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> The empty line in <em>student-cities.sql</em>.</p><p data-pep-hint-step><strong>Next step:</strong> In the SELECT list, pass <code>city</code> first and the quoted fallback second to COALESCE.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="2" data-section-skip><summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 2</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> The unfinished clause or expression in your query.</p><p data-pep-hint-step><strong>Next step:</strong> Name that expression <code>city_label</code>, then order by student_id.</p></div></details></div></details></div><section class="pep-activity-checks teach" data-pep-activity-checks aria-labelledby="a2-checks"><h3 id="a2-checks">What success looks like</h3><ul class="checks"><li data-goal="rows"><span>All six students appear with readable city text</span></li><li data-goal="coalesce"><span>The fallback comes from COALESCE, not a filter that removes rows</span></li></ul></section><figure class="datafig" aria-labelledby="data-students"><figcaption id="data-students">Starting rows of <code>students</code></figcaption><table class="mtable data"><thead><tr><th scope="col">student_id</th><th scope="col">name</th><th scope="col">email</th><th scope="col">city</th></tr></thead><tbody><tr><td>1</td><td>Ana</td><td>ana@<wbr>example.com</td><td>Leeds</td></tr><tr><td>2</td><td>Ben</td><td>ben@<wbr>example.com</td><td>York</td></tr><tr><td>3</td><td>Chen</td><td>chen@<wbr>example.com</td><td class="null">NULL</td></tr><tr><td>4</td><td>Dina</td><td>dina@<wbr>example.com</td><td>Leeds</td></tr><tr><td>5</td><td>Eli</td><td>eli@<wbr>example.com</td><td>Bristol</td></tr><tr><td>6</td><td>Femi</td><td>femi@<wbr>example.com</td><td class="null">NULL</td></tr></tbody></table></figure><div class="pep-js-only"><fieldset class="le" id="ed2" data-interaction="explore" data-pep-explore aria-describedby="task-2" data-lesson-editor="3" data-lesson-editor-adapter="sql-practice@1" data-lesson-editor-source="head" data-le-state="loading" data-static-alt="Write a SELECT that uses COALESCE to label missing cities without removing any students."><legend>Write the query</legend><div class="le-bar"><span class="le-file">student-cities.sql</span><span class="le-badge">Lesson simulator: runs SQL on this page's sample tables, not on a real PostgreSQL server</span></div><div class="le-main"><pre class="le-gutter" aria-hidden="true">1</pre><label class="vh" for="ed2-code">Code editor for student-cities.sql</label><textarea id="ed2-code" class="le-code" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-describedby="ed2-keys"></textarea></div><div class="le-actions"><button type="button" class="primary le-run" id="ed2-run">Run</button><button type="button" class="ghost le-reset" id="ed2-reset">Reset code</button><p class="le-keys" id="ed2-keys">In the editor: Tab indents, Shift+Tab outdents, Ctrl+Enter (Cmd+Enter on a Mac) runs. To leave it, press Escape, then Tab.</p></div><div class="le-tabs" role="tablist" aria-label="Editor panels for student-cities.sql"><button type="button" role="tab" id="ed2-tab-p" aria-controls="ed2-p" aria-selected="true">Problems</button><button type="button" role="tab" id="ed2-tab-o" aria-controls="ed2-o" aria-selected="false" tabindex="-1">Output</button></div><div class="le-problems" role="tabpanel" id="ed2-p" aria-labelledby="ed2-tab-p" tabindex="0"><ul><li class="p-none">Loading the editor...</li></ul></div><div class="le-output" role="tabpanel" id="ed2-o" aria-labelledby="ed2-tab-o" tabindex="0" hidden><pre>Loading the editor...</pre></div><div class="le-status"><span class="le-pos">Ln 1, Col 1</span><span class="le-count"></span><span>Spaces: 4</span><span>SQL lesson simulator</span><span class="le-escnote">Tab now leaves the editor</span><span class="le-live" aria-live="polite"></span></div><details class="le-limits" data-section-skip><summary>What this simulator can and cannot do</summary><ul><li>Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.</li><li>Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.</li><li>Anything else is a <em>Lesson check</em>, not a claim that your SQL is invalid. Text sorting in a real server follows its collation.</li><li>Run is deterministic and bounded: no network, no files and no real database.</li></ul></details></fieldset></div><noscript data-pep-no-js data-section-skip><section class="nojs-static nojs-editor"><h3>Static editor exercise</h3><p>JavaScript is off, so Run is unavailable. Write a SELECT that uses COALESCE to label missing cities without removing any students.</p><pre class="code">-- Show every student; replace a missing city only in the result.
+
+</pre><p>The in-page editor supports the SELECT, filtering, grouping, aggregate and join subset listed in the task. To compare, run your query in psql against a copy of the shown sample rows and check the resulting rows against the success criteria. The starter does not contain a completed query.</p></section></noscript><div class="feedback" id="fb-2" data-pep-feedback aria-live="polite"></div><p class="pep-back"><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p></div></div></section>
+<section class="pep-activity" id="activity-3" data-kind="sql" data-pep-activity aria-labelledby="a3-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false"><div class="pep-regions"><div class="pep-region pep-region--reading teach" data-pep-instructions><h2 id="a3-h" tabindex="-1"><span class="pep-kicker">Activity 3 of 4:</span> Label rows with CASE</h2><div data-pep-teaching><p>A searched <code>CASE</code> checks conditions in order. It returns the result for the first true <code>WHEN</code>; <code>ELSE</code> handles everything left.</p><pre class="code">CASE
+  WHEN score IS NULL THEN 'Awaiting grade'
+  WHEN score &gt;= 70 THEN 'Pass'
+  ELSE 'Review'
+END AS status</pre><p>Put the NULL branch first when later comparisons need a value. CASE derives a column in the result; it does not update the source row.</p></div></div><div class="pep-region pep-region--workspace" data-pep-workspace="code"><div id="task-3" class="teach" data-pep-task data-pep-may-stall><h2>Your task</h2><p>List course_id, title and a derived <code>fee_band</code>: <code>Not priced</code> when fee is NULL, <code>Premium</code> when fee is at least 100, otherwise <code>Standard</code>. Sort by course_id.</p><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> The sample rows and <em>course-fees.sql</em> editor below.</li><li><strong>What to type:</strong> Write one SELECT on the empty line under the comment.</li><li><strong>What to expect:</strong> Press <em>Run</em>; Output shows the result rows or an honest lesson limit.</li><li><strong>How to know it's done:</strong> Every local check below reads <em>done</em>. Two counted runs settle the activity without penalty.</li></ol><details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 3</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> The empty line in <em>course-fees.sql</em>.</p><p data-pep-hint-step><strong>Next step:</strong> Start the CASE with <code>WHEN fee IS NULL</code>; that branch must come before the numeric comparison.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="2" data-section-skip><summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 3</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> The unfinished clause or expression in your query.</p><p data-pep-hint-step><strong>Next step:</strong> After the premium condition, ELSE covers every remaining non-NULL fee; finish with END AS fee_band.</p></div></details></div></details></div><section class="pep-activity-checks teach" data-pep-activity-checks aria-labelledby="a3-checks"><h3 id="a3-checks">What success looks like</h3><ul class="checks"><li data-goal="labels"><span>Every course receives the required label</span></li><li data-goal="case"><span>CASE handles NULL before comparing the fee</span></li></ul></section><figure class="datafig" aria-labelledby="data-courses"><figcaption id="data-courses">Starting rows of <code>courses</code></figcaption><table class="mtable data"><thead><tr><th scope="col">course_id</th><th scope="col">title</th><th scope="col">credits</th><th scope="col">fee</th><th scope="col">instructor_id</th></tr></thead><tbody><tr><td>101</td><td>SQL Basics</td><td>3</td><td>120.00</td><td>2</td></tr><tr><td>102</td><td>Java Foundations</td><td>4</td><td>150.00</td><td>3</td></tr><tr><td>103</td><td>Data Modeling</td><td>3</td><td class="null">NULL</td><td>3</td></tr><tr><td>104</td><td>Web Basics</td><td>2</td><td>80.00</td><td class="null">NULL</td></tr><tr><td>105</td><td>Intro to Testing</td><td>2</td><td>90.00</td><td>4</td></tr></tbody></table></figure><div class="pep-js-only"><fieldset class="le" id="ed3" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-lesson-editor="3" data-lesson-editor-adapter="sql-practice@1" data-lesson-editor-source="head" data-le-state="loading" data-static-alt="Write a SELECT that derives the three fee labels with CASE and sorts by course_id."><legend>Write the query</legend><div class="le-bar"><span class="le-file">course-fees.sql</span><span class="le-badge">Lesson simulator: runs SQL on this page's sample tables, not on a real PostgreSQL server</span></div><div class="le-main"><pre class="le-gutter" aria-hidden="true">1</pre><label class="vh" for="ed3-code">Code editor for course-fees.sql</label><textarea id="ed3-code" class="le-code" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-describedby="ed3-keys"></textarea></div><div class="le-actions"><button type="button" class="primary le-run" id="ed3-run">Run</button><button type="button" class="ghost le-reset" id="ed3-reset">Reset code</button><p class="le-keys" id="ed3-keys">In the editor: Tab indents, Shift+Tab outdents, Ctrl+Enter (Cmd+Enter on a Mac) runs. To leave it, press Escape, then Tab.</p></div><div class="le-tabs" role="tablist" aria-label="Editor panels for course-fees.sql"><button type="button" role="tab" id="ed3-tab-p" aria-controls="ed3-p" aria-selected="true">Problems</button><button type="button" role="tab" id="ed3-tab-o" aria-controls="ed3-o" aria-selected="false" tabindex="-1">Output</button></div><div class="le-problems" role="tabpanel" id="ed3-p" aria-labelledby="ed3-tab-p" tabindex="0"><ul><li class="p-none">Loading the editor...</li></ul></div><div class="le-output" role="tabpanel" id="ed3-o" aria-labelledby="ed3-tab-o" tabindex="0" hidden><pre>Loading the editor...</pre></div><div class="le-status"><span class="le-pos">Ln 1, Col 1</span><span class="le-count"></span><span>Spaces: 4</span><span>SQL lesson simulator</span><span class="le-escnote">Tab now leaves the editor</span><span class="le-live" aria-live="polite"></span></div><details class="le-limits" data-section-skip><summary>What this simulator can and cannot do</summary><ul><li>Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.</li><li>Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.</li><li>Anything else is a <em>Lesson check</em>, not a claim that your SQL is invalid. Text sorting in a real server follows its collation.</li><li>Run is deterministic and bounded: no network, no files and no real database.</li></ul></details></fieldset></div><noscript data-pep-no-js data-section-skip><section class="nojs-static nojs-editor"><h3>Static editor exercise</h3><p>JavaScript is off, so Run is unavailable. Write a SELECT that derives the three fee labels with CASE and sorts by course_id.</p><pre class="code">-- Derive fee_band with CASE; do not update the table.
+
+</pre><p>The in-page editor supports the SELECT, filtering, grouping, aggregate and join subset listed in the task. To compare, run your query in psql against a copy of the shown sample rows and check the resulting rows against the success criteria. The starter does not contain a completed query.</p></section></noscript><div class="feedback" id="fb-3" data-pep-feedback aria-live="polite"></div><p class="pep-back"><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p></div></div></section>
+<section class="pep-activity" id="activity-4" data-kind="apply" data-pep-activity aria-labelledby="a4-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false"><div class="pep-regions"><div class="pep-region pep-region--reading teach" data-pep-instructions><h2 id="a4-h" tabindex="-1"><span class="pep-kicker">Activity 4 of 4:</span> Keep unknown different from empty</h2><div data-pep-teaching><p><code>IS NULL</code> asks whether a value is missing. <code>COALESCE</code> supplies a result-time fallback. <code>CASE</code> applies ordered conditions. None of these requires replacing unknown data in the stored row.</p></div></div><div class="pep-region pep-region--workspace" data-pep-workspace="activity"><div id="task-4" class="teach" data-pep-task><h2>Your task</h2><p id="task-apply">Which condition finds only students whose city is missing?</p><p id="task-apply-b" tabindex="-1" data-retry hidden>Same idea, new form: Which expression labels a NULL city “Unknown” but keeps a real empty string as an empty string?</p><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> The four options.</li><li><strong>What to do:</strong> Choose one and report confidence.</li><li><strong>What to expect:</strong> Every option is explained; one wrong answer gets one retry.</li><li><strong>How to know it's done:</strong> Feedback appears and the recap opens.</li></ol></div><section class="pep-activity-checks teach" data-pep-activity-checks aria-labelledby="a4-checks"><h3 id="a4-checks">What success looks like</h3><p>You choose the query that matches the report requirement and can explain why the others do not.</p></section><div class="pep-js-only" data-restore="a4"><div data-first><fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply"><legend>Choose the query or rule</legend><div class="opts one"><label class="opt"><input type="radio" name="apply-a" value="a"> <span>city = NULL</span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span>city IS NULL</span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span>COALESCE(city, &#x27;&#x27;) = city</span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span>city = &#x27;&#x27;</span></label></div></fieldset><div class="row"><fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help"><legend id="conf-help">Confidence, then check</legend><label class="opt"><input type="radio" name="conf" value="low"> <span>Low</span></label><label class="opt"><input type="radio" name="conf" value="medium"> <span>Medium</span></label><label class="opt"><input type="radio" name="conf" value="high"> <span>High</span></label></fieldset><button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button></div></div><div data-retry hidden><fieldset id="apply-b" aria-describedby="task-apply-b"><legend>Choose again</legend><div class="opts one"><label class="opt"><input type="radio" name="apply-b" value="a"> <span>CASE WHEN city = &#x27;&#x27; THEN &#x27;Unknown&#x27; ELSE city END</span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span>COALESCE(city, &#x27;Unknown&#x27;)</span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span>CASE WHEN city IS NOT NULL THEN &#x27;Unknown&#x27; ELSE city END</span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span>city || &#x27;Unknown&#x27;</span></label></div></fieldset><div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div></div></div><noscript data-section-skip><div class="nojs-static"><h3>Question, with its answer</h3><p>Which condition finds only students whose city is missing?</p><p>Answer: city IS NULL. IS NULL is the predicate designed to test a missing value.</p></div></noscript><div class="feedback" id="fb-4" data-pep-feedback aria-live="polite"></div><p class="pep-back"><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p></div></div></section>
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation"><button type="button" class="ghost" id="previous-activity" data-pep-previous disabled>Previous activity</button><button type="button" class="primary" id="next-activity" data-pep-next disabled>Next activity</button></div><section class="recap is-pending" id="recap" data-pep-recap aria-labelledby="recap-h"><h2 id="recap-h" tabindex="-1">Recap</h2><p id="complete-msg" class="complete"></p><ul><li>Use IS NULL and IS NOT NULL to test missingness; ordinary comparisons with NULL are unknown.</li><li>COALESCE returns the first non-NULL argument and is useful for display fallbacks.</li><li>CASE checks WHEN conditions in order and returns one derived result.</li></ul><details data-section-skip><summary>Cheat sheet</summary><table><tr><td><code>value IS NULL</code></td><td>value is missing</td></tr><tr><td><code>value IS NOT NULL</code></td><td>value is present</td></tr><tr><td><code>COALESCE(value, &#x27;Unknown&#x27;)</code></td><td>display fallback</td></tr><tr><td><code>CASE WHEN condition THEN &#x27;A&#x27; ELSE &#x27;B&#x27; END</code></td><td>derive a label</td></tr></table></details><details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against current official PostgreSQL documentation on 2026-10-16. The bounded editor runs only the documented subset named on this page; unsupported SQL is labelled as a lesson limit, not rejected as invalid PostgreSQL.</p><ul><li><a href="https://www.postgresql.org/docs/current/functions-comparison.html" rel="noopener">Comparison predicates</a></li><li><a href="https://www.postgresql.org/docs/current/functions-conditional.html" rel="noopener">CASE and COALESCE</a></li></ul></details><p class="next-topic">Next topic: <a href="../aggregate-functions/artifact.html" rel="noopener">Aggregate functions</a></p></section></main>
+<script>
+/* lesson-editor@3 shell.js head */
+/* lesson-editor shell, version 1. Language-neutral editor chrome and behaviour: gutter, Problems and Output
+   panels, status bar, Run (button, Enter or Space on the button, Ctrl+Enter or Cmd+Enter in the code),
+   Reset, keyboard model and live announcements. All language behaviour comes from an adapter object.
+   No form submission, no storage, no network, no timers beyond a short input debounce. */
+var LESSON_EDITOR=(function(){
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function plural(n,w){return n+' '+w+(n===1?'':'s');}
+function mount(root,cfg){
+  var A=cfg.adapter,q=function(s){return root.querySelector(s);};
+  var ta=q('.le-code'),gut=q('.le-gutter'),probList=q('.le-problems ul'),outEl=q('.le-output pre'),stat=q('.le-status'),pos=q('.le-pos'),cnt=q('.le-count'),live=q('.le-live'),runBtn=q('.le-run'),resetBtn=q('.le-reset');
+  var tabs=[].slice.call(root.querySelectorAll('[role=tab]'));
+  var escArmed=false,last={problems:[]},timer=null,broken=false;
+  root.setAttribute('data-le-state','ready');
+  function fail(where,e){broken=true;root.setAttribute('data-le-state','error');
+    outEl.textContent='The editor hit an internal error while '+where+', so nothing was run. The exercise still stands: '+(cfg.fallbackText||'')+(e&&e.message?'\n('+e.message+')':'');
+    select(1);live.textContent='Editor error; see Output.';}
+  function lines(){return ta.value.split('\n').length;}
+  function paintGutter(){var n=lines(),bad={};last.problems.forEach(function(p){if(!bad[p.line]||p.kind==='error'){bad[p.line]=p.kind;}});var h='';for(var i=1;i<=n;i++){h+='<span'+(bad[i]?' class="g-'+bad[i]+'"':'')+'>'+i+'</span>\n';}gut.innerHTML=h;gut.scrollTop=ta.scrollTop;}
+  function caret(){var v=ta.value.slice(0,ta.selectionStart).split('\n');pos.textContent='Ln '+v.length+', Col '+(v[v.length-1].length+1);}
+  function paintProblems(){var ps=last.problems,L=A.kindLabels;
+    probList.innerHTML=ps.length?ps.map(function(p){return '<li class="p-'+p.kind+'"><button type="button" class="le-jump" data-line="'+p.line+'" data-col="'+p.col+'"><span class="le-ln">Ln '+p.line+'</span> <span class="le-kind">'+esc(L[p.kind]||p.kind)+'</span> '+esc(p.msg)+'</button></li>';}).join(''):'<li class="p-none">No problems found by the lesson checker.</li>';
+    var e=ps.filter(function(p){return p.kind==='error';}).length;
+    cnt.textContent=plural(e,'error')+', '+plural(ps.length-e,'simulator note');
+    tabs[0].textContent='Problems ('+ps.length+')';}
+  function analyse(){if(broken){return last;}try{last=A.check(ta.value);}catch(e){fail('checking the code',e);return last;}paintProblems();paintGutter();return last;}
+  function select(i,focus){tabs.forEach(function(t,k){var on=k===i;t.setAttribute('aria-selected',on?'true':'false');t.tabIndex=on?0:-1;root.querySelector('#'+t.getAttribute('aria-controls')).hidden=!on;});if(focus){tabs[i].focus();}}
+  function disarm(){escArmed=false;stat.removeAttribute('data-esc');}
+  tabs.forEach(function(t,i){
+    t.addEventListener('click',function(){select(i);});
+    t.addEventListener('keydown',function(e){var k=e.key,n=tabs.length;
+      if(k==='ArrowRight'||k==='ArrowLeft'){e.preventDefault();select((i+(k==='ArrowRight'?1:n-1))%n,true);}
+      else if(k==='Home'){e.preventDefault();select(0,true);}else if(k==='End'){e.preventDefault();select(n-1,true);}});});
+  probList.addEventListener('click',function(e){var b=e.target.closest('.le-jump');if(!b){return;}
+    var ln=+b.getAttribute('data-line'),col=+b.getAttribute('data-col'),ls=ta.value.split('\n'),off=0;
+    for(var i=0;i<ln-1&&i<ls.length;i++){off+=ls[i].length+1;}off+=Math.max(0,Math.min(col-1,(ls[ln-1]||'').length));
+    ta.focus();ta.setSelectionRange(off,off);caret();});
+  ta.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();disarm();doRun();return;}
+    if(e.key==='Escape'){escArmed=true;stat.setAttribute('data-esc','1');return;}
+    if(e.key==='Tab'&&!e.ctrlKey&&!e.metaKey&&!e.altKey){if(escArmed){disarm();return;}
+      e.preventDefault();var s=ta.selectionStart,v=ta.value,ls=v.lastIndexOf('\n',s-1)+1;
+      if(e.shiftKey){var lead=/^ {0,4}/.exec(v.slice(ls))[0].length;if(lead){ta.value=v.slice(0,ls)+v.slice(ls+lead);var c=Math.max(ls,s-lead);ta.setSelectionRange(c,c);}}
+      else{ta.setRangeText('    ',s,ta.selectionEnd,'end');}
+      changed();return;}
+    if(escArmed){disarm();}});
+  function changed(){caret();paintGutter();clearTimeout(timer);timer=setTimeout(analyse,250);if(cfg.onChange){cfg.onChange(ta.value);}}
+  ta.addEventListener('input',changed);
+  ta.addEventListener('blur',disarm);
+  ta.addEventListener('scroll',function(){gut.scrollTop=ta.scrollTop;});
+  ['keyup','click','focus'].forEach(function(ev){ta.addEventListener(ev,caret);});
+  function doRun(){if(broken){return null;}clearTimeout(timer);var a=analyse();if(broken){return null;}
+    var rep;try{var stop=a.problems.filter(function(p){return p.kind!=='hint';}).length;rep=stop?A.notRun(a.problems):A.run(a.program,cfg.calls);}catch(e){fail('running the code',e);return null;}
+    rep.problems=a.problems;
+    outEl.textContent=['$ lesson-run '+cfg.file+'   (lesson simulator, not real '+A.language+')'].concat(rep.lines).join('\n');
+    select(rep.status==='syntax'||rep.status==='limit'?0:1);
+    live.textContent='';var msg=rep.summary;setTimeout(function(){live.textContent=msg;},30);
+    if(cfg.onRun){cfg.onRun(rep,ta.value);}return rep;}
+  runBtn.addEventListener('click',function(){doRun();});
+  resetBtn.addEventListener('click',function(){set(cfg.starter);if(cfg.onChange){cfg.onChange(ta.value);}live.textContent='Code reset to the starting version.';});
+  function set(v){ta.value=v;outEl.textContent='Press Run (or Ctrl+Enter in the editor) to check this file with the lesson simulator.';analyse();caret();select(0);}
+  try{set(cfg.initial==null?cfg.starter:cfg.initial);}catch(e){fail('starting',e);}
+  return {set:set,run:doRun,value:function(){return ta.value;}};}
+return {id:'lesson-editor',version:'1',mount:mount};
+})();
+/* /lesson-editor shell.js */
+/* lesson-editor SQL practice adapter, version 1. A bounded, deterministic evaluator for small PostgreSQL practice files
+   over the lesson's own in-memory tables. It reads SELECT (joins, WHERE, GROUP BY, HAVING, ORDER BY, DISTINCT,
+   aggregates, CASE, COALESCE, IN, EXISTS, BETWEEN, LIKE), INSERT ... VALUES or SELECT, UPDATE and DELETE with
+   RETURNING, and enforces the tables' NOT NULL, primary key, unique and foreign key constraints with PostgreSQL's own
+   messages. Output imitates psql's aligned format. Anything outside this subset is reported as a lesson limit,
+   never as invalid SQL. Every Run starts again from the lesson's starting rows. No network, no storage. */
+var LESSON_EDITOR_SQL=(function(){
+var MAX_ROWS=5000;
+function problem(line,col,kind,msg){return {line:line,col:col||1,kind:kind,msg:msg};}
+function Limit(msg,line){this.msg=msg;this.line=line;}
+function PgError(msg,detail){this.msg=msg;this.detail=detail||null;}
+function lim(msg,t){throw new Limit(msg,t&&t.line);}
+function pgerr(msg,detail){throw new PgError(msg,detail);}
+/* Exact decimals for numeric columns: value = u / 10^s, with u a BigInt. */
+function Num(u,s){this.u=u;this.s=s;}
+function p10(n){var r=1n;for(var i=0;i<n;i++){r*=10n;}return r;}
+function toNum(v){return v instanceof Num?v:new Num(BigInt(v),0);}
+function rescale(a,s){if(s>=a.s){return new Num(a.u*p10(s-a.s),s);}return new Num(divRound(a.u,p10(a.s-s)),s);}
+function divRound(n,d){var neg=(n<0n)!==(d<0n),an=n<0n?-n:n,ad=d<0n?-d:d,q=an/ad,r=an%ad;if(r*2n>=ad){q+=1n;}return neg?-q:q;}
+function numStr(a){var neg=a.u<0n,s=(neg?-a.u:a.u).toString();if(a.s>0){while(s.length<=a.s){s='0'+s;}s=s.slice(0,s.length-a.s)+'.'+s.slice(s.length-a.s);}return (neg?'-':'')+s;}
+function numCmp(a,b){var s=Math.max(a.s,b.s),x=rescale(a,s).u,y=rescale(b,s).u;return x<y?-1:(x>y?1:0);}
+function weightFirst(a){/* PostgreSQL base-10000 weight and leading digit of |a| */
+  var u=a.u<0n?-a.u:a.u;if(u===0n){return {w:0,f:0};}
+  var s=u.toString(),ip=s.length>a.s?s.slice(0,s.length-a.s):'',fp=s.length>a.s?s.slice(s.length-a.s):s;
+  while(fp.length<a.s){fp='0'+fp;}
+  ip=ip.replace(/^0+/,'');
+  if(ip.length){var g=Math.ceil(ip.length/4),lead=ip.length-4*(g-1);return {w:g-1,f:+ip.slice(0,lead)};}
+  while(fp.length%4){fp+='0';}
+  for(var k=0;k*4<fp.length;k++){var grp=+fp.slice(k*4,k*4+4);if(grp){return {w:-(k+1),f:grp};}}
+  return {w:0,f:0};}
+function numDiv(a,b){a=toNum(a);b=toNum(b);if(b.u===0n){pgerr('division by zero');}
+  var x=weightFirst(a),y=weightFirst(b),qw=x.w-y.w;if(x.f<=y.f){qw--;}
+  var rs=Math.min(Math.max(16-qw*4,a.s,b.s,0),1000);
+  return new Num(divRound(a.u*p10(b.s+rs),b.u*p10(a.s)),rs);}
+function numAdd(a,b,sign){a=toNum(a);b=toNum(b);var s=Math.max(a.s,b.s);return new Num(rescale(a,s).u+(sign<0?-1n:1n)*rescale(b,s).u,s);}
+function numMul(a,b){a=toNum(a);b=toNum(b);return new Num(a.u*b.u,a.s+b.s);}
+function parseNumLit(t){var m=/^(\d*)\.?(\d*)$/.exec(t);var ip=m[1]||'0',fp=m[2]||'';return new Num(BigInt(ip+fp),fp.length);}
+/* Display text of one value, as psql prints it. */
+function sig(x){return JSON.stringify(x,function(k,v){return typeof v==='bigint'?'b'+v.toString():v;});}
+function show(v){if(v===null){return '';}if(v instanceof Num){return numStr(v);}if(v===true){return 't';}if(v===false){return 'f';}return String(v);}
+function isNumType(t){return t==='int'||t==='num';}
+
+/* ---------- Lexer ---------- */
+var KW=('select distinct from where group by having order asc desc nulls first last join inner left outer on as and or not is null true false in exists between like case when then else end insert into values update set delete returning limit offset union intersect except with cross right full natural using all any some window over filter lateral fetch for create drop alter table truncate begin commit rollback grant revoke copy ilike similar').split(' ');
+var KWS={};KW.forEach(function(k){KWS[k]=1;});
+function lex(src){
+  var out=[],i=0,line=1,col=1,n=src.length;
+  function adv(k){for(var j=0;j<k;j++){if(src[i]==='\n'){line++;col=1;}else{col++;}i++;}}
+  while(i<n){var c=src[i],rest;
+    if(/\s/.test(c)){adv(1);continue;}
+    if(c==='-'&&src[i+1]==='-'){while(i<n&&src[i]!=='\n'){adv(1);}continue;}
+    if(c==='/'&&src[i+1]==='*'){var sl=line;adv(2);while(i<n&&!(src[i]==='*'&&src[i+1]==='/')){adv(1);}if(i>=n){out.push({t:'bad',v:'/*',line:sl,col:1,why:'Close the /* comment with */.'});break;}adv(2);continue;}
+    var tl=line,tc=col;
+    if(c==='\\'&&(col===1||/^\s*$/.test(src.slice(src.lastIndexOf('\n',i-1)+1,i)))){var e=src.indexOf('\n',i);e=e<0?n:e;out.push({t:'meta',v:src.slice(i,e).trim(),line:tl,col:tc});adv(e-i);continue;}
+    if(c==="'"){var j=i+1,s='';while(j<n){if(src[j]==="'"){if(src[j+1]==="'"){s+="'";j+=2;continue;}break;}s+=src[j];j++;}
+      if(j>=n){out.push({t:'bad',v:"'",line:tl,col:tc,why:'Close the text value with a matching single quote.'});break;}
+      out.push({t:'str',v:s,line:tl,col:tc});adv(j+1-i);continue;}
+    if(c==='"'){var k=src.indexOf('"',i+1);if(k<0){out.push({t:'bad',v:'"',line:tl,col:tc,why:'Close the quoted name with a matching double quote.'});break;}
+      out.push({t:'id',v:src.slice(i+1,k),q:true,line:tl,col:tc});adv(k+1-i);continue;}
+    rest=src.slice(i);var m;
+    if((m=/^(\d+\.\d*|\.\d+|\d+)/.exec(rest))){out.push({t:m[1].indexOf('.')>=0?'dec':'int',v:m[1],line:tl,col:tc});adv(m[1].length);continue;}
+    if((m=/^[A-Za-z_][A-Za-z_0-9$]*/.exec(rest))){var w=m[0].toLowerCase();out.push({t:KWS[w]?'kw':'id',v:w,line:tl,col:tc});adv(m[0].length);continue;}
+    if((m=/^(<>|!=|<=|>=|\|\||::|[-+*\/%=<>(),.;\[\]])/.exec(rest))){out.push({t:'op',v:m[1],line:tl,col:tc});adv(m[1].length);continue;}
+    out.push({t:'bad',v:c,line:tl,col:tc,why:'The character '+c+' is outside this practice editor.'});adv(1);}
+  return out;}
+
+/* ---------- Parser ---------- */
+function Parser(ts){this.ts=ts;this.i=0;}
+Parser.prototype={
+  peek:function(k){return this.ts[this.i+(k||0)]||{t:'end',v:'',line:(this.ts.length?this.ts[this.ts.length-1].line:1)};},
+  next:function(){return this.ts[this.i++]||this.peek();},
+  is:function(v,k){var p=this.peek(k);return (p.t==='kw'||p.t==='op')&&p.v===v;},
+  eat:function(v){if(this.is(v)){this.i++;return true;}return false;},
+  want:function(v,msg){if(!this.eat(v)){var p=this.peek();lim(msg||('Expected '+v.toUpperCase()+(p.t==='end'?' before the end of the statement.':' near "'+p.v+'".')),p);}},
+  ident:function(what){var p=this.peek();if(p.t==='id'){this.i++;return p.v;}lim('Expected '+what+(p.t==='end'?' before the end of the statement.':' near "'+p.v+'".'),p);},
+  statement:function(){var p=this.peek(),st;
+    if(this.is('select')){st=this.select();}
+    else if(this.is('insert')){st=this.insert();}
+    else if(this.is('update')){st=this.update();}
+    else if(this.is('delete')){st=this.del();}
+    else if(this.is('with')){lim('WITH queries are outside this practice editor.',p);}
+    else if(p.t==='kw'&&/^(create|drop|alter|truncate)$/.test(p.v)){lim(p.v.toUpperCase()+' is not available here: this practice editor works only on the tables shown.',p);}
+    else if(p.t==='kw'&&/^(begin|commit|rollback)$/.test(p.v)){lim('Transactions are outside this practice editor; each statement here runs on its own.',p);}
+    else if(p.t==='kw'&&p.v==='copy'){lim('COPY runs on the database server and reads server files, so it is not available in this practice editor.',p);}
+    else{lim('This practice editor runs SELECT, INSERT, UPDATE and DELETE statements; it could not read one starting "'+p.v+'".',p);}
+    if(this.peek().t!=='end'){var q=this.peek();lim('This practice editor could not read the statement near "'+q.v+'". Check the commas, keywords and brackets.',q);}
+    return st;},
+  select:function(){var tok=this.peek();this.want('select');var q={type:'select',line:tok.line,distinct:false,items:[],from:[],where:null,group:[],having:null,order:[]};
+    if(this.eat('distinct')){if(this.is('on')){lim('DISTINCT ON is outside this practice editor.',this.peek());}q.distinct=true;}else{this.eat('all');}
+    q.items=this.items();
+    if(this.eat('from')){q.from=this.fromList();}
+    if(this.eat('where')){q.where=this.expr();}
+    if(this.is('group')){this.next();this.want('by');do{q.group.push(this.expr());}while(this.eat(','));}
+    if(this.eat('having')){q.having=this.expr();}
+    if(this.is('order')){this.next();this.want('by');do{var e=this.expr(),o={e:e,desc:false,nulls:null};if(this.eat('desc')){o.desc=true;}else{this.eat('asc');}
+      if(this.eat('nulls')){if(this.eat('first')){o.nulls='first';}else{this.want('last','Write NULLS FIRST or NULLS LAST.');o.nulls='last';}}q.order.push(o);}while(this.eat(','));}
+    var p=this.peek();
+    if(p.t==='kw'&&/^(limit|offset|fetch|union|intersect|except|window|for)$/.test(p.v)){lim(p.v.toUpperCase()+' is outside this practice editor.',p);}
+    return q;},
+  items:function(){var out=[];do{var p=this.peek();
+      if(this.is('*')){this.next();out.push({star:true});continue;}
+      if(p.t==='id'&&this.is('.',1)&&this.peek(2).t==='op'&&this.peek(2).v==='*'){this.i+=3;out.push({star:true,qual:p.v});continue;}
+      var e=this.expr(),alias=null;
+      if(this.eat('as')){var a=this.peek();if(a.t==='id'||a.t==='kw'){this.next();alias=a.v;}else{lim('Name the column after AS.',a);}}
+      else if(this.peek().t==='id'){alias=this.next().v;}
+      out.push({e:e,alias:alias});}while(this.eat(','));
+    return out;},
+  fromList:function(){var items=[this.fromItem(null)];
+    for(;;){var p=this.peek();
+      if(this.is(',')){lim('Join tables with JOIN ... ON in this practice editor, not with a comma.',p);}
+      if(p.t==='kw'&&/^(cross|right|full|natural)$/.test(p.v)){lim(p.v.toUpperCase()+' JOIN is outside this practice editor; use JOIN or LEFT JOIN with ON.',p);}
+      var kind=null;
+      if(this.is('join')){this.next();kind='inner';}
+      else if(this.is('inner')){this.next();this.want('join');kind='inner';}
+      else if(this.is('left')){this.next();this.eat('outer');this.want('join');kind='left';}
+      if(!kind){break;}
+      var it=this.fromItem(kind);
+      if(this.is('using')){lim('USING is outside this practice editor; write ON with the matching columns.',this.peek());}
+      this.want('on','A JOIN needs ON and a condition in this practice editor.');it.on=this.expr();items.push(it);}
+    return items;},
+  fromItem:function(kind){var p=this.peek(),it={kind:kind,line:p.line};
+    if(this.is('(')){lim('A subquery in FROM is outside this practice editor.',p);}
+    if(this.is('lateral')){lim('LATERAL is outside this practice editor.',p);}
+    var name=this.ident('a table name');
+    if(this.is('(')){if(name!=='generate_series'){lim('The function '+name+' in FROM is outside this practice editor; only generate_series is available.',p);}
+      this.next();var args=[this.expr()];while(this.eat(',')){args.push(this.expr());}this.want(')');it.fn=name;it.args=args;}
+    it.name=name;it.alias=null;it.colAlias=null;
+    if(this.eat('as')){it.alias=this.ident('a name after AS');}else if(this.peek().t==='id'){it.alias=this.next().v;}
+    if(it.alias&&this.is('(')){if(!it.fn){lim('Column aliases on a table are outside this practice editor.',this.peek());}this.next();it.colAlias=this.ident('a column name');this.want(')');}
+    return it;},
+  insert:function(){var tok=this.peek();this.want('insert');this.want('into');var st={type:'insert',line:tok.line,table:this.ident('a table name'),cols:null,rows:null,query:null,returning:null};
+    if(this.is('as')||this.peek().t==='id'){lim('A table alias in INSERT is outside this practice editor.',this.peek());}
+    if(this.eat('(')){st.cols=[];do{st.cols.push(this.ident('a column name'));}while(this.eat(','));this.want(')');}
+    if(this.eat('values')){st.rows=[];do{this.want('(','Put each row of VALUES in parentheses.');var r=[];do{r.push(this.is('default')?lim('DEFAULT is outside this practice editor.',this.peek()):this.expr());}while(this.eat(','));this.want(')');st.rows.push(r);}while(this.eat(','));}
+    else if(this.is('select')){st.query=this.select();}
+    else if(this.is('default')){lim('DEFAULT VALUES is outside this practice editor.',this.peek());}
+    else{lim('After the table and columns, write VALUES or a SELECT.',this.peek());}
+    if(this.is('on')){lim('ON CONFLICT is outside this practice editor.',this.peek());}
+    if(this.eat('returning')){st.returning=this.items();}
+    return st;},
+  update:function(){var tok=this.peek();this.want('update');var st={type:'update',line:tok.line,table:this.ident('a table name'),alias:null,sets:[],where:null,returning:null};
+    if(this.eat('as')){st.alias=this.ident('a name');}else if(this.peek().t==='id'){st.alias=this.next().v;}
+    this.want('set','UPDATE needs SET, then column = value.');
+    do{var c=this.ident('a column name');if(this.is('.')){lim('In SET, name the column alone, without a table prefix.',this.peek());}this.want('=','In SET, write column = value.');st.sets.push({col:c,e:this.expr()});}while(this.eat(','));
+    if(this.is('from')){lim('UPDATE ... FROM is outside this practice editor.',this.peek());}
+    if(this.eat('where')){st.where=this.expr();}
+    if(this.eat('returning')){st.returning=this.items();}
+    return st;},
+  del:function(){var tok=this.peek();this.want('delete');this.want('from','Write DELETE FROM and the table name.');var st={type:'delete',line:tok.line,table:this.ident('a table name'),alias:null,where:null,returning:null};
+    if(this.eat('as')){st.alias=this.ident('a name');}else if(this.peek().t==='id'){st.alias=this.next().v;}
+    if(this.is('using')){lim('DELETE ... USING is outside this practice editor.',this.peek());}
+    if(this.eat('where')){st.where=this.expr();}
+    if(this.eat('returning')){st.returning=this.items();}
+    return st;},
+  /* Expressions, with PostgreSQL operator precedence. */
+  expr:function(){return this.or();},
+  or:function(){var a=this.and();while(this.eat('or')){a={op:'or',a:a,b:this.and()};}return a;},
+  and:function(){var a=this.not();while(this.eat('and')){a={op:'and',a:a,b:this.not()};}return a;},
+  not:function(){if(this.eat('not')){return {op:'not',a:this.not()};}return this.isx();},
+  isx:function(){var a=this.cmp();
+    while(this.is('is')){this.next();var neg=this.eat('not');
+      if(this.eat('null')){a={op:neg?'isnotnull':'isnull',a:a};}
+      else if(this.is('true')||this.is('false')){lim('IS TRUE and IS FALSE are outside this practice editor.',this.peek());}
+      else if(this.is('distinct')){lim('IS DISTINCT FROM is outside this practice editor.',this.peek());}
+      else{lim('After IS, write NULL or NOT NULL.',this.peek());}}
+    return a;},
+  cmp:function(){var a=this.pred();var p=this.peek();
+    if(p.t==='op'&&/^(=|<>|!=|<|<=|>|>=)$/.test(p.v)){this.next();
+      if(this.is('any')||this.is('all')||this.is('some')){lim('ANY, ALL and SOME are outside this practice editor.',this.peek());}
+      a={op:p.v==='!='?'<>':p.v,a:a,b:this.pred()};
+      var q=this.peek();if(q.t==='op'&&/^(=|<>|!=|<|<=|>|>=)$/.test(q.v)){lim('Join two comparisons with AND or OR.',q);}}
+    return a;},
+  pred:function(){var a=this.other();
+    for(;;){var neg=false,save=this.i;
+      if(this.is('not')&&(this.is('in',1)||this.is('between',1)||this.is('like',1)||this.is('ilike',1))){this.next();neg=true;}
+      if(this.eat('in')){this.want('(','Put the IN values in parentheses.');
+        if(this.is('select')){var sq=this.select();this.want(')');a={op:'insub',a:a,q:sq,neg:neg};}
+        else{var list=[this.expr()];while(this.eat(',')){list.push(this.expr());}this.want(')');a={op:'inlist',a:a,list:list,neg:neg};}}
+      else if(this.eat('between')){if(this.is('symmetric')){lim('BETWEEN SYMMETRIC is outside this practice editor.',this.peek());}var lo=this.other();this.want('and','BETWEEN needs AND between its two limits.');a={op:'between',a:a,lo:lo,hi:this.other(),neg:neg};}
+      else if(this.eat('like')){var pat=this.other();if(this.is('escape')){lim('LIKE ... ESCAPE is outside this practice editor.',this.peek());}a={op:'like',a:a,b:pat,neg:neg};}
+      else if(this.is('ilike')||this.is('similar')){lim(this.peek().v.toUpperCase()+' is outside this practice editor; use LIKE.',this.peek());}
+      else{this.i=save;break;}}
+    return a;},
+  other:function(){var a=this.add();while(this.eat('||')){a={op:'||',a:a,b:this.add()};}return a;},
+  add:function(){var a=this.mul();for(;;){if(this.eat('+')){a={op:'+',a:a,b:this.mul()};}else if(this.eat('-')){a={op:'-',a:a,b:this.mul()};}else{return a;}}},
+  mul:function(){var a=this.unary();for(;;){if(this.eat('*')){a={op:'*',a:a,b:this.unary()};}else if(this.eat('/')){a={op:'/',a:a,b:this.unary()};}else if(this.eat('%')){a={op:'%',a:a,b:this.unary()};}else{return a;}}},
+  unary:function(){if(this.eat('-')){return {op:'neg',a:this.unary()};}if(this.eat('+')){return this.unary();}var a=this.primary();if(this.is('::')){lim(':: casts are outside this practice editor.',this.peek());}if(this.is('[')){lim('Array subscripts are outside this practice editor.',this.peek());}return a;},
+  primary:function(){var p=this.next();
+    if(p.t==='int'){return {lit:+p.v,type:'int',raw:p.v};}
+    if(p.t==='dec'){return {lit:parseNumLit(p.v),type:'num',raw:p.v};}
+    if(p.t==='str'){return {lit:p.v,type:'unknown'};}
+    if(p.t==='kw'&&p.v==='null'){return {lit:null,type:'unknown'};}
+    if(p.t==='kw'&&(p.v==='true'||p.v==='false')){return {lit:p.v==='true',type:'bool'};}
+    if(p.t==='op'&&p.v==='('){if(this.is('select')){var sq=this.select();this.want(')');return {op:'scalar',q:sq};}var e=this.expr();if(this.is(',')){lim('Row values are outside this practice editor.',this.peek());}this.want(')','Close the parenthesis.');return e;}
+    if(p.t==='kw'&&p.v==='exists'){this.want('(','Write EXISTS (SELECT ...).');if(!this.is('select')){lim('EXISTS needs a SELECT inside its parentheses.',this.peek());}var q=this.select();this.want(')');return {op:'exists',q:q};}
+    if(p.t==='kw'&&p.v==='case'){return this.caseExpr();}
+    if(p.t==='id'){
+      if(this.is('(')){return this.call(p);}
+      if(this.is('.')){this.next();var c=this.peek();if(c.t==='op'&&c.v==='*'){lim('Use table.* only directly in the select list.',c);}var cn=this.ident('a column name after the dot');return {col:cn,qual:p.v,line:p.line};}
+      return {col:p.v,line:p.line};}
+    if(p.t==='end'){lim('The statement ends too early; something is missing after the last word.',p);}
+    if(p.t==='kw'){lim('This practice editor could not read the statement near "'+p.v+'". Check the keyword order, commas and brackets.',p);}
+    lim('This practice editor could not read the statement near "'+p.v+'".',p);},
+  caseExpr:function(){var c={op:'case',subject:null,whens:[],els:null};
+    if(!this.is('when')){c.subject=this.expr();}
+    if(!this.is('when')){lim('CASE needs at least one WHEN ... THEN.',this.peek());}
+    while(this.eat('when')){var w=this.expr();this.want('then','Each WHEN needs THEN and a result.');c.whens.push({w:w,t:this.expr()});}
+    if(this.eat('else')){c.els=this.expr();}
+    this.want('end','Close the CASE expression with END.');return c;},
+  call:function(p){var name=p.v;this.next();var f={op:'call',name:name,args:[],star:false,line:p.line};
+    var AGG={count:1,sum:1,avg:1,min:1,max:1},FN={coalesce:1,round:1,lower:1,upper:1,length:1};
+    if(name==='generate_series'){lim('generate_series belongs in FROM in this practice editor: FROM generate_series(1, 5) AS n.',p);}
+    if(!AGG[name]&&!FN[name]){lim('The function '+name+'() is outside this practice editor. Available: count, sum, avg, min, max, coalesce, round, lower, upper and length.',p);}
+    f.agg=!!AGG[name];
+    if(this.is('distinct')){lim('DISTINCT inside an aggregate is outside this practice editor.',this.peek());}
+    if(this.eat('*')){if(name!=='count'){lim('Only count(*) takes a star.',p);}f.star=true;}
+    else if(!this.is(')')){do{f.args.push(this.expr());}while(this.eat(','));}
+    this.want(')','Close the function call with a parenthesis.');
+    if(this.is('over')||this.is('filter')){lim('Window functions and FILTER are outside this practice editor.',this.peek());}
+    var n=f.args.length;
+    if(f.agg&&!f.star&&n!==1){lim(name+'() takes one argument here.',p);}
+    if(name==='coalesce'&&n<1){lim('coalesce() needs at least one argument.',p);}
+    if((name==='lower'||name==='upper'||name==='length')&&n!==1){lim(name+'() takes one argument.',p);}
+    if(name==='round'&&(n<1||n>2)){lim('round() takes a value and an optional number of decimal places.',p);}
+    return f;}
+};
+function split(ts){var out=[],cur=[];ts.forEach(function(t){if(t.t==='op'&&t.v===';'){if(cur.length){out.push(cur);}cur=[];}else if(t.t==='meta'){if(cur.length){out.push(cur);cur=[];}out.push([t]);}else{cur.push(t);}});if(cur.length){out.push(cur);}return out;}
+
+/* ---------- Tables ---------- */
+function cloneDb(schema){var db={};schema.tables.forEach(function(t){db[t.name]={def:t,rows:t.rows.map(function(r){return r.map(cv);}),seq:0};});return db;}
+function cv(v){return (v!==null&&typeof v==='object'&&'dec' in v)?parseNumLit(v.dec):v;}
+function colIndex(def,name){for(var i=0;i<def.cols.length;i++){if(def.cols[i].name===name){return i;}}return -1;}
+
+/* ---------- Evaluation ---------- */
+function Ctx(db,outer){this.db=db;this.items=[];this.outer=outer||null;}
+function resolve(ctx,e){/* -> {depth, item index, column index, type, label} */
+  for(var c=ctx,depth=0;c;c=c.outer,depth++){var hits=[],qualSeen=false;
+    for(var k=0;k<c.items.length;k++){var it=c.items[k],ref=it.alias||it.name;
+      if(e.qual){if(ref!==e.qual){if(it.alias&&it.name===e.qual&&!it.fn){pgerr('invalid reference to FROM-clause entry for table "'+e.qual+'"','HINT:  Perhaps you meant to reference the table alias "'+it.alias+'".');}continue;}qualSeen=true;}
+      var ci=it.cols.indexOf(e.col);if(ci>=0){hits.push({depth:depth,k:k,ci:ci,type:it.types[ci],ref:ref});}}
+    if(hits.length>1){pgerr('column reference "'+e.col+'" is ambiguous');}
+    if(hits.length){return hits[0];}
+    if(e.qual&&qualSeen){pgerr('column '+e.qual+'.'+e.col+' does not exist');}}
+  if(e.qual){pgerr('missing FROM-clause entry for table "'+e.qual+'"');}
+  pgerr('column "'+e.col+'" does not exist');}
+function typeName(t){return {int:'integer',num:'numeric',text:'text',bool:'boolean',unknown:'unknown'}[t]||t;}
+function coerceLit(v,t){/* an untyped quoted literal meets a typed operand */
+  if(v===null){return null;}
+  if(t==='int'){if(!/^\s*[-+]?\d+\s*$/.test(v)){pgerr('invalid input syntax for type integer: "'+v+'"');}return parseInt(v,10);}
+  if(t==='num'){var m=/^\s*([-+]?)(\d*\.?\d*)\s*$/.exec(v);if(!m||!/\d/.test(m[2])){pgerr('invalid input syntax for type numeric: "'+v+'"');}var n=parseNumLit(m[2]);if(m[1]==='-'){n.u=-n.u;}return n;}
+  if(t==='bool'){var b=String(v).trim().toLowerCase();if(/^(t|true|yes|on|1)$/.test(b)){return true;}if(/^(f|false|no|off|0)$/.test(b)){return false;}pgerr('invalid input syntax for type boolean: "'+v+'"');}
+  return v;}
+function cmpVals(a,b){if(typeof a==='string'){return a<b?-1:(a>b?1:0);}if(typeof a==='boolean'){return a===b?0:(a?1:-1);}if(a instanceof Num||b instanceof Num){return numCmp(toNum(a),toNum(b));}return a<b?-1:(a>b?1:0);}
+function opType(op,ta,tb){
+  if(op==='||'){if(ta!=='text'&&ta!=='unknown'&&tb!=='text'&&tb!=='unknown'){pgerr('operator does not exist: '+typeName(ta)+' || '+typeName(tb));}return 'text';}
+  if(ta==='unknown'&&tb==='unknown'){return op==='cmp'?'text':'text';}
+  var x=ta==='unknown'?tb:ta,y=tb==='unknown'?ta:tb;
+  if(isNumType(x)&&isNumType(y)){return x==='num'||y==='num'?'num':'int';}
+  if(x===y){return x;}
+  pgerr('operator does not exist: '+typeName(ta)+' '+(op==='cmp'?'=':op)+' '+typeName(tb));}
+function Evaluator(db){this.db=db;}
+Evaluator.prototype={
+  /* Static type of an expression in a context (needed for literal coercion and alignment). */
+  type:function(e,ctx){var self=this;
+    if('lit' in e){return e.type;}
+    if(e.col){return resolve(ctx,e).type;}
+    switch(e.op){
+      case 'or':case 'and':case 'not':case 'isnull':case 'isnotnull':case 'inlist':case 'insub':case 'between':case 'like':case 'exists':case '=':case '<>':case '<':case '<=':case '>':case '>=':return 'bool';
+      case 'neg':return this.type(e.a,ctx);
+      case '||':return 'text';
+      case '+':case '-':case '*':case '/':case '%':{var t=opType(e.op,this.type(e.a,ctx),this.type(e.b,ctx));if(t!=='int'&&t!=='num'){pgerr('operator does not exist: '+typeName(this.type(e.a,ctx))+' '+e.op+' '+typeName(this.type(e.b,ctx)));}return t;}
+      case 'case':{var ts=e.whens.map(function(w){return self.type(w.t,ctx);});if(e.els){ts.push(this.type(e.els,ctx));}return unify(ts,'CASE');}
+      case 'scalar':return this.subquery(e.q,ctx,[]).types[0]||'text';
+      case 'call':{var n=e.name;if(n==='count'){return 'int';}if(n==='avg'){var at=this.type(e.args[0],ctx);if(!isNumType(at)){pgerr('function avg('+typeName(at)+') does not exist');}return 'num';}
+        if(n==='sum'){var st=this.type(e.args[0],ctx);if(!isNumType(st)){pgerr('function sum('+typeName(st)+') does not exist');}return st;}
+        if(n==='min'||n==='max'){var mt=this.type(e.args[0],ctx);return mt==='unknown'?'text':mt;}
+        if(n==='coalesce'){return unify(e.args.map(function(a){return self.type(a,ctx);}),'COALESCE');}
+        if(n==='round'){return 'num';}if(n==='length'){return 'int';}return 'text';}}
+    return 'unknown';},
+  ev:function(e,ctx,row,grp){var self=this;
+    if('lit' in e){return e.lit;}
+    if(e.col){var r=resolve(ctx,e);if(grp&&r.depth===0){return grp.first?grp.first[r.k][r.ci]:null;}var rr=row;for(var d=0,c=ctx;d<r.depth;d++){rr=c.outerRow;c=c.outer;}return rr[r.k]?rr[r.k][r.ci]:null;}
+    switch(e.op){
+      case 'and':{var a=this.ev(e.a,ctx,row,grp),b=this.ev(e.b,ctx,row,grp);if(a===false||b===false){return false;}if(a===null||b===null){return null;}return true;}
+      case 'or':{var a2=this.ev(e.a,ctx,row,grp),b2=this.ev(e.b,ctx,row,grp);if(a2===true||b2===true){return true;}if(a2===null||b2===null){return null;}return false;}
+      case 'not':{var n=this.ev(e.a,ctx,row,grp);return n===null?null:!n;}
+      case 'isnull':return this.ev(e.a,ctx,row,grp)===null;
+      case 'isnotnull':return this.ev(e.a,ctx,row,grp)!==null;
+      case '=':case '<>':case '<':case '<=':case '>':case '>=':return this.compare(e.op,e.a,e.b,ctx,row,grp);
+      case 'between':{var lo=this.compare('>=',e.a,e.lo,ctx,row,grp),hi=this.compare('<=',e.a,e.hi,ctx,row,grp),r1=(lo===false||hi===false)?false:((lo===null||hi===null)?null:true);return e.neg?(r1===null?null:!r1):r1;}
+      case 'like':{var s=this.ev(e.a,ctx,row,grp),pt=this.ev(e.b,ctx,row,grp);var ta=this.type(e.a,ctx),tb=this.type(e.b,ctx);if((ta!=='text'&&ta!=='unknown')||(tb!=='text'&&tb!=='unknown')){pgerr('operator does not exist: '+typeName(ta==='unknown'?'text':ta)+' ~~ '+typeName(tb==='unknown'?'text':tb));}
+        if(s===null||pt===null){return null;}var re='^';for(var i=0;i<pt.length;i++){var ch=pt[i];if(ch==='\\'&&i+1<pt.length){i++;re+=pt[i].replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}else if(ch==='%'){re+='[\\s\\S]*';}else if(ch==='_'){re+='[\\s\\S]';}else{re+=ch.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');}}
+        var m=new RegExp(re+'$').test(s);return e.neg?!m:m;}
+      case 'inlist':{var any=false,nul=false;for(var j=0;j<e.list.length;j++){var c1=this.compare('=',e.a,e.list[j],ctx,row,grp);if(c1===true){any=true;break;}if(c1===null){nul=true;}}
+        var r2=any?true:(nul?null:false);return e.neg?(r2===null?null:!r2):r2;}
+      case 'insub':{var lv=this.ev(e.a,ctx,row,grp),res=this.subquery(e.q,ctx,row),any2=false,nul2=false;if(res.cols.length!==1){pgerr('subquery has too many columns');}
+        var lt=this.type(e.a,ctx),rt=res.types[0];var ct=opType('cmp',lt,rt==='unknown'?'unknown':rt);
+        if(lv!==null&&lt==='unknown'){lv=coerceLit(lv,ct);}
+        if(res.rows.length===0){return e.neg;}
+        if(lv===null){return null;}
+        for(var k=0;k<res.rows.length;k++){var v=res.rows[k][0];if(v===null){nul2=true;continue;}if(cmpVals(lv,v)===0){any2=true;break;}}
+        var r3=any2?true:(nul2?null:false);return e.neg?(r3===null?null:!r3):r3;}
+      case 'exists':return this.subquery(e.q,ctx,row).rows.length>0;
+      case 'scalar':{var sr=this.subquery(e.q,ctx,row);if(sr.cols.length!==1){pgerr('subquery must return only one column');}if(sr.rows.length>1){pgerr('more than one row returned by a subquery used as an expression');}return sr.rows.length?sr.rows[0][0]:null;}
+      case 'neg':{var nv=this.ev(e.a,ctx,row,grp);if(nv===null){return null;}if(nv instanceof Num){return new Num(-nv.u,nv.s);}if(typeof nv!=='number'){pgerr('operator does not exist: - '+typeName(this.type(e.a,ctx)));}return -nv;}
+      case '||':{opType('||',this.type(e.a,ctx),this.type(e.b,ctx));var x=this.ev(e.a,ctx,row,grp),y=this.ev(e.b,ctx,row,grp);if(x===null||y===null){return null;}return show(x)+show(y);}
+      case '+':case '-':case '*':case '/':case '%':return this.arith(e,ctx,row,grp);
+      case 'case':{var subj=e.subject?this.ev(e.subject,ctx,row,grp):undefined;
+        for(var w=0;w<e.whens.length;w++){var hit;if(e.subject){hit=this.compare('=',e.subject,e.whens[w].w,ctx,row,grp);}else{hit=this.ev(e.whens[w].w,ctx,row,grp);}
+          if(hit===true){return this.cast(this.ev(e.whens[w].t,ctx,row,grp),this.type(e.whens[w].t,ctx),this.type(e,ctx));}}
+        return e.els?this.cast(this.ev(e.els,ctx,row,grp),this.type(e.els,ctx),this.type(e,ctx)):null;}
+      case 'call':return this.call(e,ctx,row,grp);}
+    lim('This expression is outside this practice editor.');},
+  cast:function(v,from,to){if(v===null){return null;}if(from==='unknown'){return coerceLit(v,to);}if(to==='num'&&typeof v==='number'){return new Num(BigInt(v),0);}return v;},
+  compare:function(op,ea,eb,ctx,row,grp){var ta=this.type(ea,ctx),tb=this.type(eb,ctx),t=opType('cmp',ta,tb);
+    var a=this.ev(ea,ctx,row,grp),b=this.ev(eb,ctx,row,grp);if(a===null||b===null){return null;}
+    if(ta==='unknown'){a=coerceLit(a,t);}if(tb==='unknown'){b=coerceLit(b,t);}
+    var c=cmpVals(a,b);return op==='='?c===0:op==='<>'?c!==0:op==='<'?c<0:op==='<='?c<=0:op==='>'?c>0:c>=0;},
+  arith:function(e,ctx,row,grp){var ta=this.type(e.a,ctx),tb=this.type(e.b,ctx),t=this.type(e,ctx),a=this.ev(e.a,ctx,row,grp),b=this.ev(e.b,ctx,row,grp);
+    if(a===null||b===null){return null;}if(ta==='unknown'){a=coerceLit(a,t);}if(tb==='unknown'){b=coerceLit(b,t);}
+    if(t==='int'){var r;switch(e.op){case '+':r=a+b;break;case '-':r=a-b;break;case '*':r=a*b;break;case '/':if(b===0){pgerr('division by zero');}r=Math.trunc(a/b);break;case '%':if(b===0){pgerr('division by zero');}r=a%b;break;}
+      if(!Number.isSafeInteger(r)||Math.abs(r)>2147483647){pgerr('integer out of range');}return r;}
+    switch(e.op){case '+':return numAdd(a,b,1);case '-':return numAdd(a,b,-1);case '*':return numMul(a,b);case '/':return numDiv(a,b);}
+    lim('% on decimals is outside this practice editor.');},
+  call:function(e,ctx,row,grp){var self=this,n=e.name;
+    if(e.agg){if(!grp){pgerr('aggregate functions are not allowed here');}
+      if(e.star){return grp.rows.length;}
+      var vals=[];grp.rows.forEach(function(r){var v=self.ev(e.args[0],grp.ctx,r,null);if(v!==null){vals.push(v);}});
+      var at=this.type(e.args[0],grp.ctx);if(at==='unknown'){vals=vals.map(function(v){return coerceLit(v,n==='count'?'text':'text');});}
+      if(n==='count'){return vals.length;}
+      if(!vals.length){return null;}
+      if(n==='min'||n==='max'){return vals.reduce(function(a,b){var c=cmpVals(a,b);return (n==='min'?c<=0:c>=0)?a:b;});}
+      var sum=vals.reduce(function(a,b){return at==='int'?a+b:numAdd(a,b,1);},at==='int'?0:new Num(0n,0));
+      if(at==='num'){var sc=Math.max.apply(null,vals.map(function(v){return v.s;}));sum=rescale(sum,sc);}
+      if(n==='sum'){return sum;}
+      return numDiv(toNum(sum),new Num(BigInt(vals.length),0));}
+    var args=e.args.map(function(a){return self.ev(a,ctx,row,grp);});
+    if(n==='coalesce'){var t=this.type(e,ctx);for(var i=0;i<args.length;i++){if(args[i]!==null){return this.cast(args[i],this.type(e.args[i],ctx),t);}}return null;}
+    if(args[0]===null){return null;}
+    var t0=this.type(e.args[0],ctx);
+    if(n==='lower'||n==='upper'){if(t0!=='text'&&t0!=='unknown'){pgerr('function '+n+'('+typeName(t0)+') does not exist');}return n==='lower'?String(args[0]).toLowerCase():String(args[0]).toUpperCase();}
+    if(n==='length'){if(t0!=='text'&&t0!=='unknown'){pgerr('function length('+typeName(t0)+') does not exist');}return Array.from(String(args[0])).length;}
+    if(n==='round'){if(!isNumType(t0)&&t0!=='unknown'){pgerr('function round('+typeName(t0)+') does not exist');}var v0=t0==='unknown'?coerceLit(args[0],'num'):args[0];var places=args.length>1?args[1]:0;if(places===null){return null;}if(typeof places!=='number'){pgerr('function round(numeric, '+typeName(this.type(e.args[1],ctx))+') does not exist');}
+      if(places<0||places>20){lim('round() places from 0 to 20 only in this practice editor.');}return rescale(toNum(v0),places);}
+    lim('This function is outside this practice editor.');},
+  subquery:function(q,ctx,row){var c2=new Ctx(this.db,ctx);c2.outerRow=row;return this.select(q,c2);},
+  fromItems:function(q,ctx){var self=this,envs=[[]];
+    q.from.forEach(function(f){var it={name:f.name,alias:f.alias,fn:f.fn},rows;
+      if(f.fn){var a=f.args.map(function(x){return self.ev(x,ctx,[],null);});if(a.length<2||a.length>3){lim('generate_series takes a start, a stop and an optional step here.');}
+        if(a.some(function(v){return typeof v!=='number';})){lim('generate_series takes whole numbers in this practice editor.');}
+        var st=a.length>2?a[2]:1;if(st===0){pgerr('step size cannot equal zero');}rows=[];for(var v=a[0];st>0?v<=a[1]:v>=a[1];v+=st){rows.push([v]);if(rows.length>MAX_ROWS){lim('That series is too long for this practice editor.');}}
+        it.cols=[f.colAlias||f.alias||'generate_series'];it.types=['int'];}
+      else{var tb=self.db[f.name];if(!tb){pgerr('relation "'+f.name+'" does not exist');}it.cols=tb.def.cols.map(function(c){return c.name;});it.types=tb.def.cols.map(function(c){return c.type;});it.def=tb.def;rows=tb.rows;}
+      var ref=it.alias||it.name;ctx.items.forEach(function(o){if((o.alias||o.name)===ref){pgerr('table name "'+ref+'" specified more than once');}});
+      ctx.items.push(it);
+      if(f.on&&hasAgg(f.on)){pgerr('aggregate functions are not allowed in JOIN conditions');}
+      var next=[];envs.forEach(function(env){var matched=false;
+        rows.forEach(function(r){var e2=env.concat([r]);if(!f.on||self.ev(f.on,ctx,e2,null)===true){next.push(e2);matched=true;}if(next.length>MAX_ROWS){lim('That join produces too many rows for this practice editor.');}});
+        if(f.kind==='left'&&!matched){next.push(env.concat([it.cols.map(function(){return null;})]));}});
+      envs=next;});
+    return envs;},
+  select:function(q,ctx){var self=this;
+    var envs=q.from.length?this.fromItems(q,ctx):[[]];
+    if(q.where){if(hasAgg(q.where)){pgerr('aggregate functions are not allowed in WHERE');}self.type(q.where,ctx);envs=envs.filter(function(r){return self.ev(q.where,ctx,r,null)===true;});}
+    /* output columns */
+    var outs=[];q.items.forEach(function(it){
+      if(it.star){var any=false;ctx.items.forEach(function(fi,k){if(it.qual&&(fi.alias||fi.name)!==it.qual){return;}any=true;fi.cols.forEach(function(c,ci){outs.push({e:{col:c,qual:fi.alias||fi.name},name:c,type:fi.types[ci]});});});
+        if(!any){if(it.qual){pgerr('missing FROM-clause entry for table "'+it.qual+'"');}pgerr('SELECT * with no tables specified is not valid');}return;}
+      outs.push({e:it.e,name:it.alias||label(it.e),type:self.type(it.e,ctx)});});
+    q.group.forEach(function(g){if(hasAgg(g)){pgerr('aggregate functions are not allowed in GROUP BY');}});
+    var grouping=q.group.length>0||outs.some(function(o){return hasAgg(o.e);})||(q.having!==null)||q.order.some(function(o){return hasAgg(o.e);});
+    var groupExprs=q.group.map(function(g){return self.outRef(g,outs,ctx,'GROUP BY');});
+    var rows;
+    if(grouping){
+      outs.forEach(function(o){self.checkGrouped(o.e,groupExprs,ctx);});
+      if(q.having){self.checkGrouped(q.having,groupExprs,ctx);}
+      var groups=[],idx={};
+      envs.forEach(function(r){var key=sig(groupExprs.map(function(g){var v=self.ev(g,ctx,r,null);return v instanceof Num?'n'+numStr(v):v;}));
+        if(!(key in idx)){idx[key]=groups.length;groups.push({ctx:ctx,rows:[],first:r});}groups[idx[key]].rows.push(r);});
+      if(!q.group.length&&!groups.length){groups.push({ctx:ctx,rows:[],first:null});}
+      if(q.having){self.type(q.having,ctx);groups=groups.filter(function(g){return self.ev(q.having,ctx,g.first||[],g)===true;});}
+      rows=groups.map(function(g){return {vals:outs.map(function(o){return self.ev(o.e,ctx,g.first||[],g);}),g:g,env:g.first||[]};});}
+    else{rows=envs.map(function(r){return {vals:outs.map(function(o){return self.ev(o.e,ctx,r,null);}),env:r};});}
+    if(q.distinct){var seen={};rows=rows.filter(function(r){var k=sig(r.vals.map(function(v){return v instanceof Num?'n'+numStr(v):v;}));if(seen[k]){return false;}seen[k]=1;return true;});}
+    if(q.order.length){var keys=q.order.map(function(o){var pos=self.orderPos(o.e,outs);
+        if(pos<0){if(q.distinct){pgerr('for SELECT DISTINCT, ORDER BY expressions must appear in select list');}if(grouping){self.checkGrouped(o.e,groupExprs,ctx);}self.type(o.e,ctx);}
+        return {pos:pos,o:o};});
+      rows.forEach(function(r){r.k=keys.map(function(k){return k.pos>=0?r.vals[k.pos]:self.ev(k.o.e,ctx,r.env,r.g||null);});});
+      rows.sort(function(x,y){for(var i=0;i<keys.length;i++){var o=keys[i].o,a=x.k[i],b=y.k[i],nf=o.nulls?o.nulls==='first':o.desc,c;
+          if(a===null&&b===null){c=0;}else if(a===null){c=nf?-1:1;}else if(b===null){c=nf?1:-1;}else{c=cmpVals(a,b);if(o.desc){c=-c;}}
+          if(c){return c;}}return 0;});}
+    return {cols:outs.map(function(o){return o.name;}),types:outs.map(function(o){return o.type==='unknown'?'text':o.type;}),rows:rows.map(function(r){return r.vals;}),ordered:q.order.length>0};},
+  orderPos:function(e,outs){if('lit' in e&&e.type==='int'){if(e.lit<1||e.lit>outs.length){pgerr('ORDER BY position '+e.lit+' is not in select list');}return e.lit-1;}
+    if(e.col&&!e.qual){var hit=-1;outs.forEach(function(o,i){if(o.name===e.col){if(hit>=0&&sig(outs[hit].e)!==sig(o.e)){pgerr('ORDER BY "'+e.col+'" is ambiguous');}if(hit<0){hit=i;}}});if(hit>=0){return hit;}}
+    var js=sig(e);for(var i=0;i<outs.length;i++){if(sig(outs[i].e)===js){return i;}}return -1;},
+  outRef:function(g,outs,ctx,where){if('lit' in g&&g.type==='int'){if(g.lit<1||g.lit>outs.length){pgerr(where+' position '+g.lit+' is not in select list');}return outs[g.lit-1].e;}
+    if(g.col&&!g.qual){try{resolve(ctx,g);return g;}catch(err){for(var i=0;i<outs.length;i++){if(outs[i].name===g.col){return outs[i].e;}}throw err;}}
+    this.type(g,ctx);return g;},
+  checkGrouped:function(e,groupExprs,ctx){var self=this,gk=groupExprs.map(function(g){return g.col?'c'+sig(refOf(ctx,g)):sig(g);});
+    (function walk(x){if(!x||typeof x!=='object'){return;}
+      if(x.op==='call'&&x.agg){x.args.forEach(function(a){if(hasAgg(a)){pgerr('aggregate function calls cannot be nested');}});return;}
+      if(x.op==='exists'||x.op==='insub'||x.op==='scalar'){if(x.a){walk(x.a);}return;}
+      if(gk.indexOf(sig(x))>=0){return;}
+      if(x.col){var r=resolve(ctx,x);if(r.depth>0){return;}var key='c'+sig(refOf(ctx,x));if(gk.indexOf(key)>=0){return;}
+        var it=ctx.items[r.k];if(it.def){var pk=it.def.cols.filter(function(c){return c.pk;}).map(function(c){return 'c'+sig([r.k,colIndex(it.def,c.name)]);});if(pk.length===1&&gk.indexOf(pk[0])>=0){return;}}
+        pgerr('column "'+r.ref+'.'+x.col+'" must appear in the GROUP BY clause or be used in an aggregate function');}
+      Object.keys(x).forEach(function(k){var v=x[k];if(Array.isArray(v)){v.forEach(function(y){walk(y&&y.w?y.w:y);if(y&&y.t){walk(y.t);}if(y&&y.e){walk(y.e);}});}else if(v&&typeof v==='object'&&k!=='lit'){walk(v);}});})(e);
+    void self;}
+};
+function refOf(ctx,e){var r=resolve(ctx,e);return [r.k,r.ci];}
+function unify(ts,what){var t='unknown';ts.forEach(function(x){if(x==='unknown'){return;}if(t==='unknown'){t=x;return;}if(isNumType(t)&&isNumType(x)){if(x==='num'){t='num';}return;}if(t!==x){pgerr(what+' types '+typeName(t)+' and '+typeName(x)+' cannot be matched');}});return t==='unknown'?'text':t;}
+function hasAgg(e){var f=false;(function walk(x){if(f||!x||typeof x!=='object'){return;}if(x.op==='exists'||x.op==='insub'||x.op==='scalar'){if(x.a){walk(x.a);}return;}if(x.op==='call'&&x.agg){f=true;return;}Object.keys(x).forEach(function(k){if(k!=='lit'){var v=x[k];if(Array.isArray(v)){v.forEach(function(y){walk(y);if(y&&y.w){walk(y.w);walk(y.t);}});}else if(v&&typeof v==='object'){walk(v);}}});})(e);return f;}
+function label(e){if(e.col){return e.col;}if(e.op==='call'){return e.name;}if(e.op==='case'){return 'case';}if(e.op==='exists'){return 'exists';}return '?column?';}
+
+/* ---------- Data changes ---------- */
+function rowText(def,r){return '('+r.map(function(v){return v===null?'null':show(v);}).join(', ')+')';}
+function storeVal(v,from,col){if(v===null){return null;}
+  if(from==='unknown'){v=coerceLit(v,col.type);}
+  if(col.type==='int'){if(v instanceof Num){var x=Number(divRound(v.u,p10(v.s)));v=x;}if(typeof v!=='number'){pgerr('column "'+col.name+'" is of type integer but expression is of type '+typeName(from));}if(Math.abs(v)>2147483647){pgerr('integer out of range');}return v;}
+  if(col.type==='num'){if(typeof v!=='number'&&!(v instanceof Num)){pgerr('column "'+col.name+'" is of type numeric but expression is of type '+typeName(from));}var n=toNum(v);if(col.scale!=null){n=rescale(n,col.scale);var lim10=p10(col.precision);if((n.u<0n?-n.u:n.u)>=lim10){pgerr('numeric field overflow','DETAIL:  A field with precision '+col.precision+', scale '+col.scale+' must round to an absolute value less than 10^'+(col.precision-col.scale)+'.');}}return n;}
+  if(col.type==='text'){return show(v);}
+  if(col.type==='bool'){if(typeof v!=='boolean'){pgerr('column "'+col.name+'" is of type boolean but expression is of type '+typeName(from));}return v;}
+  return v;}
+function keyText(def,cols,r){return 'Key ('+cols.join(', ')+')=('+cols.map(function(c){return show(r[colIndex(def,c)]);}).join(', ')+')';}
+function checkTable(db,name,changed,deletedOld){/* NOT NULL and unique per changed row, then foreign keys */
+  var t=db[name],def=t.def;
+  changed.forEach(function(r){def.cols.forEach(function(c,i){if(c.notnull&&r[i]===null){pgerr('null value in column "'+c.name+'" of relation "'+name+'" violates not-null constraint','DETAIL:  Failing row contains '+rowText(def,r)+'.');}});
+    (def.keys||[]).forEach(function(k){var idx=k.cols.map(function(c){return colIndex(def,c);});if(idx.some(function(i){return r[i]===null;})){return;}
+      var dup=t.rows.filter(function(o){return idx.every(function(i){return o[i]!==null&&cmpVals(o[i],r[i])===0;});}).length;
+      if(dup>1){pgerr('duplicate key value violates unique constraint "'+k.name+'"','DETAIL:  '+keyText(def,k.cols,r)+' already exists.');}});});
+  changed.forEach(function(r){(def.fks||[]).forEach(function(fk){var i=colIndex(def,fk.col);if(r[i]===null){return;}var p=db[fk.table];var j=colIndex(p.def,fk.ref);
+      if(!p.rows.some(function(o){return o[j]!==null&&cmpVals(o[j],r[i])===0;})){pgerr('insert or update on table "'+name+'" violates foreign key constraint "'+fk.name+'"','DETAIL:  Key ('+fk.col+')=('+show(r[i])+') is not present in table "'+fk.table+'".');}});});
+  (deletedOld||[]).forEach(function(old){Object.keys(db).forEach(function(cn){(db[cn].def.fks||[]).forEach(function(fk){if(fk.table!==name){return;}var j=colIndex(def,fk.ref),i=colIndex(db[cn].def,fk.col);if(old[j]===null){return;}
+      if(t.rows.some(function(o){return o[j]!==null&&cmpVals(o[j],old[j])===0;})){return;}
+      if(db[cn].rows.some(function(o){return o[i]!==null&&cmpVals(o[i],old[j])===0;})){pgerr('update or delete on table "'+name+'" violates foreign key constraint "'+fk.name+'" on table "'+cn+'"','DETAIL:  Key ('+fk.ref+')=('+show(old[j])+') is still referenced from table "'+cn+'".');}});});});}
+function snapshot(db){var s={};Object.keys(db).forEach(function(k){s[k]=db[k].rows.slice();});return s;}
+function restore(db,s){Object.keys(s).forEach(function(k){db[k].rows=s[k];});}
+function returning(ev,items,t,rows,alias){if(!items){return null;}var ctx=new Ctx(ev.db,null);ctx.items=[{name:t.def.name,alias:alias,cols:t.def.cols.map(function(c){return c.name;}),types:t.def.cols.map(function(c){return c.type;}),def:t.def}];
+  var q={type:'select',items:items,from:[],where:null,group:[],having:null,order:[],distinct:false},outs=[];
+  items.forEach(function(it){if(it.star){t.def.cols.forEach(function(c){outs.push({e:{col:c.name},name:c.name,type:c.type});});return;}if(hasAgg(it.e)){pgerr('aggregate functions are not allowed in RETURNING');}outs.push({e:it.e,name:it.alias||label(it.e),type:ev.type(it.e,ctx)});});
+  void q;return {cols:outs.map(function(o){return o.name;}),types:outs.map(function(o){return o.type==='unknown'?'text':o.type;}),rows:rows.map(function(r){return outs.map(function(o){return ev.ev(o.e,ctx,[r],null);});})};}
+function execInsert(ev,st){var db=ev.db,t=db[st.table];if(!t){pgerr('relation "'+st.table+'" does not exist');}var def=t.def;
+  var cols=st.cols||def.cols.map(function(c){return c.name;});
+  cols.forEach(function(c,i){if(colIndex(def,c)<0){pgerr('column "'+c+'" of relation "'+st.table+'" does not exist');}if(cols.indexOf(c)!==i){pgerr('column "'+c+'" specified more than once');}});
+  var src;var ctx0=new Ctx(db,null);
+  if(st.rows){src=st.rows.map(function(r){if(r.length>cols.length){pgerr('INSERT has more expressions than target columns');}if(st.cols&&r.length<cols.length){pgerr('INSERT has more target columns than expressions');}
+      return r.map(function(e){if(hasAgg(e)){pgerr('aggregate functions are not allowed in VALUES');}return {v:ev.ev(e,ctx0,[],null),t:ev.type(e,ctx0)};});});}
+  else{var res=ev.select(st.query,new Ctx(db,null));if(res.cols.length>cols.length){pgerr('INSERT has more expressions than target columns');}if(st.cols&&res.cols.length<cols.length){pgerr('INSERT has more target columns than expressions');}
+    src=res.rows.map(function(r){return r.map(function(v,i){return {v:v,t:res.types[i]};});});}
+  var before=snapshot(db),added=[];
+  try{src.forEach(function(r){var row=def.cols.map(function(){return null;});r.forEach(function(x,i){var ci=colIndex(def,cols[i]);row[ci]=storeVal(x.v,x.t,def.cols[ci]);});t.rows=t.rows.concat([row]);added.push(row);});
+    checkTable(db,st.table,added,null);}
+  catch(e){restore(db,before);throw e;}
+  return {tag:'INSERT 0 '+added.length,count:added.length,ret:returning(ev,st.returning,t,added,null),changed:added};}
+function targetRows(ev,st,t){var ctx=new Ctx(ev.db,null);ctx.items=[{name:st.table,alias:st.alias,cols:t.def.cols.map(function(c){return c.name;}),types:t.def.cols.map(function(c){return c.type;}),def:t.def}];
+  if(st.where){if(hasAgg(st.where)){pgerr('aggregate functions are not allowed in WHERE');}ev.type(st.where,ctx);}
+  return {ctx:ctx,rows:t.rows.filter(function(r){return !st.where||ev.ev(st.where,ctx,[r],null)===true;})};}
+function execUpdate(ev,st){var db=ev.db,t=db[st.table];if(!t){pgerr('relation "'+st.table+'" does not exist');}var def=t.def;
+  st.sets.forEach(function(s){if(colIndex(def,s.col)<0){pgerr('column "'+s.col+'" of relation "'+st.table+'" does not exist');}});
+  var tr=targetRows(ev,st,t),before=snapshot(db),news=[];
+  try{var nr=tr.rows.map(function(r){var n=r.slice();st.sets.forEach(function(s){var ci=colIndex(def,s.col);n[ci]=storeVal(ev.ev(s.e,tr.ctx,[r],null),ev.type(s.e,tr.ctx),def.cols[ci]);});return n;});
+    /* PostgreSQL writes a new row version; a plain table scan then meets it after the untouched rows. */
+    t.rows=t.rows.filter(function(r){return tr.rows.indexOf(r)<0;}).concat(nr);news=nr;
+    checkTable(db,st.table,nr,tr.rows);}
+  catch(e){restore(db,before);throw e;}
+  return {tag:'UPDATE '+news.length,count:news.length,ret:returning(ev,st.returning,t,news,st.alias),changed:news,old:tr.rows};}
+function execDelete(ev,st){var db=ev.db,t=db[st.table];if(!t){pgerr('relation "'+st.table+'" does not exist');}
+  var tr=targetRows(ev,st,t),before=snapshot(db);
+  try{t.rows=t.rows.filter(function(r){return tr.rows.indexOf(r)<0;});checkTable(db,st.table,[],tr.rows);}
+  catch(e){restore(db,before);throw e;}
+  return {tag:'DELETE '+tr.rows.length,count:tr.rows.length,ret:returning(ev,st.returning,t,tr.rows,st.alias),old:tr.rows};}
+
+/* ---------- psql aligned output ---------- */
+function table(res){var w=res.cols.map(function(c,i){return Math.max(Array.from(c).length,res.rows.reduce(function(m,r){return Math.max(m,Array.from(show(r[i])).length);},0));});
+  function pad(s,n,right){var l=Array.from(s).length,sp=new Array(Math.max(0,n-l)+1).join(' ');return right?sp+s:s+sp;}
+  var last=res.cols.length-1,out=[];
+  out.push(res.cols.map(function(c,i){var l=Array.from(c).length,left=Math.floor((w[i]-l)/2);return ' '+new Array(left+1).join(' ')+c+new Array(w[i]-l-left+1).join(' ')+' ';}).join('|'));
+  out.push(w.map(function(n){return new Array(n+3).join('-');}).join('+'));
+  res.rows.forEach(function(r){out.push(r.map(function(v,i){var right=isNumType(res.types[i]),s=show(v);return ' '+(i===last&&!right?s:pad(s,w[i],right))+(i===last?'':' ');}).join('|'));});
+  out.push('('+res.rows.length+' row'+(res.rows.length===1?'':'s')+')');out.push('');return out;}
+
+/* ---------- Adapter interface for the lesson-editor shell ---------- */
+function check(src){var ts=lex(String(src).replace(/\r\n?/g,'\n')),problems=[],program=[];
+  ts.forEach(function(t){if(t.t==='bad'){problems.push(problem(t.line,t.col,'limit',t.why));}});
+  if(problems.length){return {problems:problems,program:[]};}
+  split(ts).forEach(function(stmt){var first=stmt[0];
+    if(first.t==='meta'){var cmd=first.v.split(/\s+/)[0];problems.push(problem(first.line,1,'limit',cmd==='\\copy'?'\\copy is a psql command that reads a file on your computer; this practice editor has no files or psql, so run it in psql itself.':cmd+' is a psql command, not SQL; it is not available in this practice editor.'));return;}
+    try{var st=new Parser(stmt).statement();st.text=null;st.line=first.line;program.push(st);}
+    catch(e){if(e instanceof Limit){problems.push(problem(e.line||first.line,1,'limit',e.msg));}else{throw e;}}});
+  if(!program.length&&!problems.length){problems.push(problem(1,1,'limit','Write at least one SQL statement, ending with a semicolon.'));}
+  return {problems:problems,program:program};}
+function notRun(problems){return {status:'limit',lines:['Not run: '+problems.length+' item'+(problems.length===1?'':'s')+' under Problems to fix first.'],summary:'Not run. '+problems.length+' problem'+(problems.length===1?'':'s')+' still open.',outcomes:[]};}
+function run(program,schema){var db=cloneDb(schema),ev=new Evaluator(db),lines=[],outcomes=[],errors=0;
+  program.forEach(function(st){var o={type:st.type,line:st.line,st:st};
+    try{if(st.type==='select'){var r=ev.select(st,new Ctx(db,null));o.res=r;lines=lines.concat(table(r));if(!r.ordered&&r.rows.length>1){lines.splice(lines.length-1,0,'(no ORDER BY: PostgreSQL does not promise this row order)');}}
+      else{var x=st.type==='insert'?execInsert(ev,st):st.type==='update'?execUpdate(ev,st):execDelete(ev,st);o.tag=x.tag;o.count=x.count;o.ret=x.ret;o.changed=x.changed||[];o.old=x.old||[];
+        if(x.ret){lines=lines.concat(table(x.ret));}lines.push(x.tag);}}
+    catch(e){if(e instanceof PgError){errors++;o.error=e.msg;lines.push('ERROR:  '+e.msg);if(e.detail){lines.push(e.detail);}}
+      else if(e instanceof Limit){o.limit=e.msg;lines.push('Stopped (line '+st.line+'): '+e.msg);}
+      else{o.limit='internal';lines.push('Stopped (line '+st.line+'): this practice editor could not evaluate this statement.');}}
+    outcomes.push(o);});
+  var stopped=outcomes.some(function(o){return o.limit;});
+  return {status:stopped?'stopped':(errors?'error':'ran'),lines:lines,outcomes:outcomes,db:db,
+    summary:outcomes.length+' statement'+(outcomes.length===1?'':'s')+' run'+(errors?', '+errors+' with an ERROR':'')+(stopped?', one stopped at a lesson limit':'')+'. See Output.'};}
+return {id:'sql-practice',version:'1',language:'SQL',kindLabels:{error:'Error',limit:'Lesson check',hint:'Hint'},
+  check:check,notRun:notRun,run:function(program,schema){return run(program,schema);},show:show,table:table,numStr:numStr};
+})();
+/* sql-practice@1 page data */
+var SQL_TABLES={tables:[
+{name:'instructors',cols:[{name:'instructor_id',type:'int',notnull:true,pk:true},{name:'name',type:'text',notnull:true},{name:'lead_id',type:'int'}],
+ keys:[{name:'instructors_pkey',cols:['instructor_id']}],fks:[{name:'instructors_lead_id_fkey',col:'lead_id',table:'instructors',ref:'instructor_id'}],
+ rows:[[1,'Mara',null],[2,'Tomas',1],[3,'Priya',1],[4,'Ken',2]]},
+{name:'courses',cols:[{name:'course_id',type:'int',notnull:true,pk:true},{name:'title',type:'text',notnull:true},{name:'credits',type:'int',notnull:true},{name:'fee',type:'num',precision:6,scale:2},{name:'instructor_id',type:'int'}],
+ keys:[{name:'courses_pkey',cols:['course_id']}],fks:[{name:'courses_instructor_id_fkey',col:'instructor_id',table:'instructors',ref:'instructor_id'}],
+ rows:[[101,'SQL Basics',3,{dec:'120.00'},2],[102,'Java Foundations',4,{dec:'150.00'},3],[103,'Data Modeling',3,null,3],[104,'Web Basics',2,{dec:'80.00'},null],[105,'Intro to Testing',2,{dec:'90.00'},4]]},
+{name:'students',cols:[{name:'student_id',type:'int',notnull:true,pk:true},{name:'name',type:'text',notnull:true},{name:'email',type:'text',notnull:true},{name:'city',type:'text'}],
+ keys:[{name:'students_pkey',cols:['student_id']},{name:'students_email_key',cols:['email']}],fks:[],
+ rows:[[1,'Ana','ana@example.com','Leeds'],[2,'Ben','ben@example.com','York'],[3,'Chen','chen@example.com',null],[4,'Dina','dina@example.com','Leeds'],[5,'Eli','eli@example.com','Bristol'],[6,'Femi','femi@example.com',null]]},
+{name:'enrollments',cols:[{name:'student_id',type:'int',notnull:true},{name:'course_id',type:'int',notnull:true},{name:'grade',type:'int'}],
+ keys:[{name:'enrollments_pkey',cols:['student_id','course_id']}],fks:[{name:'enrollments_student_id_fkey',col:'student_id',table:'students',ref:'student_id'},{name:'enrollments_course_id_fkey',col:'course_id',table:'courses',ref:'course_id'}],
+ rows:[[1,101,82],[1,102,null],[2,101,67],[2,103,74],[3,101,null],[3,102,58],[4,102,91],[4,103,null],[5,101,45]]}
+]};
+var STUDENTS0=[['1','Ana','ana@example.com','Leeds'],['2','Ben','ben@example.com','York'],['3','Chen','chen@example.com',null],['4','Dina','dina@example.com','Leeds'],['5','Eli','eli@example.com','Bristol'],['6','Femi','femi@example.com',null]];
+var TOPIC={predict:{correct:"c",why:{a:"equality with NULL is not true, even when the stored value is NULL.",b:"two missing values are not equal under ordinary = comparison; the result is unknown.",c:"<code>city = NULL</code> evaluates to unknown for every row, and WHERE keeps only true.",d:"the expression is legal; its result is unknown rather than an ERROR."}},sql:{ 2:{file:"student-cities.sql",goals:["rows", "coalesce"],starter:"-- Show every student; replace a missing city only in the result.\n\n",fallback:"Write a SELECT that uses COALESCE to label missing cities without removing any students.",check:function(rep,H){var done={},notes=[],sels=H.selects(rep),o=sels[sels.length-1],code=(o&&o.st&&o.st.source)||'';if(H.errors(rep).length){notes.push('PostgreSQL rejected a statement; read Output.');}if(!o){notes.push('No SELECT result ran yet.');return {done:done,notes:notes};}code=rep.__code||'';var rows=H.rows(o.res);if(H.sameList(rows,[["1","Ana","Leeds"],["2","Ben","York"],["3","Chen","Not recorded"],["4","Dina","Leeds"],["5","Eli","Bristol"],["6","Femi","Not recorded"]])){done.rows=true;}else{notes.push('All six students should appear, with Not recorded only for Chen and Femi.');}var txt='';if(done.rows){done.coalesce=true;}else{notes.push('Use COALESCE in the SELECT list so no row is filtered out.');}return {done:done,notes:notes};}}, 3:{file:"course-fees.sql",goals:["labels", "case"],starter:"-- Derive fee_band with CASE; do not update the table.\n\n",fallback:"Write a SELECT that derives the three fee labels with CASE and sorts by course_id.",check:function(rep,H){var done={},notes=[],sels=H.selects(rep),o=sels[sels.length-1],code=(o&&o.st&&o.st.source)||'';if(H.errors(rep).length){notes.push('PostgreSQL rejected a statement; read Output.');}if(!o){notes.push('No SELECT result ran yet.');return {done:done,notes:notes};}code=rep.__code||'';var rows=H.rows(o.res);if(H.sameList(rows,[["101","SQL Basics","Premium"],["102","Java Foundations","Premium"],["103","Data Modeling","Not priced"],["104","Web Basics","Standard"],["105","Intro to Testing","Standard"]])){done.labels=true;}else{notes.push('Compare all five labels in Output with the three rules in the task.');}var txt='',n=txt.indexOf('is null'),c=txt.indexOf('>=');if(done.labels){done.case=true;}else{notes.push('Use CASE and test IS NULL before the numeric comparison.');}return {done:done,notes:notes};}}},apply:{A:{fs:'apply-a',correct:"b",okNote:"<p>IS NULL tests absence directly; it does not treat empty text as missing.</p>",why:{a:"comparison with NULL is unknown, not true.",b:"IS NULL is the predicate designed to test a missing value.",c:"for NULL, the left side becomes empty text while the right stays NULL, so equality is unknown.",d:"an empty string is a known text value and is different from NULL."},miss:{a:"Use IS NULL rather than equality.",b:"This is the direct missing-value test.",c:"COALESCE belongs in a value expression, but this comparison does not find NULL rows.",d:"Empty text is still a known value."},hint:"NULL uses the IS predicate, not the equality operator."},B:{fs:'apply-b',correct:"b",reveal:"<code>COALESCE(city, 'Unknown')</code> chooses the fallback only when city is NULL.",why:{a:"this changes empty strings and leaves NULL as NULL.",b:"COALESCE returns city when it exists and the fallback only when city is NULL.",c:"this reverses the condition and labels every known city Unknown.",d:"concatenation with NULL remains NULL and changes every known city."}}}};
+/* /sql-practice page data */
+/* sql-practice@1 page controller. Shared by every page of the module; page content comes from TOPIC and SQL_TABLES.
+   Activity 1 is a practice prediction, the middle activities are SQL editor tasks, and the last is an apply check
+   with confidence, one retry and the answer. Navigation never changes activity state; Restart resets only the
+   current activity. No storage, no network. */
+var SQLCHK={
+  show:function(v){return v===null?null:LESSON_EDITOR_SQL.show(v);},
+  rows:function(res){return res.rows.map(function(r){return r.map(SQLCHK.show);});},
+  selects:function(rep){return (rep.outcomes||[]).filter(function(o){return o.res;});},
+  errors:function(rep){return (rep.outcomes||[]).filter(function(o){return o.error;});},
+  of:function(rep,type,table){return (rep.outcomes||[]).filter(function(o){return o.type===type&&!o.error&&!o.limit&&(!table||o.st.table===table);});},
+  col:function(res,name){return res.cols.indexOf(name);},
+  key:function(r){return JSON.stringify(r);},
+  sameList:function(a,b){return SQLCHK.key(a)===SQLCHK.key(b);},
+  sameSet:function(a,b){return a.length===b.length&&SQLCHK.key(a.map(SQLCHK.key).sort())===SQLCHK.key(b.map(SQLCHK.key).sort());},
+  pick:function(res,names){var idx=names.map(function(n){return res.cols.indexOf(n);});if(idx.some(function(i){return i<0;})){return null;}return SQLCHK.rows(res).map(function(r){return idx.map(function(i){return r[i];});});},
+  table:function(rep,name){var t=rep.db&&rep.db[name];return t?t.rows.map(function(r){return r.map(SQLCHK.show);}):[];},
+  orderCols:function(o){return (o.st.order||[]).map(function(k){return k.e&&k.e.col?k.e.col:null;});}
+};
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson');
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+var acts=qa('[data-pep-activity]'),links=qa('[data-pep-activity-link]'),N=acts.length;
+var prevBtn=$('previous-activity'),nextBtn=$('next-activity'),resetBtn=$('reset');
+var MIN=main.getAttribute('data-pep-required-minutes');
+function kind(n){return section(n).getAttribute('data-kind');}
+function blank(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,canContinue:false,missed:false,g:{},tries:0,conf:null,firstPick:null};}
+var S={current:1,unlocked:1,complete:false,a:acts.map(blank)};
+var SNAP={};
+qa('[data-restore]').forEach(function(n){SNAP[n.getAttribute('data-restore')]=n.innerHTML;});
+function act(n){return S.a[n-1];}
+function section(n){return acts[n-1];}
+function feedback(n,html){var f=section(n).querySelector('[data-pep-feedback]');f.innerHTML=html||'';}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function optLabel(inp){return inp.closest('label');}
+
+function reflect(){
+  main.setAttribute('data-pep-current-activity',String(S.current));
+  main.setAttribute('data-pep-unlocked-through',String(S.unlocked));
+  main.setAttribute('data-pep-complete',S.complete?'true':'false');
+  acts.forEach(function(sec,i){var s=S.a[i];
+    sec.setAttribute('data-pep-attempts',String(s.attempts));sec.setAttribute('data-pep-settled',String(s.settled));
+    sec.setAttribute('data-pep-completed',String(s.completed));sec.setAttribute('data-pep-credit',String(s.credit));
+    sec.setAttribute('data-pep-grade',String(s.grade));sec.setAttribute('data-pep-continue',String(s.canContinue));});
+}
+function progress(){
+  var done=0,missed=0;
+  S.a.forEach(function(s,i){if(s.completed){done++;}if(s.completed&&s.missed){missed++;}
+    var seg=qa('#progress .seg')[i];seg.className='seg'+(s.completed?(s.missed?' is-settled':' is-done'):(i+1===S.current?' is-current':''));});
+  $('prog-text').textContent='Activity '+S.current+' of '+N+' · '+done+' of '+N+' done'+(missed?' ('+missed+' answered, not marked correct)':'')+' · about '+MIN+' min';
+}
+function checks(n){var s=act(n);qa('[data-goal]',section(n)).forEach(function(li){li.classList.toggle('done',!!s.g[li.getAttribute('data-goal')]);});}
+function render(){
+  acts.forEach(function(sec,i){sec.hidden=(i+1!==S.current);});
+  links.forEach(function(a,i){var n=i+1,s=S.a[i],state=a.querySelector('.pep-step__state');
+    if(n===S.current){a.setAttribute('aria-current','step');}else{a.removeAttribute('aria-current');}
+    if(n>S.unlocked){a.setAttribute('aria-disabled','true');}else{a.removeAttribute('aria-disabled');}
+    a.classList.toggle('is-done',s.completed);
+    state.textContent=n>S.unlocked?', locked':(s.completed?', done':(n===S.current?', current':''));});
+  prevBtn.disabled=S.current===1;
+  nextBtn.disabled=S.current>=N||S.current>=S.unlocked||!act(S.current).canContinue;
+  $('recap').classList.toggle('is-pending',!S.complete);
+  for(var n=1;n<=N;n++){checks(n);}
+  progress();reflect();
+}
+function go(n,mode,focus){
+  if(!(n>=1&&n<=N&&n<=S.unlocked)){return false;}
+  S.current=n;
+  try{if(mode==='push'){history.pushState({activity:n},'','#activity-'+n);}else if(mode==='replace'){history.replaceState({activity:n},'','#activity-'+n);}}
+  catch(e){if(mode&&location.hash!=='#activity-'+n){location.hash='activity-'+n;}}
+  render();
+  if(focus){var h=section(n).querySelector('h2[tabindex]');if(h){h.focus();}}
+  return true;
+}
+function fromHash(){var m=/^#activity-(\d+)$/.exec(location.hash);return m?+m[1]:0;}
+function historyChanged(){var n=fromHash();if(n===S.current){return;}if(!go(n,null,false)){go(S.current,'replace',false);}}
+addEventListener('popstate',historyChanged);
+addEventListener('hashchange',historyChanged);
+
+function complete(n,grade,missed){var s=act(n);
+  if(!s.completed){s.completed=true;s.settled=true;s.canContinue=true;s.credit=1;s.grade=grade;s.missed=!!missed;}
+  S.unlocked=Math.max(S.unlocked,Math.min(n+1,N));
+  if(S.a.every(function(x){return x.completed;})&&!S.complete){S.complete=true;
+    var m=S.a.filter(function(x){return x.missed;}).length;
+    $('complete-msg').textContent='All '+N+' activities finished'+(m?'; '+m+' answered without being marked correct. That is fine: review its explanation before moving on.':'.');}
+  render();
+}
+function nextNote(n){return n<N?' Choose <em>Next activity</em> when ready.':' The recap now follows the activities.';}
+
+/* Prediction before teaching: practice, not scored. */
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf'),n=+$('predict-fs').closest('[data-pep-activity]').id.split('-')[1],s=act(n);
+  if(!ch||!pc||s.completed){return;}
+  s.attempts=1;
+  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
+    if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
+  var html='<p class="verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+' Each option, explained:</p><ul class="explain">';
+  Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
+    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
+  feedback(n,html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p><p>'+nextNote(n)+'</p>');
+  complete(n,0,false);
+}
+
+/* SQL editor tasks: every Run starts from the lesson's starting rows. Two runs that still miss a check settle the
+   activity without revealing a finished statement; the editor stays open for practice. */
+var editors={};
+function normal(code){return String(code).replace(/\r\n?/g,'\n').replace(/[ \t]+$/gm,'').trim();}
+function onSqlRun(n,report,code){var cfg=TOPIC.sql[n],s=act(n),m=[];
+  if(normal(code)===normal(cfg.starter)){feedback(n,'<p>That is the starting file, so nothing was counted. Add your statement where the comment says, then press <em>Run</em>.</p>');return;}
+  if(report.status==='limit'){feedback(n,'<p>Not run yet: fix the items under <em>Problems</em> first. Nothing was counted.</p>');return;}
+  var r=cfg.check(report,SQLCHK)||{},done=r.done||{},all=true;
+  cfg.goals.forEach(function(g){if(done[g]){s.g[g]=1;}if(!done[g]){all=false;}});
+  (r.notes||[]).forEach(function(t){m.push(t);});
+  if(!s.completed){s.attempts++;
+    if(all){m.push('<strong>All checks done.</strong>'+nextNote(n));complete(n,1,false);}
+    else if(s.attempts>=2){m.push('<strong>Settled after two tries, without penalty.</strong> Compare Output with the checks, open the hints for the next reasoning step, and keep practising here if you like.'+nextNote(n));complete(n,0,true);}
+    else{m.push('One more try before this activity settles; the hints give the next reasoning step.');render();}}
+  else{if(all){m.push('<strong>All checks now pass.</strong> Your earlier result for this activity stands.');}render();}
+  feedback(n,'<p>'+m.join(' ')+'</p>');
+}
+
+/* Apply check with confidence, one retry, then the answer. */
+function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===set.correct&&chosen===set.correct){l.classList.add('right');}
+  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
+function badges(ok,mine){return '<span class="badges">'+(mine?'<span class="badge me">Your answer</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
+function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
+  w.innerHTML=badges(i.value===set.correct,i.value===chosen)+set.why[i.value];sp.appendChild(w);});}
+function explainList(set){var html='<ul>';Object.keys(set.why).forEach(function(k){var i=qa('input[value="'+k+'"]',$(set.fs))[0];
+  html+='<li><strong>'+(k===set.correct?'Correct: ':'Not this: ')+'</strong><span class="on">'+esc(optLabel(i).textContent.trim())+'</span>: '+set.why[k]+'</li>';});return html+'</ul>';}
+function confText(s){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(s.conf)+' (reported to you, never graded).</p>';}
+function applyN(){return +$('apply-a').closest('[data-pep-activity]').id.split('-')[1];}
+function focusVerdict(n){var v=section(n).querySelector('[data-pep-feedback] .verdict');if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function checkApply(which){var A=TOPIC.apply.A,B=TOPIC.apply.B,n=applyN(),s=act(n);
+  if(s.completed){return;}
+  if(which==='a'){var ch=checked('apply-a');s.conf=checked('conf');if(!ch||!s.conf){return;}
+    s.attempts=1;s.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
+    if(ch===A.correct){annotate(A,ch);$('apply-check').hidden=true;feedback(n,'<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText(s)+'<p>'+nextNote(n)+'</p>');complete(n,1,false);focusVerdict(n);return;}
+    s.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
+    feedback(n,'<p class="verdict no">Not yet. Try once more with the same idea shown a different way.</p><p>Your first answer, <span class="on">'+esc(s.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText(s));
+    qa('[data-retry]',section(n)).forEach(function(x){x.hidden=false;});qa('[data-first]',section(n)).forEach(function(x){x.hidden=true;});
+    render();$('task-apply-b').focus();
+  }else{var c2=checked('apply-b');if(!c2||s.tries!==1){return;}
+    s.attempts=2;s.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
+    var details='<details><summary>First question: every option explained</summary>'+explainList(A)+'</details>';
+    if(c2===B.correct){feedback(n,'<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+details+confText(s)+'<p>'+nextNote(n)+'</p>');complete(n,1,false);}
+    else{qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
+      feedback(n,'<p class="verdict set">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+details+confText(s)+'<p>'+nextNote(n)+'</p>');complete(n,0,true);}
+    focusVerdict(n);}
+}
+function syncButtons(){var pf=$('predict-fs'),af=$('apply-a');
+  if(pf){var p=act(+pf.closest('[data-pep-activity]').id.split('-')[1]);if(!p.completed){$('predict-check').disabled=!(checked('predict')&&checked('pconf'));}}
+  if(af){var a=act(applyN());if(!a.completed&&a.tries===0){$('apply-check').disabled=!(checked('apply-a')&&checked('conf'));}
+    if(!a.completed&&a.tries===1){$('apply-check-b').disabled=!checked('apply-b');}}}
+
+/* Restart: only the current activity returns to its authored start; the frontier, page completion, required time
+   and every other activity stay exactly as they are. Re-completion earns one credit again. */
+function restart(){var n=S.current;
+  S.a[n-1]=blank();
+  var box=section(n).querySelector('[data-restore]');if(box){box.innerHTML=SNAP[box.getAttribute('data-restore')];}
+  if(editors[n]){editors[n].set(TOPIC.sql[n].starter);}
+  if(kind(n)==='apply'){$('task-apply-b').hidden=true;}
+  qa('details.pep-optional',section(n)).forEach(function(x){x.open=false;});
+  feedback(n,'');render();
+  var h=section(n).querySelector('h2[tabindex]');if(h){h.focus();}
+}
+
+d.addEventListener('click',function(e){
+  var link=e.target.closest('[data-pep-activity-link],[data-pep-back-link]');
+  if(link){e.preventDefault();var n=+(/activity-(\d+)$/.exec(link.getAttribute('href'))||[])[1];
+    if(link.getAttribute('aria-disabled')!=='true'){go(n,'push',true);}return;}
+  var b=e.target.closest('button');if(!b||b.disabled){return;}
+  if(b===resetBtn){restart();}
+  else if(b===prevBtn){go(S.current-1,'push',true);}
+  else if(b===nextBtn){go(S.current+1,'push',true);}
+  else if(b.id==='predict-check'){checkPredict();}
+  else if(b.id==='apply-check'){checkApply('a');}
+  else if(b.id==='apply-check-b'){checkApply('b');}
+});
+d.addEventListener('change',syncButtons);
+
+var obj=d.querySelector('[data-pep-objectives]'),objSum=obj.querySelector('summary'),hoverOpened=false;
+function fine(){return !!(window.matchMedia&&matchMedia('(hover: hover) and (pointer: fine)').matches);}
+obj.addEventListener('mouseenter',function(){if(fine()&&!obj.open){obj.open=true;hoverOpened=true;}});
+obj.addEventListener('mouseleave',function(){if(hoverOpened){obj.open=false;hoverOpened=false;}});
+objSum.addEventListener('click',function(e){if(hoverOpened){e.preventDefault();hoverOpened=false;}});
+d.addEventListener('keydown',function(e){if(e.key==='Escape'&&obj.open){obj.open=false;hoverOpened=false;objSum.focus();}});
+d.addEventListener('click',function(e){if(obj.open&&!obj.contains(e.target)){obj.open=false;hoverOpened=false;}});
+
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=qa('details:not([open])',main);printOpened.forEach(function(x){x.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(x){x.open=false;});printOpened=[];});
+
+Object.keys(TOPIC.sql).forEach(function(k){var n=+k,cfg=TOPIC.sql[k],root=$('ed'+n);
+  try{editors[n]=LESSON_EDITOR.mount(root,{adapter:LESSON_EDITOR_SQL,file:cfg.file,starter:cfg.starter,calls:cfg.tables||SQL_TABLES,fallbackText:cfg.fallback,onRun:function(rep,code){onSqlRun(n,rep,code);}});}
+  catch(e){feedback(n,'<p>The editor could not start; the static exercise text still describes the task.</p>');}});
+var start=fromHash();
+go(start>=1&&start<=S.unlocked?start:1,'replace',false);
+})();
+</script>
+</body>
+</html>

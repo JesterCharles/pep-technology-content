@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="collections-streams">
+<meta name="pep:module" content="collections-in-depth">
+<meta name="pep:topic" content="Wrapper types and autoboxing">
+<meta name="pep:topic-id" content="wrapper-types-and-autoboxing">
+<meta name="pep:budget-minutes" content="10">
+<meta name="pep:source" content="authoring/evidence/collections-streams/collections-in-depth/wrapper-types-and-autoboxing/sources.json">
+<meta name="pep:position" content="4 of 9">
+<title>Wrapper types and autoboxing · Collections in Depth</title>
+<style>
+/* pep:component restart@1 css */
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* /pep:component restart css */
+/* pep:component progress@1 css */
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:repeating-linear-gradient(135deg,var(--amber) 0 3px,transparent 3px 6px);border-color:var(--amber)}
+/* /pep:component progress css */
+/* pep:component predict@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+/* /pep:component predict css */
+/* pep:component mcq-with-confidence@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start}
+.feedback{width:100%;min-width:0;font-size:15px;line-height:1.35}
+.feedback:empty{display:none}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin:0}
+.feedback .verdict{font-weight:700}
+.feedback .ok{color:var(--teal)}
+.feedback .no{color:var(--red)}
+.feedback .set{color:var(--amber)}
+.feedback .info{color:var(--ink)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+/* /pep:component mcq-with-confidence css */
+/* DESIGN.md token reference */
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* Components bridge: embedded components/*@1 fragments read these older names */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+/* Base, focus and motion */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; }
+p { margin: 0; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+pre { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; max-width: 100%; }
+pre code { font-size: 1em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[hidden] { display: none !important; }
+button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+.pep-page { max-width: 1200px; margin: 0 auto; padding: 24px; }
+@media (max-width: 480px) { .pep-page { padding: 16px; } }
+/* Topic bar */
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; min-width: 0; }
+.pep-topicbar__meta .progress { font: inherit; color: inherit; }
+.pep-topicbar__meta #prog-text { color: var(--pep-text-strong); }
+.pep-topicbar__meta .pips { gap: 4px; }
+.pep-topicbar__meta .pip { width: 20px; height: 6px; border: 0; border-radius: var(--pep-radius-pill); background: var(--pep-control); outline: 1px solid var(--pep-line-strong); outline-offset: 0; }
+.pep-topicbar__meta .pip.on { background: var(--pep-accent); outline-color: var(--pep-accent); }
+.pep-topicbar__meta .pip.settled { background: var(--pep-warning); outline-color: var(--pep-warning); }
+/* Regions */
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.teach > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.teach ul, .teach ol { margin: 0; padding-left: 24px; }
+.teach li + li { margin-top: 4px; }
+.pep-goalsbox { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); min-width: 0; }
+.pep-goalsbox h3 { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); text-transform: none; }
+.pep-goals { margin: 0; padding: 0; list-style: none; }
+.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-goals > li:first-child { border-top: 0; }
+.pep-goals .state { display: inline-flex; align-items: center; gap: 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; }
+.pep-goals .state svg { width: 16px; height: 16px; display: none; }
+.pep-goals .state::after { content: "open"; }
+.pep-goals > li[data-state="done"] .state { color: var(--pep-success); }
+.pep-goals > li[data-state="done"] .state svg { display: block; }
+.pep-goals > li[data-state="done"] .state::after { content: "done"; }
+.pep-goals > li[data-state="review"] .state { color: var(--pep-warning); }
+.pep-goals > li[data-state="review"] .state::after { content: "done, review"; }
+.pep-goal-summary { font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-steps-list { margin: 0; padding-left: 24px; }
+.pep-steps-list > li + li { margin-top: 8px; }
+.pep-steps-h { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-bottom: 4px; }
+/* Workspace */
+.task { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
+.task:not(:has(> div:not([hidden]))) { display: none; }
+.task p { font-weight: 600; color: var(--pep-text-strong); }
+.task > div, .task > div > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.model { margin: 0; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0 0 8px; }
+.model > div { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.model .note { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.control { min-width: 0; }
+.lk { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.sub { margin: 0 0 8px; font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.cells { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; padding: 0; list-style: none; min-height: 36px; }
+.cells li { font: 400 14px/20px var(--pep-font-mono); padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.cells li.hot { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 3px 7px; }
+.cells li.gone { border-style: dashed; color: var(--pep-text-muted); text-decoration: line-through; }
+.cells li .ix { display: block; font-size: 12px; line-height: 16px; color: var(--pep-text-muted); }
+.out { margin: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; min-height: 44px; }
+.out .err { color: var(--pep-danger); font-weight: 700; }
+.out .okl { color: var(--pep-success); font-weight: 700; }
+.ops { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.ops button { font-family: var(--pep-font-mono); font-size: 14px; }
+.ops button[aria-pressed="true"] { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); color: var(--pep-text-strong); }
+.lanebtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.lanebtns button { min-width: 120px; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+.lane .lk { overflow-wrap: anywhere; }
+.snip { margin: 0 0 4px; }
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.lane { padding: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); min-height: 80px; background: var(--pep-page); min-width: 0; }
+.cards { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.cards li { font-size: 14px; line-height: 20px; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); overflow-wrap: anywhere; }
+.cards li.revealed { border-style: dashed; border-color: var(--pep-warning); }
+.tag { display: inline-block; margin-left: 4px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--pep-warning); }
+table.grid, .recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+table.grid th, table.grid td { border: 1px solid var(--pep-line-strong); padding: 8px 12px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+table.grid th { background: var(--pep-card); font-weight: 600; color: var(--pep-text-strong); }
+.recap details { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.recap summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: flex; align-items: center; }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+.sources ul { margin: 8px 0; padding-left: 24px; font-size: 14px; line-height: 20px; }
+.sources li { margin-bottom: 4px; overflow-wrap: anywhere; }
+.sources p { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.next-topic { font-weight: 600; color: var(--pep-text-strong); }
+.complete { padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete.settled { border-color: var(--pep-warning); background: var(--pep-warning-soft); }
+/* Component overrides: DESIGN.md look for the embedded @1 fragments (their bytes stay unchanged) */
+button { border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); padding: 10px 20px; }
+.ghost { background: var(--pep-control); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); }
+.ghost:hover { background: var(--pep-control); border-color: var(--pep-accent); }
+.ghost[aria-pressed="true"] { background: var(--pep-accent-soft); border: 2px solid var(--pep-accent); }
+.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); filter: none; }
+.primary:active { transform: none; }
+button:disabled, .primary:disabled { background: var(--pep-control); color: var(--pep-text-muted); border: 1px solid var(--pep-line-strong); }
+legend { font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 8px; }
+.opts { gap: 8px; }
+.opt { min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); font-size: 16px; line-height: 24px; box-shadow: none; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; box-shadow: none; }
+.opt:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; box-shadow: none; }
+.opt.mine { border-color: var(--pep-accent); }
+.opt input { accent-color: var(--pep-accent-fill); }
+.opts.explained .opt { padding: 8px 16px; }
+.oexp { font-size: 14px; line-height: 20px; color: var(--pep-text); border-top-color: var(--pep-line-strong); }
+.badge { font-size: 13px; line-height: 20px; font-weight: 600; border-radius: var(--pep-radius-pill); padding: 0 8px; }
+.badge.ok-b { color: var(--pep-success); border-color: var(--pep-success); }
+.badge.no-b { color: var(--pep-danger); border-color: var(--pep-danger); }
+.badge.mine-b { color: var(--pep-text-strong); border-color: var(--pep-line-strong); }
+.conf legend { line-height: 44px; }
+.conf .opt { min-width: 96px; }
+.row { gap: 12px; }
+.fbrow { gap: 12px; }
+.feedback { font-size: 14px; line-height: 20px; color: var(--pep-text); }
+.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.feedback .verdict { font-size: 16px; line-height: 24px; font-weight: 700; }
+.feedback .ok { color: var(--pep-success); }
+.feedback .no { color: var(--pep-danger); }
+.feedback .set { color: var(--pep-warning); }
+.feedback .info { color: var(--pep-text-strong); }
+.feedback .conf-report { color: var(--pep-text-muted); }
+.feedback ul { padding-left: 24px; }
+/* Editor workspace */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-right: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: none; min-height: 160px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; width: 100%; min-width: 0; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__scope { padding: 8px 12px; font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); background: var(--pep-sunken); }
+.pep-editor__panel .out { border: 0; padding: 0; background: transparent; }
+.pep-editor__empty { font-family: var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 700; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 700; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); max-width: none; }
+/* No-JavaScript reading route */
+.pep-nojs-reading { display: flex; flex-direction: column; gap: 16px; max-width: 72ch; }
+.pep-nojs-reading section { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--pep-line-strong); }
+.pep-nojs-reading ul, .pep-nojs-reading ol { margin: 0; padding-left: 24px; }
+.pep-nojs-reading .pep-callout { padding: 12px 16px; border: 1px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); color: var(--pep-text-strong); }
+.pep-nojs-reading .pep-expected { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-nojs-reading details { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-nojs-reading summary { min-height: 44px; display: flex; align-items: center; font-weight: 600; color: var(--pep-text-strong); }
+.pep-nojs-reading table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+.pep-nojs-reading td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .opts, .lanes { grid-template-columns: minmax(0, 1fr); } }
+/* Responsive, touch and optional-disclosure contract (DESIGN.md, data-pep-responsive) */
+html, body { max-width: 100%; overflow-x: clip; }
+p, li { overflow-wrap: anywhere; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+input, select, textarea, summary { font: inherit; }
+.pep-page, .pep-app { min-width: 0; }
+@media (max-width: 480px) {
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+/* Topic bar: progress wraps, Restart stays a visible 44 px target */
+.pep-topicbar__meta { flex: 1 1 260px; }
+.pep-topicbar__meta .pips { flex-wrap: wrap; }
+.pep-topicbar .pep-js-only { flex: 0 0 auto; }
+/* Choice cards: the whole card is the touch target; the native radio stays the focusable control */
+.opt { position: relative; }
+.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.opt input:disabled { cursor: default; }
+.opt::before { content: ""; flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); }
+.opt:has(input:checked)::before { border: 6px solid var(--pep-accent); }
+.opt:has(input:disabled)::before { opacity: 0.6; }
+.opts.explained .opt::before { margin-top: 2px; }
+/* Editor: bounded, resizable, and reduced on phones without hiding Run, Reset, Problems, Output or status */
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; margin-right: 0; margin-inline-end: auto; }
+.pep-editor__code { overscroll-behavior: contain auto; }
+.pep-editor__input { resize: vertical; max-height: 400px; scroll-margin-block: 16px; }
+.pep-editor__panel { overscroll-behavior: contain auto; }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar button { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__code { font-size: 16px; line-height: 24px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* Optional Anecdote and Challenge disclosures */
+.pep-optional { min-width: 0; border-block: 1px solid var(--pep-line-strong); background: transparent; break-inside: avoid; }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; list-style: none; }
+.pep-optional > summary::-webkit-details-marker { display: none; }
+.pep-optional > summary::before { content: ""; flex: 0 0 auto; width: 8px; height: 8px; margin: 0 4px; border-right: 2px solid var(--pep-accent-text); border-bottom: 2px solid var(--pep-accent-text); transform: rotate(-45deg); }
+.pep-optional[open] > summary::before { transform: rotate(45deg); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__cue { margin-inline-start: auto; }
+.pep-optional__body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 16px; }
+.pep-optional__body ol { margin: 0; padding-left: 24px; }
+.pep-optional__body li + li { margin-top: 4px; }
+/* Reading version (no JavaScript) */
+.pep-nojs-code pre { margin: 0; }
+@media print {
+  .pep-optional > summary::before { display: none; }
+  .pep-optional { break-inside: avoid; }
+}
+</style>
+<noscript><style>.pep-js-only,.pep-reading>:not(noscript):not(.pep-optional),.pep-workspace>:not(noscript):not(.pep-optional){display:none!important}.pep-regions{display:flex!important;flex-direction:column}</style></noscript>
+</head>
+<body>
+<div class="pep-page">
+<header class="pep-topicbar">
+  <h1>Wrapper types and autoboxing</h1>
+  <div class="pep-topicbar__meta"><div class="pep-js-only">
+<!-- pep:component progress@1 html -->
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 4</span><span class="pips" aria-hidden="true"><span class="pip" data-k="predict"></span><span class="pip" data-k="x1"></span><span class="pip" data-k="x2"></span><span class="pip" data-k="apply"></span></span></div>
+<!-- /pep:component progress html -->
+</div><span class="pep-minutes">about 10 min</span></div>
+  <div class="pep-js-only">
+<!-- pep:component restart@1 html -->
+      <button type="button" class="ghost" id="reset" data-pep-reset>Restart this activity</button>
+<!-- /pep:component restart html -->
+  </div>
+</header>
+<main id="lesson" class="pep-app" data-pep-responsive data-pep-complete="false">
+  <div class="pep-regions" id="stage" data-at="1">
+    <section class="pep-region pep-reading" aria-label="Reading and steps" data-pep-instructions>
+      <noscript data-section-skip><div class="pep-nojs-reading">
+<p class="pep-callout"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. Every teaching step is below, and each activity is listed with its expected results and why.</p>
+<section><h2>Goals</h2><ul><li>Identify where autoboxing and unboxing happen when primitive values go into and come out of a collection</li><li>Predict the result of comparing two Integer objects with == and with equals, and of unboxing a null Integer</li></ul></section>
+<section><h2>Start with a guess</h2><p>A list of numbers holds <code>Integer</code> objects. Read this code before any explanation.</p><pre><code>List&lt;Integer&gt; ids = new ArrayList&lt;&gt;();
+ids.add(1000);
+ids.add(1000);
+System.out.println(ids.get(0) == ids.get(1));</code></pre><h3>Activity 1 of 4: Prediction (practice, not scored)</h3><p>What does the last line print?</p><p class="pep-expected"><strong>Expected results and why:</strong> Prediction (practice, not scored): a List&lt;Integer&gt; gets add(1000) twice; what does ids.get(0) == ids.get(1) print? Options: true, both are 1000 (wrong: == compares the Integer objects, not their values); false on a standard JDK, and Java promises neither result (correct: boxing 1000 twice may create two objects; OpenJDK 25 prints false); a compile error (wrong: == on two Integer objects compiles); NullPointerException (wrong: both elements exist).</p></section>
+<section><h2>The model</h2><p>The model: a collection holds references to wrapper objects, never raw <code>int</code> values. Going in, an <code>int</code> is boxed into an <code>Integer</code>; coming out, it is unboxed back. Two boxes can hold the same value and still be different objects, so <code>==</code> on wrappers asks about objects and <code>equals</code> asks about values. An empty reference, <code>null</code>, has no value to unbox.</p></section>
+</div></noscript>
+      <div id="current-teaching" class="teach">
+        <div data-step="1" data-pep-teaching>
+          <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+          <p>A list of numbers holds <code>Integer</code> objects. Read this code before any explanation.</p>
+<pre><code>List&lt;Integer&gt; ids = new ArrayList&lt;&gt;();
+ids.add(1000);
+ids.add(1000);
+System.out.println(ids.get(0) == ids.get(1));</code></pre>
+        </div>
+        <div data-step="2" hidden data-pep-teaching>
+          <h2 id="teach-2-h" tabindex="-1">Collections hold objects, so Java converts</h2>
+          <p>A type argument must be a reference type: <code>List&lt;int&gt;</code> does not compile. Each primitive has a wrapper class, such as <code>Integer</code> for <code>int</code> and <code>Double</code> for <code>double</code>. The compiler converts for you:</p>
+          <ul>
+            <li><strong>Autoboxing</strong>, primitive to wrapper: <code>ids.add(5)</code> passes an <code>Integer</code>.</li>
+            <li><strong>Unboxing</strong>, wrapper to primitive: <code>int first = ids.get(0);</code> and arithmetic such as <code>ids.get(0) + 1</code>.</li>
+          </ul>
+        </div>
+        <div data-step="3" hidden data-pep-teaching>
+          <h2 id="teach-3-h" tabindex="-1">== compares objects; equals compares values</h2>
+          <p>Between two <code>Integer</code> objects, <code>==</code> asks "the same object?" and <code>equals</code> asks "the same value?". Java guarantees the same object only for boxed values from -128 to 127; for others, such as 1000, <code>==</code> may be <code>false</code>. Compare wrappers with <code>equals</code>, or unbox first.</p>
+          <p>Unboxing <code>null</code> throws <code>NullPointerException</code>. <code>Map.get</code> returns <code>null</code> for a missing key, so <code>int n = counts.get("x");</code> throws when <code>"x"</code> is absent.</p>
+        </div>
+        <div data-step="4" hidden data-pep-teaching>
+          <h2 id="teach-4-h" tabindex="-1">Apply it to a stock map</h2>
+          <p>A shop keeps a <code>Map&lt;String, Integer&gt;</code> of items left in stock.</p>
+        </div>
+        <div data-step="5" hidden data-pep-recap class="recap">
+          <h2 id="teach-5-h" tabindex="-1">Recap</h2>
+          <ul>
+            <li>Collections store objects, so <code>int</code> values are autoboxed to <code>Integer</code> going in and unboxed coming out or in arithmetic.</li>
+            <li><code>==</code> on two <code>Integer</code> objects compares identity; it is guaranteed <code>true</code> for equal values only from -128 to 127. Use <code>equals</code> for values.</li>
+            <li>Unboxing <code>null</code> throws <code>NullPointerException</code>, which often comes from <code>Map.get</code> on a missing key.</li>
+          </ul>
+          <details data-section-skip data-pep-cheat-sheet>
+            <summary>Cheat sheet</summary>
+            <table>
+              <tr><td>Boxing</td><td><code>list.add(5)</code>, <code>Integer n = 5;</code></td></tr>
+              <tr><td>Unboxing</td><td><code>int n = list.get(0);</code>, <code>list.get(0) + 1</code></td></tr>
+              <tr><td>Value comparison</td><td><code>a.equals(b)</code></td></tr>
+              <tr><td>Safe map read</td><td><code>int n = counts.getOrDefault("x", 0);</code></td></tr>
+            </table>
+          </details>
+          <details data-section-skip data-pep-sources class="sources">
+            <summary>Sources and review date</summary>
+            <p>Claims on this page were checked against the live official pages below on 13 October 2026 (UTC), for Java SE 25. Program output was confirmed on OpenJDK 25.0.4 with default settings. Links open outside this lesson.</p>
+            <ul>
+              <li><a href="https://dev.java/learn/language/constructs/numbers-strings/autoboxing/" rel="noopener">Dev.java: Autoboxing and Unboxing</a>: when the compiler boxes and unboxes.</li>
+              <li><a href="https://dev.java/learn/language/constructs/numbers-strings/numbers/" rel="noopener">Dev.java: Numbers</a>: the wrapper classes.</li>
+              <li><a href="https://dev.java/learn/language/fp/generics/restrictions/" rel="noopener">Dev.java: Restrictions on Generics</a>: cannot instantiate generic types with primitive types.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Integer.html" rel="noopener">Integer (Java SE 25 API)</a>: valueOf always caches -128 to 127 and may cache others.</li>
+              <li><a href="https://docs.oracle.com/javase/specs/jls/se25/html/jls-5.html" rel="noopener">Java Language Specification SE 25, chapter 5</a>: 5.1.7 Boxing Conversion; 5.1.8 Unboxing Conversion.</li>
+            </ul>
+            <p>Implementation detail, not a Java promise: <code>==</code> printing <code>false</code> for 1000 is what OpenJDK 25 does with default settings; the specification allows either result.</p>
+          </details>
+          <p id="complete" class="complete" data-pep-completion></p>
+          <p class="next-topic">Next topic: Big-O basics</p>
+        </div>
+      </div>
+      <details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+        <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+        <div class="pep-optional__body">
+    <p><strong>Optional example.</strong> <em>Try the step 1 prediction before you read on: this example explains its answer.</em></p>
+    <p>Picture each <code>Integer</code> as a small box with a number card inside. A list holds only boxes, so Java puts the number in a box on the way in (boxing) and takes the card out on the way back (unboxing).</p>
+    <p>Two boxes can hold cards with the same number. <code>equals</code> opens both and compares the cards; <code>==</code> only asks whether you are holding the very same box. For values from -128 to 127, Java guarantees that boxing hands out the same box each time, so <code>==</code> agrees with <code>equals</code>; for 1000 you may get two different boxes. And <code>null</code> is no box at all, so there is no card to take out: unboxing it throws <code>NullPointerException</code>.</p>
+        </div>
+      </details>
+      <noscript data-section-skip><div class="pep-nojs-reading">
+<section><h2>Collections hold objects, so Java converts</h2><p>A type argument must be a reference type: <code>List&lt;int&gt;</code> does not compile. Each primitive has a wrapper class, such as <code>Integer</code> for <code>int</code> and <code>Double</code> for <code>double</code>. The compiler converts for you:</p><ul>
+            <li><strong>Autoboxing</strong>, primitive to wrapper: <code>ids.add(5)</code> passes an <code>Integer</code>.</li>
+            <li><strong>Unboxing</strong>, wrapper to primitive: <code>int first = ids.get(0);</code> and arithmetic such as <code>ids.get(0) + 1</code>.</li>
+          </ul><h3>Activity 2 of 4: Sorting practice</h3><p>For each line, <code>ids</code> is a <code>List&lt;Integer&gt;</code>. Choose which conversion happens.</p><p class="pep-expected"><strong>Expected results and why:</strong> Sorting activity, ids is a List&lt;Integer&gt;: ids.add(5) autoboxes the int 5. int first = ids.get(0) unboxes. Integer total = 0 autoboxes. total = total + ids.get(1) unboxes both sides, adds, then boxes the result: both. String s = ids.get(0).toString() is neither: it calls a method on the Integer object.</p></section>
+<section><h2>== compares objects; equals compares values</h2><p>Between two <code>Integer</code> objects, <code>==</code> asks "the same object?" and <code>equals</code> asks "the same value?". Java guarantees the same object only for boxed values from -128 to 127; for others, such as 1000, <code>==</code> may be <code>false</code>. Compare wrappers with <code>equals</code>, or unbox first.</p><p>Unboxing <code>null</code> throws <code>NullPointerException</code>. <code>Map.get</code> returns <code>null</code> for a missing key, so <code>int n = counts.get("x");</code> throws when <code>"x"</code> is absent.</p><h3>Activity 3 of 4: Practice</h3><p>Compare two <code>Integer</code> objects holding the same value. Find a value where <code>==</code> and <code>equals</code> agree, and one where they may disagree.</p><p class="pep-expected"><strong>Expected results and why:</strong> Comparison bench: Integer a and b are both boxed from the same value. For 100 or 127, a == b prints true (guaranteed for -128 to 127) and a.equals(b) prints true. For 128 or 1000, a == b printed false on OpenJDK 25 with default settings (not guaranteed either way) while a.equals(b) prints true. Unboxing first, a.intValue() == b.intValue(), compares values and prints true.</p></section>
+<section><h2>Apply it to a stock map</h2><p>A shop keeps a <code>Map&lt;String, Integer&gt;</code> of items left in stock.</p><h3>Activity 4 of 4: Final check</h3><div><p>The map has no key <code>"pear"</code>. What happens here?</p>
+<pre><code>int left = stock.get("pear");</code></pre></div><p><strong>Retry form, if the first answer is wrong:</strong></p><div><p>Same rule, other code. What happens here?</p>
+<pre><code>Integer discount = null;
+if (discount == 0) { System.out.println("none"); }</code></pre></div><p class="pep-expected"><strong>Expected results and why:</strong> Apply question: stock is a Map&lt;String, Integer&gt; with no key pear; int left = stock.get("pear") throws NullPointerException, because get returns null and unboxing null fails. Wrong: left is 0; a compile error; left is null. Retry form: Integer discount = null; if (discount == 0) also throws NullPointerException, because comparing with the int 0 unboxes discount.</p></section>
+<section><h2>Recap</h2><ul>
+            <li>Collections store objects, so <code>int</code> values are autoboxed to <code>Integer</code> going in and unboxed coming out or in arithmetic.</li>
+            <li><code>==</code> on two <code>Integer</code> objects compares identity; it is guaranteed <code>true</code> for equal values only from -128 to 127. Use <code>equals</code> for values.</li>
+            <li>Unboxing <code>null</code> throws <code>NullPointerException</code>, which often comes from <code>Map.get</code> on a missing key.</li>
+          </ul><details>
+            <summary>Cheat sheet</summary>
+            <table>
+              <tbody><tr><td>Boxing</td><td><code>list.add(5)</code>, <code>Integer n = 5;</code></td></tr>
+              <tr><td>Unboxing</td><td><code>int n = list.get(0);</code>, <code>list.get(0) + 1</code></td></tr>
+              <tr><td>Value comparison</td><td><code>a.equals(b)</code></td></tr>
+              <tr><td>Safe map read</td><td><code>int n = counts.getOrDefault("x", 0);</code></td></tr>
+            </tbody></table>
+          </details><details class="sources">
+            <summary>Sources and review date</summary>
+            <p>Claims on this page were checked against the live official pages below on 13 October 2026 (UTC), for Java SE 25. Program output was confirmed on OpenJDK 25.0.4 with default settings. Links open outside this lesson.</p>
+            <ul>
+              <li><a href="https://dev.java/learn/language/constructs/numbers-strings/autoboxing/" rel="noopener">Dev.java: Autoboxing and Unboxing</a>: when the compiler boxes and unboxes.</li>
+              <li><a href="https://dev.java/learn/language/constructs/numbers-strings/numbers/" rel="noopener">Dev.java: Numbers</a>: the wrapper classes.</li>
+              <li><a href="https://dev.java/learn/language/fp/generics/restrictions/" rel="noopener">Dev.java: Restrictions on Generics</a>: cannot instantiate generic types with primitive types.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Integer.html" rel="noopener">Integer (Java SE 25 API)</a>: valueOf always caches -128 to 127 and may cache others.</li>
+              <li><a href="https://docs.oracle.com/javase/specs/jls/se25/html/jls-5.html" rel="noopener">Java Language Specification SE 25, chapter 5</a>: 5.1.7 Boxing Conversion; 5.1.8 Unboxing Conversion.</li>
+            </ul>
+            <p>Implementation detail, not a Java promise: <code>==</code> printing <code>false</code> for 1000 is what OpenJDK 25 does with default settings; the specification allows either result.</p>
+          </details><p class="next-topic">Next topic: Big-O basics</p></section>
+</div></noscript>
+      <div class="pep-goalsbox">
+        <h3 id="goals-h">Goals</h3>
+        <ul class="pep-goals" data-pep-objectives aria-labelledby="goals-h">
+            <li data-state="open"><span>Identify where autoboxing and unboxing happen when primitive values go into and come out of a collection</span><span class="state"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></li>
+            <li data-state="open"><span>Predict the result of comparing two Integer objects with == and with equals, and of unboxing a null Integer</span><span class="state"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></li>
+        </ul>
+      </div>
+      <div id="current-steps">
+          <div data-step="1"><ol class="pep-steps-list" aria-label="Steps"><li>Read the example above.</li><li>Choose an answer, then how sure you are.</li><li>Press <strong>Check prediction</strong> to see why each option is right or wrong.</li></ol></div>
+          <div data-step="2" hidden><ol class="pep-steps-list" aria-label="Steps"><li id="task-2">For each line, <code>ids</code> is a <code>List&lt;Integer&gt;</code>. Choose which conversion happens.</li><li>A wrong choice gets one retry, then the answer shows.</li></ol></div>
+          <div data-step="3" hidden><ol class="pep-steps-list" aria-label="Steps"><li id="task-3">Compare two <code>Integer</code> objects holding the same value. Find a value where <code>==</code> and <code>equals</code> agree, and one where they may disagree.</li><li><strong>Continue</strong> appears once the task is met.</li></ol></div>
+          <div data-step="4" hidden><ol class="pep-steps-list" aria-label="Steps"><li>Read the question in the workspace.</li><li>Choose an answer and how sure you are, then press <strong>Check answer</strong>.</li><li>A wrong first answer gets one retry.</li></ol></div>
+      </div>
+      <p class="pep-goal-summary" id="goal-summary" aria-live="polite"></p>
+    </section>
+    <section class="pep-region pep-workspace" aria-labelledby="ws-h" data-pep-workspace="practice">
+      <h2 id="ws-h"></h2>
+      <section id="current-task" class="task" aria-label="Current task">
+          <div data-step="1"><p id="task-1">What does the last line print?</p></div>
+          <div data-step="4" hidden>
+          <div id="task-4"><p>The map has no key <code>"pear"</code>. What happens here?</p>
+<pre><code>int left = stock.get("pear");</code></pre></div>
+          <div id="task-4b" tabindex="-1" hidden><p>Same rule, other code. What happens here?</p>
+<pre><code>Integer discount = null;
+if (discount == 0) { System.out.println("none"); }</code></pre></div>
+        </div>
+      </section>
+      <figure id="model" class="model" aria-labelledby="m-cap">
+        <figcaption id="m-cap">Primitive values and wrapper objects</figcaption>
+        <div data-step="2">
+          <div class="lanes" id="m-lanes"></div>
+        </div>
+        <div data-step="3">
+<pre><code id="m-code"></code></pre>
+          <p class="lk" id="m-out-k">Printed</p>
+          <pre class="out" id="m-out" aria-labelledby="m-out-k">Choose a value and a comparison.</pre>
+          <p class="note">Output from OpenJDK 25 with default settings.</p>
+        </div>
+        <div data-step="1 4 5">
+          <p data-pep-model>The model: a collection holds references to wrapper objects, never raw <code>int</code> values. Going in, an <code>int</code> is boxed into an <code>Integer</code>; coming out, it is unboxed back. Two boxes can hold the same value and still be different objects, so <code>==</code> on wrappers asks about objects and <code>equals</code> asks about values. An empty reference, <code>null</code>, has no value to unbox.</p>
+        </div>
+      </figure>
+      <div id="current-control" class="control">
+        <div data-step="1">
+          <fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict data-static-alt="Prediction (practice, not scored): a List&lt;Integer&gt; gets add(1000) twice; what does ids.get(0) == ids.get(1) print? Options: true, both are 1000 (wrong: == compares the Integer objects, not their values); false on a standard JDK, and Java promises neither result (correct: boxing 1000 twice may create two objects; OpenJDK 25 prints false); a compile error (wrong: == on two Integer objects compiles); NullPointerException (wrong: both elements exist).">
+            <legend>Your prediction</legend>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="predict" id="p-true" value="true" aria-describedby="task-1"><span class="ot"><code>true</code>: both are 1000</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-false" value="false" aria-describedby="task-1"><span class="ot"><code>false</code> on a standard JDK, and Java promises neither result</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-compile" value="compile" aria-describedby="task-1"><span class="ot">A compile error</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-npe" value="npe" aria-describedby="task-1"><span class="ot"><code>NullPointerException</code></span></label>
+            </div>
+            <div class="row"><fieldset class="conf" id="conf0" data-pep-confidence aria-describedby="conf0-instr"><legend id="conf0-instr">How sure are you?</legend><label class="opt"><input type="radio" name="conf0" id="conf0-low" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-medium" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-high" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check aria-describedby="conf0-instr" disabled>Check prediction</button></div>
+          </fieldset>
+        </div>
+        <div data-step="2" hidden>
+          <fieldset id="x1" data-interaction="drag" data-pep-explore aria-describedby="task-2" data-static-alt="Sorting activity, ids is a List&lt;Integer&gt;: ids.add(5) autoboxes the int 5. int first = ids.get(0) unboxes. Integer total = 0 autoboxes. total = total + ids.get(1) unboxes both sides, adds, then boxes the result: both. String s = ids.get(0).toString() is neither: it calls a method on the Integer object.">
+            <legend id="ln-legend">Line: <span id="ln-name"></span></legend>
+            <div class="lanebtns" id="ln-btns"></div>
+            <p class="sub" id="ln-count">0 of 5 sorted</p>
+          </fieldset>
+        </div>
+        <div data-step="3" hidden>
+          <fieldset id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-static-alt="Comparison bench: Integer a and b are both boxed from the same value. For 100 or 127, a == b prints true (guaranteed for -128 to 127) and a.equals(b) prints true. For 128 or 1000, a == b printed false on OpenJDK 25 with default settings (not guaranteed either way) while a.equals(b) prints true. Unboxing first, a.intValue() == b.intValue(), compares values and prints true.">
+            <legend>Compare two boxed values</legend>
+            <p class="lk" id="g-n">Value in both boxes</p>
+            <div class="ops" role="group" aria-labelledby="g-n"><button type="button" class="ghost" id="n-100" data-g="n" data-v="100" aria-pressed="true">100</button><button type="button" class="ghost" id="n-127" data-g="n" data-v="127" aria-pressed="false">127</button><button type="button" class="ghost" id="n-128" data-g="n" data-v="128" aria-pressed="false">128</button><button type="button" class="ghost" id="n-1000" data-g="n" data-v="1000" aria-pressed="false">1000</button></div>
+            <p class="lk" id="g-op">Comparison</p>
+            <div class="ops" role="group" aria-labelledby="g-op"><button type="button" class="ghost" id="op-eq" data-g="op" data-v="eq" aria-pressed="true">a == b</button><button type="button" class="ghost" id="op-equals" data-g="op" data-v="equals" aria-pressed="false">a.equals(b)</button><button type="button" class="ghost" id="op-int" data-g="op" data-v="int" aria-pressed="false">a.intValue() == b.intValue()</button></div>
+            <div class="row"><button type="button" class="primary" id="run" aria-describedby="task-3">Run</button></div>
+          </fieldset>
+        </div>
+        <div data-step="4" hidden>
+          <fieldset id="apply" data-interaction="mcq" data-confidence data-pep-apply data-static-alt="Apply question: stock is a Map&lt;String, Integer&gt; with no key pear; int left = stock.get(&quot;pear&quot;) throws NullPointerException, because get returns null and unboxing null fails. Wrong: left is 0; a compile error; left is null. Retry form: Integer discount = null; if (discount == 0) also throws NullPointerException, because comparing with the int 0 unboxes discount.">
+            <legend>What happens</legend>
+            <div class="opts one" id="a1">
+              <label class="opt"><input type="radio" name="a1" id="a1-zero" value="zero" aria-describedby="task-4"><span class="ot"><code>left</code> is <code>0</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-npe" value="npe" aria-describedby="task-4"><span class="ot"><code>NullPointerException</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-compile" value="compile" aria-describedby="task-4"><span class="ot">A compile error</span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-null" value="null" aria-describedby="task-4"><span class="ot"><code>left</code> is <code>null</code></span></label>
+            </div>
+            <div class="opts one" id="a2" hidden>
+              <label class="opt"><input type="radio" name="a2" id="a2-none" value="none" aria-describedby="task-4b"><span class="ot">It prints <code>none</code></span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-skip" value="skip" aria-describedby="task-4b"><span class="ot">The condition is <code>false</code>, so nothing prints</span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-npe" value="npe" aria-describedby="task-4b"><span class="ot"><code>NullPointerException</code></span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-compile" value="compile" aria-describedby="task-4b"><span class="ot">A compile error</span></label>
+            </div>
+          </fieldset>
+          <div class="row">
+            <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-instr">
+              <legend id="conf-instr">How sure are you?</legend>
+              <label class="opt"><input type="radio" name="conf" id="conf-low" value="low"><span class="ot">Low</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-medium" value="medium"><span class="ot">Medium</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-high" value="high"><span class="ot">High</span></label>
+            </fieldset>
+            <button type="button" class="primary" id="apply-check" data-pep-apply-check aria-describedby="conf-instr" disabled>Check answer</button>
+          </div>
+        </div>
+      </div>
+      <div class="fbrow">
+        <div id="current-feedback" class="feedback" role="status" aria-live="polite" tabindex="-1" data-pep-predict-feedback data-pep-explore-feedback data-pep-apply-feedback></div>
+        <button type="button" class="primary" id="next" hidden>Continue</button>
+      </div>
+    </section>
+  </div>
+<script>
+var PAGE={};
+(function(){
+var E,$,$$,C={n:'100',op:'eq'},seen={};
+function pick(g,v){C[g]=v;$$('[data-g="'+g+'"]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-v')===v?'true':'false');});code();}
+var OPS={eq:'a == b',equals:'a.equals(b)',int:'a.intValue() == b.intValue()'};
+function code(){$('#m-code').textContent='Integer a = '+C.n+';\nInteger b = '+C.n+';\nSystem.out.println('+OPS[C.op]+');';}
+function run(){var cached=+C.n<=127,res,why;code();
+  if(C.op==='eq'){res=cached?'true':'false';why=cached?'Values from -128 to 127 are always boxed to the same object, so `==` is `true`. That is guaranteed, but it is still comparing objects.':'Two boxes of '+C.n+' were two different objects on this JDK, so `==` is `false`. Java promises nothing either way for this value.';}
+  else{res='true';why=C.op==='equals'?'`equals` compares the values inside the boxes.':'`intValue()` unboxes both, so `==` compares two `int` values.';}
+  $('#m-out').textContent=res;seen[C.n+C.op]=res;
+  var agree=['100','127'].some(function(n){return seen[n+'eq']==='true'&&seen[n+'equals']==='true';}),
+      differ=['128','1000'].some(function(n){return seen[n+'eq']==='false'&&seen[n+'equals']==='true';});
+  var msg=[{c:'verdict info',s:'`'+OPS[C.op]+'` with '+C.n+' printed `'+res+'`.'},{s:why}];
+  if(agree&&differ&&!E.state().done.x2){msg.push({c:'verdict ok',s:'Found both: inside -128 to 127 the two agree; outside, `==` can be `false` while `equals` is `true`. Use `equals` for wrapper values.'});E.say(msg,true);E.complete('x2');}
+  else{if(!agree)msg.push({s:'Still to find: a value where `==` and `equals` both print `true`.'});if(!differ)msg.push({s:'Still to find: a value where `==` and `equals` disagree.'});E.say(msg);}}
+PAGE.predict={ok:'false',lead:'Each add(1000) boxed the int into an Integer object. == compares those objects, and two boxes of 1000 need not be the same object.',expl:{
+  true:'Not quite: == compares the two Integer objects, not the numbers inside them.',
+  false:'Right: OpenJDK 25 prints false, and the Java specification lets either result happen for 1000.',
+  compile:'Not quite: == between two Integer references compiles; it just compares identity.',
+  npe:'Not quite: both elements exist, so nothing is null.'}};
+PAGE.lanes={key:'x1',model:'#m-lanes',btns:'#ln-btns',name:'#ln-name',count:'#ln-count',legend:'ln-legend',label:'Continue',
+ lanes:[{id:'box',label:'Autoboxing'},{id:'unbox',label:'Unboxing'},{id:'both',label:'Both'},{id:'none',label:'Neither'}],
+ done:'Into an Integer variable or collection: boxing. Into an int variable or arithmetic: unboxing.',
+ items:[
+  {n:'`ids.add(5);`',lane:'box',ok:'The list holds `Integer` objects, so the `int` 5 is boxed.',w:{unbox:'Nothing is taken out of a wrapper here.',both:'Only one conversion happens: `int` to `Integer`.',none:'`add` expects an `Integer`, and 5 is an `int`, so the compiler boxes it.'}},
+  {n:'`int first = ids.get(0);`',lane:'unbox',ok:'`get` returns an `Integer`, and assigning it to an `int` unboxes it.',w:{box:'The value goes from wrapper to primitive, not the other way.',both:'Only one conversion happens: `Integer` to `int`.',none:'An `Integer` cannot be stored in an `int` without unboxing.'}},
+  {n:'`Integer total = 0;`',lane:'box',ok:'Assigning an `int` literal to an `Integer` variable boxes it.',w:{unbox:'The value goes from primitive to wrapper.',both:'Only one conversion happens.',none:'0 is an `int`, so storing it in an `Integer` needs boxing.'}},
+  {n:'`total = total + ids.get(1);`',lane:'both',ok:'`+` needs `int` values, so both `Integer` operands are unboxed; the `int` sum is then boxed back into `total`.',w:{box:'The operands must be unboxed before `+` can add them.',unbox:'The sum is an `int`, and storing it in the `Integer` variable boxes it again.',none:'`+` does not work on `Integer` objects directly.'}},
+  {n:'`String s = ids.get(0).toString();`',lane:'none',ok:'`toString()` is called on the `Integer` object itself; no primitive is involved.',w:{box:'No primitive value is turned into an object.',unbox:'The `Integer` stays an object; its method is called.',both:'No conversion happens at all.'}}
+ ]};
+PAGE.apply={
+ r1:{ok:'npe',expl:{
+   zero:'get does not supply a default; getOrDefault("pear", 0) would.',
+   npe:'get returns null for the missing key, and unboxing null into int throws.',
+   compile:'It compiles: the compiler inserts the unboxing.',
+   null:'An int can never hold null.'},
+   mis:{zero:'get returns null, not 0, for a missing key.',compile:'Unboxing is inserted by the compiler, so this compiles.',null:'An int variable cannot be null.'}},
+ r2:{ok:'npe',answer:'Comparing an `Integer` with the `int` 0 unboxes it, and unboxing `null` throws `NullPointerException`.',expl:{
+   none:'discount is not 0; it is null, and the comparison cannot even be made.',
+   skip:'The comparison does not evaluate to false; unboxing fails first.',
+   npe:'== with an int operand unboxes discount, and unboxing null throws.',
+   compile:'It compiles; the failure happens when it runs.'},
+   mis:{none:'null is not 0.',skip:'Unboxing happens before any comparison.',compile:'It compiles; the error is at run time.'}}
+};
+PAGE.goals=[['x1'],['x2','apply']];
+PAGE.checkLabels={x1:'Boxing or unboxing',apply:'Final check'};
+PAGE.init=function(eng){E=eng;$=eng.$;$$=eng.$$;
+  $$('[data-g]').forEach(function(b){b.addEventListener('click',function(){pick(b.getAttribute('data-g'),b.getAttribute('data-v'));});});
+  $('#run').addEventListener('click',run);code();E.lanes(PAGE.lanes);};
+PAGE.resetStep=function(st){if(st===3){seen={};pick('n','100');pick('op','eq');$('#m-out').textContent='Choose a value and a comparison.';}};
+})();
+</script>
+</main>
+<!-- pep:nojs -->
+<!-- /pep:nojs -->
+</div>
+<script>
+(function(){
+'use strict';
+var D=document,R=D.documentElement;
+function $(s,r){return (r||D).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||D).querySelectorAll(s));}
+function md(s){var f=D.createDocumentFragment(),re=/(`[^`]+`|\*\*[^*]+\*\*)/g,last=0,m;s=String(s);
+  while((m=re.exec(s))){if(m.index>last)f.appendChild(D.createTextNode(s.slice(last,m.index)));
+    var t=m[0],e=D.createElement(t.charAt(0)==='`'?'code':'strong');e.textContent=t.charAt(0)==='`'?t.slice(1,-1):t.slice(2,-2);f.appendChild(e);last=re.lastIndex;}
+  if(last<s.length)f.appendChild(D.createTextNode(s.slice(last)));return f;}
+function el(tag,cls,txt){var e=D.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.appendChild(typeof txt==='string'?md(txt):txt);return e;}
+var main=$('#lesson'),stage=$('#stage'),fb=$('#current-feedback'),next=$('#next'),P=window.PAGE;
+var KEYS=['predict','x1','x2','apply'],S;
+function fresh(){S={step:1,done:{},results:{}};}
+fresh();
+function say(parts,focus){fb.textContent='';(parts||[]).forEach(function(p){
+  if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li',it[2]||'');li.appendChild(el('strong',null,it[0]));li.appendChild(D.createTextNode(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
+  else if(p.pre){var pr=el('pre','out');pr.textContent=p.pre;fb.appendChild(pr);}
+  else{var q=el('p',p.c||'',p.s);if(p.attr)q.setAttribute(p.attr,'');fb.appendChild(q);}});
+  if(focus)fb.focus();}
+function optText(i){var l=i.closest('label');return l?l.textContent.replace(/\s+/g,' ').trim():i.value;}
+/* pep:component progress@1 js */
+function progress(){var n=0,set=0;KEYS.forEach(function(k){var pip=$('.pip[data-k="'+k+'"]');pip.className='pip';if(S.done[k]){n++;if(S.results[k]==='settled')set++;pip.className='pip '+(S.results[k]==='settled'?'settled':'on');}});
+  $('#prog-text').textContent='Activities done: '+n+' of 4'+(set?' ('+set+(set>1?' checks':' check')+' settled, not correct)':'');}
+var WORD={'correct':'correct on the first try','correct-retry':'correct on the second try','settled':'answered and settled, not marked correct'};
+function complete(k,label){S.done[k]=true;progress();next.textContent=label||'Continue';next.hidden=false;}
+/* /pep:component progress js */
+/* page anatomy: goal states, paired step headings and the goal summary follow the activity state */
+var GOALS=P.goals||[],goalItems=$$('[data-pep-objectives] > li');
+function goalsUi(){var open=0;goalItems.forEach(function(li,i){var ks=GOALS[i]||[],done=ks.length>0&&ks.every(function(k){return !!S.done[k];}),rev=done&&ks.some(function(k){return S.results[k]==='settled';});
+  li.setAttribute('data-state',done?(rev?'review':'done'):'open');if(!done)open++;});
+  var n=goalItems.length;$('#goal-summary').textContent=open?open+' of '+n+(n>1?' goals':' goal')+' still open':'All '+n+' goals done'+(goalItems.some(function(li){return li.getAttribute('data-state')==='review';})?'; review the ones marked for review':'');}
+function stepUi(step){var h=$('#teach-'+step+'-h');$('#ws-h').textContent=h?h.textContent:'';goalsUi();}
+if(window.MutationObserver)new MutationObserver(goalsUi).observe($('#prog-text'),{childList:true,characterData:true,subtree:true});
+function show(step){S.step=step;stage.setAttribute('data-at',String(step));
+  $$('[data-step]',stage).forEach(function(e){e.hidden=e.getAttribute('data-step').split(' ').indexOf(String(step))<0;});
+  if(step===5){main.setAttribute('data-pep-complete','true');var c=$('#complete'),labels=P.checkLabels||{apply:'Final check'},parts=[],anySet=false;
+    KEYS.forEach(function(k){if(S.results[k]&&labels[k]){parts.push(labels[k]+': '+WORD[S.results[k]]+'.');if(S.results[k]==='settled')anySet=true;}});
+    c.className='complete'+(anySet?' settled':'');c.textContent='Topic complete. '+parts.join(' ')+(anySet?' Review the explanations before the practice quiz.':'');}
+  $('#reset').hidden=step>=5;stepUi(step);
+  if(P.onStep)P.onStep(step,S);}
+next.addEventListener('click',function(){next.hidden=true;fb.textContent='';show(S.step+1);var h=$('#teach-'+S.step+'-h');if(h)h.focus();});
+/* pep:component predict@1 js */
+/* predict */
+var pf=$('#predict'),pc=$('#predict-check');
+function pReady(){pc.disabled=!!S.done.predict||!($('input[name="predict"]:checked')&&$('input[name="conf0"]:checked'));}
+pf.addEventListener('change',pReady);
+function badges(l,arr){var b=l.querySelector('.badges');if(!b){b=el('span','badges');l.appendChild(b);}arr.forEach(function(x){b.appendChild(el('span','badge '+x[1],x[0]));});}
+pc.addEventListener('click',function(){var c=$('input[name="predict"]:checked'),cv=$('input[name="conf0"]:checked');if(!c||!cv)return;var okv=P.predict.ok,match=c.value===okv;
+  $$('input',pf).forEach(function(i){i.disabled=true;});pc.disabled=true;
+  $$('input[name="predict"]',pf).forEach(function(i){var l=i.closest('label');if(i===c){l.classList.add('mine');badges(l,[['Your prediction','mine-b'],[match?'Correct':'Not correct',match?'ok-b':'no-b']]);}else if(i.value===okv){badges(l,[[P.predict.okLabel||'Correct answer','ok-b']]);}if(i.value===okv)l.classList.add('right');l.appendChild(el('span','oexp',P.predict.expl[i.value]));});
+  pf.querySelector('.opts').classList.add('explained');pc.hidden=true;$('#conf0').closest('.row').hidden=true;
+  if(P.onPredict)P.onPredict();
+  say([{c:'verdict info',s:'Practice prediction, not scored. '+(match?'Your prediction matches the answer.':'Your prediction differs from the answer; nothing is lost.')},{c:'conf-report',s:'Your confidence: '+cv.value+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:P.predict.lead},{s:'Each option now shows its label and why, directly under it.'}],true);
+  complete('predict');});
+/* /pep:component predict js */
+/* pep:component mcq-with-confidence@1 js */
+/* graded checks: confidence first, retry in a second representation, settle after two misses */
+var checks={};
+function check(o){var st={att:0,conf:[],result:null,step:{x1:2,x2:3,apply:4}[o.key]},btn=$(o.btn),cf=$(o.conf),fs=$(o.fs),cn=o.confName||'conf';checks[o.key]=st;
+  function grp(){return st.att===0?o.g1:o.g2;}
+  function ready(){btn.disabled=!!st.result||!($('input[name="'+grp()+'"]:checked')&&$('input[name="'+cn+'"]:checked'));}
+  function lockConf(){$$('input[name="'+cn+'"]').forEach(function(i){i.disabled=true;});btn.disabled=true;}
+  function done(){S.results[o.key]=st.result;if(P.onCheck)P.onCheck(o.key,st.result);complete(o.key,o.label);}
+  fs.addEventListener('change',ready);cf.addEventListener('change',ready);
+  btn.addEventListener('click',function(){var g=grp(),r=st.att===0?o.data.r1:o.data.r2,c=$('input[name="'+g+'"]:checked'),cv=$('input[name="'+cn+'"]:checked');
+    if(!c||!cv||st.result)return;var ok=c.value===r.ok;st.conf.push(cv.value);
+    var confLine='Your confidence: '+cv.value+'. Confidence is your own read on how sure you were; it is reported, never scored.';
+    var expl=$$('input[name="'+g+'"]').map(function(i){return [optText(i)+(i===c?' (your answer):':':'),r.expl[i.value]];});
+    $$('input[name="'+g+'"]').forEach(function(i){i.disabled=true;});c.closest('label').classList.add(ok?'right':'wrong');badges(c.closest('label'),[['Your answer','mine-b'],[ok?'Correct':'Not correct',ok?'ok-b':'no-b']]);
+    if(ok){st.result=st.att===0?'correct':'correct-retry';lockConf();
+      say([{c:'verdict ok',s:st.att===0?'Correct.':'Correct on your second try.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}],true);done();}
+    else if(st.att===0){st.att=1;$('#'+o.g1).hidden=true;$('#'+o.g2).hidden=false;$(o.t1).hidden=true;$(o.t2).hidden=false;$$('input[name="'+cn+'"]').forEach(function(i){i.checked=false;});
+      say([{c:'verdict no',s:'Not yet. '+r.mis[c.value]+' Try again below: same idea, different form, with your confidence again.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}]);
+      ready();$(o.t2).focus();}
+    else{st.result='settled';lockConf();$$('input[name="'+o.g2+'"]').forEach(function(i){if(i.value===r.ok){i.closest('label').classList.add('right');badges(i.closest('label'),[['Correct answer','ok-b']]);}});
+      say([{c:'verdict set',s:'Answered and settled: this check is not marked correct. '+r.mis[c.value]},{c:'conf-report',s:'Confidence on each try: '+st.conf.join(', then ')+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:'The answer: '+r.answer},{list:expl}],true);done();}});
+  st.reset=function(){st.att=0;st.conf=[];st.result=null;$('#'+o.g1).hidden=false;$('#'+o.g2).hidden=true;$(o.t1).hidden=false;$(o.t2).hidden=true;btn.disabled=true;};
+  return st;}
+/* /pep:component mcq-with-confidence js */
+/* lane sort: each item gets one retry, then its lane is revealed; any reveal settles the activity */
+var lanesets={};
+function lanes(o){var st={idx:0,tries:{},placed:{},revealed:{}},box=$(o.model),btns=$(o.btns);lanesets[o.key]=st;
+  function laneName(id){for(var i=0;i<o.lanes.length;i++)if(o.lanes[i].id===id)return o.lanes[i].label;return id;}
+  function render(){box.textContent='';var cnt=0;
+    o.lanes.forEach(function(ln){var d=el('div','lane'),h=el('p','lk',ln.label),u=el('ul','cards');h.id=o.key+'-lk-'+ln.id;u.setAttribute('aria-labelledby',h.id);d.appendChild(h);d.appendChild(u);box.appendChild(d);
+      o.items.forEach(function(it,i){if(st.placed[i]!==ln.id)return;cnt++;var li=el('li',st.revealed[i]?'revealed':'',it.n);if(st.revealed[i])li.appendChild(el('span','tag','shown after two tries'));u.appendChild(li);});});
+    var it=o.items[st.idx];$(o.name).textContent=it?'':'all sorted';$(o.name).appendChild(it?md(it.n):D.createTextNode(''));
+    if(o.desc)$(o.desc).textContent=it&&it.d?it.d:'';
+    $(o.count).textContent=cnt+' of '+o.items.length+' sorted';}
+  function finish(msg){var anyRev=Object.keys(st.revealed).length,anyRetry=Object.keys(st.tries).some(function(k){return st.tries[k]>0;});
+    var res=anyRev?'settled':(anyRetry?'correct-retry':'correct');S.results[o.key]=res;
+    $$('button',btns).forEach(function(b){b.disabled=true;});
+    msg.push({c:anyRev?'verdict set':'verdict ok',s:anyRev?'All sorted. Answered and settled: '+anyRev+(anyRev>1?' items were':' item was')+' shown after two tries, so this activity is not marked correct.':(anyRetry?'All sorted, some on a second try.':'All sorted on the first try.')});
+    if(o.done)msg.push({s:o.done});say(msg,true);complete(o.key,o.label);}
+  o.lanes.forEach(function(ln){var b=el('button','ghost',ln.label);b.type='button';b.id=o.key+'-to-'+ln.id;b.setAttribute('data-lane',ln.id);b.setAttribute('aria-describedby',o.legend);
+    b.addEventListener('click',function(){var i=st.idx,it=o.items[i];if(!it||S.done[o.key])return;
+      if(ln.id===it.lane){st.placed[i]=ln.id;st.idx++;var msg=[{c:'verdict ok',s:'Yes: '+laneName(ln.id)+'.'},{s:it.ok}];render();if(st.idx>=o.items.length)finish(msg);else say(msg);}
+      else{st.tries[i]=(st.tries[i]||0)+1;
+        if(st.tries[i]<2){say([{c:'verdict no',s:'Not '+laneName(ln.id)+'. '+it.w[ln.id]},{s:'Try another button for the same item.'}]);}
+        else{st.placed[i]=it.lane;st.revealed[i]=true;st.idx++;var m2=[{c:'verdict set',s:'Shown after two tries: '+laneName(it.lane)+'. '+it.w[ln.id]},{s:it.ok}];render();if(st.idx>=o.items.length)finish(m2);else say(m2);}}});
+    btns.appendChild(b);});
+  st.reset=function(){st.idx=0;st.tries={};st.placed={};st.revealed={};$$('button',btns).forEach(function(b){b.disabled=false;});render();};
+  st.step={x1:2,x2:3,apply:4}[o.key];render();return st;}
+/* pep:component restart@1 js */
+/* restart the current activity only: earlier activities keep their results */
+var STEPKEY={1:'predict',2:'x1',3:'x2',4:'apply'};
+function restartStep(){var stp=S.step;if(stp>=5)return;var k=STEPKEY[stp];
+  $$('#current-control [data-step], #current-task [data-step]').forEach(function(p){if(p.getAttribute('data-step').split(' ').indexOf(String(stp))<0)return;
+    $$('input',p).forEach(function(i){i.checked=false;i.disabled=false;});$$('.opt',p).forEach(function(o){o.classList.remove('right','wrong','mine');});
+    $$('.oexp,.badges',p).forEach(function(e){e.remove();});$$('.opts.explained',p).forEach(function(o){o.classList.remove('explained');});});
+  if(stp===1){pc.hidden=false;pc.disabled=true;$('#conf0').closest('.row').hidden=false;}
+  Object.keys(checks).forEach(function(ck){if(checks[ck].step===stp)checks[ck].reset();});
+  delete S.done[k];delete S.results[k];next.hidden=true;fb.textContent='';
+  if(P.resetStep)P.resetStep(stp);
+  progress();say([{c:'verdict info',s:'Activity restarted. Earlier activities keep their results.'}]);var h=$('#teach-'+stp+'-h');if(h)h.focus();}
+$('#reset').addEventListener('click',restartStep);
+/* /pep:component restart js */
+var userReset=P.resetStep;P.resetStep=function(stp){Object.keys(lanesets).forEach(function(k){if(lanesets[k].step===stp)lanesets[k].reset();});if(userReset)userReset(stp);};
+window.ENG={say:say,complete:complete,check:check,lanes:lanes,md:md,el:el,$:$,$$:$$,state:function(){return S;}};
+if(P.init)P.init(window.ENG);
+check({key:'apply',fs:'#apply',g1:'a1',g2:'a2',t1:'#task-4',t2:'#task-4b',conf:'#conf',confName:'conf',btn:'#apply-check',data:P.apply,label:'Continue to recap'});
+progress();show(1);
+})();
+
+</script>
+<script>
+(function(){var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=[].slice.call(document.querySelectorAll('details.pep-optional:not([open])'));printOpened.forEach(function(d){d.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(d){d.open=false;});printOpened=[];});})();
+</script>
+</body>
+</html>

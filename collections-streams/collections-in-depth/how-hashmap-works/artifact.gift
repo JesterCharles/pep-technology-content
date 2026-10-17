@@ -1,0 +1,51 @@
+// Formative practice quiz for how-hashmap-works. Low-stakes; answers are visible by design.
+$CATEGORY: collections-streams/collections-in-depth/how-hashmap-works
+
+::how-hashmap-works o1 - the lookup path::In what order does HashMap.get(key) use the key's methods?{
+=hashCode to choose a bucket, then equals to find the matching key in it#Correct. The hash code narrows the search to one bucket; equals confirms the exact key.
+~equals against every key in the map, then hashCode to confirm#Not quite. Comparing with every key would be a linear scan; the hash code avoids that.
+~hashCode only; equals is never called#Not quite. Different keys can share a bucket, so equals is needed to tell them apart.
+~toString to build an index, then equals#Not quite. HashMap does not use toString.
+}
+
+::how-hashmap-works o1 - a collision::Two different keys, k1 and k2, have the same hash code. After put(k1, "a") and put(k2, "b"), what does get(k1) return?{
+=a#Correct. Both keys share a bucket; equals picks out k1, whose value is a.
+~b#Not quite. k2 did not replace k1, because the keys are not equal.
+~null#Not quite. k1 is still stored in its bucket.
+~It throws, because collisions are not allowed#Not quite. Collisions are normal and handled with equals.
+}
+
+::how-hashmap-works o2 - when a default HashMap rehashes::A HashMap made with new HashMap() has capacity 16 and load factor 0.75. You add distinct keys whose hash codes spread well, so no bucket fills up with collisions. Adding which entry first makes it rehash into more buckets?{
+=The 13th#Correct. It rehashes when the number of entries exceeds 16 times 0.75, which is 12. Keys that collide heavily can make OpenJDK resize earlier.
+~The 12th#Not quite. 12 equals the threshold; the rule rehashes only when entries exceed it.
+~The 17th#Not quite. It does not wait until there are more entries than buckets.
+~Never; a HashMap has a fixed size#Not quite. HashMap grows automatically to about twice the buckets.
+}
+
+::how-hashmap-works o2 - why get stays fast::Why do get and put stay close to constant time as a HashMap grows?{
+=Rehashing into more buckets keeps each bucket short, if hash codes spread well#Correct. Each lookup then compares only a few keys.
+~HashMap sorts its keys so it can binary search#Not quite. That describes neither HashMap nor its cost; a sorted map is TreeMap with log(n) lookups.
+~HashMap caches the last key looked up#Not quite. Caching is not how HashMap achieves its cost.
+~get and put are constant time even if every key has the same hash code#Not quite. Then all keys share one bucket, and lookups slow down.
+}
+
+::how-hashmap-works o2 - iteration order::A test prints a HashMap and compares it with an expected string. It passes today but breaks after more keys are added. Why?{
+=HashMap makes no order guarantee, and rehashing can move entries to new buckets#Correct. Use LinkedHashMap or TreeMap, or compare maps with equals, when order matters.
+~HashMap prints keys in insertion order, which the new keys changed#Not quite. HashMap does not keep insertion order; that is LinkedHashMap.
+~HashMap sorts keys alphabetically#Not quite. That is TreeMap.
+~toString on a map is random on every call#Not quite. The order comes from the bucket layout, which changes when the map rehashes.
+}
+
+::how-hashmap-works o3 - counting with merge::counts is an empty HashMap from String to Integer. For each word in the list a, b, a, the loop calls counts.merge(word, 1, f), where f is a lambda that adds the old and new values. What is counts.get("a")?{
+=2#Correct. The first a stores 1; the second merges 1 with the old 1 to make 2.
+~1#Not quite. merge combines the new value with the existing one instead of overwriting.
+~3#Not quite. Only two of the three words are a.
+~null#Not quite. merge stored a value the first time a appeared.
+}
+
+::how-hashmap-works o3 - grouping with computeIfAbsent::byFirst maps a Character to a List of String. For each name in ana, ben, amy the loop calls byFirst.computeIfAbsent(name.charAt(0), a function that creates a new ArrayList).add(name). What is the list for a?{
+=[ana, amy]#Correct. computeIfAbsent creates the list once for a and returns the same list for amy.
+~[amy]#Not quite. The stored list is reused, so ana is still in it.
+~[ana]#Not quite. computeIfAbsent returns the existing list for amy, which is then added to it.
+~2#Not quite. The values are lists of names, not counts.
+}

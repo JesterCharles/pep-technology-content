@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="en" class="pep-nojs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Java review: core language, HTTP with Javalin, testing</title>
+<meta name="description" content="Java review: core language, HTTP with Javalin, testing">
+<meta name="pep:course" content="java-foundations">
+<meta name="pep:module" content="testing-and-java-review">
+<meta name="pep:topic" content="Java review: core language, HTTP with Javalin, testing">
+<meta name="pep:topic-id" content="java-review">
+<meta name="pep:budget-minutes" content="14">
+<meta name="pep:source" content="authoring/evidence/java-foundations/testing-and-java-review/java-review/sources.json">
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0; }
+ul, ol { margin: 0; padding-left: 24px; }
+li + li { margin-top: 4px; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+.pep-sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; padding: 0; }
+
+/* topic bar and objectives */
+.pep-topicbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding: 12px 16px; margin: 0 0 16px;
+  border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { display: flex; flex: 1 1 220px; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; flex: 1 1 96px; width: 96px; max-width: 160px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-line-strong); opacity: 0.45; }
+.pep-progress > span.is-done { background: var(--pep-accent); opacity: 1; }
+.pep-objectives { position: relative; break-inside: avoid; min-width: 0; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; border-radius: var(--pep-radius-sm); }
+.pep-objectives > div { width: min(360px, 100%); margin-top: 4px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text); }
+.pep-objectives[open] { flex: 1 1 100%; }
+.pep-topicbar .pep-btn { flex: 0 0 auto; }
+@media print { .pep-objectives > div { display: block !important; width: auto; } }
+
+/* timeline */
+.pep-timeline { margin: 0 0 24px; }
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pep-steps > li + li { margin-top: 0; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px 6px 6px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; background: var(--pep-page); }
+.pep-step__n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--pep-control); color: var(--pep-text); font-size: 13px; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-current="step"] .pep-step__n { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); border-style: dashed; cursor: not-allowed; }
+.pep-step__state { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+
+/* activities and regions */
+.pep-activity { margin: 0 0 32px; min-width: 0; }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-teach { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pep-region--workspace, [data-pep-workspace] {
+  padding: 24px; border: 1px solid var(--pep-line-strong);
+  border-radius: var(--pep-radius-lg); background: var(--pep-card);
+}
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
+.pep-task { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pep-activity-checks, [data-pep-activity-checks] {
+  padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px;
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); color: var(--pep-text);
+}
+.pep-activity-checks h3 { margin-bottom: 4px; }
+.pep-back { margin-top: 16px; }
+.pep-back a, .pep-back-link { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; font-weight: 600; }
+.pep-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 4px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); background: var(--pep-control); color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); align-self: flex-start; }
+
+/* where this fits */
+[data-pep-where-fits] {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text);
+}
+[data-pep-where-fits] strong { color: var(--pep-text-strong); }
+
+/* hints */
+.pep-hint, details[data-pep-hint] {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md);
+  background: var(--pep-accent-soft); break-inside: avoid; color: var(--pep-text);
+}
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
+.pep-hint .pep-hint {
+  margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong);
+  border-radius: 0; background: transparent;
+}
+
+/* optional disclosures */
+.pep-optional {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-card); break-inside: avoid; color: var(--pep-text);
+}
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer;
+  color: var(--pep-text-strong); font-weight: 600;
+}
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { display: flex; flex-direction: column; gap: 8px; padding: 4px 0 16px; }
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional, [data-pep-workspace] { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+  .pep-option.is-correct, .pep-option.is-wrong, .pep-step[aria-current="step"] { border-color: Highlight; }
+}
+@media print {
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .pep-optional > summary, .pep-hint > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker, .pep-hint > summary::-webkit-details-marker { display: none; }
+}
+
+/* cards, callouts, code */
+.pep-callout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text); }
+.pep-callout strong { color: var(--pep-text-strong); }
+.pep-callout--info { background: var(--pep-page); border-color: var(--pep-accent); }
+.pep-callout--success { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-callout--warning { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-callout--danger { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-code {
+  margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong);
+  border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm);
+  font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4;
+}
+.pep-code .tok-key { color: var(--pep-accent-text); }
+.pep-code .tok-com { color: var(--pep-text-muted); }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.pep-figure { margin: 0; }
+.pep-figure svg { display: block; width: 100%; height: auto; }
+.pep-figure .node { fill: var(--pep-card); stroke: var(--pep-line-strong); stroke-width: 1.5; }
+.pep-figure .node.is-focus { fill: var(--pep-accent-soft); stroke: var(--pep-accent); stroke-width: 2; }
+.pep-figure .edge { fill: none; stroke: var(--pep-line-strong); stroke-width: 2; }
+.pep-figure .label { fill: var(--pep-text-strong); font: 600 16px var(--pep-font-sans); }
+.pep-figure .label-sm { fill: var(--pep-text); font: 400 15px var(--pep-font-sans); }
+.pep-figure figcaption { margin-top: 8px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-table-wrap { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); overflow-x: auto; }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); }
+.pep-table th { text-align: left; font-weight: 600; color: var(--pep-text-strong); background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); padding: 8px 12px; }
+.pep-table td { padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.pep-table code { white-space: pre-wrap; }
+
+/* buttons */
+.pep-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; min-width: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm);
+  font: 600 16px/24px var(--pep-font-sans); cursor: pointer;
+  border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong);
+}
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+.pep-btn:disabled, .pep-btn[aria-disabled="true"] { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 32px; }
+.pep-activity-actions .pep-btn { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn { flex: 0 1 auto; } }
+
+/* options and confidence */
+.pep-q { margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-q > legend { padding: 0; margin-bottom: 8px; font-weight: 600; color: var(--pep-text-strong); }
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-option {
+  position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 4px 12px; align-items: center;
+  min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer;
+}
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option.is-correct .pep-option__key { background: var(--pep-success); color: var(--pep-page); }
+.pep-option.is-wrong .pep-option__key { background: var(--pep-danger); color: var(--pep-page); }
+.pep-option input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pep-option input:disabled { cursor: default; }
+.pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-option:has(input:disabled) { cursor: default; }
+.pep-option__tag { grid-column: 2; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-explain { grid-column: 2; margin: 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-confidence .pep-options { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); }
+.pep-confidence .pep-option { grid-template-columns: minmax(0, 1fr); text-align: center; }
+@media (max-width: 480px) { .pep-confidence .pep-options { grid-template-columns: minmax(0, 1fr); } }
+.pep-feedback { min-height: 0; }
+.pep-feedback:empty { display: none; }
+.pep-feedback > * + * { margin-top: 8px; }
+.pep-verdict { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.pep-verdict--correct { color: var(--pep-success); } .pep-verdict--wrong { color: var(--pep-danger); } .pep-verdict--revealed { color: var(--pep-warning); }
+.pep-verdict svg { flex: 0 0 auto; width: 20px; height: 20px; }
+
+/* editor */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); min-width: 0; }
+.pep-editor__bar { border-radius: 11px 11px 0 0; }
+.pep-editor__status { border-radius: 0 0 11px 11px; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__secondary { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { margin: 0; padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font: inherit; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { display: block; width: 100%; margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; min-height: 200px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; margin: 0; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); background: var(--pep-sunken); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; white-space: pre-wrap; cursor: pointer; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); border-top: 1px solid var(--pep-line-strong); }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__gutter { font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+
+/* trace and debugger */
+.pep-trace { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pep-listing { margin: 0; padding: 8px 0; list-style: none; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text-strong); counter-reset: none; min-width: 0; }
+.pep-listing > li { display: grid; grid-template-columns: 32px 20px minmax(0, 1fr); align-items: center; gap: 0 4px; margin: 0; min-height: 28px; padding: 0 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-listing > li + li { margin-top: 0; }
+.pep-listing .ln { color: var(--pep-text-muted); text-align: right; font-variant-numeric: tabular-nums; padding-right: 4px; }
+.pep-listing .mark { color: var(--pep-accent-text); font-weight: 700; text-align: center; }
+.pep-listing li.is-current { background: var(--pep-accent-soft); }
+.pep-listing .bp { display: grid; place-items: center; width: 44px; min-height: 44px; padding: 0; border: 0; background: none; color: var(--pep-text-muted); font: 600 13px/1 var(--pep-font-sans); cursor: pointer; }
+.pep-listing .bp[aria-pressed="true"] { color: var(--pep-danger); }
+.pep-listing .bp .dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; }
+.pep-listing .bp[aria-pressed="true"] .dot { background: currentColor; }
+.pep-trace__panes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 600px) { .pep-trace__panes { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.pep-pane { min-width: 0; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); }
+.pep-pane h4 { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-frames { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.pep-frames > li { margin: 0; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); overflow-wrap: anywhere; }
+.pep-frames > li.is-top { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); }
+.pep-vars { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; font: 400 14px/20px var(--pep-font-mono); }
+.pep-vars dt { color: var(--pep-text-strong); font-weight: 600; }
+.pep-vars dd { margin: 0; overflow-wrap: anywhere; }
+.pep-trace__status { font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-trace__out { margin: 0; min-height: 44px; padding: 8px 12px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--pep-text-strong); }
+.pep-static-trace { display: none; }
+.pep-nojs .pep-static-trace { display: block; }
+.pep-recap, .pep-sources { margin: 48px 0 0; display: flex; flex-direction: column; gap: 12px; }
+.pep-sources-box { border-top: 1px solid var(--pep-line-strong); padding-top: 12px; }
+.pep-sources-box > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; color: var(--pep-text-strong); }
+.pep-sources-box a { display: inline-block; min-height: 44px; padding: 10px 0; }
+.pep-cheat { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); }
+.pep-cheat h3 { margin-bottom: 8px; }
+@media print {
+  .pep-timeline, .pep-activity-actions, .pep-back, nav[aria-label="Activities"] { display: none !important; }
+  [data-pep-activity], [data-pep-activity][hidden] { display: block !important; }
+  .pep-static-trace { display: block !important; }
+  .pep-live-trace, .pep-editor__tabs, .pep-actions { display: none !important; }
+  .pep-regions { display: block; }
+  .pep-region + .pep-region { margin-top: 16px; }
+  .pep-editor__code { max-height: none; overflow: visible; }
+  .pep-sources-box a { min-height: 0; padding: 0; }
+}
+.pep-nojs .pep-live-trace, .pep-nojs .pep-editor, .pep-nojs .pep-actions, .pep-nojs .pep-activity-actions, .pep-nojs .pep-confidence { display: none; }
+.pep-optcode { display: block; margin-top: 4px; padding: 8px 12px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--pep-text-strong); }
+.pep-optcode .tok-key { color: var(--pep-accent-text); }
+.pep-form { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pep-field label { font-weight: 600; color: var(--pep-text-strong); }
+.pep-field__help { font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-field textarea { width: 100%; min-height: 88px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 400 16px/24px var(--pep-font-sans); resize: vertical; scroll-margin-block: 16px; }
+.pep-listing--debug > li { grid-template-columns: 44px 28px 20px minmax(0, 1fr); }
+</style>
+<style>
+/* testing-and-java-review add-on: practice JUnit workspace, coverage view and request tracer. Token roles only. */
+.pep-junit { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); min-width: 0; }
+.pep-junit__limits { margin: 0; padding: 0 12px 8px; border-top: 1px solid var(--pep-line-strong); background: var(--pep-card); border-radius: 0 0 11px 11px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-junit__limits > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; color: var(--pep-text-strong); }
+.pep-junit__limits ul { margin: 0; padding-left: 20px; }
+.pep-junit .pep-editor__status { border-radius: 0; }
+.pep-code-label { margin: 0; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-readonly { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pep-cov { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pep-cov ol { margin: 0; padding: 8px 0; list-style: none; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text-strong); min-width: 0; }
+.pep-cov__line { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 0 8px; margin: 0; padding: 2px 8px 2px 0; border-left: 4px solid transparent; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-cov__line .ln { color: var(--pep-text-muted); text-align: right; font-variant-numeric: tabular-nums; }
+.pep-cov__state { grid-column: 2; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-cov__line.is-full { background: var(--pep-success-soft); border-left-color: var(--pep-success); }
+.pep-cov__line.is-part { background: var(--pep-warning-soft); border-left-color: var(--pep-warning); border-left-style: dashed; }
+.pep-cov__line.is-none { background: var(--pep-danger-soft); border-left-color: var(--pep-danger); border-left-style: dotted; }
+.pep-cov__summary { margin: 0; font: 600 14px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-tracer { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pep-tracer__controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.pep-tracer__controls label { display: flex; flex-direction: column; gap: 4px; font: 600 14px/20px var(--pep-font-sans); color: var(--pep-text-strong); min-width: 0; }
+.pep-tracer select { min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 400 16px/24px var(--pep-font-mono); max-width: 100%; }
+.pep-tracer__steps { margin: 0; padding-left: 24px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-tracer__steps li + li { margin-top: 4px; }
+.pep-tracer__steps code { white-space: pre-wrap; }
+.pep-goals { list-style: none; margin: 0; padding: 0; }
+.pep-goals li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 4px 0; }
+.pep-goals .pep-goal__state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-goals li.is-done .pep-goal__state { color: var(--pep-success); }
+.pep-nojs .pep-junit, .pep-nojs .pep-js-only { display: none; }
+@media (max-width: 480px) {
+  .pep-tracer__controls label, .pep-tracer select { width: 100%; }
+  .pep-cov__line { grid-template-columns: 24px minmax(0, 1fr); }
+}
+@media forced-colors {
+  .pep-cov__line.is-full, .pep-cov__line.is-part, .pep-cov__line.is-none { border-left-color: CanvasText; }
+}
+@media print {
+  .pep-junit__limits[open], .pep-junit__limits { break-inside: avoid; }
+}
+.pep-junit .pep-editor__status, .pep-cov li, .pep-cov p, .pep-junit__limits li { max-width: none; }
+</style>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="14">
+<header class="pep-topicbar">
+<h1 id="page-title">Java review: core language, HTTP with Javalin, testing</h1>
+<span class="pep-topicbar__progress" data-pep-progress><span id="progress-text">Activity 1 of 3 · 0 of 3 done · about 14 min</span><span class="pep-progress" aria-hidden="true"><span></span><span></span><span></span></span></span>
+<details class="pep-objectives" data-pep-objectives>
+<summary aria-controls="objectives-body">Objectives</summary>
+<div id="objectives-body"><ul><li>Retrieve core language rules for types, control flow, methods and classes to predict a program's output</li><li>Trace a Javalin request through route, handler and status code</li><li>Choose the right assertion or test double for a unit test</li></ul></div>
+</details>
+<button class="pep-btn" type="button" id="restart" data-pep-reset>Restart activity</button>
+</header>
+<nav class="pep-timeline" aria-label="Activities"><ol class="pep-steps">
+<li><a class="pep-step" id="timeline-1" href="#activity-1" data-pep-activity-link><span class="pep-step__n">1</span><span>Predict output</span><span class="pep-step__state"></span></a></li>
+<li><a class="pep-step" id="timeline-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n">2</span><span>Trace a request</span><span class="pep-step__state"></span></a></li>
+<li><a class="pep-step" id="timeline-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n">3</span><span>Choose the check</span><span class="pep-step__state"></span></a></li>
+</ol></nav>
+<section class="pep-activity" id="activity-1" data-pep-activity data-kind="choice" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div class="pep-teach" data-pep-teaching>
+<h2 id="activity-1-title" tabindex="-1">Activity 1 of 3: Predict a program’s output</h2>
+<p>Start by retrieving what you already know. Read this complete program, then predict its three lines of output before checking. It touches types, a loop, a method and two ways to compare strings.</p>
+<pre class="pep-code"><code><span class="tok-key">public</span> <span class="tok-key">class</span> Main {
+    <span class="tok-key">static</span> <span class="tok-key">int</span> countOdd(<span class="tok-key">int</span> limit) {
+        <span class="tok-key">int</span> n = 0;
+        <span class="tok-key">for</span> (<span class="tok-key">int</span> i = 0; i &lt; limit; i++) {
+            <span class="tok-key">if</span> (i % 2 == 1) {
+                n++;
+            }
+        }
+        <span class="tok-key">return</span> n;
+    }
+
+    <span class="tok-key">public</span> <span class="tok-key">static</span> <span class="tok-key">void</span> main(String[] args) {
+        String a = "pep";
+        String b = <span class="tok-key">new</span> String("pep");
+        System.out.println(a == b);
+        System.out.println(a.equals(b));
+        System.out.println(countOdd(5) / 2);
+    }
+}</code></pre>
+</div>
+
+</div>
+<div class="pep-region pep-region--workspace" data-pep-workspace="choice">
+<div class="pep-task" id="task-1" data-pep-task data-pep-may-stall>
+<h3>Your task</h3>
+<p>In the options below, choose the three printed lines, in order. Then choose how sure you are and press <strong>Check</strong>.</p>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-1" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 1</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The two <code>String</code> lines in <code>main</code>.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Decide whether <code>new String("pep")</code> gives the same object as the literal, then recall which comparison checks objects and which checks characters.</p>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-1" data-pep-hint-order="2" data-section-skip>
+<summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 1</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The <code>countOdd</code> method and the last <code>println</code>.</p>
+<p data-pep-hint-step><strong>Next step:</strong> List the values of <code>i</code> that the loop visits for a limit of 5 and count the odd ones; then remember that dividing two <code>int</code> values gives an <code>int</code>.</p>
+</div>
+</details></div>
+</details>
+</div>
+<section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1">
+<h3 id="checks-1">What success looks like</h3>
+<ul><li>You chose three printed lines and a confidence rating, then pressed Check.</li><li>You can explain each line: references versus characters, the loop’s count and integer division.</li></ul>
+</section>
+<fieldset class="pep-q" data-pep-q data-interaction="predict" data-confidence data-static-alt="Question: What does the program print?. Option A: false, true, 1 - Correct. new String creates a separate object, so ==, which compares references, is false while equals, which compares characters, is true. The loop visits 0 to 4 and counts 1 and 3, so countOdd(5) is 2, and 2 / 2 is 1. Option B: true, true, 1 - Not quite. a == b compares references, and new String(&quot;pep&quot;) is a different object from the literal, so it prints false. Option C: false, true, 1.5 - Not quite. Both operands of / are int, so the result is an int; also, countOdd(5) is 2, not 3. Option D: false, true, 2 - Not quite. That would need countOdd(5) to be 4 or 5. The loop stops before 5 and counts only 1 and 3, giving 2, and 2 / 2 is 1. Before feedback, the learner rates confidence: Guessing, Fairly sure or Certain.">
+<legend>What does the program print?</legend>
+<div class="pep-options">
+<label class="pep-option" for="a1-a"><input type="radio" id="a1-a" name="a1" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text"><code>false</code>, <code>true</code>, <code>1</code></span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Correct. <code>new String</code> creates a separate object, so <code>==</code>, which compares references, is false while <code>equals</code>, which compares characters, is true. The loop visits 0 to 4 and counts 1 and 3, so <code>countOdd(5)</code> is 2, and <code>2 / 2</code> is 1.</span></label>
+<label class="pep-option" for="a1-b"><input type="radio" id="a1-b" name="a1" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text"><code>true</code>, <code>true</code>, <code>1</code></span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. <code>a == b</code> compares references, and <code>new String("pep")</code> is a different object from the literal, so it prints false.</span></label>
+<label class="pep-option" for="a1-c"><input type="radio" id="a1-c" name="a1" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text"><code>false</code>, <code>true</code>, <code>1.5</code></span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. Both operands of <code>/</code> are <code>int</code>, so the result is an <code>int</code>; also, <code>countOdd(5)</code> is 2, not 3.</span></label>
+<label class="pep-option" for="a1-d"><input type="radio" id="a1-d" name="a1" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text"><code>false</code>, <code>true</code>, <code>2</code></span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. That would need <code>countOdd(5)</code> to be 4 or 5. The loop stops before 5 and counts only 1 and 3, giving 2, and <code>2 / 2</code> is 1.</span></label>
+</div>
+</fieldset>
+<fieldset class="pep-q pep-confidence" data-confidence>
+<legend>How sure are you?</legend>
+<div class="pep-options">
+<label class="pep-option" for="a1-conf-0"><input type="radio" id="a1-conf-0" name="a1-conf" value="guess"><span class="pep-option__text">Guessing</span></label>
+<label class="pep-option" for="a1-conf-1"><input type="radio" id="a1-conf-1" name="a1-conf" value="fair"><span class="pep-option__text">Fairly sure</span></label>
+<label class="pep-option" for="a1-conf-2"><input type="radio" id="a1-conf-2" name="a1-conf" value="certain"><span class="pep-option__text">Certain</span></label>
+</div>
+</fieldset>
+<div class="pep-actions">
+<button type="button" class="pep-btn pep-btn--primary" id="check-1" data-pep-wrong-attempt>Check</button>
+<button type="button" class="pep-btn" id="reveal-1" data-pep-complete-activity>Show the explained answer</button>
+</div>
+<div class="pep-feedback" id="feedback-1" data-pep-feedback aria-live="polite"></div>
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-2" data-pep-activity data-kind="form" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div class="pep-teach" data-pep-teaching>
+<h2 id="activity-2-title" tabindex="-1">Activity 2 of 3: Trace a request through route, handler and status</h2>
+<p>In Javalin 7 you register routes inside <code>config.routes</code> when you create the app. A route pairs an HTTP method and a path with a handler, a lambda that receives a <code>Context</code> named <code>ctx</code>.</p>
+<p>When a request arrives, Javalin finds the endpoint whose method and path match. <code>{id}</code> matches one path segment, and <code>ctx.pathParam("id")</code> reads it. The handler builds the response: <code>ctx.result(...)</code> sets the body and <code>ctx.status(201)</code> sets the status; if it sets none, the status stays 200. If no endpoint and no static file matches, the answer is 404.</p>
+<p class="pep-code-label"><strong>The app</strong></p>
+<pre class="pep-code"><code><span class="tok-key">var</span> app = Javalin.create(config -&gt; {
+    config.routes.get("/books/{id}", ctx -&gt;
+        ctx.result("Book " + ctx.pathParam("id")));
+    config.routes.post("/books", ctx -&gt; {
+        ctx.status(201);
+        ctx.result("Created");
+    });
+}).start(7070);</code></pre>
+</div>
+
+</div>
+<div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+<div class="pep-task" id="task-2" data-pep-task data-pep-may-stall>
+<h3>Your task</h3>
+<p>Use the request tracer below, which follows the app shown on this page:</p>
+<ol>
+<li>Choose a method and a path, then press <strong>Send request</strong>.</li>
+<li>Read each step: which route matched, what the handler did, and which status came back.</li>
+<li>Keep sending until you have seen all three statuses in the list, then press <strong>Check my trace</strong>.</li>
+</ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 2</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The method and path menus in the tracer.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Pick the combination that exactly matches the first route, then the one that matches the second; read which status each handler sets or leaves.</p>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="2" data-section-skip>
+<summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 2</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The tracer, for the last status in the list.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Choose a method and path pair that no route in the app registers, for example the right path with the wrong method, and see what Javalin answers.</p>
+</div>
+</details></div>
+</details>
+</div>
+<section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2">
+<h3 id="checks-2">What success looks like</h3>
+<ul><li>You sent a request that came back <strong>200</strong>, one that came back <strong>201</strong> and one that came back <strong>404</strong>.</li><li>For each, you can name the route that matched (or that none did) and what the handler did.</li></ul>
+</section>
+<div class="pep-tracer pep-js-only" data-interaction="explore" data-static-alt="Request tracer for the Javalin app on this page. GET /books/42 matches config.routes.get with path parameter id equal to 42; the handler sets the body Book 42 and no status, so the response is 200 OK. POST /books matches config.routes.post; the handler calls ctx.status(201) and sets the body Created, so the response is 201 Created. GET /books, DELETE /books/42, POST /books/42 and GET or POST /authors/7 match no endpoint, so Javalin answers 404 Not Found by default (prefer405over404 is false). Task: send requests until 200, 201 and 404 have all been seen.">
+<div class="pep-tracer__controls">
+<label for="method-2">Method<select id="method-2"><option>GET</option><option>POST</option><option>DELETE</option></select></label>
+<label for="path-2">Path<select id="path-2"><option>/books/42</option><option>/books</option><option>/authors/7</option></select></label>
+<button type="button" class="pep-btn" id="send-2">Send request</button>
+</div>
+<ol class="pep-tracer__steps" id="trace-2" aria-label="Request trace"><li>No request sent yet.</li></ol>
+<p class="pep-code-label" id="trace-status-2" aria-live="polite"></p>
+<ul class="pep-goals" aria-label="Statuses seen"><li data-goal="200"><span>200 OK: a handler ran and set no status</span><span class="pep-goal__state">not yet</span></li><li data-goal="201"><span>201 Created: a handler set the status itself</span><span class="pep-goal__state">not yet</span></li><li data-goal="404"><span>404 Not Found: no route matched</span><span class="pep-goal__state">not yet</span></li></ul>
+</div>
+<noscript data-section-skip><div class="pep-callout"><p><strong>Reading without JavaScript.</strong> Trace these requests against the app above. GET /books/42 matches the get route, id is 42, the handler sets the body Book 42 and no status, so the answer is 200 OK. POST /books matches the post route; the handler sets status 201 and the body Created. GET /books, DELETE /books/42 and GET /authors/7 match no registered endpoint, so Javalin answers 404 Not Found with its default setting.</p></div></noscript>
+<div class="pep-actions">
+<button type="button" class="pep-btn pep-btn--primary" id="check-2" data-pep-wrong-attempt>Check my trace</button>
+<button type="button" class="pep-btn" id="reveal-2" data-pep-complete-activity>Show the explained trace</button>
+</div>
+<div class="pep-feedback" id="feedback-2" data-pep-feedback aria-live="polite"></div>
+</div>
+</div>
+<p class="pep-back"><a class="pep-back-link" href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</section>
+<section class="pep-activity" id="activity-3" data-pep-activity data-kind="choice" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div class="pep-teach" data-pep-teaching>
+<h2 id="activity-3-title" tabindex="-1">Activity 3 of 3: Choose the assertion and test double</h2>
+<p>Pick the assertion from the behavior. A returned value: <code>assertEquals(expected, actual)</code>. A yes-or-no condition: <code>assertTrue</code>. A call that must be refused: <code>assertThrows(Type.class, () -&gt; call)</code>.</p>
+<p>Pick the double from the dependency. A fixed answer: a stub, or a mock with <code>when(...).thenReturn(...)</code>. Data saved and read back: an in-memory fake. An outgoing call you cannot see in a return value: a mock with <code>verify</code>.</p>
+</div>
+<section class="pep-fit" data-pep-where-fits aria-labelledby="fit-3">
+<h2 id="fit-3">Where this fits</h2>
+<p data-pep-fit-decision><strong>Decision:</strong> Check a result with an assertion, or check an interaction with verify?</p>
+<p data-pep-fit-good><strong>Good fit:</strong> Assert on what the method returns or throws whenever it has an observable result, such as a discount percentage or an exception.</p>
+<p data-pep-fit-boundary><strong>Choose something else when:</strong> The only effect is a call to another object, such as sending an e-mail, with nothing returned: verify that call on a mock instead.</p>
+</section>
+</div>
+<div class="pep-region pep-region--workspace" data-pep-workspace="choice">
+<div class="pep-task" id="task-3" data-pep-task data-pep-may-stall>
+<h3>Your task</h3>
+<p>You are testing <code>PriceService.discount</code> for a code that does not exist. The repository is the <code>CouponRepository</code> interface. Choose the best test body, rate your confidence, then press <strong>Check</strong>.</p>
+<pre class="pep-code"><code><span class="tok-key">class</span> PriceService {
+    <span class="tok-key">private</span> <span class="tok-key">final</span> CouponRepository coupons;
+
+    PriceService(CouponRepository coupons) {
+        <span class="tok-key">this</span>.coupons = coupons;
+    }
+
+    <span class="tok-key">int</span> discount(String code) {
+        Coupon coupon = coupons.find(code);
+        <span class="tok-key">if</span> (coupon == <span class="tok-key">null</span>) {
+            <span class="tok-key">throw</span> <span class="tok-key">new</span> IllegalArgumentException("unknown code");
+        }
+        <span class="tok-key">return</span> coupon.percent();
+    }
+}</code></pre>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 3</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The <code>if</code> inside <code>discount</code>.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Decide what the method does for an unknown code: does it return something to compare, or refuse the call? Then decide what the repository must answer for that path to run.</p>
+</div>
+</details>
+</div>
+<section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3">
+<h3 id="checks-3">What success looks like</h3>
+<ul><li>You chose one test body and a confidence rating, then pressed Check.</li><li>You can say why the right assertion is about a thrown exception here.</li></ul>
+</section>
+<fieldset class="pep-q" data-pep-q data-interaction="mcq" data-confidence data-static-alt="Question: Which test body fits?. Option A: CouponRepository coupons = mock(CouponRepository.class); PriceService service = new PriceService(coupons); assertThrows(IllegalArgumentException.class,     () -&gt; service.discount(&quot;NOPE&quot;)); - Correct. An unstubbed mock returns null for find, which is exactly the unknown-code case, and assertThrows checks that the call is refused. Option B: PriceService service = new PriceService(null); assertEquals(0, service.discount(&quot;NOPE&quot;)); - Not quite. With no repository, coupons.find throws a NullPointerException; and the method never returns 0 for an unknown code, it throws. Option C: CouponRepository coupons = mock(CouponRepository.class); new PriceService(coupons).discount(&quot;NOPE&quot;); verify(coupons).find(&quot;NOPE&quot;); - Not quite. The discount line throws before verify runs, so the test errors; and verify would only check the lookup, not the refusal. Option D: CouponRepository coupons = mock(CouponRepository.class); PriceService service = new PriceService(coupons); assertTrue(service.discount(&quot;NOPE&quot;) &lt; 0); - Not quite. discount throws for an unknown code, so the comparison never runs and the test errors with the exception. Before feedback, the learner rates confidence: Guessing, Fairly sure or Certain.">
+<legend>Which test body fits?</legend>
+<div class="pep-options">
+<label class="pep-option" for="a3-a"><input type="radio" id="a3-a" name="a3" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text"><code class="pep-optcode">CouponRepository coupons = mock(CouponRepository.class);
+PriceService service = new PriceService(coupons);
+assertThrows(IllegalArgumentException.class,
+    () -&gt; service.discount("NOPE"));</code></span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Correct. An unstubbed mock returns <code>null</code> for <code>find</code>, which is exactly the unknown-code case, and <code>assertThrows</code> checks that the call is refused.</span></label>
+<label class="pep-option" for="a3-b"><input type="radio" id="a3-b" name="a3" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text"><code class="pep-optcode">PriceService service = new PriceService(null);
+assertEquals(0, service.discount("NOPE"));</code></span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. With no repository, <code>coupons.find</code> throws a <code>NullPointerException</code>; and the method never returns 0 for an unknown code, it throws.</span></label>
+<label class="pep-option" for="a3-c"><input type="radio" id="a3-c" name="a3" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text"><code class="pep-optcode">CouponRepository coupons = mock(CouponRepository.class);
+new PriceService(coupons).discount("NOPE");
+verify(coupons).find("NOPE");</code></span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. The <code>discount</code> line throws before <code>verify</code> runs, so the test errors; and verify would only check the lookup, not the refusal.</span></label>
+<label class="pep-option" for="a3-d"><input type="radio" id="a3-d" name="a3" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text"><code class="pep-optcode">CouponRepository coupons = mock(CouponRepository.class);
+PriceService service = new PriceService(coupons);
+assertTrue(service.discount("NOPE") &lt; 0);</code></span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. <code>discount</code> throws for an unknown code, so the comparison never runs and the test errors with the exception.</span></label>
+</div>
+</fieldset>
+<fieldset class="pep-q pep-confidence" data-confidence>
+<legend>How sure are you?</legend>
+<div class="pep-options">
+<label class="pep-option" for="a3-conf-0"><input type="radio" id="a3-conf-0" name="a3-conf" value="guess"><span class="pep-option__text">Guessing</span></label>
+<label class="pep-option" for="a3-conf-1"><input type="radio" id="a3-conf-1" name="a3-conf" value="fair"><span class="pep-option__text">Fairly sure</span></label>
+<label class="pep-option" for="a3-conf-2"><input type="radio" id="a3-conf-2" name="a3-conf" value="certain"><span class="pep-option__text">Certain</span></label>
+</div>
+</fieldset>
+<div class="pep-actions">
+<button type="button" class="pep-btn pep-btn--primary" id="check-3" data-pep-wrong-attempt>Check</button>
+<button type="button" class="pep-btn" id="reveal-3" data-pep-complete-activity>Show the explained answer</button>
+</div>
+<div class="pep-feedback" id="feedback-3" data-pep-feedback aria-live="polite"></div>
+</div>
+</div>
+<p class="pep-back"><a class="pep-back-link" href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</section>
+<div class="pep-activity-actions" role="group" aria-label="Activity navigation">
+<button type="button" class="pep-btn" id="previous-activity" data-pep-previous>Previous activity</button>
+<button type="button" class="pep-btn pep-btn--primary" id="next-activity" data-pep-next>Next activity</button>
+</div>
+<p class="pep-sr" id="pep-announce" aria-live="polite"></p>
+<section class="pep-recap" data-pep-recap aria-labelledby="recap-title">
+<h2 id="recap-title">Recap</h2>
+<ul>
+<li><code>==</code> compares references and <code>equals</code> compares content; <code>int</code> division drops the fraction; trace loops value by value.</li>
+<li>In Javalin 7, <code>config.routes</code> pairs a method and path with a handler; <code>ctx.pathParam</code>, <code>ctx.result</code> and <code>ctx.status</code> read the request and build the response.</li>
+<li>A handler that sets no status answers 200; no matching endpoint answers 404 with the default settings.</li>
+<li>Assert on returned values with <code>assertEquals</code>, on conditions with <code>assertTrue</code>, on refusals with <code>assertThrows</code>; verify only interactions you cannot observe otherwise.</li>
+</ul>
+<div class="pep-cheat" data-section-skip>
+<h3>Cheat sheet</h3>
+<pre class="pep-code"><code><span class="tok-com">// core language</span>
+"pep" == <span class="tok-key">new</span> String("pep")      <span class="tok-com">// false: different objects</span>
+"pep".equals(<span class="tok-key">new</span> String("pep")) <span class="tok-com">// true: same characters</span>
+7 / 2                           <span class="tok-com">// 3: int division</span>
+
+<span class="tok-com">// Javalin 7</span>
+Javalin.create(config -&gt; {
+    config.routes.get("/items/{id}", ctx -&gt; ctx.result(ctx.pathParam("id")));
+    config.routes.post("/items", ctx -&gt; ctx.status(201));
+}).start(7070);
+
+<span class="tok-com">// tests</span>
+assertEquals(expected, actual);
+assertThrows(IllegalArgumentException.<span class="tok-key">class</span>, () -&gt; call());
+when(repo.find("A")).thenReturn(item);
+verify(mailer).send("to@example.com", "text");</code></pre>
+</div>
+</section>
+<section class="pep-sources" data-pep-sources aria-labelledby="sources-title">
+<h2 id="sources-title" class="pep-sr">Sources</h2>
+<details class="pep-sources-box" data-section-skip>
+<summary>Sources and review date</summary>
+<p>Claims on this page were checked against these official sources, retrieved 2026-10-16 (Javalin 7.2.3, JUnit 6.1.3, Mockito 5.24.0). The request tracer follows only the two routes shown; it is not Javalin.</p>
+<ul>
+<li><a href="https://docs.oracle.com/javase/specs/jls/se25/html/index.html" rel="noopener">Java Language Specification, Java SE 25</a> — reference equality, integer division, for loops and methods</li>
+<li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" rel="noopener">Java SE 25 API: Object</a> — equals contract and default identity comparison</li>
+<li><a href="https://javalin.io/documentation" rel="noopener">Javalin documentation</a> — routes in config.routes, Context pathParam, result and status, 404 when nothing matches, prefer405over404</li>
+<li><a href="https://docs.junit.org/current/writing-tests/assertions.html" rel="noopener">JUnit User Guide: Assertions</a> — assertEquals, assertTrue and assertThrows</li>
+<li><a href="https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html" rel="noopener">Mockito 5 API: class Mockito</a> — mock defaults (null for objects), when/thenReturn and verify</li>
+</ul>
+</details>
+</section>
+</main>
+<script>
+window.PEP_PAGE = {"correct": {"activity-1": "a", "activity-3": "a"}, "explain": {"activity-2": "GET /books/42 matches the get route with id 42; its handler sets only the body, so the status is 200. POST /books matches the post route, whose handler sets 201. A pair no route registers, such as GET /books or GET /authors/7, gets 404, because Javalin finds no endpoint handler and, by default, does not switch to 405."}};
+window.PEP_PAGE.checks = {
+  'activity-2': function () {
+    var seen = window.PEP_TRACER_SEEN ? window.PEP_TRACER_SEEN() : {}, notes = [];
+    [['200', '200 OK from a handler that sets no status'], ['201', '201 Created from a handler that sets its status'], ['404', '404 Not Found when no route matches']].forEach(function (g) {
+      notes.push((seen[g[0]] ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + g[1] + '.'); });
+    return { pass: !!(seen[200] && seen[201] && seen[404]), notes: notes };
+  }
+};
+
+(function () {
+  var sec = document.getElementById('activity-2'); if (!sec) return;
+  var seen = {};
+  var method = document.getElementById('method-2'), path = document.getElementById('path-2');
+  var steps = document.getElementById('trace-2'), goals = [].slice.call(sec.querySelectorAll('[data-goal]'));
+  var live = document.getElementById('trace-status-2');
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function paintGoals() { goals.forEach(function (g) { var on = !!seen[g.getAttribute('data-goal')]; g.classList.toggle('is-done', on); g.querySelector('.pep-goal__state').textContent = on ? 'seen' : 'not yet'; }); }
+  function trace(m, p) {
+    var out = ['<li>Request arrives: <code>' + esc(m + ' ' + p) + '</code>.</li>'], status, body;
+    var book = /^\/books\/([^/]+)$/.exec(p);
+    if (m === 'GET' && book) {
+      out.push('<li>Route: matches <code>config.routes.get("/books/{id}", …)</code>; the path parameter <code>id</code> is <code>"' + esc(book[1]) + '"</code>.</li>');
+      out.push('<li>Handler: runs <code>ctx.result("Book " + ctx.pathParam("id"))</code>, so the body is <code>Book ' + esc(book[1]) + '</code>. It never calls <code>ctx.status</code>.</li>');
+      status = 200; body = 'Book ' + book[1];
+    } else if (m === 'POST' && p === '/books') {
+      out.push('<li>Route: matches <code>config.routes.post("/books", …)</code>.</li>');
+      out.push('<li>Handler: runs <code>ctx.status(201)</code>, then <code>ctx.result("Created")</code>.</li>');
+      status = 201; body = 'Created';
+    } else {
+      var other = (p === '/books' || book) ? ' The path is registered for a different method, but with the default setting <code>prefer405over404 = false</code> Javalin still answers 404, not 405.' : '';
+      out.push('<li>Route: no endpoint handler is registered for <code>' + esc(m + ' ' + p) + '</code>, and there are no static files.' + other + '</li>');
+      out.push('<li>Handler: none runs.</li>');
+      status = 404; body = null;
+    }
+    out.push('<li>Response: status <strong>' + status + (status === 200 ? ' OK' : status === 201 ? ' Created' : ' Not Found') + '</strong>' + (body !== null ? ', body <code>' + esc(body) + '</code>' : ', Javalin’s default not-found response') + (status === 200 ? '. A handler that sets no status leaves the response at 200.' : '.') + '</li>');
+    seen[status] = true;
+    steps.innerHTML = out.join('');
+    live.textContent = m + ' ' + p + ' answered ' + status + '.';
+    paintGoals();
+  }
+  document.getElementById('send-2').addEventListener('click', function () { trace(method.value, path.value); });
+  var restart = document.querySelector('[data-pep-reset]');
+  restart.addEventListener('click', function () {
+    if (document.getElementById('lesson').getAttribute('data-pep-current-activity') !== '2') return;
+    seen = {}; steps.innerHTML = '<li>No request sent yet.</li>'; live.textContent = ''; paintGoals();
+  });
+  window.PEP_TRACER_SEEN = function () { return seen; };
+  paintGoals();
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  var PAGE = window.PEP_PAGE || {};
+  var lesson = document.querySelector('[data-pep-guidance-contract]');
+  if (!lesson) return;
+  document.documentElement.classList.remove('pep-nojs');
+  var activities = [].slice.call(lesson.querySelectorAll('section[data-pep-activity]'));
+  var links = [].slice.call(lesson.querySelectorAll('a[data-pep-activity-link]'));
+  var prevBtn = lesson.querySelector('[data-pep-previous]');
+  var nextBtn = lesson.querySelector('[data-pep-next]');
+  var restartBtn = lesson.querySelector('[data-pep-reset]');
+  var progressText = document.getElementById('progress-text');
+  var progressBar = lesson.querySelector('.pep-progress');
+  var minutes = lesson.getAttribute('data-pep-required-minutes');
+  var current = 1, unlocked = 1;
+  var ICON_OK = '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+  var ICON_NO = '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+  var ICON_INFO = '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 9v5M10 6v.5" stroke="currentColor" stroke-width="2"/></svg>';
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function freshState() { return { attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false }; }
+  var state = activities.map(freshState);
+  var authored = activities.map(function (a) {
+    return [].slice.call(a.querySelectorAll('input, textarea, select')).map(function (c) { return { control: c, value: c.value, checked: c.checked, selectedIndex: c.selectedIndex }; });
+  });
+  var widgets = activities.map(function () { return {}; });
+
+  function reflect(i) {
+    var a = activities[i], s = state[i];
+    a.setAttribute('data-pep-attempts', String(s.attempts));
+    a.setAttribute('data-pep-settled', String(s.settled));
+    a.setAttribute('data-pep-completed', String(s.completed));
+    a.setAttribute('data-pep-credit', String(s.credit));
+    a.setAttribute('data-pep-grade', String(s.grade));
+    a.setAttribute('data-pep-continue', String(s.canContinue));
+  }
+  function doneCount() { return state.filter(function (s) { return s.completed; }).length; }
+  function renderProgress() {
+    var done = doneCount();
+    if (progressText) progressText.textContent = 'Activity ' + current + ' of ' + activities.length + ' · ' + done + ' of ' + activities.length + ' done · about ' + minutes + ' min';
+    if (progressBar) [].slice.call(progressBar.children).forEach(function (seg, i) { seg.className = state[i] && state[i].completed ? 'is-done' : ''; });
+    lesson.setAttribute('data-pep-complete', String(done === activities.length));
+    links.forEach(function (link, i) {
+      var st = link.querySelector('.pep-step__state');
+      if (st) st.textContent = state[i].completed ? '(done)' : (i + 1 > unlocked ? '(locked)' : (i + 1 === current ? '(current)' : '(open)'));
+    });
+  }
+  function render(n, mode, focus) {
+    if (!(n >= 1 && n <= activities.length && n <= unlocked)) return false;
+    current = n;
+    lesson.setAttribute('data-pep-current-activity', String(current));
+    lesson.setAttribute('data-pep-unlocked-through', String(unlocked));
+    activities.forEach(function (a, i) { a.hidden = i + 1 !== current; });
+    links.forEach(function (link, i) {
+      if (i + 1 === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+      if (i + 1 > unlocked) link.setAttribute('aria-disabled', 'true'); else link.removeAttribute('aria-disabled');
+    });
+    prevBtn.disabled = current === 1;
+    var s = state[current - 1];
+    nextBtn.disabled = current === activities.length || !s.canContinue || current >= unlocked;
+    renderProgress();
+    try {
+      var target = location.href.split('#')[0] + '#activity-' + current;
+      if (mode === 'push') history.pushState({ activity: current }, '', target);
+      if (mode === 'replace') history.replaceState({ activity: current }, '', target);
+    } catch (e) {
+      if (mode && mode !== 'none' && location.hash !== '#activity-' + current) location.hash = 'activity-' + current;
+    }
+    if (focus) { var h = activities[current - 1].querySelector('h2[tabindex]'); if (h) h.focus(); }
+    return true;
+  }
+  function settle(i, grade, html) {
+    var s = state[i];
+    if (s.settled) return;
+    s.settled = true; s.completed = true; s.canContinue = true; s.grade = grade;
+    if (s.credit === 0) s.credit = 1;
+    reflect(i);
+    if (html !== undefined) feedback(i, html);
+    unlocked = Math.max(unlocked, Math.min(i + 2, activities.length));
+    render(current);
+  }
+  function feedback(i, html) { var f = activities[i].querySelector('[data-pep-feedback]'); if (f) f.innerHTML = html; }
+  function verdict(kind, text) {
+    var cls = kind === 'ok' ? 'pep-verdict--correct' : kind === 'no' ? 'pep-verdict--wrong' : 'pep-verdict--revealed';
+    return '<p class="pep-verdict ' + cls + '">' + (kind === 'ok' ? ICON_OK : kind === 'no' ? ICON_NO : ICON_INFO) + '<span>' + esc(text) + '</span></p>';
+  }
+
+  /* ---- choice activities ---- */
+  function setupChoice(i) {
+    var a = activities[i], w = widgets[i];
+    w.q = a.querySelector('fieldset[data-pep-q]');
+    if (!w.q) return;
+    w.conf = a.querySelector('fieldset.pep-confidence');
+    w.correct = (PAGE.correct || {})[a.id];
+    w.options = [].slice.call(w.q.querySelectorAll('.pep-option'));
+    w.options.forEach(function (o) { var ex = o.querySelector('.pep-explain'); if (ex) ex.hidden = true; });
+  }
+  function chosen(fs) { var c = fs && fs.querySelector('input:checked'); return c ? c.value : null; }
+  function confLabel(w) { var c = w.conf && w.conf.querySelector('input:checked'); return c ? c.parentNode.querySelector('.pep-option__text').textContent : null; }
+  function lockChoice(i, picked) {
+    var w = widgets[i];
+    w.options.forEach(function (o) {
+      var input = o.querySelector('input'); input.disabled = true;
+      var ex = o.querySelector('.pep-explain'); if (ex) ex.hidden = false;
+      var tag = o.querySelector('.pep-option__tag');
+      if (input.value === w.correct) { o.classList.add('is-correct'); if (tag) tag.textContent = 'Correct answer'; }
+      else if (input.value === picked) { o.classList.add('is-wrong'); if (tag) tag.textContent = 'Your answer'; }
+    });
+    if (w.conf) [].slice.call(w.conf.querySelectorAll('input')).forEach(function (x) { x.disabled = true; });
+  }
+  function checkChoice(i) {
+    var s = state[i], w = widgets[i];
+    if (s.settled) { feedback(i, verdict('info', 'This activity is settled. Use Restart activity to try it again.') + (w.lastHtml || '')); return; }
+    var picked = chosen(w.q);
+    if (!picked || (w.conf && !chosen(w.conf))) { feedback(i, '<div class="pep-callout pep-callout--danger"><p><strong>Not checked yet.</strong> Choose one answer' + (w.conf ? ' and how sure you are' : '') + ', then press Check.</p></div>'); return; }
+    s.attempts += 1; reflect(i);
+    var ex = w.q.querySelector('input[value="' + picked + '"]').closest('.pep-option').querySelector('.pep-explain');
+    var why = ex ? ex.innerHTML : '';
+    var conf = confLabel(w);
+    var confNote = conf ? '<p>You rated your confidence: <strong>' + esc(conf) + '</strong>.</p>' : '';
+    if (picked === w.correct) {
+      lockChoice(i, picked);
+      w.lastHtml = '<div class="pep-callout pep-callout--success">' + verdict('ok', s.attempts === 1 ? 'Correct' : 'Correct on your second try') + confNote + '<p>' + why + '</p><p>Every option is explained above.</p></div>';
+      settle(i, 1, w.lastHtml);
+    } else if (s.attempts < 2) {
+      feedback(i, '<div class="pep-callout pep-callout--danger">' + verdict('no', 'Not quite — try once more') + confNote + '<p>' + why + '</p><p>Change your answer and press Check again.</p></div>');
+    } else {
+      lockChoice(i, picked);
+      w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Answered and settled, not correct') + confNote + '<p>' + why + '</p><p>The correct answer is marked above, and every option is explained.</p></div>';
+      settle(i, 0, w.lastHtml);
+    }
+  }
+  function revealChoice(i) {
+    var s = state[i], w = widgets[i];
+    if (s.settled) { feedback(i, verdict('info', 'This activity is already settled.') + (w.lastHtml || '')); return; }
+    lockChoice(i, null);
+    w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Explained answer shown — settled without a grade') + '<p>The correct answer is marked above, and every option is explained. Restart activity if you want to try it yourself.</p></div>';
+    settle(i, 0, w.lastHtml);
+  }
+
+  /* ---- code editor ---- */
+  function setupEditor(i) {
+    var a = activities[i], w = widgets[i];
+    var ed = a.querySelector('.pep-editor'); if (!ed) return;
+    w.ed = ed; w.input = ed.querySelector('.pep-editor__input'); w.gutter = ed.querySelector('.pep-editor__gutter');
+    w.problems = ed.querySelector('[data-panel="problems"]'); w.output = ed.querySelector('[data-panel="output"]');
+    w.status = ed.querySelector('.pep-editor__status'); w.starter = w.input.defaultValue;
+    w.tabs = [].slice.call(ed.querySelectorAll('[role="tab"]'));
+    function lines() { var n = w.input.value.split('\n').length; var t = ''; for (var k = 1; k <= n; k++) t += k + (k < n ? '\n' : ''); w.gutter.textContent = t; }
+    w.lines = lines; lines();
+    w.input.addEventListener('input', lines);
+    w.tabs.forEach(function (tab) { tab.addEventListener('click', function () { selectTab(w, tab.getAttribute('data-tab')); }); });
+    w.tabs.forEach(function (tab, k) { tab.addEventListener('keydown', function (ev) { if (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft') { ev.preventDefault(); var o = w.tabs[(k + 1) % w.tabs.length]; o.focus(); selectTab(w, o.getAttribute('data-tab')); } }); });
+    var run = ed.querySelector('[data-run]'), reset = ed.querySelector('[data-reset-code]');
+    run.addEventListener('click', function () { runCode(i); });
+    reset.addEventListener('click', function () { w.input.value = w.starter; lines(); w.status.textContent = 'Starter code restored. Your credit for this activity did not change.'; });
+    selectTab(w, 'output');
+  }
+  function selectTab(w, name) {
+    w.tabs.forEach(function (t) { var on = t.getAttribute('data-tab') === name; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; });
+    w.problems.hidden = name !== 'problems'; w.output.hidden = name !== 'output';
+  }
+  function runCode(i, quiet) {
+    var w = widgets[i];
+    var res = PepJava.run(w.input.value, { maxDepth: (PAGE.maxDepth || 1000) });
+    w.problems.innerHTML = '';
+    if (!res.compiled) {
+      res.errors.forEach(function (e) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'pep-editor__problem';
+        b.innerHTML = '<span class="' + (e.kind === 'limit' ? 'kind-limit">Not supported here' : 'kind-error">Error') + '</span> Main.java line ' + e.line + ': ' + esc(e.message) + (e.extra && e.extra.length ? '\n' + esc(e.extra.join('\n')) : '');
+        b.addEventListener('click', function () { focusLine(w, e.line); });
+        w.problems.appendChild(b);
+      });
+      w.output.textContent = res.errors[0].kind === 'limit' ? 'Not run: this code uses something outside the practice editor\'s Java subset.' : 'Not run: javac would stop with the compile error shown in Problems.';
+      selectTab(w, 'problems');
+      w.status.textContent = (res.errors[0].kind === 'limit' ? 'Not supported in this practice editor: ' : 'Compile error: ') + res.errors.length + ' problem' + (res.errors.length > 1 ? 's' : '') + ' — see Problems.';
+    } else {
+      w.problems.textContent = 'No problems.';
+      var out = res.out;
+      if (res.stopped) out += (out ? '\n' : '') + '[Practice editor stopped: ' + res.stopped + ']';
+      if (res.exception === 'StackOverflowError') out += '[Practice editor note: this simulated stack holds about ' + (PAGE.maxDepth || 1000) + ' frames; a real JVM stack is usually deeper, but unbounded recursion still overflows it.]\n';
+      w.output.textContent = out || '(no output)';
+      selectTab(w, 'output');
+      w.status.textContent = res.exception ? 'Run ended with ' + res.exception + ' — see Output.' : res.stopped ? 'Run stopped by the practice editor — see Output.' : 'Run finished. Output shows what the program printed.';
+    }
+    w.last = res;
+    return res;
+  }
+  function focusLine(w, line) {
+    var parts = w.input.value.split('\n'), pos = 0;
+    for (var k = 0; k < line - 1 && k < parts.length; k++) pos += parts[k].length + 1;
+    w.input.focus(); w.input.setSelectionRange(pos, pos + (parts[line - 1] || '').length);
+  }
+  function checkCode(i) {
+    var s = state[i], w = widgets[i], a = activities[i];
+    if (s.settled) { feedback(i, verdict('info', 'This activity is settled. Run still works for practice; use Restart activity to be checked again.') + (w.lastHtml || '')); return; }
+    var res = runCode(i, true);
+    s.attempts += 1; reflect(i);
+    var fn = (PAGE.checks || {})[a.id];
+    var verdictObj = fn ? fn(res, w.input.value) : { pass: false, notes: ['No checks are defined for this activity.'] };
+    var list = '<ul>' + verdictObj.notes.map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul>';
+    if (verdictObj.pass) {
+      w.lastHtml = '<div class="pep-callout pep-callout--success">' + verdict('ok', s.attempts === 1 ? 'All checks pass' : 'All checks pass on this try') + list + '</div>';
+      settle(i, 1, w.lastHtml);
+    } else if (s.attempts < 2) {
+      feedback(i, '<div class="pep-callout pep-callout--danger">' + verdict('no', 'Not yet — one more check before the explanation appears') + list + '<p>Edit the code, press Run to look at Output, then press Check again.</p></div>');
+    } else {
+      w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Checked twice and settled, not passing yet') + list + (PAGE.explain && PAGE.explain[a.id] ? '<p>' + PAGE.explain[a.id] + '</p>' : '') + '<p>You can keep editing and running for practice.</p></div>';
+      settle(i, 0, w.lastHtml);
+    }
+  }
+  function revealCode(i) {
+    var s = state[i], w = widgets[i], a = activities[i];
+    if (s.settled) { feedback(i, verdict('info', 'This activity is already settled.') + (w.lastHtml || '')); return; }
+    w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Explanation shown — settled without a grade') + '<p>' + ((PAGE.explain || {})[a.id] || '') + '</p><p>You can keep editing and running for practice.</p></div>';
+    settle(i, 0, w.lastHtml);
+  }
+
+  /* ---- form activities (written records) ---- */
+  function checkForm(i) {
+    var s = state[i], a = activities[i], w = widgets[i];
+    if (s.settled) { feedback(i, verdict('info', 'This activity is settled. Use Restart activity to be checked again.') + (w.lastHtml || '')); return; }
+    s.attempts += 1; reflect(i);
+    var fn = (PAGE.checks || {})[a.id];
+    var v = fn ? fn(a) : { pass: false, notes: [] };
+    var list = '<ul>' + v.notes.map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul>';
+    if (v.pass) { w.lastHtml = '<div class="pep-callout pep-callout--success">' + verdict('ok', 'Record complete') + list + '</div>'; settle(i, 1, w.lastHtml); }
+    else if (s.attempts < 2) feedback(i, '<div class="pep-callout pep-callout--danger">' + verdict('no', 'Not yet — one more check before the explanation appears') + list + '</div>');
+    else { w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Checked twice and settled, not complete yet') + list + '<p>' + ((PAGE.explain || {})[a.id] || '') + '</p></div>'; settle(i, 0, w.lastHtml); }
+  }
+
+  /* ---- traces and the practice debugger ---- */
+  function setupTrace(i) {
+    var a = activities[i], w = widgets[i];
+    var box = a.querySelector('.pep-live-trace'); if (!box) return;
+    var srcEl = document.getElementById(box.getAttribute('data-trace-src'));
+    var res = PepJava.run(srcEl.textContent, { trace: true, maxTrace: 4000 });
+    var src = srcEl.textContent.replace(/\n$/, '').split('\n');
+    var debug = box.hasAttribute('data-debugger');
+    var events = [];
+    (res.trace || []).forEach(function (ev, k) {
+      if (debug) {
+        if (ev.kind === 'line' || ev.kind === 'loop') events.push(ev);
+        else if (ev.kind === 'return' && ev.frames.length > 1) {
+          var caller = ev.frames.slice(0, -1);
+          events.push({ kind: 'after-call', line: caller[caller.length - 1].line, depth: ev.depth - 1, frames: caller, out: ev.out, note: ev.frames[ev.frames.length - 1].name.replace(/^.*\./, '') + ' returned' + (ev.ret ? ' ' + ev.ret : '') });
+        } else if (ev.kind === 'exception') events.push(ev);
+      } else events.push(ev);
+    });
+    w.events = events; w.pos = debug ? -1 : 0; w.debug = debug; w.box = box; w.src = src;
+    w.bps = {};
+    [].slice.call(box.querySelectorAll('[data-bp]')).forEach(function (b) { if (b.getAttribute('aria-pressed') === 'true') w.bps[b.getAttribute('data-bp')] = true; });
+    w.authoredBps = JSON.parse(JSON.stringify(w.bps));
+    [].slice.call(box.querySelectorAll('[data-bp]')).forEach(function (b) {
+      b.addEventListener('click', function () { var ln = b.getAttribute('data-bp'); var on = !w.bps[ln]; if (on) w.bps[ln] = true; else delete w.bps[ln]; b.setAttribute('aria-pressed', String(on)); traceStatus(w, (on ? 'Breakpoint set on line ' : 'Breakpoint removed from line ') + ln + '.'); });
+    });
+    function on(sel, fn) { var b = box.querySelector(sel); if (b) b.addEventListener('click', fn); }
+    on('[data-step="back"]', function () { if (w.pos > 0) { w.pos--; drawTrace(w); } });
+    on('[data-step="next"]', function () { if (w.pos < w.events.length - 1) { w.pos++; drawTrace(w); } else traceStatus(w, 'End of the program: there are no more steps.'); });
+    on('[data-step="restart"]', function () { w.pos = w.debug ? -1 : 0; drawTrace(w); });
+    on('[data-dbg="debug"]', function () { w.pos = -1; dbgMove(w, function () { return true; }, true); });
+    on('[data-dbg="over"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); var d = w.events[w.pos].depth; dbgMove(w, function (ev) { return ev.depth <= d; }); });
+    on('[data-dbg="into"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); dbgMove(w, function () { return true; }); });
+    on('[data-dbg="out"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); var d = w.events[w.pos].depth; dbgMove(w, function (ev) { return ev.depth < d; }); });
+    on('[data-dbg="resume"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); dbgMove(w, function () { return true; }, true); });
+    on('[data-dbg="stop"]', function () { w.pos = -1; drawTrace(w); traceStatus(w, 'Debug session stopped.'); });
+    drawTrace(w);
+  }
+  function dbgMove(w, ok, toBreakpoint) {
+    for (var k = w.pos + 1; k < w.events.length; k++) {
+      var ev = w.events[k];
+      if (toBreakpoint ? (w.bps[ev.line] && ev.kind !== 'after-call') : ok(ev)) { w.pos = k; drawTrace(w); return; }
+    }
+    w.pos = w.events.length; drawTrace(w);
+  }
+  function traceStatus(w, text) { var st = w.box.querySelector('.pep-trace__status'); if (st) st.textContent = text; }
+  function drawTrace(w) {
+    var ev = w.events[w.pos];
+    var listing = [].slice.call(w.box.querySelectorAll('.pep-listing > li'));
+    listing.forEach(function (li) { var on = ev && Number(li.getAttribute('data-line')) === ev.line; li.classList.toggle('is-current', !!on); var m = li.querySelector('.mark'); if (m) m.textContent = on ? '▶' : ''; if (on) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current'); });
+    var frames = w.box.querySelector('.pep-frames'), vars = w.box.querySelector('.pep-vars'), out = w.box.querySelector('.pep-trace__out');
+    var counter = w.box.querySelector('.pep-trace__count');
+    if (!ev) {
+      frames.innerHTML = '<li>(no frames)</li>'; vars.innerHTML = '<dt>—</dt><dd>' + (w.debug && w.pos < 0 ? 'Not debugging yet' : 'Program finished') + '</dd>';
+      var lastOut = w.events.length ? w.events[w.events.length - 1].out : '';
+      out.textContent = w.debug && w.pos < 0 ? '' : lastOut;
+      if (counter) counter.textContent = w.debug && w.pos < 0 ? 'Not started' : 'Finished';
+      traceStatus(w, w.debug && w.pos < 0 ? 'Not debugging. Set a breakpoint if you like, then press Debug.' : 'The program finished. Step back or restart to look again.');
+      return;
+    }
+    var fs = ev.frames.slice().reverse();
+    frames.innerHTML = fs.map(function (f, k) { return '<li' + (k === 0 ? ' class="is-top"' : '') + '>' + esc(f.name.replace(/^Main\./, '')) + (k === 0 ? ' (top)' : '') + '</li>'; }).join('');
+    var top = ev.frames[ev.frames.length - 1];
+    var statics = (w.box.getAttribute('data-statics') || '').split(' ').filter(Boolean);
+    vars.innerHTML = top && top.vars.length ? top.vars.filter(function (v) { return v.name !== 'args'; }).map(function (v) { return '<dt>' + esc(v.name) + '</dt><dd>' + esc(v.value) + '</dd>'; }).join('') || '<dt>—</dt><dd>no local variables yet</dd>' : '<dt>—</dt><dd>no local variables yet</dd>';
+    out.textContent = ev.out;
+    if (counter) counter.textContent = 'Step ' + (w.pos + 1) + ' of ' + w.events.length;
+    var what = ev.kind === 'call' ? 'Entered ' + top.name.replace(/^Main\./, '') + ' — a new frame was pushed.' :
+      ev.kind === 'return' ? top.name.replace(/^Main\./, '') + (ev.ret ? ' returns ' + ev.ret : ' finishes') + ' — its frame is popped next.' :
+      ev.kind === 'after-call' ? 'Back on line ' + ev.line + ' in ' + top.name.replace(/^Main\./, '') + ': ' + ev.note + '.' :
+      ev.kind === 'exception' ? 'An exception was thrown on line ' + ev.line + '.' :
+      (w.debug ? 'Paused before line ' + ev.line + ' runs.' : 'About to run line ' + ev.line + '.');
+    traceStatus(w, what + ' ' + (top.vars.filter(function (v) { return v.name !== 'args'; }).map(function (v) { return v.name + ' = ' + v.value; }).join(', ')));
+  }
+
+  /* ---- wiring ---- */
+  activities.forEach(function (a, i) {
+    setupChoice(i); setupEditor(i); setupTrace(i);
+    var check = a.querySelector('[data-pep-wrong-attempt]');
+    var reveal = a.querySelector('[data-pep-complete-activity]');
+    var kind = a.getAttribute('data-kind');
+    if (check) check.addEventListener('click', function () { if (kind === 'code') checkCode(i); else if (kind === 'form') checkForm(i); else checkChoice(i); });
+    if (reveal) reveal.addEventListener('click', function () { if (kind === 'code') revealCode(i); else if (kind === 'form') { var s = state[i]; if (s.settled) { feedback(i, verdict('info', 'This activity is already settled.') + (widgets[i].lastHtml || '')); return; } widgets[i].lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Explanation shown — settled without a grade') + '<p>' + ((PAGE.explain || {})[a.id] || '') + '</p></div>'; settle(i, 0, widgets[i].lastHtml); } else revealChoice(i); });
+    reflect(i);
+  });
+  restartBtn.addEventListener('click', function () {
+    var i = current - 1, a = activities[i], w = widgets[i];
+    authored[i].forEach(function (c) {
+      var el = c.control;
+      if (el.type === 'checkbox' || el.type === 'radio') el.checked = c.checked; else if (el.tagName === 'SELECT') el.selectedIndex = c.selectedIndex; else el.value = c.value;
+      el.disabled = false;
+    });
+    state[i] = freshState(); reflect(i);
+    [].slice.call(a.querySelectorAll('[data-pep-feedback]')).forEach(function (f) { f.innerHTML = ''; });
+    if (w.options) w.options.forEach(function (o) { o.classList.remove('is-correct', 'is-wrong'); var t = o.querySelector('.pep-option__tag'); if (t) t.textContent = ''; var ex = o.querySelector('.pep-explain'); if (ex) ex.hidden = true; });
+    w.lastHtml = '';
+    if (w.input) { w.lines(); w.problems.textContent = ''; w.output.textContent = ''; w.status.textContent = 'Restarted: starter code restored.'; selectTab(w, 'output'); }
+    if (w.events) { w.pos = w.debug ? -1 : 0; w.bps = JSON.parse(JSON.stringify(w.authoredBps)); [].slice.call(w.box.querySelectorAll('[data-bp]')).forEach(function (b) { b.setAttribute('aria-pressed', String(!!w.bps[b.getAttribute('data-bp')])); }); drawTrace(w); }
+    render(current);
+    var live = document.getElementById('pep-announce'); if (live) live.textContent = 'Activity ' + current + ' restarted.';
+  });
+  links.forEach(function (link, i) { link.addEventListener('click', function (ev) { ev.preventDefault(); if (i + 1 > unlocked) return; render(i + 1, 'push', true); }); });
+  [].slice.call(lesson.querySelectorAll('a[data-pep-back-link]')).forEach(function (link) {
+    link.addEventListener('click', function (ev) { ev.preventDefault(); var n = Number((/activity-(\d+)/.exec(link.getAttribute('href')) || [])[1]); render(n, 'push', true); });
+  });
+  prevBtn.addEventListener('click', function () { render(current - 1, 'push', true); });
+  nextBtn.addEventListener('click', function () { render(current + 1, 'push', true); });
+  var lastFocus = null;
+  document.addEventListener('focusin', function (ev) { lastFocus = ev.target; });
+  function fromHistory() {
+    var keep = lastFocus;
+    var m = /^#activity-(\d+)$/.exec(location.hash);
+    var n = m ? Number(m[1]) : 1;
+    if (!render(n, 'none', false)) render(Math.min(current, unlocked), 'replace', false);
+    if (keep && keep.isConnected && !keep.closest('[hidden]')) keep.focus({ preventScroll: true });
+  }
+  addEventListener('popstate', fromHistory);
+  addEventListener('hashchange', fromHistory);
+
+  /* ---- objectives disclosure ---- */
+  var objectives = lesson.querySelector('details[data-pep-objectives]');
+  if (objectives) {
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); } });
+    document.addEventListener('click', function (ev) { if (objectives.open && !objectives.contains(ev.target)) objectives.open = false; });
+  }
+  /* ---- print: open every disclosure, then restore exact prior states ---- */
+  var printStates = null;
+  addEventListener('beforeprint', function () {
+    var all = [].slice.call(document.querySelectorAll('details'));
+    printStates = all.map(function (d) { return [d, d.open]; });
+    all.forEach(function (d) { d.open = true; });
+    [].slice.call(document.querySelectorAll('.pep-explain')).forEach(function (e) { e.setAttribute('data-print-hidden', String(e.hidden)); e.hidden = false; });
+  });
+  addEventListener('afterprint', function () {
+    if (printStates) printStates.forEach(function (p) { p[0].open = p[1]; });
+    printStates = null;
+    [].slice.call(document.querySelectorAll('.pep-explain[data-print-hidden]')).forEach(function (e) { e.hidden = e.getAttribute('data-print-hidden') === 'true'; e.removeAttribute('data-print-hidden'); });
+  });
+  var req = /^#activity-(\d+)$/.exec(location.hash);
+  render(req && Number(req[1]) <= unlocked ? Number(req[1]) : 1, 'replace');
+})();
+</script>
+</body>
+</html>

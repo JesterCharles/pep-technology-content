@@ -1,0 +1,1347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="java-foundations">
+<meta name="pep:module" content="arrays-lists-and-maps">
+<meta name="pep:topic" content="Linear and binary search">
+<meta name="pep:topic-id" content="linear-and-binary-search">
+<meta name="pep:budget-minutes" content="12">
+<meta name="pep:source" content="authoring/evidence/java-foundations/arrays-lists-and-maps/linear-and-binary-search/sources.json">
+<meta name="alm-engine" content="engine.css sha256:5e5248ee7c2c88ff39df4f38dada8f569772a1e402a04236373ec10c2263ec44">
+<meta name="alm-engine" content="jmini.js sha256:eb082a98e7df79fda284eacaa6c6ca3ec1178f0f46dd7237b0194faba872b1d1">
+<meta name="alm-engine" content="engine.js sha256:1ddc755c60fe93ce71c5196721d18b72857d52b3821dbf11210f124e924f0b44">
+<title>Linear and binary search · Java Foundations</title>
+<script>document.documentElement.classList.add('pep-js');</script>
+<style>
+/* alm-engine@1 engine.css */
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* Base, focus and motion */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp, .mono { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  #lesson :is(input, select, textarea) { font-size: 16px; scroll-margin-block: 16px; }
+}
+button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+/* Progressive enhancement: without JavaScript every activity is an ordinary section; inert controls are hidden. */
+html:not(.pep-js) .pep-js-only { display: none !important; }
+.nojs { display: block; margin: 16px; padding: 12px 16px; border: 1px solid var(--pep-warning); border-radius: var(--pep-radius-md); background: var(--pep-warning-soft); color: var(--pep-text-strong); }
+.nojs p { margin: 0; }
+.nojs-static { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.nojs-static h3 { margin: 0; }
+.nojs-static p, .nojs-static ul { margin: 0; }
+.nojs-static ul { padding-left: 24px; }
+/* Topic bar: the clearest brand-accent region */
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; margin: 0 0 24px; border: 1px solid var(--pep-accent); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { display: flex; flex: 1 1 240px; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; flex: 1 1 96px; max-width: 160px; }
+.pep-progress > .seg { height: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); background: var(--pep-page); }
+.pep-progress > .seg.is-current { border-color: var(--pep-accent); }
+.pep-progress > .seg.is-done { border-color: var(--pep-accent); background: var(--pep-accent); }
+.pep-progress > .seg.is-settled { border-color: var(--pep-warning); background: var(--pep-warning); }
+.pep-topicbar__actions { display: flex; flex: 1 1 100%; flex-wrap: wrap; align-items: flex-start; gap: 8px; min-width: 0; }
+.pep-objectives { position: relative; min-width: 0; max-width: 100%; break-inside: avoid; }
+.pep-objectives > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-accent); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-accent-text); font-weight: 600; cursor: pointer; list-style: none; }
+.pep-objectives > summary::-webkit-details-marker { display: none; }
+.pep-objectives > summary::after { content: "\25BE"; font-size: 13px; }
+.pep-objectives[open] > summary::after { content: "\25B4"; }
+.pep-objectives > div { width: min(360px, 100%); margin-top: 8px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives > div p { margin: 0 0 8px; color: var(--pep-text-muted); font: 400 14px/20px var(--pep-font-sans); }
+.pep-objectives ul { margin: 0; padding-left: 20px; }
+.pep-objectives li { margin: 0 0 4px; }
+.pep-topicbar nav { flex: 1 1 100%; min-width: 0; }
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px 6px 6px; border: 1px solid transparent; border-radius: var(--pep-radius-md); color: var(--pep-text); font: 600 14px/20px var(--pep-font-sans); text-decoration: none; }
+.pep-step__n { display: grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); color: var(--pep-text-strong); font-size: 13px; }
+.pep-step[aria-current="step"] { background: var(--pep-page); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-current="step"] .pep-step__n { border-color: var(--pep-accent); background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-step.is-done .pep-step__n::before { content: "\2713"; }
+.pep-step.is-done .pep-step__n span { display: none; }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-step__state { font-weight: 400; color: var(--pep-text-muted); }
+/* Activities: one current activity at a time when enhanced */
+.pep-activity { margin: 0; min-width: 0; }
+.pep-activity + .pep-activity { margin-top: 48px; }
+html.pep-js .pep-activity + .pep-activity { margin-top: 0; }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+/* Reading and instructions stay on the quiet page surface */
+.pep-region--reading h2 { margin: 0; }
+.pep-region--reading [data-pep-teaching] p { margin: 0 0 12px; }
+.pep-region--reading [data-pep-teaching] > :last-child { margin-bottom: 0; }
+.pep-kicker { display: block; margin: 0 0 4px; color: var(--pep-accent-text); font: 600 13px/20px var(--pep-font-sans); }
+/* Elevated interactive workspace */
+.pep-region--workspace, [data-pep-workspace] { padding: 24px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
+[data-pep-task] { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+[data-pep-task] > h2 { margin: 0; }
+[data-pep-task] p { margin: 0; }
+.steps { margin: 0; padding-left: 24px; }
+.steps li { margin: 0; padding-left: 4px; }
+.steps li + li { margin-top: 8px; }
+/* Required activity checks: accent help/requirement surface */
+.pep-activity-checks, [data-pep-activity-checks] { padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] h3 { margin: 0 0 4px; }
+[data-pep-activity-checks] p { margin: 0; }
+.checks { list-style: none; margin: 0; padding: 0; }
+.checks li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 4px 0; max-width: none; }
+html.pep-js .checks li::after { content: "open"; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; text-align: right; }
+html.pep-js .checks li.done::after { content: "\2713\00a0 done"; color: var(--pep-success); }
+/* Where this fits: required practitioner context */
+[data-pep-where-fits] { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+[data-pep-where-fits] h2 { margin: 0 0 8px; font-size: 16px; line-height: 24px; }
+[data-pep-where-fits] p { margin: 0 0 8px; }
+[data-pep-where-fits] p:last-child { margin-bottom: 0; }
+[data-pep-where-fits] strong { color: var(--pep-text-strong); }
+/* Progressive optional hints */
+.pep-hint, details[data-pep-hint] { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-accent); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); break-inside: avoid; }
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
+.pep-hint__body p { margin: 0; }
+.pep-hint .pep-hint { margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-accent); border-radius: 0; background: transparent; }
+/* Optional Anecdote and Challenge disclosures (never required, never counted) */
+.pep-optional { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body p { margin: 0 0 8px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+@media forced-colors {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+}
+/* Models, code and output */
+.model { margin: 0; min-width: 0; }
+.model figcaption, .pep-label { margin: 0 0 8px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+pre.code { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; }
+pre.code .cm { color: var(--pep-text-muted); }
+.simnote { margin: 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.out { margin: 8px 0 0; min-height: 44px; max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.out:empty { display: none; }
+.mtable { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); }
+.mtable th, .mtable td { padding: 8px 12px; text-align: left; vertical-align: top; overflow-wrap: anywhere; border-bottom: 1px solid var(--pep-line-strong); }
+.mtable tr:last-child > td, .mtable tr:last-child > th { border-bottom: 0; }
+.mtable th { font-weight: 600; color: var(--pep-text-strong); }
+.mtable td.mono { font-family: var(--pep-font-mono); color: var(--pep-text-strong); }
+.mtable.positions th, .mtable.positions td { padding: 4px 8px; text-align: center; }
+.mtable.positions th[scope="row"] { text-align: left; }
+.mtable.positions td.took { background: var(--pep-accent-soft); font-weight: 600; }
+/* Buttons */
+button { font: 600 16px/24px var(--pep-font-sans); min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); cursor: pointer; }
+.ghost { background: var(--pep-control); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); }
+.ghost:hover { border-color: var(--pep-accent); }
+.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+button:disabled, .primary:disabled, .ghost:disabled { cursor: not-allowed; background: var(--pep-control); border: 1px solid var(--pep-line-strong); color: var(--pep-text-muted); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+/* Options and confidence */
+fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+legend { padding: 0; margin-bottom: 8px; font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
+.opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.opts.one { grid-template-columns: minmax(0, 1fr); }
+.opts.one .opt span { font-family: var(--pep-font-mono); font-size: 14px; line-height: 20px; white-space: pre-wrap; }
+.opt { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; min-width: 0; }
+.opt > span { min-width: 0; overflow-wrap: anywhere; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.opt:has(input:disabled) { cursor: default; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.opt input { appearance: none; -webkit-appearance: none; flex: 0 0 auto; width: 44px; height: 44px; margin: -12px; border: 0; border-radius: 50%; background: radial-gradient(circle, var(--pep-page) 0 8px, var(--pep-line-strong) 8.5px 10px, transparent 10.5px); cursor: pointer; }
+.opt input:checked { background: radial-gradient(circle, var(--pep-accent-fill) 0 5px, var(--pep-page) 5.5px 7.5px, var(--pep-accent-fill) 8px 10px, transparent 10.5px); }
+.opt input:disabled { cursor: default; }
+.opt input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -8px; }
+.opt .why { display: block; margin-top: 4px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.opt .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.rg { margin: 0 0 12px; }
+.rg legend { font: 600 14px/20px var(--pep-font-sans); margin-bottom: 8px; }
+.rg .opts { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+.rg .opt span { font: 400 14px/20px var(--pep-font-mono); }
+.conf { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.conf legend { float: left; margin: 0 8px 0 0; font: 600 14px/44px var(--pep-font-sans); }
+.conf .opt { min-width: 96px; }
+@media (max-width: 480px) { .opts { grid-template-columns: minmax(0, 1fr); } }
+/* Feedback beside the control that produced it */
+.feedback { width: 100%; min-width: 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.feedback p { margin: 0 0 4px; }
+.feedback p:last-child { margin-bottom: 0; }
+.feedback ul { margin: 4px 0 0; padding-left: 20px; }
+.feedback li { margin-bottom: 4px; }
+.feedback details { margin: 4px 0; }
+.feedback summary, .recap summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: list-item; padding: 10px 0; }
+.verdict { font: 700 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
+.verdict.ok { color: var(--pep-success); }
+.verdict.no { color: var(--pep-danger); }
+.verdict.set { color: var(--pep-warning); }
+.feedback .on { font-weight: 600; color: var(--pep-text-strong); }
+.badge { display: inline-flex; align-items: center; margin: 0 4px 0 0; padding: 0 8px; min-height: 24px; border: 1px solid currentColor; border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); vertical-align: baseline; }
+.badge.ok { color: var(--pep-success); background: var(--pep-success-soft); }
+.badge.ok::before { content: "\2713\00a0"; }
+.badge.no { color: var(--pep-danger); background: var(--pep-danger-soft); }
+.badge.no::before { content: "\2717\00a0"; }
+.badge.me { color: var(--pep-accent-text); background: var(--pep-accent-soft); }
+.explain { list-style: none; padding: 0; margin: 4px 0 0; }
+.explain li { margin: 0; padding: 4px 0 4px 12px; border-left: 2px solid var(--pep-line-strong); }
+.explain li + li { margin-top: 4px; }
+.explain li.mine { border-left-color: var(--pep-accent); }
+.explain .on, .explain .ex { display: block; }
+.conf-report { color: var(--pep-text-muted); }
+/* Reversible activity navigation */
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 0; }
+.pep-activity-actions button { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions button { flex: 0 1 auto; } }
+.pep-back { margin: 0; }
+.pep-back a { display: inline-flex; align-items: center; min-height: 44px; }
+/* Recap closes the required path */
+.recap { margin: 48px 0 0; padding: 24px 0 0; border-top: 1px solid var(--pep-line-strong); }
+html.pep-js .recap.is-pending { display: none; }
+.recap h2 { margin: 0 0 8px; }
+.recap ul { padding-left: 24px; }
+.recap details { margin: 8px 0; padding: 0 16px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.recap table { border-collapse: collapse; margin-top: 8px; font: 400 14px/20px var(--pep-font-sans); }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; }
+.complete { margin: 0; padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete:empty { display: none; }
+.next-topic { font-weight: 600; }
+/* Practice editor (DESIGN.md editor workspace anatomy): toolbar, code with gutter, Problems | Output, status */
+.pep-editor { margin: 0; padding: 0; min-width: 0; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; }
+.pep-editor legend { float: left; width: 100%; margin: 0; padding: 12px 12px 0; background: var(--pep-card); font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-editor legend + * { clear: both; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__secondary { color: var(--pep-text-muted); font: 400 13px/20px var(--pep-font-sans); }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { margin: 0; padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font: inherit; font-variant-numeric: tabular-nums; white-space: pre; border-right: 1px solid var(--pep-line); }
+.pep-editor__gutter .g-error { color: var(--pep-danger); font-weight: 700; text-decoration: underline wavy; }
+.pep-editor__gutter .g-limit { color: var(--pep-warning); font-weight: 700; }
+.pep-editor__input { display: block; width: 100%; margin: 0; padding: 12px; border: 0; border-radius: 0; resize: vertical; min-width: 0; min-height: 160px; height: 280px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow: auto; overflow-wrap: normal; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line); }
+.pep-editor__keys { margin: 0; color: var(--pep-text-muted); font: 400 13px/20px var(--pep-font-sans); }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; background: var(--pep-page); font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); }
+.pep-editor__panel ul { list-style: none; margin: 0; padding: 0; }
+.pep-editor__panel li + li { margin-top: 4px; }
+.pep-editor__panel pre { margin: 0; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 1px solid var(--pep-line); border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: 400 14px/20px var(--pep-font-sans); overflow-wrap: anywhere; }
+.pep-editor__problem .ln { font-family: var(--pep-font-mono); color: var(--pep-text-muted); }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 700; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 700; }
+.pep-editor__none { color: var(--pep-text-muted); font: 400 14px/20px var(--pep-font-sans); }
+.pep-editor__status { display: flex; flex-wrap: wrap; gap: 4px 16px; padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-editor__status .esc { display: none; font-weight: 700; }
+.pep-editor__status[data-esc] .esc { display: inline; }
+.pep-editor__live { font-weight: 700; }
+.pep-editor__limits { margin: 0; padding: 0 12px 8px; background: var(--pep-card); border-top: 1px solid var(--pep-line); font: 400 14px/20px var(--pep-font-sans); }
+.pep-editor__limits summary { display: list-item; padding: 10px 0; cursor: pointer; font-weight: 600; color: var(--pep-text-strong); }
+.pep-editor__limits ul { margin: 0; padding-left: 20px; }
+/* Array, list and map models used by the explorations */
+.cells { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.cells li { display: grid; grid-template-rows: auto auto; min-width: 48px; max-width: none; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); text-align: center; font-variant-numeric: tabular-nums; }
+.cells .v { padding: 8px 6px; font: 600 16px/24px var(--pep-font-mono); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.cells .i { padding: 0 6px 4px; font: 400 12px/16px var(--pep-font-sans); color: var(--pep-text-muted); }
+.cells li.is-on { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); }
+.cells li.is-out { opacity: 1; background: var(--pep-control); color: var(--pep-text-muted); }
+.cells li.is-out .v { color: var(--pep-text-muted); text-decoration: line-through; }
+.cells li.is-mid { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); }
+.cells .tag { display: block; padding: 0 4px 4px; font: 600 12px/16px var(--pep-font-sans); color: var(--pep-accent-text); }
+.stepper { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.stepper output { min-width: 96px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 600 16px/24px var(--pep-font-mono); text-align: center; font-variant-numeric: tabular-nums; }
+.kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 4px 12px; margin: 0; font: 400 14px/20px var(--pep-font-sans); }
+.kv dt { font-weight: 600; color: var(--pep-text-strong); }
+.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; font-family: var(--pep-font-mono); }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__actions button { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary, .pep-editor__keys { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; height: 240px; font-size: 16px; line-height: 24px; }
+  .pep-editor__gutter { font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel, #lesson .out { max-height: 180px; }
+  .row > button, .stepper > button { flex: 1 1 auto; }
+}
+/* Every disclosure summary is a 44 px touch target */
+#lesson summary { min-height: 44px; }
+@media print {
+  [data-pep-activity][hidden], .pep-activity { display: block !important; }
+  html.pep-js .recap.is-pending { display: block; }
+  .pep-topicbar nav, .pep-activity-actions, .pep-back, [data-pep-back-link] { display: none !important; }
+  .pep-objectives > div { display: block !important; width: auto; }
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .pep-optional > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker { display: none; }
+  .pep-activity + .pep-activity { margin-top: 32px; }
+}
+/* /alm-engine engine.css */
+</style>
+</head>
+<body>
+<noscript><div class="nojs"><p>JavaScript is off. Every activity below is still readable in order, with its task, a static result and the recap; the checks, the explorer and the practice editor do not run.</p></div></noscript>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="12">
+  <header class="pep-topicbar">
+    <h1 id="page-title">Linear and binary search</h1>
+    <div class="pep-topicbar__progress" id="progress" data-pep-progress><span id="prog-text">Activity 1 of 4 · 0 of 4 done · about 12 min</span><span class="pep-progress" aria-hidden="true"><span class="seg is-current"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span></span></div>
+    <div class="pep-topicbar__actions">
+      <details class="pep-objectives" data-pep-objectives>
+        <summary aria-controls="objectives-body">Objectives</summary>
+        <div id="objectives-body"><ul>
+          <li>Write a linear search that returns the index of a target or -1</li>
+          <li>Trace binary search on a sorted array, narrowing the low and high bounds each step</li>
+          <li>Explain why binary search requires sorted input and how its step count grows with input size</li>
+        </ul></div>
+      </details>
+      <button type="button" class="ghost pep-js-only" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+      <span class="vh" id="reset-help">Clears only the current activity; other activities keep their work.</span>
+    </div>
+    <nav aria-label="Activities"><ol class="pep-steps">
+      <li><a class="pep-step" id="step-link-1" href="#activity-1" data-pep-activity-link aria-current="step"><span class="pep-step__n" aria-hidden="true"><span>1</span></span>Activity 1<span class="pep-step__state vh"></span></a></li>
+      <li><a class="pep-step" id="step-link-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"><span>2</span></span>Activity 2<span class="pep-step__state vh"></span></a></li>
+      <li><a class="pep-step" id="step-link-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"><span>3</span></span>Activity 3<span class="pep-step__state vh"></span></a></li>
+      <li><a class="pep-step" id="step-link-4" href="#activity-4" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"><span>4</span></span>Activity 4<span class="pep-step__state vh"></span></a></li>
+    </ol></nav>
+  </header>
+
+  <section class="pep-activity" id="activity-1" data-pep-activity data-kind="predict" aria-labelledby="a1-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+    <div class="pep-regions">
+      <div class="pep-region pep-region--reading teach" data-pep-instructions>
+        <h2 id="a1-h" tabindex="-1"><span class="pep-kicker">Activity 1 of 4:</span> Start with a guess</h2>
+        <div data-pep-teaching>
+          <p>Practice prediction, not scored. Guess before any rules are shown.</p>
+        </div>
+      </div>
+      <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+        <div id="task-1" class="teach" data-pep-task>
+          <h2>Your task</h2>
+          <p>An app keeps 1,000 customer names in alphabetical order. To find one name, it looks at the middle name of the part that could still hold it, then throws away the half that cannot. At most, how many names does it look at before it finds the name or knows it is missing?</p>
+          <ol class="steps" aria-label="Steps"><li><strong>What to do:</strong> Under <em>Prediction</em>, pick the number you expect.</li><li><strong>Then:</strong> Pick Low, Medium or High confidence and press <em>Check my prediction</em>.</li><li><strong>How to know it's done:</strong> Feedback explains every option and <em>Next activity</em> becomes available. A wrong guess is fine.</li></ol>
+        </div>
+        <section class="pep-activity-checks teach" data-pep-activity-checks aria-labelledby="a1-checks"><h3 id="a1-checks">What success looks like</h3><p>You chose a prediction and a confidence, then read why each option is right or wrong.</p></section>
+        <div class="pep-js-only" data-restore="a1">
+        <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): 1,000 sorted names; each look checks the middle of the remaining part and discards the half that cannot hold the name. At most how many looks? Options: about 10; about 100; about 500; 1,000. Answer: about 10, because 1,000 halves to 1 in about ten steps (1,000, 500, 250, 125, 63, 32, 16, 8, 4, 2, 1). 1,000 is the worst case for checking names one by one.">
+          <legend>Prediction</legend>
+          <div class="opts"><label class="opt"><input type="radio" name="predict" value="a"> <span>About 10</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span>About 100</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span>About 500</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span>1,000</span></label></div>
+        </fieldset>
+        <div class="row">
+          <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
+            <legend id="pconf-help">Confidence, then check</legend>
+            <label class="opt"><input type="radio" name="pconf" value="low"> <span>Low</span></label>
+            <label class="opt"><input type="radio" name="pconf" value="medium"> <span>Medium</span></label>
+            <label class="opt"><input type="radio" name="pconf" value="high"> <span>High</span></label>
+          </fieldset>
+          <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+        </div>
+        </div>
+        <noscript data-section-skip><div class="nojs-static"><h3>Prediction, with its result</h3><p>Options: about 10, about 100, about 500, or 1,000.</p><p>Result: about 10. Each look halves what is left: 1,000, 500, 250, 125, 63, 32, 16, 8, 4, 2, 1, so about ten looks settle it. 1,000 is the worst case when you check the names one by one from the start, and about 500 is that one-by-one search's typical case.</p></div></noscript>
+        <div class="feedback" id="fb-1" data-pep-feedback aria-live="polite"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pep-activity" id="activity-2" data-pep-activity data-kind="code" aria-labelledby="a2-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+    <div class="pep-regions">
+      <div class="pep-region pep-region--reading teach" data-pep-instructions>
+        <h2 id="a2-h" tabindex="-1"><span class="pep-kicker">Activity 2 of 4:</span> Linear search</h2>
+        <div data-pep-teaching>
+          <p>A linear search checks the elements one at a time, starting at index 0. As soon as an element equals the target, it returns that index, so a repeated value is reported at its first position.</p>
+          <p>If the loop finishes without a match, it returns <code>-1</code>. No array has an index of -1, so the caller can test the result for it. Linear search works on any array, sorted or not; in the worst case it checks every element.</p>
+        </div>
+        <details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+          <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+          <div class="pep-optional__body">
+            <p data-pep-anecdote-story>You lost your blue mug somewhere along a shelf of mixed mugs. You start at the left end and pick each mug up in turn. The moment you hold the blue one, you stop and remember which spot it was in. If you reach the right end empty-handed, you can say for certain the mug is not on that shelf.</p>
+            <p data-pep-anecdote-map>Linear search is that walk: first match wins, and reaching the end means a clear “not here” answer.</p>
+          </div>
+        </details>
+      </div>
+      <div class="pep-region pep-region--workspace" data-pep-workspace="code">
+        <div id="task-2" class="teach" data-pep-task data-pep-may-stall>
+          <h2>Your task</h2>
+          <p>Finish <code>indexOf</code> so it returns the first index where <code>a</code> holds <code>target</code>, or <code>-1</code> when no element does. Run checks it on the examples below, which are the only inputs it uses.</p>
+          <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> The <em>Search.java</em> editor below. It holds only the method; the page supplies the class and calls it.</li><li><strong>What to type:</strong> above <code>return -1;</code>, add a loop that checks each element in index order and returns the index of the first match.</li><li><strong>Then:</strong> keep <code>return -1;</code> as the last line, and press <em>Run</em>.</li><li><strong>What to expect:</strong> <em>Problems</em> points to any line to fix; <em>Output</em> shows each call and its result.</li><li><strong>How to know it's done:</strong> All three checks below read <em>done</em>. Two runs that still differ settle the activity without penalty.</li></ol>
+          <details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip>
+            <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 2</span></summary>
+            <div class="pep-hint__body">
+              <p data-pep-hint-target><strong>Where to act:</strong> The blank line above <code>return -1;</code>.</p>
+              <p data-pep-hint-step><strong>Next step:</strong> The answer is a position, not a value, so the loop needs the index. Choose the kind of loop that gives you each index from 0 up to the last one.</p>
+              <details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="2" data-section-skip>
+                <summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 2</span></summary>
+                <div class="pep-hint__body">
+                  <p data-pep-hint-target><strong>Where to act:</strong> Inside that loop's body.</p>
+                  <p data-pep-hint-step><strong>Next step:</strong> Compare the element at the current index with the target. Only when they are equal, leave the method at once with that index; otherwise let the loop carry on, so <code>return -1;</code> runs only after every index failed.</p>
+                </div>
+              </details>
+            </div>
+          </details>
+        </div>
+        <section class="pep-activity-checks teach" data-pep-activity-checks aria-labelledby="a2-checks"><h3 id="a2-checks">What success looks like</h3>
+          <ul class="checks"><li data-goal="found"><span>In <code>{4, 8, 15, 16, 23, 42}</code>, targets 15, 4 and 42 give 2, 0 and 5</span></li><li data-goal="missing"><span>Target 7, and any target in the empty array <code>{}</code>, give -1</span></li><li data-goal="first"><span>In <code>{5, 3, 5}</code>, target 5 gives 0, the first match</span></li></ul>
+        </section>
+        <div class="pep-js-only">
+        <fieldset class="pep-editor" id="ed" data-interaction="explore" data-pep-explore aria-describedby="task-2" data-static-alt="Typed linear-search activity. Search.java holds static int indexOf(int[] a, int target) whose body is only return -1;. Finish it so it returns the first index holding target, or -1. Examples: in {4, 8, 15, 16, 23, 42}, 15 gives 2, 4 gives 0, 42 gives 5 and 7 gives -1; in {} any target gives -1; in {5, 3, 5}, 5 gives 0. A loop that returns -1 inside its first pass reports missing too early. Run evaluates only a bounded Java subset on these examples.">
+          <legend>Write the method</legend>
+          <div class="pep-editor__bar"><span class="pep-editor__file">Search.java</span><span class="pep-editor__secondary">Lesson simulator: runs this exercise only, not a real JVM</span></div>
+          <div class="pep-editor__code">
+            <pre class="pep-editor__gutter" aria-hidden="true">1</pre>
+            <label class="vh" for="ed-code">Code editor for Search.java</label>
+            <textarea id="ed-code" class="pep-editor__input" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-describedby="ed-keys"></textarea>
+          </div>
+          <div class="pep-editor__actions">
+            <button type="button" class="primary pep-editor__run" id="ed-run">Run</button>
+            <button type="button" class="ghost pep-editor__reset" id="ed-reset">Reset code</button>
+            <p class="pep-editor__keys" id="ed-keys">In the editor: Tab indents, Shift+Tab outdents, Ctrl+Enter (Cmd+Enter on a Mac) runs. To leave it, press Escape, then Tab.</p>
+          </div>
+          <div class="pep-editor__tabs" role="tablist" aria-label="Editor panels">
+            <button type="button" role="tab" id="ed-tab-p" aria-controls="ed-p" aria-selected="true">Problems</button>
+            <button type="button" role="tab" id="ed-tab-o" aria-controls="ed-o" aria-selected="false" tabindex="-1">Output</button>
+          </div>
+          <div class="pep-editor__panel" role="tabpanel" id="ed-p" aria-labelledby="ed-tab-p" tabindex="0"><ul class="pep-editor__probs"><li class="pep-editor__none">Loading the editor...</li></ul></div>
+          <div class="pep-editor__panel" role="tabpanel" id="ed-o" aria-labelledby="ed-tab-o" tabindex="0" hidden><pre class="pep-editor__out">Loading the editor...</pre></div>
+          <div class="pep-editor__status"><span class="pep-editor__pos">Ln 1, Col 1</span><span class="pep-editor__count"></span><span>Spaces: 4</span><span>Java lesson simulator</span><span class="esc">Tab now leaves the editor</span><span class="pep-editor__live" aria-live="polite"></span></div>
+          <details class="pep-editor__limits" data-section-skip><summary>What this simulator can and cannot do</summary><ul><li>Reads static methods with <code>int</code>, <code>boolean</code>, <code>String</code> and arrays of them; <code>if</code>/<code>else</code>, <code>while</code>, <code>for</code> and the enhanced for loop; <code>+ - * / %</code>, comparisons, <code>&amp;&amp;</code>, <code>||</code> and <code>!</code>.</li><li>Anything else is a <em>Lesson check</em>, not a claim that other Java is invalid; <em>Error</em> is used only where javac certainly rejects the code.</li><li>Exceptions use the real JDK exception names and messages. A run stops after 20000 steps instead of looping forever.</li><li>Run is deterministic and bounded: no network, files or arbitrary-code execution.</li></ul></details>
+        </fieldset>
+        </div>
+        <noscript data-pep-no-js data-section-skip><section class="nojs-static nojs-editor"><h3>Static editor exercise</h3><p>JavaScript is off, so Run is unavailable. Finish this method so it returns the first index where <code>a</code> holds <code>target</code>, or <code>-1</code>: add a loop above <code>return -1;</code>.</p><pre class="code">static int indexOf(int[] a, int target) {
+    // return the first index where a holds target, or -1
+
+    return -1;
+}</pre><p>Supported in the in-page editor: static methods with <code>int</code>, <code>boolean</code>, <code>String</code> and their arrays, <code>if</code>, <code>while</code>, <code>for</code> and enhanced for loops, and ordinary arithmetic and comparisons. To compare, call your method from <code>main</code> in any Java 17 or later JDK and print each result.</p><p>Expected results: in <code>{4, 8, 15, 16, 23, 42}</code>, 15 gives 2, 4 gives 0, 42 gives 5 and 7 gives -1; in <code>{}</code> any target gives -1; in <code>{5, 3, 5}</code>, 5 gives 0.</p></section></noscript>
+        <div class="feedback" id="fb-2" data-pep-feedback aria-live="polite"></div>
+        <p class="pep-back"><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pep-activity" id="activity-3" data-pep-activity data-kind="explore" aria-labelledby="a3-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+    <div class="pep-regions">
+      <div class="pep-region pep-region--reading teach" data-pep-instructions>
+        <h2 id="a3-h" tabindex="-1"><span class="pep-kicker">Activity 3 of 4:</span> Binary search, one step at a time</h2>
+        <div data-pep-teaching>
+          <p>Binary search needs an array sorted in ascending order. Keep two bounds: <code>low = 0</code> and <code>high = a.length - 1</code>. Check the middle index, <code>mid = (low + high) / 2</code>, where integer division drops any remainder.</p>
+          <p>If <code>a[mid]</code> is the target, stop. If the target is larger, it can only be to the right, so <code>low = mid + 1</code>. If it is smaller, <code>high = mid - 1</code>. When <code>low</code> passes <code>high</code>, nothing is left to check: the target is missing.</p>
+        </div>
+        <section data-pep-where-fits aria-labelledby="a3-fits">
+          <h2 id="a3-fits">Where this fits</h2>
+          <p data-pep-fit-decision><strong>Decision:</strong> You must find values in an array. Scan it with linear search, or use binary search?</p>
+          <p data-pep-fit-good><strong>Good fit:</strong> Binary search, when a large array is already sorted and searched many times, such as a sorted list of order numbers checked on every request.</p>
+          <p data-pep-fit-boundary><strong>Choose something else when:</strong> the data is unsorted and you search it only once or twice, because sorting costs more than a scan; when the array is tiny; or when you look values up by key all the time, where a <code>HashMap</code> finds a key without searching.</p>
+        </section>
+      </div>
+      <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+        <div id="task-3" class="teach" data-pep-task data-pep-may-stall>
+          <h2>Your task</h2>
+          <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> <em>Binary search tracer</em>, under the sorted array.</li><li><strong>What to do:</strong> Choose a target, read <code>a[mid]</code>, then press the button for the right next step: move <code>low</code>, move <code>high</code>, report found, or report missing.</li><li><strong>What to expect:</strong> The boxes outside <code>low</code> to <code>high</code> are crossed out, and the trace lists every step and the number of checks.</li><li><strong>How to know it's done:</strong> Both checks below read <em>done</em>. A wrong step is explained and changes nothing.</li></ol>
+          <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
+            <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 3</span></summary>
+            <div class="pep-hint__body">
+              <p data-pep-hint-target><strong>Where to act:</strong> The four step buttons, after reading the value under <em>mid</em>.</p>
+              <p data-pep-hint-step><strong>Next step:</strong> Compare the target with <code>a[mid]</code> only. A larger target means every box up to and including <em>mid</em> is too small; a smaller target means every box from <em>mid</em> on is too big. Report missing only once <code>low</code> is greater than <code>high</code>.</p>
+            </div>
+          </details>
+        </div>
+        <section class="pep-activity-checks teach" data-pep-activity-checks aria-labelledby="a3-checks"><h3 id="a3-checks">What success looks like</h3>
+          <ul class="checks"><li data-goal="present"><span>Trace a target that is in the array until you report it found</span></li><li data-goal="missing"><span>Trace target 40, which is not in the array, until you report it missing</span></li></ul>
+        </section>
+        <figure class="model" data-pep-model aria-labelledby="a3-model"><figcaption id="a3-model"><code>int[] a</code>, sorted, with each index; <em>low</em>, <em>mid</em> and <em>high</em> are labelled</figcaption>
+          <ol class="cells" id="bs-cells"><li><span class="v">3</span><span class="i">[0]</span></li><li><span class="v">7</span><span class="i">[1]</span></li><li><span class="v">11</span><span class="i">[2]</span></li><li><span class="v">15</span><span class="i">[3]</span></li><li><span class="v">19</span><span class="i">[4]</span></li><li><span class="v">23</span><span class="i">[5]</span></li><li><span class="v">27</span><span class="i">[6]</span></li><li><span class="v">31</span><span class="i">[7]</span></li><li><span class="v">36</span><span class="i">[8]</span></li><li><span class="v">41</span><span class="i">[9]</span></li><li><span class="v">45</span><span class="i">[10]</span></li><li><span class="v">52</span><span class="i">[11]</span></li><li><span class="v">58</span><span class="i">[12]</span></li><li><span class="v">63</span><span class="i">[13]</span></li><li><span class="v">70</span><span class="i">[14]</span></li><li><span class="v">77</span><span class="i">[15]</span></li></ol>
+          <p class="simnote" id="bs-bounds">Choose a target to start.</p>
+        </figure>
+        <div class="pep-js-only" data-restore="a3">
+        <fieldset data-interaction="explore" data-pep-explore id="bs-fs" aria-describedby="task-3" data-static-alt="Binary search trace on the sorted array {3, 7, 11, 15, 19, 23, 27, 31, 36, 41, 45, 52, 58, 63, 70, 77} (indexes 0 to 15). Target 58: low 0, high 15, mid 7 holds 31, 58 is larger so low = 8; mid 11 holds 52, larger so low = 12; mid 13 holds 63, smaller so high = 12; mid 12 holds 58: found at index 12 after 4 checks. Target 40: mid 7 (31) larger, low = 8; mid 11 (52) smaller, high = 10; mid 9 (41) smaller, high = 8; mid 8 (36) larger, low = 9; now low 9 is greater than high 8, so 40 is missing after 4 checks. Linear search would need 13 checks to find 58 and 16 to rule out 40.">
+          <legend>Binary search tracer</legend>
+          <fieldset class="rg"><legend>Target</legend><div class="opts"><label class="opt"><input type="radio" name="bs-target" value="58" data-act-input> <span>58</span></label><label class="opt"><input type="radio" name="bs-target" value="7" data-act-input> <span>7</span></label><label class="opt"><input type="radio" name="bs-target" value="27" data-act-input> <span>27</span></label><label class="opt"><input type="radio" name="bs-target" value="40" data-act-input> <span>40</span></label></div></fieldset>
+          <div class="row"><button type="button" class="ghost" data-act="higher" id="bs-higher">Target is larger: low = mid + 1</button><button type="button" class="ghost" data-act="lower" id="bs-lower">Target is smaller: high = mid - 1</button><button type="button" class="ghost" data-act="found" id="bs-found">Found at mid</button><button type="button" class="ghost" data-act="missing" id="bs-missing">Missing: low &gt; high</button></div>
+          <pre class="out" id="out-bs" aria-label="Trace"></pre>
+        </fieldset>
+        </div>
+        <noscript data-section-skip><div class="nojs-static"><h3>Two traces, with real results</h3><ul><li>Target 58: <code>low</code> 0, <code>high</code> 15, <code>mid</code> 7 holds 31, so <code>low = 8</code>; <code>mid</code> 11 holds 52, so <code>low = 12</code>; <code>mid</code> 13 holds 63, so <code>high = 12</code>; <code>mid</code> 12 holds 58: found at index 12 after 4 checks.</li><li>Target 40: <code>mid</code> 7 (31), <code>low = 8</code>; <code>mid</code> 11 (52), <code>high = 10</code>; <code>mid</code> 9 (41), <code>high = 8</code>; <code>mid</code> 8 (36), <code>low = 9</code>. Now <code>low</code> is greater than <code>high</code>: 40 is missing after 4 checks.</li><li>Linear search would need 13 checks to find 58 and all 16 to rule out 40.</li></ul></div></noscript>
+        <div class="feedback" id="fb-3" data-pep-feedback aria-live="polite"></div>
+        <p class="pep-back"><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="pep-activity" id="activity-4" data-pep-activity data-kind="apply" aria-labelledby="a4-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+    <div class="pep-regions">
+      <div class="pep-region pep-region--reading teach" data-pep-instructions>
+        <h2 id="a4-h" tabindex="-1"><span class="pep-kicker">Activity 4 of 4:</span> Why sorted, and how fast</h2>
+        <div data-pep-teaching>
+          <p>Discarding half the array is safe only when every value left of <code>mid</code> is smaller and every value right of it is larger, which is what sorted means. On unsorted input binary search can report a present value as missing.</p>
+          <p>Each check halves the range, so the worst case is about log₂ <em>n</em> checks: about 10 for 1,000 elements and about 20 for 1,000,000. Doubling the array adds only one check. Linear search's worst case grows with <em>n</em> itself.</p>
+        </div>
+      </div>
+      <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+        <div id="task-4" class="teach" data-pep-task>
+          <h2>Your task</h2>
+          <p id="task-apply">Which statement about binary search is true?</p>
+          <p id="task-apply-b" tabindex="-1" data-retry hidden>Same idea, new form: a sorted array grows from 1,000 elements to about 1,000,000, a thousand times bigger. Binary search's worst case goes from about 10 checks to about how many?</p>
+          <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> The four statements in the options below.</li><li><strong>What to do:</strong> Pick one answer, pick your confidence, then press <em>Check answer</em>.</li><li><strong>What to expect:</strong> Feedback explains every option. After a wrong first answer, a second question appears with <em>Check second try</em>.</li><li><strong>How to know it's done:</strong> Feedback appears and the recap opens below the activities.</li></ol>
+        </div>
+        <section class="pep-activity-checks teach" data-pep-activity-checks aria-labelledby="a4-checks"><h3 id="a4-checks">What success looks like</h3><p>You chose the true statement and can say why sorted input matters and how the number of checks grows.</p></section>
+        <div class="pep-js-only" data-restore="a4">
+        <div data-first>
+        <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply">
+          <legend data-static-alt="Apply question: which statement about binary search is true? Options: it needs sorted input because it discards a half by comparing the target with the middle value (true); it works on any array and is only faster on sorted ones (false: on unsorted input it can report a present value as missing); doubling the array roughly doubles its worst-case checks (false: doubling adds about one check); it always checks fewer elements than linear search (false: a target at index 0 takes linear search one check). Retry: growing from 1,000 to about 1,000,000 sorted elements raises the worst case from about 10 to about 20 checks, because 2 to the 20th is about a million.">Choose the true statement</legend>
+          <div class="opts one"><label class="opt"><input type="radio" name="apply-a" value="a"> <span>It works on any array; it is just faster when the array is sorted.</span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span>Doubling the array's length roughly doubles its worst-case number of checks.</span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span>It needs sorted input, because it discards a half by comparing the target with the middle value.</span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span>It always checks fewer elements than linear search does.</span></label></div>
+        </fieldset>
+        <div class="row">
+          <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
+            <legend id="conf-help">Confidence, then check</legend>
+            <label class="opt"><input type="radio" name="conf" value="low"> <span>Low</span></label>
+            <label class="opt"><input type="radio" name="conf" value="medium"> <span>Medium</span></label>
+            <label class="opt"><input type="radio" name="conf" value="high"> <span>High</span></label>
+          </fieldset>
+          <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
+        </div>
+        </div>
+        <div data-retry hidden>
+          <fieldset id="apply-b" aria-describedby="task-apply-b">
+            <legend>Choose the number of checks</legend>
+            <div class="opts one"><label class="opt"><input type="radio" name="apply-b" value="a"> <span>About 11</span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span>About 20</span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span>About 10,000</span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span>About 1,000,000</span></label></div>
+          </fieldset>
+          <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+        </div>
+        </div>
+        <noscript data-section-skip><div class="nojs-static"><h3>Question, with its answer</h3><p>Answer: binary search needs sorted input, because it discards a half by comparing the target with the middle value. On unsorted input it can report a present value as missing; doubling the array adds about one check rather than doubling them; and a target at index 0 takes linear search a single check. Growing from 1,000 to about 1,000,000 sorted elements raises the worst case from about 10 to about 20 checks.</p></div></noscript>
+        <div class="feedback" id="fb-4" data-pep-feedback aria-live="polite"></div>
+        <p class="pep-back"><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+    <button type="button" class="ghost" id="previous-activity" data-pep-previous disabled>Previous activity</button>
+    <button type="button" class="primary" id="next-activity" data-pep-next disabled>Next activity</button>
+  </div>
+
+  <section class="recap is-pending" id="recap" data-pep-recap aria-labelledby="recap-h">
+    <h2 id="recap-h" tabindex="-1">Recap</h2>
+    <p id="complete-msg" class="complete"></p>
+    <ul><li>Linear search checks each index in order, returns the first match's index, and returns -1 only after the loop finds nothing.</li><li>Binary search keeps <code>low</code> and <code>high</code>, checks <code>mid</code>, and moves one bound past <code>mid</code> each step until it finds the target or <code>low</code> passes <code>high</code>.</li><li>It needs sorted input; its worst case is about log₂ <em>n</em> checks, so doubling the array adds one check.</li></ul>
+    <details data-section-skip>
+      <summary>Cheat sheet</summary>
+      <table><tr><td>first match: its index; no match: <code>-1</code></td><td>linear search result</td></tr><tr><td><code>mid = (low + high) / 2</code></td><td>middle index</td></tr><tr><td>target larger: <code>low = mid + 1</code></td><td>keep the right half</td></tr><tr><td>target smaller: <code>high = mid - 1</code></td><td>keep the left half</td></tr><tr><td><code>low &gt; high</code></td><td>target missing</td></tr><tr><td><code>Arrays.binarySearch(a, key)</code></td><td>the JDK's version, for a sorted array</td></tr></table>
+    </details>
+    <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live official Java pages on 2026-10-16. The traces and the linear-search examples were checked by compiling and running Java with a real JDK (OpenJDK 17.0.12); the behaviours shown are unchanged in Java 25.</p><ul><li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Arrays.html" rel="noopener">Java SE 25 API: Arrays.binarySearch (requires a sorted array; results are undefined otherwise)</a></li><li><a href="https://docs.oracle.com/javase/specs/jls/se25/html/jls-10.html" rel="noopener">Java Language Specification SE 25, chapter 10: Arrays (indexes 0 to length - 1)</a></li><li><a href="https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html" rel="noopener">Java Language Specification SE 25, 15.17.2: integer division rounds toward zero</a></li><li><a href="https://dev.java/learn/language-basics/arrays/" rel="noopener">Dev.java: Arrays</a></li></ul></details>
+    <p class="next-topic">Next topic: <a href="../arraylist-basics/artifact.html" rel="noopener">ArrayList basics</a></p>
+  </section>
+</main>
+<script>
+/* alm-engine@1 jmini.js */
+/* jmini@1: a bounded, deterministic interpreter for a small Java subset, used only by the practice editors on
+   these pages. It reads int, boolean and String values, int[] and String[] arrays, List and ArrayList, Map and
+   HashMap, Integer, if/else, while, for, enhanced for, break, continue, return, static methods,
+   System.out.print/println, Arrays.toString and the listed collection methods. Anything else is reported as a
+   lesson check (not supported here), never as invalid Java. "Error" is used only where javac certainly rejects
+   the code. Runs have a step limit, so a loop that never ends stops honestly instead of freezing the page.
+   No network, storage, eval or timers. */
+var JMINI=(function(){
+'use strict';
+var MAX_STEPS=20000,MAX_DEPTH=64,MAX_SIZE=64;
+function own(o,k){return Object.prototype.hasOwnProperty.call(o,k);}
+function Problem(kind,line,col,msg){this.kind=kind;this.line=line||1;this.col=col||1;this.msg=msg;}
+function limit(t,msg){return new Problem('limit',t?t.line:1,t?t.col:1,msg);}
+function cerr(t,msg){return new Problem('error',t?t.line:1,t?t.col:1,msg);}
+function JavaThrow(type,msg,line){this.jt=type;this.msg=msg;this.line=line;}
+function Stop(msg,line){this.stop=msg;this.line=line;}
+function Flow(kind,value){this.flow=kind;this.value=value;}
+
+/* ---------- tokens ---------- */
+var KW={'int':1,'boolean':1,'if':1,'else':1,'while':1,'for':1,'return':1,'break':1,'continue':1,'new':1,'true':1,'false':1,'null':1,'static':1,'void':1,'public':1,'private':1,'final':1};
+var UNSUPPORTED_KW={'double':'double values','float':'float values','long':'long values','char':'char values','byte':'byte values','short':'short values','do':'do-while loops','switch':'switch','try':'try/catch','catch':'try/catch','throw':'throw','class':'class declarations','var':'var declarations','this':'this','import':'import lines','package':'package lines','instanceof':'instanceof','yield':'yield','record':'records','enum':'enums','interface':'interfaces','super':'super','synchronized':'synchronized','assert':'assert','case':'switch','default':'switch'};
+var OPS=['>>>=','<<=','>>=','>>>','...','::','->','==','!=','<=','>=','&&','||','++','--','+=','-=','*=','/=','%=','&=','|=','^=','<<','>>','(',')','{','}','[',']',';',',','.','=','<','>','!','~','?',':','+','-','*','/','%','&','|','^','@'];
+function tokenize(src){
+  var out=[],i=0,line=1,col=1,n=src.length;
+  function adv(k){for(var j=0;j<k;j++){if(src[i]==='\n'){line++;col=1;}else{col++;}i++;}}
+  while(i<n){
+    var c=src[i];
+    if(c===' '||c==='\t'||c==='\r'||c==='\n'){adv(1);continue;}
+    if(c==='/'&&src[i+1]==='/'){while(i<n&&src[i]!=='\n'){adv(1);}continue;}
+    if(c==='/'&&src[i+1]==='*'){var sl=line,sc=col;adv(2);while(i<n&&!(src[i]==='*'&&src[i+1]==='/')){adv(1);}
+      if(i>=n){throw cerr({line:sl,col:sc},'This /* comment is never closed with */.');}adv(2);continue;}
+    var t={line:line,col:col};
+    if(/[0-9]/.test(c)){var m=/^[0-9][0-9_a-zA-Z.]*/.exec(src.slice(i))[0];
+      if(!/^(0|[1-9][0-9]*)$/.test(m)){throw limit(t,'This practice editor reads only plain whole numbers such as 0, 7 or 42, not '+m+'.');}
+      var v=Number(m);if(v>2147483647){throw cerr(t,'integer number too large: '+m+' (an int holds at most 2147483647).');}
+      t.type='num';t.value=v;t.text=m;adv(m.length);out.push(t);continue;}
+    if(/[A-Za-z_$]/.test(c)){var w=/^[A-Za-z_$][A-Za-z0-9_$]*/.exec(src.slice(i))[0];t.type=own(KW,w)?'kw':'id';t.value=w;t.text=w;adv(w.length);out.push(t);continue;}
+    if(c==='"'){var s='',j=i+1;
+      if(src.slice(i,i+3)==='"""'){throw limit(t,'Text blocks (""") are outside this practice editor.');}
+      while(j<n&&src[j]!=='"'){if(src[j]==='\n'){throw cerr(t,'This string is not closed with " before the end of the line.');}
+        if(src[j]==='\\'){var e=src[j+1],map={n:'\n',t:'\t','"':'"','\\':'\\',"'":"'"};if(!(e in map)){throw limit(t,'Only the escapes \\n, \\t, \\" and \\\\ are read here.');}s+=map[e];j+=2;}
+        else{s+=src[j];j++;}}
+      if(j>=n){throw cerr(t,'This string is not closed with ".');}
+      t.type='str';t.value=s;t.text=src.slice(i,j+1);adv(j+1-i);out.push(t);continue;}
+    if(c==="'"){throw limit(t,'char values (single quotes) are outside this practice editor; use a String in double quotes.');}
+    var op=null;for(var k=0;k<OPS.length;k++){if(src.substr(i,OPS[k].length)===OPS[k]){op=OPS[k];break;}}
+    if(!op){throw limit(t,'The character '+c+' is outside this practice editor.');}
+    t.type='op';t.value=op;t.text=op;adv(op.length);out.push(t);}
+  out.push({type:'eof',value:'',text:'end of code',line:line,col:col});
+  return out;}
+
+/* ---------- parser ---------- */
+function Parser(toks){this.t=toks;this.i=0;}
+var P=Parser.prototype;
+P.peek=function(o){return this.t[this.i+(o||0)];};
+P.next=function(){return this.t[this.i++];};
+P.is=function(v,o){var t=this.peek(o);return (t.type==='op'||t.type==='kw')&&t.value===v;};
+P.eat=function(v){if(this.is(v)){return this.next();}return null;};
+P.want=function(v,what){if(this.is(v)){return this.next();}var t=this.peek();
+  throw limit(t,'The practice editor expected '+v+(what?' '+what:'')+' here, but found '+(t.type==='eof'?'the end of the code':t.text)+'.');};
+P.ident=function(what){var t=this.peek();if(t.type==='id'){if(own(UNSUPPORTED_KW,t.value)){throw limit(t,UNSUPPORTED_KW[t.value]+' are outside this practice editor.');}return this.next();}
+  throw limit(t,'The practice editor expected '+(what||'a name')+' here, but found '+(t.type==='eof'?'the end of the code':t.text)+'.');};
+P.checkUnsupported=function(){var t=this.peek();if(t.type==='id'&&own(UNSUPPORTED_KW,t.value)){throw limit(t,UNSUPPORTED_KW[t.value]+' are outside this practice editor.');}};
+/* Types: int, boolean, String, Integer, Boolean, List<T>, ArrayList<T>, Map<K,V>, HashMap<K,V>, each optionally []. */
+P.typeStart=function(o){var t=this.peek(o||0);if(t.type==='kw'&&(t.value==='int'||t.value==='boolean')){return true;}
+  return t.type==='id'&&/^(String|Integer|Boolean|List|ArrayList|Map|HashMap)$/.test(t.value);};
+P.looksLikeDecl=function(){if(this.is('final')){return true;}if(!this.typeStart()){return false;}
+  var j=this.i,depth=0,t=this.t;j++;
+  if(t[j].value==='<'){depth=1;j++;while(depth>0&&t[j].type!=='eof'){if(t[j].value==='<'){depth++;}else if(t[j].value==='>'){depth--;}else if(t[j].value==='>>'){depth-=2;}j++;}}
+  while(t[j].value==='['&&t[j+1].value===']'){j+=2;}
+  return t[j].type==='id';};
+P.type=function(){var t=this.peek(),ty;
+  if(t.type==='kw'&&(t.value==='int'||t.value==='boolean')){this.next();ty={base:t.value};}
+  else if(t.type==='id'){this.checkUnsupported();
+    if(!/^(String|Integer|Boolean|List|ArrayList|Map|HashMap)$/.test(t.value)){throw limit(t,'The type '+t.value+' is outside this practice editor; it reads int, boolean, String, Integer, arrays, List/ArrayList and Map/HashMap.');}
+    this.next();ty={base:t.value};
+    if(/^(List|ArrayList|Map|HashMap)$/.test(t.value)){
+      if(this.is('<')){this.next();var args=[];
+        if(this.is('>')){throw limit(t,'The diamond <> belongs after new, as in new '+(/Map/.test(t.value)?'HashMap':'ArrayList')+'<>(); the declared type names its element type.');}
+        do{var at=this.peek();
+          if(at.type==='kw'&&(at.value==='int'||at.value==='boolean')){throw cerr(at,'unexpected type: required reference, found '+at.value+'. A type argument must be a class type, so write '+(at.value==='int'?'Integer':'Boolean')+' instead of '+at.value+'.');}
+          if(at.type==='id'&&/^(double|long|char|float|short|byte)$/.test(at.value)){throw cerr(at,'unexpected type: required reference, found '+at.value+'. A type argument must be a class type.');}
+          var a=this.type();if(a.arr){throw limit(at,'Arrays as type arguments are outside this practice editor.');}args.push(a);}while(this.eat(','));
+        if(this.is('>>')){this.t[this.i]={type:'op',value:'>',text:'>',line:this.peek().line,col:this.peek().col+1};}else{this.want('>','to close the type arguments');}
+        var need=/Map/.test(t.value)?2:1;if(args.length!==need){throw cerr(t,t.value+' takes '+need+' type argument'+(need>1?'s':'')+'.');}
+        ty.args=args;}
+      else{throw limit(t,'Give '+t.value+' its element type, such as '+(/Map/.test(t.value)?t.value+'<String, Integer>':t.value+'<Integer>')+'; raw types are outside this practice editor.');}}}
+  else{throw limit(t,'The practice editor expected a type here.');}
+  while(this.is('[')&&this.peek(1).value===']'){this.next();this.next();ty={base:'array',el:ty,arr:true};
+    if(ty.el.arr){throw limit(t,'Arrays of arrays are outside this practice editor.');}
+    if(ty.el.args){throw limit(t,'Arrays of lists or maps are outside this practice editor.');}}
+  return ty;};
+P.program=function(mode){var methods=[],stmts=[];
+  if(mode==='methods'){while(this.peek().type!=='eof'){methods.push(this.method());}return {methods:methods};}
+  while(this.peek().type!=='eof'){stmts.push(this.statement());}return {stmts:stmts};};
+P.method=function(){var start=this.peek();
+  while(this.is('public')||this.is('private')||this.is('final')){this.next();}
+  if(this.peek().type==='id'&&this.peek().value==='class'){throw limit(this.peek(),'Write only the method here; the page supplies the class around it.');}
+  if(!this.eat('static')){throw limit(this.peek(),'Each method here starts with static, as in the starter.');}
+  var rt;if(this.eat('void')){rt={base:'void'};}else{rt=this.type();}
+  var name=this.ident('the method name');this.want('(','after the method name');var params=[];
+  if(!this.is(')')){do{if(this.eat('final')){}var pt=this.type(),pn=this.ident('a parameter name');params.push({type:pt,name:pn.value,tok:pn});}while(this.eat(','));}
+  this.want(')','to close the parameter list');
+  if(!this.is('{')){throw limit(this.peek(),'The practice editor expected { to start the method body.');}
+  var body=this.block();return {name:name.value,tok:name,ret:rt,params:params,body:body,line:start.line};};
+P.block=function(){var open=this.want('{'),stmts=[];
+  while(!this.is('}')){if(this.peek().type==='eof'){throw cerr(open,'This { is never closed with }. Java reports: reached end of file while parsing.');}stmts.push(this.statement());}
+  this.next();return {k:'block',stmts:stmts,line:open.line};};
+P.statement=function(){var t=this.peek();this.checkUnsupported();
+  if(t.type==='op'&&t.value==='{'){return this.block();}
+  if(t.type==='op'&&t.value===';'){this.next();return {k:'empty',line:t.line};}
+  if(t.type==='kw'){
+    if(t.value==='if'){this.next();this.want('(','after if');var c=this.expr();this.want(')','to close the if condition');var th=this.statement(),el=null;if(this.eat('else')){el=this.statement();}return {k:'if',c:c,th:th,el:el,line:t.line};}
+    if(t.value==='while'){this.next();this.want('(','after while');var wc=this.expr();this.want(')','to close the while condition');return {k:'while',c:wc,body:this.statement(),line:t.line};}
+    if(t.value==='for'){return this.forStmt();}
+    if(t.value==='return'){this.next();var rv=null;if(!this.is(';')){rv=this.expr();}this.want(';','after return');return {k:'return',e:rv,line:t.line,tok:t};}
+    if(t.value==='break'||t.value==='continue'){this.next();if(this.peek().type==='id'){throw limit(this.peek(),'Labelled break and continue are outside this practice editor.');}this.want(';');return {k:t.value,line:t.line,tok:t};}
+    if(t.value==='else'){throw cerr(t,"'else' without 'if': check the braces before this else.");}
+    if(t.value==='static'||t.value==='public'||t.value==='private'){throw limit(t,'Write statements here; a method declaration does not belong inside this code.');}}
+  if(this.looksLikeDecl()){var d=this.decl();this.want(';','to end the declaration');return d;}
+  var e=this.expr();
+  if(!/^(assign|pre|post|call)$/.test(e.k)&&!(e.k==='new')){throw cerr(t,'not a statement: Java allows only an assignment, ++, --, a method call or new as a statement on its own.');}
+  this.want(';','to end the statement');return {k:'expr',e:e,line:t.line};};
+P.decl=function(){var fin=!!this.eat('final'),start=this.peek(),ty=this.type(),list=[];
+  do{var nm=this.ident('a variable name'),init=null;
+    if(this.is('[')){throw limit(this.peek(),'Put [] after the type, as in int[] '+nm.value+', in this practice editor.');}
+    if(this.eat('=')){if(this.is('{')){if(!ty.arr){throw cerr(this.peek(),'illegal initializer for '+tyName(ty)+': braces { } initialize only arrays.');}init=this.arrayInit(ty.el);}else{init=this.expr();}}
+    list.push({name:nm.value,tok:nm,init:init});}while(this.eat(','));
+  return {k:'decl',type:ty,vars:list,fin:fin,line:start.line};};
+P.arrayInit=function(el){var open=this.want('{'),items=[];
+  if(!this.is('}')){do{if(this.is('}')){break;}if(this.is('{')){throw limit(this.peek(),'Nested array braces are outside this practice editor.');}items.push(this.expr());}while(this.eat(','));}
+  this.want('}','to close the array values');return {k:'arrlit',el:el,items:items,line:open.line,tok:open};};
+P.forStmt=function(){var t=this.next();this.want('(','after for');
+  if(this.looksLikeDecl()){var save=this.i,fin=!!this.eat('final'),ty=this.type(),nm=this.ident('a loop variable');
+    if(this.eat(':')){var src=this.expr();this.want(')','to close the for header');return {k:'foreach',type:ty,name:nm.value,tok:nm,src:src,body:this.statement(),line:t.line};}
+    this.i=save;}
+  var init=null;if(!this.is(';')){if(this.looksLikeDecl()){init=this.decl();}else{init={k:'expr',e:this.expr(),line:t.line};}}
+  this.want(';','after the for loop start');var cond=null;if(!this.is(';')){cond=this.expr();}
+  this.want(';','after the for loop condition');var upd=[];
+  if(!this.is(')')){do{var u=this.expr();if(!/^(assign|pre|post|call)$/.test(u.k)){throw cerr(this.peek(),'not a statement: the for update must be an assignment, ++, -- or a method call.');}upd.push(u);}while(this.eat(','));}
+  this.want(')','to close the for header');return {k:'for',init:init,cond:cond,upd:upd,body:this.statement(),line:t.line};};
+P.expr=function(){return this.assign();};
+P.assign=function(){var lhs=this.ternary(),t=this.peek();
+  if(t.type==='op'&&/^(=|\+=|-=|\*=|\/=|%=)$/.test(t.value)){this.next();
+    if(!(lhs.k==='name'||lhs.k==='index')){throw cerr(t,'unexpected type: the left side of '+t.value+' must be a variable or an array element.');}
+    var rhs=this.is('{')?null:this.assign();if(rhs===null){throw cerr(t,'array initializer braces { } are allowed only in a declaration; use new int[]{...} here.');}
+    return {k:'assign',op:t.value,l:lhs,r:rhs,tok:t,line:t.line};}
+  if(t.type==='op'&&/^(&=|\|=|\^=|<<=|>>=|>>>=)$/.test(t.value)){throw limit(t,'The operator '+t.value+' is outside this practice editor.');}
+  return lhs;};
+P.ternary=function(){var c=this.or();if(this.is('?')){var q=this.next(),a=this.assign();this.want(':','in the ? : expression');var b=this.ternary();return {k:'cond',c:c,a:a,b:b,tok:q,line:q.line};}return c;};
+function bin(name,ops,nextName){return function(){var l=this[nextName]();while(true){var t=this.peek();if(t.type==='op'&&ops.indexOf(t.value)>=0){this.next();l={k:'bin',op:t.value,l:l,r:this[nextName](),tok:t,line:t.line};}else{return l;}}};}
+P.or=bin('or',['||'],'and');P.and=bin('and',['&&'],'bitor');
+P.bitor=function(){var l=this.eq(),t=this.peek();if(t.type==='op'&&/^(\||&|\^)$/.test(t.value)){throw limit(t,'The operator '+t.value+' is outside this practice editor; use && or || for conditions.');}return l;};
+P.eq=bin('eq',['==','!='],'rel');P.rel=bin('rel',['<','>','<=','>='],'shift');
+P.shift=function(){var l=this.add(),t=this.peek();if(t.type==='op'&&/^(<<|>>|>>>)$/.test(t.value)){throw limit(t,'Shift operators are outside this practice editor.');}return l;};
+P.add=bin('add',['+','-'],'mul');P.mul=bin('mul',['*','/','%'],'unary');
+P.unary=function(){var t=this.peek();
+  if(t.type==='op'&&(t.value==='!'||t.value==='-'||t.value==='+')){this.next();return {k:'un',op:t.value,e:this.unary(),tok:t,line:t.line};}
+  if(t.type==='op'&&(t.value==='++'||t.value==='--')){this.next();var e=this.unary();if(!(e.k==='name'||e.k==='index')){throw cerr(t,'unexpected type: '+t.value+' needs a variable.');}return {k:'pre',op:t.value,e:e,tok:t,line:t.line};}
+  if(t.type==='op'&&t.value==='~'){throw limit(t,'The operator ~ is outside this practice editor.');}
+  if(t.type==='op'&&t.value==='('&&this.peek(1).type==='kw'&&/^(int|boolean)$/.test(this.peek(1).value)&&this.peek(2).value===')'){throw limit(t,'Casts are outside this practice editor.');}
+  if(t.type==='op'&&t.value==='('&&this.peek(1).type==='id'&&/^(Integer|String)$/.test(this.peek(1).value)&&this.peek(2).value===')'){throw limit(t,'Casts are outside this practice editor.');}
+  return this.postfix();};
+P.postfix=function(){var e=this.primary();
+  while(true){var t=this.peek();
+    if(t.type==='op'&&t.value==='.'){this.next();var nm=this.ident('a method or field name');
+      if(this.is('(')){e={k:'call',obj:e,name:nm.value,args:this.args(),tok:nm,line:nm.line};}
+      else{e={k:'field',obj:e,name:nm.value,tok:nm,line:nm.line};}}
+    else if(t.type==='op'&&t.value==='['){this.next();var ix=this.expr();this.want(']','to close the index');e={k:'index',a:e,i:ix,tok:t,line:t.line};}
+    else if(t.type==='op'&&(t.value==='++'||t.value==='--')){if(!(e.k==='name'||e.k==='index')){throw cerr(t,'unexpected type: '+t.value+' needs a variable.');}this.next();e={k:'post',op:t.value,e:e,tok:t,line:t.line};}
+    else if(t.type==='op'&&t.value==='::'){throw limit(t,'Method references (::) are outside this practice editor.');}
+    else if(t.type==='op'&&t.value==='->'){throw limit(t,'Lambdas (->) are outside this practice editor.');}
+    else{return e;}}};
+P.args=function(){this.want('(');var a=[];if(!this.is(')')){do{a.push(this.expr());}while(this.eat(','));}this.want(')','to close the argument list');return a;};
+P.primary=function(){var t=this.peek();this.checkUnsupported();
+  if(t.type==='num'){this.next();return {k:'lit',v:t.value,ty:'int',line:t.line,tok:t};}
+  if(t.type==='str'){this.next();return {k:'lit',v:t.value,ty:'String',line:t.line,tok:t};}
+  if(t.type==='kw'&&(t.value==='true'||t.value==='false')){this.next();return {k:'lit',v:t.value==='true',ty:'boolean',line:t.line,tok:t};}
+  if(t.type==='kw'&&t.value==='null'){this.next();return {k:'lit',v:null,ty:'null',line:t.line,tok:t};}
+  if(t.type==='op'&&t.value==='('){this.next();var e=this.expr();this.want(')','to close the parenthesis');return e;}
+  if(t.type==='kw'&&t.value==='new'){return this.newExpr();}
+  if(t.type==='id'){this.next();
+    if(this.is('(')){return {k:'call',obj:null,name:t.value,args:this.args(),tok:t,line:t.line};}
+    return {k:'name',name:t.value,tok:t,line:t.line};}
+  throw limit(t,t.type==='eof'?'The code ends where the practice editor expected a value.':'The practice editor expected a value here, but found '+t.text+'.');};
+P.newExpr=function(){var t=this.next(),ty=this.peek();
+  if(ty.type==='kw'&&(ty.value==='int'||ty.value==='boolean')||(ty.type==='id'&&/^(String|Integer)$/.test(ty.value))){this.next();var el={base:ty.value};
+    if(!this.is('[')){throw limit(ty,'Only new arrays, new ArrayList<>() and new HashMap<>() are read here.');}
+    this.next();
+    if(this.is(']')){this.next();if(this.is('[')){throw limit(ty,'Arrays of arrays are outside this practice editor.');}if(!this.is('{')){throw cerr(this.peek(),'array dimension missing: write new '+el.base+'[size] or new '+el.base+'[]{values}.');}return this.arrayInit(el);}
+    var sz=this.expr();this.want(']','to close the array size');if(this.is('[')){throw limit(ty,'Arrays of arrays are outside this practice editor.');}
+    if(this.is('{')){throw cerr(this.peek(),'array creation with both a size and values is not allowed; use one or the other.');}
+    return {k:'newarr',el:el,size:sz,tok:t,line:t.line};}
+  if(ty.type==='id'&&/^(ArrayList|HashMap)$/.test(ty.value)){this.next();
+    if(this.is('<')){this.next();if(!this.is('>')){var a=this.peek();
+        if(a.type==='kw'&&/^(int|boolean)$/.test(a.value)){throw cerr(a,'unexpected type: required reference, found '+a.value+'. A type argument must be a class type such as '+(a.value==='int'?'Integer':'Boolean')+'.');}
+        var depth=1;while(depth>0&&this.peek().type!=='eof'){var x=this.next();if(x.value==='<'){depth++;}else if(x.value==='>'){depth--;}else if(x.value==='>>'){depth-=2;}}}
+      else{this.next();}}
+    else{throw limit(ty,'Write new '+ty.value+'<>() with the diamond <> in this practice editor.');}
+    var args=this.args();if(args.length){throw limit(ty,'Write new '+ty.value+'<>() with empty parentheses in this practice editor.');}
+    return {k:'newcoll',kind:ty.value==='ArrayList'?'list':'map',tok:t,line:t.line};}
+  if(ty.type==='id'&&/^(List|Map)$/.test(ty.value)){throw cerr(ty,ty.value+' is abstract; cannot be instantiated. Create an '+(ty.value==='List'?'ArrayList':'HashMap')+' instead.');}
+  throw limit(ty,'Only new arrays, new ArrayList<>() and new HashMap<>() are read here.');};
+
+/* ---------- values ---------- */
+function tyName(t){if(!t){return '?';}if(t.arr){return tyName(t.el)+'[]';}if(t.args){return t.base+'<'+t.args.map(tyName).join(', ')+'>';}return t.base;}
+function isRefType(t){return t&&(t.arr||t.args||t.base==='String'||t.base==='Integer'||t.base==='Boolean');}
+function defaultFor(t){if(t.base==='int'){return 0;}if(t.base==='boolean'){return false;}return null;}
+function newArray(el,n){var a=[];for(var i=0;i<n;i++){a.push(defaultFor(el));}return {k:'arr',el:el,a:a,id:++ARR_ID};}
+var ARR_ID=0;
+function javaHash(v){if(typeof v==='number'){return v|0;}if(typeof v==='boolean'){return v?1231:1237;}var h=0;for(var i=0;i<v.length;i++){h=(Math.imul(31,h)+v.charCodeAt(i))|0;}return h;}
+function spread(h){return (h^(h>>>16))|0;}
+/* Iteration order of a java.util.HashMap built only by put (no removals) with default capacity 16 and load factor
+   0.75: buckets in index order, entries within a bucket in insertion order. Exact for this editor's sizes. */
+function hashOrder(m){var cap=16;while(m.e.length>cap*0.75){cap*=2;}
+  return m.e.map(function(e,i){return {e:e,b:spread(javaHash(e.k))&(cap-1),i:i};}).sort(function(x,y){return x.b-y.b||x.i-y.i;}).map(function(x){return x.e;});}
+function show(v,ctx){
+  if(v===null||v===undefined){return 'null';}
+  if(typeof v==='number'||typeof v==='boolean'){return String(v);}
+  if(typeof v==='string'){return v;}
+  if(v.k==='list'){return '['+v.a.map(function(x){return show(x,ctx);}).join(', ')+']';}
+  if(v.k==='map'){return '{'+hashOrder(v).map(function(e){return show(e.k,ctx)+'='+show(e.v,ctx);}).join(', ')+'}';}
+  if(v.k==='keys'){return '['+hashOrder(v.m).map(function(e){return show(e.k,ctx);}).join(', ')+']';}
+  if(v.k==='arr'){throw new Stop('Printing an array object directly shows a type code and hash such as [I@1b6d3586 in real Java, which this practice editor cannot reproduce. Print Arrays.toString('+(ctx||'the array')+') instead.');}
+  return String(v);}
+function jeq(a,b){return a===b;}
+
+/* ---------- interpreter ---------- */
+function Interp(prog,out){this.prog=prog;this.out=out;this.steps=0;this.depth=0;this.methods={};
+  var self=this;(prog.methods||[]).forEach(function(m){if(self.methods[m.name]){throw cerr(m.tok,'method '+m.name+' is already defined.');}self.methods[m.name]=m;});}
+var I=Interp.prototype;
+I.tick=function(line){if(++this.steps>MAX_STEPS){throw new Stop('Stopped after '+MAX_STEPS+' steps. Real Java would keep running: check that each loop moves toward its end condition.',line);}};
+function Scope(parent){this.v={};this.p=parent;}
+Scope.prototype.find=function(n){var s=this;while(s){if(Object.prototype.hasOwnProperty.call(s.v,n)){return s.v[n];}s=s.p;}return null;};
+Scope.prototype.declare=function(n,slot,tok){var s=this;while(s){if(Object.prototype.hasOwnProperty.call(s.v,n)){throw cerr(tok,'variable '+n+' is already defined in this method.');}s=s.p;}this.v[n]=slot;};
+I.lookup=function(sc,tok){var s=sc.find(tok.value||tok.name);if(!s){throw cerr(tok,'cannot find symbol: variable '+(tok.value||tok.name)+'. Declare it before you use it.');}return s;};
+I.toInt=function(v,line,what){if(v===null){throw new JavaThrow('NullPointerException',(what||'A null Integer')+' cannot be unboxed to an int: the value is null.',line);}
+  if(typeof v!=='number'){throw new Stop('Java would reject this at compile time: '+(what||'this value')+' is not an int here.',line);}return v;};
+I.toBool=function(v,line){if(v===null){throw new JavaThrow('NullPointerException','A null Boolean cannot be unboxed to a boolean.',line);}
+  if(typeof v!=='boolean'){throw new Stop('Java would reject this at compile time: a condition must be a boolean (true or false).',line);}return v;};
+I.coerce=function(v,ty,line,name){
+  if(ty.base==='int'){if(v===null){throw new JavaThrow('NullPointerException','Assigning null to the int '+name+' fails: a null Integer cannot be unboxed to an int.',line);}if(typeof v!=='number'){throw new Stop('Java would reject this at compile time: incompatible types, '+name+' is an int.',line);}return v;}
+  if(ty.base==='boolean'){if(typeof v!=='boolean'){throw new Stop('Java would reject this at compile time: incompatible types, '+name+' is a boolean.',line);}return v;}
+  if(v===null){return null;}
+  if(ty.base==='Integer'&&typeof v!=='number'){throw new Stop('Java would reject this at compile time: incompatible types, '+name+' is an Integer.',line);}
+  if(ty.base==='String'&&typeof v!=='string'){throw new Stop('Java would reject this at compile time: incompatible types, '+name+' is a String.',line);}
+  if(ty.arr&&!(v.k==='arr'&&v.el.base===ty.el.base)){throw new Stop('Java would reject this at compile time: incompatible types, '+name+' is '+tyName(ty)+'.',line);}
+  if(ty.args){var want=/List/.test(ty.base)?'list':'map';if(!v.k||v.k!==want){throw new Stop('Java would reject this at compile time: incompatible types, '+name+' is '+tyName(ty)+'.',line);}
+    if(!v.ty){v.ty=ty;}else if(tyName(v.ty).replace(/^Array|^Hash/,'').replace(/<.*/,'')!==tyName(ty).replace(/^Array|^Hash/,'').replace(/<.*/,'')||JSON.stringify(v.ty.args)!==JSON.stringify(ty.args)){throw new Stop('Java would reject this at compile time: incompatible types, '+tyName(v.ty)+' cannot be assigned to '+tyName(ty)+'.',line);}}
+  if(ty.base==='List'||ty.base==='ArrayList'){if(v.k!=='list'){throw new Stop('Java would reject this at compile time: '+name+' is a list.',line);}}
+  return v;};
+I.elemCheck=function(coll,v,line,role){var t=coll.ty&&coll.ty.args?coll.ty.args[role||0]:null;if(!t||v===null){return v;}
+  if(t.base==='Integer'&&typeof v!=='number'||t.base==='String'&&typeof v!=='string'||t.base==='Boolean'&&typeof v!=='boolean'){throw new Stop('Java would reject this at compile time: incompatible types, this '+(coll.k==='map'?(role?'map value':'map key'):'list element')+' must be '+t.base+'.',line);}
+  return v;};
+I.callMethod=function(name,args,tok){var m=this.methods[name];
+  if(!m){throw cerr(tok,'cannot find symbol: method '+name+'. Only the methods written in this file can be called here.');}
+  if(m.params.length!==args.length){throw cerr(tok,'method '+name+' needs '+m.params.length+' argument'+(m.params.length===1?'':'s')+', but '+args.length+' '+(args.length===1?'was':'were')+' given.');}
+  if(++this.depth>MAX_DEPTH){throw new Stop('Stopped after '+MAX_DEPTH+' nested calls. Real Java would eventually throw StackOverflowError: check the base case.',tok.line);}
+  var sc=new Scope(null),self=this;
+  m.params.forEach(function(p,i){sc.v[p.name]={ty:p.type,val:self.coerce(args[i],p.type,tok.line,p.name)};});
+  try{this.execBlock(m.body.stmts,sc);}
+  catch(f){if(f instanceof Flow&&f.flow==='return'){this.depth--;return f.value;}throw f;}
+  this.depth--;
+  if(m.ret.base!=='void'){throw new Stop('The end of '+name+' was reached without a return. Java\'s compiler requires every path of a non-void method to return a value ("missing return statement").',m.body.line);}
+  return undefined;};
+I.execBlock=function(stmts,sc){for(var i=0;i<stmts.length;i++){this.exec(stmts[i],sc);}};
+I.exec=function(s,sc){this.tick(s.line);var self=this;
+  switch(s.k){
+  case 'empty':return;
+  case 'block':this.execBlock(s.stmts,new Scope(sc));return;
+  case 'decl':s.vars.forEach(function(d){var v=defaultFor(s.type),init=false;
+      if(d.init){v=d.init.k==='arrlit'?self.arrlit(d.init,sc,s.type):self.ev(d.init,sc);v=self.coerce(v,s.type,s.line,d.name);init=true;}
+      sc.declare(d.name,{ty:s.type,val:v,init:init,fin:s.fin},d.tok);});return;
+  case 'expr':this.ev(s.e,sc);return;
+  case 'if':if(this.toBool(this.ev(s.c,sc),s.line)){this.exec(s.th,new Scope(sc));}else if(s.el){this.exec(s.el,new Scope(sc));}return;
+  case 'while':while(this.toBool(this.ev(s.c,sc),s.line)){this.tick(s.line);try{this.exec(s.body,new Scope(sc));}catch(f){if(f instanceof Flow){if(f.flow==='break'){break;}if(f.flow==='continue'){continue;}}throw f;}}return;
+  case 'for':var fs=new Scope(sc);if(s.init){this.exec(s.init,fs);}
+    while(s.cond?this.toBool(this.ev(s.cond,fs),s.line):true){this.tick(s.line);
+      try{this.exec(s.body,new Scope(fs));}catch(f){if(f instanceof Flow){if(f.flow==='break'){break;}if(f.flow!=='continue'){throw f;}}else{throw f;}}
+      s.upd.forEach(function(u){self.ev(u,fs);});}return;
+  case 'foreach':var src=this.ev(s.src,sc);
+    if(src===null){throw new JavaThrow('NullPointerException','The enhanced for loop cannot iterate over null.',s.line);}
+    var items,iter=null;
+    if(src.k==='arr'){items=src.a.slice();}
+    else if(src.k==='list'){iter={list:src,cursor:0,expected:src.mod||0};}
+    else if(src.k==='keys'){items=hashOrder(src.m).map(function(e){return e.k;});}
+    else{throw new Stop('Java would reject this at compile time: an enhanced for loop needs an array or a collection.',s.line);}
+    var idx=0;
+    while(true){var val;
+      if(iter){if(iter.cursor===iter.list.a.length){break;}if((iter.list.mod||0)!==iter.expected){throw new JavaThrow('ConcurrentModificationException','The list was changed by add or remove inside the enhanced for loop that is reading it.',s.line);}val=iter.list.a[iter.cursor++];}
+      else{if(idx>=items.length){break;}val=items[idx++];}
+      this.tick(s.line);var ls=new Scope(sc);ls.declare(s.name,{ty:s.type,val:this.coerce(val,s.type,s.line,s.name),init:true},s.tok);
+      try{this.exec(s.body,ls);}catch(f){if(f instanceof Flow){if(f.flow==='break'){break;}if(f.flow!=='continue'){throw f;}}else{throw f;}}}
+    return;
+  case 'return':throw new Flow('return',s.e?this.ev(s.e,sc):undefined);
+  case 'break':throw new Flow('break');
+  case 'continue':throw new Flow('continue');}
+  throw limit({line:s.line},'This statement is outside this practice editor.');};
+I.arrlit=function(e,sc,ty){var el=ty&&ty.arr?ty.el:e.el,self=this,arr=newArray(el,0);
+  arr.a=e.items.map(function(x){return self.coerce(self.ev(x,sc),el,e.line,'each array value');});
+  if(arr.a.length>MAX_SIZE){throw new Stop('Arrays here hold at most '+MAX_SIZE+' values.',e.line);}return arr;};
+I.slotOf=function(e,sc){if(e.k==='name'){return this.lookup(sc,e.tok);}return null;};
+I.ev=function(e,sc){this.tick(e.line);var self=this,v,a,b;
+  switch(e.k){
+  case 'lit':return e.v;
+  case 'name':var slot=this.lookup(sc,e.tok);if(!slot.init&&!slot.param&&slot.init!==undefined){throw cerr(e.tok,'variable '+e.name+' might not have been initialized.');}return slot.val;
+  case 'arrlit':return this.arrlit(e,sc,null);
+  case 'newarr':var n=this.toInt(this.ev(e.size,sc),e.line,'The array size');if(n<0){throw new JavaThrow('NegativeArraySizeException',String(n),e.line);}if(n>MAX_SIZE){throw new Stop('Arrays here hold at most '+MAX_SIZE+' values.',e.line);}return newArray(e.el,n);
+  case 'newcoll':return e.kind==='list'?{k:'list',a:[],mod:0}:{k:'map',e:[]};
+  case 'cond':return this.toBool(this.ev(e.c,sc),e.line)?this.ev(e.a,sc):this.ev(e.b,sc);
+  case 'index':var arr=this.ev(e.a,sc);if(arr===null){throw new JavaThrow('NullPointerException','Cannot read an element of a null array.',e.line);}
+    if(!arr||arr.k!=='arr'){throw new Stop('Java would reject this at compile time: [ ] indexing works only on arrays. For a list, use get(index).',e.line);}
+    var i=this.toInt(this.ev(e.i,sc),e.line,'The index');if(i<0||i>=arr.a.length){throw new JavaThrow('ArrayIndexOutOfBoundsException','Index '+i+' out of bounds for length '+arr.a.length,e.line);}return arr.a[i];
+  case 'field':var o=this.ev(e.obj,sc);if(e.name==='length'){if(o===null){throw new JavaThrow('NullPointerException','Cannot read the length of a null array.',e.line);}if(o&&o.k==='arr'){return o.a.length;}
+      if(typeof o==='string'){throw cerr(e.tok,'cannot find symbol: length. A String uses length() with parentheses; .length without them is for arrays.');}
+      if(o&&o.k==='list'){throw cerr(e.tok,'cannot find symbol: length. A list uses size().');}}
+    throw limit(e.tok,'The field '+e.name+' is outside this practice editor.');
+  case 'un':v=this.ev(e.e,sc);if(e.op==='!'){return !this.toBool(v,e.line);}v=this.toInt(v,e.line);return e.op==='-'?(-v|0):v;
+  case 'pre':case 'post':var old=this.toInt(this.ev(e.e,sc),e.line,'The value'),nv=(e.op==='++'?old+1:old-1)|0;this.store(e.e,nv,sc,e.tok);return e.k==='pre'?nv:old;
+  case 'assign':var rv;if(e.op==='='){rv=this.ev(e.r,sc);}else{var cur=this.ev(e.l,sc),rr=this.ev(e.r,sc);rv=this.arith(e.op.charAt(0),cur,rr,e);}
+    this.store(e.l,rv,sc,e.tok);return rv;
+  case 'bin':if(e.op==='&&'){return this.toBool(this.ev(e.l,sc),e.line)&&this.toBool(this.ev(e.r,sc),e.line);}
+    if(e.op==='||'){return this.toBool(this.ev(e.l,sc),e.line)||this.toBool(this.ev(e.r,sc),e.line);}
+    a=this.ev(e.l,sc);b=this.ev(e.r,sc);
+    if(e.op==='=='||e.op==='!='){var eq=this.equality(e,a,b,sc);return e.op==='=='?eq:!eq;}
+    if(/^(<|>|<=|>=)$/.test(e.op)){a=this.toInt(a,e.line);b=this.toInt(b,e.line);return e.op==='<'?a<b:e.op==='>'?a>b:e.op==='<='?a<=b:a>=b;}
+    return this.arith(e.op,a,b,e);
+  case 'call':return this.call(e,sc);
+  case 'new':return null;}
+  throw limit({line:e.line},'This expression is outside this practice editor.');};
+I.staticType=function(e,sc){
+  if(e.k==='lit'){return e.ty;}
+  if(e.k==='name'){var s=sc.find(e.name);return s?tyName(s.ty):null;}
+  if(e.k==='call'&&e.obj&&/^(get|getOrDefault|remove|set)$/.test(e.name)){var o=e.obj.k==='name'?sc.find(e.obj.name):null;if(o&&o.ty.args){return tyName(o.ty.args[o.ty.args.length-1]);}}
+  if(e.k==='index'){var arr=e.a.k==='name'?sc.find(e.a.name):null;if(arr&&arr.ty.arr){return tyName(arr.ty.el);}}
+  return null;};
+I.equality=function(e,a,b,sc){var ta=this.staticType(e.l,sc),tb=this.staticType(e.r,sc);
+  if(typeof a==='string'&&typeof b==='string'||ta==='String'&&tb==='String'){throw new Stop('Comparing two Strings with '+e.op+' compares object references, not text. Use equals, as in a.equals(b); this practice editor does not model references.',e.line);}
+  if(ta==='Integer'&&tb==='Integer'){throw new Stop('Comparing two Integer objects with '+e.op+' compares references, which can be false for equal values above 127. Use equals, or compare int values; this practice editor does not model references.',e.line);}
+  if(a===null||b===null){if((ta==='int'&&b===null)||(tb==='int'&&a===null)){throw new JavaThrow('NullPointerException','Comparing a null Integer with an int unboxes the null.',e.line);}return a===b;}
+  if(typeof a==='number'&&typeof b==='number'||typeof a==='boolean'&&typeof b==='boolean'){return a===b;}
+  if(typeof a==='object'&&typeof b==='object'){return a===b;}
+  throw new Stop('Java would reject this at compile time: these two values cannot be compared with '+e.op+'.',e.line);};
+I.arith=function(op,a,b,e){
+  if(op==='+'&&(typeof a==='string'||typeof b==='string')){
+    if(a&&typeof a==='object'||b&&typeof b==='object'){var tgt=typeof a==='object'?a:b;if(tgt.k==='arr'){throw new Stop('Joining an array object to a String shows a type code and hash such as [I@1b6d3586 in real Java. Use Arrays.toString(...) instead.',e.line);}}
+    return show(a)+show(b);}
+  if(typeof a==='string'||typeof b==='string'){throw new Stop('Java would reject this at compile time: the operator '+op+' does not apply to a String.',e.line);}
+  a=this.toInt(a,e.line);b=this.toInt(b,e.line);
+  switch(op){case '+':return (a+b)|0;case '-':return (a-b)|0;case '*':return Math.imul(a,b);
+    case '/':if(b===0){throw new JavaThrow('ArithmeticException','/ by zero',e.line);}return (a/b)|0;
+    case '%':if(b===0){throw new JavaThrow('ArithmeticException','/ by zero',e.line);}return (a%b)|0;}
+  throw limit(e.tok,'The operator '+op+' is outside this practice editor.');};
+I.store=function(target,v,sc,tok){
+  if(target.k==='name'){var s=this.lookup(sc,target.tok);if(s.fin&&s.init){throw cerr(target.tok,'cannot assign a value to final variable '+target.name+'.');}s.val=this.coerce(v,s.ty,tok.line,target.name);s.init=true;return;}
+  var arr=this.ev(target.a,sc);if(arr===null){throw new JavaThrow('NullPointerException','Cannot store into a null array.',tok.line);}
+  if(!arr||arr.k!=='arr'){throw new Stop('Java would reject this at compile time: [ ] indexing works only on arrays. For a list, use set(index, value).',tok.line);}
+  var i=this.toInt(this.ev(target.i,sc),tok.line,'The index');if(i<0||i>=arr.a.length){throw new JavaThrow('ArrayIndexOutOfBoundsException','Index '+i+' out of bounds for length '+arr.a.length,tok.line);}
+  arr.a[i]=this.coerce(v,arr.el,tok.line,'each element');};
+function argc(e,n,sig){if(e.args.length!==n){throw cerr(e.tok,'no suitable method found for '+e.name+' with '+e.args.length+' argument'+(e.args.length===1?'':'s')+'; it takes '+sig+'.');}}
+I.call=function(e,sc){var self=this,line=e.line;
+  if(!e.obj){return this.callMethod(e.name,e.args.map(function(x){return self.ev(x,sc);}),e.tok);}
+  if(e.obj.k==='field'&&e.obj.obj.k==='name'&&e.obj.obj.name==='System'&&e.obj.name==='out'){
+    if(e.name!=='println'&&e.name!=='print'){throw limit(e.tok,'Only System.out.print and System.out.println are read here.');}
+    if(e.args.length>1){throw cerr(e.tok,'no suitable method found for '+e.name+' with '+e.args.length+' arguments.');}
+    var txt=e.args.length?show(this.ev(e.args[0],sc),e.args[0].k==='name'?e.args[0].name:null):'';
+    this.out.push({t:txt,nl:e.name==='println'});if(this.out.length>200){throw new Stop('Stopped after 200 printed lines.',line);}return undefined;}
+  if(e.obj.k==='name'&&e.obj.name==='Arrays'&&!sc.find('Arrays')){
+    if(e.name!=='toString'){throw limit(e.tok,'Only Arrays.toString is read in this practice editor.');}argc(e,1,'one array');
+    var ar=this.ev(e.args[0],sc);if(ar===null){return 'null';}if(!ar||ar.k!=='arr'){throw new Stop('Java would reject this at compile time: Arrays.toString needs an array.',line);}
+    return '['+ar.a.map(function(x){return show(x);}).join(', ')+']';}
+  if(e.obj.k==='name'&&/^(Math|Integer|String|List|Map|Collections|Objects)$/.test(e.obj.name)&&!sc.find(e.obj.name)){throw limit(e.tok,e.obj.name+'.'+e.name+' is outside this practice editor.');}
+  var o=this.ev(e.obj,sc);
+  if(o===null){throw new JavaThrow('NullPointerException','Cannot call '+e.name+'() on null.',line);}
+  var A=function(i){return self.ev(e.args[i],sc);};
+  if(typeof o==='string'){
+    if(e.name==='length'){argc(e,0,'no arguments');return o.length;}
+    if(e.name==='equals'){argc(e,1,'one argument');var x=A(0);return typeof x==='string'&&x===o;}
+    if(e.name==='isEmpty'){argc(e,0,'no arguments');return o.length===0;}
+    throw limit(e.tok,'String.'+e.name+' is outside this practice editor; it reads length, equals and isEmpty.');}
+  if(o.k==='arr'){if(e.name==='length'){throw cerr(e.tok,'cannot find symbol: length(). An array uses .length without parentheses.');}throw limit(e.tok,'Arrays have no '+e.name+' method in this practice editor.');}
+  if(o.k==='list'){var L=o.a,n=L.length;
+    function idx(i,max){if(i<0||i>=max){throw new JavaThrow('IndexOutOfBoundsException','Index '+i+' out of bounds for length '+n,line);}return i;}
+    switch(e.name){
+    case 'add':if(e.args.length===1){if(n>=MAX_SIZE){throw new Stop('Lists here hold at most '+MAX_SIZE+' values.',line);}L.push(this.elemCheck(o,A(0),line));o.mod=(o.mod||0)+1;return true;}
+      argc(e,2,'one value, or an index and a value');var ai=this.toInt(A(0),line,'The index');if(ai<0||ai>n){throw new JavaThrow('IndexOutOfBoundsException','Index: '+ai+', Size: '+n,line);}L.splice(ai,0,this.elemCheck(o,A(1),line));o.mod=(o.mod||0)+1;return undefined;
+    case 'get':argc(e,1,'one index');return L[idx(this.toInt(A(0),line,'The index'),n)];
+    case 'set':argc(e,2,'an index and a value');var si=idx(this.toInt(A(0),line,'The index'),n),prev=L[si];L[si]=this.elemCheck(o,A(1),line);return prev;
+    case 'size':argc(e,0,'no arguments');return n;
+    case 'isEmpty':argc(e,0,'no arguments');return n===0;
+    case 'contains':argc(e,1,'one value');var cv=A(0);return L.some(function(x){return jeq(x,cv);});
+    case 'indexOf':argc(e,1,'one value');var iv=A(0);for(var k=0;k<n;k++){if(jeq(L[k],iv)){return k;}}return -1;
+    case 'clear':argc(e,0,'no arguments');L.length=0;o.mod=(o.mod||0)+1;return undefined;
+    case 'remove':argc(e,1,'one index or one value');
+      /* Java picks remove(int index) for an int argument and remove(Object o) for an object such as a String or Integer. */
+      var st=this.staticType(e.args[0],sc),rv=A(0);
+      if(typeof rv==='number'&&(st==='int'||st===null&&e.args[0].k!=='name')){var ri=idx(rv,n),gone=L[ri];L.splice(ri,1);o.mod=(o.mod||0)+1;return gone;}
+      if(typeof rv==='number'&&st===null){throw limit(e.tok,'This practice editor cannot tell whether this remove is by index or by value.');}
+      for(var r=0;r<n;r++){if(jeq(L[r],rv)){L.splice(r,1);o.mod=(o.mod||0)+1;return true;}}return false;}
+    throw limit(e.tok,'List.'+e.name+' is outside this practice editor; it reads add, get, set, remove, size, isEmpty, contains, indexOf and clear.');}
+  if(o.k==='map'){var E=o.e;function find(k){for(var q=0;q<E.length;q++){if(jeq(E[q].k,k)){return E[q];}}return null;}
+    switch(e.name){
+    case 'put':argc(e,2,'a key and a value');var pk=this.elemCheck(o,A(0),line,0),pv=this.elemCheck(o,A(1),line,1),hit=find(pk);if(hit){var was=hit.v;hit.v=pv;return was;}
+      if(E.length>=MAX_SIZE){throw new Stop('Maps here hold at most '+MAX_SIZE+' entries.',line);}E.push({k:pk,v:pv});return null;
+    case 'get':argc(e,1,'one key');var g=find(A(0));return g?g.v:null;
+    case 'getOrDefault':argc(e,2,'a key and a default value');var gd=find(A(0)),dv=A(1);return gd?gd.v:dv;
+    case 'containsKey':argc(e,1,'one key');return !!find(A(0));
+    case 'size':argc(e,0,'no arguments');return E.length;
+    case 'isEmpty':argc(e,0,'no arguments');return E.length===0;
+    case 'keySet':argc(e,0,'no arguments');return {k:'keys',m:o};
+    case 'merge':case 'compute':case 'computeIfAbsent':case 'putIfAbsent':case 'remove':case 'entrySet':case 'values':
+      throw limit(e.tok,'Map.'+e.name+' is outside this practice editor; use put, get, getOrDefault and containsKey here.');}
+    throw limit(e.tok,'Map.'+e.name+' is outside this practice editor; it reads put, get, getOrDefault, containsKey, size, isEmpty and keySet.');}
+  if(o.k==='keys'){throw limit(e.tok,'Use keySet() only in an enhanced for loop in this practice editor.');}
+  if(typeof o==='number'||typeof o==='boolean'){throw cerr(e.tok,(typeof o==='number'?'int':'boolean')+' cannot be dereferenced: a primitive value has no methods.');}
+  throw limit(e.tok,'This method call is outside this practice editor.');};
+
+/* ---------- public API ---------- */
+function parse(src,mode){var toks;try{toks=tokenize(String(src));}catch(p){if(p instanceof Problem){return {problems:[p]};}throw p;}
+  var bad=null;toks.forEach(function(t){if(!bad&&t.type==='id'&&t.value==='___'){bad=t;}});
+  if(bad){return {problems:[limit(bad,'Replace the ___ placeholder with your own code.')]};}
+  try{var prog=new Parser(toks).program(mode);return {problems:[],prog:prog};}
+  catch(p){if(p instanceof Problem){return {problems:[p]};}throw p;}}
+/* run: executes a parsed program. For 'methods' mode, entry = {name, args}; for 'statements' mode, entry is null. */
+function run(prog,entry){var out=[],it,result,status='ok',err=null;
+  try{it=new Interp(prog,out);
+    if(entry){if(!it.methods[entry.name]){return {status:'problem',problems:[cerr({line:1,col:1},'The method '+entry.name+' is missing; keep its first line from the starter.')]};}
+      var m=it.methods[entry.name];
+      if(entry.check){var msg=entry.check(m,tyName);if(msg){return {status:'problem',problems:[limit({line:m.line,col:1},msg)]};}}
+      result=it.callMethod(entry.name,entry.args,m.tok);}
+    else{var sc=new Scope(null);try{it.execBlock(prog.stmts,sc);}catch(f){if(f instanceof Flow){if(f.flow==='return'){throw new Stop('return is outside this practice snippet; the lines run as the body of main.',1);}throw new Stop(f.flow+' outside a loop: Java\'s compiler rejects it.',1);}throw f;}
+      result=sc;}}
+  catch(x){if(x instanceof JavaThrow){status='exception';err={type:x.jt,msg:x.msg,line:x.line};}
+    else if(x instanceof Stop){status='stopped';err={msg:x.stop,line:x.line};}
+    else if(x instanceof Problem){return {status:'problem',problems:[x],out:out};}
+    else{throw x;}}
+  return {status:status,result:result,out:out,err:err,steps:it?it.steps:0};}
+/* Exception text as the JVM prints its first line. Index exceptions carry the JDK's own message; for the others the
+   JVM's detail message varies by version, so the explanation is shown as a separate simulator note instead. */
+function exceptionText(err,where){var pkg=err.type==='ConcurrentModificationException'?'java.util.':'java.lang.',exact=/IndexOutOfBounds|ArithmeticException|NegativeArraySize/.test(err.type);
+  return 'Exception in thread "main" '+pkg+err.type+(exact?': '+err.msg:'')+'\n        at '+where+' (line '+err.line+')'+(exact?'':'\n    Simulator note: '+err.msg);}
+function printed(out){var s='';out.forEach(function(o){s+=o.t+(o.nl?'\n':'');});return s;}
+return {version:'1',parse:parse,run:run,show:show,printed:printed,exceptionText:exceptionText,hashOrder:hashOrder,newArray:newArray,tyName:tyName,Problem:Problem};
+})();
+/* /alm-engine jmini.js */
+/* Topic data and handlers for Linear and binary search. Every trace and result matches a real JDK run. */
+var TOPIC={
+predict:{correct:'a',why:{
+ a:'each look halves what is left (1,000, 500, 250, 125, 63, 32, 16, 8, 4, 2, 1), so about ten looks find the name or rule it out.',
+ b:'halving shrinks the range far faster than that: after 10 looks fewer than one name is left.',
+ c:'about 500 is the typical cost of checking names one by one from the start, not of halving.',
+ d:'1,000 is the worst case of checking every name one by one; halving never needs that many.'}},
+code:{file:'Search.java',mode:'methods',
+ startNote:'add a loop above return -1; first.',
+ starter:'static int indexOf(int[] a, int target) {\n    // return the first index where a holds target, or -1\n\n    return -1;\n}\n',
+ evaluate:function(prog,J){
+  var A=[4,8,15,16,23,42],cases=[{a:A,t:15,w:2,g:'found'},{a:A,t:4,w:0,g:'found'},{a:A,t:42,w:5,g:'found'},{a:A,t:7,w:-1,g:'missing'},{a:[],t:1,w:-1,g:'missing'},{a:[5,3,5],t:5,w:0,g:'first'}];
+  var lines=[],ok={found:0,missing:0,first:0},need={found:3,missing:2,first:1},status='pass',fb=[];
+  function sig(m,ty){if(ty(m.ret)!=='int'||m.params.length!==2||ty(m.params[0].type)!=='int[]'||ty(m.params[1].type)!=='int'){return 'Keep the first line from the starter: static int indexOf(int[] a, int target).';}return null;}
+  for(var c=0;c<cases.length;c++){var k=cases[c],arr=J.newArray({base:'int'},0);arr.a=k.a.slice();
+    var label='indexOf({'+k.a.join(', ')+'}, '+k.t+')',r=J.run(prog,{name:'indexOf',args:[arr,k.t],check:sig});
+    if(r.status==='problem'){return {status:'limit',problems:r.problems,lines:['Not run: '+r.problems[0].msg],summary:'Not run. 1 problem still open.',goals:{},feedback:'Not run yet: '+api_esc(r.problems[0].msg)};}
+    if(r.status==='exception'){status='exception';lines.push(label+'\n    '+J.exceptionText(r.err,'Search.indexOf'));fb.push(label+' threw '+r.err.type+' at line '+r.err.line+'.');break;}
+    if(r.status==='stopped'){status='stopped';lines.push(label+'\n    Stopped: '+r.err.msg);fb.push('The run stopped: '+r.err.msg);break;}
+    var good=r.result===k.w;lines.push(label+' -> '+r.result+(good?'   matches':'   expected '+k.w));
+    if(good){ok[k.g]++;}else{status='mismatch';fb.push(label+' gave '+r.result+', not '+k.w+'.'+(k.w===-1?' -1 should come only after every index has been checked.':(r.result===-1?' Is -1 returned before the loop reaches index '+k.w+'?':'')));}}
+  var goals={};Object.keys(need).forEach(function(g){if(ok[g]===need[g]){goals[g]=1;}});
+  var all=goals.found&&goals.missing&&goals.first;
+  return {status:all?'pass':status,lines:lines,goals:goals,summary:all?'Every call matches.':'Some calls do not match yet.',
+   feedback:all?'Every call returns the first matching index, or -1 after checking every element.':api_esc(fb.join(' '))};}},
+explore:{
+ A:[3,7,11,15,19,23,27,31,36,41,45,52,58,63,70,77],
+ reset:function(api){api.s.x={t:null,low:0,high:15,checks:0,done:false,log:[]};},
+ mid:function(x){return Math.floor((x.low+x.high)/2);},
+ render:function(api){var x=api.s.x,A=this.A,self=this;if(!x){return;}var m=x.low<=x.high?self.mid(x):-1;
+  var h=A.map(function(v,k){var cls=[],tags=[];if(x.t!==null&&(k<x.low||k>x.high)){cls.push('is-out');}
+    if(x.t!==null&&k===m&&!x.done){cls.push('is-mid');}if(x.t!==null&&x.done==='found'&&k===m){cls.push('is-on');}
+    if(x.t!==null){if(k===x.low){tags.push('low');}if(k===m&&x.low<=x.high){tags.push('mid');}if(k===x.high){tags.push('high');}}
+    return '<li'+(cls.length?' class="'+cls.join(' ')+'"':'')+'><span class="v">'+v+'</span><span class="i">['+k+']</span>'+(tags.length?'<span class="tag">'+tags.join(' ')+'</span>':'')+'</li>';}).join('');
+  var cells=api.$('bs-cells');if(cells.innerHTML!==h){cells.innerHTML=h;}
+  api.$('bs-bounds').textContent=x.t===null?'Choose a target to start.':(x.done?('Target '+x.t+(x.done==='found'?' found at index '+m:' is missing')+' after '+x.checks+' check'+(x.checks===1?'':'s')+'.'):(x.low<=x.high?'Target '+x.t+': low = '+x.low+', high = '+x.high+', mid = '+m+', and a[mid] is '+A[m]+'.':'Target '+x.t+': low = '+x.low+' is now greater than high = '+x.high+'.'));},
+ onInput:function(el,api){if(el.name!=='bs-target'){return;}var x=api.s.x;x.t=+el.value;x.low=0;x.high=15;x.checks=0;x.done=false;x.log=[];
+  var out=api.$('out-bs');if(out){out.textContent='target = '+x.t+'\nlow = 0, high = 15';}api.render();},
+ on:function(act,btn,api){var x=api.s.x,A=this.A;
+  if(x.t===null){api.feedback('<p>Choose a target first.</p>');return;}
+  if(x.done){api.feedback('<p>This trace is finished. Choose another target to trace again.</p>');return;}
+  api.s.attempts++;
+  var live=x.low<=x.high,m=live?this.mid(x):-1,v=live?A[m]:null,right=!live?'missing':(v===x.t?'found':(x.t>v?'higher':'lower')),msg;
+  if(act!==right){var why={higher:'the target '+x.t+' is larger than a[mid] = '+v+', so everything up to mid is too small.',lower:'the target '+x.t+' is smaller than a[mid] = '+v+', so everything from mid on is too big.',found:'a[mid] = '+v+' is the target.',missing:'low = '+x.low+' has passed high = '+x.high+', so nothing is left to check.'};
+    api.feedback('<p>Not that step: '+api.esc(why[right])+' Nothing changed; try the step that matches.</p>');return;}
+  if(live){x.checks++;}
+  if(act==='higher'){x.low=m+1;x.log.push('mid '+m+' holds '+v+': '+x.t+' is larger, low = '+x.low);}
+  else if(act==='lower'){x.high=m-1;x.log.push('mid '+m+' holds '+v+': '+x.t+' is smaller, high = '+x.high);}
+  else if(act==='found'){x.done='found';x.log.push('mid '+m+' holds '+v+': found at index '+m);api.goal('present');}
+  else{x.done='missing';x.log.push('low '+x.low+' > high '+x.high+': '+x.t+' is missing, return -1');api.goal('missing');}
+  api.$('out-bs').textContent='target = '+x.t+'\n'+x.log.join('\n');
+  msg=x.done?('Done in '+x.checks+' check'+(x.checks===1?'':'s')+'. Linear search would need '+(x.done==='found'?(A.indexOf(x.t)+1):16)+'.'):'Correct step. '+(x.low<=x.high?'Read the new a[mid].':'Now low is greater than high.');
+  var left=api.left();
+  api.feedback('<p>'+api.esc(msg)+'</p><p>'+(left?left+' of 2 checks still open.'+(api.s.g.present&&!api.s.g.missing?' Trace target 40 next.':''):'<strong>All checks done.</strong>'+(api.s.completed?'':api.nextNote()))+'</p>');
+  if(!left&&!api.s.completed){api.finish();}else{api.render();}}},
+apply:{A:{fs:'apply-a',correct:'c',okNote:'<p>Comparing the target with the middle value tells you which half to discard only when the array is sorted.</p>',
+  why:{a:'on unsorted input it can discard the half that holds the target and report a present value as missing.',b:'each check halves the range, so doubling the length adds about one check.',c:'the comparison with a[mid] decides which half to throw away, which is safe only for sorted input.',d:'a target at index 0 takes linear search one check, while binary search starts in the middle.'},
+  miss:{a:'On unsorted input, binary search can throw away the half that holds the target and wrongly report it missing.',b:'Halving means doubling the array adds only about one extra check.',d:'Not always: if the target is the first element, linear search finds it with a single check.'},
+  hint:'Ask what the comparison with the middle value relies on.'},
+ B:{fs:'apply-b',correct:'b',reveal:'About 20 checks: 2 to the power 20 is about 1,000,000, so a thousand times more elements adds only about ten halvings.',
+  why:{a:'11 would fit only one doubling; a thousand times more data is about ten doublings.',b:'2 to the power 20 is about a million, so about 20 halvings reach one element.',c:'10,000 would mean the checks grew a thousand times, like linear search; halving grows far slower.',d:'1,000,000 is linear search checking every element.'}}}
+};
+function api_esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+/* alm-engine@1 engine.js */
+/* alm-engine@1: shared page behaviour for the arrays-lists-and-maps pages. It reads the page's TOPIC object and
+   the activity sections' data-kind (predict, explore, code, apply). State lives only in this page: no storage,
+   network, telemetry, form submission or dialogs. Navigation changes only the current activity; completion
+   advances a monotonic unlocked frontier; Restart resets only the current activity. */
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),J=window.JMINI,T=window.TOPIC;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+var acts=qa('[data-pep-activity]'),links=qa('[data-pep-activity-link]'),N=acts.length;
+var prevBtn=$('previous-activity'),nextBtn=$('next-activity'),resetBtn=$('reset');
+var MIN=main.getAttribute('data-pep-required-minutes');
+var KIND={};acts.forEach(function(s,i){KIND[s.getAttribute('data-kind')]=i+1;});
+function blank(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,canContinue:false,missed:false,g:{},tries:0,conf:null,x:{}};}
+var S={current:1,unlocked:1,complete:false,a:acts.map(blank)};
+var SNAP={};qa('[data-restore]').forEach(function(n){SNAP[n.getAttribute('data-restore')]=n.innerHTML;});
+function act(n){return S.a[n-1];}
+function section(n){return acts[n-1];}
+function feedback(n,html){section(n).querySelector('[data-pep-feedback]').innerHTML=html||'';}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function optLabel(inp){return inp.closest('label');}
+function need(n){return qa('[data-goal]',section(n)).map(function(li){return li.getAttribute('data-goal');});}
+
+function reflect(){
+  main.setAttribute('data-pep-current-activity',String(S.current));
+  main.setAttribute('data-pep-unlocked-through',String(S.unlocked));
+  main.setAttribute('data-pep-complete',S.complete?'true':'false');
+  acts.forEach(function(sec,i){var s=S.a[i];
+    sec.setAttribute('data-pep-attempts',String(s.attempts));sec.setAttribute('data-pep-settled',String(s.settled));
+    sec.setAttribute('data-pep-completed',String(s.completed));sec.setAttribute('data-pep-credit',String(s.credit));
+    sec.setAttribute('data-pep-grade',String(s.grade));sec.setAttribute('data-pep-continue',String(s.canContinue));});}
+function progress(){var done=0,missed=0,segs=qa('#progress .seg');
+  S.a.forEach(function(s,i){if(s.completed){done++;if(s.missed){missed++;}}
+    segs[i].className='seg'+(s.completed?(s.missed?' is-settled':' is-done'):(i+1===S.current?' is-current':''));});
+  $('prog-text').textContent='Activity '+S.current+' of '+N+' · '+done+' of '+N+' done'+(missed?' ('+missed+' answered, not marked correct)':'')+' · about '+MIN+' min';}
+function render(){
+  acts.forEach(function(sec,i){sec.hidden=(i+1!==S.current);});
+  links.forEach(function(a,i){var n=i+1,s=S.a[i],st=a.querySelector('.pep-step__state');
+    if(n===S.current){a.setAttribute('aria-current','step');}else{a.removeAttribute('aria-current');}
+    if(n>S.unlocked){a.setAttribute('aria-disabled','true');}else{a.removeAttribute('aria-disabled');}
+    a.classList.toggle('is-done',s.completed);
+    st.textContent=n>S.unlocked?', locked':(s.completed?', done':(n===S.current?', current':''));});
+  prevBtn.disabled=S.current===1;
+  nextBtn.disabled=S.current>=N||S.current>=S.unlocked||!act(S.current).canContinue;
+  $('recap').classList.toggle('is-pending',!S.complete);
+  acts.forEach(function(sec,i){var s=S.a[i];qa('[data-goal]',sec).forEach(function(li){li.classList.toggle('done',!!s.g[li.getAttribute('data-goal')]);});});
+  if(T.explore&&T.explore.render){T.explore.render(api(KIND.explore));}
+  progress();reflect();}
+function go(n,mode,focus){
+  if(!(n>=1&&n<=N&&n<=S.unlocked)){return false;}
+  S.current=n;
+  try{if(mode==='push'){history.pushState({activity:n},'','#activity-'+n);}else if(mode==='replace'){history.replaceState({activity:n},'','#activity-'+n);}}
+  catch(e){if(mode&&location.hash!=='#activity-'+n){location.hash='activity-'+n;}}
+  render();
+  if(focus){var h=section(n).querySelector('h2[tabindex]');if(h){h.focus();}}
+  return true;}
+function fromHash(){var m=/^#activity-(\d+)$/.exec(location.hash);return m?+m[1]:0;}
+function historyChanged(){var n=fromHash();if(n===S.current){return;}if(!go(n,null,false)){go(S.current,'replace',false);}}
+addEventListener('popstate',historyChanged);
+addEventListener('hashchange',historyChanged);
+function complete(n,grade,missed){var s=act(n);
+  if(!s.completed){s.completed=true;s.settled=true;s.canContinue=true;s.credit=1;s.grade=grade;s.missed=!!missed;}
+  S.unlocked=Math.max(S.unlocked,Math.min(n+1,N));
+  if(S.a.every(function(x){return x.completed;})&&!S.complete){S.complete=true;
+    var m=S.a.filter(function(x){return x.missed;}).length;
+    $('complete-msg').textContent='All '+N+' activities finished'+(m?'; '+m+' answered without being marked correct. That is fine: review its explanation before moving on.':'.');}
+  render();}
+function nextNote(n){return n<N?' Choose <em>Next activity</em> when ready.':' The recap now follows the activities.';}
+function api(n){return {n:n,s:act(n),sec:section(n),$:$,qa:qa,esc:esc,checked:checked,feedback:function(h){feedback(n,h);},
+  goal:function(k){act(n).g[k]=1;},left:function(){var s=act(n);return need(n).filter(function(k){return !s.g[k];}).length;},
+  finish:function(){complete(n,1,false);},render:render,nextNote:function(){return nextNote(n);},J:J};}
+
+/* Predict: practice prediction before teaching, not scored. */
+function checkPredict(){var n=KIND.predict,P=T.predict,ch=checked('predict'),pc=checked('pconf'),s=act(n);
+  if(!ch||!pc||s.completed){return;}
+  s.attempts=1;
+  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}});
+  var html='<p class="verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+' Each option, explained:</p><ul class="explain">';
+  Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
+    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
+  feedback(n,html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p><p>'+nextNote(n)+'</p>');
+  complete(n,0,false);}
+
+/* Apply: a confidence rating first, one retry in a new form, then the answer is revealed and locked. */
+function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===set.correct&&chosen===set.correct){l.classList.add('right');}
+  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
+function badges(ok,mine){return '<span class="badges">'+(mine?'<span class="badge me">Your answer</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
+function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
+  w.innerHTML=badges(i.value===set.correct,i.value===chosen)+set.why[i.value];sp.appendChild(w);});}
+function explainList(set){var html='<ul>';Object.keys(set.why).forEach(function(k){var i=qa('input[value="'+k+'"]',$(set.fs))[0];
+  html+='<li><strong>'+(k===set.correct?'Correct: ':'Not this: ')+'</strong><span class="on">'+esc(optLabel(i).textContent.trim())+'</span>: '+set.why[k]+'</li>';});return html+'</ul>';}
+function confText(s){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(s.conf)+' (reported to you, never graded).</p>';}
+function focusVerdict(n){var v=section(n).querySelector('[data-pep-feedback] .verdict');if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function checkApply(which){var n=KIND.apply,A=T.apply.A,B=T.apply.B,s=act(n);
+  if(s.completed){return;}
+  if(which==='a'){var ch=checked('apply-a');s.conf=checked('conf');if(!ch||!s.conf){return;}
+    s.attempts=1;s.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
+    if(ch===A.correct){annotate(A,ch);$('apply-check').hidden=true;feedback(n,'<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText(s)+'<p>'+nextNote(n)+'</p>');complete(n,1,false);focusVerdict(n);return;}
+    var pick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
+    feedback(n,'<p class="verdict no">Not yet. Try once more with the same idea shown a different way.</p><p>Your first answer, <span class="on">'+esc(pick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText(s));
+    qa('[data-retry]',section(n)).forEach(function(x){x.hidden=false;});qa('[data-first]',section(n)).forEach(function(x){x.hidden=true;});
+    render();$('task-apply-b').focus();}
+  else{var c2=checked('apply-b');if(!c2||s.tries!==1){return;}
+    s.attempts=2;s.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
+    var details='<details><summary>First question: every option explained</summary>'+explainList(A)+'</details>';
+    if(c2===B.correct){feedback(n,'<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+details+confText(s)+'<p>'+nextNote(n)+'</p>');complete(n,1,false);}
+    else{qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
+      feedback(n,'<p class="verdict set">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+details+confText(s)+'<p>'+nextNote(n)+'</p>');complete(n,0,true);}
+    focusVerdict(n);}}
+function syncButtons(){var p=KIND.predict,a=KIND.apply;
+  if(p&&!act(p).completed){$('predict-check').disabled=!(checked('predict')&&checked('pconf'));}
+  if(a&&!act(a).completed&&act(a).tries===0){$('apply-check').disabled=!(checked('apply-a')&&checked('conf'));}
+  if(a&&!act(a).completed&&act(a).tries===1){$('apply-check-b').disabled=!checked('apply-b');}}
+
+/* Practice editor: gutter, Problems | Output, status, Run, Reset code. Language behaviour comes from JMINI and
+   the topic's evaluate function, which checks resulting values on the visible examples only. */
+var ED=null;
+function mountEditor(root,cfg){
+  var q=function(s){return root.querySelector(s);},ta=q('.pep-editor__input'),gut=q('.pep-editor__gutter'),probs=q('.pep-editor__probs'),outEl=q('.pep-editor__out'),
+    stat=q('.pep-editor__status'),pos=q('.pep-editor__pos'),cnt=q('.pep-editor__count'),live=q('.pep-editor__live'),tabs=qa('[role=tab]',root),escArmed=false,last=[],timer=null;
+  function paintGutter(){var n=ta.value.split('\n').length,bad={},h='';last.forEach(function(p){if(!bad[p.line]||p.kind==='error'){bad[p.line]=p.kind;}});
+    for(var i=1;i<=n;i++){h+='<span'+(bad[i]?' class="g-'+bad[i]+'"':'')+'>'+i+'</span>\n';}gut.innerHTML=h;}
+  function caret(){var v=ta.value.slice(0,ta.selectionStart).split('\n');pos.textContent='Ln '+v.length+', Col '+(v[v.length-1].length+1);}
+  function paintProblems(){probs.innerHTML=last.length?last.map(function(p){return '<li><button type="button" class="pep-editor__problem" data-line="'+p.line+'" data-col="'+p.col+'"><span class="ln">Ln '+p.line+'</span> <span class="kind-'+p.kind+'">'+(p.kind==='error'?'Error':'Lesson check')+'</span> '+esc(p.msg)+'</button></li>';}).join(''):'<li class="pep-editor__none">No problems found by the lesson checker.</li>';
+    var e=last.filter(function(p){return p.kind==='error';}).length;cnt.textContent=e+' error'+(e===1?'':'s')+', '+(last.length-e)+' lesson check'+(last.length-e===1?'':'s');tabs[0].textContent='Problems ('+last.length+')';}
+  function analyse(){var p=J.parse(ta.value,cfg.mode);last=p.problems;paintProblems();paintGutter();return p;}
+  function select(i,focus){tabs.forEach(function(t,k){var on=k===i;t.setAttribute('aria-selected',on?'true':'false');t.tabIndex=on?0:-1;$(t.getAttribute('aria-controls')).hidden=!on;});if(focus){tabs[i].focus();}}
+  tabs.forEach(function(t,i){t.addEventListener('click',function(){select(i);});
+    t.addEventListener('keydown',function(e){if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();select(1-i,true);}});});
+  probs.addEventListener('click',function(e){var b=e.target.closest('.pep-editor__problem');if(!b){return;}
+    var ln=+b.getAttribute('data-line'),col=+b.getAttribute('data-col'),ls=ta.value.split('\n'),off=0;
+    for(var i=0;i<ln-1&&i<ls.length;i++){off+=ls[i].length+1;}off+=Math.max(0,Math.min(col-1,(ls[ln-1]||'').length));ta.focus();ta.setSelectionRange(off,off);caret();});
+  function disarm(){escArmed=false;stat.removeAttribute('data-esc');}
+  ta.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();disarm();doRun();return;}
+    if(e.key==='Escape'){escArmed=true;stat.setAttribute('data-esc','1');return;}
+    if(e.key==='Tab'&&!e.ctrlKey&&!e.metaKey&&!e.altKey){if(escArmed){disarm();return;}e.preventDefault();var s=ta.selectionStart,v=ta.value,ls=v.lastIndexOf('\n',s-1)+1;
+      if(e.shiftKey){var lead=/^ {0,4}/.exec(v.slice(ls))[0].length;if(lead){ta.value=v.slice(0,ls)+v.slice(ls+lead);var c=Math.max(ls,s-lead);ta.setSelectionRange(c,c);}}
+      else{ta.setRangeText('    ',s,ta.selectionEnd,'end');}changed();return;}
+    if(escArmed){disarm();}});
+  function changed(){caret();paintGutter();clearTimeout(timer);timer=setTimeout(analyse,250);}
+  ta.addEventListener('input',changed);ta.addEventListener('blur',disarm);
+  ['keyup','click','focus'].forEach(function(ev){ta.addEventListener(ev,caret);});
+  function doRun(){clearTimeout(timer);var p=analyse(),rep;
+    if(p.problems.length){var err=p.problems.filter(function(x){return x.kind==='error';}).length;
+      rep={status:err?'syntax':'limit',lines:['Not run: '+p.problems.length+' problem'+(p.problems.length===1?'':'s')+' to fix first.'+(err?' javac would reject this code before running any of it.':'')],summary:'Not run. '+p.problems.length+' problem'+(p.problems.length===1?'':'s')+' still open.',goals:{}};}
+    else{rep=cfg.evaluate(p.prog,J);if(rep.problems){last=rep.problems;paintProblems();paintGutter();}}
+    outEl.textContent=['$ practice-run '+cfg.file+'   (lesson simulator, not a real JVM)'].concat(rep.lines).join('\n');
+    select(rep.status==='syntax'||rep.status==='limit'?0:1);
+    live.textContent='';var msg=rep.summary;setTimeout(function(){live.textContent=msg;},30);
+    onCodeRun(rep,ta.value);return rep;}
+  q('.pep-editor__run').addEventListener('click',doRun);
+  q('.pep-editor__reset').addEventListener('click',function(){set(cfg.starter);live.textContent='Code reset to the starting version.';});
+  function set(v){ta.value=v;last=[];outEl.textContent='Press Run (or Ctrl+Enter in the editor) to check this code with the lesson simulator.';analyse();caret();select(0);}
+  set(cfg.starter);root.setAttribute('data-state','ready');
+  return {set:set,run:doRun};}
+function normal(code){return String(code).replace(/\r\n?/g,'\n').replace(/[ \t]+$/gm,'').trim();}
+function onCodeRun(rep,code){var n=KIND.code,s=act(n),C=T.code,m=[];
+  if(normal(code)===normal(C.starter)){feedback(n,'<p>Not run yet: '+C.startNote+' Nothing was counted.</p>');return;}
+  /* Checks reflect the latest run as a whole, so passing them in separate runs with different code cannot add up. */
+  if(!s.completed){s.g={};Object.keys(rep.goals||{}).forEach(function(k){if(rep.goals[k]){s.g[k]=1;}});}
+  m.push(rep.feedback||esc(rep.summary));
+  var all=need(n).every(function(k){return s.g[k];});
+  if(!s.completed){s.attempts++;
+    if(all){m.push('<strong>All checks done.</strong>'+nextNote(n));complete(n,1,false);}
+    else if(s.attempts>=2){m.push('<strong>Settled after two tries, without penalty.</strong> Compare Output with the examples, open the hints for the next reasoning step, and keep practising here if you like.'+nextNote(n));complete(n,0,true);}
+    else{m.push('One more try before this activity settles; the hints beside the task give the next reasoning step.');render();}}
+  else{if(all){m.push('<strong>All checks now pass.</strong> Your earlier result for this activity stands.');}render();}
+  feedback(n,'<p>'+m.join(' ')+'</p>');}
+
+/* Restart: only the current activity returns to its authored start; the frontier, page completion, required time
+   and every other activity stay exactly as they are. */
+function restart(){var n=S.current;
+  S.a[n-1]=blank();
+  qa('[data-restore]',section(n)).forEach(function(box){box.innerHTML=SNAP[box.getAttribute('data-restore')];});
+  if(n===KIND.code&&ED){ED.set(T.code.starter);}
+  if(n===KIND.explore&&T.explore.reset){T.explore.reset(api(n));}
+  if(n===KIND.apply){$('task-apply-b').hidden=true;}
+  qa('details.pep-optional',section(n)).forEach(function(x){x.open=false;});
+  feedback(n,'');render();
+  var h=section(n).querySelector('h2[tabindex]');if(h){h.focus();}}
+
+d.addEventListener('click',function(e){
+  var link=e.target.closest('[data-pep-activity-link],[data-pep-back-link]');
+  if(link){e.preventDefault();var n=+(/activity-(\d+)$/.exec(link.getAttribute('href'))||[])[1];
+    if(link.getAttribute('aria-disabled')!=='true'){go(n,'push',true);}return;}
+  var b=e.target.closest('button');if(!b||b.disabled){return;}
+  if(b===resetBtn){restart();}
+  else if(b===prevBtn){go(S.current-1,'push',true);}
+  else if(b===nextBtn){go(S.current+1,'push',true);}
+  else if(b.id==='predict-check'){checkPredict();}
+  else if(b.id==='apply-check'){checkApply('a');}
+  else if(b.id==='apply-check-b'){checkApply('b');}
+  else if(b.hasAttribute('data-act')&&T.explore){T.explore.on(b.getAttribute("data-act"),b,api(KIND.explore));}});
+d.addEventListener('change',function(e){syncButtons();if(e.target.hasAttribute('data-act-input')&&T.explore&&T.explore.onInput){T.explore.onInput(e.target,api(KIND.explore));}});
+d.addEventListener('input',function(e){if(e.target.hasAttribute('data-act-input')&&T.explore&&T.explore.onInput){T.explore.onInput(e.target,api(KIND.explore));}});
+
+/* Objectives: a native disclosure; a fine pointer may also open it on hover. Escape and an outside click close it. */
+var obj=d.querySelector('[data-pep-objectives]'),objSum=obj.querySelector('summary'),hoverOpened=false;
+function fine(){return !!(window.matchMedia&&matchMedia('(hover: hover) and (pointer: fine)').matches);}
+obj.addEventListener('mouseenter',function(){if(fine()&&!obj.open){obj.open=true;hoverOpened=true;}});
+obj.addEventListener('mouseleave',function(){if(hoverOpened){obj.open=false;hoverOpened=false;}});
+objSum.addEventListener('click',function(e){if(hoverOpened){e.preventDefault();hoverOpened=false;}});
+d.addEventListener('keydown',function(e){if(e.key==='Escape'&&obj.open){obj.open=false;hoverOpened=false;objSum.focus();}});
+d.addEventListener('click',function(e){if(obj.open&&!obj.contains(e.target)){obj.open=false;hoverOpened=false;}});
+
+/* Print shows every activity and opens closed disclosures, then restores their exact prior state. */
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=qa('details:not([open])',main);printOpened.forEach(function(x){x.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(x){x.open=false;});printOpened=[];});
+
+if(T.code){try{ED=mountEditor($('ed'),{file:T.code.file,mode:T.code.mode,starter:T.code.starter,evaluate:T.code.evaluate});}
+  catch(e){feedback(KIND.code,'<p>The editor could not start; the static exercise text still describes the task.</p>');}}
+if(T.explore&&T.explore.reset){T.explore.reset(api(KIND.explore));}
+var start=fromHash();
+go(start>=1&&start<=S.unlocked?start:1,'replace',false);
+})();
+/* /alm-engine engine.js */
+</script>
+</body>
+</html>

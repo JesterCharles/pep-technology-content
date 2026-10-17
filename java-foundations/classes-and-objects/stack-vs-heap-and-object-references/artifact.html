@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="java-foundations">
+<meta name="pep:module" content="classes-and-objects">
+<meta name="pep:topic" content="Stack vs heap and object references">
+<meta name="pep:topic-id" content="stack-vs-heap-and-object-references">
+<meta name="pep:budget-minutes" content="14">
+<meta name="pep:source" content="authoring/evidence/java-foundations/classes-and-objects/stack-vs-heap-and-object-references/sources.json">
+<title>Stack vs heap and object references · Classes and Objects</title>
+<style>
+/* pep-classes-objects-shell v1: shared page shell, identical bytes on every page of this module */
+/* DESIGN.md token reference */
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* Base, focus and motion */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+pre { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; max-width: 100%; break-inside: avoid; }
+pre code { font-size: 1em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+/* Buttons */
+button { cursor: pointer; min-height: 44px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); padding: 10px 20px; max-width: 100%; overflow-wrap: anywhere; }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.pep-btn:hover { border-color: var(--pep-accent); }
+.pep-btn--primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+button:disabled, .pep-btn:disabled, .pep-btn--primary:disabled { cursor: not-allowed; background: var(--pep-control); color: var(--pep-text-muted); border: 1px solid var(--pep-line-strong); }
+/* Topic bar: the clearest accent surface */
+.pep-topicbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding: 12px 16px; margin: 0;
+  border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 4px; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress p { max-width: none; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; max-width: 220px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); outline: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); outline-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning); outline-color: var(--pep-warning); }
+.pep-progress > span.is-current { outline: 2px solid var(--pep-accent); }
+.pep-objectives { position: relative; break-inside: avoid; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; border-radius: var(--pep-radius-sm); }
+.pep-objectives > summary::marker { color: var(--pep-accent-text); }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; padding-left: 20px; }
+.pep-objectives li + li { margin-top: 8px; }
+@media (min-width: 640px) { .pep-objectives[open] > div { position: absolute; right: 0; z-index: 2; width: 360px; } }
+/* Activity timeline */
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; counter-reset: pep-step; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px 6px 6px; border: 1px solid transparent; border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; }
+.pep-step__n::before { counter-increment: pep-step; content: counter(pep-step); }
+.pep-step__n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--pep-control); color: var(--pep-text); font-size: 13px; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-current="step"] .pep-step__n { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-step.is-done .pep-step__n { background: var(--pep-accent-soft); color: var(--pep-accent-text); outline: 1px solid var(--pep-accent); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+/* Activities and regions */
+.pep-activity { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-activity > h2 { padding-bottom: 8px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region--workspace, [data-pep-workspace] {
+  padding: 24px; border: 1px solid var(--pep-line-strong);
+  border-radius: var(--pep-radius-lg); background: var(--pep-card);
+}
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
+.teach { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.teach ul, .teach ol { margin: 0; padding-left: 24px; }
+.task { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task ol, .task ul { margin: 0; padding-left: 24px; }
+.pep-task-q { font-weight: 600; color: var(--pep-text-strong); }
+/* Required activity checks: accent tint and rail, never success green */
+.pep-activity-checks, [data-pep-activity-checks] {
+  padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px;
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-activity-checks h3 { margin-bottom: 4px; }
+.pep-activity-checks ul { margin: 0; padding-left: 20px; }
+/* Where this fits */
+[data-pep-where-fits] {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-card);
+}
+[data-pep-where-fits] strong { color: var(--pep-text-strong); }
+/* Progressive optional hints */
+.pep-hint, details[data-pep-hint] {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md);
+  background: var(--pep-accent-soft); break-inside: avoid;
+}
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
+.pep-hint .pep-hint {
+  margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong);
+  border-radius: 0; background: transparent;
+}
+/* Optional Anecdote and Challenge disclosures */
+.pep-optional {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-card); break-inside: avoid;
+}
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer;
+  color: var(--pep-text-strong); font-weight: 600;
+}
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 16px; }
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+  .pep-step[aria-current="step"] { border-color: Highlight; }
+  .opt:has(input:checked), .opt.right, .opt.wrong { border-color: Highlight; }
+}
+/* Options, confidence, badges and feedback */
+fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+legend { padding: 0; font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 8px; }
+.opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.opts.one { grid-template-columns: minmax(0, 1fr); }
+.opt { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt::before { content: ""; flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); }
+.opt.is-box::before { border-radius: 4px; }
+.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.opt input:disabled { cursor: default; }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.opt:has(input:checked)::before { border: 6px solid var(--pep-accent); }
+.opt:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.opt:has(input:disabled) { cursor: default; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.opt.mine { border-color: var(--pep-accent); }
+.ot { flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; }
+.opts.explained .opt { align-items: flex-start; padding: 8px 16px; }
+.opts.explained .opt::before { margin-top: 2px; }
+.oexp { flex: 1 0 100%; margin: 2px 0 0; padding-top: 4px; border-top: 1px solid var(--pep-line-strong); font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.badges { display: flex; flex-wrap: wrap; gap: 4px; flex: 1 0 100%; margin: 2px 0 0 32px; }
+.badge { padding: 0 8px; font: 600 13px/20px var(--pep-font-sans); border: 1px solid; border-radius: var(--pep-radius-pill); white-space: nowrap; }
+.badge.ok-b { color: var(--pep-success); border-color: var(--pep-success); }
+.badge.no-b { color: var(--pep-danger); border-color: var(--pep-danger); }
+.badge.mine-b { color: var(--pep-text-strong); border-color: var(--pep-line-strong); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 12px; }
+.conf { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.conf legend { float: left; margin: 0 8px 0 0; line-height: 44px; }
+.conf .opt { min-width: 96px; }
+.feedback { width: 100%; min-width: 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.feedback:empty { display: none; }
+.feedback:not(:empty) { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.feedback ul { margin: 4px 0 0; padding-left: 24px; }
+.feedback .verdict { font-size: 16px; line-height: 24px; font-weight: 700; }
+.feedback .ok { color: var(--pep-success); }
+.feedback .no { color: var(--pep-danger); }
+.feedback .set { color: var(--pep-warning); }
+.feedback .info { color: var(--pep-text-strong); }
+.feedback .conf-report { color: var(--pep-text-muted); }
+@media (max-width: 480px) { .opts, .lanes { grid-template-columns: minmax(0, 1fr); } }
+/* Models, lanes and figures */
+.model { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.lk { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.sub { margin: 0 0 8px; font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.lanebtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.lanebtns button { min-width: 120px; text-align: left; }
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.lane { padding: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); min-height: 80px; background: var(--pep-page); min-width: 0; }
+.lane .lk { overflow-wrap: anywhere; color: var(--pep-text-strong); }
+.cards { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.cards li { font-size: 14px; line-height: 20px; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); overflow-wrap: anywhere; }
+.cards li.revealed { border-style: dashed; border-color: var(--pep-warning); }
+.tag { display: inline-block; margin-left: 4px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--pep-warning); }
+.pep-figure { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.pep-figure svg { display: block; width: 100%; height: auto; }
+.pep-figure .node { fill: var(--pep-card); stroke: var(--pep-line-strong); stroke-width: 1.5; }
+.pep-figure .node.is-focus { fill: var(--pep-accent-soft); stroke: var(--pep-accent); stroke-width: 2; }
+.pep-figure .edge { fill: none; stroke: var(--pep-line-strong); stroke-width: 2; }
+.pep-figure .arrow { fill: var(--pep-line-strong); }
+.pep-figure .label { fill: var(--pep-text-strong); font: 600 16px var(--pep-font-sans); }
+.pep-figure .small { fill: var(--pep-text); font: 400 14px var(--pep-font-mono); }
+.pep-figure figcaption { font: 400 12px/16px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-table-wrap { border: 1px solid var(--pep-line); border-radius: var(--pep-radius-md); overflow: hidden; }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); }
+.pep-table th { text-align: left; font-weight: 600; color: var(--pep-text-strong); background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); padding: 8px 12px; }
+.pep-table td { padding: 8px 12px; border-bottom: 1px solid var(--pep-line); vertical-align: top; overflow-wrap: anywhere; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.pep-table td:first-child { font-weight: 600; color: var(--pep-text-strong); }
+/* Editor workspace */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; max-height: 400px; overflow: hidden; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__scope { padding: 8px 12px; font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); background: var(--pep-sunken); }
+.pep-editor__panel ul { margin: 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.pep-editor__empty { color: var(--pep-text-muted); }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: 400 14px/20px var(--pep-font-mono); }
+.kind-error, .kind-fail { color: var(--pep-danger); font-weight: 700; }
+.kind-limit { color: var(--pep-warning); font-weight: 700; }
+.kind-pass { color: var(--pep-success); font-weight: 700; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); max-width: none; }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar button { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input, .pep-editor__gutter { max-height: 240px; }
+  .pep-editor__code { font-size: 16px; line-height: 24px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* Navigation */
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions button { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions button { flex: 0 1 auto; } }
+.pep-back a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+/* Recap */
+.recap { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; margin-top: 24px; border-top: 1px solid var(--pep-line-strong); }
+.recap ul { margin: 0; padding-left: 24px; }
+.recap li + li { margin-top: 4px; }
+.recap details { padding: 0 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.recap details > summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: flex; align-items: center; }
+.recap details > :last-child { margin-bottom: 12px; }
+.recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+.sources ul { margin: 8px 0; padding-left: 24px; font-size: 14px; line-height: 20px; }
+.sources li { margin-bottom: 4px; overflow-wrap: anywhere; }
+.sources li a { display: inline-flex; align-items: center; min-height: 44px; }
+.sources p { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.complete { padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete.settled { border-color: var(--pep-warning); background: var(--pep-warning-soft); }
+.complete:empty { display: none; }
+/* Static expected results: no-JavaScript reading only */
+.pep-expected { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); display: flex; flex-direction: column; gap: 8px; }
+.pep-expected ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-nojs-note { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text-strong); }
+@media print {
+  [data-pep-activity][hidden] { display: flex !important; }
+  .pep-nav, .pep-activity-actions, .pep-back, .pep-reset, .pep-progress { display: none !important; }
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .pep-objectives[open] > div { position: static; width: auto; }
+  .pep-editor__code, .pep-editor__input, .pep-editor__gutter, .pep-editor__panel { max-height: none; overflow: visible; }
+}
+</style>
+<noscript><style>.pep-js-only{display:none!important}</style></noscript>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="14">
+<header class="pep-topicbar">
+<h1 id="page-title">Stack vs heap and object references</h1>
+<div class="pep-topicbar__progress"><p><span class="pep-js-only"><span id="pos-text">Activity 1 of 4</span> · <span id="prog-text">Activities done: 0 of 4</span> · </span>about 14 min</p>
+<div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span><span></span></div></div>
+<details class="pep-objectives" data-pep-objectives><summary aria-controls="objectives-body">Objectives</summary><div id="objectives-body"><ul><li>Draw where local variables, objects and references live for a short program</li><li>Predict the effect of two references pointing to the same object</li><li>Explain when an object becomes unreachable and eligible for garbage collection</li></ul></div></details>
+<button type="button" class="pep-btn pep-reset pep-js-only" id="reset" data-pep-reset>Restart activity</button>
+<p class="vh" id="restart-status" role="status" aria-live="polite"></p>
+</header>
+<nav class="pep-nav" aria-label="Activities"><ol class="pep-steps"><li><a class="pep-step" id="tl-1" href="#activity-1" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Guess</a></li><li><a class="pep-step" id="tl-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Draw</a></li><li><a class="pep-step" id="tl-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Reach</a></li><li><a class="pep-step" id="tl-4" href="#activity-4" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Apply</a></li></ol></nav>
+<noscript data-section-skip><p class="pep-nojs-note"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. All 4 activities follow in order, each with its expected results and why.</p></noscript>
+<section id="activity-1" class="pep-activity" data-pep-activity aria-labelledby="a1-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+<h2 id="a1-h" tabindex="-1">Activity 1: Guess first</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions><div class="teach" data-pep-teaching><p>Before any explanation, predict what this program prints.</p>
+<pre><code>class Box {
+    int size;
+}
+
+// inside main:
+Box a = new Box();
+a.size = 1;
+Box b = a;
+b.size = 5;
+System.out.println(a.size);</code></pre></div></div>
+<div class="pep-region pep-region--workspace" data-pep-workspace="activity"><div id="task-1" class="task" data-pep-task><h3>Your task</h3><p>Under <strong>Your prediction</strong>, choose what the last line prints and how sure you are, then press <strong>Check prediction</strong>.</p></div><section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to a prediction, then read why each option is right or wrong. A prediction is practice and is not scored.</p></section><div class="pep-js-only"><fieldset id="pf-1" data-static-alt="Expected results and why. It prints 5 : b = a copies the reference, so both variables refer to the same object, and setting size through b changes that one object. It is not 1 (no copy of the object exists), not 6 (the assignment replaces) and not a compile error." data-interaction="predict" data-confidence><legend>Your prediction</legend><div class="opts"><label class="opt"><input type="radio" name="p-1" value="a" aria-describedby="task-1"><span class="ot"><code>1</code></span></label><label class="opt"><input type="radio" name="p-1" value="b" aria-describedby="task-1"><span class="ot"><code>5</code></span></label><label class="opt"><input type="radio" name="p-1" value="c" aria-describedby="task-1"><span class="ot"><code>6</code></span></label><label class="opt"><input type="radio" name="p-1" value="d" aria-describedby="task-1"><span class="ot">A compile error</span></label></div><div class="row"><fieldset class="conf" id="conf-1" data-pep-confidence aria-describedby="conf-1-l"><legend id="conf-1-l">How sure are you?</legend><label class="opt"><input type="radio" name="c-1" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="c-1" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="c-1" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="pep-btn pep-btn--primary" id="check-1" disabled>Check prediction</button></div></fieldset></div><div class="feedback" id="fb-1" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div><noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> It prints <code>5</code>: <code>b = a</code> copies the reference, so both variables refer to the same object, and setting <code>size</code> through <code>b</code> changes that one object. It is not 1 (no copy of the object exists), not 6 (the assignment replaces) and not a compile error.</p></div></noscript></div>
+</div>
+</section>
+<section id="activity-2" class="pep-activity" data-pep-activity aria-labelledby="a2-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+<h2 id="a2-h" tabindex="-1">Activity 2: Stack or heap?</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions><div class="teach" data-pep-teaching><p data-pep-model>The model: each method call gets a <strong>frame</strong> on its thread's <strong>stack</strong>. The frame holds that call's parameters and local variables, and it disappears when the call returns. Every object made by <code>new</code> lives on the <strong>heap</strong>, together with its fields. A local variable of a class type holds only a <strong>reference</strong>: an arrow to an object on the heap.</p>
+<figure class="pep-figure"><svg viewBox="0 0 360 200" role="img" aria-labelledby="fig-sh-t fig-sh-d"><title id="fig-sh-t">Stack frame and heap after Box b = a</title><desc id="fig-sh-d">The main method's frame on the stack holds count = 3 and two reference variables, a and b. Both arrows point to one Box object on the heap whose size field is 5.</desc>
+<text class="label" x="8" y="20">Stack: frame of main</text>
+<rect class="node" x="8" y="32" width="150" height="40" rx="8"/><text class="small" x="20" y="57">count = 3</text>
+<rect class="node" x="8" y="80" width="150" height="40" rx="8"/><text class="small" x="20" y="105">a</text><circle class="arrow" cx="140" cy="100" r="4"/>
+<rect class="node" x="8" y="128" width="150" height="40" rx="8"/><text class="small" x="20" y="153">b</text><circle class="arrow" cx="140" cy="148" r="4"/>
+<text class="label" x="214" y="20">Heap</text>
+<rect class="node is-focus" x="214" y="88" width="138" height="64" rx="8"/><text class="label" x="226" y="114">Box</text><text class="small" x="226" y="138">size = 5</text>
+<path class="edge" d="M140 100 H206"/><path class="arrow" d="M214 100 l-10 -6 v12 z"/>
+<path class="edge" d="M140 148 H180 V140 H206"/><path class="arrow" d="M214 140 l-10 -6 v12 z"/>
+</svg><figcaption>Two references on the stack, one object on the heap.</figcaption></figure>
+<p>This is the model the Java Virtual Machine Specification describes. A running JVM may optimize where data really sits, but it never changes what your program can observe.</p></div></div>
+<div class="pep-region pep-region--workspace" data-pep-workspace="activity"><div id="task-2" class="task" data-pep-task data-pep-may-stall><h3>Your task</h3><p>For the item shown after <strong>Item:</strong>, press <strong>Stack</strong> or <strong>Heap</strong>, using the drawing's model. Every item comes from a <code>main</code> method that runs <code>int count = 3; Box a = new Box(); a.size = 5;</code>.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> The item shown after <strong>Item:</strong>, above the two buttons.</p><p data-pep-hint-step><strong>Next step:</strong> Ask whether the item is a variable declared inside the method, which lives in the call's frame, or something made by <code>new</code> or belonging to such an object.</p></div></details></div><section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>All six items sit in the right lanes. Each one allows one retry; a second miss shows its lane and settles the activity.</p></section><div class="pep-js-only"><fieldset id="lf-2" data-static-alt="Expected results and why. count : stack; a local variable. The object made by new Box() : heap. The variable a : stack; it holds a reference. The size field: heap; it belongs to the object. The parameter args : stack; parameters are in the frame. The array args refers to: heap; arrays are objects." data-interaction="drag"><legend id="ln-legend-2">Item: <span id="ln-name-2"></span></legend><div class="lanebtns" id="ln-btns-2"></div><p class="sub" id="ln-count-2"></p></fieldset><figure class="model" aria-label="Sorted so far"><div class="lanes" id="lanes-2"></div></figure></div><div class="feedback" id="fb-2" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div><noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong></p><ul><li><code>count</code>: stack; a local variable.</li><li>The object made by <code>new Box()</code>: heap.</li><li>The variable <code>a</code>: stack; it holds a reference.</li><li>The <code>size</code> field: heap; it belongs to the object.</li><li>The parameter <code>args</code>: stack; parameters are in the frame.</li><li>The array <code>args</code> refers to: heap; arrays are objects.</li></ul></div></noscript><p class="pep-back"><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p></div>
+</div>
+</section>
+<section id="activity-3" class="pep-activity" data-pep-activity aria-labelledby="a3-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+<h2 id="a3-h" tabindex="-1">Activity 3: Which objects can be collected?</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions><div class="teach" data-pep-teaching><p>An object is <strong>reachable</strong> while a chain of references leads to it from a variable that running code can still use, such as a local variable of a method that has not returned. When no such chain is left, the object is <strong>unreachable</strong>: no code can ever use it again, so it is <strong>eligible for garbage collection</strong>. The JVM reclaims its memory when it chooses, possibly never; you cannot force it.</p>
+<p>Reassigning a variable or setting it to <code>null</code> removes one reference. An object created by <code>new</code> but never stored has no reference at all.</p></div>
+<details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip><summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary><div class="pep-optional__body">
+<p data-pep-anecdote-story>Balloons at a fair are tied to strings that children hold. A child may let go of one string, but the balloon stays as long as anyone still holds a string tied to it. A balloon with no string held by anyone drifts off and is gone for good, whenever the wind happens to take it.</p>
+<p data-pep-anecdote-map>Strings are references; a balloon nobody holds is unreachable, and when it leaves is not up to you.</p></div></details></div>
+<div class="pep-region pep-region--workspace" data-pep-workspace="activity"><div id="task-3" class="task" data-pep-task data-pep-may-stall><h3>Your task</h3><p>Read the code below, then under <strong>Unreachable at the marked line</strong> tick every <code>Box</code> that is eligible for garbage collection when the program reaches the line marked <code>here</code>. Press <strong>Check choices</strong>.</p><pre><code>Box a = new Box();   // Box 1
+Box b = new Box();   // Box 2
+Box c = new Box();   // Box 3
+new Box();           // Box 4
+Box d = b;
+a = c;
+b = null;
+// here</code></pre><details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 3</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> The four boxes listed in the comments, against the last three lines of code.</p><p data-pep-hint-step><strong>Next step:</strong> Trace which variable refers to which box after every line: <code>d = b</code> adds a reference, while <code>a = c</code> and <code>b = null</code> each move or remove one.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="2" data-section-skip><summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 3</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> Each box in turn, at the marked line.</p><p data-pep-hint-step><strong>Next step:</strong> A box is eligible only if no variable at all refers to it at that point. Count the variables still pointing at each box; a count of zero means eligible.</p></div></details></div></details></div><section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>You tick exactly the unreachable boxes. A wrong first set gives a retry; a second miss shows the full answer and settles the check.</p></section><div class="pep-js-only"><fieldset id="ms-3" data-static-alt="Expected results and why. Box 1 and Box 4 are eligible. Box 1&#x27;s only reference moved away with a = c ; Box 4 was never stored. Box 2 is still referenced by d , and Box 3 by a and c ." data-interaction="mcq"><legend>Unreachable at the marked line</legend><div class="opts one"><label class="opt is-box"><input type="checkbox" name="m-3" value="b1" aria-describedby="task-3"><span class="ot">Box 1</span></label><label class="opt is-box"><input type="checkbox" name="m-3" value="b2" aria-describedby="task-3"><span class="ot">Box 2</span></label><label class="opt is-box"><input type="checkbox" name="m-3" value="b3" aria-describedby="task-3"><span class="ot">Box 3</span></label><label class="opt is-box"><input type="checkbox" name="m-3" value="b4" aria-describedby="task-3"><span class="ot">Box 4</span></label></div><div class="row"><button type="button" class="pep-btn pep-btn--primary" id="check-3" disabled>Check choices</button></div></fieldset></div><div class="feedback" id="fb-3" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div><noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> Box 1 and Box 4 are eligible. Box 1's only reference moved away with <code>a = c</code>; Box 4 was never stored. Box 2 is still referenced by <code>d</code>, and Box 3 by <code>a</code> and <code>c</code>.</p></div></noscript><p class="pep-back"><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p></div>
+</div>
+</section>
+<section id="activity-4" class="pep-activity" data-pep-activity aria-labelledby="a4-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+<h2 id="a4-h" tabindex="-1">Activity 4: References into a method</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions><div class="teach" data-pep-teaching><p>Java passes every argument by value. For an object, the value copied into the parameter is the reference, so the method's parameter and the caller's variable point at the same object, but reassigning the parameter moves only the method's own copy.</p></div></div>
+<div class="pep-region pep-region--workspace" data-pep-workspace="activity"><div id="task-4" class="task" data-pep-task><h3>Your task</h3><p>Read the code below, then under <strong>What prints?</strong> choose your answer and your confidence, and press <strong>Check answer</strong>.</p><div id="q-4-1" tabindex="-1"><p class="pep-task-q">What does the last line print?</p><pre><code>static void grow(Box x) {
+    x.size = x.size + 1;
+    x = new Box();
+    x.size = 100;
+}
+
+// inside main:
+Box a = new Box();
+a.size = 1;
+grow(a);
+System.out.println(a.size);</code></pre></div><div id="q-4-2" tabindex="-1" hidden><p class="pep-task-q">Retry: what does the last line print?</p><pre><code>static void swap(Box x, Box y) {
+    Box t = x;
+    x = y;
+    y = t;
+}
+
+// inside main:
+Box a = new Box();
+a.size = 1;
+Box b = new Box();
+b.size = 2;
+swap(a, b);
+System.out.println(a.size + " " + b.size);</code></pre></div></div><section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>You pick the printed result. A wrong first answer gives a retry with different code; a second miss shows the answer and settles the check.</p></section><div class="pep-js-only"><fieldset id="mf-4" data-static-alt="Expected results and why. It prints 2 : the parameter x holds a copy of the reference, so x.size + 1 changes the caller&#x27;s box; then x = new Box() points only the parameter at a new box, which receives 100. Retry: it prints 1 2 , because swap exchanges its own parameter copies, not a and b ." data-interaction="mcq" data-confidence><legend>What prints?</legend><div class="opts one" id="g-4-1"><label class="opt"><input type="radio" name="a-4-1" value="one" aria-describedby="q-4-1"><span class="ot"><code>1</code></span></label><label class="opt"><input type="radio" name="a-4-1" value="two" aria-describedby="q-4-1"><span class="ot"><code>2</code></span></label><label class="opt"><input type="radio" name="a-4-1" value="hundred" aria-describedby="q-4-1"><span class="ot"><code>100</code></span></label><label class="opt"><input type="radio" name="a-4-1" value="hundred1" aria-describedby="q-4-1"><span class="ot"><code>101</code></span></label></div><div class="opts one" id="g-4-2" hidden><label class="opt"><input type="radio" name="a-4-2" value="swapped" aria-describedby="q-4-2"><span class="ot"><code>2 1</code></span></label><label class="opt"><input type="radio" name="a-4-2" value="same" aria-describedby="q-4-2"><span class="ot"><code>1 2</code></span></label><label class="opt"><input type="radio" name="a-4-2" value="ones" aria-describedby="q-4-2"><span class="ot"><code>1 1</code></span></label><label class="opt"><input type="radio" name="a-4-2" value="twos" aria-describedby="q-4-2"><span class="ot"><code>2 2</code></span></label></div></fieldset><div class="row"><fieldset class="conf" id="conf-4" data-pep-confidence aria-describedby="conf-4-l"><legend id="conf-4-l">How sure are you?</legend><label class="opt"><input type="radio" name="c-4" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="c-4" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="c-4" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="pep-btn pep-btn--primary" id="check-4" disabled>Check answer</button></div></div><div class="feedback" id="fb-4" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div><noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> It prints <code>2</code>: the parameter <code>x</code> holds a copy of the reference, so <code>x.size + 1</code> changes the caller's box; then <code>x = new Box()</code> points only the parameter at a new box, which receives 100. Retry: it prints <code>1 2</code>, because <code>swap</code> exchanges its own parameter copies, not <code>a</code> and <code>b</code>.</p></div></noscript><p class="pep-back"><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p></div>
+</div>
+</section>
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+<button type="button" class="pep-btn" id="prev" data-pep-previous>Previous activity</button>
+<button type="button" class="pep-btn pep-btn--primary" id="next" data-pep-next>Next activity</button>
+</div>
+<section id="recap" class="recap" data-pep-recap aria-labelledby="recap-h">
+<h2 id="recap-h">Recap</h2>
+<p id="complete" class="complete" data-pep-completion></p>
+<ul><li>Each method call has a frame on the stack holding its parameters and local variables.</li><li>Objects made by <code>new</code>, with their fields, live on the heap; reference variables hold arrows to them.</li><li>Copying a reference makes two arrows to one object, so a change through either is seen through both.</li><li>An object with no remaining chain of references is unreachable and eligible for garbage collection; the JVM decides when, if ever, to reclaim it.</li></ul>
+<details data-section-skip data-pep-cheat-sheet><summary>Cheat sheet</summary><table><tr><td>Stack frame</td><td>Parameters and local variables of one call</td></tr><tr><td>Heap</td><td>Every object and array, with its fields</td></tr><tr><td>Alias</td><td><code>Box b = a;</code> gives two references to one object</td></tr><tr><td>Drop a reference</td><td><code>b = null;</code> or reassign the variable</td></tr></table></details>
+<details data-section-skip data-pep-sources class="sources"><summary>Sources and review date</summary>
+<p>Claims on this page were checked against the live official pages below on 16 October 2026 (UTC), for Java SE 25. Links open outside this lesson.</p>
+<ul><li><a href="https://docs.oracle.com/javase/specs/jvms/se25/html/jvms-2.html" rel="noopener">Java Virtual Machine Specification SE 25, chapter 2</a>: run-time data areas: Java Virtual Machine stacks and frames (2.5.2, 2.6) and the heap where all class instances and arrays are allocated (2.5.3).</li><li><a href="https://docs.oracle.com/javase/specs/jls/se25/html/jls-12.html" rel="noopener">Java Language Specification SE 25, chapter 12: Execution</a>: reachable and unreachable objects and finalization (12.6, 12.6.1).</li><li><a href="https://docs.oracle.com/javase/specs/jls/se25/html/jls-4.html" rel="noopener">Java Language Specification SE 25, chapter 4: Types, Values, and Variables</a>: reference values point to objects, and several references may refer to the same object (4.3.1).</li><li><a href="https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html" rel="noopener">Java Language Specification SE 25, chapter 15: Expressions</a>: method invocation evaluates argument values and assigns them to new parameter variables (15.12.4).</li></ul></details>
+</section>
+</main>
+<script>
+window.PEP_PAGE={acts:[
+{"type": "predict", "ok": "b", "lead": "`Box b = a;` copies the reference, not the object. Both variables refer to the same `Box`, so a change made through `b` is seen through `a`.", "expl": {"a": "Not quite: that would need `b` to be a separate copy of the object.", "b": "Right: `a` and `b` refer to one object, and its `size` is now 5.", "c": "Not quite: `b.size = 5` replaces the value; it does not add to it.", "d": "Not quite: assigning one `Box` variable to another is legal."}},
+{"type": "lanes", "label": "Stack or heap", "lanes": [{"id": "stack", "label": "Stack"}, {"id": "heap", "label": "Heap"}], "items": [{"n": "the local variable `count` and its value 3", "lane": "stack", "ok": "`count` is a local variable, so it lives in `main`'s frame.", "w": {"heap": "Only objects and their fields go on the heap; `count` is a local `int`."}}, {"n": "the object created by `new Box()`", "lane": "heap", "ok": "Every object made by `new` is allocated on the heap.", "w": {"stack": "The frame holds the variable `a`, not the object."}}, {"n": "the reference variable `a`", "lane": "stack", "ok": "`a` is a local variable; it holds a reference to the heap object.", "w": {"heap": "The object is on the heap, but `a`, the variable that refers to it, is a local in the frame."}}, {"n": "the `size` field holding 5", "lane": "heap", "ok": "Fields belong to their object, so they live on the heap with it.", "w": {"stack": "`size` is part of the `Box` object, not a local variable."}}, {"n": "the parameter `args` of `main`", "lane": "stack", "ok": "Parameters are part of the call's frame, like local variables.", "w": {"heap": "The array `args` refers to is on the heap, but the parameter variable itself is in the frame."}}, {"n": "the array that `args` refers to", "lane": "heap", "ok": "Arrays are objects, so they live on the heap.", "w": {"stack": "The frame holds only the reference; the array object is on the heap."}}], "done": "Locals and parameters, including reference variables, live in the call's frame on the stack; objects and their fields live on the heap."},
+{"type": "mselect", "label": "Reachability", "ok": ["b1", "b4"], "mis": "Trace each variable to the box it refers to after the last line.", "lead": "At the marked line, `a` and `c` refer to Box 3 and `d` refers to Box 2. Box 1 lost its only reference when `a = c` ran, and Box 4 was never stored.", "expl": {"b1": "Unreachable: its only reference was `a`, and `a = c` moved it to Box 3.", "b2": "Reachable: `b` is `null` now, but `d` still refers to Box 2.", "b3": "Reachable: both `c` and `a` refer to it.", "b4": "Unreachable: it was created but never stored in any variable."}},
+{"type": "mcq", "label": "Final check", "r1": {"ok": "two", "expl": {"one": "The first line of `grow` changes the caller's object through the copied reference.", "two": "The increment reaches the shared object; after `x = new Box()`, the method works on a different object.", "hundred": "`x = new Box()` moves only the method's copy of the reference; `a` still refers to the first box.", "hundred1": "The value 100 goes into the new box, which `a` never refers to."}, "mis": {"one": "`x.size = x.size + 1` runs on the caller's object.", "hundred": "Reassigning the parameter does not change `a`.", "hundred1": "The new box is not the one `a` refers to."}}, "r2": {"ok": "same", "expl": {"swapped": "Only the parameters were exchanged; the caller's variables did not move.", "same": "Nothing changed any object's field, and `a` and `b` were never reassigned.", "ones": "No field was assigned inside `swap`.", "twos": "No field was assigned inside `swap`."}, "mis": {"swapped": "Reassigning parameters never moves the caller's variables.", "ones": "No field is changed in `swap`.", "twos": "No field is changed in `swap`."}, "answer": "`1 2`: `swap` exchanges only its own copies `x` and `y`; `a` and `b` still refer to their original boxes."}}
+]};
+</script>
+<script>
+/* pep-classes-objects-engine v1: shared activity engine, identical bytes on every page of this module.
+   It reads the page's own activity data from window.PEP_PAGE and never contacts the network. */
+(function(){
+'use strict';
+var D=document,PAGE=window.PEP_PAGE;
+function $(s,r){return (r||D).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||D).querySelectorAll(s));}
+function md(s){var f=D.createDocumentFragment(),re=/(`[^`]+`|\*\*[^*]+\*\*)/g,last=0,m;s=String(s);
+  while((m=re.exec(s))){if(m.index>last)f.appendChild(D.createTextNode(s.slice(last,m.index)));
+    var t=m[0],e=D.createElement(t.charAt(0)==='`'?'code':'strong');e.textContent=t.charAt(0)==='`'?t.slice(1,-1):t.slice(2,-2);f.appendChild(e);last=re.lastIndex;}
+  if(last<s.length)f.appendChild(D.createTextNode(s.slice(last)));return f;}
+function el(tag,cls,txt){var e=D.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.appendChild(typeof txt==='string'?md(txt):txt);return e;}
+function T(t){return D.createTextNode(t);}
+
+/* Guidance state: current activity, a monotonic unlocked frontier and per-activity results kept apart */
+var main=$('#lesson'),ACTS=$$('[data-pep-activity]'),LINKS=$$('[data-pep-activity-link]'),prevBtn=$('#prev'),nextBtn=$('#next'),resetBtn=$('#reset');
+var N=ACTS.length,CFG=PAGE.acts;
+function freshAct(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,cont:false,result:null};}
+var G={current:1,unlocked:1,complete:false,acts:CFG.map(freshAct)};
+function fbOf(n){return $('#fb-'+n);}
+function say(n,parts,focus){var fb=fbOf(n);fb.textContent='';(parts||[]).forEach(function(p){
+  if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li');li.appendChild(el('strong',null,it[0]));li.appendChild(T(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
+  else{var q=el('p',p.c||'',p.s);if(p.attr)q.setAttribute(p.attr,'');fb.appendChild(q);}});
+  if(focus)fb.focus();}
+function optText(i){var l=i.closest('label');return l?l.textContent.replace(/\s+/g,' ').trim():i.value;}
+var WORD={'correct':'correct on the first try','correct-retry':'correct on the second try','settled':'answered and settled, not marked correct','predicted':'prediction recorded'};
+function reflect(){ACTS.forEach(function(sec,i){var a=G.acts[i];sec.setAttribute('data-pep-attempts',String(a.attempts));sec.setAttribute('data-pep-settled',String(a.settled));
+    sec.setAttribute('data-pep-completed',String(a.completed));sec.setAttribute('data-pep-credit',String(a.credit));sec.setAttribute('data-pep-grade',String(a.grade));sec.setAttribute('data-pep-continue',String(a.cont));});
+  main.setAttribute('data-pep-current-activity',String(G.current));main.setAttribute('data-pep-unlocked-through',String(G.unlocked));main.setAttribute('data-pep-complete',String(G.complete));}
+function progress(){var n=0,set=0,segs=$$('.pep-progress > span');G.acts.forEach(function(a,i){var s=segs[i];if(!s)return;s.className='';
+    if(a.completed){n++;if(a.result==='settled'){set++;s.className='is-settled';}else s.className='is-done';}
+    if(i+1===G.current)s.className+=(s.className?' ':'')+'is-current';});
+  $('#prog-text').textContent='Activities done: '+n+' of '+N+(set?' ('+set+(set>1?' activities':' activity')+' settled, not correct)':'');}
+function attempt(n){G.acts[n-1].attempts++;reflect();}
+function finishPage(){var c=$('#complete'),parts=[],anySet=false;
+  CFG.forEach(function(cfg,i){var r=G.acts[i].result;if(cfg.type!=='predict'&&r){parts.push(cfg.label+': '+WORD[r]+'.');if(r==='settled')anySet=true;}});
+  c.className='complete'+(anySet?' settled':'');c.textContent='Topic complete. '+parts.join(' ')+(anySet?' Review the explanations in the settled activities before you move on.':'');}
+function complete(n,result){var a=G.acts[n-1];a.result=result;
+  a.completed=true;a.settled=true;a.cont=true;
+  if(a.credit===0){a.credit=1;a.grade=(result==='correct'||result==='correct-retry')?1:0;}
+  G.unlocked=Math.max(G.unlocked,Math.min(n+1,N));
+  if(!G.complete&&G.acts.every(function(x){return x.completed;})){G.complete=true;finishPage();}
+  progress();render(G.current);}
+function render(number,mode,moveFocus){
+  if(!(number>=1&&number<=N&&number<=G.unlocked))return false;
+  G.current=number;
+  ACTS.forEach(function(sec,i){sec.hidden=i+1!==number;});
+  LINKS.forEach(function(link,i){var n=i+1;
+    if(n===number)link.setAttribute('aria-current','step');else link.removeAttribute('aria-current');
+    if(n>G.unlocked)link.setAttribute('aria-disabled','true');else link.removeAttribute('aria-disabled');
+    link.classList.toggle('is-done',G.acts[i].completed);});
+  prevBtn.disabled=number===1;
+  nextBtn.disabled=number===N||number>=G.unlocked||!G.acts[number-1].cont;
+  $('#pos-text').textContent='Activity '+number+' of '+N;
+  reflect();progress();
+  try{if(mode==='push')history.pushState({activity:number},'','#activity-'+number);
+    else if(mode==='replace')history.replaceState({activity:number},'','#activity-'+number);}
+  catch(e){if(mode&&location.hash!=='#activity-'+number)location.hash='activity-'+number;}
+  if(moveFocus){var h=$('#a'+number+'-h');if(h)h.focus();}
+  return true;}
+function badges(l,arr){var b=l.querySelector('.badges');if(!b){b=el('span','badges');l.appendChild(b);}arr.forEach(function(x){b.appendChild(el('span','badge '+x[1],x[0]));});}
+function clearChoices(scope){$$('input',scope).forEach(function(i){i.checked=false;i.disabled=false;});$$('.opt',scope).forEach(function(o){o.classList.remove('right','wrong','mine');});
+  $$('.oexp,.badges',scope).forEach(function(e){e.remove();});$$('.opts.explained',scope).forEach(function(o){o.classList.remove('explained');});}
+var H={};
+
+/* Predict: a practice prediction with a confidence rating; it is reported, never graded */
+H.predict=function(n,cfg){var fs=$('#pf-'+n),btn=$('#check-'+n),row=btn.closest('.row');
+  function ready(){btn.disabled=G.acts[n-1].completed||!($('input[name="p-'+n+'"]:checked')&&$('input[name="c-'+n+'"]:checked'));}
+  fs.addEventListener('change',ready);
+  btn.addEventListener('click',function(){var c=$('input[name="p-'+n+'"]:checked'),cv=$('input[name="c-'+n+'"]:checked');if(!c||!cv||G.acts[n-1].completed)return;
+    var match=c.value===cfg.ok;attempt(n);
+    $$('input',fs).forEach(function(i){i.disabled=true;});btn.disabled=true;
+    $$('input[name="p-'+n+'"]',fs).forEach(function(i){var l=i.closest('label');
+      if(i===c){l.classList.add('mine');badges(l,[['Your prediction','mine-b'],[match?'Correct':'Not correct',match?'ok-b':'no-b']]);}
+      else if(i.value===cfg.ok)badges(l,[['Correct answer','ok-b']]);
+      if(i.value===cfg.ok)l.classList.add('right');l.appendChild(el('span','oexp',cfg.expl[i.value]));});
+    $('.opts',fs).classList.add('explained');row.hidden=true;
+    say(n,[{c:'verdict info',s:'Practice prediction, not scored. '+(match?'Your prediction matches the answer.':'Your prediction differs from the answer; nothing is lost.')},{c:'conf-report',s:'Your confidence: '+cv.value+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:cfg.lead},{s:'Each option now shows why it is right or wrong, directly under it.'}],true);
+    complete(n,'predicted');});
+  return {reset:function(){clearChoices(fs);row.hidden=false;btn.disabled=true;}};};
+
+/* Graded check: confidence first, one retry in a second form, then the answer is shown and the check settles */
+H.mcq=function(n,cfg){var st={att:0,conf:[]},btn=$('#check-'+n),fs=$('#mf-'+n),conf=$('#conf-'+n);
+  function grp(){return 'a-'+n+'-'+(st.att+1);}
+  function ready(){btn.disabled=G.acts[n-1].completed||!($('input[name="'+grp()+'"]:checked')&&$('input[name="c-'+n+'"]:checked'));}
+  function lockConf(){$$('input[name="c-'+n+'"]').forEach(function(i){i.disabled=true;});btn.disabled=true;}
+  fs.addEventListener('change',ready);conf.addEventListener('change',ready);
+  btn.addEventListener('click',function(){var g=grp(),r=st.att===0?cfg.r1:cfg.r2,c=$('input[name="'+g+'"]:checked'),cv=$('input[name="c-'+n+'"]:checked');
+    if(!c||!cv||G.acts[n-1].completed)return;var ok=c.value===r.ok;st.conf.push(cv.value);attempt(n);
+    var confLine='Your confidence: '+cv.value+'. Confidence is your own read on how sure you were; it is reported, never scored.';
+    var expl=$$('input[name="'+g+'"]').map(function(i){return [optText(i)+(i===c?' (your answer):':':'),r.expl[i.value]];});
+    $$('input[name="'+g+'"]').forEach(function(i){i.disabled=true;});c.closest('label').classList.add(ok?'right':'wrong');badges(c.closest('label'),[['Your answer','mine-b'],[ok?'Correct':'Not correct',ok?'ok-b':'no-b']]);
+    if(ok){lockConf();
+      say(n,[{c:'verdict ok',s:st.att===0?'Correct.':'Correct on your second try.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}],true);complete(n,st.att===0?'correct':'correct-retry');}
+    else if(st.att===0){st.att=1;$('#g-'+n+'-1').hidden=true;$('#g-'+n+'-2').hidden=false;$('#q-'+n+'-1').hidden=true;$('#q-'+n+'-2').hidden=false;$$('input[name="c-'+n+'"]').forEach(function(i){i.checked=false;});
+      say(n,[{c:'verdict no',s:'Not yet. '+r.mis[c.value]+' Try again below: same idea, different code, with your confidence again.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}]);
+      ready();$('#q-'+n+'-2').focus();}
+    else{lockConf();$$('input[name="'+g+'"]').forEach(function(i){if(i.value===r.ok){i.closest('label').classList.add('right');badges(i.closest('label'),[['Correct answer','ok-b']]);}});
+      say(n,[{c:'verdict set',s:'Answered and settled: this check is not marked correct. '+r.mis[c.value]},{c:'conf-report',s:'Confidence on each try: '+st.conf.join(', then ')+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:'The answer: '+r.answer},{list:expl}],true);complete(n,'settled');}});
+  return {reset:function(){clearChoices($('#activity-'+n));st.att=0;st.conf=[];$('#g-'+n+'-1').hidden=false;$('#g-'+n+'-2').hidden=true;$('#q-'+n+'-1').hidden=false;$('#q-'+n+'-2').hidden=true;btn.disabled=true;}};};
+
+/* Multi-select: choose every option that applies; one retry, then the full set is shown and the check settles */
+H.mselect=function(n,cfg){var st={att:0},btn=$('#check-'+n),fs=$('#ms-'+n);
+  function ready(){btn.disabled=G.acts[n-1].completed||!$('input[name="m-'+n+'"]:checked');}
+  fs.addEventListener('change',ready);
+  function chosen(){return $$('input[name="m-'+n+'"]:checked').map(function(i){return i.value;}).sort().join(',');}
+  btn.addEventListener('click',function(){if(G.acts[n-1].completed||!$('input[name="m-'+n+'"]:checked'))return;attempt(n);
+    var ok=chosen()===cfg.ok.slice().sort().join(',');
+    function explainAll(){$$('input[name="m-'+n+'"]').forEach(function(i){var l=i.closest('label'),inSet=cfg.ok.indexOf(i.value)>=0;i.disabled=true;
+      if(inSet)l.classList.add('right');else if(i.checked)l.classList.add('wrong');
+      badges(l,(i.checked?[['Your choice','mine-b']]:[]).concat([[inSet?'Belongs in the set':'Not in the set',inSet?'ok-b':'no-b']]));l.appendChild(el('span','oexp',cfg.expl[i.value]));});
+      $('.opts',fs).classList.add('explained');btn.disabled=true;}
+    if(ok){explainAll();say(n,[{c:'verdict ok',s:st.att===0?'Correct: you chose exactly the right set.':'Correct on your second try.'},{s:cfg.lead}],true);complete(n,st.att===0?'correct':'correct-retry');}
+    else if(st.att===0){st.att=1;var picked=$$('input[name="m-'+n+'"]:checked').map(function(i){return i.value;}),extra=picked.filter(function(v){return cfg.ok.indexOf(v)<0;}).length,missing=cfg.ok.filter(function(v){return picked.indexOf(v)<0;}).length;
+      say(n,[{c:'verdict no',s:'Not yet. '+(extra?extra+(extra>1?' of your choices do':' of your choices does')+' not belong. ':'')+(missing?missing+(missing>1?' choices that belong are':' choice that belongs is')+' missing. ':'')+cfg.mis},{s:'Change your choices and check again.'}]);ready();}
+    else{explainAll();say(n,[{c:'verdict set',s:'Answered and settled: this check is not marked correct. Each choice now shows whether it belongs and why.'},{s:cfg.lead}],true);complete(n,'settled');}});
+  return {reset:function(){clearChoices(fs);st.att=0;btn.disabled=true;}};};
+
+/* Lane sort: each item gets one retry, then its lane is shown; any shown item settles the activity */
+H.lanes=function(n,cfg){var st={idx:0,tries:{},placed:{},revealed:{}},box=$('#lanes-'+n),btns=$('#ln-btns-'+n),nameEl=$('#ln-name-'+n),countEl=$('#ln-count-'+n);
+  function laneName(id){for(var i=0;i<cfg.lanes.length;i++)if(cfg.lanes[i].id===id)return cfg.lanes[i].label;return id;}
+  function draw(){box.textContent='';var cnt=0;
+    cfg.lanes.forEach(function(ln){var d=el('div','lane'),h=el('p','lk',ln.label),u=el('ul','cards');h.id='ln-'+n+'-'+ln.id;u.setAttribute('aria-labelledby',h.id);d.appendChild(h);d.appendChild(u);box.appendChild(d);
+      cfg.items.forEach(function(it,i){if(st.placed[i]!==ln.id)return;cnt++;var li=el('li',st.revealed[i]?'revealed':'',it.n);if(st.revealed[i])li.appendChild(el('span','tag','shown after two tries'));u.appendChild(li);});});
+    var it=cfg.items[st.idx];nameEl.textContent='';nameEl.appendChild(it?md(it.n):T('all sorted'));
+    countEl.textContent=cnt+' of '+cfg.items.length+' sorted';}
+  function finish(msg){var anyRev=Object.keys(st.revealed).length,anyRetry=Object.keys(st.tries).some(function(k){return st.tries[k]>0;});
+    $$('button',btns).forEach(function(b){b.disabled=true;});
+    msg.push({c:anyRev?'verdict set':'verdict ok',s:anyRev?'All sorted. Answered and settled: '+anyRev+(anyRev>1?' items were':' item was')+' shown after two tries, so this activity is not marked correct.':(anyRetry?'All sorted, some on a second try.':'All sorted on the first try.')});
+    if(cfg.done)msg.push({s:cfg.done});say(n,msg,true);complete(n,anyRev?'settled':(anyRetry?'correct-retry':'correct'));}
+  cfg.lanes.forEach(function(ln){var b=el('button','pep-btn',ln.label);b.type='button';b.id='lane-'+n+'-'+ln.id;b.setAttribute('aria-describedby','ln-legend-'+n);
+    b.addEventListener('click',function(){var i=st.idx,it=cfg.items[i];if(!it||G.acts[n-1].completed)return;attempt(n);
+      if(ln.id===it.lane){st.placed[i]=ln.id;st.idx++;var msg=[{c:'verdict ok',s:'Yes: '+laneName(ln.id)+'.'},{s:it.ok}];draw();if(st.idx>=cfg.items.length)finish(msg);else say(n,msg);}
+      else{st.tries[i]=(st.tries[i]||0)+1;
+        if(st.tries[i]<2)say(n,[{c:'verdict no',s:'Not '+laneName(ln.id)+'. '+it.w[ln.id]},{s:'Try another button for the same item.'}]);
+        else{st.placed[i]=it.lane;st.revealed[i]=true;st.idx++;var m2=[{c:'verdict set',s:'Shown after two tries: '+laneName(it.lane)+'. '+it.w[ln.id]},{s:it.ok}];draw();if(st.idx>=cfg.items.length)finish(m2);else say(n,m2);}}});
+    btns.appendChild(b);});
+  draw();
+  return {reset:function(){st.idx=0;st.tries={};st.placed={};st.revealed={};$$('button',btns).forEach(function(b){b.disabled=false;});draw();}};};
+
+/* Java structure reader: a bounded parser for the class and enum shapes these tasks use.
+   It does not compile or run Java; it reports a shape it cannot read as "not supported". */
+function Problem(kind,msg,pos){this.kind=kind;this.msg=msg;this.pos=pos;}
+var MODS=['public','protected','private','static','final','abstract'];
+function lex(src){var t=[],re=/\s+|\/\/[^\n]*|\/\*[\s\S]*?\*\/|("(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|->|::|\+\+|--|&&|\|\||[=!<>+\-*\/%]=|[A-Za-z_$][\w$]*|\d[\w.]*|.)/g,m;
+  while((m=re.exec(src))){if(m[1]!==undefined)t.push({v:m[1],p:m.index});}return t;}
+function parseJava(src){var Tk=lex(src),i=0,model={types:[]};
+  function pk(o){var x=Tk[i+(o||0)];return x?x.v:'';}
+  function at(){return Tk[i]?Tk[i].p:src.length;}
+  function isId(v){return /^[A-Za-z_$][\w$]*$/.test(v);}
+  function eat(v){if(pk()===v){i++;return;}throw new Problem('error',"error: '"+v+"' expected",at());}
+  function ident(){var v=pk();if(!isId(v)||MODS.indexOf(v)>=0)throw new Problem('error','error: <identifier> expected',at());i++;return v;}
+  function balanced(open,close){var p0=at(),depth=0,start=i;
+    do{var v=pk();if(v==='')throw new Problem('error','error: reached end of file while parsing; a '+close+' is missing',p0);if(v===open)depth++;else if(v===close)depth--;i++;}while(depth>0);
+    return Tk.slice(start+1,i-1);}
+  function mods(){var ms=[],annos=[];while(MODS.indexOf(pk())>=0||pk()==='@'){if(pk()==='@'){i++;annos.push(ident());}else ms.push(Tk[i++].v);}return {mods:ms,annos:annos};}
+  function type(){var p0=at(),s=ident();while(pk()==='.'){i++;s+='.'+ident();}
+    if(pk()==='<'){var d=0;do{var v=pk();if(v==='')throw new Problem('error','error: > expected',p0);if(v==='<')d++;else if(v==='>')d--;else if(v==='>>')d-=2;s+=v;i++;}while(d>0);}
+    while(pk()==='['&&pk(1)===']'){s+='[]';i+=2;}return s;}
+  function params(){var ps=[];eat('(');if(pk()===')'){i++;return ps;}
+    while(true){mods();var ty=type(),nm=ident();ps.push({type:ty,name:nm});if(pk()===','){i++;continue;}eat(')');return ps;}}
+  function expr(stops){var start=i,d=0;while(true){var v=pk();if(v==='')throw new Problem('error',"error: ';' expected",at());
+      if(d===0&&stops.indexOf(v)>=0)break;if(v==='('||v==='{'||v==='[')d++;else if(v===')'||v==='}'||v===']'){if(d===0)break;d--;}i++;}
+    return Tk.slice(start,i);}
+  function member(t){var p0=at(),mm=mods();
+    if(pk()==='class'||pk()==='enum'||pk()==='interface'||pk()==='record')throw new Problem('limit','not supported in this practice editor: a type declared inside another type',p0);
+    if(pk()==='{')throw new Problem('limit','not supported in this practice editor: an initializer block',p0);
+    if(pk()==='<')throw new Problem('limit','not supported in this practice editor: a generic method',p0);
+    if(pk()===t.name&&pk(1)==='('){i++;var cp=params();if(pk()==='throws'){i++;type();while(pk()===','){i++;type();}}
+      if(pk()!=='{')throw new Problem('error',"error: '{' expected",at());
+      t.ctors.push({mods:mm.mods,annos:mm.annos,params:cp,body:balanced('{','}'),pos:p0});return;}
+    var ty=type();
+    if(pk()==='('&&isId(ty)&&ty!==t.name)throw new Problem('error','error: invalid method declaration; return type required',p0);
+    var nm=ident();
+    if(pk()==='('){var mp=params();if(pk()==='throws'){i++;type();while(pk()===','){i++;type();}}
+      var body=null;if(pk()===';')i++;else if(pk()==='{')body=balanced('{','}');else throw new Problem('error',"error: '{' expected",at());
+      t.methods.push({mods:mm.mods,annos:mm.annos,type:ty,name:nm,params:mp,body:body,pos:p0});return;}
+    while(true){var init=null;if(pk()==='='){i++;init=expr([',',';']);}
+      t.fields.push({mods:mm.mods,annos:mm.annos,type:ty,name:nm,init:init,pos:p0});
+      if(pk()===','){i++;nm=ident();continue;}
+      if(pk()!==';')throw new Problem('error',"error: ';' expected",at());i++;return;}}
+  function typeDecl(){var p0=at(),mm=mods(),kind=pk();
+    if(kind==='interface'||kind==='record')throw new Problem('limit','not supported in this practice editor: a '+kind+' declaration',p0);
+    if(kind!=='class'&&kind!=='enum')throw new Problem('error','error: class, interface, enum, or record expected',p0);
+    i++;var t={kind:kind,name:ident(),mods:mm.mods,fields:[],ctors:[],methods:[],constants:[],pos:p0};
+    if(pk()==='extends'||pk()==='implements')throw new Problem('limit','not supported in this practice editor: extends or implements',at());
+    eat('{');
+    if(kind==='enum'){while(isId(pk())&&MODS.indexOf(pk())<0&&pk()!==';'){var cp=at(),cn=ident(),args=null;if(pk()==='(')args=balanced('(',')');
+        if(pk()==='{')throw new Problem('limit','not supported in this practice editor: an enum constant with its own body',at());
+        t.constants.push({name:cn,args:args,pos:cp});if(pk()===','){i++;continue;}break;}
+      if(pk()===';')i++;else if(pk()!=='}')throw new Problem('error',"error: ',', '}', or ';' expected",at());}
+    while(pk()!=='}'){if(pk()==='')throw new Problem('error','error: reached end of file while parsing; a } is missing',at());if(pk()===';'){i++;continue;}member(t);}
+    i++;model.types.push(t);}
+  if(!Tk.length)throw new Problem('error','error: the editor is empty',0);
+  while(i<Tk.length)typeDecl();
+  return model;}
+/* Helpers the page's checks use: they read token shapes, never an expected answer text */
+var J={
+  type:function(m,name){for(var k=0;k<m.types.length;k++)if(m.types[k].name===name)return m.types[k];return null;},
+  field:function(t,name){if(!t)return null;for(var k=0;k<t.fields.length;k++)if(t.fields[k].name===name)return t.fields[k];return null;},
+  methods:function(t,name){return t?t.methods.filter(function(x){return x.name===name;}):[];},
+  vals:function(toks){return (toks||[]).map(function(x){return x.v;});},
+  has:function(toks,seq){var v=J.vals(toks);for(var a=0;a+seq.length<=v.length;a++){var ok=true;for(var b=0;b<seq.length;b++){if(seq[b]!=='*'&&v[a+b]!==seq[b]){ok=false;break;}}if(ok)return a;}return -1;},
+  count:function(toks,seq){var v=J.vals(toks),c=0;for(var a=0;a+seq.length<=v.length;a++){var ok=true;for(var b=0;b<seq.length;b++){if(seq[b]!=='*'&&v[a+b]!==seq[b]){ok=false;break;}}if(ok)c++;}return c;},
+  stmts:function(toks){var out=[],cur=[],d=0;(toks||[]).forEach(function(x){cur.push(x);if(x.v==='('||x.v==='[')d++;else if(x.v===')'||x.v===']')d--;
+      if(d===0&&(x.v===';'||x.v==='{'||x.v==='}')){out.push(cur);cur=[];}});if(cur.length)out.push(cur);return out;},
+  block:function(toks,word){var v=J.vals(toks),a=v.indexOf(word);if(a<0)return null;while(a<v.length&&v[a]!=='{')a++;var d=0,s=a;for(;a<v.length;a++){if(v[a]==='{')d++;else if(v[a]==='}'){d--;if(d===0)return toks.slice(s+1,a);}}return null;},
+  isPrivate:function(x){return !!x&&x.mods.indexOf('private')>=0;},
+  isPublic:function(x){return !!x&&x.mods.indexOf('public')>=0;},
+  access:function(x){if(!x)return null;var a=['public','protected','private'];for(var k=0;k<a.length;k++)if(x.mods.indexOf(a[k])>=0)return a[k];return 'package';}
+};
+H.code=function(n,cfg){var ed=$('#ed-'+n),gut=$('#gut-'+n),STARTER=cfg.starter,st={assessed:0};
+  function gutter(){var c=ed.value.split('\n').length,g=[];for(var k=1;k<=c;k++)g.push(k);gut.textContent=g.join('\n');ed.rows=Math.max(6,Math.min(20,c));}
+  function tab(which){[['prob','#tabp-'+n,'#prob-'+n],['out','#tabo-'+n,'#out-'+n]].forEach(function(t){var on=t[0]===which;$(t[1]).setAttribute('aria-selected',on?'true':'false');$(t[1]).tabIndex=on?0:-1;$(t[2]).hidden=!on;});}
+  function lineOf(pos){return ed.value.slice(0,pos).split('\n').length;}
+  function goLine(l){var ls=ed.value.split('\n'),pos=0;for(var k=0;k<l-1&&k<ls.length;k++)pos+=ls[k].length+1;ed.focus();ed.setSelectionRange(pos,pos);}
+  function idle(){$('#prob-'+n).textContent='';$('#prob-'+n).appendChild(el('p','pep-editor__empty','Not checked yet. Edit the code, then press Check code.'));
+    $('#out-'+n).textContent='';$('#out-'+n).appendChild(el('p','pep-editor__empty','No results yet.'));tab('prob');$('#st-'+n).textContent='Not checked yet';}
+  function run(){var src=ed.value,m;attempt(n);
+    try{m=parseJava(src);}catch(pr){if(!(pr instanceof Problem))throw pr;var l=lineOf(pr.pos),b=el('button','pep-editor__problem');b.type='button';
+      b.appendChild(el('span',pr.kind==='error'?'kind-error':'kind-limit',pr.kind==='error'?'Error':'Not supported'));b.appendChild(T(' line '+l+': '+pr.msg));
+      b.addEventListener('click',function(){goLine(l);});$('#prob-'+n).textContent='';$('#prob-'+n).appendChild(b);tab('prob');
+      $('#st-'+n).textContent=(pr.kind==='error'?'1 error: the compiler would reject this code':'1 problem: outside what this practice editor reads')+'. Select the problem to jump to line '+l+'.';
+      say(n,[{c:'verdict info',s:pr.kind==='error'?'Not checked: fix the problem shown under the editor, then check again. This does not count as a try.':'Not checked: this practice editor cannot read that shape. Read the problem under the editor. This does not count as a try.'}]);return;}
+    $('#prob-'+n).textContent='';$('#prob-'+n).appendChild(el('p','pep-editor__empty','No problems found in the parts this editor reads.'));
+    var res=cfg.checks.map(function(c){var r;try{r=c.test(m,J);}catch(e){r=false;}return {c:c,ok:r===true,why:typeof r==='string'?r:c.fail};});
+    var ul=el('ul');res.forEach(function(r){var li=el('li');li.appendChild(el('span',r.ok?'kind-pass':'kind-fail',r.ok?'Pass':'Not yet'));li.appendChild(T(' '));li.appendChild(md(r.c.label));if(!r.ok){li.appendChild(T(' '));li.appendChild(md(r.why));}ul.appendChild(li);});
+    $('#out-'+n).textContent='';$('#out-'+n).appendChild(ul);tab('out');
+    var passed=res.filter(function(r){return r.ok;}).length,all=passed===res.length,a=G.acts[n-1];
+    $('#st-'+n).textContent='Checked: '+passed+' of '+res.length+' checks pass';
+    if(all){var msg=[{c:'verdict ok',s:'All '+res.length+' checks pass.'},{s:cfg.done}];
+      if(!a.completed){say(n,msg,true);complete(n,st.assessed===0?'correct':'correct-retry');}else say(n,msg.concat([{c:'conf-report',s:'This activity was already settled; this practice run does not change its result.'}]));return;}
+    var first=res.filter(function(r){return !r.ok;})[0];
+    if(!a.completed&&src===STARTER){say(n,[{c:'verdict info',s:'The starter is unchanged, so this does not count as a try. Output lists the checks to meet.'},{s:first.why}]);return;}
+    if(a.completed){say(n,[{c:'verdict info',s:passed+' of '+res.length+' checks pass. Practice run: this activity is already settled.'},{s:first.why}]);return;}
+    st.assessed++;
+    if(st.assessed>=2){say(n,[{c:'verdict set',s:'Answered and settled: '+passed+' of '+res.length+' checks pass, so this activity is not marked correct. Output lists each unmet check and why.'},{s:cfg.settled},{s:'You can keep editing and checking for practice; the result stays settled.'}],true);complete(n,'settled');}
+    else say(n,[{c:'verdict no',s:'Not yet: '+passed+' of '+res.length+' checks pass. Output lists each check.'},{s:first.why},{s:'One more checked try before this activity settles.'}]);}
+  ed.addEventListener('input',gutter);ed.addEventListener('scroll',function(){gut.scrollTop=ed.scrollTop;});$('#run-'+n).addEventListener('click',run);
+  $('#edreset-'+n).addEventListener('click',function(){ed.value=STARTER;gutter();idle();});
+  $('#tabp-'+n).addEventListener('click',function(){tab('prob');});$('#tabo-'+n).addEventListener('click',function(){tab('out');});
+  [$('#tabp-'+n),$('#tabo-'+n)].forEach(function(t){t.addEventListener('keydown',function(ev){if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){var o=t.id==='tabp-'+n?'out':'prob';tab(o);$(o==='out'?'#tabo-'+n:'#tabp-'+n).focus();ev.preventDefault();}});});
+  ed.value=STARTER;gutter();idle();
+  return {reset:function(){ed.value=STARTER;gutter();idle();st.assessed=0;}};};
+
+var R=CFG.map(function(cfg,i){return H[cfg.type](i+1,cfg);});
+
+/* Restart: only the current activity returns to its authored start; other work, the frontier and page completion stay */
+resetBtn.addEventListener('click',function(){var n=G.current,sec=ACTS[n-1];
+  R[n-1].reset();G.acts[n-1]=freshAct();
+  $$('[data-pep-feedback]',sec).forEach(function(f){f.textContent='';});
+  $$('details[data-pep-optional]',sec).forEach(function(d){d.open=false;});
+  render(n);
+  $('#restart-status').textContent='Activity '+n+' restarted. Other activities keep their work.';});
+
+/* Reversible navigation: buttons, timeline, back links and browser history change only the current activity */
+function numberOf(hash){var m=/^#activity-(\d+)$/.exec(hash||'');return m?Number(m[1]):0;}
+prevBtn.addEventListener('click',function(){render(G.current-1,'push',true);});
+nextBtn.addEventListener('click',function(){render(G.current+1,'push',true);});
+LINKS.forEach(function(link,i){link.addEventListener('click',function(ev){ev.preventDefault();render(i+1,'push',true);});});
+$$('[data-pep-back-link]').forEach(function(link){link.addEventListener('click',function(ev){ev.preventDefault();render(numberOf(link.getAttribute('href')),'push',true);});});
+var lastFocused=null;D.addEventListener('focusin',function(ev){lastFocused=ev.target;});
+function fromHistory(){var keep=lastFocused,n=numberOf(location.hash);
+  if(!render(n,null,false))render(G.current,'replace',false);
+  if(keep&&keep.isConnected&&!keep.closest('[hidden]'))keep.focus({preventScroll:true});}
+addEventListener('popstate',fromHistory);addEventListener('hashchange',fromHistory);
+
+/* Objectives: native disclosure; Escape and an outside click close it */
+var obj=$('[data-pep-objectives]');
+D.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&obj.open){obj.open=false;obj.querySelector('summary').focus();}});
+D.addEventListener('click',function(ev){if(obj.open&&!obj.contains(ev.target))obj.open=false;});
+
+/* Print: expand closed disclosures, then restore only those */
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=$$('details:not([open])');printOpened.forEach(function(d){d.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(d){d.open=false;});printOpened=[];});
+
+var first=numberOf(location.hash);
+render(first>=1&&first<=G.unlocked?first:1,'replace',false);
+})();
+</script>
+</body>
+</html>
