@@ -1,9 +1,9 @@
 # Project agent entrypoint
 
-The project contract is in [`authoring/AGENTS.md`](authoring/AGENTS.md).
+The project contract is in [`workflow/AGENTS.md`](workflow/AGENTS.md).
 Read and follow it before changing learner content or authoring tooling.
 
-@authoring/AGENTS.md
+@workflow/AGENTS.md
 
 ## Maintaining this file
 

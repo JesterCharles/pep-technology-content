@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pep.local/workflow/schemas/solved-run.schema.json",
+  "title": "Coding-lab solved-run evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "lab", "record", "ranAt"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "lab": { "$ref": "#/$defs/labPath" },
+    "record": { "type": "string", "pattern": "^solved at .+ by run .+$" },
+    "commit": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "runId": { "type": "string", "minLength": 1 },
+    "ranAt": {
+      "oneOf": [
+        { "type": "string", "format": "date" },
+        { "type": "string", "format": "date-time" }
+      ]
+    },
+    "contract": { "type": "string", "minLength": 1 },
+    "environment": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "procedure": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "result": { "type": "string", "minLength": 1 },
+    "starterRun": { "type": "string", "minLength": 1 },
+    "cleanup": { "type": "string", "minLength": 1 },
+    "otherSystems": { "type": "string", "minLength": 1 },
+    "testScope": { "type": "string", "minLength": 1 },
+    "variantRuns": { "type": "string", "minLength": 1 },
+    "collisionSafety": { "type": "string", "minLength": 1 },
+    "toolchain": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "runs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["what", "summary"],
+        "properties": {
+          "what": { "type": "string", "minLength": 1 },
+          "project": { "$ref": "#/$defs/path" },
+          "summary": { "type": "string", "minLength": 1 },
+          "expectation": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "privateStaging": { "type": "string", "minLength": 1 },
+    "artifactHashes": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "$ref": "#/$defs/relativePath" },
+      "additionalProperties": { "$ref": "#/$defs/hash" }
+    },
+    "files": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["file", "reviewedSha256"],
+        "properties": {
+          "file": { "$ref": "#/$defs/path" },
+          "reviewedSha256": { "$ref": "#/$defs/hash" }
+        }
+      }
+    }
+  },
+  "oneOf": [
+    { "required": ["artifactHashes"], "not": { "required": ["files"] } },
+    { "required": ["files"], "not": { "required": ["artifactHashes"] } }
+  ],
+  "$defs": {
+    "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "path": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"
+    },
+    "relativePath": {
+      "type": "string",
+      "pattern": "^(?!/)(?!.*\\\\)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*//)[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$"
+    },
+    "labPath": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?:/[a-z0-9]+(?:-[a-z0-9]+)*){0,2}/coding-lab$"
+    }
+  }
+}
