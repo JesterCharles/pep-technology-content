@@ -1,0 +1,1179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="java-foundations">
+<meta name="pep:module" content="http-and-javalin">
+<meta name="pep:topic" content="Routes and handlers in Javalin">
+<meta name="pep:topic-id" content="routes-and-handlers-in-javalin">
+<meta name="pep:budget-minutes" content="15">
+<meta name="pep:source" content="authoring/evidence/java-foundations/http-and-javalin/routes-and-handlers-in-javalin/sources.json">
+<meta name="pep:position" content="3 of 5">
+<title>Routes and handlers in Javalin · HTTP and Javalin</title>
+<style>
+/* pep:component predict@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+/* /pep:component predict css */
+/* pep:component mcq-with-confidence@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start}
+.feedback{width:100%;min-width:0;font-size:15px;line-height:1.35}
+.feedback:empty{display:none}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin:0}
+.feedback .verdict{font-weight:700}
+.feedback .ok{color:var(--teal)}
+.feedback .no{color:var(--red)}
+.feedback .set{color:var(--amber)}
+.feedback .info{color:var(--ink)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+/* /pep:component mcq-with-confidence css */
+/* DESIGN.md token reference */
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* Components bridge: embedded components/*@1 fragments read these older names */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+/* Base, focus and motion */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+pre { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; max-width: 100%; }
+pre code { font-size: 1em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+/* Buttons */
+button { cursor: pointer; min-height: 44px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); padding: 10px 20px; }
+.pep-btn, .ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.ghost:hover, .pep-btn:hover { border-color: var(--pep-accent); }
+.ghost[aria-pressed="true"] { background: var(--pep-accent-soft); border: 2px solid var(--pep-accent); }
+.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+button:disabled, .primary:disabled, .pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); color: var(--pep-text-muted); border: 1px solid var(--pep-line-strong); }
+/* Topic bar: the clearest accent surface */
+.pep-topicbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding: 12px 16px; margin: 0;
+  border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 4px; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress p { max-width: none; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; max-width: 220px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); outline: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); outline-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning); outline-color: var(--pep-warning); }
+.pep-progress > span.is-current { outline: 2px solid var(--pep-accent); }
+.pep-objectives { position: relative; break-inside: avoid; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; border-radius: var(--pep-radius-sm); }
+.pep-objectives > summary::marker { color: var(--pep-accent-text); }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; padding-left: 20px; }
+.pep-objectives li + li { margin-top: 8px; }
+@media (min-width: 640px) { .pep-objectives[open] > div { position: absolute; right: 0; z-index: 2; width: 360px; } }
+/* Activity timeline */
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px 6px 6px; border: 1px solid transparent; border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; }
+.pep-steps { counter-reset: pep-step; }
+.pep-step__n::before { counter-increment: pep-step; content: counter(pep-step); }
+.pep-step__n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--pep-control); color: var(--pep-text); font-size: 13px; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-current="step"] .pep-step__n { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-step.is-done .pep-step__n { background: var(--pep-accent-soft); color: var(--pep-accent-text); outline: 1px solid var(--pep-accent); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-step__state { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+/* Activities and regions */
+.pep-activity { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-activity > h2 { padding-bottom: 8px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region--workspace, [data-pep-workspace] {
+  padding: 24px; border: 1px solid var(--pep-line-strong);
+  border-radius: var(--pep-radius-lg); background: var(--pep-card);
+}
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
+.teach { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.teach ul, .teach ol { margin: 0; padding-left: 24px; }
+.task { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task .pep-task-q { font-weight: 600; color: var(--pep-text-strong); }
+/* Required activity checks: accent tint and rail, never success green */
+.pep-activity-checks, [data-pep-activity-checks] {
+  padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px;
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-activity-checks h3 { margin-bottom: 4px; }
+.pep-activity-checks ul { margin: 0; padding-left: 20px; }
+/* Where this fits */
+[data-pep-where-fits] {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-card);
+}
+[data-pep-where-fits] strong { color: var(--pep-text-strong); }
+/* Progressive optional hints */
+.pep-hint, details[data-pep-hint] {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md);
+  background: var(--pep-accent-soft); break-inside: avoid;
+}
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
+.pep-hint .pep-hint {
+  margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong);
+  border-radius: 0; background: transparent;
+}
+/* Optional Anecdote and Challenge disclosures */
+.pep-optional {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-card); break-inside: avoid;
+}
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer;
+  color: var(--pep-text-strong); font-weight: 600;
+}
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 16px; }
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+  .pep-step[aria-current="step"] { border-color: Highlight; }
+}
+/* Model, cells and lanes */
+.model { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-lists { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 600px) { .pep-lists { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pep-list { padding: 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.pep-list h3 { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 4px; }
+.pep-list__state { font-weight: 600; }
+.lk { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.sub { margin: 0 0 8px; font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.cells { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; padding: 0; list-style: none; min-height: 32px; }
+.cells li { font: 400 14px/20px var(--pep-font-mono); padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.lanebtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.lanebtns button { min-width: 120px; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.lane { padding: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); min-height: 80px; background: var(--pep-page); min-width: 0; }
+.lane .lk { overflow-wrap: anywhere; color: var(--pep-text-strong); }
+.cards { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.cards li { font-size: 14px; line-height: 20px; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); overflow-wrap: anywhere; }
+.cards li.revealed { border-style: dashed; border-color: var(--pep-warning); }
+.tag { display: inline-block; margin-left: 4px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--pep-warning); }
+/* Component overrides: DESIGN.md look for the embedded @1 fragments (their bytes stay unchanged) */
+legend { font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 8px; }
+.opts { gap: 8px; }
+.opt { position: relative; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); font-size: 16px; line-height: 24px; box-shadow: none; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; box-shadow: none; }
+.opt:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; box-shadow: none; }
+.opt.mine { border-color: var(--pep-accent); }
+.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.opt input:disabled { cursor: default; }
+.opt::before { content: ""; flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); }
+.opt:has(input:checked)::before { border: 6px solid var(--pep-accent); }
+.opt:has(input:disabled)::before { opacity: 0.6; }
+.opts.explained .opt { padding: 8px 16px; align-items: flex-start; }
+.opts.explained .opt::before { margin-top: 2px; }
+.oexp { font-size: 14px; line-height: 20px; color: var(--pep-text); border-top-color: var(--pep-line-strong); }
+.badge { font-size: 13px; line-height: 20px; font-weight: 600; border-radius: var(--pep-radius-pill); padding: 0 8px; }
+.badge.ok-b { color: var(--pep-success); border-color: var(--pep-success); }
+.badge.no-b { color: var(--pep-danger); border-color: var(--pep-danger); }
+.badge.mine-b { color: var(--pep-text-strong); border-color: var(--pep-line-strong); }
+.conf legend { line-height: 44px; }
+.conf .opt { min-width: 96px; }
+.row, .fbrow { gap: 12px; }
+.feedback { font-size: 14px; line-height: 20px; color: var(--pep-text); }
+.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.feedback .verdict { font-size: 16px; line-height: 24px; font-weight: 700; }
+.feedback .ok { color: var(--pep-success); }
+.feedback .no { color: var(--pep-danger); }
+.feedback .set { color: var(--pep-warning); }
+.feedback .info { color: var(--pep-text-strong); }
+.feedback .conf-report { color: var(--pep-text-muted); }
+.feedback ul { padding-left: 24px; }
+@media (max-width: 480px) { .opts, .lanes { grid-template-columns: minmax(0, 1fr); } }
+/* Editor workspace */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__scope { padding: 8px 12px; font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); background: var(--pep-sunken); }
+.pep-editor__panel pre { border: 0; padding: 0; background: transparent; }
+.pep-editor__empty { font-family: var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 700; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 700; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); max-width: none; }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn, .pep-editor__bar button { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__code { font-size: 16px; line-height: 24px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* Navigation */
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 0 1 auto; } }
+.pep-back a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+/* Recap */
+.recap { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--pep-line-strong); }
+.recap ul { margin: 0; padding-left: 24px; }
+.recap li + li { margin-top: 4px; }
+.recap details { padding: 0 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.recap details > summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: flex; align-items: center; }
+.recap details > :last-child { margin-bottom: 12px; }
+.recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+.sources ul { margin: 8px 0; padding-left: 24px; font-size: 14px; line-height: 20px; }
+.sources li { margin-bottom: 4px; overflow-wrap: anywhere; }
+.sources p { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.next-topic { font-weight: 600; color: var(--pep-text-strong); }
+.complete { padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete.settled { border-color: var(--pep-warning); background: var(--pep-warning-soft); }
+.complete:empty { display: none; }
+/* Static expected results: no-JavaScript reading only */
+.pep-expected { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.pep-expected ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-nojs-note { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text-strong); }
+.pep-nojs-code { display: flex; flex-direction: column; gap: 12px; }
+@media print {
+  [data-pep-activity][hidden], [data-pep-recap][hidden] { display: flex !important; }
+  .pep-nav, .pep-activity-actions, .pep-back, #reset, .pep-progress { display: none !important; }
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .pep-objectives[open] > div { position: static; width: auto; }
+  .pep-activity { break-before: auto; }
+}
+</style>
+<noscript><style>.pep-js-only{display:none!important}</style></noscript>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="15">
+<header class="pep-topicbar">
+  <h1 id="page-title">Routes and handlers in Javalin</h1>
+  <div class="pep-topicbar__progress progress">
+    <p><span class="pep-js-only"><span id="pos-text">Activity 1 of 5</span> · <span id="prog-text">Activities done: 0 of 5</span> · </span>about 15 min</p>
+    <div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+  <details class="pep-objectives" data-pep-objectives>
+    <summary aria-controls="objectives-body">Objectives</summary>
+    <div id="objectives-body"><ul>
+      <li>Trace which registered route and handler a request reaches, and select the Context call that reads a path parameter, a query parameter or a JSON body</li>
+      <li>Write and register a GET or POST handler that sets the status and returns JSON, and pass its public check in the required guided local run</li>
+      <li>Map an exception to a status code and JSON body with an exception handler, and pass its public check in the required guided local run</li>
+    </ul></div>
+  </details>
+  <button type="button" class="pep-btn pep-js-only" id="reset" data-pep-reset>Restart activity</button>
+  <p class="vh" id="restart-status" role="status" aria-live="polite"></p>
+</header>
+<nav class="pep-nav" aria-label="Activities"><ol class="pep-steps">
+  <li><a class="pep-step" id="tl-1" href="#activity-1" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Guess</a></li>
+  <li><a class="pep-step" id="tl-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Read the request</a></li>
+  <li><a class="pep-step" id="tl-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>POST handler</a></li>
+  <li><a class="pep-step" id="tl-4" href="#activity-4" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Exceptions</a></li>
+  <li><a class="pep-step" id="tl-5" href="#activity-5" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Trace</a></li>
+</ol></nav>
+<noscript data-section-skip><p class="pep-nojs-note"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. All five activities follow in order, each with its expected results and why.</p></noscript>
+
+<section id="activity-1" class="pep-activity" data-pep-activity aria-labelledby="a1-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a1-h" tabindex="-1">Activity 1: Guess first</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>This Javalin app registers two routes. Predict before any explanation.</p>
+<pre><code>var app = Javalin.create(config -&gt; {
+    config.routes.get("/books", ctx -&gt; ctx.result("All books"));
+    config.routes.get("/books/{id}", ctx -&gt;
+        ctx.result("Book " + ctx.pathParam("id")));
+}).start(7070);</code></pre>
+        <p>A browser sends <code>GET /books/7?format=short</code>.</p>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-1" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <p>Under <strong>Your prediction</strong>, choose the response body and your confidence, then press <strong>Check prediction</strong>.</p>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to a guess, then read why each option is right or wrong.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict data-static-alt="Prediction (practice, not scored): with routes GET /books and GET /books/{id}, the request GET /books/7?format=short gets the body Book 7. Wrong: All books (the path has a second segment, so /books does not match); Book {id} (the braces name the parameter; pathParam returns the value from the request); Book 7?format=short (the query is not part of the path, so it is not in the path parameter).">
+            <legend>Your prediction</legend>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="predict" id="p-all" value="all" aria-describedby="task-1"><span class="ot"><code>All books</code></span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-book7" value="book7" aria-describedby="task-1"><span class="ot"><code>Book 7</code></span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-brace" value="brace" aria-describedby="task-1"><span class="ot"><code>Book {id}</code></span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-query" value="query" aria-describedby="task-1"><span class="ot"><code>Book 7?format=short</code></span></label>
+            </div>
+            <div class="row"><fieldset class="conf" id="conf0" data-pep-confidence aria-describedby="conf0-instr"><legend id="conf0-instr">How sure are you?</legend><label class="opt"><input type="radio" name="conf0" id="conf0-low" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-medium" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-high" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check aria-describedby="conf0-instr" disabled>Check prediction</button></div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-1" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> The body is <code>Book 7</code>.</p><ul><li><code>All books</code>: wrong. The path <code>/books/7</code> has a second segment, so <code>/books</code> does not match.</li><li><code>Book 7</code>: correct. <code>/books/{id}</code> matches, and <code>pathParam("id")</code> returns <code>7</code>.</li><li><code>Book {id}</code>: wrong. The braces name the parameter; the value comes from the request.</li><li><code>Book 7?format=short</code>: wrong. The query is not part of the path.</li></ul></div></noscript>
+    </div>
+  </div>
+</section>
+
+<section id="activity-2" class="pep-activity" data-pep-activity aria-labelledby="a2-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a2-h" tabindex="-1">Activity 2: Find the route, read the request</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <p data-pep-model>The model: a table of routes, each a method, a path pattern and a handler. A request runs the first matching row; its handler reads and answers through <code>ctx</code>, the Context.</p>
+      <div class="teach" data-pep-teaching>
+        <p>Javalin 7 registers routes inside <code>Javalin.create(config -&gt; { ... })</code> with <code>config.routes.get</code>, <code>post</code>, <code>put</code> or <code>delete</code>. A <code>{name}</code> path segment matches one request segment.</p>
+        <ul>
+          <li><code>ctx.pathParam("id")</code>: the value of <code>{id}</code>, as a <code>String</code>.</li>
+          <li><code>ctx.queryParam("sort")</code>: the value after <code>sort=</code> in the query, or <code>null</code> if it is missing.</li>
+          <li><code>ctx.bodyAsClass(Book.class)</code>: the JSON request body turned into a <code>Book</code> by Javalin's JSON mapper.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-2" class="task" data-pep-task data-pep-may-stall>
+        <h3>Your task</h3>
+        <p>Each item after <strong>Need:</strong> names a route, a request and a wanted value. Press the Context call that reads it.</p>
+        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip>
+          <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary>
+          <div class="pep-hint__body">
+            <p data-pep-hint-target><strong>Where to act:</strong> The request inside the item after <strong>Need:</strong>.</p>
+            <p data-pep-hint-step><strong>Next step:</strong> Find where the wanted value sits in that request: in a path segment matched by <code>{...}</code>, after <code>?</code>, or in the body sent with the request.</p>
+          </div>
+        </details>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>All four items sit under the right Context call; a second miss on any item settles the activity.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="x1" data-interaction="drag" data-pep-explore aria-describedby="task-2" data-static-alt="Context sorting activity. Route GET /books/{id}, request GET /books/7, the value 7: ctx.pathParam(&quot;id&quot;). Route GET /books, request GET /books?sort=year, the value year: ctx.queryParam(&quot;sort&quot;). Route POST /books, request with a JSON book in its body, the new book: ctx.bodyAsClass(Book.class). Route GET /authors/{name}/books, request GET /authors/ana/books, the value ana: ctx.pathParam(&quot;name&quot;).">
+            <legend id="x1-legend">Need: <span id="x1-name"></span></legend>
+            <div class="lanebtns" id="x1-btns"></div>
+            <p class="sub" id="x1-count"></p>
+          </fieldset>
+          <figure class="model" aria-label="Items sorted so far">
+            <div class="lanes" id="m-x1"></div>
+          </figure>
+      </div>
+      <div class="feedback" id="fb-2" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong></p><ul><li>Route <code>/books/{id}</code>, request <code>/books/7</code>, the 7: <code>ctx.pathParam("id")</code>.</li><li>Request <code>/books?sort=year</code>, the <code>year</code>: <code>ctx.queryParam("sort")</code>.</li><li><code>POST /books</code> with a JSON book in the body, the new book: <code>ctx.bodyAsClass(Book.class)</code>.</li><li>Route <code>/authors/{name}/books</code>, request <code>/authors/ana/books</code>, the <code>ana</code>: <code>ctx.pathParam("name")</code>.</li></ul></div></noscript>
+      <p class="pep-back"><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-3" class="pep-activity" data-pep-activity aria-labelledby="a3-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a3-h" tabindex="-1">Activity 3: Write and register a POST handler</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>A handler answers through <code>ctx</code>. <code>ctx.status(201)</code> sets the status code; unset, it is 200. <code>ctx.json(value)</code> turns a record, list or <code>Map</code> into JSON and sets a JSON content type. Use a block <code>ctx -&gt; { ... }</code> for several statements.</p>
+<pre><code>config.routes.get("/books/{id}", ctx -&gt; {
+    Book book = books.find(ctx.pathParam("id"));
+    ctx.status(200);
+    ctx.json(book);
+});</code></pre>
+      </div>
+      <section data-pep-where-fits aria-labelledby="where-fits-3">
+        <h2 id="where-fits-3">Where this fits</h2>
+        <p data-pep-fit-decision><strong>Decision:</strong> answer with <code>ctx.json(...)</code> or with <code>ctx.result(...)</code>?</p>
+        <p data-pep-fit-good><strong>Good fit:</strong> <code>ctx.json</code> when another program, such as a web page's script or a test, reads fields from the answer.</p>
+        <p data-pep-fit-boundary><strong>Choose something else when:</strong> the answer is a single human-readable message: <code>ctx.result</code> sends plain text, and <code>ctx.html</code> sends a web page.</p>
+      </section>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="code">
+      <div id="task-3" class="task" data-pep-task data-pep-may-stall>
+        <h3>Your task</h3>
+        <p>In <strong>BookApp.java</strong>, replace the comment line with a <code>POST /books</code> route whose handler reads the book from the request body, saves it with <code>books.save</code>, sets status 201 and answers with the <em>saved</em> book as JSON. <strong>Run</strong> sends the two requests shown under <strong>What success looks like</strong>.</p>
+        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
+          <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 3 for Activity 3</span></summary>
+          <div class="pep-hint__body">
+            <p data-pep-hint-target><strong>Where to act:</strong> On the comment line inside the config block, below the existing <code>get</code> route.</p>
+            <p data-pep-hint-step><strong>Next step:</strong> Copy the shape of the <code>get</code> line, but change the method; the handler needs several steps, so give it a block body like the teaching example.</p>
+            <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="2" data-section-skip>
+              <summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 3 for Activity 3</span></summary>
+              <div class="pep-hint__body">
+                <p data-pep-hint-target><strong>Where to act:</strong> The first statement inside your block.</p>
+                <p data-pep-hint-step><strong>Next step:</strong> The new book arrives as JSON in the request body; store the Context call from Activity 2 that turns the body into a <code>Book</code> in a variable.</p>
+                <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="3" data-section-skip>
+                  <summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 3 of 3 for Activity 3</span></summary>
+                  <div class="pep-hint__body">
+                    <p data-pep-hint-target><strong>Where to act:</strong> The statements after that variable.</p>
+                    <p data-pep-hint-step><strong>Next step:</strong> The book from the body has id 0; <code>books.save</code> returns a copy with the new id. Keep that returned book in a second variable, and use it, not the first, in the JSON answer after setting the status.</p>
+                  </div>
+                </details>
+              </div>
+            </details>
+          </div>
+        </details>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><ul><li><code>POST /books</code> with body <code>{"title":"Dune","year":1965}</code> answers <code>201 Created</code> with JSON for the saved book, which has id 3.</li><li>A following <code>GET /books</code> lists Dune with the two starting books.</li></ul></section>
+      <noscript data-pep-no-js data-section-skip><div class="pep-nojs-code pep-expected"><p><strong>Practice editor, reading version.</strong> JavaScript is off, so the editor cannot run here. Work on paper or in any Java 25 project with Javalin 7 that you already use.</p><p><strong>Task:</strong> replace the comment line with a <code>POST /books</code> route whose handler reads the book from the request body, saves it with <code>books.save</code>, sets status 201 and answers with the saved book as JSON.</p><p><strong>Starter, BookApp.java:</strong></p><pre><code>// record Book(int id, String title, int year) { }
+// books.all() returns every Book; books.save(book) stores it
+// and returns a copy with its new id. Store: 1 Good Omens, 2 Small Gods
+var app = Javalin.create(config -&gt; {
+    config.routes.get("/books", ctx -&gt; ctx.json(books.all()));
+    // Register POST /books here
+}).start(7070);</code></pre><p><strong>What the practice editor accepts:</strong> the <code>Javalin.create(config -&gt; { ... }).start(7070);</code> block with <code>config.routes.get</code>, <code>post</code>, <code>put</code> and <code>delete</code> routes; handlers written as lambdas with an expression or block body; local variables declared with <code>var</code> or <code>Book</code>; and the calls <code>ctx.pathParam</code>, <code>ctx.queryParam</code>, <code>ctx.bodyAsClass(Book.class)</code>, <code>ctx.status</code>, <code>ctx.json</code>, <code>ctx.result</code>, <code>books.all</code>, <code>books.save</code> and <code>Map.of</code>.</p><p><strong>How to compare:</strong> imagine sending <code>POST /books</code> with body <code>{"title":"Dune","year":1965}</code>. The answer must be status 201 with JSON <code>{"id":3,"title":"Dune","year":1965}</code>, and a following <code>GET /books</code> must list Dune after the two starting books. Status 200 means the status was never set; <code>"id":0</code> means the answer used the book from the body instead of the one <code>save</code> returned; plain text means <code>result</code> was used instead of <code>json</code>; a 404 means no <code>POST /books</code> route is registered.</p></div></noscript>
+      <div class="pep-js-only">
+          <fieldset id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-static-alt="Java editor for a Javalin 7 app. The starter registers GET /books, which answers with books.all() as JSON; the store holds 1 Good Omens and 2 Small Gods. The learner registers a POST /books handler. Run sends POST /books with body {&quot;title&quot;:&quot;Dune&quot;,&quot;year&quot;:1965} and then GET /books. Success: POST answers 201 Created with JSON for the saved book, id 3, and GET lists Dune after the two starting books. Status 200 means the status was never set; id 0 means the answer used the book read from the body instead of the one save returned; text/plain means result was used instead of json; 404 means no POST /books route matched.">
+            <legend>Write the handler</legend>
+            <div class="pep-editor">
+              <div class="pep-editor__bar"><span class="pep-editor__file">BookApp.java</span><button type="button" class="primary" id="x2-run">Run</button><button type="button" class="ghost" id="x2-reset">Reset code</button></div>
+              <div class="pep-editor__code"><div class="pep-editor__gutter" id="x2-gutter" aria-hidden="true"></div><textarea id="x2-ed" class="pep-editor__input" rows="5" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Java editor, BookApp.java" aria-describedby="task-3 x2-scope"></textarea></div>
+              <p class="pep-editor__scope" id="x2-scope">Runs one <code>Javalin.create</code> block against two simulated requests, offline.</p>
+              <div class="pep-editor__tabs" role="tablist" aria-label="Results"><button type="button" role="tab" id="x2-tab-prob" aria-controls="x2-prob" aria-selected="true">Problems</button><button type="button" role="tab" id="x2-tab-out" aria-controls="x2-out" aria-selected="false" tabindex="-1">Output</button></div>
+              <div class="pep-editor__panel" id="x2-prob" role="tabpanel" aria-labelledby="x2-tab-prob" tabindex="0"></div>
+              <div class="pep-editor__panel" id="x2-out" role="tabpanel" aria-labelledby="x2-tab-out" tabindex="0" hidden><pre class="out" id="x2-print">(no output yet)</pre></div>
+              <p class="pep-editor__status" id="x2-status"></p>
+            </div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-3" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <p class="pep-back"><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-4" class="pep-activity" data-pep-activity aria-labelledby="a4-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a4-h" tabindex="-1">Activity 4: Map an exception to a response</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>When a handler throws, Javalin runs the most specific <strong>exception handler</strong> registered for that exception's class or a superclass. It receives the exception and the Context, so it can set the status and body. If none matches, Javalin answers 500 with the text <code>Server Error</code>.</p>
+<pre><code>config.routes.exception(IllegalStateException.class, (e, ctx) -&gt; {
+    ctx.status(409);
+    ctx.result("Conflict: " + e.getMessage());
+});</code></pre>
+        <p><code>ctx.json(Map.of("count", 2))</code> sends the JSON object <code>{"count":2}</code>.</p>
+      </div>
+      <details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+        <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+        <div class="pep-optional__body">
+          <p data-pep-anecdote-story>A shop assistant who cannot find an item on the shelf does not walk off silently. They call the help desk, and the help desk knows what to tell the customer for each kind of problem: out of stock, wrong aisle, damaged box. A problem nobody planned for still gets an apology, just a vague one.</p>
+          <p data-pep-anecdote-map>The help desk plays the exception handler; the vague apology is the server-error answer for problems with no handler.</p>
+        </div>
+      </details>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="code">
+      <div id="task-4" class="task" data-pep-task data-pep-may-stall>
+        <h3>Your task</h3>
+        <p>In <strong>BookApp.java</strong>, replace the comment line with an exception handler for <code>BookNotFoundException</code> that sets status 404 and answers with a JSON object whose <code>error</code> field holds the exception's message. <strong>Run</strong> sends the two requests shown under <strong>What success looks like</strong>.</p>
+        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-4" data-pep-hint-order="1" data-section-skip>
+          <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 4</span></summary>
+          <div class="pep-hint__body">
+            <p data-pep-hint-target><strong>Where to act:</strong> On the comment line inside the config block.</p>
+            <p data-pep-hint-step><strong>Next step:</strong> Start from the shape of the teaching example: change the exception class to the one <code>books.find</code> throws, and the status to the code for a missing resource.</p>
+            <details class="pep-hint" data-pep-hint data-pep-hint-for="task-4" data-pep-hint-order="2" data-section-skip>
+              <summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 4</span></summary>
+              <div class="pep-hint__body">
+                <p data-pep-hint-target><strong>Where to act:</strong> The line that sets the body in your exception handler.</p>
+                <p data-pep-hint-step><strong>Next step:</strong> The body must be JSON, not text: build a map with one entry, key <code>"error"</code> and the exception's message as the value, and send it with the Context method that writes JSON.</p>
+              </div>
+            </details>
+          </div>
+        </details>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><ul><li><code>GET /books/1</code> still answers <code>200 OK</code> with JSON for Good Omens.</li><li><code>GET /books/99</code> answers <code>404 Not Found</code> with the JSON object <code>{"error": ...}</code> holding the message <code>No book with id 99</code>.</li></ul></section>
+      <noscript data-pep-no-js data-section-skip><div class="pep-nojs-code pep-expected"><p><strong>Practice editor, reading version.</strong> JavaScript is off, so the editor cannot run here. Work on paper or in any Java 25 project with Javalin 7 that you already use.</p><p><strong>Task:</strong> replace the comment line with an exception handler for <code>BookNotFoundException</code> that sets status 404 and answers with a JSON object whose <code>error</code> field holds the exception's message.</p><p><strong>Starter, BookApp.java:</strong></p><pre><code>// books.find(id) returns the Book, or throws
+// BookNotFoundException("No book with id " + id). Store: 1, 2
+var app = Javalin.create(config -&gt; {
+    config.routes.get("/books/{id}", ctx -&gt;
+        ctx.json(books.find(ctx.pathParam("id"))));
+    // Map BookNotFoundException to a 404 JSON error here
+}).start(7070);</code></pre><p><strong>What the practice editor accepts:</strong> the same forms as Activity 3, plus <code>config.routes.exception(SomeException.class, (e, ctx) -&gt; ...)</code> with <code>e.getMessage()</code> inside it.</p><p><strong>How to compare:</strong> imagine <code>GET /books/1</code>: the answer is 200 with Good Omens as JSON. Then <code>GET /books/99</code>: <code>books.find</code> throws, your handler runs, and the answer must be 404 with the JSON object <code>{"error":"No book with id 99"}</code>. A 500 means no exception handler matched; a 200 with an empty body means the handler never set the status or body; plain text means <code>result</code> was used instead of <code>json</code>.</p></div></noscript>
+      <div class="pep-js-only">
+          <fieldset id="x3" data-interaction="explore" data-pep-explore aria-describedby="task-4" data-static-alt="Java editor for a Javalin 7 app. The starter registers GET /books/{id}, which answers with books.find(id) as JSON; books.find throws BookNotFoundException with the message No book with id 99 when the book is missing. The learner adds an exception handler. Run sends GET /books/1 and GET /books/99. Success: GET /books/1 answers 200 with Good Omens as JSON, and GET /books/99 answers 404 with a JSON object whose error field holds No book with id 99. Without a matching exception handler, Javalin answers 500 Internal Server Error.">
+            <legend>Write the exception handler</legend>
+            <div class="pep-editor">
+              <div class="pep-editor__bar"><span class="pep-editor__file">BookApp.java</span><button type="button" class="primary" id="x3-run">Run</button><button type="button" class="ghost" id="x3-reset">Reset code</button></div>
+              <div class="pep-editor__code"><div class="pep-editor__gutter" id="x3-gutter" aria-hidden="true"></div><textarea id="x3-ed" class="pep-editor__input" rows="5" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Java editor, BookApp.java, exception handler" aria-describedby="task-4 x3-scope"></textarea></div>
+              <p class="pep-editor__scope" id="x3-scope">Runs one <code>Javalin.create</code> block against two simulated requests, offline.</p>
+              <div class="pep-editor__tabs" role="tablist" aria-label="Results"><button type="button" role="tab" id="x3-tab-prob" aria-controls="x3-prob" aria-selected="true">Problems</button><button type="button" role="tab" id="x3-tab-out" aria-controls="x3-out" aria-selected="false" tabindex="-1">Output</button></div>
+              <div class="pep-editor__panel" id="x3-prob" role="tabpanel" aria-labelledby="x3-tab-prob" tabindex="0"></div>
+              <div class="pep-editor__panel" id="x3-out" role="tabpanel" aria-labelledby="x3-tab-out" tabindex="0" hidden><pre class="out" id="x3-print">(no output yet)</pre></div>
+              <p class="pep-editor__status" id="x3-status"></p>
+            </div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-4" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <section class="teach" id="local-run" data-pep-local-run aria-labelledby="local-run-h">
+        <h3 id="local-run-h">Guided local run (required)</h3>
+        <p>The editors above simulate Javalin. Now do both tasks with the real JDK 25 and Javalin, in this topic's coding lab:</p>
+        <ol>
+          <li>In the lab's <code>starter</code> folder, run <code>mvn -q dependency:go-offline</code> once, online.</li>
+          <li>Do Tasks 1 and 2 of its <code>README.md</code>.</li>
+          <li>Run <code>mvn -q -o test</code>. You pass the public checks when it prints nothing and exits 0.</li>
+        </ol>
+      </section>
+      <p class="pep-back"><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-5" class="pep-activity" data-pep-activity aria-labelledby="a5-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a5-h" tabindex="-1">Activity 5: Trace a request end to end</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>A request first needs a matching route. Only a matched handler runs, and only a thrown exception reaches an exception handler.</p>
+        <p>Take the finished app from Activity 4: the <code>GET /books/{id}</code> route from its starter, plus an exception handler that maps <code>BookNotFoundException</code> to 404 with a JSON <code>error</code> field.</p>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-apply" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <p>Under <strong>The response</strong>, choose what comes back for the request below and your confidence, then press <strong>Check answer</strong>.</p>
+        <div id="task-5"><p class="pep-task-q">That app, which has no book 99, receives <code>GET /books/99</code>. What is the response?</p></div>
+        <div id="task-5b" tabindex="-1" hidden><p class="pep-task-q">Retry: the same app receives <code>GET /authors/3</code>. No route has a path that starts with <code>/authors</code>. What is the response?</p></div>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-5"><h3 id="checks-5">What success looks like</h3><p>You pick the response; a second miss settles the check.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="apply" data-interaction="mcq" data-confidence data-pep-apply data-static-alt="Apply question: with a GET /books/{id} route that calls books.find, and an exception handler for BookNotFoundException that sets 404 and a JSON error, the request GET /books/99 matches the route, books.find throws BookNotFoundException, and that handler answers 404 with the JSON object {&quot;error&quot;:&quot;No book with id 99&quot;}. Wrong: 500 (a matching exception handler exists, so Javalin does not fall back to 500); 200 with an empty body (the exception stops the handler, and a handler sets the status); 404 with Javalin's default not-found body (the route did match). Retry form: GET /authors/3 matches no route, so no handler or exception handler runs and Javalin answers 404 with its default not-found response.">
+            <legend>The response</legend>
+            <div class="opts one" id="a1">
+              <label class="opt"><input type="radio" name="a1" id="a1-500" value="500" aria-describedby="task-5"><span class="ot"><code>500 Internal Server Error</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-right" value="right" aria-describedby="task-5"><span class="ot"><code>404</code> with the JSON object <code>{"error":"No book with id 99"}</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-200" value="200" aria-describedby="task-5"><span class="ot"><code>200 OK</code> with an empty body</span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-default" value="default" aria-describedby="task-5"><span class="ot"><code>404</code> with Javalin's default not-found response</span></label>
+            </div>
+            <div class="opts one" id="a2" hidden>
+              <label class="opt"><input type="radio" name="a2" id="a2-json" value="json" aria-describedby="task-5b"><span class="ot"><code>404</code> with a JSON object from the <code>BookNotFoundException</code> handler</span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-500" value="500" aria-describedby="task-5b"><span class="ot"><code>500 Internal Server Error</code></span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-right" value="right" aria-describedby="task-5b"><span class="ot"><code>404</code> with Javalin's default not-found response</span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-200" value="200" aria-describedby="task-5b"><span class="ot"><code>200 OK</code> from the <code>/books/{id}</code> handler</span></label>
+            </div>
+          </fieldset>
+          <div class="row">
+            <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-instr">
+              <legend id="conf-instr">How sure are you?</legend>
+              <label class="opt"><input type="radio" name="conf" id="conf-low" value="low"><span class="ot">Low</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-medium" value="medium"><span class="ot">Medium</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-high" value="high"><span class="ot">High</span></label>
+            </fieldset>
+            <button type="button" class="primary" id="apply-check" data-pep-apply-check aria-describedby="conf-instr" disabled>Check answer</button>
+          </div>
+      </div>
+      <div class="feedback" id="fb-5" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> <code>GET /books/99</code> matches the route, <code>books.find</code> throws <code>BookNotFoundException</code>, and its exception handler answers <code>404</code> with <code>{"error":"No book with id 99"}</code>.</p><ul><li><code>500</code>: wrong; a matching exception handler exists, so Javalin does not fall back to 500.</li><li><code>200 OK</code> with an empty body: wrong; the exception stops the route handler, and the exception handler sets the status.</li><li><code>404</code> with Javalin's default not-found response: wrong; the route did match.</li></ul><p><strong>Retry form:</strong> <code>GET /authors/3</code> matches no route, so no handler and no exception handler runs, and Javalin answers <code>404</code> with its default not-found response.</p></div></noscript>
+      <details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+        <summary>Challenge (optional)</summary>
+        <div class="pep-optional__body">
+          <p data-pep-optional-time><strong>Optional time:</strong> about 5 minutes, in addition to this topic's time.</p>
+          <p>On paper, or in any Javalin 7 project you already use, write a <code>GET /search</code> route that reads a <code>title</code> query parameter and answers with a JSON object holding that title, such as <code>{"title":"Dune"}</code> for <code>GET /search?title=Dune</code>. Then answer one question: what does your handler send when the request has no <code>title</code> parameter at all?</p>
+          <p data-pep-success-criteria><strong>Success criteria:</strong> your route uses the Context call for query parameters, and you can say what value that call gives for a missing parameter and why the response then needs care.</p>
+        </div>
+      </details>
+      <p class="pep-back"><a href="#activity-4" data-pep-back-link>Back to activity 4</a></p>
+    </div>
+  </div>
+</section>
+
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+  <button type="button" class="pep-btn" id="prev" data-pep-previous>Previous activity</button>
+  <button type="button" class="primary" id="next" data-pep-next>Next activity</button>
+</div>
+
+<section id="recap" class="recap" data-pep-recap aria-labelledby="recap-h">
+  <h2 id="recap-h" tabindex="-1">Recap</h2>
+  <p id="complete" class="complete" data-pep-completion></p>
+  <ul>
+    <li>Routes live in <code>config.routes</code>; the first route whose method and path match runs.</li>
+    <li>Read with <code>ctx.pathParam</code>, <code>ctx.queryParam</code>, <code>ctx.bodyAsClass</code>; answer with <code>ctx.status</code> (200 if unset) and <code>ctx.json</code>.</li>
+    <li>An exception handler turns a thrown exception into a status and body; the most specific wins, and none means 500.</li>
+  </ul>
+  <details data-section-skip data-pep-cheat-sheet>
+    <summary>Cheat sheet</summary>
+    <table>
+      <tr><td>Register</td><td><code>config.routes.put("/books/{id}", ctx -&gt; { ... });</code></td></tr>
+      <tr><td>Path / query</td><td><code>ctx.pathParam("id")</code>, <code>ctx.queryParam("sort")</code></td></tr>
+      <tr><td>JSON body in</td><td><code>ctx.bodyAsClass(Book.class)</code></td></tr>
+      <tr><td>Answer</td><td><code>ctx.status(201)</code>, <code>ctx.json(value)</code></td></tr>
+      <tr><td>Exceptions</td><td><code>config.routes.exception(X.class, (e, ctx) -&gt; { ... });</code></td></tr>
+    </table>
+  </details>
+  <details data-section-skip data-pep-sources class="sources">
+    <summary>Sources and review date</summary>
+    <p>Claims on this page were checked against the live official pages below on 16 October 2026 (UTC), for Javalin 7.2.3 on Java 25. The practice editors simulate Javalin; they do not run it. Links open outside this lesson.</p>
+    <ul>
+      <li><a href="https://javalin.io/documentation" rel="noopener">Javalin documentation</a>: Getting started (routes in <code>config.routes</code>), Handlers, Context, Exception mapping, Default responses, HttpConfig (<code>prefer405over404</code>).</li>
+      <li><a href="https://javadoc.io/static/io.javalin/javalin/7.2.3/io/javalin/http/Handler.html" rel="noopener">Javalin 7.2.3 Javadoc: Handler</a> and <a href="https://javadoc.io/static/io.javalin/javalin/7.2.3/io/javalin/http/ExceptionHandler.html" rel="noopener">ExceptionHandler</a>.</li>
+      <li><a href="https://github.com/javalin/javalin/blob/javalin-parent-7.2.3/javalin/src/main/java/io/javalin/router/exception/ExceptionMapper.kt" rel="noopener">Javalin 7.2.3 source: ExceptionMapper</a>: an exception with no matching handler becomes a 500 response.</li>
+      <li><a href="https://www.rfc-editor.org/rfc/rfc9110.html" rel="noopener">RFC 9110, HTTP Semantics</a>, section 15: 200, 201, 404 and 500.</li>
+    </ul>
+  </details>
+  <p class="next-topic">Next topic: Lambdas as handlers: shorthand for functional interfaces</p>
+</section>
+</main>
+<script>
+/* Javalin practice interpreter: a bounded parser for one Javalin.create(...) block and a simulated request runner.
+   It runs only the forms listed in each editor's scope note; anything else is reported, never guessed. */
+var JV=(function(){
+function Problem(kind,msg,pos){this.kind=kind;this.msg=msg;this.pos=pos;}
+function lex(src){var t=[],re=/\s+|\/\/[^\n]*|\/\*[\s\S]*?\*\/|(::|->|@[A-Za-z_$][\w$]*|[A-Za-z_$][\w$]*|\d+|"(?:[^"\\\n]|\\.)*"|.)/g,m;
+  while((m=re.exec(src))){if(m[1]!==undefined)t.push({v:m[1],p:m.index});}return t;}
+var CTX_KNOWN=['body','bodyAsBytes','bodyStreamAsClass','bodyValidator','formParam','formParams','pathParamMap','pathParamAsClass','queryParamAsClass','queryParams','header','headers','html','redirect','future','attribute','cookie','method','path','url','ip','contentType','statusCode','req','res','endpoint','async','render','jsonStream','writeJsonStream','uploadedFile','host','port','sessionAttribute'];
+var VERBS=['get','post','put','delete'],VERBS_OTHER=['patch','head','options','query','before','after','beforeMatched','afterMatched','error','ws','sse','addHttpHandler','apiBuilder','wsException'];
+function parse(src,env){var Tk=lex(src),i=0;
+  function pk(o){var x=Tk[i+(o||0)];return x?x.v:'';}
+  function at(){return Tk[i]?Tk[i].p:src.length;}
+  function eat(v){if(pk()===v){i++;return;}throw new Problem('error',"error: '"+v+"' expected",at());}
+  function ident(){var v=pk();if(!/^[A-Za-z_$][\w$]*$/.test(v))throw new Problem('error','error: <identifier> expected',at());i++;return v;}
+  function str(){var v=pk();if(v.charAt(0)!=='"')throw new Problem('error','error: a string in double quotes is expected here',at());i++;return JSON.parse(v);}
+  /* expressions: literals, names and call chains on ctx, books, Map, e */
+  function args(){var a=[];eat('(');if(pk()!==')'){a.push(expr());while(pk()===','){i++;a.push(expr());}}eat(')');return a;}
+  function primary(){var p0=at(),v=pk();
+    if(v.charAt(0)==='"'){i++;return {k:'lit',v:JSON.parse(v),p:p0};}
+    if(/^\d+$/.test(v)){i++;return {k:'lit',v:Number(v),p:p0};}
+    if(v==='new')throw new Problem('limit','not supported in this practice editor: new objects inside a handler',p0);
+    if(/^[A-Z]/.test(v)&&pk(1)==='.'&&pk(2)==='class'){i+=3;return {k:'class',v:v,p:p0};}
+    if(v==='Map'&&pk(1)==='.'&&pk(2)==='of'){i+=3;return {k:'map',a:args(),p:p0};}
+    if(/^[A-Za-z_$][\w$]*$/.test(v)){i++;return {k:'name',v:v,p:p0};}
+    throw new Problem('error','error: illegal start of expression',p0);}
+  function expr(){var e=primary();
+    while(pk()==='.'){i++;var p0=at(),m=ident();if(pk()==='(')e={k:'call',o:e,m:m,a:args(),p:p0};else throw new Problem('limit','not supported in this practice editor: field access .'+m,p0);}
+    return e;}
+  function stmt(){var p0=at();
+    if(pk()==='return'){i++;if(pk()===';'){i++;return {k:'return',p:p0};}throw new Problem('error','error: incompatible types: unexpected return value (a handler returns nothing)',p0);}
+    if(pk()==='throw'||pk()==='if'||pk()==='for'||pk()==='while'||pk()==='try')throw new Problem('limit','not supported in this practice editor: '+pk()+' statements',p0);
+    if(/^[A-Za-z_$][\w$]*$/.test(pk())&&/^[A-Za-z_$][\w$]*$/.test(pk(1))&&pk(2)==='='){var type=ident(),name=ident();i++;var e=expr();eat(';');return {k:'let',type:type,name:name,e:e,p:p0};}
+    var x=expr();eat(';');if(x.k!=='call')throw new Problem('error','error: not a statement',p0);return {k:'expr',e:x,p:p0};}
+  function block(){eat('{');var b=[];while(pk()!=='}'){if(!pk())throw new Problem('error',"error: reached end of file while parsing: '}' expected",at());b.push(stmt());}eat('}');return b;}
+  function lambdaBody(){if(pk()==='{')return block();var p0=at(),e=expr();if(e.k!=='call')throw new Problem('error','error: bad return type in lambda expression: a handler returns nothing, so its body must be a call or a { block }',p0);return [{k:'expr',e:e,p:p0,bodyExpr:true}];}
+  /* handlers: a lambda, an anonymous Handler class, or a method reference */
+  function handler(){var p0=at();if((pk()===cfg&&pk(1)==='->')||(pk()==='('&&pk(1)===cfg))throw new Problem('error','error: variable '+cfg+' is already defined; give the handler parameter another name, such as ctx',p0);
+    if(pk()==='new'){i++;var t=ident();if(t!=='Handler')throw new Problem('limit','not supported in this practice editor: new '+t+'(...) as a handler',p0);eat('(');eat(')');eat('{');
+      var ann=false;if(pk()==='@Override'){i++;ann=true;}
+      if(pk()!=='public')throw new Problem('error','error: handle(Context) in an anonymous Handler must be public',at());i++;
+      eat('void');var mn=ident();if(mn!=='handle')throw new Problem('error','error: <anonymous Handler> is not abstract and does not override abstract method handle(Context) in Handler',p0);
+      eat('(');var ct=ident();if(ct!=='Context')throw new Problem('error','error: handle must take a Context parameter',at());var pn=ident();eat(')');var b=block();eat('}');
+      return {form:'anon',param:pn,body:b,p:p0,override:ann};}
+    if(/^[A-Za-z_$][\w$]*$/.test(pk())&&pk(1)==='::'){var cls=ident();i++;var mm=ident();return {form:'ref',cls:cls,m:mm,p:p0};}
+    if(pk()==='('&&pk(2)===')'&&pk(3)==='->'){i++;var p1=ident();i++;i++;return {form:'lambda',param:p1,body:lambdaBody(),p:p0,parens:true};}
+    if(/^[a-z_$][\w$]*$/.test(pk())&&pk(1)==='->'){var p2=ident();i++;return {form:'lambda',param:p2,body:lambdaBody(),p:p0};}
+    throw new Problem('error','error: a handler is expected here: a lambda such as ctx -> { ... }',p0);}
+  function exHandler(){var p0=at();
+    if(pk()==='('&&/^[a-z_$][\w$]*$/.test(pk(1))&&pk(2)===','&&/^[a-z_$][\w$]*$/.test(pk(3))&&pk(4)===')'&&pk(5)==='->'){i++;var e=ident();i++;var c=ident();i+=2;return {form:'lambda',eparam:e,param:c,body:lambdaBody(),p:p0};}
+    if(pk()==='new')throw new Problem('limit','not supported in this practice editor: an anonymous ExceptionHandler; write a lambda (e, ctx) -> { ... }',p0);
+    throw new Problem('error','error: an exception handler is expected here: a lambda with two parameters, such as (e, ctx) -> { ... }',p0);}
+  /* the program */
+  if(!Tk.length)throw new Problem('error','error: the editor is empty',0);
+  if(pk()==='var'||pk()==='Javalin'){if(pk(1)!=='.'){i++;ident();eat('=');}}
+  if(pk()!=='Javalin'||pk(1)!=='.'||pk(2)!=='create')throw new Problem('limit','not supported in this practice editor: keep the Javalin.create(config -> { ... }) block',at());
+  i+=3;eat('(');var cfg=ident();eat('->');eat('{');var routes=[],mappers=[];
+  while(pk()!=='}'){if(!pk())throw new Problem('error',"error: reached end of file while parsing: '}' expected",at());var p0=at();
+    if(pk()!==cfg||pk(1)!=='.'||pk(2)!=='routes'||pk(3)!=='.')throw new Problem('limit','not supported in this practice editor: inside the config block, write only '+cfg+'.routes.get/post/put/delete(...) or '+cfg+'.routes.exception(...) statements',p0);
+    i+=4;var vp=at(),verb=ident();
+    if(verb==='exception'){eat('(');var cl=primary();if(cl.k!=='class')throw new Problem('error','error: the first argument must be an exception class, such as SomeException.class',cl.p);eat(',');var h=exHandler();eat(')');eat(';');mappers.push({cls:cl.v,h:h,p:p0});continue;}
+    if(VERBS.indexOf(verb)<0){if(VERBS_OTHER.indexOf(verb)>=0)throw new Problem('limit','not supported in this practice editor: routes.'+verb+'(...)',vp);throw new Problem('error','error: cannot find symbol: method '+verb+' in the routes config',vp);}
+    eat('(');var pth=str();if(pth.charAt(0)!=='/')throw new Problem('limit','not supported in this practice editor: paths must start with /',p0);eat(',');var hh=handler();eat(')');eat(';');routes.push({verb:verb,path:pth,h:hh,p:p0});}
+  eat('}');eat(')');
+  if(pk()!=='.'||pk(1)!=='start')throw new Problem('error','error: keep .start(7070) after the create block',at());i+=2;eat('(');if(pk()!=='7070')throw new Problem('limit','not supported in this practice editor: this practice server always starts on port 7070',at());i++;eat(')');eat(';');
+  if(i<Tk.length)throw new Problem('limit','not supported in this practice editor: write nothing after the create block',at());
+  if(env&&env.check)env.check(routes,mappers);
+  return {routes:routes,mappers:mappers};}
+
+/* simulation */
+var STATUS={200:'OK',201:'Created',204:'No Content',400:'Bad Request',404:'Not Found',500:'Internal Server Error'};
+function Thrown(cls,msg){this.cls=cls;this.msg=msg;}
+function toJson(v){return JSON.stringify(v);}
+function match(path,req){var a=path.split('/'),b=req.split('?')[0].split('/'),pp={};if(a.length!==b.length)return null;
+  for(var k=0;k<a.length;k++){var m=/^\{(\w+)\}$/.exec(a[k]);if(m)pp[m[1]]=decodeURIComponent(b[k]);else if(a[k]!==b[k])return null;}return pp;}
+function makeRunner(world){
+  function evalE(e,sc,res,pos){
+    if(e.k==='lit')return e.v;
+    if(e.k==='class')throw new Problem('error','error: '+e.v+'.class can only be passed to bodyAsClass or routes.exception',e.p);
+    if(e.k==='map'){if(e.a.length%2)throw new Problem('error','error: Map.of needs key and value pairs',e.p);var o={};for(var k=0;k<e.a.length;k+=2){var key=evalE(e.a[k],sc,res);if(typeof key!=='string')throw new Problem('error','error: use string keys in Map.of here',e.a[k].p);o[key]=evalE(e.a[k+1],sc,res);}return o;}
+    if(e.k==='name'){if(Object.prototype.hasOwnProperty.call(sc,e.v))return sc[e.v];if(world.names&&Object.prototype.hasOwnProperty.call(world.names,e.v))return world.names[e.v];throw new Problem('error','error: cannot find symbol: variable '+e.v,e.p);}
+    if(e.k==='call'){var o2=e.o;
+      if(o2.k==='name'&&o2.v===sc.$ctx&&!Object.prototype.hasOwnProperty.call(sc,'$shadow'))return ctxCall(e,sc,res);
+      if(o2.k==='call'&&isCtxChain(o2,sc)){evalE(o2,sc,res);return ctxCall(e,sc,res);}
+      if(o2.k==='name'&&o2.v===sc.$e){if(e.m==='getMessage'&&!e.a.length)return sc[o2.v].msg;throw new Problem('limit','not supported in this practice editor: '+o2.v+'.'+e.m+'(...)',e.p);}
+      if(o2.k==='name'&&world.objects&&world.objects[o2.v]){var obj=world.objects[o2.v],fn=obj[e.m];if(!fn)throw new Problem('error','error: cannot find symbol: method '+e.m+' in '+o2.v,e.p);var av=e.a.map(function(x){return evalE(x,sc,res);});return fn(av,e,res);}
+      throw new Problem('limit','not supported in this practice editor: calls on '+(o2.k==='name'?o2.v:'that value'),e.p);}
+    throw new Problem('error','error: illegal expression',e.p);}
+  function isCtxChain(e,sc){while(e.k==='call')e=e.o;return e.k==='name'&&e.v===sc.$ctx;}
+  function ctxCall(e,sc,res){var m=e.m,a=e.a;
+    if(m==='pathParam'){var n=evalE(a[0],sc,res);if(!Object.prototype.hasOwnProperty.call(res.pp,n))throw new Thrown('IllegalArgumentException','\''+n+'\' is not a path parameter of this route');return res.pp[n];}
+    if(m==='queryParam'){var q=evalE(a[0],sc,res),qs=(res.req.split('?')[1]||'').split('&'),v=null;qs.forEach(function(x){var kv=x.split('=');if(kv[0]===q&&v===null)v=decodeURIComponent(kv[1]||'');});return v;}
+    if(m==='bodyAsClass'){if(a.length!==1||a[0].k!=='class')throw new Problem('error','error: bodyAsClass needs a class, such as Book.class',e.p);if(a[0].v!=='Book')throw new Problem('error','error: cannot find symbol: class '+a[0].v,a[0].p);var b=JSON.parse(res.body||'{}');return {$type:'Book',id:typeof b.id==='number'?b.id:0,title:b.title===undefined?null:b.title,year:typeof b.year==='number'?b.year:0};}
+    if(m==='status'){var s=evalE(a[0],sc,res);if(typeof s!=='number')throw new Problem('error','error: incompatible types: String cannot be converted to int',e.p);res.status=s;return sc[sc.$ctx];}
+    if(m==='json'){res.body_out=toJson(strip(evalE(a[0],sc,res)));res.type='application/json';return sc[sc.$ctx];}
+    if(m==='result'){var r=evalE(a[0],sc,res);if(typeof r!=='string')throw new Problem('limit','not supported in this practice editor: result(...) with a non-string value',e.p);res.body_out=r;res.type='text/plain';return sc[sc.$ctx];}
+    if(CTX_KNOWN.indexOf(m)>=0)throw new Problem('limit','not supported in this practice editor: ctx.'+m+'(...)',e.p);
+    throw new Problem('error','error: cannot find symbol: method '+m+' in Context',e.p);}
+  function strip(v){if(v&&typeof v==='object'){if(Array.isArray(v))return v.map(strip);var o={};Object.keys(v).forEach(function(k){if(k!=='$type')o[k]=strip(v[k]);});return o;}return v;}
+  function runBody(h,sc,res){for(var k=0;k<h.body.length;k++){var s=h.body[k];
+      if(s.k==='return')return;
+      if(s.k==='let'){if(Object.prototype.hasOwnProperty.call(sc,s.name)||s.name===sc.$ctx)throw new Problem('error','error: variable '+s.name+' is already defined',s.p);var v=evalE(s.e,sc,res);
+        if(s.type!=='var'&&!(s.type==='Book'&&v&&v.$type==='Book')&&!(s.type==='String'&&typeof v==='string')&&!(s.type==='int'&&typeof v==='number'))throw new Problem('error','error: incompatible types: the value cannot be stored in a '+s.type+' variable',s.p);sc[s.name]=v;}
+      else evalE(s.e,sc,res);}}
+  return function(prog,req){var parts=req.split(' '),method=parts[0].toLowerCase(),url=parts[1],res={req:url,body:parts.slice(2).join(' '),status:200,body_out:'',type:null,pp:{}},hit=null;
+    for(var k=0;k<prog.routes.length;k++){var r=prog.routes[k],pp=r.verb===method?match(r.path,url):null;if(pp){hit=r;res.pp=pp;break;}}
+    if(!hit){res.status=404;res.body_out='Endpoint '+parts[0]+' '+url.split('?')[0]+' not found';res.type='text/plain';res.note='no registered route matches, so Javalin answers with its default not-found text';return res;}
+    res.route=hit;
+    try{if(hit.h.form==='ref'){var f=world.refs&&world.refs[hit.h.cls+'.'+hit.h.m];if(!f)throw new Problem('error','error: invalid method reference: cannot find symbol '+hit.h.m+' in '+hit.h.cls,hit.h.p);f(res);}
+      else{var sc={$ctx:hit.h.param};sc[hit.h.param]={$type:'Context'};runBody(hit.h,sc,res);}}
+    catch(x){if(!(x instanceof Thrown))throw x;res.thrown=x;res.status=200;res.body_out='';res.type=null;
+      var best=null;prog.mappers.forEach(function(mp){var d=world.exceptionDepth(x.cls,mp.cls);if(d>=0&&(!best||d<best.d))best={d:d,mp:mp};});
+      if(!best){res.status=500;res.body_out='Server Error';res.type='text/plain';res.note='no exception handler matches '+x.cls+', so Javalin answers 500';}
+      else{res.mapper=best.mp;var sc2={$ctx:best.mp.h.param,$e:best.mp.h.eparam};sc2[best.mp.h.param]={$type:'Context'};sc2[best.mp.h.eparam]=x;
+        try{runBody(best.mp.h,sc2,res);}catch(y){if(!(y instanceof Thrown))throw y;res.status=500;res.body_out='Server Error';res.type='text/plain';res.note='the exception handler itself threw '+y.cls+', so Javalin answers 500';}}}
+    return res;};}
+function show(req,res){var lines=[req.split(' ').slice(0,2).join(' ')+(req.split(' ').length>2?'  body '+req.split(' ').slice(2).join(' '):''),'  -> '+res.status+' '+(STATUS[res.status]||'')+(res.type?'  ('+res.type+')':'')];
+  if(res.body_out)lines.push('  '+res.body_out);if(res.note)lines.push('  note: '+res.note);return lines.join('\n');}
+return {Problem:Problem,Thrown:Thrown,parse:parse,makeRunner:makeRunner,show:show,STATUS:STATUS};
+})();
+/* Page data: routes and handlers in Javalin */
+var PEP_PAGE=(function(){
+var HIER={BookNotFoundException:['BookNotFoundException','RuntimeException','Exception'],IllegalArgumentException:['IllegalArgumentException','RuntimeException','Exception'],IllegalStateException:['IllegalStateException','RuntimeException','Exception'],RuntimeException:['RuntimeException','Exception'],Exception:['Exception']};
+function world(){var store=[{$type:'Book',id:1,title:'Good Omens',year:1990},{$type:'Book',id:2,title:'Small Gods',year:1992}],nextId=3;
+  function isBook(v){return v&&v.$type==='Book';}
+  return {
+    exceptionDepth:function(thrown,mapped){return (HIER[thrown]||[thrown]).indexOf(mapped);},
+    objects:{books:{
+      all:function(a,e){if(a.length)throw new JV.Problem('error','error: all() takes no arguments',e.p);return store.map(function(b){return b;});},
+      save:function(a,e){if(a.length!==1||!isBook(a[0]))throw new JV.Problem('error','error: incompatible types: save needs a Book',e.p);var b={$type:'Book',id:nextId++,title:a[0].title,year:a[0].year};store.push(b);return b;},
+      find:function(a,e){if(a.length!==1||typeof a[0]!=='string')throw new JV.Problem('error','error: incompatible types: find needs the id as a String',e.p);
+        for(var k=0;k<store.length;k++)if(String(store[k].id)===a[0])return store[k];throw new JV.Thrown('BookNotFoundException','No book with id '+a[0]);}}}};}
+function check(routes,mappers){mappers.forEach(function(m){if(!HIER[m.cls])throw new JV.Problem('error','error: cannot find symbol: class '+m.cls,m.p);});}
+function exec(src,reqs){var prog,w=world(),run,out=[];
+  try{prog=JV.parse(src,{check:check});run=JV.makeRunner(w);out=reqs.map(function(r){return run(prog,r);});}
+  catch(x){if(x instanceof JV.Problem)return {problem:x};throw x;}
+  return {res:out,text:reqs.map(function(r,k){return JV.show(r,out[k]);}).join('\n\n')};}
+function body(r){try{return JSON.parse(r.body_out);}catch(e){return undefined;}}
+function rows(list){var ok=list.every(function(x){return x[0];});return {ok:ok,list:list.map(function(x){return [x[0]?'Met:':'Not yet:',x[1]];})};}
+var POST='POST /books {"title":"Dune","year":1965}';
+function runPost(src){var r=exec(src,[POST,'GET /books']);if(r.problem)return r;var p=r.res[0],g=r.res[1],pb=body(p),gb=body(g),why=null;
+  var c1=p.status===201,c2=p.type==='application/json'&&pb&&pb.id===3&&pb.title==='Dune',c3=g.status===200&&Array.isArray(gb)&&gb.some(function(b){return b&&b.title==='Dune';});
+  var R=rows([[c1,'`POST /books` answers status 201'],[c2,'its JSON body is the saved book, with id 3'],[c3,'`GET /books` then lists Dune']]);
+  if(!p.route)why='No route matched `POST /books`, so Javalin answered 404. Register a route with the `post` method and the path `/books`.';
+  else if(p.thrown)why='The handler threw '+p.thrown.cls+'.';
+  else if(!c1&&p.status===200)why='The status is 200, the default: nothing set it. A request that created a book should say so with 201.';
+  else if(!c1)why='The status is '+p.status+'; a request that created a book answers 201.';
+  else if(p.type!=='application/json')why=p.type?'The answer is plain text: `result` sends text. Send the saved book with the method that writes JSON.':'The answer has no body yet. Send the saved book as JSON.';
+  else if(pb&&pb.id===0)why='The JSON has `"id":0`: that is the book as it arrived in the request body. `books.save` returns a copy with the new id; answer with that one.';
+  else if(!c2)why='The JSON body is not the saved Dune book.';
+  else if(!c3)why='`GET /books` does not list Dune, so the book was never saved.';
+  return {out:r.text,ok:R.ok,status:R.ok?'Ran: both requests behave as required':'Ran: '+R.list.filter(function(x){return x[0]!=='Met:';}).length+' check(s) not met yet',
+    msg:[{c:R.ok?'verdict ok':'verdict info',s:R.ok?'Both requests behave as required: the POST handler reads the body, saves the book, sets 201 and answers with the saved book as JSON.':(why||'Compare the output with the checks below.')},{list:R.list}]};}
+function runEx(src){var r=exec(src,['GET /books/1','GET /books/99']);if(r.problem)return r;var a=r.res[0],b=r.res[1],ab=body(a),bb=body(b),why=null;
+  var c1=a.status===200&&a.type==='application/json'&&ab&&ab.title==='Good Omens',c2=b.status===404,c3=b.type==='application/json'&&bb&&typeof bb==='object'&&!Array.isArray(bb)&&bb.error==='No book with id 99';
+  var R=rows([[c1,'`GET /books/1` answers 200 with Good Omens as JSON'],[c2,'`GET /books/99` answers 404'],[c3,'its JSON body is an object whose `error` field holds the exception\'s message']]);
+  if(!c1)why='`GET /books/1` changed: keep the starter route as it is.';
+  else if(b.status===500)why='Javalin answered 500 because no exception handler matched `BookNotFoundException`. Register one with `config.routes.exception`.';
+  else if(!c2)why='Your exception handler ran, but the status is '+b.status+'. A missing book is 404.';
+  else if(b.type!=='application/json')why=b.type?'The body is plain text. Build a map with an `error` entry and send it with the method that writes JSON.':'The body is empty. Send a JSON object with an `error` field.';
+  else if(!(bb&&typeof bb==='object'&&!Array.isArray(bb)&&'error' in bb))why='The JSON needs a field named `error`.';
+  else if(!c3)why='The `error` field must hold the exception\'s own message, from `e.getMessage()`.';
+  return {out:r.text,ok:R.ok,status:R.ok?'Ran: both requests behave as required':'Ran: '+R.list.filter(function(x){return x[0]!=='Met:';}).length+' check(s) not met yet',
+    msg:[{c:R.ok?'verdict ok':'verdict info',s:R.ok?'Both requests behave as required: the route answers normally, and the thrown exception becomes a 404 with a JSON error body.':(why||'Compare the output with the checks below.')},{list:R.list}]};}
+var START1='// record Book(int id, String title, int year) { }\n// books.all() returns every Book; books.save(book) stores it\n// and returns a copy with its new id. Store: 1 Good Omens, 2 Small Gods\nvar app = Javalin.create(config -> {\n    config.routes.get("/books", ctx -> ctx.json(books.all()));\n    // Register POST /books here\n}).start(7070);';
+var START2='// books.find(id) returns the Book, or throws\n// BookNotFoundException("No book with id " + id). Store: 1, 2\nvar app = Javalin.create(config -> {\n    config.routes.get("/books/{id}", ctx ->\n        ctx.json(books.find(ctx.pathParam("id"))));\n    // Map BookNotFoundException to a 404 JSON error here\n}).start(7070);';
+var CTX=[{id:'path',label:'ctx.pathParam(...)'},{id:'query',label:'ctx.queryParam(...)'},{id:'body',label:'ctx.bodyAsClass(Book.class)'}];
+return {
+predict:{ok:'book7',lead:'Javalin compares the method and the path with each route. `/books/7` has two segments, so it matches `/books/{id}`, and `ctx.pathParam("id")` returns the text `7`. The query is not part of the path.',expl:{
+  all:'Not quite: `/books` matches only a path with one segment; `/books/7` has two.',
+  book7:'Right: `/books/{id}` matches, and `pathParam("id")` returns `7`.',
+  brace:'Not quite: `{id}` names the parameter in the route; the value comes from the request.',
+  query:'Not quite: the query after `?` is not part of the path, so it is not in the path parameter.'}},
+acts:{
+ x1:{type:'lanes',lanes:CTX,
+  done:'A value in a `{...}` path segment comes from `pathParam`, a value after `?` from `queryParam`, and a JSON body from `bodyAsClass`.',
+  items:[
+   {n:'Route `/books/{id}`, request `GET /books/7`: the 7',lane:'path',ok:'`7` fills the `{id}` segment, so `ctx.pathParam("id")`.',w:{query:'There is no `?` in this request.',body:'A `GET` like this sends no body; the 7 is in the path.'}},
+   {n:'Route `/books`, request `GET /books?sort=year`: the year',lane:'query',ok:'`year` comes after `sort=` in the query, so `ctx.queryParam("sort")`.',w:{path:'The route `/books` has no `{...}` segment.',body:'The value is in the URL, not a body.'}},
+   {n:'Route `/books`, request `POST /books` with a JSON book as its body: the new book',lane:'body',ok:'The book is JSON in the request body, so `ctx.bodyAsClass(Book.class)`.',w:{path:'The path holds no book data.',query:'There is no query; the book travels in the body.'}},
+   {n:'Route `/authors/{name}/books`, request `GET /authors/ana/books`: the ana',lane:'path',ok:'`ana` fills the `{name}` segment, so `ctx.pathParam("name")`.',w:{query:'There is no `?` in this request.',body:'The value is a path segment.'}}
+  ]},
+ x2:{type:'editor',starter:START1,run:runPost},
+ x3:{type:'editor',starter:START2,run:runEx}
+},
+apply:{
+ r1:{ok:'right',expl:{
+   '500':'Javalin answers 500 only when no exception handler matches; here the `BookNotFoundException` handler matches.',
+   right:'The route matched, `books.find` threw, and the most specific exception handler set 404 and the JSON error.',
+   '200':'The exception stops the route handler; the exception handler then sets the response.',
+   'default':'The route `/books/{id}` matched, so this is not Javalin\'s default not-found answer.'},
+   mis:{'500':'A matching exception handler sets the response.','200':'A thrown exception never leaves a normal 200 answer here.','default':'A route matched; its handler threw.'}},
+ r2:{ok:'right',answer:'`404` with Javalin\'s default not-found response: no route matches `/authors/3`, so no handler runs and nothing throws.',expl:{
+   json:'That handler runs only when a handler throws `BookNotFoundException`; no handler ran.',
+   '500':'Nothing threw, because no handler ran.',
+   right:'No route matched, so Javalin itself answers 404.',
+   '200':'`/books/{id}` does not match a path that starts with `/authors`.'},
+   mis:{json:'Exception handlers run only after a matched handler throws.','500':'No handler ran, so nothing threw.','200':'The path must match the route\'s pattern.'}}
+},
+finishLabels:{x1:'Context calls',apply:'Final check'}
+};})();
+</script>
+<script>
+/* PEP lesson engine for http-and-javalin pages: identical bytes on every page of this module; page data lives in PEP_PAGE */
+(function(){
+'use strict';
+var D=document,P=window.PEP_PAGE;
+function $(s,r){return (r||D).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||D).querySelectorAll(s));}
+function md(s){var f=D.createDocumentFragment(),re=/(`[^`]+`|\*\*[^*]+\*\*)/g,last=0,m;s=String(s);
+  while((m=re.exec(s))){if(m.index>last)f.appendChild(D.createTextNode(s.slice(last,m.index)));
+    var t=m[0],e=D.createElement(t.charAt(0)==='`'?'code':'strong');e.textContent=t.charAt(0)==='`'?t.slice(1,-1):t.slice(2,-2);f.appendChild(e);last=re.lastIndex;}
+  if(last<s.length)f.appendChild(D.createTextNode(s.slice(last)));return f;}
+function el(tag,cls,txt){var e=D.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.appendChild(typeof txt==='string'?md(txt):txt);return e;}
+function T(t){return D.createTextNode(t);}
+
+/* Guidance state: current activity, a monotonic unlocked frontier and per-activity results kept apart */
+var main=$('#lesson'),ACTS=$$('[data-pep-activity]'),LINKS=$$('[data-pep-activity-link]'),prevBtn=$('#prev'),next=$('#next'),resetBtn=$('#reset'),recap=$('#recap');
+var KEYS=['predict'].concat(Object.keys(P.acts),['apply']),N=KEYS.length;
+var S={step:1,done:{},results:{}};
+function freshAct(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,cont:false};}
+var G={current:1,unlocked:1,complete:false,acts:KEYS.map(freshAct)};
+function fbOf(n){return $('[data-pep-feedback]',ACTS[n-1]);}
+function say(parts,focus){var fb=fbOf(G.current);fb.textContent='';(parts||[]).forEach(function(p){
+  if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li',it[2]||'');li.appendChild(el('strong',null,it[0]));li.appendChild(T(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
+  else if(p.pre){var pr=el('pre','out');pr.textContent=p.pre;fb.appendChild(pr);}
+  else{var q=el('p',p.c||'',p.s);if(p.attr)q.setAttribute(p.attr,'');fb.appendChild(q);}});
+  if(focus)fb.focus();}
+function optText(i){var l=i.closest('label');return l?l.textContent.replace(/\s+/g,' ').trim():i.value;}
+var WORD={'correct':'correct on the first try','correct-retry':'correct on the second try','settled':'answered and settled, not marked correct'};
+function reflect(){ACTS.forEach(function(sec,i){var a=G.acts[i];sec.setAttribute('data-pep-attempts',String(a.attempts));sec.setAttribute('data-pep-settled',String(a.settled));
+    sec.setAttribute('data-pep-completed',String(a.completed));sec.setAttribute('data-pep-credit',String(a.credit));sec.setAttribute('data-pep-grade',String(a.grade));sec.setAttribute('data-pep-continue',String(a.cont));});
+  main.setAttribute('data-pep-current-activity',String(G.current));main.setAttribute('data-pep-unlocked-through',String(G.unlocked));main.setAttribute('data-pep-complete',String(G.complete));}
+function progress(){var n=0,set=0,segs=$$('.pep-progress > span');KEYS.forEach(function(k,i){var s=segs[i];s.className='';
+    if(S.done[k]){n++;if(S.results[k]==='settled'){set++;s.className='is-settled';}else s.className='is-done';}
+    if(i+1===G.current)s.className+=(s.className?' ':'')+'is-current';});
+  $('#prog-text').textContent='Activities done: '+n+' of '+N+(set?' ('+set+(set>1?' checks':' check')+' settled, not correct)':'');}
+function attempt(n){G.acts[n-1].attempts++;reflect();}
+function finishPage(){var c=$('#complete'),labels=P.finishLabels||{},parts=[],anySet=false;
+  KEYS.forEach(function(k){if(S.results[k]&&labels[k]){parts.push(labels[k]+': '+WORD[S.results[k]]+'.');if(S.results[k]==='settled')anySet=true;}});
+  c.className='complete'+(anySet?' settled':'');c.textContent='Topic complete. '+parts.join(' ')+(anySet?' Review the explanations before the practice quiz.':'');}
+function complete(k){var n=KEYS.indexOf(k)+1,a=G.acts[n-1];S.done[k]=true;
+  a.completed=true;a.settled=true;a.cont=true;
+  if(a.credit===0){a.credit=1;a.grade=(k==='predict'||S.results[k]==='settled')?0:1;}
+  G.unlocked=Math.max(G.unlocked,Math.min(n+1,N));
+  if(!G.complete&&KEYS.every(function(x){return !!S.done[x];})){G.complete=true;finishPage();}
+  progress();render(G.current);}
+function render(number,mode,moveFocus){
+  if(!(number>=1&&number<=N&&number<=G.unlocked))return false;
+  G.current=number;S.step=number;
+  ACTS.forEach(function(sec,i){sec.hidden=i+1!==number;});
+  LINKS.forEach(function(link,i){var n=i+1;
+    if(n===number)link.setAttribute('aria-current','step');else link.removeAttribute('aria-current');
+    if(n>G.unlocked)link.setAttribute('aria-disabled','true');else link.removeAttribute('aria-disabled');
+    link.classList.toggle('is-done',!!S.done[KEYS[i]]);});
+  prevBtn.disabled=number===1;
+  next.disabled=number===N||number>=G.unlocked||!G.acts[number-1].cont;
+  recap.hidden=!G.complete;
+  $('#pos-text').textContent='Activity '+number+' of '+N;
+  reflect();progress();
+  try{if(mode==='push')history.pushState({activity:number},'','#activity-'+number);
+    else if(mode==='replace')history.replaceState({activity:number},'','#activity-'+number);}
+  catch(e){if(mode&&location.hash!=='#activity-'+number)location.hash='activity-'+number;}
+  if(moveFocus){var h=$('#a'+number+'-h');if(h)h.focus();}
+  return true;}
+/* pep:component predict@1 js */
+/* predict */
+var pf=$('#predict'),pc=$('#predict-check');
+function pReady(){pc.disabled=!!S.done.predict||!($('input[name="predict"]:checked')&&$('input[name="conf0"]:checked'));}
+pf.addEventListener('change',pReady);
+function badges(l,arr){var b=l.querySelector('.badges');if(!b){b=el('span','badges');l.appendChild(b);}arr.forEach(function(x){b.appendChild(el('span','badge '+x[1],x[0]));});}
+pc.addEventListener('click',function(){var c=$('input[name="predict"]:checked'),cv=$('input[name="conf0"]:checked');if(!c||!cv)return;var okv=P.predict.ok,match=c.value===okv;
+  $$('input',pf).forEach(function(i){i.disabled=true;});pc.disabled=true;
+  $$('input[name="predict"]',pf).forEach(function(i){var l=i.closest('label');if(i===c){l.classList.add('mine');badges(l,[['Your prediction','mine-b'],[match?'Correct':'Not correct',match?'ok-b':'no-b']]);}else if(i.value===okv){badges(l,[[P.predict.okLabel||'Correct answer','ok-b']]);}if(i.value===okv)l.classList.add('right');l.appendChild(el('span','oexp',P.predict.expl[i.value]));});
+  pf.querySelector('.opts').classList.add('explained');pc.hidden=true;$('#conf0').closest('.row').hidden=true;
+  if(P.onPredict)P.onPredict();
+  say([{c:'verdict info',s:'Practice prediction, not scored. '+(match?'Your prediction matches the answer.':'Your prediction differs from the answer; nothing is lost.')},{c:'conf-report',s:'Your confidence: '+cv.value+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:P.predict.lead},{s:'Each option now shows its label and why, directly under it.'}],true);
+  complete('predict');});
+/* /pep:component predict js */
+/* pep:component mcq-with-confidence@1 js */
+/* graded checks: confidence first, retry in a second representation, settle after two misses */
+var checks={};
+function check(o){var st={att:0,conf:[],result:null,step:{x1:2,x2:3,apply:4}[o.key]},btn=$(o.btn),cf=$(o.conf),fs=$(o.fs),cn=o.confName||'conf';checks[o.key]=st;
+  function grp(){return st.att===0?o.g1:o.g2;}
+  function ready(){btn.disabled=!!st.result||!($('input[name="'+grp()+'"]:checked')&&$('input[name="'+cn+'"]:checked'));}
+  function lockConf(){$$('input[name="'+cn+'"]').forEach(function(i){i.disabled=true;});btn.disabled=true;}
+  function done(){S.results[o.key]=st.result;if(P.onCheck)P.onCheck(o.key,st.result);complete(o.key,o.label);}
+  fs.addEventListener('change',ready);cf.addEventListener('change',ready);
+  btn.addEventListener('click',function(){var g=grp(),r=st.att===0?o.data.r1:o.data.r2,c=$('input[name="'+g+'"]:checked'),cv=$('input[name="'+cn+'"]:checked');
+    if(!c||!cv||st.result)return;var ok=c.value===r.ok;st.conf.push(cv.value);
+    var confLine='Your confidence: '+cv.value+'. Confidence is your own read on how sure you were; it is reported, never scored.';
+    var expl=$$('input[name="'+g+'"]').map(function(i){return [optText(i)+(i===c?' (your answer):':':'),r.expl[i.value]];});
+    $$('input[name="'+g+'"]').forEach(function(i){i.disabled=true;});c.closest('label').classList.add(ok?'right':'wrong');badges(c.closest('label'),[['Your answer','mine-b'],[ok?'Correct':'Not correct',ok?'ok-b':'no-b']]);
+    if(ok){st.result=st.att===0?'correct':'correct-retry';lockConf();
+      say([{c:'verdict ok',s:st.att===0?'Correct.':'Correct on your second try.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}],true);done();}
+    else if(st.att===0){st.att=1;$('#'+o.g1).hidden=true;$('#'+o.g2).hidden=false;$(o.t1).hidden=true;$(o.t2).hidden=false;$$('input[name="'+cn+'"]').forEach(function(i){i.checked=false;});
+      say([{c:'verdict no',s:'Not yet. '+r.mis[c.value]+' Try again below: same idea, different form, with your confidence again.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}]);
+      ready();$(o.t2).focus();}
+    else{st.result='settled';lockConf();$$('input[name="'+o.g2+'"]').forEach(function(i){if(i.value===r.ok){i.closest('label').classList.add('right');badges(i.closest('label'),[['Correct answer','ok-b']]);}});
+      say([{c:'verdict set',s:'Answered and settled: this check is not marked correct. '+r.mis[c.value]},{c:'conf-report',s:'Confidence on each try: '+st.conf.join(', then ')+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:'The answer: '+r.answer},{list:expl}],true);done();}});
+  st.reset=function(){st.att=0;st.conf=[];st.result=null;$('#'+o.g1).hidden=false;$('#'+o.g2).hidden=true;$(o.t1).hidden=false;$(o.t2).hidden=true;btn.disabled=true;};
+  return st;}
+/* /pep:component mcq-with-confidence js */
+/* lane sort: each item gets one retry, then its lane is revealed; any reveal settles the activity */
+var sets={};
+function lanes(key,o){var step=KEYS.indexOf(key)+1,st={idx:0,tries:{},placed:{},revealed:{}},box=$('#m-'+key),btns=$('#'+key+'-btns'),nm=$('#'+key+'-name'),cnt=$('#'+key+'-count');sets[key]=st;
+  function laneName(id){for(var i=0;i<o.lanes.length;i++)if(o.lanes[i].id===id)return o.lanes[i].label;return id;}
+  function draw(){box.textContent='';var c=0;
+    o.lanes.forEach(function(ln){var d=el('div','lane'),h=el('p','lk',ln.label),u=el('ul','cards');h.id=key+'-lk-'+ln.id;u.setAttribute('aria-labelledby',h.id);d.appendChild(h);d.appendChild(u);box.appendChild(d);
+      o.items.forEach(function(it,i){if(st.placed[i]!==ln.id)return;c++;var li=el('li',st.revealed[i]?'revealed':'',it.n);if(st.revealed[i])li.appendChild(el('span','tag','shown after two tries'));u.appendChild(li);});});
+    var it=o.items[st.idx];nm.textContent=it?'':'all sorted';nm.appendChild(it?md(it.n):T(''));
+    cnt.textContent=c+' of '+o.items.length+' sorted';}
+  function finish(msg){var anyRev=Object.keys(st.revealed).length,anyRetry=Object.keys(st.tries).some(function(k){return st.tries[k]>0;});
+    S.results[key]=anyRev?'settled':(anyRetry?'correct-retry':'correct');
+    $$('button',btns).forEach(function(b){b.disabled=true;});
+    msg.push({c:anyRev?'verdict set':'verdict ok',s:anyRev?'All sorted. Answered and settled: '+anyRev+(anyRev>1?' items were':' item was')+' shown after two tries, so this activity is not marked correct.':(anyRetry?'All sorted, some on a second try.':'All sorted on the first try.')});
+    if(o.done)msg.push({s:o.done});say(msg,true);complete(key);}
+  o.lanes.forEach(function(ln){var b=el('button','ghost',ln.label);b.type='button';b.id=key+'-to-'+ln.id;b.setAttribute('data-lane',ln.id);b.setAttribute('aria-describedby',key+'-legend');
+    b.addEventListener('click',function(){var i=st.idx,it=o.items[i];if(!it||S.done[key])return;attempt(step);
+      if(ln.id===it.lane){st.placed[i]=ln.id;st.idx++;var msg=[{c:'verdict ok',s:'Yes: '+laneName(ln.id)+'.'},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(msg);else say(msg);}
+      else{st.tries[i]=(st.tries[i]||0)+1;
+        if(st.tries[i]<2){say([{c:'verdict no',s:'Not '+laneName(ln.id)+'. '+it.w[ln.id]},{s:'Try another button for the same item.'}]);}
+        else{st.placed[i]=it.lane;st.revealed[i]=true;st.idx++;var m2=[{c:'verdict set',s:'Shown after two tries: '+laneName(it.lane)+'. '+it.w[ln.id]},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(m2);else say(m2);}}});
+    btns.appendChild(b);});
+  st.reset=function(){st.idx=0;st.tries={};st.placed={};st.revealed={};$$('button',btns).forEach(function(b){b.disabled=false;});draw();};
+  draw();return st;}
+
+/* sequence: press the step that comes next; each position gets one retry, then it is revealed and the activity settles */
+function seq(key,o){var step=KEYS.indexOf(key)+1,st={idx:0,tries:{},revealed:{}},box=$('#m-'+key),btns=$('#'+key+'-btns'),cnt=$('#'+key+'-count');sets[key]=st;
+  function draw(){box.textContent='';var d=el('div','lane'),h=el('p','lk','Your order so far'),u=el('ol','cards');h.id=key+'-lk-order';u.setAttribute('aria-labelledby',h.id);d.appendChild(h);d.appendChild(u);box.appendChild(d);
+    for(var i=0;i<st.idx;i++){var li=el('li',st.revealed[i]?'revealed':'',(i+1)+'. '+o.items[i].n);if(st.revealed[i])li.appendChild(el('span','tag','shown after two tries'));u.appendChild(li);}
+    $$('button',btns).forEach(function(b){var j=Number(b.getAttribute('data-step'));b.disabled=!!st.fin||j<st.idx;});
+    cnt.textContent=st.idx+' of '+o.items.length+' placed';}
+  function finish(msg){var anyRev=Object.keys(st.revealed).length,anyRetry=Object.keys(st.tries).some(function(k){return st.tries[k]>0;});
+    S.results[key]=anyRev?'settled':(anyRetry?'correct-retry':'correct');
+    msg.push({c:anyRev?'verdict set':'verdict ok',s:anyRev?'All placed. Answered and settled: '+anyRev+(anyRev>1?' steps were':' step was')+' shown after two tries, so this activity is not marked correct.':(anyRetry?'All placed, some on a second try.':'All placed on the first try.')});
+    if(o.done)msg.push({s:o.done});st.fin=true;draw();say(msg,true);complete(key);}
+  o.order.forEach(function(j){var b=el('button','ghost',o.items[j].n);b.type='button';b.id=key+'-step-'+j;b.setAttribute('data-step',String(j));b.setAttribute('aria-describedby',key+'-legend');
+    b.addEventListener('click',function(){var i=st.idx;if(i>=o.items.length||st.fin||j<i)return;attempt(step);
+      if(j===i){st.idx++;var msg=[{c:'verdict ok',s:'Yes: step '+(i+1)+'.'},{s:o.items[i].ok}];draw();if(st.idx>=o.items.length)finish(msg);else say(msg);}
+      else{st.tries[i]=(st.tries[i]||0)+1;
+        if(st.tries[i]<2){say([{c:'verdict no',s:'Not yet. '+o.items[j].when},{s:'Try another step for position '+(i+1)+'.'}]);}
+        else{st.revealed[i]=true;st.idx++;var m2=[{c:'verdict set',s:'Shown after two tries: step '+(i+1)+' is '+o.items[i].n+'.'},{s:o.items[i].ok}];draw();if(st.idx>=o.items.length)finish(m2);else say(m2);}}});
+    btns.appendChild(b);});
+  st.reset=function(){st.idx=0;st.tries={};st.revealed={};st.fin=false;draw();};
+  draw();return st;}
+
+/* bounded practice editor: the page supplies run(src); the shell owns Run, Reset code, Problems, Output and status */
+function editor(key,o){var step=KEYS.indexOf(key)+1,ta=$('#'+key+'-ed'),st={};sets[key]=st;
+  function q(s){return $('#'+key+'-'+s);}
+  function gutter(){var n=ta.value.split('\n').length,g=[];for(var k=1;k<=n;k++)g.push(k);q('gutter').textContent=g.join('\n');ta.rows=Math.max(5,Math.min(20,n));}
+  function tab(which){[['prob','tab-prob','prob'],['out','tab-out','out']].forEach(function(t){var on=t[0]===which;q(t[1]).setAttribute('aria-selected',on?'true':'false');q(t[1]).tabIndex=on?0:-1;q(t[2]).hidden=!on;});}
+  function lineOf(src,pos){return src.slice(0,pos).split('\n').length;}
+  function goLine(n){var ls=ta.value.split('\n'),pos=0;for(var k=0;k<n-1&&k<ls.length;k++)pos+=ls[k].length+1;ta.focus();ta.setSelectionRange(pos,pos);}
+  function model(r){var box=q('model');if(!box)return;box.textContent='';if(r&&o.model)o.model(box,r,el);else if(o.model)o.model(box,null,el);}
+  function showProblem(src,pr){var box=q('prob'),ln=lineOf(src,pr.pos||0),b=el('button','pep-editor__problem');b.type='button';
+    b.appendChild(el('span',pr.kind==='error'?'kind-error':'kind-limit',pr.kind==='error'?'Error':'Not supported'));b.appendChild(T(' line '+ln+': '+pr.msg));
+    b.addEventListener('click',function(){goLine(ln);});box.textContent='';box.appendChild(b);tab('prob');
+    q('status').textContent=(pr.kind==='error'?'1 error: '+(o.errorWord||'the code would not compile as written'):'1 problem: outside what this practice editor runs')+'. Select the problem to jump to line '+ln+'.';}
+  function run(){var src=ta.value,r;attempt(step);model(null);
+    r=o.run(src);
+    if(r.problem){showProblem(src,r.problem);say([{c:'verdict info',s:r.problem.kind==='error'?(o.errorSay||'Not run: the compiler would reject this. Read the problem under the editor, fix it and run again.'):'Not run: this practice editor cannot run that form. Read the problem under the editor.'}]);return;}
+    q('prob').textContent='';q('prob').appendChild(el('p','pep-editor__empty','No problems.'));
+    q('print').textContent=r.out;tab('out');q('status').textContent=r.status;model(r);
+    if(r.ok&&!S.done[key]){say(r.msg,true);complete(key);}else say(r.msg);}
+  function reset(){ta.value=o.starter;gutter();q('prob').textContent='';q('prob').appendChild(el('p','pep-editor__empty','Not run yet. Edit the code, then press Run.'));q('print').textContent='(no output yet)';tab('prob');q('status').textContent='Not run yet';model(null);}
+  ta.addEventListener('input',gutter);q('run').addEventListener('click',run);q('reset').addEventListener('click',reset);
+  q('tab-prob').addEventListener('click',function(){tab('prob');});q('tab-out').addEventListener('click',function(){tab('out');});
+  [q('tab-prob'),q('tab-out')].forEach(function(t){t.addEventListener('keydown',function(ev){if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){var w=t.id===key+'-tab-prob'?'out':'prob';tab(w);q('tab-'+w).focus();ev.preventDefault();}});});
+  st.reset=reset;reset();return st;}
+
+/* Wire the activities */
+P.onPredict=function(){attempt(1);};
+Object.keys(P.acts).forEach(function(k){var a=P.acts[k];if(a.type==='lanes')lanes(k,a);else if(a.type==='seq')seq(k,a);else editor(k,a);});
+check({key:'apply',fs:'#apply',g1:'a1',g2:'a2',t1:'#task-'+N,t2:'#task-'+N+'b',conf:'#conf',confName:'conf',btn:'#apply-check',data:P.apply});
+$('#apply-check').addEventListener('click',function(){var n=checks.apply.conf.length;var ai=KEYS.indexOf('apply');if(n!==G.acts[ai].attempts){G.acts[ai].attempts=n;reflect();}});
+
+/* Restart: only the current activity returns to its authored start; other work, the frontier and page completion stay */
+function clearChoices(scope){$$('input',scope).forEach(function(i){i.checked=false;i.disabled=false;});$$('.opt',scope).forEach(function(o){o.classList.remove('right','wrong','mine');});
+  $$('.oexp,.badges',scope).forEach(function(e){e.remove();});$$('.opts.explained',scope).forEach(function(o){o.classList.remove('explained');});}
+function restart(){var n=G.current,k=KEYS[n-1],sec=ACTS[n-1];
+  if(k==='predict'){clearChoices(sec);pc.hidden=false;pc.disabled=true;$('#conf0').closest('.row').hidden=false;}
+  else if(k==='apply'){clearChoices(sec);checks.apply.reset();}
+  else sets[k].reset();
+  delete S.done[k];delete S.results[k];G.acts[n-1]=freshAct();
+  $$('[data-pep-feedback]',sec).forEach(function(f){f.textContent='';});
+  render(n);
+  $('#restart-status').textContent='Activity '+n+' restarted. Other activities keep their work.';}
+resetBtn.addEventListener('click',restart);
+
+/* Reversible navigation: buttons, timeline, back links and browser history change only the current activity */
+function numberOf(hash){var m=/^#activity-(\d+)$/.exec(hash||'');return m?Number(m[1]):0;}
+prevBtn.addEventListener('click',function(){render(G.current-1,'push',true);});
+next.addEventListener('click',function(){render(G.current+1,'push',true);});
+LINKS.forEach(function(link,i){link.addEventListener('click',function(ev){ev.preventDefault();render(i+1,'push',true);});});
+$$('[data-pep-back-link]').forEach(function(link){link.addEventListener('click',function(ev){ev.preventDefault();render(numberOf(link.getAttribute('href')),'push',true);});});
+var lastFocused=null;D.addEventListener('focusin',function(ev){lastFocused=ev.target;});
+function fromHistory(){var keep=lastFocused,n=numberOf(location.hash);
+  if(!render(n,null,false))render(G.current,'replace',false);
+  if(keep&&keep.isConnected&&!keep.closest('[hidden]'))keep.focus({preventScroll:true});}
+addEventListener('popstate',fromHistory);addEventListener('hashchange',fromHistory);
+
+/* Objectives: native disclosure; Escape and an outside click close it */
+var obj=$('[data-pep-objectives]');
+D.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&obj.open){obj.open=false;obj.querySelector('summary').focus();}});
+D.addEventListener('click',function(ev){if(obj.open&&!obj.contains(ev.target))obj.open=false;});
+
+/* Print: expand closed disclosures, then restore only those */
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=$$('details:not([open])');printOpened.forEach(function(d){d.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(d){d.open=false;});printOpened=[];});
+
+var first=numberOf(location.hash);
+render(first>=1&&first<=G.unlocked?first:1,'replace',false);
+})();
+</script>
+</body>
+</html>

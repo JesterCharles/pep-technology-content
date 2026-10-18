@@ -1,0 +1,51 @@
+// Formative practice quiz for the-equals-and-hashcode-contract. Low-stakes; answers are visible by design.
+$CATEGORY: collections-streams/collections-in-depth/the-equals-and-hashcode-contract
+
+::the-equals-and-hashcode-contract o1 - the hash code rule::Which statement is the rule that links equals and hashCode?{
+=If two objects are equal by equals, their hash codes must be equal#Correct. This is the hard rule. Unequal objects may still share a hash code.
+~If two objects have equal hash codes, they must be equal by equals#Not quite. That is the reverse; unequal objects are allowed to share a hash code.
+~Unequal objects must always have different hash codes#Not quite. Distinct codes help performance but are not required.
+~hashCode must return a different number on every call#Not quite. It must return the same number while the compared fields do not change.
+}
+
+::the-equals-and-hashcode-contract o1 - comparing with null::A teammate's equals starts with return this.name.equals(((Person) o).name); and throws NullPointerException for x.equals(null). Which rule does it break?{
+=x.equals(null) must return false#Correct. equals must return false for null instead of throwing.
+~Reflexive#Not quite. Reflexive is about x.equals(x), which works here.
+~Transitive#Not quite. Transitivity is about chains of three equal objects.
+~None; throwing is allowed for null#Not quite. The contract requires false for null.
+}
+
+::the-equals-and-hashcode-contract o1 - symmetry::Class A treats an A and a B with the same id as equal, but class B's equals returns false for any A. Which rule is broken?{
+=Symmetric#Correct. a.equals(b) is true while b.equals(a) is false.
+~Consistent#Not quite. Consistency is about repeated calls giving the same answer.
+~False for null#Not quite. No null is involved.
+~Equal objects, equal hash codes#Not quite. That rule concerns hashCode; here equals itself disagrees with itself.
+}
+
+::the-equals-and-hashcode-contract o2 - matching fields::Product.equals compares sku and price. Which hashCode is correct?{
+=return Objects.hash(sku, price);#Correct. It combines exactly the fields equals compares.
+~return Objects.hash(sku, price, description);#Not quite. description is ignored by equals, so equal products could get different hash codes.
+~return super.hashCode();#Not quite. Object's hashCode is identity-based, so equal products would usually differ.
+~Nothing; hashCode is generated automatically when equals is overridden#Not quite. Only records generate it. A class must override hashCode itself.
+}
+
+::the-equals-and-hashcode-contract o2 - what a record provides::For record Point(int x, int y), what does Java provide automatically?{
+=equals and hashCode based on x and y, plus toString#Correct. A record's implicit equals compares every component, and its hashCode is consistent with it.
+~Only toString; equals still compares identity#Not quite. Records provide component-based equals and hashCode too.
+~equals only; hashCode must be written by hand#Not quite. hashCode is provided as well.
+~Nothing; records are just shorter classes#Not quite. The accessors, equals, hashCode and toString are all provided.
+}
+
+::the-equals-and-hashcode-contract o3 - a key that was not found::A Ticket key with a mutable code field, used by equals and hashCode, is put into a HashMap. Later the code changes, and map.get(sameTicket) returns null. Why?{
+=Changing a field used by equals and hashCode made the map's behavior unspecified; most likely the new hash code sent the lookup to a different bucket#Correct. The Map documentation leaves the behavior unspecified once a compared field of a stored key changes. A changed hash code is the usual cause of a failed lookup, but even that is not guaranteed: the hash code need not change.
+~get compares keys with \=\=, which fails after a change#Not quite. HashMap uses hashCode and equals, not identity.
+~HashMap removes keys automatically when they change#Not quite. The entry is still stored; the lookup just failed to find it.
+~The map throws away null values#Not quite. The value is not null; the lookup most likely looked in the wrong place.
+}
+
+::the-equals-and-hashcode-contract o3 - a harmless change::The same Ticket also has a lastViewed field that neither equals nor hashCode uses. It changes while the ticket is a key. What happens to map.get(ticket)?{
+=It still finds the value#Correct. The hash code and equals result do not depend on lastViewed, so lookup is unaffected.
+~It returns null#Not quite. Only changes to fields used by equals and hashCode can disturb lookup.
+~It throws ConcurrentModificationException#Not quite. Changing a key's field is not a structural change to the map.
+~The behavior is unspecified#Not quite. The Map documentation leaves behavior unspecified only for changes that affect equals comparisons.
+}
