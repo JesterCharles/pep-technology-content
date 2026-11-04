@@ -18,7 +18,7 @@ import { run as runT13 } from "../tools/checks/T13-responsive.mjs";
 import { run as runT18 } from "../tools/checks/T18-markdown-pdf.mjs";
 import { markdownFromHtml } from "../tools/qa/md-from-html.mjs";
 import { pdfFromMarkdown } from "../tools/qa/pdf-from-md.mjs";
-import { launchChromium, runPrivateOverlay, validateQaPrivateProofs, VIEWPORTS } from "../tools/qa/harness.mjs";
+import { launchChromium, resolvePrivateActionValues, runPrivateOverlay, validateQaPrivateProofs, VIEWPORTS } from "../tools/qa/harness.mjs";
 
 const fixtures = path.resolve("authoring/tests/fixtures/qa");
 const runners = { T09: runT09, T10: runT10, T11: runT11, T12: runT12, T13: runT13, T18: runT18 };
@@ -140,6 +140,9 @@ test("qa-paths schema requires complete guidance and exact per-action operands",
   const enabledHints = structuredClone(good);
   enabledHints.guidance.hints = true;
   assert.equal(validate(enabledHints), true, JSON.stringify(validate.errors));
+  const privateValue = structuredClone(good);
+  privateValue.routes.success[0] = { do: "fill", selector: "#activity-input", valueFrom: "private:sql-success" };
+  assert.equal(validate(privateValue), true, JSON.stringify(validate.errors));
   for (const mutate of [
     (value) => { value.guidance = {}; },
     (value) => { delete value.guidance.objectivesTouch; },
@@ -148,10 +151,84 @@ test("qa-paths schema requires complete guidance and exact per-action operands",
     (value) => { value.routes.success = [{ do: "goBack", selector: "body" }]; },
     (value) => { value.routes.success = [{ do: "expectText", selector: "#feedback" }]; },
     (value) => { value.routes.success = [{ do: "click", selector: "#success", value: "irrelevant" }]; },
+    (value) => { value.routes.success = [{ do: "fill", selector: "#command", valueFrom: "secret:answer" }]; },
+    (value) => { value.routes.success = [{ do: "fill", selector: "#command", value: "literal", valueFrom: "private:answer" }]; },
   ]) {
     const invalid = structuredClone(good);
     mutate(invalid);
     assert.equal(validate(invalid), false, "mutation unexpectedly matched qa-paths schema");
+  }
+});
+
+test("private QA action values resolve only from an environment-selected external JSON file", async () => {
+  const repository = await mkdtemp(path.join(os.tmpdir(), "pep-private-values-repo-"));
+  const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-values-source-"));
+  const source = path.join(staging, "inputs.json");
+  const environment = { PEP_QA_PRIVATE_INPUTS_FILE: source };
+  const secret = "SELECT private_fixture_value";
+  try {
+    await writeFile(source, `${JSON.stringify({ correctSql: secret, count: 3 })}\n`);
+    const actions = [
+      { do: "fill", selector: "#query", valueFrom: "private:correctSql" },
+      { do: "fill", selector: "#note", value: "committed literal" },
+    ];
+    assert.deepEqual(await resolvePrivateActionValues(actions, { environment, repoRoot: repository }), [
+      { do: "fill", selector: "#query", value: secret },
+      actions[1],
+    ]);
+    assert.equal(actions[0].valueFrom, "private:correctSql", "resolution must not mutate the QA path");
+    const literalActions = [actions[1]];
+    assert.strictEqual(
+      await resolvePrivateActionValues(literalActions, { environment: {}, repoRoot: repository }),
+      literalActions,
+      "committed literal actions must not require or change a private source",
+    );
+
+    await assert.rejects(
+      resolvePrivateActionValues([actions[0]], { environment: {}, repoRoot: repository }),
+      /PEP_QA_PRIVATE_INPUTS_FILE is required/,
+    );
+    await assert.rejects(
+      resolvePrivateActionValues([actions[0]], {
+        environment: { PEP_QA_PRIVATE_INPUTS_FILE: path.join(staging, "missing.json") },
+        repoRoot: repository,
+      }),
+      /source is unreadable/,
+    );
+    const trackedLocation = path.join(repository, "inputs.json");
+    await writeFile(trackedLocation, `${JSON.stringify({ correctSql: secret })}\n`);
+    await assert.rejects(
+      resolvePrivateActionValues([actions[0]], {
+        environment: { PEP_QA_PRIVATE_INPUTS_FILE: trackedLocation },
+        repoRoot: repository,
+      }),
+      /not outside the repository/,
+    );
+    await writeFile(source, `{ "correctSql": ${JSON.stringify(secret)} trailing }`);
+    await assert.rejects(
+      resolvePrivateActionValues([actions[0]], { environment, repoRoot: repository }),
+      /must contain valid JSON/,
+    );
+    await writeFile(source, `${JSON.stringify({ other: secret })}\n`);
+    await assert.rejects(
+      resolvePrivateActionValues([actions[0]], { environment, repoRoot: repository }),
+      /required private QA input is missing or is not a string/,
+    );
+    await writeFile(source, `${JSON.stringify({ correctSql: 7 })}\n`);
+    await assert.rejects(
+      resolvePrivateActionValues([actions[0]], { environment, repoRoot: repository }),
+      /required private QA input is missing or is not a string/,
+    );
+    await assert.rejects(
+      resolvePrivateActionValues(
+        [{ do: "fill", selector: "#query", valueFrom: "vault:correctSql" }],
+        { environment, repoRoot: repository },
+      ),
+      /reference syntax is unsupported/,
+    );
+  } finally {
+    await rm(repository, { recursive: true, force: true });
+    await rm(staging, { recursive: true, force: true });
   }
 });
 
@@ -227,6 +304,8 @@ test("private overlay runs success, retry, keyboard and sandbox without reposito
   const repository = await makeRepository("good.html");
   const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-"));
   const overlayFile = path.join(staging, "overlay.json");
+  const inputsFile = path.join(staging, "inputs.json");
+  const environment = { PEP_QA_PRIVATE_INPUTS_FILE: inputsFile };
   try {
     for (const file of ["authoring/tools/qa/harness.mjs", "authoring/tools/qa/python-answer-scan.py", "authoring/tools/checks/T08-html-static.mjs"]) {
       await mkdir(path.dirname(path.join(repository.root, file)), { recursive: true });
@@ -241,25 +320,36 @@ test("private overlay runs success, retry, keyboard and sandbox without reposito
       runId: "local-safe-fixture",
       topic: "course/module/topic",
       routes: {
-        success: [{ do: "check", selector: "#action-local" }, { do: "click", selector: "#check-one" }],
+        success: [
+          { do: "fill", selector: "#activity-input", valueFrom: "private:activityNote" },
+          { do: "check", selector: "#action-local" }, { do: "click", selector: "#check-one" },
+        ],
         wrongFirst: [
+          { do: "fill", selector: "#activity-input", valueFrom: "private:activityNote" },
           { do: "check", selector: "#action-external" }, { do: "click", selector: "#check-one" },
           { do: "check", selector: "#action-local" }, { do: "click", selector: "#check-one" },
         ],
-        keyboard: [{ do: "check", selector: "#action-local" }, { do: "click", selector: "#check-one" }],
-        sandbox: [{ do: "check", selector: "#action-local" }, { do: "click", selector: "#check-one" }],
+        keyboard: [
+          { do: "fill", selector: "#activity-input", valueFrom: "private:activityNote" },
+          { do: "check", selector: "#action-local" }, { do: "click", selector: "#check-one" },
+        ],
+        sandbox: [
+          { do: "fill", selector: "#activity-input", valueFrom: "private:activityNote" },
+          { do: "check", selector: "#action-local" }, { do: "click", selector: "#check-one" },
+        ],
       },
     };
     await writeFile(overlayFile, `${JSON.stringify(overlay)}\n`);
+    await writeFile(inputsFile, `${JSON.stringify({ activityNote: `runtime-only-${process.pid}` })}\n`);
     await writeFile(path.join(repository.root, "untracked-private-proof.txt"), "dirty\n");
-    await assert.rejects(runPrivateOverlay(context(repository.root), overlayFile), /clean public commit/);
+    await assert.rejects(runPrivateOverlay(context(repository.root), overlayFile, { environment }), /clean public commit/);
     await rm(path.join(repository.root, "untracked-private-proof.txt"));
     const artifactFile = path.join(repository.root, "course/module/topic/artifact.html");
     const artifactBytes = await readFile(artifactFile);
     await writeFile(artifactFile, Buffer.concat([artifactBytes, Buffer.from("<!-- dirty -->\n")]));
-    await assert.rejects(runPrivateOverlay(context(repository.root), overlayFile), /clean public commit/);
+    await assert.rejects(runPrivateOverlay(context(repository.root), overlayFile, { environment }), /clean public commit/);
     await writeFile(artifactFile, artifactBytes);
-    const result = await runPrivateOverlay(context(repository.root), overlayFile);
+    const result = await runPrivateOverlay(context(repository.root), overlayFile, { environment });
     assert.match(result.commit, /^[a-f0-9]{40}$/u);
     assert.equal(result.result, "pass");
     await assert.rejects(readFile(path.join(repository.root, "build", "qa", "qa-receipt.json")), { code: "ENOENT" });

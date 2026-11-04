@@ -10,7 +10,8 @@ npm run check
 node authoring/tools/qa/run.mjs
 node authoring/tools/qa/run.mjs java-foundations/basics/a-topic
 node authoring/tools/qa/run.mjs --write-evidence java-foundations/basics/a-topic
-node authoring/tools/qa/run.mjs --private-overlay /absolute/outside-repo/private-qa.json
+PEP_QA_PRIVATE_INPUTS_FILE=/absolute/outside-repo/private-inputs.json \
+  node authoring/tools/qa/run.mjs --private-overlay /absolute/outside-repo/private-qa.json
 ```
 
 Normal runs write receipts and failure diagnostics under gitignored `build/qa/`.
@@ -60,11 +61,11 @@ T13 repeats it at every responsive/zoom viewport.
 Actions use strict per-action schema branches; missing or irrelevant operands are rejected. Supported actions are:
 
 - `click` and `check`: `do` plus `selector` only;
-- `fill` and `select`: `do`, `selector` and `value`;
+- `fill` and `select`: `do`, `selector` and exactly one of literal `value` or private-overlay-only `valueFrom: "private:<key>"`;
 - `press`: `do`, `selector` and `key`;
 - `goBack` and `goForward`: `do` only, with no selector;
 - `expectText`: `selector` and non-empty regular-expression `text`;
-- `expectValue`: `selector` and regular-expression `value`;
+- `expectValue`: `selector` and exactly one of regular-expression `value` or private-overlay-only `valueFrom: "private:<key>"`;
 - `expectAttribute`: `selector`, `attribute` and `equals`;
 - `expectVisible`, `expectHidden`, `expectEnabled`, `expectDisabled` and `expectFocus`: `selector` only.
 
@@ -163,8 +164,13 @@ or selector-associated QA surfaces, preserving unrelated teaching. Canonical UTF
 forms are decoded; target-associated decoder/character assembly and 40/64-hex digests fail. Arbitrary semantic
 leakage and opaque provenance remain explicit education/SME review boundaries.
 
-Completed inputs run only from an absolute authorized uncommitted overlay outside the repository. The private runner
-captures clean commit **P** before loading the topic, verifies the exact five approved public working files equal P's
+Completed inputs run only from an absolute authorized uncommitted overlay outside the repository. Private-valued
+`fill`, `select` and `expectValue` steps use `valueFrom: "private:<key>"`; at execution, the runner reads that key from
+the JSON object selected by `PEP_QA_PRIVATE_INPUTS_FILE`. The source path must be absolute and resolve outside the
+repository. Missing, unreadable or malformed sources and missing or non-string keys are refused. Keep the overlay and
+input file uncommitted; neither file nor any resolved value is copied into evidence or generated output.
+
+The private runner captures clean commit **P** before loading the topic, verifies the exact five approved public working files equal P's
 blobs before and after `success`, `wrongFirst`, `keyboard` and `sandbox`, and rejects dirty tracked/untracked bytes,
 HEAD movement or file drift. It disables tracing, screenshots, value logging and `build/` output; generic errors keep
 completed values out of logs. After staging is retired, immediate evidence-only child **R** may add the existing
