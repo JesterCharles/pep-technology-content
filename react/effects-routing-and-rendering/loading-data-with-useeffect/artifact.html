@@ -1,0 +1,1055 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data:">
+<meta name="pep:course" content="react">
+<meta name="pep:module" content="effects-routing-and-rendering">
+<meta name="pep:topic" content="Loading data with useEffect">
+<meta name="pep:topic-id" content="loading-data-with-useeffect">
+<meta name="pep:budget-minutes" content="10">
+<meta name="pep:source" content="authoring/evidence/react/effects-routing-and-rendering/loading-data-with-useeffect/sources.json">
+<meta name="pep:position" content="1 of 7">
+<meta name="pep:draft-status" content="first-draft-unreviewed">
+<title>Loading data with useEffect · Effects, Routing and Rendering</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;max-width:100%;overflow-x:clip}
+body{background:var(--pep-page);color:var(--pep-text);font:400 16px/24px var(--pep-font-sans);-webkit-text-size-adjust:100%}
+h1,h2,h3{color:var(--pep-text-strong);margin:0;text-wrap:balance}
+h1,h2{font-size:20px;line-height:28px;font-weight:700}
+h3{font-size:16px;line-height:24px;font-weight:600}
+p,li{max-width:68ch;overflow-wrap:anywhere}
+p{margin:0 0 12px}
+ul,ol{margin:0 0 12px;padding-inline-start:24px}
+svg{max-width:100%;height:auto}
+button,input,select,textarea,summary{font:inherit}
+a{color:var(--pep-accent-text);text-underline-offset:3px}
+a:hover{text-decoration-thickness:2px}
+code,kbd,samp{font-family:var(--pep-font-mono);font-size:.875em}
+:focus-visible{outline:2px solid var(--pep-focus);outline-offset:2px}
+::selection{background:var(--pep-accent-fill);color:var(--pep-on-accent-fill)}
+.pep-main{max-width:1200px;margin:0 auto;padding:24px;min-width:0}
+button,.pep-option,.pep-step{transition:background-color var(--pep-dur-1) var(--pep-ease),border-color var(--pep-dur-1) var(--pep-ease),color var(--pep-dur-1) var(--pep-ease)}
+.pep-topicbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:12px 16px;margin:0 0 16px;border:1px solid var(--pep-line-strong);border-block-start:4px solid var(--pep-accent);border-radius:var(--pep-radius-md);background:var(--pep-accent-soft)}
+.pep-topicbar h1{flex:1 1 240px;min-width:0}
+.pep-topicbar__progress{flex:1 1 220px;min-width:0;color:var(--pep-text);font:600 13px/20px var(--pep-font-sans);font-variant-numeric:tabular-nums}
+.pep-topicbar__progress p{margin:0;font:inherit}
+.pep-objectives{position:relative;break-inside:avoid;min-width:0}
+.pep-objectives>summary{display:flex;align-items:center;min-height:44px;min-width:44px;padding:8px 12px;cursor:pointer;color:var(--pep-accent-text);font-weight:600}
+.pep-objectives>div{width:min(360px,100%);padding:12px 16px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);background:var(--pep-card)}
+.pep-objectives ul{margin:0;padding-inline-start:20px;font-size:14px;line-height:20px}
+.pep-steps{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 24px;padding:0;list-style:none}
+.pep-step{display:inline-flex;align-items:center;gap:8px;min-height:44px;min-width:44px;padding:6px 12px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);color:var(--pep-text);font-weight:600;font-size:14px;line-height:20px;text-decoration:none}
+.pep-step[aria-current="step"]{background:var(--pep-accent-soft);border-color:var(--pep-accent);color:var(--pep-text-strong)}
+.pep-step[aria-disabled="true"]{color:var(--pep-text-muted);border-style:dashed;cursor:not-allowed}
+.pep-activity{margin:0 0 32px;min-width:0}
+.pep-activity[hidden]{display:none}
+.pep-activity>h2{margin-bottom:16px}
+.pep-regions{display:grid;grid-template-columns:minmax(0,1fr);gap:24px}
+@media (min-width:960px){.pep-regions{grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:start}}
+.pep-region{display:flex;flex-direction:column;gap:16px;min-width:0}
+[data-pep-workspace]{padding:24px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-lg);background:var(--pep-card)}
+[data-pep-teaching] p:last-child{margin-bottom:0}
+[data-pep-activity-checks]{padding:12px 16px;border:1px solid var(--pep-accent);border-block-start-width:4px;border-radius:var(--pep-radius-md);background:var(--pep-accent-soft)}
+[data-pep-activity-checks] p:last-child,[data-pep-activity-checks] ul:last-child{margin-bottom:0}
+[data-pep-where-fits]{padding:12px 16px;border:1px solid var(--pep-line-strong);border-block-start:4px solid var(--pep-accent);border-radius:var(--pep-radius-md);background:var(--pep-card)}
+[data-pep-where-fits] h2{font-size:16px;line-height:24px;margin-bottom:8px}
+[data-pep-where-fits] p:last-child{margin-bottom:0}
+.pep-hint,details[data-pep-hint]{min-width:0;margin-block:12px 0;padding:0 12px;border:1px solid var(--pep-line-strong);border-block-start:4px solid var(--pep-accent);border-radius:var(--pep-radius-md);background:var(--pep-accent-soft);break-inside:avoid}
+.pep-hint>summary{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;min-height:44px;padding:8px 0;color:var(--pep-text-strong);font-weight:600;cursor:pointer}
+.pep-hint>summary::marker{color:var(--pep-accent-text)}
+.pep-hint__ordinal,.pep-optional__cue,[data-pep-optional-time]{color:var(--pep-text-muted);font:600 13px/20px var(--pep-font-sans)}
+.pep-hint__body{padding:4px 0 12px}
+.pep-hint .pep-hint{margin-inline-start:12px;padding:0;border:0;border-block-start:1px solid var(--pep-line-strong);border-radius:0;background:transparent}
+.pep-optional{min-width:0;padding:0 12px;border:1px solid var(--pep-line-strong);border-block-start:4px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);background:var(--pep-card);break-inside:avoid}
+.pep-optional--challenge{margin-top:16px;border-color:var(--pep-line-strong);background:var(--pep-control)}
+.pep-optional>summary{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px;min-height:44px;padding:8px 0;cursor:pointer;color:var(--pep-text-strong);font-weight:600}
+.pep-optional__body{padding:4px 0 16px}
+.pep-optional__body>:last-child{margin-bottom:0}
+.pep-sources{margin-top:16px}
+.pep-sources a{display:inline-flex;align-items:center;min-height:44px;min-width:44px}
+.pep-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;min-width:44px;padding:10px 20px;border-radius:var(--pep-radius-sm);font:600 16px/24px var(--pep-font-sans);cursor:pointer;border:1px solid var(--pep-line-strong);background:var(--pep-control);color:var(--pep-text-strong)}
+.pep-btn--primary{background:var(--pep-accent-fill);border-color:var(--pep-accent);color:var(--pep-on-accent-fill)}
+.pep-btn--primary:hover{background:var(--pep-accent-fill-hover);border-color:var(--pep-accent)}
+.pep-btn:disabled{cursor:not-allowed;background:var(--pep-control);border-color:var(--pep-line-strong);color:var(--pep-text-muted)}
+.pep-activity-actions{display:flex;flex-wrap:wrap;gap:8px;margin-block:0 32px}
+.pep-activity-actions .pep-btn{flex:1 1 180px}
+@media (min-width:481px){.pep-activity-actions .pep-btn{flex:0 1 auto}}
+.pep-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.pep-options{display:grid;gap:8px;margin:12px 0 0;padding:0;border:0;min-width:0}
+.pep-options>legend{padding:0;margin-bottom:8px;font-weight:600;color:var(--pep-text-strong)}
+.pep-option{position:relative;display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;align-items:center;min-height:48px;padding:10px 16px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);background:var(--pep-page);color:var(--pep-text-strong);cursor:pointer}
+.pep-option__key{display:grid;place-items:center;width:28px;height:28px;border-radius:var(--pep-radius-sm);background:var(--pep-control);font:600 13px/1 var(--pep-font-sans);color:var(--pep-text)}
+.pep-option:hover{border-color:var(--pep-accent)}
+.pep-option:has(input:checked){border:2px solid var(--pep-accent);background:var(--pep-accent-soft);padding:9px 15px}
+.pep-option.is-correct,.pep-option.is-correct:has(input:checked){border:2px solid var(--pep-success);background:var(--pep-success-soft);padding:9px 15px}
+.pep-option.is-wrong,.pep-option.is-wrong:has(input:checked){border:2px dashed var(--pep-danger);background:var(--pep-danger-soft);padding:9px 15px}
+.pep-option input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:.001;cursor:pointer}
+.pep-option input:disabled{cursor:not-allowed}
+.pep-option:has(input:focus-visible){outline:2px solid var(--pep-focus);outline-offset:2px}
+.pep-option__text{min-width:0;overflow-wrap:anywhere}
+.pep-explain{display:block;margin-top:4px;font:400 14px/20px var(--pep-font-sans);color:var(--pep-text)}
+.pep-explain[hidden]{display:none}
+.pep-confidence{margin-top:16px;padding:0;border:0;min-width:0}
+.pep-confidence>legend{padding:0;margin-bottom:8px;font-weight:600;color:var(--pep-text-strong)}
+.pep-confidence__row{display:flex;flex-wrap:wrap;gap:8px}
+.pep-confidence .pep-option{flex:1 1 96px;grid-template-columns:minmax(0,1fr);text-align:center;justify-items:center}
+.pep-feedback{margin-top:12px;min-height:24px}
+.pep-feedback:empty{display:none}
+.pep-callout{padding:12px 16px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);background:var(--pep-card);color:var(--pep-text)}
+.pep-callout p:last-child{margin-bottom:0}
+.pep-callout--success{background:var(--pep-success-soft);border-color:var(--pep-success)}
+.pep-callout--wrong{background:var(--pep-danger-soft);border-color:var(--pep-danger)}
+.pep-callout--warning{background:var(--pep-warning-soft);border-color:var(--pep-warning)}
+.pep-callout--info{background:var(--pep-accent-soft);border-color:var(--pep-accent)}
+.pep-code{margin:12px 0;padding:12px 16px;background:var(--pep-sunken);color:var(--pep-text-strong);border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);font:400 14px/20px var(--pep-font-mono);white-space:pre-wrap;overflow-wrap:anywhere;tab-size:2}
+:not(pre)>code{padding:1px 6px;border-radius:var(--pep-radius-sm);background:var(--pep-control);color:var(--pep-text-strong)}
+.pep-sim{display:grid;gap:12px;margin-top:12px;min-width:0}
+.pep-sim label{display:grid;gap:4px;font-weight:600;color:var(--pep-text-strong);min-width:0}
+.pep-sim input[type=text],.pep-sim select,.pep-sim input[type=range]{min-height:44px;width:100%;padding:8px 12px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-page);color:var(--pep-text-strong)}
+.pep-sim input[type=range]{padding:0;accent-color:var(--pep-accent)}
+.pep-sim .pep-check{display:flex;grid-template-columns:none;align-items:center;gap:8px;min-height:44px;font-weight:400}
+.pep-sim .pep-check input{flex:0 0 44px;width:44px;height:44px;margin:0;accent-color:var(--pep-accent)}
+.pep-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
+.pep-row>.pep-btn{flex:0 1 auto}
+.pep-panel{padding:12px 16px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-sunken);color:var(--pep-text-strong);min-width:0;overflow-wrap:anywhere}
+.pep-panel--mono{font:400 14px/20px var(--pep-font-mono);white-space:pre-wrap}
+.pep-panel__label{display:block;margin-bottom:4px;color:var(--pep-text-muted);font:600 13px/20px var(--pep-font-sans)}
+.pep-chip{display:inline-block;padding:2px 10px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-pill);background:var(--pep-control);font:600 13px/20px var(--pep-font-sans);color:var(--pep-text)}
+.pep-chip.is-on{background:var(--pep-accent-soft);border-color:var(--pep-accent);color:var(--pep-text-strong)}
+.pep-box{padding:8px 12px;margin-block:4px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-card);min-width:0}
+.pep-box.is-on{border:2px solid var(--pep-accent);background:var(--pep-accent-soft)}
+.pep-box .pep-box{margin-inline-start:12px}
+.pep-figure{margin:12px 0}
+.pep-figure svg{display:block;width:100%;height:auto}
+.pep-figure .node{fill:var(--pep-card);stroke:var(--pep-line-strong);stroke-width:1.5}
+.pep-figure .node.is-focus{fill:var(--pep-accent-soft);stroke:var(--pep-accent);stroke-width:2}
+.pep-figure .edge{fill:none;stroke:var(--pep-line-strong);stroke-width:2}
+.pep-figure .label{fill:var(--pep-text-strong);font:600 16px var(--pep-font-sans)}
+.pep-figure figcaption{margin-top:8px;font:400 12px/16px var(--pep-font-sans);color:var(--pep-text-muted)}
+.pep-table-wrap{border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);overflow:hidden;margin-block:12px}
+.pep-table{width:100%;border-collapse:collapse;font:400 14px/20px var(--pep-font-sans)}
+.pep-table th{text-align:left;font-weight:600;color:var(--pep-text-strong);background:var(--pep-card);border-bottom:1px solid var(--pep-line-strong);padding:8px 12px}
+.pep-table td{padding:8px 12px;border-bottom:1px solid var(--pep-line-strong);vertical-align:top;overflow-wrap:anywhere}
+.pep-table tr:last-child td{border-bottom:0}
+.pep-table td:first-child{font-weight:600;color:var(--pep-text-strong)}
+.pep-editor{border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);background:var(--pep-sunken);margin-top:12px;min-width:0}
+.pep-editor__bar{border-radius:var(--pep-radius-md) var(--pep-radius-md) 0 0}
+.pep-editor__status{border-radius:0 0 var(--pep-radius-md) var(--pep-radius-md)}
+.pep-editor__bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;background:var(--pep-card);border-bottom:1px solid var(--pep-line-strong)}
+.pep-editor__file{min-width:0;overflow-wrap:anywhere;font:400 13px/20px var(--pep-font-mono);color:var(--pep-text-strong);padding:4px 8px;border-bottom:2px solid var(--pep-accent);margin-inline-end:auto}
+.pep-editor__code{display:grid;grid-template-columns:auto minmax(0,1fr);max-height:400px;overflow:auto;overscroll-behavior:contain auto;font:400 14px/20px var(--pep-font-mono)}
+.pep-editor__gutter{padding:12px 8px 12px 12px;text-align:right;color:var(--pep-text-muted);user-select:none;font-variant-numeric:tabular-nums;white-space:pre}
+.pep-editor__input{display:block;width:100%;margin:0;padding:12px;border:0;resize:vertical;min-width:0;min-height:200px;max-height:400px;scroll-margin-block:16px;background:transparent;color:var(--pep-text-strong);font:inherit;caret-color:var(--pep-accent-text);white-space:pre;overflow-wrap:normal;tab-size:2}
+.pep-editor__input:focus-visible{outline:2px solid var(--pep-focus);outline-offset:-2px}
+.pep-editor__tabs{display:flex;gap:4px;padding:0 12px;background:var(--pep-card);border-top:1px solid var(--pep-line-strong)}
+.pep-editor__tabs [role=tab]{min-height:44px;min-width:44px;padding:0 12px;border:0;border-bottom:2px solid transparent;background:none;color:var(--pep-text-muted);font:600 13px/20px var(--pep-font-sans);cursor:pointer}
+.pep-editor__tabs [role=tab][aria-selected=true]{color:var(--pep-text-strong);border-bottom-color:var(--pep-accent)}
+.pep-editor__panel{max-height:240px;overflow:auto;overscroll-behavior:contain auto;padding:12px;font:400 14px/20px var(--pep-font-mono);color:var(--pep-text);overflow-wrap:anywhere;white-space:pre-wrap}
+.pep-editor__panel[hidden]{display:none}
+.pep-editor__problem{display:block;width:100%;min-height:44px;text-align:left;padding:8px;border:0;border-radius:var(--pep-radius-sm);background:none;color:var(--pep-text);font:inherit;cursor:pointer;white-space:normal}
+.pep-editor__problem .kind-error{color:var(--pep-danger);font-weight:600}
+.pep-editor__problem .kind-limit{color:var(--pep-warning);font-weight:600}
+.pep-editor__preview{margin-top:8px;padding:8px 12px;border:1px dashed var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-page);color:var(--pep-text-strong);font:400 14px/20px var(--pep-font-sans);white-space:normal}
+.pep-editor__preview:empty{display:none}
+.pep-editor__preview button{min-height:44px;min-width:44px;padding:4px 12px;margin:2px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-control);color:var(--pep-text-strong);cursor:pointer}
+.pep-editor__preview input,.pep-editor__preview select{min-height:44px;padding:4px 8px;margin:2px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-page);color:var(--pep-text-strong)}
+.pep-editor__status{padding:8px 12px;background:var(--pep-control);color:var(--pep-text);font:400 13px/20px var(--pep-font-sans);border-top:1px solid var(--pep-line-strong)}
+.pep-terminal{padding:12px 16px;background:var(--pep-sunken);color:var(--pep-text-strong);border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);font:400 14px/20px var(--pep-font-mono);overflow-wrap:anywhere;white-space:pre-wrap}
+.pep-terminal .prompt{color:var(--pep-accent-text);font-weight:600}
+.pep-recap{margin-block:48px 0}
+.pep-recap h2{margin-bottom:12px}
+html:not(.is-enhanced) .pep-js-only{display:none}
+.pep-noscript{margin-top:12px;padding:12px 16px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);background:var(--pep-control)}
+[data-pep-back-link]{display:inline-flex;align-items:center;min-height:44px;min-width:44px;margin-top:12px}
+html.is-enhanced [data-pep-back-link]{display:inline-flex}
+[data-static-alt]{display:none}
+@media (max-width:480px){
+.pep-main{padding:16px}
+input,select,textarea{font-size:16px;scroll-margin-block:16px}
+[data-pep-workspace]{padding:16px}
+.pep-editor__bar{align-items:stretch}
+.pep-editor__file{flex:1 1 100%;margin-inline-end:0}
+.pep-editor__bar .pep-btn{flex:1 1 calc(50% - 4px)}
+.pep-editor__code,.pep-editor__input{max-height:240px}
+.pep-editor__input{min-height:160px;font-size:16px;line-height:24px}
+.pep-editor__tabs{flex-wrap:wrap}
+.pep-editor__tabs [role=tab]{flex:1 1 120px}
+.pep-editor__panel{max-height:180px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0s!important;animation-iteration-count:1!important;transition-duration:0s!important;scroll-behavior:auto!important}}
+@media (forced-colors:active){.pep-topicbar,[data-pep-where-fits],details[data-pep-hint],[data-pep-activity-checks],.pep-optional,[data-pep-workspace]{border-color:CanvasText}.pep-topicbar,[data-pep-where-fits],details[data-pep-hint],[data-pep-activity-checks]{border-block-start-color:Highlight}}
+@media print{
+body{background:#FFF}
+.pep-noprint,.pep-activity-actions,nav[aria-label="Activities"],[data-pep-back-link],[data-pep-reset],.pep-js-only,.pep-editor__bar .pep-btn{display:none!important}
+.pep-activity,[data-pep-activity],.pep-activity[hidden],[data-pep-recap][hidden],[data-pep-cheat][hidden]{display:block!important}
+[data-static-alt]{display:block}
+.pep-objectives>div{display:block!important;width:auto}
+.pep-topicbar,[data-pep-workspace],[data-pep-where-fits],details[data-pep-hint],[data-pep-activity-checks],.pep-optional,.pep-callout{break-inside:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+.pep-optional>summary{list-style:none}
+.pep-optional>summary::-webkit-details-marker{display:none}
+}
+</style>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-route-settled="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="10">
+<header class="pep-topicbar">
+<h1 id="page-title">Loading data with useEffect</h1>
+<div class="pep-topicbar__progress"><p><span id="pep-position">5 activities</span> · about 10 min</p><p class="progress" id="progress" aria-live="polite">0 of 5 activities finished</p></div>
+<details class="pep-objectives" data-pep-objectives><summary aria-controls="objectives-body">Objectives</summary><div id="objectives-body"><ul><li>Fetch data inside an Effect with useEffect and store the result in state</li><li>Set an Effect's dependency array so it re-runs exactly when the values it reads change, and state what an empty array means</li><li>Write an Effect cleanup that ignores or aborts a stale request, and explain why Strict Mode runs Effects twice in development</li></ul></div></details>
+<button type="button" class="pep-btn" id="restart" data-pep-reset>Restart activity</button>
+</header>
+<nav aria-label="Activities"><ol class="pep-steps"><li><a class="pep-step" id="timeline-a1" href="#activity-1" data-pep-activity-link aria-current="step">Activity 1</a></li><li><a class="pep-step" id="timeline-a2" href="#activity-2" data-pep-activity-link aria-disabled="true">Activity 2</a></li><li><a class="pep-step" id="timeline-a3" href="#activity-3" data-pep-activity-link aria-disabled="true">Activity 3</a></li><li><a class="pep-step" id="timeline-a4" href="#activity-4" data-pep-activity-link aria-disabled="true">Activity 4</a></li><li><a class="pep-step" id="timeline-a5" href="#activity-5" data-pep-activity-link aria-disabled="true">Activity 5</a></li></ol></nav>
+<section class="pep-activity" id="activity-1" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<h2 id="activity-1-title" tabindex="-1">Activity 1: Predict a fetch with no array</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div data-pep-teaching><p>Most screens load data from a server. React code that talks to the outside world goes in an Effect. Predict this one before any teaching.</p></div>
+
+</div>
+<div class="pep-region" data-pep-workspace="activity" data-interaction="predict">
+<div id="task-1" data-pep-task><h3>Your task: predict what this Effect does</h3><p>Read the code below, where the Effect has no second argument. Choose what you expect to happen from the option list.</p></div>
+<section data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to one result and read why each option is right or wrong.</p></section>
+<div class="q"><pre class="pep-code"><code>function Items() {
+  const [items, setItems] = useState([]);
+  useEffect(() =&gt; {
+    fetch('/api/items')
+      .then(r =&gt; r.json())
+      .then(setItems);
+  });
+  return &lt;p&gt;{items.length} items&lt;/p&gt;;
+}</code></pre><fieldset class="pep-options"><legend>What happens when this component mounts?</legend><label class="pep-option" id="a1-opt-1-row"><input type="radio" name="a1-choice" id="a1-opt-1" value="1"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">It fetches once, and shows the count<span class="pep-explain" hidden><strong class="pep-verdict"></strong>Fetching once needs a dependency array. With no array the Effect runs after every render.</span></span></label><label class="pep-option" id="a1-opt-2-row"><input type="radio" name="a1-choice" id="a1-opt-2" value="2"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">It fetches over and over, because each new array in state causes another render<span class="pep-explain" hidden><strong class="pep-verdict"></strong>No array means the Effect runs after each render. setItems gets a new array each time, so it renders again, and the cycle repeats.</span></span></label><label class="pep-option" id="a1-opt-3-row"><input type="radio" name="a1-choice" id="a1-opt-3" value="3"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">It never fetches, because an Effect needs an array to start<span class="pep-explain" hidden><strong class="pep-verdict"></strong>The array is optional. Leaving it out means run after every render.</span></span></label><label class="pep-option" id="a1-opt-4-row"><input type="radio" name="a1-choice" id="a1-opt-4" value="4"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">React rejects it as a syntax error<span class="pep-explain" hidden><strong class="pep-verdict"></strong>It is valid code. The problem only appears at run time.</span></span></label></fieldset><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-1" data-pep-submit data-pep-complete-activity>Check answer</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Static version: a component calls useEffect with a fetch and no second argument, then stores the result in state. Trace what happens after the first response arrives, then compare with Activity 2.</p></div></noscript></div>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<div data-static-alt data-section-skip><p>Static version: a component calls useEffect with a fetch and no second argument, then stores the result in state. Trace what happens after the first response arrives, then compare with Activity 2.</p></div>
+</div>
+</div>
+
+</section>
+<section class="pep-activity" id="activity-2" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<h2 id="activity-2-title" tabindex="-1">Activity 2: Find the right dependency array</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div data-pep-teaching><p>An <strong>Effect</strong> runs code after React has updated the screen, keeping a component in sync with something outside React. Rendering must stay pure, so fetching belongs in an Effect or an event handler, not in the render itself.</p>
+<p>The <strong>dependency array</strong> says when to re-run:</p>
+<ul><li>No array: after every render.</li><li><code>[]</code>: only after the first mount.</li><li><code>[userId]</code>: after mount, and whenever <code>userId</code> changes.</li></ul>
+<p>List every reactive value the Effect reads.</p><details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip><summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary><div class="pep-optional__body"><p data-pep-anecdote-story>A pharmacist checks a prescription whenever the patient or the dose changes, not each time someone walks past the counter.</p><p data-pep-anecdote-map>The array names the only changes that should cause the work to run again.</p></div></details></div>
+<section data-pep-where-fits aria-labelledby="where-fits-2"><h2 id="where-fits-2">Where this fits</h2><p data-pep-fit-decision><strong>Decision:</strong> Does this work belong in an Effect, or in an event handler or a plain calculation?</p><p data-pep-fit-good><strong>Good fit:</strong> Use an Effect to synchronize with something external, such as fetching data for what is on screen.</p><p data-pep-fit-boundary><strong>Choose something else when:</strong> A click caused the work (use the event handler), or the value can be computed during render (no Effect at all).</p></section>
+</div>
+<div class="pep-region" data-pep-workspace="activity" data-interaction="explore">
+<div id="task-2" data-pep-task data-pep-may-stall><h3>Your task: test each array in the Effect lab</h3><p>The Effect below reads <code>userId</code>. In the <strong>Effect lab</strong>, choose a dependency array, then press <strong>Change userId</strong> and <strong>Change theme</strong> and read the log. Leave the array set to the one that fetches exactly when <code>userId</code> changes, then press <strong>Check result</strong>.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> The log after each button press.</p><p data-pep-hint-step><strong>Next step:</strong> Press both buttons with each choice. A correct array makes a fetch line appear after one of them only.</p></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><ul><li>You pressed both buttons while the final array was selected.</li><li>The final array re-runs the Effect for a new <code>userId</code> and not for a new theme.</li></ul></section>
+<div class="q"><div class="pep-sim pep-js-only" data-pep-sim><label for="p9-deps">Dependency array</label><select id="p9-deps"><option value="none">no array</option><option value="empty">[]</option><option value="user">[userId]</option></select>
+<div class="pep-row"><button type="button" class="pep-btn" id="p9-user">Change userId</button><button type="button" class="pep-btn" id="p9-theme">Change theme</button></div>
+<div class="pep-panel pep-panel--mono" id="p9-log" tabindex="0" aria-label="Effect log"></div></div><p class="pep-js-only" data-pep-sim-live aria-live="polite" style="margin:8px 0 0;font:400 14px/20px var(--pep-font-sans)"></p><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-2" data-pep-submit data-pep-complete-activity>Check result</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Without JavaScript the lab cannot run. On paper: for no array, an empty array, and an array with userId, say whether the Effect runs on mount, after userId changes, and after an unrelated theme change.</p></div></noscript></div>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<div data-static-alt data-section-skip><p>Without JavaScript the lab cannot run. On paper: for no array, an empty array, and an array with userId, say whether the Effect runs on mount, after userId changes, and after an unrelated theme change.</p></div>
+</div>
+</div>
+<p><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</section>
+<section class="pep-activity" id="activity-3" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<h2 id="activity-3-title" tabindex="-1">Activity 3: Stop a stale response</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div data-pep-teaching><p>Responses can arrive out of order. If you open user 1 and quickly switch to user 2, a slow response for user 1 can land last and overwrite the screen.</p>
+<p>An Effect can return a <strong>cleanup</strong> function. React runs it before the next Effect run and on unmount. Use it to ignore a stale result or abort the request:</p>
+<pre class="pep-code"><code>let ignore = false;
+fetchUser(id).then(u =&gt; { if (!ignore) setUser(u); });
+return () =&gt; { ignore = true; };</code></pre></div>
+
+</div>
+<div class="pep-region" data-pep-workspace="activity" data-interaction="explore">
+<div id="task-3" data-pep-task data-pep-may-stall><h3>Your task: reproduce and fix a race in the request lab</h3><p>In the <strong>request lab</strong> below, press <strong>Open user 1</strong> then <strong>Open user 2</strong>, then <strong>Deliver next response</strong> until both have arrived, and notice who is on screen. Turn on <strong>cleanup</strong> and repeat, then press <strong>Check result</strong> with user 2 on screen.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 3</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> The Cleanup checkbox and the deliver button.</p><p data-pep-hint-step><strong>Next step:</strong> User 1 is the slower request, so its response is delivered last. Watch what the screen does when that happens with and without cleanup.</p></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><ul><li>You see a run where the stale response wins.</li><li>With cleanup on, the screen ends on user 2, because the slow response for user 1 is ignored.</li></ul></section>
+<div class="q"><div class="pep-sim pep-js-only" data-pep-sim><label class="pep-check"><input type="checkbox" id="p10-clean"> Cleanup: ignore a stale response</label>
+<div class="pep-row"><button type="button" class="pep-btn" id="p10-u1">Open user 1</button><button type="button" class="pep-btn" id="p10-u2">Open user 2</button><button type="button" class="pep-btn" id="p10-deliver">Deliver next response</button></div>
+<div class="pep-panel"><span class="pep-panel__label">Screen shows</span><strong id="p10-screen">nothing yet</strong></div>
+<div class="pep-panel pep-panel--mono" id="p10-log" tabindex="0" aria-label="Request log"></div></div><p class="pep-js-only" data-pep-sim-live aria-live="polite" style="margin:8px 0 0;font:400 14px/20px var(--pep-font-sans)"></p><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-3" data-pep-submit data-pep-complete-activity>Check result</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Without JavaScript the lab cannot run. On paper: user 1 is slow and user 2 is fast. Open user 1 and then user 2. Trace which response arrives last, what the screen ends on without cleanup, and what changes when cleanup sets an ignore flag.</p></div></noscript></div>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<div data-static-alt data-section-skip><p>Without JavaScript the lab cannot run. On paper: user 1 is slow and user 2 is fast. Open user 1 and then user 2. Trace which response arrives last, what the screen ends on without cleanup, and what changes when cleanup sets an ignore flag.</p></div>
+</div>
+</div>
+<p><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</section>
+<section class="pep-activity" id="activity-4" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-4-title">
+<h2 id="activity-4-title" tabindex="-1">Activity 4: Write the fetching Effect</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div data-pep-teaching><p>Put it together: state for the result, an Effect that fetches, the value it reads in the array, and a cleanup that ignores a stale response.</p>
+<p>The first render happens before any data exists, so render something sensible for that moment, such as <code>Loading</code>. This practice runtime supports <code>useEffect</code> with a fake <code>fetch</code> so nothing leaves your browser. It does not run Effects twice the way Strict Mode does.</p></div>
+
+</div>
+<div class="pep-region" data-pep-workspace="code" data-interaction="terminal" data-steps="3">
+<div id="task-4" data-pep-task data-pep-may-stall><h3>Your task: finish Profile in the Profile.jsx editor</h3><p>In the <code>Profile.jsx</code> editor below, fetch <code>/api/users/</code> plus <code>userId</code> (the response JSON has a <code>name</code>), store it in state and show the name. The paragraph should read <code>Loading</code> until data arrives. The check changes <code>userId</code> and delivers the first response late. Press <strong>Run</strong>.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-4" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 4</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> Inside <code>useEffect</code>, and the array after it.</p><p data-pep-hint-step><strong>Next step:</strong> Start with the fetch chain from the predict step, storing the JSON in the state you already have. Then ask which value the Effect reads.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-4" data-pep-hint-order="2" data-section-skip><summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 4</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> The end of the Effect function.</p><p data-pep-hint-step><strong>Next step:</strong> Return a function that marks this run as stale, and test that mark before calling the setter.</p></div></details></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><ul><li>It fetches once per <code>userId</code> and re-fetches when <code>userId</code> changes.</li><li>A late response for the old <code>userId</code> does not overwrite the new user's name.</li><li>It shows <code>Loading</code> before data arrives.</li></ul></section>
+<div class="q"><div class="pep-editor pep-js-only"><div class="pep-editor__bar"><span class="pep-editor__file">Profile.jsx</span><button type="button" class="pep-btn pep-btn--primary" id="run-4" data-pep-run data-pep-submit data-pep-complete-activity>Run</button><button type="button" class="pep-btn" id="reset-code-4" data-pep-reset-code>Reset code</button></div><div class="pep-editor__code"><div class="pep-editor__gutter" aria-hidden="true"></div><textarea class="pep-editor__input" id="editor-4" aria-label="Code editor for Profile.jsx" spellcheck="false" autocapitalize="off" autocomplete="off" rows="8">function Profile({ userId }) {
+  const [user, setUser] = useState(null);
+  useEffect(() =&gt; {
+    // fetch here
+  });
+  return &lt;p&gt;{user ? user.name : 'Loading'}&lt;/p&gt;;
+}</textarea></div><div class="pep-editor__tabs" role="tablist" aria-label="Results"><button type="button" role="tab" id="problems-tab-4" aria-selected="true" aria-controls="problems-4">Problems</button><button type="button" role="tab" id="output-tab-4" aria-selected="false" aria-controls="output-4">Output</button></div><div class="pep-editor__panel" role="tabpanel" id="problems-4" aria-labelledby="problems-tab-4"></div><div class="pep-editor__panel" role="tabpanel" id="output-4" aria-labelledby="output-tab-4" hidden><div class="pep-editor__log"></div><div class="pep-editor__preview"></div></div><div class="pep-editor__status" aria-live="polite">Ready: edit the code, then press Run.</div></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Without JavaScript the editor cannot run. Starter: Profile has user state and an empty Effect with no array. On paper, write the fetch, the dependency array and a cleanup that ignores a stale response. The ignore-flag snippet in Activity 3 shows that shape.</p></div></noscript></div>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<div data-static-alt data-section-skip><p>Without JavaScript the editor cannot run. Starter: Profile has user state and an empty Effect with no array. On paper, write the fetch, the dependency array and a cleanup that ignores a stale response. The ignore-flag snippet in Activity 3 shows that shape.</p></div>
+</div>
+</div>
+<p><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+</section>
+<section class="pep-activity" id="activity-5" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-5-title">
+<h2 id="activity-5-title" tabindex="-1">Activity 5: Explain the double run</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div data-pep-teaching><p>In development, <strong>Strict Mode</strong> mounts each component, runs its cleanup, then runs the Effect again. It does this on purpose, to expose Effects with missing cleanup. It does not happen in production.</p>
+<p>So seeing two requests in development is not a bug by itself. A correct Effect with a cleanup behaves the same to the user either way.</p></div>
+
+</div>
+<div class="pep-region" data-pep-workspace="activity" data-interaction="mcq" data-confidence>
+<div id="task-5" data-pep-task><h3>Your task: explain what you see and rate your confidence</h3><p>A teammate sees the Network tab showing two requests on page load, only in development, and proposes deleting Strict Mode. Choose the best explanation from the list, rate your confidence, then press <strong>Check answer</strong>.</p></div>
+<section data-pep-activity-checks aria-labelledby="checks-5"><h3 id="checks-5">What success looks like</h3><p>You rate your confidence first, and you can state why Strict Mode runs Effects twice.</p></section>
+<div class="q"><fieldset class="pep-options"><legend>What is the right response?</legend><label class="pep-option" id="a5-opt-1-row"><input type="radio" name="a5-choice" id="a5-opt-1" value="1"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">This is Strict Mode stress-testing the Effect in development. Keep it and make sure the cleanup is correct.<span class="pep-explain" hidden><strong class="pep-verdict"></strong>The extra mount and cleanup cycle is deliberate, and it only happens in development.</span></span></label><label class="pep-option" id="a5-opt-2-row"><input type="radio" name="a5-choice" id="a5-opt-2" value="2"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Production will also send two requests, so add a flag to block the second one<span class="pep-explain" hidden><strong class="pep-verdict"></strong>Strict Mode double-invocation does not happen in production. A flag would just hide a missing cleanup.</span></span></label><label class="pep-option" id="a5-opt-3-row"><input type="radio" name="a5-choice" id="a5-opt-3" value="3"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Removing the dependency array will fix it<span class="pep-explain" hidden><strong class="pep-verdict"></strong>That would make the Effect run after every render, which is much worse.</span></span></label><label class="pep-option" id="a5-opt-4-row"><input type="radio" name="a5-choice" id="a5-opt-4" value="4"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">It means React has a bug in this version<span class="pep-explain" hidden><strong class="pep-verdict"></strong>It is documented behavior, not a bug.</span></span></label></fieldset><fieldset class="pep-confidence" data-confidence-group><legend>How sure are you?</legend><div class="pep-confidence__row"><label class="pep-option"><input type="radio" name="a5-confidence" id="a5-conf-1" value="Guessing"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="a5-confidence" id="a5-conf-2" value="Fairly sure"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="a5-confidence" id="a5-conf-3" value="Certain"><span class="pep-option__text">Certain</span></label></div></fieldset><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-5" data-pep-submit data-pep-complete-activity>Check answer</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Static version: two requests appear on load in development only. Compare keeping Strict Mode and writing a proper cleanup, blocking the second request with a flag, removing the array, and blaming a React bug. Choose, then check against the teaching text.</p></div></noscript></div>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<div data-static-alt data-section-skip><p>Static version: two requests appear on load in development only. Compare keeping Strict Mode and writing a proper cleanup, blocking the second request with a flag, removing the array, and blaming a React bug. Choose, then check against the teaching text.</p></div>
+</div>
+</div>
+<p><a href="#activity-4" data-pep-back-link>Back to activity 4</a></p>
+</section>
+<div class="pep-activity-actions" role="group" aria-label="Activity navigation"><button type="button" class="pep-btn" id="previous-activity" data-pep-previous>Previous activity</button><button type="button" class="pep-btn pep-btn--primary" id="next-activity" data-pep-next>Next activity</button></div>
+<section class="pep-recap" data-pep-recap aria-labelledby="recap-title"><h2 id="recap-title">Recap</h2><p>An Effect runs after render to synchronize with something outside React, such as a server. The dependency array controls re-runs: none means every render, <code>[]</code> means once on mount, and <code>[id]</code> means when <code>id</code> changes. Return a cleanup to ignore or abort a stale request, so a slow response cannot overwrite newer data. In development, Strict Mode runs an extra mount and cleanup cycle on purpose to expose missing cleanups.</p></section>
+<details class="pep-optional pep-sources" data-pep-cheat data-section-skip><summary><span>Cheat sheet</span><span class="pep-optional__cue">Optional reference</span></summary><div class="pep-optional__body"><pre class="pep-code"><code>useEffect(() =&gt; {
+  let cancelled = false;
+  loadPage(page).then(rows =&gt; {
+    if (!cancelled) setRows(rows);
+  });
+  return () =&gt; { cancelled = true; };
+}, [page]);</code></pre></div></details>
+<details class="pep-optional pep-sources" data-pep-sources data-section-skip><summary><span>Sources and review date</span><span class="pep-optional__cue">Optional reference</span></summary><div class="pep-optional__body"><p>First draft, not yet independently reviewed. Official sources checked 2026-11-04:</p><ul><li><a href="https://developer.mozilla.org/en-US/docs/Web/API/AbortController" rel="noopener">developer.mozilla.org/en-US/docs/Web/API/AbortController</a>: Instance methods</li><li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch" rel="noopener">developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch</a>: Making a request; Canceling a request</li><li><a href="https://react.dev/learn/synchronizing-with-effects" rel="noopener">react.dev/learn/synchronizing-with-effects</a>: How to write an Effect; How to handle the Effect firing twice in development</li><li><a href="https://react.dev/learn/you-might-not-need-an-effect" rel="noopener">react.dev/learn/you-might-not-need-an-effect</a>: How to remove unnecessary Effects</li><li><a href="https://react.dev/reference/react/useEffect" rel="noopener">react.dev/reference/react/useEffect</a>: Reference; Usage (fetching data with Effects)</li></ul></div></details>
+</main>
+<script>
+window.PEP_KIT = (() => {
+  // Practice runtime: compiles a JSX subset and runs function components with useState and context.
+  // It is not React. It re-renders the whole preview and exists only for these bounded exercises.
+  const syntax = (message, src, at) => { const e = new Error(message); e.line = src.slice(0, at).split('\n').length; return e; };
+  const compile = src => {
+    let i = 0, out = '';
+    const ws = () => { while (/\s/.test(src[i] || '')) i++; };
+    const readString = q => { const s = i; i++; while (i < src.length && src[i] !== q) { if (src[i] === '\\') i++; i++; } if (i >= src.length) throw syntax('Unterminated string.', src, s); i++; return src.slice(s, i); };
+    const expr = () => { // after '{', up to the balancing '}'
+      let depth = 1, r = '';
+      while (i < src.length) {
+        const c = src[i];
+        if (c === '{') { depth++; r += c; i++; continue; }
+        if (c === '}') { depth--; if (!depth) { i++; return r; } r += c; i++; continue; }
+        const t = token(r);
+        if (t !== null) { r += t; continue; }
+        r += c; i++;
+      }
+      throw syntax('A { in your JSX has no matching }.', src, i);
+    };
+    const token = before => {
+      const c = src[i];
+      if (c === '"' || c === "'") return readString(c);
+      if (c === '`') { const s = i; i++; while (i < src.length && src[i] !== '`') { if (src[i] === '\\') i++; i++; } i++; return src.slice(s, i); }
+      if (c === '/' && src[i + 1] === '/') { while (i < src.length && src[i] !== '\n') i++; return ''; }
+      if (c === '/' && src[i + 1] === '*') { const e = src.indexOf('*/', i + 2); if (e < 0) throw syntax('A comment is not closed.', src, i); i = e + 2; return ''; }
+      if (c === '<' && /[A-Za-z>]/.test(src[i + 1] || '') && jsxPosition(before)) {
+        const r = element();
+        const after = i; ws();
+        if (src[i] === '<' && /[A-Za-z>]/.test(src[i + 1] || '')) throw syntax('Adjacent JSX elements must be wrapped in an enclosing tag. Use one parent element or a fragment.', src, i);
+        i = after;
+        return r;
+      }
+      return null;
+    };
+    const jsxPosition = before => {
+      const t = before.replace(/\s+$/, '');
+      return !t || /(^|[^\w$.])return$/.test(t) || /[(\[{,=?:&|;!]$/.test(t) || /=>$/.test(t);
+    };
+    const element = () => {
+      const start = i; i++;
+      const nm = /^[A-Za-z][\w.]*/.exec(src.slice(i));
+      const name = nm ? nm[0] : '';
+      i += name.length;
+      const attrs = [];
+      for (;;) {
+        ws();
+        if (src[i] === '/' && src[i + 1] === '>') { i += 2; return emit(name, attrs, []); }
+        if (src[i] === '>') { i++; break; }
+        if (src[i] === '{') { i++; ws(); const inner = expr(); attrs.push(inner.trim().startsWith('...') ? inner : `...(${inner})`); continue; }
+        const an = /^[A-Za-z_][\w:-]*/.exec(src.slice(i));
+        if (!an) throw syntax(`Could not read the tag <${name || ''}>. Is a closing > missing?`, src, start);
+        i += an[0].length; ws();
+        if (src[i] === '=') {
+          i++; ws();
+          if (src[i] === '"' || src[i] === "'") { const q = src[i]; const s = i + 1; const e = src.indexOf(q, s); if (e < 0) throw syntax('An attribute string is not closed.', src, i); attrs.push(`${JSON.stringify(an[0])}: ${JSON.stringify(src.slice(s, e))}`); i = e + 1; }
+          else if (src[i] === '{') { i++; attrs.push(`${JSON.stringify(an[0])}: (${expr()})`); }
+          else throw syntax(`The ${an[0]} attribute needs "text" or {an expression}.`, src, i);
+        } else attrs.push(`${JSON.stringify(an[0])}: true`);
+      }
+      const kids = [];
+      for (;;) {
+        if (i >= src.length) throw syntax(`The tag <${name}> is never closed. Add </${name}>.`, src, start);
+        const c = src[i];
+        if (c === '<' && src[i + 1] === '/') {
+          const e = src.indexOf('>', i); if (e < 0) throw syntax('A closing tag has no >.', src, i);
+          const close = src.slice(i + 2, e).trim();
+          if (close !== name) throw syntax(`Expected the closing tag </${name}> but found </${close}>.`, src, i);
+          i = e + 1; break;
+        }
+        if (c === '<') { kids.push(element()); continue; }
+        if (c === '{') {
+          i++; const inner = expr();
+          if (inner.trim()) kids.push(`(${inner})`);
+          continue;
+        }
+        let s = i; while (i < src.length && src[i] !== '<' && src[i] !== '{') i++;
+        const text = src.slice(s, i);
+        const lines = text.split(/\r?\n/);
+        const parts = lines.map((l, k) => { let x = l.replace(/\t/g, ' '); if (k > 0) x = x.replace(/^ +/, ''); if (k < lines.length - 1) x = x.replace(/ +$/, ''); return x; }).filter(Boolean);
+        const joined = parts.join(' ');
+        if (joined) kids.push(JSON.stringify(joined.replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')));
+      }
+      return emit(name, attrs, kids);
+    };
+    const emit = (name, attrs, kids) => {
+      const type = !name ? '__K.Fragment' : /^[a-z]/.test(name) ? JSON.stringify(name) : name;
+      return `__K.h(${type}, {${attrs.join(', ')}}${kids.length ? ', ' + kids.join(', ') : ''})`;
+    };
+    while (i < src.length) {
+      const t = token(out);
+      if (t !== null) { out += t; continue; }
+      out += src[i++];
+    }
+    return out;
+  };
+  const stripImports = code => code.replace(/^\s*import\s[^\n]*$/gm, '').replace(/^\s*export\s+default\s+function/gm, 'function').replace(/^\s*export\s+default\s+[A-Za-z_$][\w$]*;?\s*$/gm, '').replace(/^\s*export\s+(function|const|let)/gm, '$1');
+  const Fragment = Symbol('Fragment');
+  const h = (type, props, ...children) => ({ type, props: { ...props, children: children.length === 1 ? children[0] : children.length ? Object.assign(children, { fixed: true }) : props.children }, key: props.key == null ? null : String(props.key) });
+  const app = (source, names, env = {}) => {
+    const warnings = [];
+    const hooks = new Map();
+    let queue = false, renderCount = {}, root = null, top = null, seen = new Set(), batching = 0;
+    const contexts = [];
+    let cursorKey = null, cursor = 0;
+    const flush = () => { if (!batching && queue) { queue = false; rerender(); } };
+    const useState = init => {
+      const key = `${cursorKey}#${cursor++}`;
+      if (!hooks.has(key)) hooks.set(key, { value: typeof init === 'function' ? init() : init, pending: [] });
+      const hook = hooks.get(key);
+      if (hook.pending.length) {
+        for (const p of hook.pending) hook.value = typeof p === 'function' ? p(hook.value) : p;
+        hook.pending = [];
+      }
+      hook.set = hook.set || (next => { hook.pending.push(next); queue = true; if (!batching) flush(); });
+      return [hook.value, hook.set];
+    };
+    const createContext = def => { const ctx = { def, stack: [] }; ctx.Provider = { ctx }; contexts.push(ctx); return ctx; };
+    const useContext = ctx => { if (!ctx || !ctx.stack) throw new Error('useContext needs a context object made by createContext.'); return ctx.stack.length ? ctx.stack[ctx.stack.length - 1] : ctx.def; };
+    const effects = [];
+    const useEffect = (fn, deps) => {
+      const key = `${cursorKey}#${cursor++}`;
+      const hook = hooks.get(key) || { effect: true };
+      const changed = !hooks.has(key) || !deps || !hook.deps || deps.length !== hook.deps.length || deps.some((d, n) => !Object.is(d, hook.deps[n]));
+      hooks.set(key, hook);
+      hook.deps = deps;
+      if (changed) effects.push(() => { if (hook.cleanup) hook.cleanup(); hook.cleanup = fn() || null; });
+    };
+    let renderGuard = 0;
+    const unsupported = name => () => { const e = new Error(`${name} is outside this practice runtime.`); e.limit = true; throw e; };
+    const scope = { useState, createContext, useContext, memo: c => c, useEffect, useRef: unsupported('useRef'), useReducer: unsupported('useReducer'), useMemo: unsupported('useMemo'), useCallback: unsupported('useCallback'), ...env };
+    let code;
+    code = compile(stripImports(source));
+    const params = ['__K', ...Object.keys(scope)];
+    const exported = names.map(n => `${n}: typeof ${n} === 'undefined' ? undefined : ${n}`).join(', ');
+    const fn = new Function(...params, `"use strict";\n${code}\nreturn {${exported}};`);
+    const exportsObj = fn({ h, Fragment }, ...Object.values(scope));
+    const toDom = (node, path, parent) => {
+      if (node == null || node === false || node === true || node === '') return;
+      if (Array.isArray(node)) {
+        const keys = new Set();
+        node.forEach((c, idx) => {
+          if (!node.fixed && c && typeof c === 'object' && !Array.isArray(c) && c.type) {
+            if (c.key == null) warn('Each child in a list should have a unique "key" prop.');
+            else if (keys.has(c.key)) warn(`Encountered two children with the same key, "${c.key}".`);
+            else keys.add(c.key);
+          }
+          toDom(c, `${path}.${c && c.key != null ? 'k' + c.key : idx}`, parent);
+        });
+        return;
+      }
+      if (typeof node === 'string' || typeof node === 'number') { parent.append(document.createTextNode(String(node))); return; }
+      if (typeof node === 'function') { warn('Functions are not valid as a React child.'); return; }
+      if (typeof node !== 'object' || !('type' in node)) { const e = new Error('Objects are not valid as a React child.'); throw e; }
+      const { type, props } = node;
+      if (type === Fragment) { kids(props.children, path, parent); return; }
+      const ctxObj = type && (type.ctx || (type.stack ? type : null));
+      if (ctxObj) { ctxObj.stack.push(props.value); kids(props.children, path + '.p', parent); ctxObj.stack.pop(); return; }
+      if (typeof type === 'function') {
+        const key = `${path}/${type.name || 'C'}`;
+        seen.add(key);
+        renderCount[type.name] = (renderCount[type.name] || 0) + 1;
+        const saveKey = cursorKey, saveCursor = cursor;
+        cursorKey = key; cursor = 0;
+        const out = type(props);
+        cursorKey = saveKey; cursor = saveCursor;
+        if (out === undefined) throw new Error(`${type.name || 'A component'} returned nothing. Return JSX or null.`);
+        toDom(out, key, parent);
+        return;
+      }
+      if (type === undefined) throw new Error('A tag names a component that is not defined. Is it spelled and capitalized correctly?');
+      const el = document.createElement(type);
+      el.dataset.kitPath = path;
+      for (const [k, v] of Object.entries(props)) {
+        if (k === 'children' || k === 'key' || v == null || v === false && !k.startsWith('aria-')) continue;
+        if (k === 'class') { warn('Invalid DOM property `class`. Did you mean `className`?'); el.setAttribute('class', v); continue; }
+        if (k === 'for') { warn('Invalid DOM property `for`. Did you mean `htmlFor`?'); el.setAttribute('for', v); continue; }
+        if (k === 'className') { el.setAttribute('class', v); continue; }
+        if (k === 'htmlFor') { el.setAttribute('for', v); continue; }
+        if (k === 'style' && typeof v === 'object') { Object.assign(el.style, v); continue; }
+        if (k === 'value' || k === 'checked' || k === 'defaultValue' || k === 'disabled' || k === 'required') {
+          if (k === 'defaultValue') el.value = v; else el[k] = v;
+          if (k === 'required' && v) el.setAttribute('required', '');
+          if (k === 'disabled' && v) el.setAttribute('disabled', '');
+          continue;
+        }
+        if (/^on[A-Z]/.test(k)) { if (typeof v !== 'function') warn(`Expected ${k} to be a function.`); continue; }
+        if (/^on[a-z]/.test(k)) { warn(`Invalid event handler property \`${k}\`. Did you mean \`on${k[2].toUpperCase()}${k.slice(3)}\`?`); continue; }
+        el.setAttribute(k, v === true ? '' : String(v));
+      }
+      if (type === 'input' && !props.type) el.setAttribute('type', 'text');
+      wire(el, type, props);
+      kids(props.children, path, el);
+      if (type === 'select' && props.value != null) el.value = props.value;
+      parent.append(el);
+    };
+    const kids = (c, path, parent) => toDom(c, `${path}.0`, parent);
+    const run = (handler, event) => { batching++; try { handler && handler(event); } finally { batching--; } flush(); };
+    const wire = (el, type, props) => {
+      if (props.onClick) el.addEventListener('click', e => { run(props.onClick, e); });
+      if (type === 'button' && (props.type || 'submit') === 'submit') el.addEventListener('click', e => {
+        const form = el.closest('form');
+        if (form) { e.preventDefault(); submit(form); }
+      });
+      if (type === 'form') { el.__onSubmit = props.onSubmit; el.addEventListener('submit', e => e.preventDefault()); }
+      if (type === 'input' || type === 'textarea' || type === 'select') {
+        el.__props = props;
+        const listener = e => {
+          const path = el.dataset.kitPath;
+          const start = el.selectionStart;
+          run(props.onChange, e);
+          const now = top.querySelector(`[data-kit-path="${path}"]`) || el;
+          const cur = now.__props || props;
+          if (cur.value != null) now.value = cur.value;
+          if (cur.checked != null) now.checked = cur.checked;
+          if (now !== el) { now.focus(); try { now.setSelectionRange(start, start); } catch (x) { /* not a text field */ } }
+        };
+        const eventName = type === 'select' || props.type === 'checkbox' || props.type === 'radio' ? 'change' : 'input';
+        el.addEventListener(eventName, listener);
+      }
+    };
+    const submit = form => {
+      let prevented = false;
+      const ev = { preventDefault() { prevented = true; }, target: form, stopPropagation() {} };
+      run(form.__onSubmit, ev);
+      api.lastSubmit = { handled: Boolean(form.__onSubmit), prevented };
+      if (!prevented) warn('The form submitted without event.preventDefault(). A real browser would reload the page and lose state.');
+    };
+    const warn = m => { if (!warnings.includes(m)) warnings.push(m); };
+    const rerender = () => {
+      if (!top) return;
+      const active = document.activeElement;
+      const focusPath = active && top.contains(active) ? active.dataset.kitPath : null;
+      top.innerHTML = '';
+      seen = new Set();
+      root(top);
+      if (++renderGuard > 200) { const e = new Error('Rendering looped too many times. Check for state set on every render.'); throw e; }
+      for (const key of [...hooks.keys()]) if (!seen.has(key.split('#')[0])) { const dead = hooks.get(key); if (dead.cleanup) dead.cleanup(); hooks.delete(key); }
+      if (focusPath) top.querySelector(`[data-kit-path="${focusPath}"]`)?.focus();
+      effects.splice(0).forEach(run => run());
+    };
+    const api = {
+      exports: exportsObj, warnings, renders: () => renderCount, lastSubmit: null,
+      mount(el, element) { top = el; root = t => toDom(element, '0', t); rerender(); return api; },
+      click(sel) { const t = top.querySelector(sel); if (!t) return false; t.click(); return true; },
+      buttons() { return [...top.querySelectorAll('button')]; },
+      type(sel, value) { const t = typeof sel === 'string' ? top.querySelector(sel) : sel; if (!t) return false; t.value = value; t.dispatchEvent(new Event(t.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true })); return true; },
+      text() { return top.textContent.replace(/\s+/g, ' ').trim(); },
+      el: h,
+      useState,
+      root: () => top,
+      resetRenders() { renderCount = {}; },
+    };
+    return api;
+  };
+  const compileError = (e) => ({ problems: [{ kind: e.limit ? 'limit' : 'error', msg: e.message, line: e.line }], limit: Boolean(e.limit), incomplete: !e.limit, ok: false });
+  const runJs = (source, names, env = {}) => {
+    if (/\bwhile\s*\(|\bfor\s*\(\s*;/.test(source)) { const e = new Error('Open-ended loops are not run here. Use map, filter or a counted for loop.'); e.limit = true; throw e; }
+    const cleaned = stripImports(source);
+    const exported = names.map(n => `${n}: typeof ${n} === 'undefined' ? undefined : ${n}`).join(', ');
+    return new Function(...Object.keys(env), `"use strict";\n${cleaned}\nreturn {${exported}};`)(...Object.values(env));
+  };
+  const fakeFetch = route => {
+    const calls = [];
+    const fn = async (url, init = {}) => {
+      calls.push({ url: String(url), init });
+      const r = await route(String(url), init, calls.length);
+      if (r instanceof Error) throw r;
+      const body = r.raw !== undefined ? r.raw : r.body === undefined ? '' : JSON.stringify(r.body);
+      return new Response(r.status === 204 ? null : body, { status: r.status || 200, headers: { 'Content-Type': 'application/json' } });
+    };
+    fn.calls = calls;
+    return fn;
+  };
+  // Practice subset of Testing Library queries, run against a real DOM fixture.
+  const rtl = host => {
+    const roleOf = e => {
+      if (e.getAttribute('role')) return e.getAttribute('role');
+      const t = e.tagName;
+      if (t === 'BUTTON') return 'button';
+      if (t === 'A' && e.hasAttribute('href')) return 'link';
+      if (/^H[1-6]$/.test(t)) return 'heading';
+      if (t === 'INPUT') { const k = (e.getAttribute('type') || 'text').toLowerCase(); return k === 'checkbox' ? 'checkbox' : k === 'radio' ? 'radio' : k === 'button' || k === 'submit' ? 'button' : 'textbox'; }
+      if (t === 'TEXTAREA') return 'textbox';
+      if (t === 'SELECT') return 'combobox';
+      return null;
+    };
+    const nameOf = e => { if (e.getAttribute('aria-label')) return e.getAttribute('aria-label').trim(); if (e.labels && e.labels.length) return [...e.labels].map(l => l.textContent).join(' ').trim(); return e.textContent.trim(); };
+    const matches = (text, want) => want === undefined ? true : want instanceof RegExp ? want.test(text) : text.replace(/\s+/g, ' ').trim() === String(want);
+    const all = () => [...host.querySelectorAll('*')];
+    const byRole = (role, opts = {}) => all().filter(e => roleOf(e) === role && matches(nameOf(e), opts.name));
+    const byLabel = text => [...host.querySelectorAll('label')].filter(l => matches(l.textContent, text)).map(l => l.control).filter(Boolean);
+    const byText = text => all().filter(e => !e.children.length && matches(e.textContent, text));
+    const err = m => { const e = new Error(m); e.isQuery = true; return e; };
+    const one = (list, what) => { if (list.length > 1) throw err(`Found multiple elements for ${what}.`); if (!list.length) throw err(`Unable to find an element for ${what}.`); return list[0]; };
+    const none = (list, what) => { if (list.length > 1) throw err(`Found multiple elements for ${what}.`); return list[0] || null; };
+    const label = (role, opts) => `role "${role}"${opts && opts.name !== undefined ? ` with name ${opts.name}` : ''}`;
+    const later = fn => new Promise((resolve, reject) => { let n = 0; const t = () => { try { resolve(fn()); } catch (e) { if (++n > 20) reject(e); else setTimeout(t, 5); } }; t(); });
+    const screen = {
+      getByRole: (r, o) => one(byRole(r, o), label(r, o)),
+      queryByRole: (r, o) => none(byRole(r, o), label(r, o)),
+      findByRole: (r, o) => later(() => one(byRole(r, o), label(r, o))),
+      getByLabelText: t => one(byLabel(t), `label ${t}`),
+      queryByLabelText: t => none(byLabel(t), `label ${t}`),
+      getByText: t => one(byText(t), `text ${t}`),
+      queryByText: t => none(byText(t), `text ${t}`),
+      findByText: t => later(() => one(byText(t), `text ${t}`)),
+    };
+    const user = {
+      click: async e => { e.click(); await new Promise(r => setTimeout(r, 0)); },
+      type: async (e, text) => { e.focus(); for (const ch of text) { e.value += ch; e.dispatchEvent(new Event('input', { bubbles: true })); } await new Promise(r => setTimeout(r, 0)); },
+    };
+    const assertion = (got, flip) => {
+      const pass = (ok, m) => { if (flip ? ok : !ok) throw err(`${flip ? 'Unexpected: ' : ''}${m}`); };
+      return {
+        toBeInTheDocument: () => pass(Boolean(got) && host.contains(got), 'expected the element to be in the document'),
+        toHaveTextContent: t => pass(Boolean(got) && matches(got.textContent, t instanceof RegExp ? t : undefined) && (t instanceof RegExp || got.textContent.includes(t)), `expected text ${t}, got "${got ? got.textContent : 'nothing'}"`),
+        toHaveValue: v => pass(Boolean(got) && got.value === v, `expected value ${v}, got "${got ? got.value : 'nothing'}"`),
+        toBeDisabled: () => pass(Boolean(got) && got.disabled, 'expected the element to be disabled'),
+        toBeNull: () => pass(got === null, 'expected null'),
+        toBe: v => pass(got === v, `expected ${v}, got ${got}`),
+      };
+    };
+    const expect = got => ({ ...assertion(got, false), not: assertion(got, true) });
+    return { screen, user, expect, nameOf };
+  };
+  return { compile, app, runJs, compileError, fakeFetch, rtl };
+})();
+window.PEP_ACTIVITIES=[{kind:'choice',key:1,confidence:false,why:["Fetching once needs a dependency array. With no array the Effect runs after every render.","No array means the Effect runs after each render. setItems gets a new array each time, so it renders again, and the cycle repeats.","The array is optional. Leaving it out means run after every render.","It is valid code. The problem only appears at run time."]},
+{kind:'sim',reveal:"The array that lists userId re-runs the Effect exactly when the value it reads changes.",success:"The array matches what the Effect reads.",setup:(root, api) => {
+        const sel = root.querySelector('#p9-deps'), log = root.querySelector('#p9-log');
+        let userId, theme, lines, pressed;
+        const write = (t) => { lines.push(t); lines = lines.slice(-6); log.textContent = lines.join('\n'); api.announce(t); };
+        const mount = () => { userId = 1; theme = 'light'; lines = []; pressed = { user: false, theme: false }; write(`mount: Effect runs: fetch /api/users/1`); };
+        const rerun = why => {
+          const mode = sel.value;
+          const runs = mode === 'none' || (mode === 'user' && why === 'user');
+          write(`${why === 'user' ? `userId is now ${userId}` : `theme is now ${theme}`}: render, ${runs ? `Effect re-runs: fetch /api/users/${userId}` : 'Effect skipped'}`);
+        };
+        root.querySelector('#p9-user').addEventListener('click', () => { userId += 1; pressed.user = true; rerun('user'); });
+        root.querySelector('#p9-theme').addEventListener('click', () => { theme = theme === 'light' ? 'dark' : 'light'; pressed.theme = true; rerun('theme'); });
+        sel.addEventListener('change', mount);
+        mount();
+        return {
+          reset: mount,
+          check: () => {
+            if (!pressed.user || !pressed.theme) return { incomplete: true, msg: 'Press both buttons with your final array selected.' };
+            return sel.value === 'user' ? { ok: true, msg: 'It fetches on mount and when userId changes, and skips the theme change.' } : { ok: false, msg: sel.value === 'empty' ? 'With an empty array, a new userId never fetches, so the screen shows the wrong person.' : 'With no array, the theme change also fetches, which is wasted work.' };
+          },
+        };
+      }},
+{kind:'sim',reveal:"With cleanup on, each new request marks the previous one as ignored, so the slow response for user 1 does nothing.",success:"That is the standard fix for a data-fetching race.",setup:(root, api) => {
+        const clean = root.querySelector('#p10-clean'), log = root.querySelector('#p10-log'), screen = root.querySelector('#p10-screen');
+        let pending, active, lines, sawStale;
+        const write = t => { lines.push(t); lines = lines.slice(-7); log.textContent = lines.join('\n'); api.announce(t); };
+        const init = () => { pending = []; active = null; lines = []; sawStale = false; screen.textContent = 'nothing yet'; log.textContent = 'No requests yet.'; };
+        const open = (id, slow) => {
+          if (active && clean.checked) { active.ignored = true; write(`cleanup ran: request for user ${active.id} is now ignored`); }
+          const req = { id, slow, ignored: false };
+          active = req;
+          pending.push(req);
+          pending.sort((a, b) => Number(a.slow) - Number(b.slow));
+          write(`request sent for user ${id} (${slow ? 'slow' : 'fast'})`);
+        };
+        root.querySelector('#p10-u1').addEventListener('click', () => open(1, true));
+        root.querySelector('#p10-u2').addEventListener('click', () => open(2, false));
+        root.querySelector('#p10-deliver').addEventListener('click', () => {
+          const req = pending.shift();
+          if (!req) { write('no response is waiting'); return; }
+          if (req.ignored) { write(`response for user ${req.id} arrived and was ignored`); return; }
+          screen.textContent = `user ${req.id}`;
+          if (req !== active) sawStale = true;
+          write(`response for user ${req.id} arrived: screen updated${req !== active ? ' (stale!)' : ''}`);
+        });
+        init();
+        return {
+          reset: init,
+          check: () => {
+            if (pending.length) return { incomplete: true, msg: 'Deliver every waiting response first.' };
+            if (!active) return { incomplete: true, msg: 'Open both users and deliver the responses first.' };
+            if (!sawStale && !clean.checked) return { incomplete: true, msg: 'First see the stale response win with cleanup off: open user 1, then user 2, and deliver both.' };
+            return clean.checked && screen.textContent === 'user 2' ? { ok: true, msg: 'The cleanup marked the old request as stale, so its late response changed nothing.' } : { ok: false, msg: `The screen shows ${screen.textContent}. Turn on cleanup, open user 1 and then user 2, and deliver both.` };
+          },
+        };
+      }},
+{kind:'editor',reveal:"You need a fetch chain that stores JSON in state, an array listing the value it reads, and a cleanup that flags the run as stale.",success:"Fetches per user, handles the race, and shows a sensible first render.",evaluate:async (code, { kit, preview }) => {
+        const tick = () => new Promise(r => setTimeout(r, 0));
+        const release = {};
+        const fetchFake = kit.fakeFetch((url) => new Promise(resolve => { const id = /(\d+)$/.exec(url)?.[1]; release[id] = () => resolve({ body: { name: id === '1' ? 'Ada' : id === '2' ? 'Grace' : 'Unknown' } }); }));
+        let app;
+        const problems = [];
+        const guarded = async (url, init) => { if (fetchFake.calls.length > 12) throw new Error('stopped: too many requests'); return fetchFake(url, init); };
+        try { app = kit.app(code, ['Profile'], { fetch: guarded }); } catch (e) { return kit.compileError(e); }
+        if (!app.exports.Profile) return { incomplete: true, problems: [{ kind: 'error', msg: 'Keep the Profile function.' }] };
+        let setId;
+        const Harness = () => { const [id, s] = app.useState(1); setId = s; return app.el(app.exports.Profile, { userId: id }); };
+        try {
+          app.mount(preview, app.el(Harness, {}));
+          await tick();
+          const first = app.text();
+          if (first !== 'Loading') problems.push({ kind: 'error', msg: `Before any data the paragraph reads "${first}". It should read Loading.` });
+          const callsAtMount = fetchFake.calls.length;
+          if (!callsAtMount) problems.push({ kind: 'error', msg: 'No request was sent on mount.' });
+          else if (!/\/api\/users\/1$/.test(fetchFake.calls[0].url)) problems.push({ kind: 'error', msg: `The first request went to ${fetchFake.calls[0].url}.` });
+          setId(2);
+          await tick();
+          if (!fetchFake.calls.some(c => /\/api\/users\/2$/.test(c.url))) problems.push({ kind: 'error', msg: 'Changing userId did not send a new request. Check the dependency array.' });
+          release['2']?.(); await tick(); await tick();
+          const afterTwo = app.text();
+          release['1']?.(); await tick(); await tick();
+          const end = app.text();
+          if (afterTwo !== 'Grace') problems.push({ kind: 'error', msg: `After the response for user 2, the paragraph reads "${afterTwo}".` });
+          if (end !== 'Grace') problems.push({ kind: 'error', msg: `The late response for user 1 overwrote the screen: "${end}". The Effect needs a cleanup.` });
+          if (fetchFake.calls.length > 2) problems.push({ kind: 'error', msg: `${fetchFake.calls.length} requests were sent where 2 were needed. Check the dependency array.` });
+          return { ok: !problems.length, problems, output: `Requests: ${fetchFake.calls.map(c => c.url).join(', ') || 'none'}\nFinal text: ${end}` };
+        } catch (e) { return kit.compileError(e); }
+      }},
+{kind:'choice',key:0,confidence:true,why:["The extra mount and cleanup cycle is deliberate, and it only happens in development.","Strict Mode double-invocation does not happen in production. A flag would just hide a missing cleanup.","That would make the Effect run after every render, which is much worse.","It is documented behavior, not a bug."]}];
+(() => {
+  document.documentElement.classList.add('is-enhanced');
+  const lesson = document.querySelector('#lesson');
+  const activities = [...document.querySelectorAll('[data-pep-activity]')];
+  const timeline = [...document.querySelectorAll('[data-pep-activity-link]')];
+  const previous = document.querySelector('[data-pep-previous]');
+  const next = document.querySelector('[data-pep-next]');
+  const progress = document.querySelector('#progress');
+  const position = document.querySelector('#pep-position');
+  const total = activities.length;
+  const defs = window.PEP_ACTIVITIES;
+  let current = 1;
+  let unlocked = 1;
+  const state = activities.map(() => ({ attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false }));
+  let initial = [];
+  const mounted = [];
+  const say = (n, kind, html) => {
+    const box = activities[n - 1].querySelector('[data-pep-feedback]');
+    box.innerHTML = html ? `<div class="pep-callout pep-callout--${kind}">${html}</div>` : '';
+  };
+  const reflect = n => {
+    const a = activities[n - 1], v = state[n - 1];
+    a.dataset.pepAttempts = String(v.attempts); a.dataset.pepSettled = String(v.settled);
+    a.dataset.pepCompleted = String(v.completed); a.dataset.pepCredit = String(v.credit);
+    a.dataset.pepGrade = String(v.grade); a.dataset.pepContinue = String(v.canContinue);
+  };
+  const updateProgress = () => {
+    const done = state.filter(v => v.settled).length;
+    progress.textContent = `${done} of ${total} activities finished`;
+    lesson.dataset.pepRouteSettled = String(done === total);
+    lesson.dataset.pepComplete = String(state.every(v => v.completed));
+    // The recap and cheat sheet close the path; showing them earlier would teach before the predict step.
+    const closed = done === total;
+    document.querySelectorAll('[data-pep-recap], [data-pep-cheat]').forEach(n => { n.hidden = !closed; });
+  };
+  const render = (n, mode = 'none', focus = false) => {
+    if (!Number.isInteger(n) || n < 1 || n > total || n > unlocked) return false;
+    current = n;
+    lesson.dataset.pepCurrentActivity = String(current);
+    lesson.dataset.pepUnlockedThrough = String(unlocked);
+    activities.forEach((a, i) => { a.hidden = i + 1 !== current; });
+    timeline.forEach((link, i) => {
+      const k = i + 1;
+      if (k === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+      if (k > unlocked) link.setAttribute('aria-disabled', 'true'); else link.removeAttribute('aria-disabled');
+    });
+    position.textContent = `Activity ${current} of ${total}`;
+    previous.disabled = current === 1;
+    next.disabled = current === total || current >= unlocked || !state[current - 1].canContinue;
+    try {
+      if (mode === 'push') history.pushState({ activity: current }, '', `#activity-${current}`);
+      if (mode === 'replace') history.replaceState({ activity: current }, '', `#activity-${current}`);
+    } catch (e) {
+      if (mode !== 'none' && location.hash !== `#activity-${current}`) location.hash = `activity-${current}`;
+    }
+    if (focus) document.querySelector(`#activity-${current}-title`)?.focus();
+    return true;
+  };
+  const finish = (n, ok) => {
+    const v = state[n - 1];
+    v.settled = true; v.canContinue = true; v.completed = ok; v.grade = ok ? 1 : 0; v.credit = ok ? 1 : 0;
+    reflect(n); updateProgress();
+    if (n === unlocked && unlocked < total) unlocked = n + 1;
+    render(current);
+  };
+  const attempt = (n, result, def) => {
+    const v = state[n - 1];
+    if (v.settled) return;
+    v.attempts += 1;
+    if (result.ok) {
+      say(n, 'success', `<p><strong>Correct.</strong> ${result.msg || def.success || ''}</p>`);
+      lock(n); finish(n, true);
+    } else if (v.attempts >= 2) {
+      say(n, 'wrong', `<p><strong>Settled, not correct.</strong> ${result.msg || ''}</p>${def.reveal ? `<p>${def.reveal}</p>` : ''}`);
+      lock(n); finish(n, false);
+    } else {
+      reflect(n);
+      say(n, 'wrong', `<p><strong>Try again.</strong> ${result.msg || ''} You have one more try.</p>`);
+    }
+  };
+  const lock = n => {
+    const a = activities[n - 1];
+    a.querySelectorAll('[data-pep-submit]').forEach(b => { b.disabled = true; });
+    a.querySelectorAll('input, textarea, select').forEach(c => { if (!c.closest('[data-pep-optional]') && c.dataset.pepKeepLive === undefined) c.disabled = true; });
+    a.querySelectorAll('[data-pep-sim] button').forEach(b => { if (b.dataset.pepKeepLive === undefined) b.disabled = true; });
+  };
+  const unlockControls = n => {
+    const a = activities[n - 1];
+    a.querySelectorAll('[data-pep-submit], input, textarea, select, [data-pep-sim] button').forEach(c => { if (!c.closest('[data-pep-optional]')) c.disabled = false; });
+  };
+  const mountChoice = (n, def) => {
+    const a = activities[n - 1];
+    const name = `a${n}-choice`;
+    const opts = [...a.querySelectorAll(`input[name="${name}"]`)];
+    a.querySelector('[data-pep-submit]').addEventListener('click', () => {
+      const v = state[n - 1];
+      if (v.settled) return;
+      const picked = opts.find(o => o.checked);
+      if (!picked) { say(n, 'info', '<p><strong>Not checked yet.</strong> Choose an option first.</p>'); return; }
+      if (def.confidence && !a.querySelector(`input[name="a${n}-confidence"]:checked`)) { say(n, 'info', '<p><strong>Not checked yet.</strong> Rate your confidence first, then check.</p>'); return; }
+      const i = opts.indexOf(picked);
+      const ok = i === def.key;
+      v.attempts += 1;
+      const why = def.why[i];
+      if (ok || v.attempts >= 2) {
+        opts.forEach((o, j) => {
+          const row = o.closest('.pep-option');
+          row.querySelector('.pep-explain').hidden = false;
+          if (j === def.key) { row.classList.add('is-correct'); row.querySelector('.pep-verdict').textContent = 'Correct answer: '; }
+          else if (o === picked) { row.classList.add('is-wrong'); row.querySelector('.pep-verdict').textContent = 'Your answer: '; }
+        });
+        say(n, ok ? 'success' : 'wrong', ok ? `<p><strong>Correct.</strong> ${why}</p>` : `<p><strong>Settled, not correct.</strong> ${why} ${def.why[def.key]}</p>`);
+        lock(n); finish(n, ok);
+      } else {
+        reflect(n);
+        say(n, 'wrong', `<p><strong>Try again.</strong> ${why} You have one more try.</p>`);
+      }
+    });
+    return () => opts.forEach(o => {
+      const row = o.closest('.pep-option');
+      row.classList.remove('is-correct', 'is-wrong');
+      row.querySelector('.pep-explain').hidden = true;
+      row.querySelector('.pep-verdict').textContent = '';
+    });
+  };
+  const mountSim = (n, def) => {
+    const a = activities[n - 1];
+    const root = a.querySelector('[data-pep-sim]');
+    const sim = def.setup(root, { esc, announce: t => { const l = a.querySelector('[data-pep-sim-live]'); if (l) l.textContent = t; } });
+    a.querySelector('[data-pep-submit]').addEventListener('click', () => {
+      if (state[n - 1].settled) return;
+      const result = sim.check();
+      if (result.incomplete) { say(n, 'info', `<p><strong>Not checked yet.</strong> ${result.msg}</p>`); return; }
+      attempt(n, result, def);
+    });
+    return () => sim.reset();
+  };
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const mountEditor = (n, def) => {
+    const a = activities[n - 1];
+    const input = a.querySelector('.pep-editor__input');
+    const gutter = a.querySelector('.pep-editor__gutter');
+    const tabs = [...a.querySelectorAll('[role=tab]')];
+    const panels = [...a.querySelectorAll('[role=tabpanel]')];
+    const problems = panels[0], output = panels[1];
+    const status = a.querySelector('.pep-editor__status');
+    const preview = a.querySelector('.pep-editor__preview');
+    const log = a.querySelector('.pep-editor__log');
+    const starter = input.value;
+    const empty = 'No problems yet. Press Run to check your code.';
+    const lines = () => { gutter.textContent = input.value.split('\n').map((_, i) => i + 1).join('\n'); };
+    input.addEventListener('input', lines); lines();
+    const select = i => tabs.forEach((t, j) => { t.setAttribute('aria-selected', String(i === j)); panels[j].hidden = i !== j; });
+    tabs.forEach((t, i) => t.addEventListener('click', () => select(i)));
+    const jump = line => { const pos = input.value.split('\n').slice(0, Math.max(0, line - 1)).join('\n').length + (line > 1 ? 1 : 0); input.focus(); input.setSelectionRange(pos, pos); };
+    const showProblems = list => {
+      problems.innerHTML = '';
+      if (!list.length) { problems.textContent = 'No problems.'; return; }
+      for (const p of list) {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'pep-editor__problem';
+        const k = p.kind === 'limit' ? 'Not supported in this practice editor' : 'Problem';
+        b.innerHTML = `<span class="kind-${p.kind === 'limit' ? 'limit' : 'error'}">${k}${p.line ? ` (line ${p.line})` : ''}:</span> ${esc(p.msg)}`;
+        b.addEventListener('click', () => jump(p.line || 1));
+        problems.append(b);
+      }
+    };
+    a.querySelector('[data-pep-run]').addEventListener('click', async () => {
+      if (state[n - 1].settled || a.dataset.pepRunning === 'true') return;
+      const code = input.value;
+      if (code.trim() === starter.trim()) {
+        showProblems([{ kind: 'error', msg: 'The code is still the starter. Make your edit, then press Run.', line: 1 }]);
+        select(0); status.textContent = 'Not checked: edit the starter first.';
+        say(n, 'info', '<p><strong>Not checked yet.</strong> Edit the starter code, then press Run.</p>');
+        return;
+      }
+      let r;
+      preview.innerHTML = '';
+      a.dataset.pepRunning = 'true';
+      status.textContent = 'Running...';
+      try { r = await def.evaluate(code, { kit: window.PEP_KIT, preview }); }
+      catch (e) { r = { problems: [{ kind: 'error', msg: e.message || String(e), line: e.line }], ok: false }; }
+      a.dataset.pepRunning = 'false';
+      r.problems = r.problems || [];
+      log.textContent = r.output || (r.ok ? 'All checks passed.' : 'No output.');
+      showProblems(r.problems);
+      if (r.limit || r.incomplete) {
+        select(0); status.textContent = r.limit ? 'Not checked: outside the supported subset.' : 'Not checked: the code did not run.';
+        say(n, 'info', `<p><strong>Not checked yet.</strong> ${r.limit ? 'Your code uses something this practice editor cannot run. See Problems.' : 'Fix the problem listed under Problems and press Run again.'}</p>`);
+        return;
+      }
+      select(r.ok ? 1 : (r.problems.length ? 0 : 1));
+      status.textContent = r.ok ? 'Pass: the observed result matches the task.' : 'Mismatch: the observed result does not match the task yet.';
+      attempt(n, { ok: r.ok, msg: r.msg || (r.ok ? '' : 'Compare Problems and Output with the success checks.') }, def);
+    });
+    a.querySelector('[data-pep-reset-code]').addEventListener('click', () => {
+      if (state[n - 1].settled) return;
+      input.value = starter; lines(); showProblems([]); problems.textContent = empty; log.textContent = 'Nothing has run yet.'; preview.innerHTML = '';
+      status.textContent = 'Ready: code reset to the starter.';
+    });
+    problems.textContent = empty; log.textContent = 'Nothing has run yet.';
+    return () => { lines(); problems.textContent = empty; log.textContent = 'Nothing has run yet.'; preview.innerHTML = ''; status.textContent = 'Ready: edit the code, then press Run.'; select(0); };
+  };
+  const activityFromHash = h => { const m = /^#activity-(\d+)$/.exec(h); return m ? Number(m[1]) : 0; };
+  defs.forEach((def, i) => {
+    const n = i + 1;
+    mounted[i] = def.kind === 'choice' ? mountChoice(n, def) : def.kind === 'sim' ? mountSim(n, def) : mountEditor(n, def);
+  });
+  initial = activities.map(a => [...a.querySelectorAll('input, textarea, select')].filter(c => !c.closest('[data-pep-optional]')).map(c => ({ c, value: c.value, checked: c.checked, index: c.selectedIndex })));
+  timeline.forEach((link, i) => link.addEventListener('click', e => {
+    e.preventDefault();
+    if (link.getAttribute('aria-disabled') === 'true') return;
+    render(i + 1, 'push', true);
+  }));
+  document.querySelectorAll('[data-pep-back-link]').forEach(link => link.addEventListener('click', e => {
+    e.preventDefault(); render(activityFromHash(link.getAttribute('href')), 'push', true);
+  }));
+  previous.addEventListener('click', () => render(current - 1, 'push', true));
+  next.addEventListener('click', () => render(current + 1, 'push', true));
+  const restore = () => {
+    const requested = activityFromHash(location.hash) || 1;
+    if (!render(requested, 'none', false)) render(Math.min(current, unlocked), 'replace', false);
+  };
+  addEventListener('popstate', restore);
+  addEventListener('hashchange', restore);
+  document.querySelector('[data-pep-reset]').addEventListener('click', () => {
+    const i = current - 1;
+    unlockControls(current);
+    for (const s of initial[i]) {
+      if (s.c.matches('input[type=checkbox], input[type=radio]')) s.c.checked = s.checked;
+      else if (s.c.tagName === 'SELECT') s.c.selectedIndex = s.index;
+      else s.c.value = s.value;
+    }
+    state[i] = { attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false };
+    mounted[i]();
+    say(current, '', '');
+    reflect(current); updateProgress(); render(current);
+  });
+  const objectives = document.querySelector('[data-pep-objectives]');
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); } });
+  document.addEventListener('click', e => { if (objectives.open && !objectives.contains(e.target)) objectives.open = false; });
+  let opened = [];
+  addEventListener('beforeprint', () => { opened = [...document.querySelectorAll('details:not([open])')]; opened.forEach(d => { d.open = true; }); });
+  addEventListener('afterprint', () => { opened.forEach(d => { d.open = false; }); opened = []; });
+  activities.forEach((_, i) => reflect(i + 1));
+  updateProgress();
+  const start = activityFromHash(location.hash);
+  render(start >= 1 && start <= unlocked ? start : 1, 'replace');
+})();
+</script>
+</body>
+</html>
