@@ -30,6 +30,62 @@ const QA_PATH_SCHEMA = JSON.parse(
   await readFile(new URL("../../schemas/qa-paths.schema.json", import.meta.url), "utf8"),
 );
 const validateQaPath = new Ajv2020({ allErrors: true, strict: false }).compile(QA_PATH_SCHEMA);
+const PRIVATE_INPUTS_ENV = "PEP_QA_PRIVATE_INPUTS_FILE";
+const PRIVATE_VALUE_REFERENCE = /^private:([A-Za-z0-9][A-Za-z0-9._-]*)$/u;
+
+export async function resolvePrivateActionValues(actions, options = {}) {
+  const references = actions.filter((action) => Object.hasOwn(action, "valueFrom"));
+  if (!references.length) return actions;
+  for (const action of references) {
+    if (Object.hasOwn(action, "value") || !PRIVATE_VALUE_REFERENCE.test(action.valueFrom ?? "")) {
+      throw new Error("private QA value reference syntax is unsupported");
+    }
+  }
+  const environment = options.environment ?? process.env;
+  const selected = environment[PRIVATE_INPUTS_ENV];
+  if (!selected) throw new Error(`${PRIVATE_INPUTS_ENV} is required for private QA value references`);
+  if (!path.isAbsolute(selected)) throw new Error(`${PRIVATE_INPUTS_ENV} must select an absolute path outside the repository`);
+  let source;
+  let repository;
+  let contents;
+  try {
+    [source, repository] = await Promise.all([
+      realpath(selected),
+      realpath(options.repoRoot ?? process.cwd()),
+    ]);
+    const outside = path.relative(repository, source);
+    if (!outside.startsWith(`..${path.sep}`) && outside !== "..") {
+      throw new Error("inside repository");
+    }
+    contents = await readFile(source, "utf8");
+  } catch {
+    throw new Error("private QA inputs source is unreadable or is not outside the repository");
+  }
+  let inputs;
+  try {
+    inputs = JSON.parse(contents);
+  } catch {
+    throw new Error("private QA inputs source must contain valid JSON");
+  }
+  if (!inputs || Array.isArray(inputs) || typeof inputs !== "object") {
+    throw new Error("private QA inputs source must contain a JSON object");
+  }
+  const resolved = [];
+  for (const action of actions) {
+    if (!Object.hasOwn(action, "valueFrom")) {
+      resolved.push(action);
+      continue;
+    }
+    const key = action.valueFrom.match(PRIVATE_VALUE_REFERENCE)[1];
+    if (!Object.hasOwn(inputs, key) || typeof inputs[key] !== "string") {
+      throw new Error("a required private QA input is missing or is not a string");
+    }
+    const next = { ...action, value: inputs[key] };
+    delete next.valueFrom;
+    resolved.push(next);
+  }
+  return resolved;
+}
 
 function digest(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
@@ -222,6 +278,9 @@ async function focusVisible(locator) {
 }
 
 async function perform(target, action, options = {}) {
+  if (Object.hasOwn(action, "valueFrom")) {
+    throw new Error("private QA value references require the private overlay runner");
+  }
   if (action.do === "goBack") {
     if (typeof target.goBack === "function") await target.goBack();
     else {
@@ -1568,7 +1627,7 @@ export async function updateReceipt(ctx, topic, rule, passed, detail, writeEvide
   await writeFile(receiptFile, `${JSON.stringify(receipt, null, 2)}\n`);
 }
 
-export async function runPrivateOverlay(ctx, overlayFile) {
+export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
   const git = (args) => spawnSync("git", args, { cwd: ctx.root, encoding: "utf8" });
   const top = git(["rev-parse", "--show-toplevel"]);
   if (top.status !== 0 || await realpath(top.stdout.trim()) !== await realpath(ctx.root)) throw new Error("private overlay repository root is invalid");
@@ -1614,6 +1673,18 @@ export async function runPrivateOverlay(ctx, overlayFile) {
     candidate.routes.success = overlay.routes[name];
     if (!validateQaPath(candidate)) throw new Error(`private overlay ${name} route does not match the public action schema`);
   }
+  const routeLengths = routeNames.map((name) => overlay.routes[name].length);
+  const resolvedActions = await resolvePrivateActionValues(
+    routeNames.flatMap((name) => overlay.routes[name]),
+    { environment: options.environment, repoRoot: ctx.root },
+  );
+  const resolvedRoutes = {};
+  let actionOffset = 0;
+  for (let index = 0; index < routeNames.length; index++) {
+    const name = routeNames[index];
+    resolvedRoutes[name] = resolvedActions.slice(actionOffset, actionOffset + routeLengths[index]);
+    actionOffset += routeLengths[index];
+  }
   const browser = await launchChromium();
   const runTopLevel = async (actions, keyboard = false) => {
     const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
@@ -1636,16 +1707,16 @@ export async function runPrivateOverlay(ctx, overlayFile) {
     }
   };
   try {
-    await runTopLevel(overlay.routes.success);
-    await runTopLevel(overlay.routes.wrongFirst);
-    await runTopLevel(overlay.routes.keyboard, true);
+    await runTopLevel(resolvedRoutes.success);
+    await runTopLevel(resolvedRoutes.wrongFirst);
+    await runTopLevel(resolvedRoutes.keyboard, true);
     const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
     const page = await context.newPage();
     let sandboxExternalLoad = false;
     await page.route("**/*", async (route) => { sandboxExternalLoad = true; await route.abort("blockedbyclient"); });
     try {
       const frame = await sandboxFrame(page, topic);
-      await execute(frame, overlay.routes.sandbox);
+      await execute(frame, resolvedRoutes.sandbox);
       await assertState(frame, spec.completion);
       await assertState(frame, spec.progress);
       if (sandboxExternalLoad) throw new Error("external load");
