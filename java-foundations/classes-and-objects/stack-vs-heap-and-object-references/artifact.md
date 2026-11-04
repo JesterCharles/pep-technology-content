@@ -48,9 +48,9 @@ The model: each method call gets a frame on its thread's stack. The frame holds 
 
 ## Cheat sheet
 
-Where to act: The item shown after Item:, above the two buttons.
+Where to act: The item shown after Item:, above the three buttons.
 
-Next step: Ask whether the item is a variable declared inside the method, which lives in the call's frame, or something made by `new` or belonging to such an object.
+Next step: Trace the program line by line. A variable declared in `main` goes in the frame, a field goes in the object its variable refers to, and an arrow ends at the object whose reference the variable was given; `b = a` copies `a`'s arrow.
 
 Balloons at a fair are tied to strings that children hold. A child may let go of one string, but the balloon stays as long as anyone still holds a string tied to it. A balloon with no string held by anyone drifts off and is gone for good, whenever the wind happens to take it.
 
@@ -90,7 +90,7 @@ Expected results and why. It prints 5 : b = a copies the reference, so both vari
 
 ### drag
 
-Expected results and why. count : stack; a local variable. The object made by new Box() : heap. The variable a : stack; it holds a reference. The size field: heap; it belongs to the object. The parameter args : stack; parameters are in the frame. The array args refers to: heap; arrays are objects.
+Expected results and why. n and its value 7: frame of main ; a local variable. The variable b : frame of main ; it holds a reference. The size field holding 4: Box 1; a refers to the first object. The size field holding 9: Box 2; c refers to the second object. The arrow from b : ends at Box 1, because b = a copies a 's reference. The arrow from c : ends at Box 2, the object from the second new Box() .
 
 ### mcq
 

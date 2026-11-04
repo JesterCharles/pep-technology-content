@@ -11,14 +11,14 @@ It is not critic or reconciliation evidence: independent education and Java-SME 
 
 | Topic | Kind | Objectives | Activities | P50 / worst path / budget (min) | Page sha256 (prefix) |
 | --- | --- | --- | --- | --- | --- |
-| `access-modifiers` | core | 3 | predict → lanes → code → mcq | 7.45 / 14.03 / 15 | `7acfc37840c4bf86` |
+| `access-modifiers` | core | 3 | predict → lanes → code → mcq | 7.77 / 14.35 / 15 | `0b9693e00c500c57` |
 | `classes-and-objects` | core | 3 | predict → lanes → code → mcq | 8.32 / 14.65 / 15 | `bd43efa5f6b02bf3` |
 | `constructors` | core | 3 | predict → lanes → code → mcq | 8.42 / 14.75 / 15 | `f2c637b37b65f391` |
 | `double-equals-vs-equals` | core | 3 | predict → lanes → code → mcq | 8.24 / 14.57 / 15 | `ed33f92a8a8bd2b2` |
 | `encapsulation-with-getters-and-setters` | core | 3 | predict → lanes → code → mcq | 7.81 / 14.14 / 15 | `2e24812095df1a3e` |
-| `enums` | core | 3 | predict → lanes → code → mcq | 8.63 / 14.71 / 15 | `23f2bcde3df45e8c` |
+| `enums` | core | 3 | predict → lanes → code → mcq | 9.15 / 14.98 / 15 | `61b7ad259ea032ea` |
 | `final-and-tostring` | reading | 3 | predict → lanes → code → mcq | 7.95 / 14.53 / 15 | `0f8eca3608ea9048` |
-| `stack-vs-heap-and-object-references` | core | 3 | predict → lanes → mselect → mcq | 9.64 / 13.72 / 14 | `71354d66e5677c0b` |
+| `stack-vs-heap-and-object-references` | core | 3 | predict → lanes → mselect → mcq | 9.85 / 13.93 / 14 | `1fc8b1cc10125705` |
 | `string-immutability` | core | 3 | predict → lanes → code → mcq | 7.58 / 14.16 / 15 | `14e9b2418f7e1efa` |
 
 ## 2. Template and engine provenance
@@ -28,7 +28,7 @@ It is not critic or reconciliation evidence: independent education and Java-SME 
   - shell CSS sha256 `5e59bb286dc42fa465ac0d64972bae066e009af56b7b5edd129e6f122ca2c804`
   - activity engine JS sha256 `92e841c836358666cf295bd8cc4c7ff30642b0095eec178f29a705e2f5803792`
 - Page-specific bytes are the activity HTML and the `window.PEP_PAGE` data block (options, explanations, lane items and per-task structural checks).
-- `data-pep-guidance-contract` is set on each page. `qa-paths.json` follows the schema on `main`, which has no `guidance` object; when the candidate tooling lands, each page needs that object added (generalized-validator item, non-blocking per captain intent).
+- `data-pep-guidance-contract` is set on each page. Each `qa-paths.json` carries the landed contract's `guidance` object (main `b80bbc4`): `activityNavigation`, `activityNavigationKeyboard` and `activityNavigationTouch` replay the existing wrong-twice route through Activity 2, press Next, then make one checked, incomplete attempt on Activity 3 (an unchanged-starter comment fill for code tasks, one wrong choice for the multi-select). `objectives` and `objectivesTouch` open the disclosure and close it with Escape or an outside tap, and `hints` is `true`. Existing routes are byte-preserved and no guidance action carries solution text.
 
 ## 3. Sources
 
@@ -48,12 +48,13 @@ For all nine pages:
 - Touch at 390 px: tap completes Activity 1. Source-list links were under 44 px and were raised to 44 px targets in the shared shell.
 - Print: all four activities render, every disclosure expands, navigation hides, and `afterprint` restores the closed state.
 - JavaScript disabled: all four activities and each activity's expected-results reading render.
-- The estimator (`authoring/tools/timing/estimate_reading.py`) gives P50 7.71 to 9.64 min. The worst path is modeled in each `topic.json` basis. Day totals: F9 = 60 and F11 = 74 of 120 minutes.
+- The estimator (`authoring/tools/timing/estimate_reading.py`) gives P50 7.58 to 9.85 min. The worst path is modeled in each `topic.json` basis. Day totals: F9 = 60 and F11 = 74 of 120 minutes.
 
 ## 5. Answer safety
 
 - Coding tasks check structure (declarations, modifiers, statement shapes) against the topic's own criteria, using token tests. No completed solution exists in any learner-visible HTML, JavaScript, no-JS reading, hint, cheat sheet or QA JSON.
 - A whole-document scan of the raw and entity-decoded bytes of every page for the private solutions' key statements found no hits. One earlier draft hit, cheat-sheet rows that restated Activity 3 answers, was fixed before this checkpoint.
+- After the inbox 007 corrections, the same scan of the two changed editor pages finds only teaching-pattern residue: `String label() {` and `return switch (this) {` from the enums `Planet` example, and `void setTarget(int t) {`, which is a substring of the access-modifiers starter's own `private void setTarget(int t) {`. No enum case list or set of access levels from a solution appears.
 - The committed QA routes reach completion on the code activities only through the settle path (two checked, incomplete tries). They contain no solution text.
 - Formative MCQ and lane answers appear in explanations and no-JS readings, as the repository contract allows for low-stakes practice.
 
@@ -61,5 +62,10 @@ For all nine pages:
 
 - Hard blockers found and fixed before checkpoint: the answer exposure through cheat sheets; and a code check that counted an unchanged starter as a try (it no longer does).
 - Correction after checkpoint `ff961d7` (firstmate inbox 003): T13 reported `ed-3` clipped on access-modifiers (desktop) and classes-and-objects (phone-320). Cause: the editor's line-number gutter grew past the textarea's height cap (400 px, or 240 px on narrow screens), so the code region scrolled and moved the textarea outside its box. The shared shell now caps the gutter at the same height, hides its overflow and keeps it scrolled in step with the textarea. Only those shell CSS and JS lines changed; page content, `artifact.md`, timing and QA routes are byte-identical to the checkpoint.
-- Open, owned by the next steps: independent Codex education and Java-SME exact-byte reviews of all nine pages (T25 critic coverage is expected to fail until they land); the GIFT, video and PDF companions; and the `guidance` QA object once the candidate tooling merges.
+- Correction after the education review (firstmate inbox 007, integrated with the inbox 008 guidance evidence): three pages now practise their whole objective on the required path, within their existing 15, 14 and 15 minute labels.
+  - `enums`: Activity 3 adds comment 5, a `String label()` method returning an exhaustive `switch (this)` with no `default`, checked by two new structural checks (eight in all). The `Planet` example shows the pattern, one Activity 2 lane item (`setLevel(LEVEL_HIGH)`) was removed to rebalance time, and the optional challenge is now the fifth-constant compiler test.
+  - `stack-vs-heap-and-object-references`: Activity 2 is now a memory-diagram completion for a six-statement `main`. Its three button targets are Frame of main (stack), Box 1 (heap) and Box 2 (heap). Six items place a local value, a reference variable, two fields and two reference arrows. Every wrong target has its own feedback, the controls are buttons (no drag-only path), and the no-JS reading lists every placement.
+  - `access-modifiers`: Activity 3 is now `Thermostat.java` with `public class Thermostat` and every member starting `private`. Supplied context (`Room` in the package, `Dashboard` in another package, a subclass in another package, no subclass syntax shown) requires package access on `setTarget`, `public` on `reading`, `protected` on field `offset`, and `private` on `target`, `current` and `clamp`; there are six checks.
+  - The other six learner pages are byte-identical to `41d4d4c`, and shell CSS and engine JS are the same bytes on all nine pages. QA lane routes for `enums` and `stack-vs-heap-and-object-references` were updated to the new items; all other routes are byte-preserved.
+- Open, owned by the next steps: focused education re-review of the three corrected pages and independent Java-SME exact-byte review of all nine pages (T25 critic coverage is expected to fail until they land) and the GIFT, video and PDF companions.
 

@@ -43,12 +43,19 @@ enum Planet {
     double gravity() {
         return gravity;
     }
+
+    String label() {
+        return switch (this) {
+            case MERCURY -> "closest";
+            case EARTH -> "home";
+        };
+    }
 }
 ```
 
-`Planet.EARTH.gravity()` returns `1.0`.
+`Planet.EARTH.gravity()` returns `1.0`. Here `switch (this)` picks the case for the constant the method was called on.
 
-A `switch` on an enum uses the bare constant names as case labels. A `switch` expression, one that produces a value, must cover every constant or have a `default`, so the compiler can promise a result. An ordinary `switch` statement over enum constants may leave some out; for those, nothing runs.
+A `switch` expression, one that produces a value, must cover every constant or have a `default`, so the compiler can promise a result. An ordinary `switch` statement over enum constants may leave some out; for those, nothing runs.
 
 ## Model
 
@@ -67,9 +74,9 @@ Where to act: The call shown after Item:, above the two buttons.
 
 Next step: Find the parameter type of the method being called, then ask whether the argument's type matches it exactly. A name spelled in a `String` is not a constant.
 
-Where to act: The constant list, then the space under comments 2 to 4.
+Where to act: The constant list, then the space under comments 2 to 5.
 
-Next step: Follow the `Planet` example in the same order: arguments in parentheses after each constant, then the field, the constructor and the method.
+Next step: Follow the `Planet` example in the same order: arguments in parentheses after each constant, then the field, the constructor and the two methods.
 
 Another hint Another hint, 2 of 2 for Activity 3
 
@@ -77,11 +84,11 @@ Where to act: The constructor under comment 3.
 
 Next step: Its name is the enum's name, it takes one `int`, and it has no access modifier; use `this.` because the parameter can share the field's name.
 
-Optional time: about 4 minutes, in addition to this topic's time.
+Optional time: about 2 minutes, in addition to this topic's time.
 
-Using your `Coin` enum, write a method that takes a `Coin` and returns its common name, such as "one cent", with a switch expression that has a case for every constant and no `default`. Then add a fifth constant in any Java 25 setup you already use and read the compiler's message.
+In any Java 25 setup you already use, add a fifth constant, `HALF_DOLLAR(50)`, to your `Coin` enum without changing `label()`, and read the compiler's message.
 
-Success criteria: the method compiles with four constants, the compiler rejects it after you add a fifth, and you can say why that is a benefit.
+Success criteria: the compiler rejects `label()` until it has a case for the new constant, and you can say why that is a benefit.
 
 |  |  |
 | --- | --- |
@@ -108,11 +115,11 @@ Expected results and why. It prints 2 . valueOf("LARGE") returns the constant na
 
 ### drag
 
-Expected results and why. Compiles: setVolume(Volume.HIGH) , setLevel(LEVEL_HIGH) , and also setLevel(42) , because any int fits. Rejected: setVolume("HIGH") and setVolume(2) because the types do not match.
+Expected results and why. Compiles: setVolume(Volume.HIGH) and also setLevel(42) , because any int fits. Rejected: setVolume("HIGH") and setVolume(2) because the types do not match.
 
 ### explore
 
-Practice editor, reading version. JavaScript is off, so the editor cannot check code here. Work on paper or in any Java 25 setup you already use. Task: give PENNY , NICKEL , DIME and QUARTER the values 1, 5, 10 and 25; add a private final int cents field, a constructor that stores the value, and a method int cents() that returns it. Starter, Coin.java: enum Coin { // 1. Give each constant its value in cents: 1, 5, 10, 25. PENNY, NICKEL, DIME, QUARTER; // 2. Add a private final int field named cents. // 3. Add a constructor that stores the value. // 4. Add a method int cents() that returns it. } What the practice editor reads: top-level classes and enums with constants, fields, constructors and methods; it checks declarations and statement shapes, and reports anything else as not supported. How to compare: Coin.DIME.cents() must return 10 and Coin.QUARTER.cents() 25 . A public constructor would not compile, and a field without final could be changed later.
+Practice editor, reading version. JavaScript is off, so the editor cannot check code here. Work on paper or in any Java 25 setup you already use. Task: give PENNY , NICKEL , DIME and QUARTER the values 1, 5, 10 and 25; add a private final int cents field, a constructor that stores the value, a method int cents() that returns it, and a method String label() that returns a switch on this with one case per constant and no default . Starter, Coin.java: enum Coin { // 1. Give each constant its value in cents: 1, 5, 10, 25. PENNY, NICKEL, DIME, QUARTER; // 2. Add a private final int field named cents. // 3. Add a constructor that stores the value. // 4. Add a method int cents() that returns it. // 5. Add a method String label() that returns switch (this) // with one case per constant and no default. } What the practice editor reads: top-level classes and enums with constants, fields, constructors and methods; it checks declarations and statement shapes, and reports anything else as not supported. How to compare: Coin.DIME.cents() must return 10 and Coin.QUARTER.cents() 25 . A public constructor would not compile, and a field without final could be changed later. Remove one case from label() , with no default , and the switch would not compile.
 
 ### mcq
 

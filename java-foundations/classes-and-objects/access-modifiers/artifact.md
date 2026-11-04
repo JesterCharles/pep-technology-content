@@ -44,7 +44,8 @@ Give each member the narrowest access that still lets every real use compile. A 
 
 - Used only inside its own class: `private`.
 - Also used by other classes in the same package: no modifier.
-- Needed by other packages: `public`, chosen on purpose.
+- Also used by subclasses in other packages: `protected`, which still includes the package.
+- Needed by any class in other packages: `public`, chosen on purpose.
 
 Choose from who really uses the member, not from who might one day want it.
 
@@ -65,15 +66,15 @@ Where to act: The situation shown after Item:, above the two buttons.
 
 Next step: Find the member's modifier, then ask two questions in order: is the using class in the same package, and is it inside the same class?
 
-Where to act: Each line in `Thermostat` that begins with `public`.
+Where to act: Each member of `Thermostat`, starting with the two methods `Room` calls.
 
-Next step: For each member, search the file for who uses it: only code inside `Thermostat`, or also `Room`?
+Next step: For each member, list its users from the task: only `Thermostat`, `Room` in the same package, a subclass in another package, or any class in another package.
 
 Another hint Another hint, 2 of 2 for Activity 3
 
-Where to act: The two methods that `Room` calls.
+Where to act: `reading` and `offset`.
 
-Next step: `Room` sits in the same file, so in the same package. Look back at the table for the narrowest level that still includes the rest of the package.
+Next step: `Dashboard` is not a subclass, so only the widest level reaches it; `SmartThermostat` is a subclass, so the level that adds subclasses in other packages is enough.
 
 |  |  |
 | --- | --- |
@@ -102,7 +103,7 @@ Expected results and why. Private pin used by another method of Safe : compiles.
 
 ### explore
 
-Practice editor, reading version. JavaScript is off, so the editor cannot check code here. Work on paper. Task: change only the modifiers inside Thermostat so each member has the narrowest access that still lets this file compile. Leave Room unchanged, and assume no code outside this file uses Thermostat . Starter, Room.java: class Thermostat { public int target = 20; public int current = 18; public void setTarget(int t) { target = clamp(t); } public int reading() { return current; } public int clamp(int t) { return Math.max(10, Math.min(30, t)); } } class Room { void evening(Thermostat t) { t.setTarget(21); System.out.println(t.reading()); } } What the practice editor reads: top-level classes with fields, constructors and methods; it checks the modifiers and statement shapes, and reports anything else as not supported. How to compare: for each member, list every class that uses it. A member used only inside Thermostat passes when it is as narrow as Java allows; a member that Room uses passes when it is the narrowest level that still includes another class in the same package; Room must keep both calls.
+Practice editor, reading version. JavaScript is off, so the editor cannot check code here. Work on paper. Task: every member of Thermostat starts private . Change only those modifiers so each member has the narrowest access its real uses need, and leave Room unchanged. Uses outside Thermostat : Room , in this file, calls setTarget and reading ; Dashboard , in another package, calls reading() ; SmartThermostat , a subclass in another package, reads and sets offset . Starter, Thermostat.java: public class Thermostat { private int target = 20; private int current = 18; private int offset = 0; private void setTarget(int t) { target = clamp(t + offset); } private int reading() { return current; } private int clamp(int t) { return Math.max(10, Math.min(30, t)); } } class Room { void evening(Thermostat t) { t.setTarget(21); System.out.println(t.reading()); } } What the practice editor reads: top-level classes with fields, constructors and methods; it checks the modifiers and statement shapes, and reports anything else as not supported. How to compare: for each member, list every class that uses it, then pick the narrowest level that includes all of them: only Thermostat itself, its package, its package plus subclasses elsewhere, or every class. Thermostat must stay public , because Dashboard is in another package, and Room must keep both calls.
 
 ### mcq
 
