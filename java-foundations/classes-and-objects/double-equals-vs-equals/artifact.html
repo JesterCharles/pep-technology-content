@@ -339,7 +339,7 @@ legend { padding: 0; font: 600 16px/24px var(--pep-font-sans); color: var(--pep-
 <noscript><style>.pep-js-only{display:none!important}</style></noscript>
 </head>
 <body>
-<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="15">
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-route-settled="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="15">
 <header class="pep-topicbar">
 <h1 id="page-title">== vs equals</h1>
 <div class="pep-topicbar__progress"><p><span class="pep-js-only"><span id="pos-text">Activity 1 of 4</span> · <span id="prog-text">Activities done: 0 of 4</span> · </span>about 15 min</p>
@@ -478,7 +478,7 @@ function T(t){return D.createTextNode(t);}
 var main=$('#lesson'),ACTS=$$('[data-pep-activity]'),LINKS=$$('[data-pep-activity-link]'),prevBtn=$('#prev'),nextBtn=$('#next'),resetBtn=$('#reset');
 var N=ACTS.length,CFG=PAGE.acts;
 function freshAct(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,cont:false,result:null};}
-var G={current:1,unlocked:1,complete:false,acts:CFG.map(freshAct)};
+var G={current:1,unlocked:1,complete:false,routeSettled:false,acts:CFG.map(freshAct)};
 function fbOf(n){return $('#fb-'+n);}
 function say(n,parts,focus){var fb=fbOf(n);fb.textContent='';(parts||[]).forEach(function(p){
   if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li');li.appendChild(el('strong',null,it[0]));li.appendChild(T(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
@@ -488,20 +488,21 @@ function optText(i){var l=i.closest('label');return l?l.textContent.replace(/\s+
 var WORD={'correct':'correct on the first try','correct-retry':'correct on the second try','settled':'answered and settled, not marked correct','predicted':'prediction recorded'};
 function reflect(){ACTS.forEach(function(sec,i){var a=G.acts[i];sec.setAttribute('data-pep-attempts',String(a.attempts));sec.setAttribute('data-pep-settled',String(a.settled));
     sec.setAttribute('data-pep-completed',String(a.completed));sec.setAttribute('data-pep-credit',String(a.credit));sec.setAttribute('data-pep-grade',String(a.grade));sec.setAttribute('data-pep-continue',String(a.cont));});
-  main.setAttribute('data-pep-current-activity',String(G.current));main.setAttribute('data-pep-unlocked-through',String(G.unlocked));main.setAttribute('data-pep-complete',String(G.complete));}
+  main.setAttribute('data-pep-current-activity',String(G.current));main.setAttribute('data-pep-unlocked-through',String(G.unlocked));main.setAttribute('data-pep-complete',String(G.complete));main.setAttribute('data-pep-route-settled',String(G.routeSettled));}
 function progress(){var n=0,set=0,segs=$$('.pep-progress > span');G.acts.forEach(function(a,i){var s=segs[i];if(!s)return;s.className='';
-    if(a.completed){n++;if(a.result==='settled'){set++;s.className='is-settled';}else s.className='is-done';}
+    if(a.settled){n++;if(a.result==='settled'){set++;s.className='is-settled';}else s.className='is-done';}
     if(i+1===G.current)s.className+=(s.className?' ':'')+'is-current';});
   $('#prog-text').textContent='Activities done: '+n+' of '+N+(set?' ('+set+(set>1?' activities':' activity')+' settled, not correct)':'');}
 function attempt(n){G.acts[n-1].attempts++;reflect();}
 function finishPage(){var c=$('#complete'),parts=[],anySet=false;
   CFG.forEach(function(cfg,i){var r=G.acts[i].result;if(cfg.type!=='predict'&&r){parts.push(cfg.label+': '+WORD[r]+'.');if(r==='settled')anySet=true;}});
-  c.className='complete'+(anySet?' settled':'');c.textContent='Topic complete. '+parts.join(' ')+(anySet?' Review the explanations in the settled activities before you move on.':'');}
+  c.className='complete'+(anySet?' settled':'');c.textContent=(G.complete?'Topic complete. ':'Every activity is answered, but the topic is not complete: an activity that settles without passing earns no credit. ')+parts.join(' ')+(anySet?' Review the explanations in the settled activities, then use Restart on any of them to try again for credit.':'');}
 function complete(n,result){var a=G.acts[n-1];a.result=result;
-  a.completed=true;a.settled=true;a.cont=true;
-  if(a.credit===0){a.credit=1;a.grade=(result==='correct'||result==='correct-retry')?1:0;}
+  a.settled=true;a.cont=true;
+  /* Only passing evidence completes an activity and earns credit; a settled miss stays incomplete with no credit or grade */
+  if(result!=='settled'){a.completed=true;if(a.credit===0){a.credit=1;a.grade=(result==='correct'||result==='correct-retry')?1:0;}}
   G.unlocked=Math.max(G.unlocked,Math.min(n+1,N));
-  if(!G.complete&&G.acts.every(function(x){return x.completed;})){G.complete=true;finishPage();}
+  if(G.acts.every(function(x){return x.settled;})){G.routeSettled=true;if(G.acts.every(function(x){return x.completed;}))G.complete=true;finishPage();}
   progress();render(G.current);}
 function render(number,mode,moveFocus){
   if(!(number>=1&&number<=N&&number<=G.unlocked))return false;
@@ -527,9 +528,9 @@ var H={};
 
 /* Predict: a practice prediction with a confidence rating; it is reported, never graded */
 H.predict=function(n,cfg){var fs=$('#pf-'+n),btn=$('#check-'+n),row=btn.closest('.row');
-  function ready(){btn.disabled=G.acts[n-1].completed||!($('input[name="p-'+n+'"]:checked')&&$('input[name="c-'+n+'"]:checked'));}
+  function ready(){btn.disabled=G.acts[n-1].settled||!($('input[name="p-'+n+'"]:checked')&&$('input[name="c-'+n+'"]:checked'));}
   fs.addEventListener('change',ready);
-  btn.addEventListener('click',function(){var c=$('input[name="p-'+n+'"]:checked'),cv=$('input[name="c-'+n+'"]:checked');if(!c||!cv||G.acts[n-1].completed)return;
+  btn.addEventListener('click',function(){var c=$('input[name="p-'+n+'"]:checked'),cv=$('input[name="c-'+n+'"]:checked');if(!c||!cv||G.acts[n-1].settled)return;
     var match=c.value===cfg.ok;attempt(n);
     $$('input',fs).forEach(function(i){i.disabled=true;});btn.disabled=true;
     $$('input[name="p-'+n+'"]',fs).forEach(function(i){var l=i.closest('label');
@@ -544,11 +545,11 @@ H.predict=function(n,cfg){var fs=$('#pf-'+n),btn=$('#check-'+n),row=btn.closest(
 /* Graded check: confidence first, one retry in a second form, then the answer is shown and the check settles */
 H.mcq=function(n,cfg){var st={att:0,conf:[]},btn=$('#check-'+n),fs=$('#mf-'+n),conf=$('#conf-'+n);
   function grp(){return 'a-'+n+'-'+(st.att+1);}
-  function ready(){btn.disabled=G.acts[n-1].completed||!($('input[name="'+grp()+'"]:checked')&&$('input[name="c-'+n+'"]:checked'));}
+  function ready(){btn.disabled=G.acts[n-1].settled||!($('input[name="'+grp()+'"]:checked')&&$('input[name="c-'+n+'"]:checked'));}
   function lockConf(){$$('input[name="c-'+n+'"]').forEach(function(i){i.disabled=true;});btn.disabled=true;}
   fs.addEventListener('change',ready);conf.addEventListener('change',ready);
   btn.addEventListener('click',function(){var g=grp(),r=st.att===0?cfg.r1:cfg.r2,c=$('input[name="'+g+'"]:checked'),cv=$('input[name="c-'+n+'"]:checked');
-    if(!c||!cv||G.acts[n-1].completed)return;var ok=c.value===r.ok;st.conf.push(cv.value);attempt(n);
+    if(!c||!cv||G.acts[n-1].settled)return;var ok=c.value===r.ok;st.conf.push(cv.value);attempt(n);
     var confLine='Your confidence: '+cv.value+'. Confidence is your own read on how sure you were; it is reported, never scored.';
     var expl=$$('input[name="'+g+'"]').map(function(i){return [optText(i)+(i===c?' (your answer):':':'),r.expl[i.value]];});
     $$('input[name="'+g+'"]').forEach(function(i){i.disabled=true;});c.closest('label').classList.add(ok?'right':'wrong');badges(c.closest('label'),[['Your answer','mine-b'],[ok?'Correct':'Not correct',ok?'ok-b':'no-b']]);
@@ -563,10 +564,10 @@ H.mcq=function(n,cfg){var st={att:0,conf:[]},btn=$('#check-'+n),fs=$('#mf-'+n),c
 
 /* Multi-select: choose every option that applies; one retry, then the full set is shown and the check settles */
 H.mselect=function(n,cfg){var st={att:0},btn=$('#check-'+n),fs=$('#ms-'+n);
-  function ready(){btn.disabled=G.acts[n-1].completed||!$('input[name="m-'+n+'"]:checked');}
+  function ready(){btn.disabled=G.acts[n-1].settled||!$('input[name="m-'+n+'"]:checked');}
   fs.addEventListener('change',ready);
   function chosen(){return $$('input[name="m-'+n+'"]:checked').map(function(i){return i.value;}).sort().join(',');}
-  btn.addEventListener('click',function(){if(G.acts[n-1].completed||!$('input[name="m-'+n+'"]:checked'))return;attempt(n);
+  btn.addEventListener('click',function(){if(G.acts[n-1].settled||!$('input[name="m-'+n+'"]:checked'))return;attempt(n);
     var ok=chosen()===cfg.ok.slice().sort().join(',');
     function explainAll(){$$('input[name="m-'+n+'"]').forEach(function(i){var l=i.closest('label'),inSet=cfg.ok.indexOf(i.value)>=0;i.disabled=true;
       if(inSet)l.classList.add('right');else if(i.checked)l.classList.add('wrong');
@@ -591,7 +592,7 @@ H.lanes=function(n,cfg){var st={idx:0,tries:{},placed:{},revealed:{}},box=$('#la
     msg.push({c:anyRev?'verdict set':'verdict ok',s:anyRev?'All sorted. Answered and settled: '+anyRev+(anyRev>1?' items were':' item was')+' shown after two tries, so this activity is not marked correct.':(anyRetry?'All sorted, some on a second try.':'All sorted on the first try.')});
     if(cfg.done)msg.push({s:cfg.done});say(n,msg,true);complete(n,anyRev?'settled':(anyRetry?'correct-retry':'correct'));}
   cfg.lanes.forEach(function(ln){var b=el('button','pep-btn',ln.label);b.type='button';b.id='lane-'+n+'-'+ln.id;b.setAttribute('aria-describedby','ln-legend-'+n);
-    b.addEventListener('click',function(){var i=st.idx,it=cfg.items[i];if(!it||G.acts[n-1].completed)return;attempt(n);
+    b.addEventListener('click',function(){var i=st.idx,it=cfg.items[i];if(!it||G.acts[n-1].settled)return;attempt(n);
       if(ln.id===it.lane){st.placed[i]=ln.id;st.idx++;var msg=[{c:'verdict ok',s:'Yes: '+laneName(ln.id)+'.'},{s:it.ok}];draw();if(st.idx>=cfg.items.length)finish(msg);else say(n,msg);}
       else{st.tries[i]=(st.tries[i]||0)+1;
         if(st.tries[i]<2)say(n,[{c:'verdict no',s:'Not '+laneName(ln.id)+'. '+it.w[ln.id]},{s:'Try another button for the same item.'}]);
@@ -691,10 +692,10 @@ H.code=function(n,cfg){var ed=$('#ed-'+n),gut=$('#gut-'+n),STARTER=cfg.starter,s
     var passed=res.filter(function(r){return r.ok;}).length,all=passed===res.length,a=G.acts[n-1];
     $('#st-'+n).textContent='Checked: '+passed+' of '+res.length+' checks pass';
     if(all){var msg=[{c:'verdict ok',s:'All '+res.length+' checks pass.'},{s:cfg.done}];
-      if(!a.completed){say(n,msg,true);complete(n,st.assessed===0?'correct':'correct-retry');}else say(n,msg.concat([{c:'conf-report',s:'This activity was already settled; this practice run does not change its result.'}]));return;}
+      if(!a.settled){say(n,msg,true);complete(n,st.assessed===0?'correct':'correct-retry');}else say(n,msg.concat([{c:'conf-report',s:'This activity was already settled; this practice run does not change its result.'}]));return;}
     var first=res.filter(function(r){return !r.ok;})[0];
-    if(!a.completed&&src===STARTER){say(n,[{c:'verdict info',s:'The starter is unchanged, so this does not count as a try. Output lists the checks to meet.'},{s:first.why}]);return;}
-    if(a.completed){say(n,[{c:'verdict info',s:passed+' of '+res.length+' checks pass. Practice run: this activity is already settled.'},{s:first.why}]);return;}
+    if(!a.settled&&src===STARTER){say(n,[{c:'verdict info',s:'The starter is unchanged, so this does not count as a try. Output lists the checks to meet.'},{s:first.why}]);return;}
+    if(a.settled){say(n,[{c:'verdict info',s:passed+' of '+res.length+' checks pass. Practice run: this activity is already settled.'},{s:first.why}]);return;}
     st.assessed++;
     if(st.assessed>=2){say(n,[{c:'verdict set',s:'Answered and settled: '+passed+' of '+res.length+' checks pass, so this activity is not marked correct. Output lists each unmet check and why.'},{s:cfg.settled},{s:'You can keep editing and checking for practice; the result stays settled.'}],true);complete(n,'settled');}
     else say(n,[{c:'verdict no',s:'Not yet: '+passed+' of '+res.length+' checks pass. Output lists each check.'},{s:first.why},{s:'One more checked try before this activity settles.'}]);}
