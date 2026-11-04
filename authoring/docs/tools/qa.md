@@ -28,14 +28,21 @@ Every HTML topic is joined by ids from `authoring/catalog/<course>/<module>/<top
 `authoring/evidence/<course>/<module>/<topic>/qa-paths.json`, validated by
 `authoring/schemas/qa-paths.schema.json`.
 Selectors belong to the page, not to the harness. A path is an ordered list of declarative actions.
-The three required routes must independently finish the topic:
+Normally, the three required routes must independently finish the topic:
 
 - `success`: correct on the first attempt;
 - `wrongFirst`: wrong first and then correct on retry;
 - `wrongTwice`: wrong twice and reach the honest settled state.
 
+An answer-sensitive topic may instead set `answerSafety.privateSuccessProof: true`. For that explicit opt-in, all
+committed routes are public-safe negative paths, so the shared `completion` and `progress` assertions prove the page
+remains incomplete and at zero credit. `wrongTwice` may reach an accepted retry limit, but it must not settle the
+answer-sensitive task as complete or award credit. T06 rejects the opt-in until the topic has its current existing
+private-success receipt.
+
 `simulatorEdges` records realistic unsupported, partial, or look-alike states and their assertions.
-`progress` separately asserts that each route reached 100%. `restart.actions` completes, restarts, and repeats an
+For ordinary topics, `progress` separately asserts that each route reached 100%; for the private-proof opt-in, it
+asserts no public route awarded credit. `restart.actions` completes, restarts, and repeats an
 activity; `restart.credit` proves credit was not duplicated. `keyboard` is the complete success route using semantic
 keyboard activation. `data-pep-guidance-contract` and `spec.guidance` are mandatory together. Enrolled specs require
 `activityNavigation`, `activityNavigationKeyboard`, `activityNavigationTouch`, `objectives` and `objectivesTouch`;
@@ -164,10 +171,13 @@ or selector-associated QA surfaces, preserving unrelated teaching. Canonical UTF
 forms are decoded; target-associated decoder/character assembly and 40/64-hex digests fail. Arbitrary semantic
 leakage and opaque provenance remain explicit education/SME review boundaries.
 
-Completed inputs run only from an absolute authorized uncommitted overlay outside the repository. Private-valued
+Completed inputs run only from an absolute authorized uncommitted overlay outside the repository, and the committed
+QA path must explicitly set `answerSafety.privateSuccessProof: true`. The overlay carries its own non-secret
+`completion` and `progress` assertions plus `success`, `wrongFirst`, `keyboard` and `sandbox` routes. Private-valued
 `fill`, `select` and `expectValue` steps use `valueFrom: "private:<key>"`; at execution, the runner reads that key from
 the JSON object selected by `PEP_QA_PRIVATE_INPUTS_FILE`. The source path must be absolute and resolve outside the
-repository. Missing, unreadable or malformed sources and missing or non-string keys are refused. Keep the overlay and
+repository. Missing, unreadable or malformed sources and missing or non-string keys are refused. After resolving the
+values, every route and the overlay-owned postconditions must still match the public QA schema. Keep the overlay and
 input file uncommitted; neither file nor any resolved value is copied into evidence or generated output.
 
 The private runner captures clean commit **P** before loading the topic, verifies the exact five approved public working files equal P's
@@ -175,9 +185,10 @@ blobs before and after `success`, `wrongFirst`, `keyboard` and `sandbox`, and re
 HEAD movement or file drift. It disables tracing, screenshots, value logging and `build/` output; generic errors keep
 completed values out of logs. After staging is retired, immediate evidence-only child **R** may add the existing
 `qa-receipt.json` and generated module lock. The proof still names P and contains exactly five bindings: artifact,
-public QA path, harness, T08 scanner and Python scanner. T06 locates the unique runId introduction, requires R's first
-parent to be P, hashes each P blob and current file, and rejects extra/missing bindings, old/non-parent identity or
-later public drift. Rebase/squash requires a fresh run. No private value or answer-derived hash is recorded.
+public QA path, harness, T08 scanner and Python scanner. T06 requires that receipt for every private-success opt-in,
+locates the unique runId introduction, requires R's first parent to be P, hashes each P blob and current file, and
+rejects extra/missing bindings, old/non-parent identity or later public drift. Rebase/squash requires a fresh run. No
+private value, private postcondition output or answer-derived hash is recorded.
 
 ## Gate behavior
 

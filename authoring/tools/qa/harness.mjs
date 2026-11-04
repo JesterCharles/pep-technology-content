@@ -1514,10 +1514,25 @@ export async function validateQaPrivateProofs(repoRoot, evidenceRoot) {
   const out = [];
   const git = (args) => spawnSync("git", args, { cwd: repoRoot, encoding: "utf8" });
   const privateName = /(^|[-_.\/])(?:answer[-_ ]?key|rubric|(?:reference|instructor|private)[-_ ]?solution|hidden[-_ ]?tests?)([-_.\/]|$)/iu;
-  for (const receiptFile of (await walk(evidenceRoot)).files.filter((file) => path.basename(file) === "qa-receipt.json")) {
+  const evidenceFiles = (await walk(evidenceRoot)).files;
+  const optedInReceipts = new Set();
+  for (const specFile of evidenceFiles.filter((file) => path.basename(file) === "qa-paths.json")) {
+    const spec = await readJson(specFile).catch(() => null);
+    if (spec?.answerSafety?.privateSuccessProof !== true) continue;
+    const receiptFile = path.join(path.dirname(specFile), "qa-receipt.json");
+    optedInReceipts.add(receiptFile);
+    const receipt = await readJson(receiptFile).catch(() => null);
+    if (!receipt?.privateSuccessProof) {
+      out.push(error("T06", relative(repoRoot, specFile), "answer-sensitive private-success opt-in requires a current private success receipt"));
+    }
+  }
+  for (const receiptFile of evidenceFiles.filter((file) => path.basename(file) === "qa-receipt.json")) {
     const receipt = await readJson(receiptFile).catch(() => null);
     const proof = receipt?.privateSuccessProof;
     if (!proof) continue;
+    if (!optedInReceipts.has(receiptFile)) {
+      out.push(error("T06", relative(repoRoot, receiptFile), "private success receipt requires the answer-sensitive private-success opt-in"));
+    }
     const display = relative(repoRoot, receiptFile);
     if (proof.record !== `validated at ${proof.commit} by run ${proof.runId}`) out.push(error("T06", display, "private success record must match commit and runId"));
     const commit = git(["cat-file", "-e", `${proof.commit}^{commit}`]);
@@ -1654,6 +1669,9 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
   const topic = (await findHtmlTopics(ctx)).find((item) => `${item.courseId}/${item.moduleId}/${item.topicId}` === overlay.topic);
   if (!topic) throw new Error("private overlay topic does not resolve to one HTML topic");
   const spec = await loadSpec(topic);
+  if (spec.answerSafety?.privateSuccessProof !== true) {
+    throw new Error("private overlay requires the answer-sensitive private-success opt-in");
+  }
   const approved = [
     relative(ctx.root, topic.html),
     relative(ctx.root, topic.spec),
@@ -1668,11 +1686,6 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
     if (blob.status !== 0 || sha256(Buffer.from(blob.stdout, "utf8")) !== working) throw new Error("private overlay public files must equal the captured commit");
     beforeHashes.set(file, working);
   }
-  for (const name of routeNames) {
-    const candidate = structuredClone(spec);
-    candidate.routes.success = overlay.routes[name];
-    if (!validateQaPath(candidate)) throw new Error(`private overlay ${name} route does not match the public action schema`);
-  }
   const routeLengths = routeNames.map((name) => overlay.routes[name].length);
   const resolvedActions = await resolvePrivateActionValues(
     routeNames.flatMap((name) => overlay.routes[name]),
@@ -1684,6 +1697,11 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
     const name = routeNames[index];
     resolvedRoutes[name] = resolvedActions.slice(actionOffset, actionOffset + routeLengths[index]);
     actionOffset += routeLengths[index];
+    const candidate = structuredClone(spec);
+    candidate.completion = overlay.completion;
+    candidate.progress = overlay.progress;
+    candidate.routes.success = resolvedRoutes[name];
+    if (!validateQaPath(candidate)) throw new Error(`private overlay ${name} route or postconditions do not match the public QA schema`);
   }
   const browser = await launchChromium();
   const runTopLevel = async (actions, keyboard = false) => {
@@ -1699,8 +1717,8 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
     try {
       await page.goto(pathToFileURL(topic.html).href, { waitUntil: "load" });
       await execute(page, actions, { keyboard });
-      await assertState(page, spec.completion);
-      await assertState(page, spec.progress);
+      await assertState(page, overlay.completion);
+      await assertState(page, overlay.progress);
       if (attemptedExternalLoad) throw new Error("external load");
     } finally {
       await context.close();
@@ -1717,8 +1735,8 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
     try {
       const frame = await sandboxFrame(page, topic);
       await execute(frame, resolvedRoutes.sandbox);
-      await assertState(frame, spec.completion);
-      await assertState(frame, spec.progress);
+      await assertState(frame, overlay.completion);
+      await assertState(frame, overlay.progress);
       if (sandboxExternalLoad) throw new Error("external load");
     } finally {
       await context.close();
