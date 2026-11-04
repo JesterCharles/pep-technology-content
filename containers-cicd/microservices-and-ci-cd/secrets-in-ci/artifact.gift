@@ -1,0 +1,46 @@
+// Practice quiz: Secrets in CI
+// Unreviewed first draft, 2026-11-04. Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: containers-cicd/microservices-and-ci-cd/secrets-in-ci
+
+::o1 reference::Which line reads a repository secret named API_KEY in a workflow? {
+=API_KEY\: $\{\{ secrets.API_KEY \}\}#Correct. The secrets context reads it at run time.
+~API_KEY\: sk-live-value#Not quite. That is a literal credential in the file.
+~API_KEY\: $\{\{ env.API_KEY \}\}#Not quite. That reads the env context, not the secret.
+~API_KEY\: git show API_KEY#Not quite. That is not how secrets work.
+}
+
+::o1 removed::A literal password was committed to a workflow and then deleted in the next commit. What else must happen? {
+~Nothing, since it is deleted#Not quite. History still holds it.
+=Rotate the password, because it stays in Git history#Correct. Deleting a line does not remove it from history.
+~Rename the workflow#Not quite. That leaves the value in history.
+~Add it to .gitignore#Not quite. That does not affect tracked history.
+}
+
+::o2 redaction::How should a team treat GitHub log redaction? {
+~As a guarantee that nothing can leak#Not quite. Automatic redaction is not guaranteed.
+~As a reason to print secrets for debugging#Not quite. Never print them.
+=As best effort, not as a permission boundary#Correct. Transformed values can get past it.
+~As limiting who can read secrets#Not quite. It limits what logs show, not who has access.
+}
+
+::o2 add-mask::A step derives a short-lived signed token from a secret. How do you keep the derived value out of logs? {
+~Trust automatic redaction#Not quite. A derived value is not registered, so it will not match.
+~Base64-encode it#Not quite. Encoding is not protection.
+~Print it only once#Not quite. Once is enough to leak.
+=Register it with \:\:add-mask\:\: before it could appear#Correct. Then it is treated as a secret and redacted.
+}
+
+::o2 fork::A pull request from a fork triggers your workflow. What does the run get? {
+=No repository secrets, apart from GITHUB_TOKEN#Correct. Secrets are not passed to fork-triggered runs.
+~All repository secrets#Not quite. That would hand credentials to strangers.
+~Secrets, but masked#Not quite. They are not passed at all.
+~Only secrets with short names#Not quite. The name makes no difference.
+}
+
+::o3 unlisted::A workflow sets permissions with only contents\: read. What about packages? {
+~It stays at the repository default#Not quite. Listing any permission sets the rest to none.
+=It is set to none#Correct. Anything not listed becomes none once any permission is specified.
+~It becomes write#Not quite. Access is never raised by omission.
+~The workflow fails to parse#Not quite. This is valid syntax.
+}
