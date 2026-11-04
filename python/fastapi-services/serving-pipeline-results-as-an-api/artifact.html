@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="python">
+<meta name="pep:module" content="fastapi-services">
+<meta name="pep:topic" content="Serving pipeline results as an API">
+<meta name="pep:topic-id" content="serving-pipeline-results-as-an-api">
+<meta name="pep:budget-minutes" content="13">
+<meta name="pep:source" content="authoring/evidence/python/fastapi-services/serving-pipeline-results-as-an-api/sources.json">
+<meta name="pep:draft-status" content="first-draft-unreviewed">
+<title>Serving pipeline results as an API · FastAPI Services</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-dur-1: 120ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 0 0 12px; padding-inline-start: 24px; }
+li { margin-block-end: 4px; }
+svg { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible, .pep-btn:focus, .pep-step:focus, .pep-back:focus { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; margin: 0 0 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-objectives { position: relative; break-inside: avoid; min-width: 0; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; margin-block-start: 16px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+[data-pep-workspace] { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+[data-pep-activity-checks] { padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] > :last-child { margin-bottom: 0; }
+[data-pep-where-fits] { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+[data-pep-where-fits] h2 { font-size: 16px; line-height: 24px; font-weight: 600; margin-bottom: 8px; }
+[data-pep-where-fits] p:last-child { margin-bottom: 0; }
+.pep-hint, details[data-pep-hint] { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); break-inside: avoid; }
+.pep-hint > summary { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; align-items: center; min-height: 44px; padding-block: 8px; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { padding-block: 4px 12px; }
+.pep-hint .pep-hint { margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong); border-radius: 0; background: transparent; }
+.pep-optional { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; min-width: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent); }
+.pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 16px; }
+.pep-activity-actions .pep-btn { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn { flex: 0 1 auto; } }
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-options legend { padding: 0; margin-block-end: 8px; color: var(--pep-text-strong); font-weight: 600; max-width: 100%; }
+.pep-option { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; position: relative; min-width: 0; }
+.pep-option--plain { grid-template-columns: minmax(0, 1fr); }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pep-option input:disabled { cursor: default; }
+.pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-confidence { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-confidence .pep-option { flex: 1 1 96px; grid-template-columns: minmax(0, 1fr); text-align: center; }
+.pep-explain { display: grid; gap: 4px; margin: 8px 0 0; padding-inline-start: 20px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-feedback:empty { display: none; }
+.pep-feedback { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text); }
+.pep-feedback p { margin: 0; }
+.pep-feedback.is-correct { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-feedback.is-wrong { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-feedback.is-revealed { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-verdict { font-weight: 700; color: var(--pep-text-strong); }
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.pep-steps li { margin: 0; }
+.pep-step { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-disabled="true"] { border-color: var(--pep-line-strong); color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-back { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+.pep-activity { min-width: 0; }
+.pep-activity[hidden] { display: none; }
+.pep-code { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.pep-table-wrap { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); overflow: hidden; }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); table-layout: auto; }
+.pep-table th { text-align: left; font-weight: 600; color: var(--pep-text-strong); background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); padding: 8px 12px; overflow-wrap: anywhere; }
+.pep-table td { padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.pep-table td:first-child { font-weight: 600; color: var(--pep-text-strong); }
+.pep-field { display: grid; gap: 4px; min-width: 0; }
+.pep-field > span, .pep-label { color: var(--pep-text-strong); font: 600 13px/20px var(--pep-font-sans); }
+.pep-field input[type="text"], .pep-field select { min-height: 44px; width: 100%; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); scroll-margin-block: 16px; }
+.pep-check { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.pep-check input { width: 24px; height: 24px; margin: 0; flex: none; accent-color: var(--pep-accent); }
+.pep-model { display: grid; gap: 12px; min-width: 0; }
+.pep-stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.pep-stat { padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); min-width: 0; }
+.pep-stat b { display: block; color: var(--pep-text-strong); font: 700 20px/28px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-stat span { color: var(--pep-text-muted); font: 400 12px/16px var(--pep-font-sans); }
+.pep-log { margin: 0; min-height: 44px; padding: 12px 16px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); min-width: 0; }
+.pep-editor__bar { border-radius: 11px 11px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { display: block; width: 100%; margin: 0; padding: 12px; border: 0; resize: none; min-width: 0; min-height: 160px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow: hidden; overflow-wrap: normal; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; min-height: 64px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; cursor: pointer; overflow-wrap: anywhere; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; }
+.pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__problem .kind-hint { color: var(--pep-text-muted); font-weight: 600; }
+.pep-editor__status { border-radius: 0 0 11px 11px; padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-sources a { overflow-wrap: anywhere; }
+.pep-recap[hidden] { display: none; }
+.pep-recap { margin-block-start: 32px; padding-block-start: 16px; border-block-start: 1px solid var(--pep-line-strong); }
+.pep-recap h2 { margin-block-end: 8px; }
+.pep-recap section, .pep-recap details { margin-block-start: 16px; }
+.pep-sources > summary, .pep-cheat > summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+html:not(.is-enhanced) .pep-js-only { display: none; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+  [data-pep-workspace] { padding: 16px; }
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__code { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__gutter { line-height: 24px; font-size: 16px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-activity, [data-pep-activity], .pep-recap { display: block !important; }
+  .pep-noprint, .pep-activity-actions, nav[aria-label="Activities"], .pep-back { display: none !important; }
+  .pep-objectives > div { display: block !important; width: auto; }
+  .pep-topicbar, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional, .pep-code, .pep-table-wrap { break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .pep-optional > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker { display: none; }
+}
+</style>
+</head>
+<body>
+<main class="pep-main" id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="13">
+<header class="pep-topicbar">
+<h1 id="page-title">Serving pipeline results as an API</h1>
+<span class="pep-topicbar__progress"><span id="pos-text">Activity 1 of 4</span> · about 13 min · <span id="prog-text">0 of 4 done</span></span>
+<details class="pep-objectives" data-pep-objectives>
+<summary aria-controls="objectives-body">Objectives</summary>
+<div id="objectives-body"><ul><li>Expose loaded pipeline results through read-only endpoints with a response model that limits the fields returned</li><li>Return 404 with HTTPException for a missing record, and page results with limit and offset query parameters</li><li>Provide the database connection to routes as a dependency, and replace it in tests with a dependency override</li></ul></div>
+</details>
+<button class="pep-btn pep-js-only" type="button" id="restart" data-pep-reset>Restart activity</button>
+</header>
+<nav aria-label="Activities"><ol class="pep-steps"><li><a class="pep-step" href="#activity-1" data-pep-activity-link aria-current="step">Activity 1</a></li><li><a class="pep-step" href="#activity-2" data-pep-activity-link aria-disabled="true">Activity 2</a></li><li><a class="pep-step" href="#activity-3" data-pep-activity-link aria-disabled="true">Activity 3</a></li><li><a class="pep-step" href="#activity-4" data-pep-activity-link aria-disabled="true">Activity 4</a></li></ol></nav>
+<section class="pep-activity" id="activity-1" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<h2 id="activity-1-title" tabindex="-1">Activity 1: predict what a response model removes</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-instructions>
+<h3>Predict before you read on</h3>
+<p>No teaching yet. Use what you already know, commit to a prediction, and the explanation follows.</p>
+</section>
+
+</div>
+<div data-pep-workspace="activity">
+<div id="task-1" data-pep-task>
+<h3>Your task: choose the response body in the options below</h3>
+<ol><li>Read the route. It returns a dict holding three keys, but declares a response model with two.</li><li>Select the JSON body you expect. Nothing has been taught yet.</li><li>Press Check answer. A wrong first try gets one retry, then every option is explained.</li></ol>
+
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to one prediction, then read why each option is right or wrong.</p></section>
+<div data-interaction="predict" data-static-alt="Prediction: a route returns three keys but declares a response model with two. Decide what the client receives.">
+<pre class="pep-code"><code>class ReportOut(BaseModel):
+    id: int
+    sku: str
+
+@app.get(&quot;/reports/{report_id}&quot;, response_model=ReportOut)
+def read_report(report_id: int):
+    return {&quot;id&quot;: report_id, &quot;sku&quot;: &quot;A&quot;, &quot;email&quot;: &quot;a@x.org&quot;}</code></pre>
+<fieldset class="pep-options"><legend>What does <code>GET /reports/1</code> return?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a1-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text"><code>{&quot;id&quot;: 1, &quot;sku&quot;: &quot;A&quot;}</code></span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a1-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text"><code>{&quot;id&quot;: 1, &quot;sku&quot;: &quot;A&quot;, &quot;email&quot;: &quot;a@x.org&quot;}</code></span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a1-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">A 500, because the dict has an extra key</span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a1-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">A 422, because the response is invalid</span></label>
+</fieldset>
+
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a1-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. Compare your prediction with Activity 2: the response model limits the returned fields.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-2" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<h2 id="activity-2-title" tabindex="-1">Activity 2: page and filter a results endpoint</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>Read-only endpoints with limited fields</h3>
+<p>Serving results means read-only <code>GET</code> routes over tables your pipeline has already loaded. <code>response_model</code> limits what leaves, so internal columns stay internal, even if your query returns them.</p>
+<p>Page with <code>limit</code> and <code>offset</code> query parameters, and bound them with <code>Query</code>, so one request cannot ask for everything. Pass them to SQL as parameters: <code>LIMIT %s OFFSET %s</code>. For one record that does not exist, raise <code>HTTPException(status_code=404, detail=&quot;...&quot;)</code>.</p>
+<pre class="pep-code"><code>@app.get(&quot;/results&quot;, response_model=list[ResultOut])
+def list_results(limit: int = Query(20, ge=1, le=100),
+                 offset: int = Query(0, ge=0)):
+    ...</code></pre>
+
+
+<details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+<summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+<div class="pep-optional__body"><p data-pep-anecdote-story>A library shows readers one shelf of the catalogue at a time, and the card they see lists the title and shelf number, never the borrower history printed on the librarian copy.</p><p data-pep-anecdote-map>Readers get a limited page and limited details, however much the back office holds.</p></div>
+</details>
+</section>
+<section data-pep-where-fits aria-labelledby="where-fits-2">
+<h2 id="where-fits-2">Where this fits</h2>
+<p data-pep-fit-decision><strong>Decision:</strong> Expose the table through a limited read API, or give consumers direct database access?</p>
+<p data-pep-fit-good><strong>Good fit:</strong> Use a read API when several consumers need a stable contract, and you want to control fields and page sizes.</p>
+<p data-pep-fit-boundary><strong>Choose something else when:</strong> One internal analyst needs ad hoc joins. A read-only database role or a report may suit better than building many endpoints.</p>
+</section>
+</div>
+<div data-pep-workspace="activity">
+<div id="task-2" data-pep-task data-pep-may-stall>
+<h3>Your task: use the results console below, then predict paging</h3>
+<ol><li>Choose Limit and Offset, toggle Use response model, then press Send request.</li><li>Set Limit to 0 to see the bound, and try a missing id.</li><li>Select your answer and press Check answer.</li></ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The Limit and Offset lists.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Set Limit to 2, then try Offset 0, 2 and 4, and note which ids come back.</p>
+</div>
+</details>
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>You changed the console at least once.</p><p>You can predict which rows a limit and offset return.</p></section>
+<div class="pep-model" data-interaction="explore" data-static-alt="Console over five result rows with ids 1 to 5. limit and offset select a slice: limit 2, offset 2 returns ids 3 and 4. limit below 1 returns 422 with type greater_than_equal. Without a response model, each row also shows an email field. A missing id returns 404 with the detail Result not found."><label class="pep-field"><span>Limit</span><select id="sv-limit" data-pep-task-control><option value="0">0</option><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="5">5</option></select></label>
+<label class="pep-field"><span>Offset</span><select id="sv-offset" data-pep-task-control><option value="0" selected>0</option><option value="1">1</option><option value="2">2</option><option value="4">4</option></select></label>
+<label class="pep-option pep-option--plain"><input type="checkbox" id="sv-model" checked data-pep-task-control><span class="pep-option__text">Use response model</span></label>
+<label class="pep-field"><span>Single record id</span><select id="sv-id" data-pep-task-control><option value="">None: list results</option><option value="3">3</option><option value="9">9</option></select></label>
+<div class="pep-actions"><button class="pep-btn" type="button" id="sv-send">Send request</button></div>
+<pre class="pep-log" id="sv-log" aria-live="polite"></pre></div>
+<noscript data-section-skip><p>Console over five result rows with ids 1 to 5. limit and offset select a slice: limit 2, offset 2 returns ids 3 and 4. limit below 1 returns 422 with type greater_than_equal. Without a response model, each row also shows an email field. A missing id returns 404 with the detail Result not found.</p></noscript><div data-interaction="mcq" data-static-alt="Question: predict which rows limit 2 and offset 2 return from ids 1 to 5.">
+
+<fieldset class="pep-options"><legend>With ids 1 to 5, what does <code>GET /results?limit=2&amp;offset=2</code> return?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a2-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">The rows with ids 3 and 4</span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a2-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">The rows with ids 2 and 3</span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a2-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">The rows with ids 1 and 2</span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a2-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">The row with id 2 only</span></label>
+</fieldset>
+
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a2-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. Offset skips rows, and limit caps how many follow.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<p class="pep-noprint"><a class="pep-back" href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-3" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<h2 id="activity-3-title" tabindex="-1">Activity 3: write a single-record route</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>Return the record, or raise a 404</h3>
+<p>A missing record is a normal outcome, and the client should learn it clearly. Raising <code>HTTPException(status_code=404, detail=&quot;...&quot;)</code> stops the function and sends that response. Returning <code>None</code> would instead attempt a validation of nothing against your response model.</p>
+<p>Fetch with a parameter, not a formatted string. The <code>db</code> argument below comes from a dependency, covered next.</p>
+<pre class="pep-code"><code>@app.get(&quot;/users/{user_id}&quot;, response_model=UserOut)
+def read_user(user_id: int, db=Depends(get_db)):
+    row = db.fetch_user(user_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail=&quot;User not found&quot;)
+    return row</code></pre>
+
+
+
+</section>
+
+</div>
+<div data-pep-workspace="code">
+<div id="task-3" data-pep-task data-pep-may-stall>
+<h3>Your task: finish <code>read_result</code> in the editor below</h3>
+<ol><li>In <code>results.py</code>, replace the first <code>___</code> with the decorator for <code>/results/{result_id}</code>, with <code>response_model=ResultOut</code>.</li><li>Replace the second <code>___</code> with the check for a missing row. Raise a 404 with a clear detail.</li><li>Press Run. Output simulates a found and a missing id. A mismatch uses an attempt; you get one retry.</li></ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 3</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The first ___ line, above the def.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Write the GET decorator with its path template, then add the argument that limits the returned fields.</p>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="2" data-section-skip>
+<summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 3</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The second ___ line, after the fetch.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Test whether the fetch found nothing, then stop the function by raising rather than returning.</p>
+</div>
+</details></div>
+</details>
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>Output shows 200 with only <code>id</code> and <code>sku</code> for a found row.</p><p>Output shows 404 with your detail for a missing row.</p></section>
+<div class="pep-js-only" data-interaction="terminal" data-steps="2" data-static-alt="Coding task: write a GET route with a response model that raises a 404 for a missing record.">
+<div class="pep-editor">
+<div class="pep-editor__bar"><span class="pep-editor__file">results.py</span>
+<button class="pep-btn pep-btn--primary" type="button" id="a3-run" data-pep-submit data-pep-run>Run</button>
+<button class="pep-btn" type="button" id="a3-reset" data-pep-reset-code data-pep-lock>Reset code</button></div>
+<div class="pep-editor__code"><div class="pep-editor__gutter" aria-hidden="true">1</div>
+<label class="pep-sr" for="a3-code" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Code editor for results.py</label>
+<textarea class="pep-editor__input" id="a3-code" data-pep-editor data-pep-task-control spellcheck="false" autocapitalize="off" autocomplete="off">from fastapi import Depends, FastAPI, HTTPException
+
+app = FastAPI()
+
+___
+def read_result(result_id: int, db=Depends(get_db)):
+    row = db.fetch_result(result_id)
+    ___
+    return row
+</textarea></div>
+<div class="pep-editor__tabs" role="tablist" aria-label="Results for results.py">
+<button type="button" role="tab" id="a3-tab-problems" data-tab="problems" aria-selected="true" aria-controls="a3-panel-problems">Problems</button>
+<button type="button" role="tab" id="a3-tab-output" data-tab="output" aria-selected="false" aria-controls="a3-panel-output" tabindex="-1">Output</button></div>
+<div class="pep-editor__panel" role="tabpanel" id="a3-panel-problems" aria-labelledby="a3-tab-problems" data-panel="problems" tabindex="0"></div>
+<div class="pep-editor__panel" role="tabpanel" id="a3-panel-output" aria-labelledby="a3-tab-output" data-panel="output" tabindex="0" hidden></div>
+<div class="pep-editor__status" role="status"></div>
+</div></div>
+<noscript data-pep-no-js data-section-skip><div>
+<p><strong>JavaScript is off, so Run is not available.</strong> Add a GET decorator for /results/{result_id} with response_model=ResultOut, and after the fetch, raise HTTPException with status 404 when row is None. Compare a found id and a missing id on the docs page with your app running.</p>
+<p>Starter for results.py:</p>
+<pre class="pep-code"><code>from fastapi import Depends, FastAPI, HTTPException
+
+app = FastAPI()
+
+___
+def read_result(result_id: int, db=Depends(get_db)):
+    row = db.fetch_result(result_id)
+    ___
+    return row
+</code></pre>
+<p>This practice editor does not run Python. It parses the decorator and the missing-row check, then simulates two requests with responses recorded from FastAPI. Anything else is reported as not supported.</p>
+</div></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+<details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+<summary>Challenge (optional)</summary>
+<div class="pep-optional__body">
+<p data-pep-optional-time><strong>Optional time:</strong> about 3 minutes</p>
+<p data-pep-success-criteria><strong>Success criteria:</strong> Sketch on paper a list route with <code>limit</code> and <code>offset</code>, including the SQL with two <code>%s</code> placeholders in the right order for <code>LIMIT</code> and <code>OFFSET</code>.</p>
+</div></details>
+<p class="pep-noprint"><a class="pep-back" href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-4" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-4-title">
+<h2 id="activity-4-title" tabindex="-1">Activity 4: swap the database in a test</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>Dependencies make routes testable</h3>
+<p><code>Depends(get_db)</code> tells FastAPI to call <code>get_db</code> for each request and pass in the result. A generator dependency can open a connection, <code>yield</code> it, and close it after the response.</p>
+<p>In tests, <code>app.dependency_overrides[get_db] = fake_db</code> replaces it, so no database runs. Clear the overrides after the test, so they cannot leak into the next one.</p>
+<pre class="pep-code"><code>def get_db():
+    with psycopg.connect(os.environ[&quot;DATABASE_URL&quot;]) as conn:
+        yield conn
+
+app.dependency_overrides[get_db] = lambda: FakeDb()
+try:
+    assert client.get(&quot;/results/9&quot;).status_code == 404
+finally:
+    app.dependency_overrides.clear()</code></pre>
+
+
+
+</section>
+
+</div>
+<div data-pep-workspace="activity">
+<div id="task-4" data-pep-task>
+<h3>Your task: choose the test result in the options below, then rate your confidence</h3>
+<ol><li>Read the test. The override replaces <code>get_db</code> with a fake whose only row has id 1.</li><li>Select what the assertions see, and rate your confidence.</li><li>Press Check answer. Confidence is asked before any feedback.</li></ol>
+
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>You predict what the override changes and rate your confidence first.</p></section>
+<div data-interaction="mcq" data-confidence="true" data-static-alt="Question: a dependency override supplies a fake database. Decide what two requests return.">
+<pre class="pep-code"><code>class FakeDb:
+    def fetch_result(self, result_id):
+        return {&quot;id&quot;: 1, &quot;sku&quot;: &quot;A&quot;, &quot;email&quot;: &quot;a@x.org&quot;} if result_id == 1 else None
+
+app.dependency_overrides[get_db] = lambda: FakeDb()
+print(client.get(&quot;/results/1&quot;).json())
+print(client.get(&quot;/results/2&quot;).status_code)
+app.dependency_overrides.clear()</code></pre>
+<fieldset class="pep-options"><legend>With <code>read_result</code> from Activity 3, what prints?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a4-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text"><code>{&quot;id&quot;: 1, &quot;sku&quot;: &quot;A&quot;}</code> then <code>404</code>, with no database needed</span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a4-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text"><code>{&quot;id&quot;: 1, &quot;sku&quot;: &quot;A&quot;, &quot;email&quot;: &quot;a@x.org&quot;}</code> then <code>404</code></span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a4-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">A connection error, because <code>get_db</code> still opens PostgreSQL</span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a4-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text"><code>{&quot;id&quot;: 1, &quot;sku&quot;: &quot;A&quot;}</code> then <code>200</code></span></label>
+</fieldset>
+<fieldset class="pep-options"><legend>How sure are you?</legend><div class="pep-confidence">
+<label class="pep-option"><input type="radio" name="a4-conf" value="low" data-pep-task-control data-pep-lock><span class="pep-option__text">Guessing</span></label>
+<label class="pep-option"><input type="radio" name="a4-conf" value="medium" data-pep-task-control data-pep-lock><span class="pep-option__text">Fairly sure</span></label>
+<label class="pep-option"><input type="radio" name="a4-conf" value="high" data-pep-task-control data-pep-lock><span class="pep-option__text">Certain</span></label>
+</div></fieldset>
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a4-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. A dependency override replaces get_db for the test; the rest of the route still runs.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<p class="pep-noprint"><a class="pep-back" href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+</div>
+</div>
+</section>
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+<button class="pep-btn" type="button" id="previous-activity" data-pep-previous>Previous activity</button>
+<button class="pep-btn pep-btn--primary" type="button" id="next-activity" data-pep-next>Next activity</button>
+</div>
+<section class="pep-recap" data-pep-recap aria-labelledby="recap-title">
+<h2 id="recap-title">Recap</h2>
+<ul><li>Serve loaded results through read-only <code>GET</code> routes, and let <code>response_model</code> limit which fields leave.</li><li>Bound <code>limit</code> and <code>offset</code> with <code>Query</code>, and pass them to SQL as parameters.</li><li>Raise <code>HTTPException(status_code=404, detail=&quot;...&quot;)</code> for a missing record.</li><li>Provide the connection through <code>Depends(get_db)</code>, and replace it in tests with <code>app.dependency_overrides</code>, clearing it afterwards.</li></ul>
+<details class="pep-cheat" data-pep-cheat-sheet data-section-skip><summary>Cheat sheet (optional)</summary><pre class="pep-code"><code>@app.get(&quot;/results&quot;, response_model=list[ResultOut])
+def list_results(limit: int = Query(20, ge=1, le=100),
+                 offset: int = Query(0, ge=0),
+                 db=Depends(get_db)):
+    return db.fetch_results(limit, offset)
+
+raise HTTPException(status_code=404, detail=&quot;Not found&quot;)
+app.dependency_overrides[get_db] = lambda: FakeDb()</code></pre></details>
+<details class="pep-sources" data-pep-sources data-section-skip><summary>Sources and review date (optional)</summary>
+<p><strong>First draft, not reviewed.</strong> Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.</p>
+<ul><li><a href="https://fastapi.tiangolo.com/tutorial/response-model/" rel="noopener">FastAPI: Response model</a></li><li><a href="https://fastapi.tiangolo.com/tutorial/handling-errors/" rel="noopener">FastAPI: Handling errors</a></li><li><a href="https://fastapi.tiangolo.com/tutorial/dependencies/" rel="noopener">FastAPI: Dependencies</a></li><li><a href="https://fastapi.tiangolo.com/tutorial/testing/" rel="noopener">FastAPI: Testing</a></li><li><a href="https://www.postgresql.org/docs/current/sql-select.html" rel="noopener">PostgreSQL: SELECT (LIMIT and OFFSET)</a></li></ul>
+</details>
+</section>
+</main>
+<script>
+(() => {
+  window.PEP_TOOLS = {
+    start(code, comment = '#') {
+      const strip = comment === '--' ? /--.*$/ : /#.*$/;
+      const lines = code.split('\n');
+      const clean = lines.map(l => l.replace(strip, '')).join('\n');
+      const lineOf = re => { const i = clean.split('\n').findIndex(l => re.test(l)); return i < 0 ? 0 : i + 1; };
+      const problems = [];
+      const bad = (msg, re, kind) => problems.push({ kind: kind || 'error', line: re ? lineOf(re) : 0, msg });
+      return {
+        code, clean, lines, lineOf, problems, bad,
+        flat: clean.replace(/\s+/g, ' ').trim(),
+        placeholder() { if (/___/.test(code)) { bad('Replace this placeholder with your code.', /___/); return true; } return false; },
+        hard() { return problems.filter(p => p.kind !== 'hint').length; },
+        stop(why) { return { problems, output: '', pass: false, why: why || 'A placeholder remains.' }; },
+      };
+    },
+    table(cols, rows) {
+      const cell = v => (v === null || v === undefined ? 'NULL' : String(v));
+      const widths = cols.map((c, i) => Math.max(c.length, ...rows.map(r => cell(r[c]).length)));
+      const line = vals => vals.map((v, i) => v.padEnd(widths[i])).join(' | ').trimEnd();
+      return [line(cols), widths.map(w => '-'.repeat(w)).join('-+-'), ...rows.map(r => line(cols.map(c => cell(r[c]))))].join('\n') + `\n(${rows.length} row${rows.length === 1 ? '' : 's'})`;
+    },
+  };
+  document.documentElement.classList.add('is-enhanced');
+  const lesson = document.querySelector('#lesson');
+  const activities = [...document.querySelectorAll('[data-pep-activity]')];
+  const timeline = [...document.querySelectorAll('[data-pep-activity-link]')];
+  const previous = document.querySelector('#previous-activity');
+  const next = document.querySelector('#next-activity');
+  const progressText = document.querySelector('#prog-text');
+  const positionText = document.querySelector('#pos-text');
+  window.PEP_SPEC = { activities: [{ kind: "choice", confidence: false, options: [{"k":"a","right":true,"why":"FastAPI filters the returned data through the response model, so the extra key is dropped."},{"k":"b","right":false,"why":"That is what happens with no response model. The declared model limits the output."},{"k":"c","right":false,"why":"Extra keys are ignored on the way out. A missing or wrong-typed declared field is what causes a failure."},{"k":"d","right":false,"why":"422 describes bad client input, not your response."}],  },
+{ kind: "explore", confidence: false, options: [{"k":"a","right":true,"why":"Offset 2 skips ids 1 and 2, then limit 2 takes the next two."},{"k":"b","right":false,"why":"Offset counts rows to skip, so 2 means start after the second row."},{"k":"c","right":false,"why":"That is offset 0. Offset 2 skips those."},{"k":"d","right":false,"why":"Limit is how many rows to return, not which id."}], needTouch: "Press Send request in the console at least once, then choose.",model: (api) => {
+        const q = s => api.root.querySelector(s);
+        const rows = [1, 2, 3, 4, 5].map(id => ({ id, sku: 'S' + id, email: 'user' + id + '@x.org' }));
+        const view = r => (q('#sv-model').checked ? { id: r.id, sku: r.sku } : r);
+        const paint = () => {
+          const limit = Number(q('#sv-limit').value), offset = Number(q('#sv-offset').value), id = q('#sv-id').value;
+          if (id) {
+            const found = rows.find(r => r.id === Number(id));
+            q('#sv-log').textContent = found ? 'GET /results/' + id + '\n200 ' + JSON.stringify(view(found)) : 'GET /results/' + id + '\n404 {"detail": "Result not found"}';
+            return;
+          }
+          const url = 'GET /results?limit=' + limit + '&offset=' + offset + '\n';
+          if (limit < 1) { q('#sv-log').textContent = url + '422 {"detail": [{"type": "greater_than_equal", "loc": ["query", "limit"],\n  "msg": "Input should be greater than or equal to 1"}]}'; return; }
+          q('#sv-log').textContent = url + '200 ' + JSON.stringify(rows.slice(offset, offset + limit).map(view));
+        };
+        q('#sv-send').addEventListener('click', () => { api.touch(); paint(); });
+        api.root.querySelectorAll('#sv-limit, #sv-offset, #sv-model, #sv-id').forEach(c => c.addEventListener('change', () => { api.touch(); paint(); }));
+        paint();
+        return { reset: paint };
+      }, },
+{ kind: "editor", confidence: false,  starter: "from fastapi import Depends, FastAPI, HTTPException\n\napp = FastAPI()\n\n___\ndef read_result(result_id: int, db=Depends(get_db)):\n    row = db.fetch_result(result_id)\n    ___\n    return row\n", settled: "Compare with the read_user example: response_model on the decorator, and an if check raising HTTPException.", run: (code) => {
+        const T = PEP_TOOLS.start(code);
+        if (T.placeholder()) return T.stop();
+        const c = T.clean;
+        const d = /@app\.get\(\s*["']([^"']+)["']\s*(?:,\s*([^)]*))?\)\s*\n\s*def\s+read_result\s*\(/.exec(c);
+        if (!d) T.bad('Put @app.get("...") directly above def read_result.', /def\s+read_result/);
+        else {
+          if (d[1] !== '/results/{result_id}') T.bad('The path should be the template /results/{result_id}.', /@app\.get/);
+          if (!/response_model\s*=\s*ResultOut\b/.test(d[2] || '')) T.bad('Add response_model=ResultOut, so only declared fields are returned.', /@app\.get/);
+        }
+        if (/@app\.(post|put|patch|delete)/.test(c)) T.bad('This endpoint is read-only: use GET.', /@app\.(post|put|patch|delete)/);
+        const check = /if\s+(row\s+is\s+None|not\s+row)\s*:\s*\n\s+raise\s+HTTPException\s*\(([^)]*)\)/.exec(c);
+        if (/return\s+None/.test(c)) T.bad('Returning None does not tell the client the record is missing. Raise instead.', /return\s+None/);
+        if (!check) T.bad('After the fetch, check for a missing row and raise HTTPException.', /fetch_result/);
+        else if (!/status_code\s*=\s*404/.test(check[2]) && !/^\s*404\b/.test(check[2])) T.bad('A missing record should be status 404.', /raise/);
+        const detail = check && /detail\s*=\s*["']([^"']+)["']/.exec(check[2]);
+        if (check && !detail) T.bad('Add a detail message, so the client knows what is missing.', /raise/);
+        if (!/return\s+row\b/.test(c)) T.bad('Keep return row after the check.', /return/);
+        const pass = !T.hard() && !!d && !!check && !!detail;
+        return {
+          problems: T.problems, pass,
+          output: pass ? 'Simulated with responses recorded from FastAPI:\nGET /results/1 -> 200 {"id": 1, "sku": "A"}     (email filtered by ResultOut)\nGET /results/9 -> 404 {"detail": "' + detail[1] + '"}' : 'No trace: fix the items under Problems first.',
+          why: pass ? 'Clients get only the declared fields, and a clear 404 for a missing record.' : 'The route does not match the checks yet; see Problems.',
+        };
+      }, },
+{ kind: "choice", confidence: true, options: [{"k":"a","right":true,"why":"The fake supplies the row, the response model drops email, and None becomes your 404."},{"k":"b","right":false,"why":"The response model still applies under an override, so email is removed."},{"k":"c","right":false,"why":"The override means get_db is not called."},{"k":"d","right":false,"why":"The fake returns None for 2, which your check turns into 404."}],  }] };
+  const SPEC = window.PEP_SPEC;
+  let current = 1;
+  let unlocked = 1;
+  const blank = () => ({ attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false, touched: false });
+  const state = activities.map(blank);
+  const initial = activities.map(activity => [...activity.querySelectorAll('[data-pep-task-control]')].map(control => ({ control, value: control.value, checked: control.checked, selectedIndex: control.selectedIndex })));
+  let lastFocused = null;
+  document.addEventListener('focusin', event => { lastFocused = event.target; });
+  const activityNumber = hash => Number(/^#activity-(\d+)$/.exec(hash)?.[1] || 1);
+  const own = (n, selector) => activities[n - 1].querySelector(selector);
+  const ownAll = (n, selector) => [...activities[n - 1].querySelectorAll(selector)];
+  const reflect = n => {
+    const a = activities[n - 1], v = state[n - 1];
+    a.dataset.pepAttempts = String(v.attempts);
+    a.dataset.pepSettled = String(v.settled);
+    a.dataset.pepCompleted = String(v.completed);
+    a.dataset.pepCredit = String(v.credit);
+    a.dataset.pepGrade = String(v.grade);
+    a.dataset.pepContinue = String(v.canContinue);
+  };
+  const recap = document.querySelector('[data-pep-recap]');
+  const renderProgress = () => {
+    const done = state.filter(v => v.credit > 0).length;
+    recap.hidden = lesson.dataset.pepComplete !== 'true';
+    progressText.textContent = `${done} of ${activities.length} done`;
+    positionText.textContent = `Activity ${current} of ${activities.length}`;
+  };
+  const renderActivity = (number, historyMode = 'none', moveFocus = false) => {
+    if (!Number.isInteger(number) || number < 1 || number > activities.length || number > unlocked) return false;
+    current = number;
+    lesson.dataset.pepCurrentActivity = String(current);
+    lesson.dataset.pepUnlockedThrough = String(unlocked);
+    activities.forEach((a, i) => { a.hidden = i + 1 !== current; });
+    timeline.forEach((link, i) => {
+      const n = i + 1;
+      if (n === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+      if (n > unlocked) link.setAttribute('aria-disabled', 'true'); else link.removeAttribute('aria-disabled');
+    });
+    previous.disabled = current === 1;
+    next.disabled = current === activities.length || current >= unlocked || !state[current - 1].canContinue;
+    renderProgress();
+    try {
+      if (historyMode === 'push') history.pushState({ activity: current }, '', `#activity-${current}`);
+      if (historyMode === 'replace') history.replaceState({ activity: current }, '', `#activity-${current}`);
+    } catch {
+      if (historyMode !== 'none' && location.hash !== `#activity-${current}`) location.hash = `activity-${current}`;
+    }
+    if (moveFocus) document.querySelector(`#activity-${current} h2`)?.focus();
+    return true;
+  };
+  const setFeedback = (n, tone, verdict, body, list) => {
+    const box = own(n, '[data-pep-feedback]');
+    box.className = 'pep-feedback' + (tone ? ` is-${tone}` : '');
+    box.textContent = '';
+    if (!verdict && !body) return;
+    const p = document.createElement('p');
+    if (verdict) { const b = document.createElement('span'); b.className = 'pep-verdict'; b.textContent = verdict + ' '; p.append(b); }
+    if (body) p.append(body);
+    box.append(p);
+    if (list?.length) {
+      const ul = document.createElement('ul');
+      ul.className = 'pep-explain';
+      list.forEach(text => { const li = document.createElement('li'); li.textContent = text; ul.append(li); });
+      box.append(ul);
+    }
+  };
+  const lockControls = (n, locked) => {
+    ownAll(n, '[data-pep-submit]').forEach(b => { b.disabled = locked; });
+    ownAll(n, '[data-pep-lock]').forEach(c => { c.disabled = locked; });
+    ownAll(n, 'textarea[data-pep-editor]').forEach(t => { t.readOnly = locked; });
+  };
+  const settle = (n, grade) => {
+    const v = state[n - 1];
+    v.settled = true; v.completed = true; v.canContinue = true; v.grade = grade;
+    if (v.credit === 0) v.credit = 1;
+    reflect(n);
+    lockControls(n, true);
+    unlocked = Math.max(unlocked, Math.min(n + 1, activities.length));
+    if (state.every(s => s.credit > 0)) lesson.dataset.pepComplete = 'true';
+    renderActivity(current);
+  };
+  const choiceRun = n => {
+    const spec = SPEC.activities[n - 1];
+    const v = state[n - 1];
+    if (spec.kind === 'explore' && !v.touched) { setFeedback(n, '', 'Not checked yet.', spec.needTouch || 'Use the model above at least once, then choose.'); return; }
+    const picked = own(n, `input[name="a${n}-opt"]:checked`);
+    if (!picked) { setFeedback(n, '', 'Not checked yet.', 'Choose one option first.'); return; }
+    if (spec.confidence && !own(n, `input[name="a${n}-conf"]:checked`)) { setFeedback(n, '', 'Not checked yet.', 'Rate your confidence before seeing feedback.'); return; }
+    v.attempts += 1;
+    const chosen = spec.options.find(o => o.k === picked.value);
+    const labelFor = o => `${o.k.toUpperCase()}: ${o.why}`;
+    ownAll(n, '.pep-option[data-opt]').forEach(row => row.classList.remove('is-wrong', 'is-correct'));
+    const row = k => own(n, `.pep-option[data-opt="${k}"]`);
+    if (chosen.right) {
+      row(chosen.k).classList.add('is-correct');
+      setFeedback(n, 'correct', 'Correct.', chosen.why, spec.options.filter(o => !o.right).map(labelFor));
+      settle(n, 1);
+    } else if (v.attempts >= 2) {
+      row(chosen.k).classList.add('is-wrong');
+      const right = spec.options.find(o => o.right);
+      row(right.k).classList.add('is-correct');
+      setFeedback(n, 'revealed', 'Answered and settled, not correct.', `The correct answer is ${right.k.toUpperCase()}.`, spec.options.map(labelFor));
+      settle(n, 0);
+    } else {
+      row(chosen.k).classList.add('is-wrong');
+      setFeedback(n, 'wrong', 'Try again.', `${chosen.why} You have one more try.`);
+      reflect(n); renderActivity(current);
+    }
+  };
+  const editors = {};
+  const setupEditor = n => {
+    const spec = SPEC.activities[n - 1];
+    const input = own(n, 'textarea[data-pep-editor]');
+    const gutter = own(n, '.pep-editor__gutter');
+    const problems = own(n, '[data-panel="problems"]');
+    const output = own(n, '[data-panel="output"]');
+    const status = own(n, '.pep-editor__status');
+    const tabs = ownAll(n, '[role="tab"]');
+    const showTab = name => {
+      tabs.forEach(tab => { const on = tab.dataset.tab === name; tab.setAttribute('aria-selected', String(on)); tab.tabIndex = on ? 0 : -1; });
+      problems.hidden = name !== 'problems';
+      output.hidden = name !== 'output';
+    };
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => showTab(tab.dataset.tab));
+      tab.addEventListener('keydown', event => {
+        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+        const other = tabs.find(t => t !== tab);
+        showTab(other.dataset.tab); other.focus(); event.preventDefault();
+      });
+    });
+    const sizeUp = () => {
+      const lines = input.value.split('\n').length;
+      gutter.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+      const lh = parseFloat(getComputedStyle(input).lineHeight) || 20;
+      input.style.height = `${Math.max(160, lines * lh + 24)}px`;
+    };
+    input.addEventListener('input', sizeUp);
+    const clear = () => {
+      problems.textContent = 'Nothing to report yet. Press Run to check your code.';
+      output.textContent = 'Output appears here after Run.';
+      status.textContent = 'Not run yet.';
+      showTab('problems');
+    };
+    const render = result => {
+      problems.textContent = '';
+      if (!result.problems.length) problems.textContent = 'No problems found.';
+      result.problems.forEach(problem => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'pep-editor__problem';
+        const kind = document.createElement('span');
+        kind.className = `kind-${problem.kind}`;
+        kind.textContent = { error: 'Error', limit: 'Not supported', hint: 'Note' }[problem.kind] + (problem.line ? ` line ${problem.line}: ` : ': ');
+        button.append(kind, problem.msg);
+        button.addEventListener('click', () => {
+          const lines = input.value.split('\n');
+          const offset = lines.slice(0, Math.max(0, (problem.line || 1) - 1)).join('\n').length + (problem.line > 1 ? 1 : 0);
+          input.focus(); input.setSelectionRange(offset, offset);
+        });
+        problems.append(button);
+      });
+      output.textContent = result.output || 'No output: the practice editor could not trace this code.';
+      showTab(result.problems.some(p => p.kind !== 'hint') ? 'problems' : 'output');
+    };
+    own(n, '[data-pep-run]').addEventListener('click', () => {
+      const v = state[n - 1];
+      const code = input.value;
+      const result = spec.run(code);
+      render(result);
+      if (/___/.test(code)) {
+        status.textContent = 'Not checked: a ___ placeholder remains.';
+        setFeedback(n, '', 'Not checked yet.', 'Replace every ___ placeholder, then press Run. Placeholders do not use an attempt.');
+        return;
+      }
+      v.attempts += 1;
+      if (result.pass) {
+        status.textContent = 'Passed: the practice checks match.';
+        setFeedback(n, 'correct', 'Correct.', result.why);
+        settle(n, 1);
+      } else if (v.attempts >= 2) {
+        status.textContent = 'Settled: the practice checks did not match.';
+        setFeedback(n, 'revealed', 'Answered and settled, not correct.', `${result.why} ${spec.settled} Restart activity lets you rewrite this without losing other work.`);
+        settle(n, 0);
+      } else {
+        status.textContent = 'Mismatch: read Problems and Output, then run again.';
+        setFeedback(n, 'wrong', 'Try again.', `${result.why} You have one more try.`);
+        reflect(n); renderActivity(current);
+      }
+    });
+    own(n, '[data-pep-reset-code]').addEventListener('click', () => {
+      if (input.readOnly) return;
+      input.value = spec.starter;
+      sizeUp(); clear();
+    });
+    clear(); sizeUp();
+    editors[n] = { clear, sizeUp };
+  };
+  const models = {};
+  SPEC.activities.forEach((spec, index) => {
+    const n = index + 1;
+    if (spec.kind === 'editor') setupEditor(n);
+    else own(n, '[data-pep-check]').addEventListener('click', () => choiceRun(n));
+    if (spec.model) {
+      models[n] = spec.model({
+        root: activities[index],
+        touch: () => { state[n - 1].touched = true; },
+      });
+    }
+  });
+  timeline.forEach((link, i) => link.addEventListener('click', event => { event.preventDefault(); renderActivity(i + 1, 'push', true); }));
+  document.querySelectorAll('[data-pep-back-link]').forEach(link => link.addEventListener('click', event => { event.preventDefault(); renderActivity(activityNumber(link.hash), 'push', true); }));
+  previous.addEventListener('click', () => renderActivity(current - 1, 'push', true));
+  next.addEventListener('click', () => renderActivity(current + 1, 'push', true));
+  const restoreFromHistory = () => {
+    const preservedFocus = lastFocused;
+    const requested = activityNumber(location.hash);
+    if (!renderActivity(requested, 'none', false)) renderActivity(Math.min(current, unlocked), 'replace', false);
+    if (preservedFocus?.isConnected && !preservedFocus.closest('[hidden]')) preservedFocus.focus({ preventScroll: true });
+  };
+  addEventListener('popstate', restoreFromHistory);
+  addEventListener('hashchange', restoreFromHistory);
+  document.querySelector('#restart').addEventListener('click', () => {
+    const n = current;
+    for (const item of initial[n - 1]) {
+      const c = item.control;
+      if (c.matches('input[type="checkbox"], input[type="radio"]')) c.checked = item.checked;
+      else if (c.tagName === 'SELECT') c.selectedIndex = item.selectedIndex;
+      else c.value = item.value;
+    }
+    state[n - 1] = blank();
+    lockControls(n, false);
+    setFeedback(n, '', '', '');
+    ownAll(n, '.pep-option[data-opt]').forEach(row => row.classList.remove('is-wrong', 'is-correct'));
+    editors[n]?.clear(); editors[n]?.sizeUp();
+    models[n]?.reset?.();
+    reflect(n);
+    renderActivity(current);
+  });
+  const objectives = document.querySelector('[data-pep-objectives]');
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); } });
+  document.addEventListener('click', event => { if (objectives.open && !objectives.contains(event.target)) objectives.open = false; });
+  let printOpened = [];
+  addEventListener('beforeprint', () => { printOpened = [...document.querySelectorAll('details:not([open])')]; printOpened.forEach(d => { d.open = true; }); });
+  addEventListener('afterprint', () => { printOpened.forEach(d => { d.open = false; }); printOpened = []; });
+  activities.forEach((_, i) => reflect(i + 1));
+  const requested = activityNumber(location.hash);
+  renderActivity(requested <= unlocked ? requested : 1, 'replace');
+})();
+</script>
+</body>
+</html>
