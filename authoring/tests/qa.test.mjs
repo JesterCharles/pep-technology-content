@@ -92,6 +92,55 @@ function context(root) {
   };
 }
 
+function answerSensitiveSpec() {
+  return {
+    schemaVersion: 1,
+    completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "false" },
+    progress: { selector: "#progress", text: "^0 of 1$" },
+    routes: {
+      success: [
+        { do: "click", selector: "#starter" },
+        { do: "expectText", selector: "#feedback", text: "incomplete; no credit" },
+      ],
+      wrongFirst: [
+        { do: "click", selector: "#malformed" },
+        { do: "expectText", selector: "#feedback", text: "incomplete; no credit" },
+      ],
+      wrongTwice: [
+        { do: "click", selector: "#wrong" },
+        { do: "click", selector: "#wrong" },
+        { do: "expectText", selector: "#feedback", text: "accepted, but still incomplete; no credit" },
+      ],
+    },
+    simulatorEdges: [{
+      name: "empty attempt remains incomplete",
+      actions: [
+        { do: "fill", selector: "#private-input", value: "" },
+        { do: "click", selector: "#private-complete" },
+        { do: "expectText", selector: "#feedback", text: "completed private attempt is required" },
+      ],
+    }],
+    restart: {
+      actions: [
+        { do: "click", selector: "#wrong" },
+        { do: "click", selector: "#restart" },
+        { do: "click", selector: "#wrong" },
+      ],
+      credit: { selector: "#progress", text: "^0 of 1$" },
+    },
+    keyboard: [
+      { do: "click", selector: "#malformed" },
+      { do: "expectText", selector: "#feedback", text: "incomplete; no credit" },
+    ],
+    answerSafety: {
+      task: "#task-sensitive",
+      language: "python-comprehension",
+      targets: ["result"],
+      privateSuccessProof: true,
+    },
+  };
+}
+
 async function runFixture(rule, page, options) {
   const repository = await makeRepository(page, options);
   try {
@@ -132,6 +181,12 @@ for (const rule of ["T09", "T10", "T11", "T12", "T13"]) {
   });
 }
 
+for (const rule of ["T10", "T11", "T12", "T13"]) {
+  test(`${rule} keeps answer-sensitive public attempts incomplete and at zero credit`, { timeout: 120000 }, async () => {
+    assert.deepEqual(await runFixture(rule, "answer-sensitive-private.html", { spec: answerSensitiveSpec() }), []);
+  });
+}
+
 test("qa-paths schema requires complete guidance and exact per-action operands", async () => {
   const schema = JSON.parse(await readFile(path.resolve("authoring/schemas/qa-paths.schema.json"), "utf8"));
   const validate = new Ajv2020({ allErrors: true, strict: false }).compile(schema);
@@ -143,6 +198,10 @@ test("qa-paths schema requires complete guidance and exact per-action operands",
   const privateValue = structuredClone(good);
   privateValue.routes.success[0] = { do: "fill", selector: "#activity-input", valueFrom: "private:sql-success" };
   assert.equal(validate(privateValue), true, JSON.stringify(validate.errors));
+  const answerSensitive = answerSensitiveSpec();
+  assert.equal(validate(answerSensitive), true, JSON.stringify(validate.errors));
+  answerSensitive.answerSafety.privateSuccessProof = false;
+  assert.equal(validate(answerSensitive), false, "private success opt-in must be explicit true");
   for (const mutate of [
     (value) => { value.guidance = {}; },
     (value) => { delete value.guidance.objectivesTouch; },
@@ -237,7 +296,7 @@ test("QA private-success proof binds only current public bytes", async () => {
   const owner = "course/module/topic";
   const publicFiles = {
     [`${owner}/artifact.html`]: "<!doctype html><title>Public artifact</title>\n",
-    [`authoring/evidence/${owner}/qa-paths.json`]: "{}\n",
+    [`authoring/evidence/${owner}/qa-paths.json`]: `${JSON.stringify({ answerSafety: { privateSuccessProof: true } })}\n`,
     "authoring/tools/qa/harness.mjs": "// public harness\n",
     "authoring/tools/qa/python-answer-scan.py": "# public scanner\n",
     "authoring/tools/checks/T08-html-static.mjs": "// public static check\n",
@@ -258,6 +317,10 @@ test("QA private-success proof binds only current public bytes", async () => {
     };
     const receiptRoot = path.join(root, "authoring/evidence/course");
     const receiptFile = path.join(root, `authoring/evidence/${owner}/qa-receipt.json`);
+    assert.match(
+      (await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "),
+      /opt-in requires a current private success receipt/,
+    );
     await writeFile(receiptFile, `${JSON.stringify({ privateSuccessProof: proof })}\n`);
     for (const args of [["add", path.relative(root, receiptFile)], ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit", "-qm", "record private proof"]]) {
       const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
@@ -300,12 +363,13 @@ test("qa-receipt schema records public-only private success metadata", async () 
   assert.equal(validate(proof), false);
 });
 
-test("private overlay runs success, retry, keyboard and sandbox without repository output", { timeout: 60000 }, async () => {
-  const repository = await makeRepository("good.html");
+test("private overlay owns success postconditions without recording resolved values", { timeout: 180000 }, async () => {
+  const repository = await makeRepository("answer-sensitive-private.html", { spec: answerSensitiveSpec() });
   const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-"));
   const overlayFile = path.join(staging, "overlay.json");
   const inputsFile = path.join(staging, "inputs.json");
   const environment = { PEP_QA_PRIVATE_INPUTS_FILE: inputsFile };
+  const privateValue = `runtime-only-${process.pid}`;
   try {
     for (const file of ["authoring/tools/qa/harness.mjs", "authoring/tools/qa/python-answer-scan.py", "authoring/tools/checks/T08-html-static.mjs"]) {
       await mkdir(path.dirname(path.join(repository.root, file)), { recursive: true });
@@ -315,32 +379,28 @@ test("private overlay runs success, retry, keyboard and sandbox without reposito
       const result = spawnSync("git", args, { cwd: repository.root, encoding: "utf8" });
       assert.equal(result.status, 0, result.stderr);
     }
+    const completedRoute = [
+      { do: "fill", selector: "#private-input", valueFrom: "private:activityValue" },
+      { do: "click", selector: "#private-complete" },
+    ];
     const overlay = {
       schemaVersion: 1,
       runId: "local-safe-fixture",
       topic: "course/module/topic",
+      completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+      progress: { selector: "#progress", text: "^1 of 1$" },
       routes: {
-        success: [
-          { do: "fill", selector: "#activity-input", valueFrom: "private:activityNote" },
-          { do: "check", selector: "#action-local" }, { do: "click", selector: "#check-one" },
-        ],
+        success: completedRoute,
         wrongFirst: [
-          { do: "fill", selector: "#activity-input", valueFrom: "private:activityNote" },
-          { do: "check", selector: "#action-external" }, { do: "click", selector: "#check-one" },
-          { do: "check", selector: "#action-local" }, { do: "click", selector: "#check-one" },
+          { do: "click", selector: "#wrong" },
+          ...completedRoute,
         ],
-        keyboard: [
-          { do: "fill", selector: "#activity-input", valueFrom: "private:activityNote" },
-          { do: "check", selector: "#action-local" }, { do: "click", selector: "#check-one" },
-        ],
-        sandbox: [
-          { do: "fill", selector: "#activity-input", valueFrom: "private:activityNote" },
-          { do: "check", selector: "#action-local" }, { do: "click", selector: "#check-one" },
-        ],
+        keyboard: completedRoute,
+        sandbox: completedRoute,
       },
     };
     await writeFile(overlayFile, `${JSON.stringify(overlay)}\n`);
-    await writeFile(inputsFile, `${JSON.stringify({ activityNote: `runtime-only-${process.pid}` })}\n`);
+    await writeFile(inputsFile, `${JSON.stringify({ activityValue: privateValue })}\n`);
     await writeFile(path.join(repository.root, "untracked-private-proof.txt"), "dirty\n");
     await assert.rejects(runPrivateOverlay(context(repository.root), overlayFile, { environment }), /clean public commit/);
     await rm(path.join(repository.root, "untracked-private-proof.txt"));
@@ -352,7 +412,52 @@ test("private overlay runs success, retry, keyboard and sandbox without reposito
     const result = await runPrivateOverlay(context(repository.root), overlayFile, { environment });
     assert.match(result.commit, /^[a-f0-9]{40}$/u);
     assert.equal(result.result, "pass");
+    assert.doesNotMatch(JSON.stringify(result), new RegExp(privateValue));
     await assert.rejects(readFile(path.join(repository.root, "build", "qa", "qa-receipt.json")), { code: "ENOENT" });
+
+    for (const routeName of ["success", "keyboard", "sandbox"]) {
+      const failing = structuredClone(overlay);
+      failing.routes[routeName] = [{ do: "fill", selector: "#private-input", valueFrom: "private:activityValue" }];
+      await writeFile(overlayFile, `${JSON.stringify(failing)}\n`);
+      await assert.rejects(
+        runPrivateOverlay(context(repository.root), overlayFile, { environment }),
+        (error) => /private success route failed; no private values were recorded/.test(error.message) && !error.message.includes(privateValue),
+      );
+    }
+    const malformed = structuredClone(overlay);
+    delete malformed.progress;
+    await writeFile(overlayFile, `${JSON.stringify(malformed)}\n`);
+    await assert.rejects(runPrivateOverlay(context(repository.root), overlayFile, { environment }), /postconditions do not match/);
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+    await rm(staging, { recursive: true, force: true });
+  }
+});
+
+test("private overlay refuses a topic without the explicit opt-in", async () => {
+  const spec = answerSensitiveSpec();
+  delete spec.answerSafety.privateSuccessProof;
+  const repository = await makeRepository("answer-sensitive-private.html", { spec });
+  const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-refusal-"));
+  const overlayFile = path.join(staging, "overlay.json");
+  try {
+    for (const file of ["authoring/tools/qa/harness.mjs", "authoring/tools/qa/python-answer-scan.py", "authoring/tools/checks/T08-html-static.mjs"]) {
+      await mkdir(path.dirname(path.join(repository.root, file)), { recursive: true });
+      await writeFile(path.join(repository.root, file), await readFile(path.resolve(file)));
+    }
+    await writeFile(overlayFile, `${JSON.stringify({
+      schemaVersion: 1,
+      runId: "no-opt-in",
+      topic: "course/module/topic",
+      completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+      progress: { selector: "#progress", text: "^1 of 1$" },
+      routes: Object.fromEntries(["success", "wrongFirst", "keyboard", "sandbox"].map((name) => [name, [{ do: "click", selector: "#private-complete" }]])),
+    })}\n`);
+    for (const args of [["init", "-q", "-b", "main"], ["add", "."], ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit", "-qm", "public fixture"]]) {
+      const result = spawnSync("git", args, { cwd: repository.root, encoding: "utf8" });
+      assert.equal(result.status, 0, result.stderr);
+    }
+    await assert.rejects(runPrivateOverlay(context(repository.root), overlayFile), /requires the answer-sensitive private-success opt-in/);
   } finally {
     await rm(repository.root, { recursive: true, force: true });
     await rm(staging, { recursive: true, force: true });
@@ -886,6 +991,9 @@ test("target-aware Python AST scanning rejects complete generic answers in every
   const baseSpec = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
   baseSpec.answerSafety = { task: "#task-safe", language: "python-comprehension", targets: ["picked"] };
   assert.deepEqual(await validateLearnerGuidance(baseHtml, baseSpec), []);
+  const optedInSpec = structuredClone(baseSpec);
+  optedInSpec.answerSafety.privateSuccessProof = true;
+  assert.deepEqual(await validateLearnerGuidance(baseHtml, optedInSpec), []);
   const prompt = "A note preview appears only in this practice page. Choose where that effect stays, then check your choice.";
   const expression = "picked = [entry for entry in records]";
   const bare = "[entry for entry in records]";

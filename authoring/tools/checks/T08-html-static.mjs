@@ -544,9 +544,15 @@ export async function validateHtmlContracts(html, options = {}) {
   const specDeclaration = options.spec?.answerSafety ?? null;
   if (Boolean(snapshot.answerDeclaration) !== Boolean(specDeclaration)) {
     answerProblems.push("HTML and QA must declare answer-sensitive scanning together");
-  } else if (snapshot.answerDeclaration &&
-      JSON.stringify(snapshot.answerDeclaration) !== JSON.stringify(specDeclaration)) {
-    answerProblems.push("HTML and QA answer-sensitive declarations must match exactly");
+  } else if (snapshot.answerDeclaration) {
+    const scanDeclaration = {
+      task: specDeclaration.task,
+      language: specDeclaration.language,
+      targets: specDeclaration.targets,
+    };
+    if (JSON.stringify(snapshot.answerDeclaration) !== JSON.stringify(scanDeclaration)) {
+      answerProblems.push("HTML and QA answer-sensitive declarations must match exactly");
+    }
   }
   if (snapshot.answerDeclaration) {
     const scriptSources = snapshot.scripts.flatMap((script) => {

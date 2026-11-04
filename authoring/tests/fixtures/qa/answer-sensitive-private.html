@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Answer-sensitive private proof</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; background: Canvas; color: CanvasText; }
+    main { box-sizing: border-box; max-width: 44rem; margin: auto; padding: 1rem; }
+    textarea, button { box-sizing: border-box; min-height: 48px; border: 2px solid ButtonText; font: inherit; }
+    textarea { width: 100%; padding: .75rem; background: Field; color: FieldText; }
+    button { margin: .5rem .5rem 0 0; padding: .65rem 1rem; background: ButtonFace; color: ButtonText; }
+    textarea:focus-visible, button:focus-visible { outline: 3px solid #b45309; outline-offset: 3px; }
+    @media (prefers-color-scheme: dark) {
+      textarea:focus-visible, button:focus-visible { outline-color: #fbbf24; }
+    }
+  </style>
+</head>
+<body>
+  <main id="lesson" data-pep-responsive data-pep-complete="false">
+    <h1>Answer-sensitive private proof</h1>
+    <section id="task-sensitive" data-pep-answer-sensitive="python-comprehension" data-pep-answer-targets="result">
+      <label for="private-input">Try the activity</label>
+      <textarea id="private-input">starter</textarea>
+      <div>
+        <button id="starter" type="button">Check starter</button>
+        <button id="malformed" type="button">Check incomplete attempt</button>
+        <button id="wrong" type="button">Check wrong attempt</button>
+        <button id="private-complete" type="button">Check completed attempt</button>
+        <button id="restart" type="button">Restart</button>
+      </div>
+    </section>
+    <p id="progress">0 of 1</p>
+    <p id="feedback" aria-live="polite">Ready</p>
+  </main>
+  <script>
+    const lesson = document.querySelector('#lesson');
+    const input = document.querySelector('#private-input');
+    const progress = document.querySelector('#progress');
+    const feedback = document.querySelector('#feedback');
+    let wrongAttempts = 0;
+    const incomplete = message => {
+      lesson.dataset.pepComplete = 'false';
+      progress.textContent = '0 of 1';
+      feedback.textContent = message;
+    };
+    document.querySelector('#starter').addEventListener('click', () => incomplete('Starter remains incomplete; no credit.'));
+    document.querySelector('#malformed').addEventListener('click', () => incomplete('Malformed attempt remains incomplete; no credit.'));
+    document.querySelector('#wrong').addEventListener('click', () => {
+      wrongAttempts += 1;
+      incomplete(wrongAttempts >= 2 ? 'Attempt accepted, but still incomplete; no credit.' : 'Try again.');
+    });
+    document.querySelector('#private-complete').addEventListener('click', () => {
+      if (!input.value || input.value === 'starter') return incomplete('A completed private attempt is required.');
+      lesson.dataset.pepComplete = 'true';
+      progress.textContent = '1 of 1';
+      feedback.textContent = 'Completed.';
+    });
+    document.querySelector('#restart').addEventListener('click', () => {
+      input.value = 'starter';
+      wrongAttempts = 0;
+      incomplete('Restarted.');
+    });
+    input.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) document.querySelector('#private-complete').click();
+    });
+  </script>
+</body>
+</html>
