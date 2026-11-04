@@ -1,0 +1,39 @@
+// Practice quiz: Connecting to Postgres from Python with psycopg
+// Formative, low-stakes retention practice. First draft, not reviewed. Titles name the objective id each item practises.
+
+$CATEGORY: python/data-pipelines/connecting-to-postgres-from-python-with-psycopg
+
+::o1 env connection::Why read the connection string from an environment variable in a pipeline script? {
+=Credentials stay out of source control and each machine can set its own #Correct. The same code runs against different databases without an edit.
+~psycopg.connect only accepts environment variables #Not quite. It accepts a string or keyword arguments; the variable is your choice.
+~It makes queries run faster #Not quite. It only changes where the setting is stored.
+~It encrypts the password in the database #Not quite. It does not encrypt anything; it just keeps the value out of the code.
+}
+
+::o2 single value::cur.execute("SELECT 1 FROM t WHERE id \= %s", (order_id)) fails. What is wrong? {
+=(order_id) is not a tuple; a one-item tuple needs a trailing comma #Correct. Parentheses alone do not make a tuple, and execute needs a sequence or mapping of values.
+~The placeholder should be ? #Not quite. psycopg uses %s; ? is another driver style.
+~%s only works with strings #Not quite. %s is used for every type in psycopg.
+~SELECT 1 is not valid SQL #Not quite. SELECT 1 is valid; the argument shape is the problem.
+}
+
+::o2 quoted placeholder::What is wrong with WHERE name \= '%s' in a parameterized query? {
+=The placeholder must not be quoted; psycopg handles the value #Correct. Quotes around the placeholder are a documented mistake and break the query.
+~Single quotes are invalid in SQL #Not quite. They are valid for literals, just not around a placeholder.
+~It should be double quotes #Not quite. No quotes belong around a placeholder.
+~Nothing; it is the recommended form #Not quite. The docs warn against it.
+}
+
+::o3 clean exit::A with psycopg.connect(...) block finishes with no exception. What happens at the end? {
+=The transaction commits and the connection closes #Correct. This is the documented connection context behaviour.
+~The transaction rolls back unless you called commit() #Not quite. A clean exit commits for you.
+~The connection stays open for reuse #Not quite. The block closes the connection.
+~Only the last statement commits #Not quite. The whole transaction commits together.
+}
+
+::o3 no block::A script calls conn \= psycopg.connect(url), runs an INSERT, then conn.close() with no commit. What about the row? {
+=It is lost, because the transaction never committed #Correct. Without a connection block you must commit yourself.
+~It is saved, because close commits #Not quite. close does not commit pending work.
+~It is saved, because psycopg autocommits by default #Not quite. Autocommit is off by default.
+~close raises an error #Not quite. close succeeds; the uncommitted work is simply discarded.
+}
