@@ -20,28 +20,37 @@
 <body>
   <main id="lesson" data-pep-responsive data-pep-complete="false">
     <h1>Answer-sensitive private proof</h1>
-    <section id="task-sensitive" data-pep-answer-sensitive="python-comprehension" data-pep-answer-targets="result">
-      <label for="private-input">Try the activity</label>
-      <textarea id="private-input">starter</textarea>
-      <div>
-        <button id="starter" type="button">Check starter</button>
-        <button id="malformed" type="button">Check incomplete attempt</button>
-        <button id="wrong" type="button">Check wrong attempt</button>
-        <button id="private-complete" type="button">Check completed attempt</button>
-        <button id="restart" type="button">Restart</button>
-      </div>
+    <section id="activity-1" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+      <section id="task-sensitive" data-pep-answer-sensitive="python-comprehension" data-pep-answer-targets="result">
+        <label for="private-input">Try the activity</label>
+        <textarea id="private-input">starter</textarea>
+        <div>
+          <button id="starter" type="button">Check starter</button>
+          <button id="malformed" type="button">Check incomplete attempt</button>
+          <button id="wrong" type="button">Check wrong attempt</button>
+          <button id="private-complete" type="button">Check completed attempt</button>
+          <button id="restart" type="button">Restart</button>
+        </div>
+      </section>
     </section>
     <p id="progress">0 of 1</p>
     <p id="feedback" aria-live="polite">Ready</p>
   </main>
   <script>
     const lesson = document.querySelector('#lesson');
+    const activity = document.querySelector('#activity-1');
     const input = document.querySelector('#private-input');
     const progress = document.querySelector('#progress');
     const feedback = document.querySelector('#feedback');
     let wrongAttempts = 0;
+    const reflect = (completed, credit, grade) => {
+      activity.dataset.pepCompleted = String(completed);
+      activity.dataset.pepCredit = String(credit);
+      activity.dataset.pepGrade = String(grade);
+    };
     const incomplete = message => {
       lesson.dataset.pepComplete = 'false';
+      reflect(false, 0, 0);
       progress.textContent = '0 of 1';
       feedback.textContent = message;
     };
@@ -54,12 +63,15 @@
     document.querySelector('#private-complete').addEventListener('click', () => {
       if (!input.value || input.value === 'starter') return incomplete('A completed private attempt is required.');
       lesson.dataset.pepComplete = 'true';
+      reflect(true, 1, 1);
+      activity.dataset.pepSettled = 'true';
       progress.textContent = '1 of 1';
       feedback.textContent = 'Completed.';
     });
     document.querySelector('#restart').addEventListener('click', () => {
       input.value = 'starter';
       wrongAttempts = 0;
+      activity.dataset.pepSettled = 'false';
       incomplete('Restarted.');
     });
     input.addEventListener('keydown', event => {
