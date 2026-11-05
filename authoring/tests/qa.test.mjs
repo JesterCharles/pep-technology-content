@@ -1551,6 +1551,33 @@ test("target-aware Python AST scanning rejects complete generic answers in every
   }
 });
 
+test("Python answer scanner handles annotation-only target candidates", () => {
+  const scanner = path.resolve("authoring/tools/qa/python-answer-scan.py");
+  const scan = (value, answerBearing = false) => {
+    const result = spawnSync("python3", [scanner], {
+      input: JSON.stringify({
+        targets: ["result"],
+        sources: [{ value, answerBearing }],
+      }),
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, result.stderr);
+    return JSON.parse(result.stdout).findings;
+  };
+
+  for (const source of [
+    "result: int",
+    "Expected result: all techniques found.",
+    "result: int = 0",
+    "other: int",
+    "result = [p: p for p in prices]",
+  ]) {
+    assert.deepEqual(scan(source), [], `${source} must remain a normal non-finding`);
+  }
+  assert.deepEqual(scan("result = [x for x in values]"), [0]);
+  assert.deepEqual(scan("result: list[int] = [x for x in values]"), [0]);
+});
+
 test("Python Activity 3 recipe is bounded and delegates semantic transfer proof to reviewers", async () => {
   const design = await readFile(path.resolve("DESIGN.md"), "utf8");
   const recipe = design.match(/### Python comprehension activity correction recipe([\s\S]*?)### Editor workspace/)?.[1] ?? "";

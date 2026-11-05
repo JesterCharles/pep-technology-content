@@ -33,6 +33,8 @@ def tree_has_target_answer(tree, targets):
     for node in ast.walk(tree):
         if not isinstance(node, ASSIGNMENTS):
             continue
+        if isinstance(node, ast.AnnAssign) and node.value is None:
+            continue
         assigned = node.targets if isinstance(node, ast.Assign) else [node.target]
         for target in assigned:
             if any(name in targets and contains_comprehension(value)
