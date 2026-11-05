@@ -614,6 +614,7 @@ console.log(url(&quot;/api/books&quot;));</code></pre><p>Supported in the practi
 <div class="pep-regions">
 <div class="pep-region" data-pep-instructions>
 <div data-pep-teaching>
+<p>This model is a different project. Its page calls a reports service, so its setting has its own name and address.</p>
 <p><code>npm run dev</code> uses <code>development</code> mode, and <code>npm run build</code> uses <code>production</code>. Vite loads <code>.env</code> and <code>.env.[mode]</code>, and a mode-specific file wins over the generic one. A <code>.local</code> variant wins over its twin, and is for values not committed.</p>
 <p>At build time, Vite replaces <code>import.meta.env.VITE_*</code> with the <strong>literal value</strong> in the JavaScript it outputs. Anyone can read that file.</p>
 
@@ -644,17 +645,17 @@ console.log(url(&quot;/api/books&quot;));</code></pre><p>Supported in the practi
 </section>
 <div class="pep-lab" data-interaction="explore">
 <div class="pep-queues">
-<div class="pep-box"><div class="pep-box__label">.env</div><div class="pep-readout">VITE_API_URL=http://localhost:8080
+<div class="pep-box"><div class="pep-box__label">.env</div><div class="pep-readout">VITE_REPORTS_URL=http://localhost:9090
 VITE_PAY_KEY=sk_live_practice_only</div></div>
-<div class="pep-box"><div class="pep-box__label">.env.production</div><div class="pep-readout">VITE_API_URL=https://api.example.com</div></div>
+<div class="pep-box"><div class="pep-box__label">.env.production</div><div class="pep-readout">VITE_REPORTS_URL=https://reports.example.com</div></div>
 </div>
 <div class="pep-row">
 <label class="pep-field">Command<select id="a3-mode"><option value="development">npm run dev (development)</option><option value="production">npm run build (production)</option></select></label>
 </div>
-<div class="pep-box"><div class="pep-box__label">Resolved value of import.meta.env.VITE_API_URL</div><div class="pep-readout" id="a3-value" aria-live="polite"></div></div>
+<div class="pep-box"><div class="pep-box__label">Resolved value of import.meta.env.VITE_REPORTS_URL</div><div class="pep-readout" id="a3-value" aria-live="polite"></div></div>
 <label class="pep-check"><input type="checkbox" id="a3-usekey"> Source also uses import.meta.env.VITE_PAY_KEY</label>
 <div class="pep-box"><div class="pep-box__label">dist/assets/index.js, as anyone can download it</div><div class="pep-readout" id="a3-bundle"></div></div>
-<div class="pep-static" data-static-alt data-section-skip><h3>Static alternative</h3><p>In development, VITE_API_URL is http://localhost:8080 from .env. In production, .env.production overrides it with https://api.example.com. The build inlines values as literal strings, so a VITE_ secret is readable by anyone who downloads the JavaScript file.</p></div>
+<div class="pep-static" data-static-alt data-section-skip><h3>Static alternative</h3><p>In development, VITE_REPORTS_URL is http://localhost:9090 from .env. In production, .env.production overrides it with https://reports.example.com. The build inlines values as literal strings, so a VITE_ secret is readable by anyone who downloads the JavaScript file.</p></div>
 </div>
 <div class="pep-actions pep-needs-js"><button class="pep-btn pep-btn--primary" type="button" id="a3-finish" data-pep-finish data-pep-submit>Check what I covered</button></div>
 <div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
@@ -798,9 +799,9 @@ VITE_PAY_KEY=sk_live_practice_only</div></div>
 <h2 id="recap-title">Recap</h2>
 <p>Only <code>VITE_</code>-prefixed values reach client code, through <code>import.meta.env</code>. Mode-specific files win over <code>.env</code>, so one codebase can target different servers. Vite inlines the values into the bundle as literal text, so they are public. Secrets stay on the server, and an exposed secret must be rotated.</p>
 <details class="pep-optional pep-cheat" data-pep-cheat-sheet data-section-skip><summary><span>Cheat sheet</span><span class="pep-optional__cue">Optional</span></summary><div class="pep-optional__body"><pre class="pep-code"><code># .env.production
-VITE_API_URL=https://api.example.com
+VITE_REPORTS_URL=https://reports.example.com
 
-const base = import.meta.env.VITE_API_URL;</code></pre></div></details>
+const base = import.meta.env.VITE_REPORTS_URL;</code></pre></div></details>
 </section>
 
 <details class="pep-optional pep-sources" data-pep-sources data-section-skip>
@@ -832,11 +833,11 @@ setup: (ctx) => {
         let sawDev = false; let sawProd = false; let sawKey = false;
         const render = () => {
           const prod = mode.value === 'production';
-          const url = prod ? 'https://api.example.com' : 'http://localhost:8080';
+          const url = prod ? 'https://reports.example.com' : 'http://localhost:9090';
           value.textContent = `${url}\nfrom ${prod ? '.env.production, which wins over .env' : '.env'}`;
           if (prod) sawProd = true; else sawDev = true;
           if (prod) {
-            bundle.textContent = `const API_BASE="${url}";${useKey.checked ? 'const PAY="sk_live_practice_only";' : ''}function url(p){return API_BASE+p}`;
+            bundle.textContent = `const REPORTS_BASE="${url}";${useKey.checked ? 'const PAY="sk_live_practice_only";' : ''}function url(p){return REPORTS_BASE+p}`;
             if (useKey.checked) sawKey = true;
           } else bundle.textContent = 'No bundle yet: the dev server serves your source files. Choose the build command.';
           if (sawDev && sawProd && sawKey) api.complete('The value changes by mode and is inlined as text, so a `VITE_` secret is not a secret.');

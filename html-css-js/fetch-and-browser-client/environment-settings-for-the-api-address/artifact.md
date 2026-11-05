@@ -29,6 +29,8 @@ const feature = import.meta.env.VITE_FEATURE_NAME;
 
 This keeps the address out of your code, so the same code can talk to different servers.
 
+This model is a different project. Its page calls a reports service, so its setting has its own name and address.
+
 `npm run dev` uses `development` mode, and `npm run build` uses `production`. Vite loads `.env` and `.env.[mode]`, and a mode-specific file wins over the generic one. A `.local` variant wins over its twin, and is for values not committed.
 
 At build time, Vite replaces `import.meta.env.VITE_*` with the literal value in the JavaScript it outputs. Anyone can read that file.
@@ -68,7 +70,7 @@ Where to act: The box showing `dist/assets/index.js`.
 
 Next step: Search the text for the key value, then ask who can download that file.
 
-In development, VITE_API_URL is http://localhost:8080 from .env. In production, .env.production overrides it with https://api.example.com. The build inlines values as literal strings, so a VITE_ secret is readable by anyone who downloads the JavaScript file.
+In development, VITE_REPORTS_URL is http://localhost:9090 from .env. In production, .env.production overrides it with https://reports.example.com. The build inlines values as literal strings, so a VITE_ secret is readable by anyone who downloads the JavaScript file.
 
 Where to act: Each row's value.
 
@@ -89,9 +91,9 @@ What should you do?
 
 ```
 # .env.production
-VITE_API_URL=https://api.example.com
+VITE_REPORTS_URL=https://reports.example.com
 
-const base = import.meta.env.VITE_API_URL;
+const base = import.meta.env.VITE_REPORTS_URL;
 ```
 
 ## Sources
@@ -124,7 +126,7 @@ Rename the variable with the VITE_ prefix in .env, and read import.meta.env.VITE
 
 ### Static alternative
 
-In development, VITE_API_URL is http://localhost:8080 from .env. In production, .env.production overrides it with https://api.example.com. The build inlines values as literal strings, so a VITE_ secret is readable by anyone who downloads the JavaScript file.
+In development, VITE_REPORTS_URL is http://localhost:9090 from .env. In production, .env.production overrides it with https://reports.example.com. The build inlines values as literal strings, so a VITE_ secret is readable by anyone who downloads the JavaScript file.
 
 ### explore
 
