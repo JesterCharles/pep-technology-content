@@ -1657,6 +1657,43 @@ export async function updateReceipt(ctx, topic, rule, passed, detail, writeEvide
   await writeFile(receiptFile, `${JSON.stringify(receipt, null, 2)}\n`);
 }
 
+// Strings the HTML parser produces from public page bytes: text nodes, attribute
+// values and template contents after character-reference decoding. Scripting is
+// off, so <noscript> content parses as elements, and nothing is loaded. Only
+// public bytes enter this browser; private values are compared afterwards.
+async function parsedHtmlStrings(html) {
+  const browser = await launchChromium();
+  try {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    await context.route("**/*", (route) => route.abort());
+    const page = await context.newPage();
+    await page.setContent(html, { waitUntil: "domcontentloaded" });
+    return await page.evaluate(() => {
+      const strings = [];
+      const visit = (node) => {
+        if (node.nodeType === Node.TEXT_NODE) strings.push(node.nodeValue);
+        for (const attribute of node.attributes ?? []) strings.push(attribute.value);
+        if (node.tagName === "TEMPLATE") visit(node.content);
+        for (const child of node.childNodes) visit(child);
+      };
+      visit(document);
+      return strings;
+    });
+  } finally {
+    await browser.close();
+  }
+}
+
+// Every string JSON.parse produced from a QA path, object keys included.
+function parsedJsonStrings(value) {
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(parsedJsonStrings);
+  if (value && typeof value === "object") {
+    return Object.entries(value).flatMap(([key, item]) => [key, ...parsedJsonStrings(item)]);
+  }
+  return [];
+}
+
 export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
   const git = (args) => spawnSync("git", args, { cwd: ctx.root, encoding: "utf8" });
   const top = git(["rev-parse", "--show-toplevel"]);
@@ -1718,8 +1755,11 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
   );
   // Exact in-memory leak comparison: every resolved private value is compared
   // against every declared public learner and companion surface of the topic.
-  // Only exact and whitespace-collapsed occurrences are caught here; renamed,
-  // reshaped, assembled or encoded leaks remain an independent review duty.
+  // Raw bytes are always scanned; the page's parsed strings and the QA path's
+  // parsed JSON strings are scanned too, so HTML character references and JSON
+  // string escapes do not hide an exact value. Only those two syntaxes are
+  // decoded: renamed, reshaped, assembled, digest or otherwise encoded leaks
+  // remain an independent review duty.
   const collapse = (text) => text.replace(/\s+/gu, " ");
   const privateValues = [...new Set(flatActions
     .map((action, index) => (Object.hasOwn(action, "valueFrom") ? resolvedActions[index].value : null))
@@ -1730,8 +1770,13 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
       const bytes = await readFile(surface).catch(() => null);
       if (!bytes) continue;
       const text = bytes.toString("utf8");
-      const collapsed = collapse(text);
-      if (privateValues.some((value) => text.includes(value) || collapsed.includes(collapse(value)))) {
+      const candidates = [text];
+      if (surface === topic.html) candidates.push(...await parsedHtmlStrings(text));
+      if (surface === topic.spec) candidates.push(...parsedJsonStrings(JSON.parse(text)));
+      if (candidates.some((candidate) => {
+        const collapsed = collapse(candidate);
+        return privateValues.some((value) => candidate.includes(value) || collapsed.includes(collapse(value)));
+      })) {
         throw new Error("a private success value appears in public topic bytes; no private values were recorded");
       }
     }
