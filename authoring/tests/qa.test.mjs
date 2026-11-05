@@ -133,10 +133,8 @@ function answerSensitiveSpec() {
       { do: "expectText", selector: "#feedback", text: "incomplete; no credit" },
     ],
     answerSafety: {
-      task: "#task-sensitive",
-      language: "python-comprehension",
-      targets: ["result"],
       privateSuccessProof: true,
+      tasks: [{ task: "#task-sensitive", language: "python-comprehension", targets: ["result"] }],
     },
   };
 }
@@ -202,6 +200,27 @@ test("qa-paths schema requires complete guidance and exact per-action operands",
   assert.equal(validate(answerSensitive), true, JSON.stringify(validate.errors));
   answerSensitive.answerSafety.privateSuccessProof = false;
   assert.equal(validate(answerSensitive), false, "private success opt-in must be explicit true");
+  const multiLanguage = answerSensitiveSpec();
+  multiLanguage.answerSafety.tasks = [
+    { task: "#task-2", language: "java", targets: ["reverse"] },
+    { task: "#task-3", language: "java", targets: ["summarize"] },
+    { task: "#task-5", language: "jsx-editor", targets: ["App"], scan: "none" },
+    { task: "#task-6", language: "javascript-editor", targets: ["loadBooks"], scan: "none" },
+  ];
+  assert.equal(validate(multiLanguage), true, JSON.stringify(validate.errors));
+  for (const mutateAnswer of [
+    (value) => { value.answerSafety = { task: "#task-2", language: "python-comprehension", targets: ["result"], privateSuccessProof: true }; },
+    (value) => { value.answerSafety.tasks = []; },
+    (value) => { value.answerSafety.tasks[0].language = "ruby"; },
+    (value) => { value.answerSafety.tasks[0].scan = "none"; },
+    (value) => { delete value.answerSafety.tasks[2].scan; },
+    (value) => { value.answerSafety.tasks[2].scan = "python"; },
+    (value) => { value.answerSafety.tasks[0].targets = []; },
+  ]) {
+    const invalid = structuredClone(multiLanguage);
+    mutateAnswer(invalid);
+    assert.equal(validate(invalid), false, "answerSafety mutation unexpectedly matched qa-paths schema");
+  }
   for (const mutate of [
     (value) => { value.guidance = {}; },
     (value) => { delete value.guidance.objectivesTouch; },
@@ -460,6 +479,440 @@ test("private overlay refuses a topic without the explicit opt-in", async () => 
     await assert.rejects(runPrivateOverlay(context(repository.root), overlayFile), /requires the answer-sensitive private-success opt-in/);
   } finally {
     await rm(repository.root, { recursive: true, force: true });
+    await rm(staging, { recursive: true, force: true });
+  }
+});
+
+function guidedSetupActions(label) {
+  return [
+    { do: "check", selector: "#predict-grows" },
+    { do: "click", selector: "#check-1" },
+    { do: "click", selector: "#next-activity" },
+    { do: "fill", selector: "#editor-2", value: `// TODO ${label} setup attempt` },
+    { do: "click", selector: "#check-2" },
+  ];
+}
+
+function guidedSpec(mode = "settle") {
+  const wrongPredict = [
+    { do: "check", selector: "#predict-grows" },
+    { do: "click", selector: "#check-1" },
+  ];
+  const missEditorTwice = (editor, check, value) => [
+    { do: "fill", selector: editor, value },
+    { do: "click", selector: check },
+    { do: "click", selector: check },
+  ];
+  const negativeRoute = (label) => [
+    ...wrongPredict,
+    { do: "click", selector: "#next-activity" },
+    ...missEditorTwice("#editor-2", "#check-2", `// TODO ${label} reverse attempt`),
+    { do: "click", selector: "#next-activity" },
+    ...missEditorTwice("#editor-3", "#check-3", `// TODO ${label} summarize attempt`),
+    { do: "click", selector: "#next-activity" },
+    { do: "fill", selector: "#recap-input", value: `${label} recap sentence` },
+    { do: "click", selector: "#check-4" },
+  ];
+  const done = mode === "strict" ? 1 : 2;
+  return {
+    schemaVersion: 1,
+    completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "false" },
+    progress: { selector: "#progress", text: `^${done} of 4 done$` },
+    routes: {
+      success: negativeRoute("success"),
+      wrongFirst: negativeRoute("wrong-first"),
+      wrongTwice: [
+        ...negativeRoute("wrong-twice"),
+        { do: "expectText", selector: "#activity-4 [data-pep-feedback]", text: "Recap recorded" },
+      ],
+    },
+    simulatorEdges: [{
+      name: "unselected prediction remains incomplete",
+      actions: [
+        { do: "click", selector: "#check-1" },
+        { do: "expectText", selector: "#activity-1 [data-pep-feedback]", text: "Choose a prediction first" },
+        { do: "expectAttribute", selector: "#lesson", attribute: "data-pep-complete", equals: "false" },
+      ],
+    }],
+    restart: {
+      actions: [
+        ...wrongPredict,
+        { do: "click", selector: "#restart" },
+        ...wrongPredict,
+      ],
+      credit: { selector: "#progress", text: mode === "strict" ? "^0 of 4 done$" : "^1 of 4 done$" },
+    },
+    keyboard: negativeRoute("keyboard"),
+    guidance: {
+      activityNavigation: guidedSetupActions("pointer"),
+      activityNavigationKeyboard: guidedSetupActions("keyboard"),
+      activityNavigationTouch: guidedSetupActions("touch"),
+      objectives: [
+        { do: "click", selector: "[data-pep-objectives] > summary" },
+        { do: "expectVisible", selector: "#objectives-body" },
+        { do: "press", selector: "[data-pep-objectives] > summary", key: "Escape" },
+        { do: "expectHidden", selector: "#objectives-body" },
+        { do: "click", selector: "[data-pep-objectives] > summary" },
+        { do: "click", selector: "#page-title" },
+        { do: "expectHidden", selector: "#objectives-body" },
+      ],
+      objectivesTouch: [
+        { do: "click", selector: "[data-pep-objectives] > summary" },
+        { do: "expectVisible", selector: "#objectives-body" },
+        { do: "click", selector: "#page-title" },
+        { do: "expectHidden", selector: "#objectives-body" },
+      ],
+    },
+  };
+}
+
+function declareAnswerTasks(html, declarations) {
+  return declarations.reduce((out, [task, language, targets]) => out.replace(
+    `id="${task}" data-pep-task`,
+    `id="${task}" data-pep-task data-pep-answer-sensitive="${language}" data-pep-answer-targets="${targets}"`,
+  ), html);
+}
+
+const JAVA_GUIDED_TASKS = [
+  { task: "#task-2", language: "java", targets: ["reverse"] },
+  { task: "#task-3", language: "java", targets: ["summarize"] },
+];
+
+function guidedOverlayRoutes(editorTwoActions, editorThreeActions) {
+  return [
+    { do: "check", selector: "#predict-same" },
+    { do: "click", selector: "#check-1" },
+    { do: "click", selector: "#next-activity" },
+    ...editorTwoActions,
+    { do: "click", selector: "#next-activity" },
+    ...editorThreeActions,
+    { do: "click", selector: "#next-activity" },
+    { do: "fill", selector: "#recap-input", value: "both methods recapped" },
+    { do: "click", selector: "#check-4" },
+  ];
+}
+
+async function makeOverlayRepository(page, options) {
+  const repository = await makeRepository(page, options);
+  for (const file of ["authoring/tools/qa/harness.mjs", "authoring/tools/qa/python-answer-scan.py", "authoring/tools/checks/T08-html-static.mjs"]) {
+    await mkdir(path.dirname(path.join(repository.root, file)), { recursive: true });
+    await writeFile(path.join(repository.root, file), await readFile(path.resolve(file)));
+  }
+  for (const args of [["init", "-q", "-b", "main"], ["add", "."], ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit", "-qm", "public fixture"]]) {
+    const result = spawnSync("git", args, { cwd: repository.root, encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+  }
+  return repository;
+}
+
+test("T10 runs the guided answer-sensitive fixture with a settled incomplete prior in sandbox", { timeout: 300000 }, async () => {
+  assert.deepEqual(await runFixture("T10", "guided-answer-sensitive.html", {
+    spec: guidedSpec("strict"),
+    transformHtml: (html) => html.replace('data-pep-predict="settle"', 'data-pep-predict="strict"'),
+  }), []);
+});
+
+test("T11 accepts guided setup with a completed non-credit prediction prior", { timeout: 300000 }, async () => {
+  assert.deepEqual(await runFixture("T11", "guided-answer-sensitive.html", { spec: guidedSpec("settle") }), []);
+});
+
+test("T11 accepts guided setup whose prior settled miss stays incomplete at zero credit", { timeout: 300000 }, async () => {
+  assert.deepEqual(await runFixture("T11", "guided-answer-sensitive.html", {
+    spec: guidedSpec("strict"),
+    transformHtml: (html) => html.replace('data-pep-predict="settle"', 'data-pep-predict="strict"'),
+  }), []);
+});
+
+test("T11 rejects an incoherent settled grade-zero completion/credit pair", { timeout: 300000 }, async () => {
+  const errors = await runFixture("T11", "guided-answer-sensitive.html", {
+    spec: guidedSpec("settle"),
+    transformHtml: (html) => html.replace('data-pep-predict="settle"', 'data-pep-predict="false-credit"'),
+  });
+  assertPreciseFailure(errors, "T11", /incoherent completion\/credit pair/);
+});
+
+test("Java answer scanning and language-to-editor matching guard declared tasks", { timeout: 120000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "guided-answer-sensitive.html"), "utf8");
+  const javaHtml = declareAnswerTasks(baseHtml, [["task-2", "java", "reverse"], ["task-3", "java", "summarize"]]);
+  const spec = { answerSafety: { privateSuccessProof: true, tasks: structuredClone(JAVA_GUIDED_TASKS) } };
+  assert.deepEqual(await validateLearnerGuidance(javaHtml, spec), []);
+
+  const completed = "int[] reverse(int[] values) { int[] out = new int[values.length]; for (int i = 0; i < values.length; i++) { out[values.length - 1 - i] = values[i]; } return out; }";
+  const assignmentBody = "void summarize(int[] values) { total += values.length; }";
+  for (const [index, mutation] of [
+    javaHtml.replace("Complete the reverse method", `${completed}. Complete the reverse method`),
+    javaHtml.replace("<section data-pep-recap>", `<!-- ${completed} -->\n    <section data-pep-recap>`),
+    javaHtml.replace("  <script>", `  <p hidden>${completed}</p>\n  <script>`),
+    javaHtml.replace("  <script>", `  <p>${Buffer.from(completed).toString("base64")}</p>\n  <script>`),
+    javaHtml.replace("(() => {", `(() => {\n      const publicExample = ${JSON.stringify(completed)};`),
+    javaHtml.replace("Complete the summarize method", `${assignmentBody}. Complete the summarize method`),
+  ].entries()) {
+    assert.match(
+      (await validateLearnerGuidance(mutation, spec)).join("; "),
+      /complete target method implementation/,
+      `Java answer mutation ${index} unexpectedly passed`,
+    );
+  }
+  const specWithRoutes = { routes: { success: [{ do: "fill", selector: "#editor-2", value: completed }] }, ...structuredClone(spec) };
+  assert.match(
+    (await validateLearnerGuidance(javaHtml, specWithRoutes)).join("; "),
+    /complete target method implementation/,
+    "a completed method in QA strings must fail",
+  );
+  for (const [index, harmless] of [
+    javaHtml.replace("Complete the reverse method", "int[] reverse(int[] values) { return null; }. Complete the reverse method"),
+    javaHtml.replace("Complete the reverse method", "int[] helper(int[] values) { int[] out = values.clone(); for (int i = 0; i < out.length; i++) { out[i] += 1; } return out; }. Complete the reverse method"),
+    javaHtml.replace("Complete the reverse method", "Call reverse(values) and look at the result. Complete the reverse method"),
+  ].entries()) {
+    assert.deepEqual(await validateLearnerGuidance(harmless, spec), [], `harmless Java mutation ${index} unexpectedly failed`);
+  }
+
+  const pythonLabel = declareAnswerTasks(baseHtml, [["task-2", "python-comprehension", "reverse"]]);
+  const pythonSpec = { answerSafety: { tasks: [{ task: "#task-2", language: "python-comprehension", targets: ["reverse"] }] } };
+  assert.match((await validateLearnerGuidance(pythonLabel, pythonSpec)).join("; "), /false language label/,
+    "a Python label on a Java editor must be rejected");
+  const jsxLabel = declareAnswerTasks(baseHtml, [["task-2", "jsx-editor", "App"]]);
+  const jsxSpec = { answerSafety: { tasks: [{ task: "#task-2", language: "jsx-editor", targets: ["App"], scan: "none" }] } };
+  assert.match((await validateLearnerGuidance(jsxLabel, jsxSpec)).join("; "), /false language label/,
+    "a JSX label on a Java editor must be rejected");
+  const noEditor = declareAnswerTasks(baseHtml, [["task-4", "java", "reverse"]]);
+  const noEditorSpec = { answerSafety: { tasks: [{ task: "#task-4", language: "java", targets: ["reverse"] }] } };
+  assert.match((await validateLearnerGuidance(noEditor, noEditorSpec)).join("; "), /requires a matched java editor/,
+    "a Java declaration without a Java editor must be rejected");
+  const unsupported = declareAnswerTasks(baseHtml, [["task-2", "ruby", "reverse"]]);
+  const unsupportedSpec = { answerSafety: { tasks: [{ task: "#task-2", language: "ruby", targets: ["reverse"] }] } };
+  assert.match((await validateLearnerGuidance(unsupported, unsupportedSpec)).join("; "),
+    /supported, uniquely identified task declarations/,
+    "an unsupported language label must be rejected");
+
+  const editorsRenamed = baseHtml.replace("Reverse.java", "App.jsx").replace("Report.java", "load.js");
+  const matchedJs = declareAnswerTasks(editorsRenamed, [["task-2", "jsx-editor", "App"], ["task-3", "javascript-editor", "loadBooks"]]);
+  const matchedJsSpec = { answerSafety: { privateSuccessProof: true, tasks: [
+    { task: "#task-2", language: "jsx-editor", targets: ["App"], scan: "none" },
+    { task: "#task-3", language: "javascript-editor", targets: ["loadBooks"], scan: "none" },
+  ] } };
+  assert.deepEqual(await validateLearnerGuidance(matchedJs, matchedJsSpec), []);
+});
+
+test("private overlay proves multi-task Java success only when every declared editor genuinely passes", { timeout: 360000 }, async () => {
+  const spec = guidedSpec("strict");
+  spec.answerSafety = { privateSuccessProof: true, tasks: structuredClone(JAVA_GUIDED_TASKS) };
+  const repository = await makeOverlayRepository("guided-answer-sensitive.html", {
+    spec,
+    transformHtml: (html) => declareAnswerTasks(
+      html.replace('data-pep-predict="settle"', 'data-pep-predict="strict"'),
+      [["task-2", "java", "reverse"], ["task-3", "java", "summarize"]],
+    ),
+  });
+  const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-java-"));
+  const overlayFile = path.join(staging, "overlay.json");
+  const inputsFile = path.join(staging, "inputs.json");
+  const environment = { PEP_QA_PRIVATE_INPUTS_FILE: inputsFile };
+  const privateReverse = `int[] out = values.clone(); runtime only ${process.pid}`;
+  const privateSummarize = `return totalOf(values); runtime only ${process.pid}`;
+  try {
+    const passRoute = guidedOverlayRoutes(
+      [{ do: "fill", selector: "#editor-2", valueFrom: "private:reverse" }, { do: "click", selector: "#check-2" }],
+      [{ do: "fill", selector: "#editor-3", valueFrom: "private:summarize" }, { do: "click", selector: "#check-3" }],
+    );
+    const overlay = {
+      schemaVersion: 1,
+      runId: "local-safe-java-multi",
+      topic: "course/module/topic",
+      completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+      progress: { selector: "#progress", text: "^4 of 4 done$" },
+      routes: {
+        success: passRoute,
+        wrongFirst: guidedOverlayRoutes(
+          [
+            { do: "fill", selector: "#editor-2", value: "// TODO wrong overlay attempt" },
+            { do: "click", selector: "#check-2" },
+            { do: "fill", selector: "#editor-2", valueFrom: "private:reverse" },
+            { do: "click", selector: "#check-2" },
+          ],
+          [{ do: "fill", selector: "#editor-3", valueFrom: "private:summarize" }, { do: "click", selector: "#check-3" }],
+        ),
+        keyboard: passRoute,
+        sandbox: passRoute,
+      },
+    };
+    await writeFile(overlayFile, `${JSON.stringify(overlay)}\n`);
+    await writeFile(inputsFile, `${JSON.stringify({ reverse: privateReverse, summarize: privateSummarize })}\n`);
+
+    await assert.rejects(
+      runPrivateOverlay(context(repository.root), overlayFile, { environment: {} }),
+      /PEP_QA_PRIVATE_INPUTS_FILE is required/,
+      "a missing private input source must be refused before any browser run",
+    );
+
+    const result = await runPrivateOverlay(context(repository.root), overlayFile, { environment });
+    assert.equal(result.result, "pass");
+    assert.equal(result.publicBindings.length, 5);
+    const serialized = JSON.stringify(result);
+    assert.ok(!serialized.includes(privateReverse) && !serialized.includes(privateSummarize), "overlay result must not echo private values");
+
+    const receiptFile = path.join(repository.root, "authoring/evidence/course/module/topic/qa-receipt.json");
+    await writeFile(receiptFile, `${JSON.stringify({
+      privateSuccessProof: {
+        record: `validated at ${result.commit} by run ${result.runId}`,
+        commit: result.commit,
+        runId: result.runId,
+        result: "pass",
+        publicBindings: result.publicBindings,
+      },
+    })}\n`);
+    for (const args of [["add", "."], ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit", "-qm", "record private proof"]]) {
+      const commitResult = spawnSync("git", args, { cwd: repository.root, encoding: "utf8" });
+      assert.equal(commitResult.status, 0, commitResult.stderr);
+    }
+    assert.deepEqual(await validateQaPrivateProofs(repository.root, path.join(repository.root, "authoring/evidence/course")), []);
+    const artifactFile = path.join(repository.root, "course/module/topic/artifact.html");
+    const artifactBytes = await readFile(artifactFile);
+    await writeFile(artifactFile, Buffer.concat([artifactBytes, Buffer.from("<!-- drift -->\n")]));
+    assert.match(
+      (await validateQaPrivateProofs(repository.root, path.join(repository.root, "authoring/evidence/course"))).map((item) => item.message).join("; "),
+      /stale private-success public binding/,
+      "public drift after the proof commit must invalidate the receipt",
+    );
+    await writeFile(artifactFile, artifactBytes);
+
+    const mixed = structuredClone(overlay);
+    const failEditorThree = [
+      { do: "fill", selector: "#editor-3", value: "// TODO mixed overlay miss" },
+      { do: "click", selector: "#check-3" },
+      { do: "click", selector: "#check-3" },
+    ];
+    mixed.routes.success = guidedOverlayRoutes(
+      [{ do: "fill", selector: "#editor-2", valueFrom: "private:reverse" }, { do: "click", selector: "#check-2" }],
+      failEditorThree,
+    );
+    await writeFile(overlayFile, `${JSON.stringify(mixed)}\n`);
+    await assert.rejects(
+      runPrivateOverlay(context(repository.root), overlayFile, { environment }),
+      (error) => /private success route failed; no private values were recorded/.test(error.message) &&
+        !error.message.includes(privateReverse) && !error.message.includes(privateSummarize),
+      "a mixed pass/fail run must be refused without echoing private values",
+    );
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+    await rm(staging, { recursive: true, force: true });
+  }
+});
+
+test("private overlay rejects settle-as-complete false credit even when the page claims completion", { timeout: 300000 }, async () => {
+  const spec = guidedSpec("settle");
+  spec.answerSafety = { privateSuccessProof: true, tasks: structuredClone(JAVA_GUIDED_TASKS) };
+  const repository = await makeOverlayRepository("guided-answer-sensitive.html", {
+    spec,
+    transformHtml: (html) => declareAnswerTasks(
+      html.replace('data-pep-editor-engine="strict"', 'data-pep-editor-engine="false-credit"'),
+      [["task-2", "java", "reverse"], ["task-3", "java", "summarize"]],
+    ),
+  });
+  const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-false-credit-"));
+  const overlayFile = path.join(staging, "overlay.json");
+  const inputsFile = path.join(staging, "inputs.json");
+  const environment = { PEP_QA_PRIVATE_INPUTS_FILE: inputsFile };
+  const privateReverse = `int[] out = values.clone(); runtime only ${process.pid}`;
+  try {
+    await writeFile(inputsFile, `${JSON.stringify({ reverse: privateReverse })}\n`);
+    const missTwice = (editor, check) => [
+      { do: "fill", selector: editor, value: "// TODO settled overlay miss" },
+      { do: "click", selector: check },
+      { do: "click", selector: check },
+    ];
+    const allEditorsFail = guidedOverlayRoutes(missTwice("#editor-2", "#check-2"), missTwice("#editor-3", "#check-3"));
+    const overlay = {
+      schemaVersion: 1,
+      runId: "local-safe-false-credit",
+      topic: "course/module/topic",
+      completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+      progress: { selector: "#progress", text: "^4 of 4 done$" },
+      routes: { success: allEditorsFail, wrongFirst: allEditorsFail, keyboard: allEditorsFail, sandbox: allEditorsFail },
+    };
+    await writeFile(overlayFile, `${JSON.stringify(overlay)}\n`);
+    await assert.rejects(
+      runPrivateOverlay(context(repository.root), overlayFile, { environment }),
+      /private success route failed; no private values were recorded/,
+      "an all-editor-fail run must be refused even when page completion claims success",
+    );
+    const mixed = structuredClone(overlay);
+    mixed.routes.success = guidedOverlayRoutes(
+      [{ do: "fill", selector: "#editor-2", valueFrom: "private:reverse" }, { do: "click", selector: "#check-2" }],
+      missTwice("#editor-3", "#check-3"),
+    );
+    mixed.routes.wrongFirst = mixed.routes.success;
+    mixed.routes.keyboard = mixed.routes.success;
+    mixed.routes.sandbox = mixed.routes.success;
+    await writeFile(overlayFile, `${JSON.stringify(mixed)}\n`);
+    await assert.rejects(
+      runPrivateOverlay(context(repository.root), overlayFile, { environment }),
+      (error) => /private success route failed; no private values were recorded/.test(error.message) && !error.message.includes(privateReverse),
+      "false credit on a failed declared editor must be caught",
+    );
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+    await rm(staging, { recursive: true, force: true });
+  }
+});
+
+test("private overlay accepts matched jsx/javascript declarations and blocks exact private-value leaks", { timeout: 300000 }, async () => {
+  const jsTasks = [
+    { task: "#task-2", language: "jsx-editor", targets: ["App"], scan: "none" },
+    { task: "#task-3", language: "javascript-editor", targets: ["loadBooks"], scan: "none" },
+  ];
+  const transformHtml = (html) => declareAnswerTasks(
+    html.replace('data-pep-predict="settle"', 'data-pep-predict="strict"')
+      .replace("Reverse.java", "App.jsx").replace("Report.java", "load.js"),
+    [["task-2", "jsx-editor", "App"], ["task-3", "javascript-editor", "loadBooks"]],
+  );
+  const makeSpec = () => {
+    const spec = guidedSpec("strict");
+    spec.answerSafety = { privateSuccessProof: true, tasks: structuredClone(jsTasks) };
+    return spec;
+  };
+  const privateApp = `export function App() { return <Done pid={${process.pid}} />; }`;
+  const privateLoad = `return fetch("/books").then((response) => response.json()); // runtime only ${process.pid}`;
+  const passRoute = guidedOverlayRoutes(
+    [{ do: "fill", selector: "#editor-2", valueFrom: "private:app" }, { do: "click", selector: "#check-2" }],
+    [{ do: "fill", selector: "#editor-3", valueFrom: "private:load" }, { do: "click", selector: "#check-3" }],
+  );
+  const overlay = {
+    schemaVersion: 1,
+    runId: "local-safe-js-editors",
+    topic: "course/module/topic",
+    completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+    progress: { selector: "#progress", text: "^4 of 4 done$" },
+    routes: { success: passRoute, wrongFirst: passRoute, keyboard: passRoute, sandbox: passRoute },
+  };
+  const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-js-"));
+  const overlayFile = path.join(staging, "overlay.json");
+  const inputsFile = path.join(staging, "inputs.json");
+  const environment = { PEP_QA_PRIVATE_INPUTS_FILE: inputsFile };
+  await writeFile(overlayFile, `${JSON.stringify(overlay)}\n`);
+  await writeFile(inputsFile, `${JSON.stringify({ app: privateApp, load: privateLoad })}\n`);
+  const repository = await makeOverlayRepository("guided-answer-sensitive.html", { spec: makeSpec(), transformHtml });
+  try {
+    const result = await runPrivateOverlay(context(repository.root), overlayFile, { environment });
+    assert.equal(result.result, "pass");
+    assert.ok(!JSON.stringify(result).includes(privateApp), "overlay result must not echo private values");
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+  }
+  const leaking = await makeOverlayRepository("guided-answer-sensitive.html", {
+    spec: makeSpec(),
+    transformHtml,
+    markdownText: `# Companion notes\n\nReference: ${privateApp}\n`,
+  });
+  try {
+    await assert.rejects(
+      runPrivateOverlay(context(leaking.root), overlayFile, { environment }),
+      (error) => /appears in public topic bytes; no private values were recorded/.test(error.message) &&
+        !error.message.includes(privateApp) && !error.message.includes(privateLoad),
+      "an exact private value in a committed companion surface must be refused without echoing it",
+    );
+  } finally {
+    await rm(leaking.root, { recursive: true, force: true });
     await rm(staging, { recursive: true, force: true });
   }
 });
@@ -989,11 +1442,37 @@ test("target-aware Python AST scanning rejects complete generic answers in every
     'id="task-safe" data-pep-task data-pep-answer-sensitive="python-comprehension" data-pep-answer-targets="picked"',
   );
   const baseSpec = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
-  baseSpec.answerSafety = { task: "#task-safe", language: "python-comprehension", targets: ["picked"] };
+  baseSpec.answerSafety = { tasks: [{ task: "#task-safe", language: "python-comprehension", targets: ["picked"] }] };
   assert.deepEqual(await validateLearnerGuidance(baseHtml, baseSpec), []);
   const optedInSpec = structuredClone(baseSpec);
   optedInSpec.answerSafety.privateSuccessProof = true;
   assert.deepEqual(await validateLearnerGuidance(baseHtml, optedInSpec), []);
+  const multiHtml = baseHtml.replace(
+    'id="task-explain" data-pep-task',
+    'id="task-explain" data-pep-task data-pep-answer-sensitive="python-comprehension" data-pep-answer-targets="explained"',
+  );
+  const multiSpec = structuredClone(baseSpec);
+  multiSpec.answerSafety.tasks.push({ task: "#task-explain", language: "python-comprehension", targets: ["explained"] });
+  assert.deepEqual(await validateLearnerGuidance(multiHtml, multiSpec), []);
+  assert.match(
+    (await validateLearnerGuidance(multiHtml, baseSpec)).join("; "),
+    /must match one-to-one and exactly/,
+    "an undeclared second HTML answer-sensitive task must fail the one-to-one comparison",
+  );
+  assert.match(
+    (await validateLearnerGuidance(baseHtml, multiSpec)).join("; "),
+    /must match one-to-one and exactly/,
+    "a QA declaration without its HTML marker must fail the one-to-one comparison",
+  );
+  const secondTargetLeak = multiHtml.replace(
+    "Explain in the field below why your first action stays local.",
+    "explained = [entry for entry in records]. Explain in the field below why your first action stays local.",
+  );
+  assert.match(
+    (await validateLearnerGuidance(secondTargetLeak, multiSpec)).join("; "),
+    /complete target comprehension expression/,
+    "the second declaration must scan its own targets",
+  );
   const prompt = "A note preview appears only in this practice page. Choose where that effect stays, then check your choice.";
   const expression = "picked = [entry for entry in records]";
   const bare = "[entry for entry in records]";

@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 import AxeBuilder from "@axe-core/playwright";
 import Ajv2020 from "ajv/dist/2020.js";
 import { chromium } from "playwright";
+import { ANSWER_LANGUAGES } from "../checks/T08-html-static.mjs";
 import { error, evidencePath, findCourses, loadCourse, readJson, relative, sha256, walk } from "../lib/common.mjs";
 
 export const VIEWPORTS = [
@@ -375,6 +376,16 @@ function requiredGuidanceState(state) {
   return copy;
 }
 
+// Accepted pages represent settled grade-zero work in exactly two coherent ways:
+// a non-credit prediction that completed with one credit, or a failed required
+// activity that stays incomplete with zero credit. Setup-state coherence is
+// fixture evidence only; it never grants completion or credit to failed work.
+function settledGradeZeroPair(activity) {
+  return activity.settled === "true" && activity.grade === "0" &&
+    ((activity.completed === "true" && activity.credit === "1") ||
+      (activity.completed === "false" && activity.credit === "0"));
+}
+
 async function exerciseSequentialHints(target, options = {}) {
   if (options.unlockActions && !options.prepared) {
     await execute(target, options.unlockActions, { keyboard: options.keyboard, touch: options.touch });
@@ -687,7 +698,11 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
       currentState.completed !== "false" || currentState.credit !== "0" || currentState.canContinue !== "false") {
     throw new Error("guidance setup must finish on a later attempted but incomplete unlocked activity");
   }
-  if (!prepared.activities.some((activity, index) => index < current - 1 && activity.settled === "true" && activity.completed === "true" && activity.credit === "1" && activity.grade === "0") ||
+  const incoherentPair = prepared.activities.find((activity) => (activity.completed === "true") !== (activity.credit === "1"));
+  if (incoherentPair) {
+    throw new Error("guidance setup produced an incoherent completion/credit pair");
+  }
+  if (!prepared.activities.some((activity, index) => index < current - 1 && settledGradeZeroPair(activity)) ||
       Number(prepared.frontier) < 2 || populatedActivities.length < 2) {
     throw new Error("guidance setup did not establish preserved inputs, prior settlement and a monotonic frontier");
   }
@@ -740,8 +755,8 @@ async function checkGuidanceInvariants(target, setupActions, mode = "pointer") {
   await expectRenderedCurrentGuidance(target);
 
   const completedNumber = restartedWrong.activities.findIndex((activity, index) =>
-    index < current - 1 && activity.settled === "true" && activity.completed === "true" && activity.credit === "1" && activity.grade === "0") + 1;
-  if (!completedNumber) throw new Error("guidance setup has no prior completed activity for Restart verification");
+    index < current - 1 && settledGradeZeroPair(activity)) + 1;
+  if (!completedNumber) throw new Error("guidance setup has no prior settled activity for Restart verification");
   state = await guidanceState(target);
   await activateGuidance(links.nth(completedNumber - 1), mode);
   const completedBefore = await expectDestination(target, completedNumber, state);
@@ -1672,6 +1687,15 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
   if (spec.answerSafety?.privateSuccessProof !== true) {
     throw new Error("private overlay requires the answer-sensitive private-success opt-in");
   }
+  const declaredTasks = spec.answerSafety.tasks ?? [];
+  for (const declaration of declaredTasks) {
+    const registered = ANSWER_LANGUAGES[declaration.language];
+    const expectedScan = registered?.scan === "none" ? "none" : undefined;
+    if (!registered || declaration.scan !== expectedScan) {
+      throw new Error("private overlay requires supported answer-sensitive task declarations");
+    }
+  }
+  if (!declaredTasks.length) throw new Error("private overlay requires at least one declared answer-sensitive task");
   const approved = [
     relative(ctx.root, topic.html),
     relative(ctx.root, topic.spec),
@@ -1687,10 +1711,31 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
     beforeHashes.set(file, working);
   }
   const routeLengths = routeNames.map((name) => overlay.routes[name].length);
+  const flatActions = routeNames.flatMap((name) => overlay.routes[name]);
   const resolvedActions = await resolvePrivateActionValues(
-    routeNames.flatMap((name) => overlay.routes[name]),
+    flatActions,
     { environment: options.environment, repoRoot: ctx.root },
   );
+  // Exact in-memory leak comparison: every resolved private value is compared
+  // against every declared public learner and companion surface of the topic.
+  // Only exact and whitespace-collapsed occurrences are caught here; renamed,
+  // reshaped, assembled or encoded leaks remain an independent review duty.
+  const collapse = (text) => text.replace(/\s+/gu, " ");
+  const privateValues = [...new Set(flatActions
+    .map((action, index) => (Object.hasOwn(action, "valueFrom") ? resolvedActions[index].value : null))
+    .filter((value) => typeof value === "string" && value.trim().length))];
+  if (privateValues.length) {
+    const surfaces = [topic.spec, ...(await walk(topic.root)).files];
+    for (const surface of surfaces) {
+      const bytes = await readFile(surface).catch(() => null);
+      if (!bytes) continue;
+      const text = bytes.toString("utf8");
+      const collapsed = collapse(text);
+      if (privateValues.some((value) => text.includes(value) || collapsed.includes(collapse(value)))) {
+        throw new Error("a private success value appears in public topic bytes; no private values were recorded");
+      }
+    }
+  }
   const resolvedRoutes = {};
   let actionOffset = 0;
   for (let index = 0; index < routeNames.length; index++) {
@@ -1704,6 +1749,32 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
     if (!validateQaPath(candidate)) throw new Error(`private overlay ${name} route or postconditions do not match the public QA schema`);
   }
   const browser = await launchChromium();
+  // Gate-owned success postconditions: the runner itself requires every
+  // declared answer-sensitive task to genuinely pass. Overlay- or page-level
+  // completion claims are never trusted as proof, so all-fail and mixed runs
+  // fail even on an engine that settles failed attempts as complete.
+  const assertDeclaredTasksPassed = async (target) => {
+    for (const declaration of declaredTasks) {
+      const state = await target.locator(declaration.task).evaluate((element) => {
+        const activity = element.closest("[data-pep-activity]");
+        if (!activity) return null;
+        return {
+          completed: activity.dataset.pepCompleted ?? null,
+          credit: activity.dataset.pepCredit ?? null,
+          grade: activity.dataset.pepGrade ?? null,
+        };
+      });
+      if (!state) throw new Error("declared task has no gate-readable activity state");
+      if (state.completed !== "true" || state.credit !== "1" || state.grade !== "1") {
+        throw new Error("declared task did not genuinely pass");
+      }
+    }
+    const guidanceRoot = target.locator("[data-pep-guidance-contract]");
+    if (await guidanceRoot.count()) {
+      const complete = await guidanceRoot.first().getAttribute("data-pep-complete");
+      if (complete !== "true") throw new Error("guided page did not genuinely complete");
+    }
+  };
   const runTopLevel = async (actions, keyboard = false) => {
     const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
     const page = await context.newPage();
@@ -1719,6 +1790,7 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
       await execute(page, actions, { keyboard });
       await assertState(page, overlay.completion);
       await assertState(page, overlay.progress);
+      await assertDeclaredTasksPassed(page);
       if (attemptedExternalLoad) throw new Error("external load");
     } finally {
       await context.close();
@@ -1737,6 +1809,7 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
       await execute(frame, resolvedRoutes.sandbox);
       await assertState(frame, overlay.completion);
       await assertState(frame, overlay.progress);
+      await assertDeclaredTasksPassed(frame);
       if (sandboxExternalLoad) throw new Error("external load");
     } finally {
       await context.close();

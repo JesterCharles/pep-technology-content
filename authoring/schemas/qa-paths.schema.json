@@ -77,21 +77,43 @@
     "answerSafety": {
       "type": "object",
       "additionalProperties": false,
+      "required": ["tasks"],
+      "properties": {
+        "privateSuccessProof": { "const": true },
+        "tasks": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/answerTask" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "answerTask": {
+      "type": "object",
+      "additionalProperties": false,
       "required": ["task", "language", "targets"],
       "properties": {
         "task": { "type": "string", "pattern": "^#[A-Za-z][A-Za-z0-9_-]*$" },
-        "language": { "const": "python-comprehension" },
-        "privateSuccessProof": { "const": true },
+        "language": {
+          "enum": ["python-comprehension", "java", "javascript-editor", "jsx-editor"]
+        },
+        "scan": { "const": "none" },
         "targets": {
           "type": "array",
           "minItems": 1,
           "uniqueItems": true,
           "items": { "type": "string", "pattern": "^[A-Za-z_]\\w*$" }
         }
-      }
-    }
-  },
-  "$defs": {
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "language": { "enum": ["javascript-editor", "jsx-editor"] } } },
+          "then": { "required": ["scan"] },
+          "else": { "not": { "required": ["scan"] } }
+        }
+      ]
+    },
     "actions": {
       "type": "array",
       "minItems": 1,
