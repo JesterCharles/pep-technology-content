@@ -1753,3 +1753,90 @@ test("T18 catches Markdown parity mismatch against the exact file", { timeout: 6
     "course/module/topic/artifact.md",
   );
 });
+
+// Syntax-aware leak comparison. Every value here is a sentinel generated for this run: it answers no task,
+// and neither the value nor anything derived from it may reach an error, log or file outside the temporary repository.
+function leakSentinel() {
+  const id = `${process.pid}${Date.now().toString(36)}`;
+  return `const sentinel${id} = (n) => n > 1 && "s<${id}>&";\nconsole.log(sentinel${id}(2));`;
+}
+
+function characterReferences(value, form) {
+  const named = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
+  return [...value].map((char) => {
+    if (form === "named") return named[char] ?? char;
+    if (!/[&<>"=\n]/u.test(char)) return char;
+    const code = char.codePointAt(0);
+    return form === "decimal" ? `&#${code};` : `&#x${code.toString(16)};`;
+  }).join("");
+}
+
+async function leakOutcome(value, options = {}) {
+  const repository = await makeOverlayRepository("answer-sensitive-private.html", { spec: options.spec ?? answerSensitiveSpec(), transformHtml: options.transformHtml });
+  const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-leak-"));
+  const overlayFile = path.join(staging, "overlay.json");
+  const inputsFile = path.join(staging, "inputs.json");
+  const route = [{ do: "fill", selector: "#private-input", valueFrom: "private:value" }, { do: "click", selector: "#private-complete" }];
+  await writeFile(overlayFile, `${JSON.stringify({
+    schemaVersion: 1,
+    runId: "local-leak-comparison",
+    topic: "course/module/topic",
+    completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+    progress: { selector: "#progress", text: "^1 of 1$" },
+    routes: { success: route, wrongFirst: route, keyboard: route, sandbox: route },
+  })}\n`);
+  await writeFile(inputsFile, `${JSON.stringify({ value })}\n`);
+  try {
+    await runPrivateOverlay(context(repository.root), overlayFile, { environment: { PEP_QA_PRIVATE_INPUTS_FILE: inputsFile } });
+    return "passed";
+  } catch (cause) {
+    assert.ok(!cause.message.includes(value), "a refusal must not echo the private value");
+    return /appears in public topic bytes; no private values were recorded/u.test(cause.message) ? "refused" : "failed";
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+    await rm(staging, { recursive: true, force: true });
+  }
+}
+
+const inPage = (text) => (html) => html.replace("</main>", `${text}</main>`);
+
+test("private overlay refuses a private value written as HTML character references in the page", { timeout: 300000 }, async () => {
+  const value = leakSentinel();
+  for (const form of ["named", "decimal", "hex"]) {
+    const encoded = characterReferences(value, form);
+    assert.notEqual(encoded, value);
+    assert.ok(!encoded.includes(value));
+    for (const [surface, markup] of [
+      ["text", `<pre>${encoded}</pre>`],
+      ["attribute", `<p title="${encoded}">note</p>`],
+      ["template", `<template><pre>${encoded}</pre></template>`],
+      ["noscript", `<noscript><pre>${encoded}</pre></noscript>`],
+    ]) {
+      assert.equal(await leakOutcome(value, { transformHtml: inPage(markup) }), "refused", `${form} references in page ${surface}`);
+    }
+  }
+});
+
+test("private overlay refuses a multiline private value JSON-escaped in qa-paths", { timeout: 180000 }, async () => {
+  const value = leakSentinel();
+  const asString = answerSensitiveSpec();
+  asString.simulatorEdges[0].name = value;
+  assert.ok(!JSON.stringify(asString).includes(value));
+  assert.equal(await leakOutcome(value, { spec: asString }), "refused", "escaped in a string value");
+  const nested = answerSensitiveSpec();
+  nested.routes.success.push({ do: "expectText", selector: "#feedback", text: value });
+  assert.equal(await leakOutcome(value, { spec: nested }), "refused", "escaped in a nested route string");
+});
+
+test("private leak comparison keeps raw exact scanning and claims no transformed leakage", { timeout: 300000 }, async () => {
+  const value = leakSentinel();
+  assert.equal(await leakOutcome(value), "passed", "a clean topic passes");
+  assert.equal(await leakOutcome(value, { transformHtml: inPage(`<!-- ${value} -->`) }), "refused", "raw value in a comment");
+  assert.equal(await leakOutcome(value, { transformHtml: inPage(`<script>/* ${value} */</script>`) }), "refused", "raw value in a script");
+  // These stay with independent review: decoding runs once, by syntax, and normalizes nothing else.
+  const doubled = characterReferences(characterReferences(value, "named"), "named");
+  assert.equal(await leakOutcome(value, { transformHtml: inPage(`<pre>${doubled}</pre>`) }), "passed", "doubly encoded text decodes only once");
+  const renamed = value.replaceAll("sentinel", "renamed");
+  assert.equal(await leakOutcome(value, { transformHtml: inPage(`<pre>${characterReferences(renamed, "named")}</pre>`) }), "passed", "a renamed form is not an exact match");
+  assert.equal(await leakOutcome(value, { transformHtml: inPage(`<pre>${Buffer.from(value).toString("base64")}</pre>`) }), "passed", "an alternate encoding is not decoded");
+});

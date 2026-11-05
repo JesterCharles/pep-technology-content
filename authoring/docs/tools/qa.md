@@ -202,7 +202,11 @@ repository. Missing, unreadable or malformed sources and missing or non-string k
 values, every route and the overlay-owned postconditions must still match the public QA schema. Before any browser
 run, the runner compares every resolved private value, exactly and whitespace-collapsed, against every committed
 learner and companion surface of the topic (every file under the topic directory plus its `qa-paths.json`); any exact
-occurrence refuses the run with a generic error. Keep the overlay and
+occurrence refuses the run with a generic error. Raw bytes are always scanned. The topic's `artifact.html` is also
+compared after HTML parsing, so character references in its text, attributes, templates and `<noscript>` do not hide a
+value, and `qa-paths.json` is also compared after `JSON.parse`, so JSON string escapes do not hide one. Those are the
+only two representations recognized. Independent review stays mandatory for renamed, reshaped, assembled, digest,
+alternate-encoding and other transformed leakage. Keep the overlay and
 input file uncommitted; neither file nor any resolved value is copied into evidence or generated output.
 
 Overlay postconditions are author-supplied but never sufficient: the runner owns per-task and page success
