@@ -10,7 +10,8 @@ npm run check
 node authoring/tools/qa/run.mjs
 node authoring/tools/qa/run.mjs java-foundations/basics/a-topic
 node authoring/tools/qa/run.mjs --write-evidence java-foundations/basics/a-topic
-node authoring/tools/qa/run.mjs --private-overlay /absolute/outside-repo/private-qa.json
+PEP_QA_PRIVATE_INPUTS_FILE=/absolute/outside-repo/private-inputs.json \
+  node authoring/tools/qa/run.mjs --private-overlay /absolute/outside-repo/private-qa.json
 ```
 
 Normal runs write receipts and failure diagnostics under gitignored `build/qa/`.
@@ -27,14 +28,21 @@ Every HTML topic is joined by ids from `authoring/catalog/<course>/<module>/<top
 `authoring/evidence/<course>/<module>/<topic>/qa-paths.json`, validated by
 `authoring/schemas/qa-paths.schema.json`.
 Selectors belong to the page, not to the harness. A path is an ordered list of declarative actions.
-The three required routes must independently finish the topic:
+Normally, the three required routes must independently finish the topic:
 
 - `success`: correct on the first attempt;
 - `wrongFirst`: wrong first and then correct on retry;
 - `wrongTwice`: wrong twice and reach the honest settled state.
 
+An answer-sensitive topic may instead set `answerSafety.privateSuccessProof: true` beside its declared
+`answerSafety.tasks`. For that explicit opt-in, all committed routes are public-safe negative paths, so the shared
+`completion` and `progress` assertions prove the page remains incomplete and at zero credit. `wrongTwice` may reach an
+accepted retry limit, but it must not settle the answer-sensitive task as complete or award credit. T06 rejects the
+opt-in until the topic has its current existing private-success receipt.
+
 `simulatorEdges` records realistic unsupported, partial, or look-alike states and their assertions.
-`progress` separately asserts that each route reached 100%. `restart.actions` completes, restarts, and repeats an
+For ordinary topics, `progress` separately asserts that each route reached 100%; for the private-proof opt-in, it
+asserts no public route awarded credit. `restart.actions` completes, restarts, and repeats an
 activity; `restart.credit` proves credit was not duplicated. `keyboard` is the complete success route using semantic
 keyboard activation. `data-pep-guidance-contract` and `spec.guidance` are mandatory together. Enrolled specs require
 `activityNavigation`, `activityNavigationKeyboard`, `activityNavigationTouch`, `objectives` and `objectivesTouch`;
@@ -42,8 +50,12 @@ keyboard activation. `data-pep-guidance-contract` and `spec.guidance` are mandat
 enrollment are both accepted, while owner-aware traversal and assertions remain harness-controlled rather than limited
 by author selectors. Empty, partial or author-selected omission fails before browser execution. The contract fixture demonstrates
 the exact shape. Navigation arrays are setup/smoke paths, not self-selected evidence: they must leave meaningful live
-inputs in at least two activities, a prior honestly settled/completed **grade-0 wrong settlement** with one credit, and
-a later unlocked, attempted but incomplete current activity. Harness-owned postconditions then activate Previous/Next,
+inputs in at least two activities, a prior honestly settled grade-0 activity in one of the two accepted coherent
+state pairs — a non-credit prediction settled as completed with one credit, or a failed required activity settled as
+incomplete with zero credit — and a later unlocked, attempted but incomplete current activity. Any incoherent
+completion/credit pair (completed without its credit, or credit without completion) fails setup directly. Setup-state
+coherence is fixture evidence only: it never grants completion or credit to failed required work, and a prior
+non-credit completion is never proof that required work passed. Harness-owned postconditions then activate Previous/Next,
 current/completed timeline and back links, every future link and fragment, browser history and Restart; they compare
 the complete root/control/per-activity snapshot and reject vacuous setup. The same procedure runs pointer and keyboard
 desktop plus 320/390 touch, both top-level and in `sandbox="allow-scripts"`.
@@ -60,11 +72,11 @@ T13 repeats it at every responsive/zoom viewport.
 Actions use strict per-action schema branches; missing or irrelevant operands are rejected. Supported actions are:
 
 - `click` and `check`: `do` plus `selector` only;
-- `fill` and `select`: `do`, `selector` and `value`;
+- `fill` and `select`: `do`, `selector` and exactly one of literal `value` or private-overlay-only `valueFrom: "private:<key>"`;
 - `press`: `do`, `selector` and `key`;
 - `goBack` and `goForward`: `do` only, with no selector;
 - `expectText`: `selector` and non-empty regular-expression `text`;
-- `expectValue`: `selector` and regular-expression `value`;
+- `expectValue`: `selector` and exactly one of regular-expression `value` or private-overlay-only `valueFrom: "private:<key>"`;
 - `expectAttribute`: `selector`, `attribute` and `equals`;
 - `expectVisible`, `expectHidden`, `expectEnabled`, `expectDisabled` and `expectFocus`: `selector` only.
 
@@ -149,29 +161,70 @@ Git `tNN.json` files, and the reusable route roles of AI `spec.js`. No course-1 
 
 ### Answer-sensitive routes and private proof
 
-An answer-sensitive task and `qa-paths.json` declare the same task selector, supported language scanner and target
-names. Committed paths contain only public-safe starter, incomplete, malformed, unsupported-shape, reset and
+Each answer-sensitive task carries one HTML declaration (`data-pep-answer-sensitive="<language>"
+data-pep-answer-targets="..."`), and `qa-paths.json` lists the same declarations one-to-one in `answerSafety.tasks`
+with exactly matching task selector, language and target names. A page may declare several answer-sensitive tasks;
+each declaration owns its activity scope and targets. The supported declarations are closed:
+
+- `python-comprehension`: CPython structural comprehension scanning of declared targets.
+- `java`: structural Java scanning that rejects a complete implementation body of any declared target method
+  (loops, branches, assignments or multi-statement bodies); a trivial placeholder starter stays legal. The declared
+  task must contain a matched `.java` editor.
+- `javascript-editor` and `jsx-editor`: an explicit no-structural-scanner mode (`"scan": "none"`), allowed only for
+  a matched `.js`/`.mjs`/`.cjs` or `.jsx` editor in the declared task. Its protection is the private runner's exact
+  in-memory value comparison plus mandatory independent review.
+
+A declaration whose task names an editor file owned by a different supported language is a false language label and
+fails; a `java`, `javascript-editor` or `jsx-editor` declaration without its matched editor fails; an unsupported
+language fails. A declaration whose required protection is not effective is refused rather than accepted vacuously.
+
+Committed paths contain only public-safe starter, incomplete, malformed, unsupported-shape, reset and
 no-premature-credit routes. An incorrect observed or expected result may use starter, incomplete, malformed or
-unsupported-shape input; it never includes a completed declared-target assignment. Complete bare comprehension
-syntax in an inline script literal is conservatively answer-bearing because static QA cannot prove where it will render. The target-aware scanner inventories decoded text and attributes from the
+unsupported-shape input; it never includes a completed declared-target assignment or method body. Complete bare
+comprehension syntax in an inline script literal is conservatively answer-bearing because static QA cannot prove where
+it will render. The target-aware scanner inventories decoded text and attributes from the
 document element and every descendant—including head, styles and body content outside the enrolled main—plus
 document-wide comments, no-JavaScript/templates/static alternatives and all QA strings. Its bounded JS
 parser cooks escapes/templates and folds all-literal `+` chains without execution. CPython `tokenize` extracts
 balanced candidates from prose; `ast` recursively checks declared targets through wrappers and positional destructuring.
-Target assignments fail anywhere, while standalone comprehensions fail only on answer-bearing task/activity/workspace
-or selector-associated QA surfaces, preserving unrelated teaching. Canonical UTF-8 base64, percent and hex-byte
-forms are decoded; target-associated decoder/character assembly and 40/64-hex digests fail. Arbitrary semantic
-leakage and opaque provenance remain explicit education/SME review boundaries.
+Target assignments and target method implementations fail anywhere, while standalone comprehensions fail only on
+answer-bearing task/activity/workspace or selector-associated QA surfaces, preserving unrelated teaching. Canonical
+UTF-8 base64, percent and hex-byte forms are decoded; target-associated decoder/character assembly and 40/64-hex
+digests fail. Exact and structural scanning never covers renamed, reshaped, assembled or encoded leaks beyond those
+bounded decodings: arbitrary semantic leakage and opaque provenance remain explicit education/SME review boundaries.
 
-Completed inputs run only from an absolute authorized uncommitted overlay outside the repository. The private runner
-captures clean commit **P** before loading the topic, verifies the exact five approved public working files equal P's
+Completed inputs run only from an absolute authorized uncommitted overlay outside the repository, and the committed
+QA path must explicitly set `answerSafety.privateSuccessProof: true`. The overlay carries its own non-secret
+`completion` and `progress` assertions plus `success`, `wrongFirst`, `keyboard` and `sandbox` routes. Private-valued
+`fill`, `select` and `expectValue` steps use `valueFrom: "private:<key>"`; at execution, the runner reads that key from
+the JSON object selected by `PEP_QA_PRIVATE_INPUTS_FILE`. The source path must be absolute and resolve outside the
+repository. Missing, unreadable or malformed sources and missing or non-string keys are refused. After resolving the
+values, every route and the overlay-owned postconditions must still match the public QA schema. Before any browser
+run, the runner compares every resolved private value, exactly and whitespace-collapsed, against every committed
+learner and companion surface of the topic (every file under the topic directory plus its `qa-paths.json`); any exact
+occurrence refuses the run with a generic error. Raw bytes are always scanned. The topic's `artifact.html` is also
+compared after HTML parsing, so character references in its text, attributes, templates and `<noscript>` do not hide a
+value, and `qa-paths.json` is also compared after `JSON.parse`, so JSON string escapes do not hide one. Those are the
+only two representations recognized. Independent review stays mandatory for renamed, reshaped, assembled, digest,
+alternate-encoding and other transformed leakage. Keep the overlay and
+input file uncommitted; neither file nor any resolved value is copied into evidence or generated output.
+
+Overlay postconditions are author-supplied but never sufficient: the runner owns per-task and page success
+postconditions. After each of the four routes, every declared answer-sensitive task's activity must report
+`completed=true`, `credit=1` and `grade=1` through its state hooks, and an enrolled page's guidance root must report
+`data-pep-complete="true"`. A declared task without gate-readable activity state is refused. An all-editor-fail or
+mixed pass/fail run therefore fails even when page-level or overlay completion claims success, including on an engine
+that settles failed attempts as complete.
+
+The private runner captures clean commit **P** before loading the topic, verifies the exact five approved public working files equal P's
 blobs before and after `success`, `wrongFirst`, `keyboard` and `sandbox`, and rejects dirty tracked/untracked bytes,
 HEAD movement or file drift. It disables tracing, screenshots, value logging and `build/` output; generic errors keep
 completed values out of logs. After staging is retired, immediate evidence-only child **R** may add the existing
 `qa-receipt.json` and generated module lock. The proof still names P and contains exactly five bindings: artifact,
-public QA path, harness, T08 scanner and Python scanner. T06 locates the unique runId introduction, requires R's first
-parent to be P, hashes each P blob and current file, and rejects extra/missing bindings, old/non-parent identity or
-later public drift. Rebase/squash requires a fresh run. No private value or answer-derived hash is recorded.
+public QA path, harness, T08 scanner and Python scanner. T06 requires that receipt for every private-success opt-in,
+locates the unique runId introduction, requires R's first parent to be P, hashes each P blob and current file, and
+rejects extra/missing bindings, old/non-parent identity or later public drift. Rebase/squash requires a fresh run. No
+private value, private postcondition output or answer-derived hash is recorded.
 
 ## Gate behavior
 

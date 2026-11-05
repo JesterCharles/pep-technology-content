@@ -11,6 +11,19 @@ export const description = "static HTML contract";
 
 const ANSWER_SCANNER = fileURLToPath(new URL("../qa/python-answer-scan.py", import.meta.url));
 
+// Closed registry of supported answer-sensitive declarations. A language with
+// scan "none" relies on matched editor shape plus the private overlay's exact
+// in-memory leak comparison, so it must name a matched editor; renamed,
+// reshaped, assembled or encoded leaks stay with independent review.
+export const ANSWER_LANGUAGES = {
+  "python-comprehension": { scan: "python", extensions: ["py"], requiresEditor: false },
+  "java": { scan: "java", extensions: ["java"], requiresEditor: true },
+  "javascript-editor": { scan: "none", extensions: ["js", "mjs", "cjs"], requiresEditor: true },
+  "jsx-editor": { scan: "none", extensions: ["jsx"], requiresEditor: true },
+};
+const EXTENSION_LANGUAGE = new Map(Object.entries(ANSWER_LANGUAGES)
+  .flatMap(([language, entry]) => entry.extensions.map((extension) => [extension, language])));
+
 function metas(html) {
   const out = {};
   for (const m of html.matchAll(/<meta\s+[^>]*name=["'](pep:[^"']+)["'][^>]*>/gi)) {
@@ -182,13 +195,93 @@ function scanPythonAnswers(sources, targets) {
   return JSON.parse(result.stdout).findings ?? [];
 }
 
+function stripJavaNoise(source) {
+  let out = "";
+  for (let index = 0; index < source.length;) {
+    const char = source[index];
+    if (char === "/" && source[index + 1] === "/") {
+      const end = source.indexOf("\n", index + 2);
+      index = end < 0 ? source.length : end;
+      continue;
+    }
+    if (char === "/" && source[index + 1] === "*") {
+      const end = source.indexOf("*/", index + 2);
+      index = end < 0 ? source.length : end + 2;
+      out += " ";
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      if (char === '"' && source[index + 1] === '"' && source[index + 2] === '"') {
+        const end = source.indexOf('"""', index + 3);
+        index = end < 0 ? source.length : end + 3;
+      } else {
+        index++;
+        while (index < source.length && source[index] !== char && source[index] !== "\n") {
+          if (source[index] === "\\") index++;
+          index++;
+        }
+        index++;
+      }
+      out += `${char}${char}`;
+      continue;
+    }
+    out += char;
+    index++;
+  }
+  return out;
+}
+
+function balancedSpanEnd(source, open, close, start) {
+  let depth = 0;
+  for (let index = start; index < source.length; index++) {
+    if (source[index] === open) depth++;
+    else if (source[index] === close) {
+      depth--;
+      if (depth === 0) return index + 1;
+    }
+  }
+  return -1;
+}
+
+function javaBodyLooksComplete(body) {
+  if ((body.match(/;/gu) ?? []).length >= 2) return true;
+  if (/\b(?:for|while|if|switch|try|do)\b/u.test(body)) return true;
+  return /(?:\+\+|--|[+\-*/%&|^]=|(?<![=!<>+\-*/%&|^])=(?![=>]))/u.test(body);
+}
+
+function containsJavaTargetAnswer(value, targets) {
+  const source = stripJavaNoise(value);
+  for (const target of targets) {
+    for (const match of source.matchAll(new RegExp(`(?<![.\\w$])${target}\\s*\\(`, "gu"))) {
+      const parenStart = source.indexOf("(", match.index + target.length);
+      const parenEnd = balancedSpanEnd(source, "(", ")", parenStart);
+      if (parenEnd < 0) continue;
+      let cursor = parenEnd;
+      const throwsClause = source.slice(cursor).match(/^\s*throws\s+[\w$][\w$.,\s]*?(?=\{)/u);
+      if (throwsClause) cursor += throwsClause[0].length;
+      const opening = source.slice(cursor).match(/^\s*\{/u);
+      if (!opening) continue;
+      const braceStart = cursor + opening[0].length - 1;
+      const braceEnd = balancedSpanEnd(source, "{", "}", braceStart);
+      if (braceEnd < 0) continue;
+      if (javaBodyLooksComplete(source.slice(braceStart + 1, braceEnd - 1))) return true;
+    }
+  }
+  return false;
+}
+
+function scanJavaAnswers(sources, targets) {
+  return sources.some((source) => decodedSources(source.value)
+    .some((value) => typeof value === "string" && containsJavaTargetAnswer(value, targets)));
+}
+
 async function inspectHtml(html, browser, spec) {
   const ownBrowser = browser ?? await launchParserBrowser();
   const context = await ownBrowser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   try {
     await page.setContent(html, { waitUntil: "load" });
-    const snapshot = await page.evaluate(() => {
+    const snapshot = await page.evaluate((supportedLanguages) => {
       const normalize = (value) => (value ?? "").replace(/\s+/gu, " ").trim();
       const direct = (element, selector) => [...element.querySelectorAll(selector)]
         .filter((node) => node.closest("details") === element);
@@ -282,7 +375,7 @@ async function inspectHtml(html, browser, spec) {
 
       const enrolled = [...document.querySelectorAll("main[data-pep-guidance-contract]")];
       if (!enrolled.length) {
-        return { ...problems, anecdoteProse, answerSources, hasGuidanceMarker: false, hintCount: 0, answerDeclaration: null, scripts: [] };
+        return { ...problems, anecdoteProse, answerSources, hasGuidanceMarker: false, hintCount: 0, answerDeclarations: null, scripts: [] };
       }
       if (enrolled.length !== 1) problems.guidance.push("guidance-contract pages require exactly one enrolled root main");
       const root = enrolled[0];
@@ -447,56 +540,69 @@ async function inspectHtml(html, browser, spec) {
       })) problems.guidance.push("hint ownership must resolve to exactly one task in the same activity");
 
       const sensitive = [...root?.querySelectorAll("[data-pep-answer-sensitive]") ?? []];
-      let answerDeclaration = null;
+      let answerDeclarations = null;
       let answerSelectors = [];
       if (sensitive.length) {
-        if (sensitive.length !== 1 || sensitive[0].dataset.pepAnswerSensitive !== "python-comprehension") {
-          problems.guidance.push("answer-sensitive guidance requires one supported task declaration");
-        } else {
-          const targets = (sensitive[0].dataset.pepAnswerTargets ?? "").split(/\s+/u).filter(Boolean);
+        answerDeclarations = [];
+        const seenTasks = new Set();
+        for (const declared of sensitive) {
+          const language = declared.dataset.pepAnswerSensitive ?? "";
+          if (!supportedLanguages.includes(language) || !declared.id || seenTasks.has(declared.id)) {
+            problems.guidance.push("answer-sensitive guidance requires supported, uniquely identified task declarations");
+            continue;
+          }
+          seenTasks.add(declared.id);
+          const targets = (declared.dataset.pepAnswerTargets ?? "").split(/\s+/u).filter(Boolean);
           if (!targets.length) problems.guidance.push("answer-sensitive guidance requires declared target names");
-          answerDeclaration = { task: `#${sensitive[0].id}`, language: "python-comprehension", targets };
-          const activityScope = sensitive[0].closest("[data-pep-activity]") ?? sensitive[0];
-          const bearing = (node) => activityScope.contains(node) || sensitive[0].contains(node) ||
-            Boolean(node.closest?.("noscript, [data-static-alt]") || node.matches?.("noscript, [data-static-alt]"));
-          const documentRoot = document.documentElement;
-          for (const node of [documentRoot, ...documentRoot.querySelectorAll("*")]) {
-            for (const child of node.childNodes) {
-              if (child.nodeType === Node.TEXT_NODE && normalize(child.textContent)) {
-                answerSources.push({
-                  value: child.textContent,
-                  answerBearing: bearing(node),
-                  source: node.tagName === "STYLE" ? "style-text" : "html-text",
-                });
-              }
-            }
-            for (const attribute of node.attributes ?? []) {
-              answerSources.push({ value: attribute.value, answerBearing: bearing(node), source: `attribute:${attribute.name}` });
-            }
-            if (node.tagName === "TEMPLATE" && normalize(node.content.textContent)) {
-              answerSources.push({ value: node.content.textContent, answerBearing: bearing(node), source: "template" });
-            }
-          }
-          const comments = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT);
-          while (comments.nextNode()) {
-            const parent = comments.currentNode.parentElement;
-            answerSources.push({ value: comments.currentNode.textContent, answerBearing: parent ? bearing(parent) : false, source: "html-comment" });
-          }
-          answerSelectors = [...activityScope.querySelectorAll("[id]")].map((node) => `#${CSS.escape(node.id)}`);
+          const editorNames = [
+            ...[...declared.querySelectorAll(".pep-editor__file, [data-pep-file-tab]")].map((node) => node.textContent ?? ""),
+            ...[...declared.querySelectorAll("[data-file]")].map((node) => node.getAttribute("data-file") ?? ""),
+          ];
+          const editorExtensions = [...new Set(editorNames
+            .map((name) => normalize(name).toLowerCase().match(/\.([a-z0-9]+)$/u)?.[1] ?? "")
+            .filter(Boolean))];
+          answerDeclarations.push({ task: `#${declared.id}`, language, targets, editorExtensions });
         }
+        const scopes = sensitive.map((declared) => declared.closest("[data-pep-activity]") ?? declared);
+        const bearing = (node) => scopes.some((scope, index) => scope.contains(node) || sensitive[index].contains(node)) ||
+          Boolean(node.closest?.("noscript, [data-static-alt]") || node.matches?.("noscript, [data-static-alt]"));
+        const documentRoot = document.documentElement;
+        for (const node of [documentRoot, ...documentRoot.querySelectorAll("*")]) {
+          for (const child of node.childNodes) {
+            if (child.nodeType === Node.TEXT_NODE && normalize(child.textContent)) {
+              answerSources.push({
+                value: child.textContent,
+                answerBearing: bearing(node),
+                source: node.tagName === "STYLE" ? "style-text" : "html-text",
+              });
+            }
+          }
+          for (const attribute of node.attributes ?? []) {
+            answerSources.push({ value: attribute.value, answerBearing: bearing(node), source: `attribute:${attribute.name}` });
+          }
+          if (node.tagName === "TEMPLATE" && normalize(node.content.textContent)) {
+            answerSources.push({ value: node.content.textContent, answerBearing: bearing(node), source: "template" });
+          }
+        }
+        const comments = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT);
+        while (comments.nextNode()) {
+          const parent = comments.currentNode.parentElement;
+          answerSources.push({ value: comments.currentNode.textContent, answerBearing: parent ? bearing(parent) : false, source: "html-comment" });
+        }
+        answerSelectors = scopes.flatMap((scope) => [...scope.querySelectorAll("[id]")].map((node) => `#${CSS.escape(node.id)}`));
       }
       const scripts = [...document.scripts].map((script) => script.textContent ?? "");
-      return { ...problems, anecdoteProse, answerSources, answerSelectors, hasGuidanceMarker: true, hintCount: hints.length, answerDeclaration, scripts };
-    });
+      return { ...problems, anecdoteProse, answerSources, answerSelectors, hasGuidanceMarker: true, hintCount: hints.length, answerDeclarations, scripts };
+    }, Object.keys(ANSWER_LANGUAGES));
     if (snapshot.anecdoteProse.some((prose) => decodedSources(prose).some(containsAnecdoteTechnical))) {
       snapshot.optional.push("optional anecdote must not contain code, API calls, commands or exact exception/output text");
     }
-    if (snapshot.answerDeclaration && spec) {
+    if (snapshot.answerDeclarations && spec) {
       for (const selector of recursiveSelectors(spec)) {
         const resolvesInsideAnswerSurface = await page.locator(selector).evaluateAll((nodes) => {
-          const sensitive = document.querySelector("[data-pep-answer-sensitive]");
-          const scope = sensitive?.closest("[data-pep-activity]") ?? sensitive;
-          return Boolean(scope && nodes.some((node) => scope.contains(node) || node.closest("noscript, [data-static-alt]")));
+          const scopes = [...document.querySelectorAll("[data-pep-answer-sensitive]")]
+            .map((declared) => declared.closest("[data-pep-activity]") ?? declared);
+          return nodes.some((node) => scopes.some((scope) => scope.contains(node)) || node.closest("noscript, [data-static-alt]"));
         }).catch(() => false);
         if (resolvesInsideAnswerSurface) snapshot.answerSelectors.push(selector);
       }
@@ -541,14 +647,46 @@ async function inspectHtml(html, browser, spec) {
 export async function validateHtmlContracts(html, options = {}) {
   const snapshot = await inspectHtml(html, options.browser, options.spec);
   const answerProblems = [];
-  const specDeclaration = options.spec?.answerSafety ?? null;
-  if (Boolean(snapshot.answerDeclaration) !== Boolean(specDeclaration)) {
+  const specTasks = options.spec?.answerSafety?.tasks ?? null;
+  if (Boolean(snapshot.answerDeclarations) !== Boolean(specTasks)) {
     answerProblems.push("HTML and QA must declare answer-sensitive scanning together");
-  } else if (snapshot.answerDeclaration &&
-      JSON.stringify(snapshot.answerDeclaration) !== JSON.stringify(specDeclaration)) {
-    answerProblems.push("HTML and QA answer-sensitive declarations must match exactly");
+  } else if (snapshot.answerDeclarations) {
+    const pageTasks = snapshot.answerDeclarations.map((declaration) => ({
+      task: declaration.task,
+      language: declaration.language,
+      targets: declaration.targets,
+    }));
+    const qaTasks = specTasks.map((declaration) => ({
+      task: declaration.task,
+      language: declaration.language,
+      targets: declaration.targets,
+    }));
+    if (JSON.stringify(pageTasks) !== JSON.stringify(qaTasks)) {
+      answerProblems.push("HTML and QA answer-sensitive declarations must match one-to-one and exactly");
+    }
+    for (const declaration of specTasks) {
+      const registered = ANSWER_LANGUAGES[declaration.language];
+      const expectedScan = registered?.scan === "none" ? "none" : undefined;
+      if (!registered || declaration.scan !== expectedScan) {
+        answerProblems.push("answer-sensitive declarations must use a supported language and its registered scan mode");
+      }
+    }
+    for (const declaration of snapshot.answerDeclarations) {
+      const registered = ANSWER_LANGUAGES[declaration.language];
+      if (!registered) continue;
+      const foreign = declaration.editorExtensions.filter((extension) =>
+        EXTENSION_LANGUAGE.has(extension) && EXTENSION_LANGUAGE.get(extension) !== declaration.language);
+      if (foreign.length) {
+        answerProblems.push(`answer-sensitive task ${declaration.task} declares a false language label for its editor`);
+        continue;
+      }
+      if (registered.requiresEditor &&
+          !declaration.editorExtensions.some((extension) => registered.extensions.includes(extension))) {
+        answerProblems.push(`answer-sensitive task ${declaration.task} requires a matched ${declaration.language} editor`);
+      }
+    }
   }
-  if (snapshot.answerDeclaration) {
+  if (snapshot.answerDeclarations) {
     const scriptSources = snapshot.scripts.flatMap((script) => {
       const parsed = staticJsSources(script);
       return [
@@ -571,17 +709,28 @@ export async function validateHtmlContracts(html, options = {}) {
       ...scriptSources,
       ...recursiveSources(options.spec ?? {}, snapshot.answerSelectors),
     ];
-    if (scanPythonAnswers(sources, snapshot.answerDeclaration.targets).length) {
-      answerProblems.push("answer-sensitive public bytes contain a complete target comprehension expression");
+    const allTargets = [];
+    for (const declaration of snapshot.answerDeclarations) {
+      allTargets.push(...declaration.targets);
+      const registered = ANSWER_LANGUAGES[declaration.language];
+      if (!registered || !declaration.targets.length) continue;
+      if (registered.scan === "python" && scanPythonAnswers(sources, declaration.targets).length) {
+        answerProblems.push("answer-sensitive public bytes contain a complete target comprehension expression");
+      }
+      if (registered.scan === "java" && scanJavaAnswers(sources, declaration.targets)) {
+        answerProblems.push("answer-sensitive public bytes contain a complete target method implementation");
+      }
     }
-    const targetPattern = new RegExp(`\\b(?:${snapshot.answerDeclaration.targets.join("|")})\\b`, "u");
-    const obfuscation = sources.some(({ value, answerBearing }) => {
-      const associated = answerBearing || targetPattern.test(value);
-      if (!associated) return false;
-      return /\b(?:atob|b64decode|decodeURIComponent|unquote|fromhex|bytes\.fromhex|String\.fromCharCode|\bchr)\s*\(/u.test(value) ||
-        /\b[a-f0-9]{40}(?:[a-f0-9]{24})?\b/iu.test(value);
-    });
-    if (obfuscation) answerProblems.push("answer-sensitive public bytes must not encode, assemble or hash a completed input");
+    if (allTargets.length) {
+      const targetPattern = new RegExp(`\\b(?:${allTargets.join("|")})\\b`, "u");
+      const obfuscation = sources.some(({ value, answerBearing }) => {
+        const associated = answerBearing || targetPattern.test(value);
+        if (!associated) return false;
+        return /\b(?:atob|b64decode|decodeURIComponent|unquote|fromhex|bytes\.fromhex|String\.fromCharCode|\bchr)\s*\(/u.test(value) ||
+          /\b[a-f0-9]{40}(?:[a-f0-9]{24})?\b/iu.test(value);
+      });
+      if (obfuscation) answerProblems.push("answer-sensitive public bytes must not encode, assemble or hash a completed input");
+    }
   }
   return {
     optional: snapshot.optional,
