@@ -11,22 +11,22 @@ It is not critic or reconciliation evidence: independent education and Java-SME 
 
 | Topic | Kind | Objectives | Activities | P50 / worst path / budget (min) | Page sha256 (prefix) |
 | --- | --- | --- | --- | --- | --- |
-| `access-modifiers` | core | 3 | predict → lanes → code → mcq | 7.77 / 14.35 / 15 | `a2b28d36485d10cb` |
-| `classes-and-objects` | core | 3 | predict → lanes → code → mcq | 8.32 / 14.65 / 15 | `799fbd2f98d3aa56` |
-| `constructors` | core | 3 | predict → lanes → code → mcq | 8.42 / 14.75 / 15 | `3983814349c5b94f` |
-| `double-equals-vs-equals` | core | 3 | predict → lanes → code → mcq | 8.24 / 14.57 / 15 | `8b6a7714042b2dd1` |
-| `encapsulation-with-getters-and-setters` | core | 3 | predict → lanes → code → mcq | 7.81 / 14.14 / 15 | `2a5ce5613a59ce8f` |
-| `enums` | core | 3 | predict → lanes → code → mcq | 9.15 / 14.98 / 15 | `16f66e5b7cb5003a` |
-| `final-and-tostring` | reading | 3 | predict → lanes → code → mcq | 7.95 / 14.53 / 15 | `2c41a01fd7a99e43` |
-| `stack-vs-heap-and-object-references` | core | 3 | predict → lanes → mselect → mcq | 9.85 / 13.93 / 14 | `f9e2a5a1af2ddec2` |
-| `string-immutability` | core | 3 | predict → lanes → code → mcq | 7.58 / 14.16 / 15 | `00e4264db15995c8` |
+| `access-modifiers` | core | 3 | predict → lanes → code → mcq | 7.77 / 14.35 / 15 | `2939c929d934ca25` |
+| `classes-and-objects` | core | 3 | predict → lanes → code → mcq | 8.32 / 14.65 / 15 | `e81ed4178e686936` |
+| `constructors` | core | 3 | predict → lanes → code → mcq | 8.63 / 14.96 / 15 | `98e0942797f484f5` |
+| `double-equals-vs-equals` | core | 3 | predict → lanes → code → mcq | 8.24 / 14.57 / 15 | `0a4d07b90f54c928` |
+| `encapsulation-with-getters-and-setters` | core | 3 | predict → lanes → code → mcq | 7.81 / 14.14 / 15 | `08c7e3656a2db07e` |
+| `enums` | core | 3 | predict → lanes → code → mcq | 9.15 / 14.98 / 15 | `d1ef5c984baf178c` |
+| `final-and-tostring` | reading | 3 | predict → lanes → code → mcq | 7.95 / 14.78 / 15 | `ac7082334bd73fd3` |
+| `stack-vs-heap-and-object-references` | core | 3 | predict → lanes → mselect → mcq | 10.1 / 14.18 / 15 | `5ea5142002d89244` |
+| `string-immutability` | core | 3 | predict → lanes → code → mcq | 7.58 / 14.16 / 15 | `fef6d70d20491728` |
 
 ## 2. Template and engine provenance
 
 - Design source: root `DESIGN.md` and the guidance contract in candidate `885207e034695aaf109ef0afe61fb1de50af9468` (topic bar with Objectives disclosure and Restart, reversible Previous/Next with locked future steps, activity checks, nested progressive hints, Where this fits, optional Anecdote and Challenge, bounded editor workspace). No shared tooling, schema or component was changed.
 - Every page embeds the same shell bytes, so the shell is proven once and reused by hash:
-  - shell CSS sha256 `5e59bb286dc42fa465ac0d64972bae066e009af56b7b5edd129e6f122ca2c804`
-  - activity engine JS sha256 `96e99ad12f5649bd51a0a1d79d5b8977f016dfdc7be0728f0e5da7b252704787`
+  - shell CSS sha256 `e0b5f8468df825fef495f0d1d5b542aef95aeaaff27b2d9595a4939d629b7756`
+  - activity engine JS sha256 `5d29553905393d11c3074bf121d0c3f8e480e77ba18245ec303d12b5aa025c65`
 - Page-specific bytes are the activity HTML and the `window.PEP_PAGE` data block (options, explanations, lane items and per-task structural checks).
 - `data-pep-guidance-contract` is set on each page. Each `qa-paths.json` carries the landed contract's `guidance` object (main `b80bbc4`): `activityNavigation`, `activityNavigationKeyboard` and `activityNavigationTouch` replay the existing wrong-twice route through Activity 2, press Next, then make one checked, incomplete attempt on Activity 3 (an unchanged-starter comment fill for code tasks, one wrong choice for the multi-select). `objectives` and `objectivesTouch` open the disclosure and close it with Escape or an outside tap, and `hints` is `true`. Existing routes are byte-preserved and no guidance action carries solution text.
 
@@ -43,13 +43,14 @@ For all nine pages:
 
 - Full route with correct answers (code tasks solved with private solutions held only in scratch, never committed): every activity completes with credit 1, graded activities score grade 1 (the Activity 1 prediction is recorded with credit 1 and is never graded), the page completes, and there are no console or page errors and no network or sibling-file requests.
 - Full wrong-twice route: every activity settles with Continue available, but each failed activity stays `data-pep-completed=false` with credit 0 and grade 0, `#lesson` reports `data-pep-route-settled=true` and `data-pep-complete=false`, and the page says it is not complete. The committed success and wrong-first routes settle the code activity the same way (no solution is committed), so they also end with the page not complete.
-- Restart on the last activity resets only that activity's credit; earlier credit and page completion are kept. Timeline link then browser Back restore activity state without resets. A deep link to a locked `#activity-3` lands on activity 1.
+- Restart resets only the current activity's credit and keeps earlier credit and the unlocked frontier; page completion, route settlement and the end-of-topic message are then recomputed from the activities, so a completed topic that is restarted and then failed is no longer complete. Timeline link then browser Back restore activity state without resets. A deep link to a locked `#activity-3` lands on activity 1.
 - No horizontal overflow at 320, 390, 768 and 1280 px for every activity, nor at 640 px with device scale 2 (200% zoom equivalent), in dark and forced-colors modes.
 - Keyboard: radios, confidence and Check operate from the keyboard; focus moves to feedback after a check and to the next heading after Next; Objectives opens with Enter and closes with Escape.
 - Touch at 390 px: tap completes Activity 1. Source-list links were under 44 px and were raised to 44 px targets in the shared shell.
-- Print: all four activities render, every disclosure expands, navigation hides, and `afterprint` restores the closed state.
-- JavaScript disabled: all four activities and each activity's expected-results reading render.
-- The estimator (`authoring/tools/timing/estimate_reading.py`) gives P50 7.58 to 9.85 min. The worst path is modeled in each `topic.json` basis. Day totals: F9 = 60 and F11 = 74 of 120 minutes.
+- Recap: with JavaScript it is hidden on load and appears only once every activity has settled (and hides again after a Restart); without JavaScript and in print it is always shown.
+- Print: all four activities and the recap render, every disclosure expands, navigation hides, and `afterprint` restores the closed state.
+- JavaScript disabled: all four activities, each activity's expected-results reading and the recap render.
+- The estimator (`authoring/tools/timing/estimate_reading.py`) gives P50 7.58 to 10.1 min. The worst path is modeled in each `topic.json` basis. Day totals: F9 = 60 and F11 = 75 of 120 minutes.
 
 ## 5. Answer safety
 
@@ -69,7 +70,18 @@ For all nine pages:
   - `access-modifiers`: Activity 3 is now `Thermostat.java` with `public class Thermostat` and every member starting `private`. Supplied context (`Room` in the package, `Dashboard` in another package, a subclass in another package, no subclass syntax shown) requires package access on `setTarget`, `public` on `reading`, `protected` on field `offset`, and `private` on `target`, `current` and `clamp`; there are six checks.
   - The other six learner pages are byte-identical to `41d4d4c`, and shell CSS and engine JS are the same bytes on all nine pages. QA lane routes for `enums` and `stack-vs-heap-and-object-references` were updated to the new items; all other routes are byte-preserved.
 - Regression check after firstmate inbox 011 (settled versus success): confirmed on all nine pages. On the committed wrong-twice route, each failed activity ended `settled=true`, `continue=true`, `completed=true`, `credit=1`, `grade=0`, and the page reported complete. The shared engine's `complete()` now completes an activity and awards credit only for a passing result (correct, correct on retry, or a recorded prediction); a settled miss keeps Continue but stays incomplete with credit 0 and grade 0. Inputs lock on `settled` rather than `completed`, progress counts settled activities, page completion (`data-pep-complete`) requires every activity completed, and the new `data-pep-route-settled` hook marks that every activity is answered. Each `qa-paths.json` now names `data-pep-route-settled` as its route-end completion postcondition, asserts settled, completed=false, credit 0, grade 0 and Continue for every settled miss, and ends each route with credit and page-completion assertions. Activity content, timing and `artifact.md` are unchanged; only the engine lines (including the end-of-topic message), the `#lesson` attribute and QA routes changed.
-- Open, owned by the next steps: focused education re-review of the three corrected pages and independent Java-SME exact-byte review of all nine pages (T25 critic coverage is expected to fail until they land), review of the nine GIFT banks, and the video and PDF companions.
+- Consolidated correction after the independent education and Java-SME reviews of `d40a74f` and `238f665` (firstmate inboxes 015 and 016). Old reviewed bytes were proven to fail first: on all nine `238f665` pages the recap was visible on load, and a completed topic restarted and failed twice stayed `data-pep-complete=true` with "Topic complete."
+  - Shared engine and shell, byte-identical on all nine pages: the recap (EDU-ENG-02) and Restart recomputation (EDU-ENG-01 / CO-SME-01) above; a print rule that shows the recap; a bounded top-level statement splitter (`J.top`) for checks; and a way for a page check to report a valid shape it does not check as not supported, which never counts as a try.
+  - `encapsulation-with-getters-and-setters` (CO-SME-02/03): the throw check refuses a bad-value test joined with `&&`, a throw outside any if and a test whose branch does not throw, and accepts an in-range test joined with `&&` that stores in its then branch and throws in its else branch. The objective and task text are unchanged.
+  - `classes-and-objects` (CO-SME-04): `isLong()` must return the comparison, or return true when it holds and false otherwise; an inverted pair is refused.
+  - `access-modifiers` (CO-SME-06, EDU-AM-01): adding `final` or `static` to a `Thermostat` member is refused because the task changes only access modifiers; the "Every" capital after a comma is fixed.
+  - `string-immutability` (CO-SME-07): the builder's `toString()` must be returned by its own statement after the loop, and reassigning any `String` local inside the loop is refused.
+  - `constructors` (CO-SME-05): the teaching line, task and recap now say the task checks a body that starts with `this(...)` and that Java 25 permits a restricted prologue that cannot use the object being built; a prologue that does not use the object is reported as not supported and is not a try, while one that uses `this` or a field is refused.
+  - `final-and-tostring` (EDU-FT-01 / CO-SME-08): Activity 2 has an eighth lane item, overriding a `final` method; its no-JS reading, item count and worst path are updated.
+  - `stack-vs-heap-and-object-references` (EDU-SVH-01): Activity 2 begins with a paper sketch of the frame, the objects and the arrows before the placements, keeping the "Draw" objective; the page's time label moves from 14 to 15 minutes.
+  - New QA edges, all value-free: on every page the recap is hidden on load, shown after the wrong-twice route and hidden again after Restart with route settlement cleared; on `stack-vs-heap-and-object-references` a completed topic that is restarted and failed is no longer complete; and partial, non-solution code shows the new refusals or the not-supported report. Every new edge fails on the old `238f665` bytes. The source-owned private proof (private solutions and positive or near-complete witnesses, kept in scratch and never printed) passes on these bytes; on the old bytes the reviewers' bypasses passed and the valid inverse guard and Java 25 prologue failed.
+  - The nine GIFT banks are byte-identical to `238f665`. Deferred by firstmate decision: EDU-GIFT-01, EDU-GIFT-SI-01, CO-SME-10, EDU-ENG-03/04, EDU-CO-01, EDU-TIME-01, CO-SME-09 and CO-SME-11.
+- Open, owned by the next steps: focused education re-review of the three corrected pages and focused education and Java-SME rechecks of the corrected HTML bytes (T25 critic coverage is expected to fail until they land), and the video and PDF companions.
 
 ## 7. Formative GIFT banks (firstmate inbox 013)
 

@@ -97,7 +97,7 @@ Expected results and why. It prints ab . final stops the variable sb from being 
 
 ### drag
 
-Expected results and why. Does not compile: max = 20 after final int max ; sb = new StringBuilder() after final ; assigning a final field in setId ; extending final class Coin . Compiles: sb.append("x") ; scores[0] = 9 ; assigning a final field once in the constructor.
+Expected results and why. Does not compile: max = 20 after final int max ; sb = new StringBuilder() after final ; assigning a final field in setId ; overriding final method ring in LoudBell ; extending final class Coin . Compiles: sb.append("x") ; scores[0] = 9 ; assigning a final field once in the constructor.
 
 ### explore
 
