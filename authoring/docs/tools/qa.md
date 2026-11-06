@@ -191,15 +191,19 @@ each declaration owns its activity scope and targets. The supported declarations
     and ancestor are still scanned, and encoded, assembled and digest checks never exempt it. Any starter, containing
     task, declaration, target or hash drift refuses, and the binding must be re-pinned after review; review also owns
     whether the bound starter itself is answer-safe.
+- `sql`: an explicit no-structural-scanner mode (`"scan": "none"`) for a matched `.sql` editor inside exactly one
+  `data-lesson-editor-adapter="sql-practice@1"` root contained by the declared task. Its protection is the private
+  runner's exact in-memory value comparison plus mandatory independent review; it does not add or claim a general SQL
+  evaluator.
 - `javascript-editor` and `jsx-editor`: an explicit no-structural-scanner mode (`"scan": "none"`), allowed only for
   a matched `.js`/`.mjs`/`.cjs` or `.jsx` editor in the declared task. Its protection is the private runner's exact
   in-memory value comparison plus mandatory independent review.
 
 A declaration whose task names an editor file owned by a different supported language is a false language label and
 fails; a `python-scaffold` declaration without its exact adapter root and `.le-file`-named `.py` editor fails; a
-`python-comprehension` declaration on that adapter root also fails; a `java`, `javascript-editor` or `jsx-editor`
-declaration without its matched editor fails; an unsupported
-language fails. A declaration whose required protection is not effective is refused rather than accepted vacuously.
+`python-comprehension` declaration on that adapter root also fails; a `sql` declaration without exactly one contained
+`sql-practice@1` adapter and matched `.sql` editor fails; a `java`, `javascript-editor` or `jsx-editor` declaration
+without its matched editor fails; an unsupported language fails. A declaration whose required protection is not effective is refused rather than accepted vacuously.
 
 Committed paths contain only public-safe starter, incomplete, malformed, unsupported-shape, reset and
 no-premature-credit routes. An incorrect observed or expected result may use starter, incomplete, malformed or
