@@ -73,8 +73,19 @@ test("default check excludes negative fixtures", async () => {
   assert.notEqual(result.status, 0);
 });
 
-test("CI retains the complete gate sequence and timeout budget", async () => {
+test("CI retains full proof history, the complete gate sequence and timeout budget", async () => {
   const workflow = await readFile(path.join(repo, ".github/workflows/ci.yml"), "utf8");
+  const checkoutStart = workflow.indexOf("      - name: Check out\n");
+  const checkoutEnd = workflow.indexOf("\n      - name:", checkoutStart + 1);
+  assert.ok(checkoutStart >= 0 && checkoutEnd > checkoutStart, "workflow must retain the checkout step");
+  const checkout = workflow.slice(checkoutStart, checkoutEnd);
+  assert.match(checkout, /^        uses: actions\/checkout@\S+/mu);
+  const checkoutConfig = Object.fromEntries(
+    [...checkout.matchAll(/^          ([a-z-]+):\s*(\S+)\s*$/gmu)].map((match) => match.slice(1)),
+  );
+  assert.equal(checkoutConfig["fetch-depth"], "0", "T06 needs every receipt-referenced ancestor commit");
+  assert.equal(checkoutConfig["persist-credentials"], "false");
+
   const timeout = workflow.match(/^    timeout-minutes: (\d+)$/mu);
   assert.ok(timeout, "gates must declare an explicit timeout");
   assert.ok(Number(timeout[1]) >= 30, "gates must retain the measured timeout budget");
