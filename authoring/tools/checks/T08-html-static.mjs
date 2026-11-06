@@ -25,6 +25,12 @@ export const ANSWER_LANGUAGES = {
     adapter: "python-scaffold@3",
   },
   "java": { scan: "java", extensions: ["java"], requiresEditor: true },
+  "sql": {
+    scan: "none",
+    extensions: ["sql"],
+    requiresEditor: true,
+    containedAdapter: "sql-practice@1",
+  },
   "javascript-editor": { scan: "none", extensions: ["js", "mjs", "cjs"], requiresEditor: true },
   "jsx-editor": { scan: "none", extensions: ["jsx"], requiresEditor: true },
 };
@@ -451,9 +457,10 @@ async function inspectHtml(html, browser, spec) {
           for (let current = declared; current; current = current.parentElement) {
             if (current.hasAttribute("data-lesson-editor-adapter")) ancestorAdapters.push(current);
           }
+          const descendantAdapters = [...declared.querySelectorAll("[data-lesson-editor-adapter]")];
           const adapterRoots = [...new Set([
             ...ancestorAdapters,
-            ...declared.querySelectorAll("[data-lesson-editor-adapter]"),
+            ...descendantAdapters,
           ])];
           const adapterScope = ancestorAdapters[0] ?? null;
           const adapter = adapterScope?.getAttribute("data-lesson-editor-adapter") ?? "";
@@ -464,7 +471,7 @@ async function inspectHtml(html, browser, spec) {
             problems.guidance.push("answer-sensitive declarations outside guidance require one task target inside the exact python-scaffold@3 adapter scope");
           }
           const editorNames = [
-            ...[...declared.querySelectorAll(".pep-editor__file, [data-pep-file-tab]")].map((node) => node.textContent ?? ""),
+            ...[...declared.querySelectorAll(".pep-editor__file, .le-file, [data-pep-file-tab]")].map((node) => node.textContent ?? ""),
             ...[...declared.querySelectorAll("[data-file]")].map((node) => node.getAttribute("data-file") ?? ""),
           ];
           const scaffoldEditorNames = scaffoldRoots.flatMap((root) => [
@@ -488,6 +495,7 @@ async function inspectHtml(html, browser, spec) {
             starterTarget: declared.getAttribute("data-pep-answer-starter"),
             adapter,
             adapterIds,
+            containedAdapterIds: descendantAdapters.map((node) => node.getAttribute("data-lesson-editor-adapter") ?? ""),
             editorExtensions: extensions(editorFiles.filter((item) => !item.qualifier)),
             statementEditorExtensions: extensions(editorFiles.filter((item) => item.qualifier === "body of main")),
             scaffoldEditorExtensions: extensions(scaffoldFiles.filter((item) => !item.qualifier)),
@@ -828,7 +836,12 @@ export async function validateHtmlContracts(html, options = {}) {
           answerProblems.push(`answer-sensitive task ${declaration.task} requires the ${registered.adapter} adapter root`);
           continue;
         }
-      } else if (declaration.adapterIds.includes("python-scaffold@3")) {
+      } else if (registered.containedAdapter) {
+        if (declaration.containedAdapterIds.length !== 1 || declaration.containedAdapterIds[0] !== registered.containedAdapter) {
+          answerProblems.push(`answer-sensitive task ${declaration.task} requires one contained ${registered.containedAdapter} adapter root`);
+          continue;
+        }
+      } else if (declaration.adapterIds.includes("python-scaffold@3") || declaration.adapterIds.includes("sql-practice@1")) {
         answerProblems.push(`answer-sensitive task ${declaration.task} declares a false language label for its adapter`);
         continue;
       }
