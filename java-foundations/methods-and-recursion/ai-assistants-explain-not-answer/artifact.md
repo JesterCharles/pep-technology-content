@@ -2,9 +2,9 @@
 
 ## Objectives
 
-- Ask an AI assistant to explain an error or a piece of code without asking for the finished solution Open
-- Check an assistant's explanation against the official documentation or by running the code Open
-- Record what the assistant produced and what you verified yourself Open
+- Ask an AI assistant to explain an error or a piece of code without asking for the finished solution
+- Check an assistant's explanation against the official documentation or by running the code
+- Record what the assistant produced and what you verified yourself
 
 ## Teaching
 

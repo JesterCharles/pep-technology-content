@@ -2,9 +2,9 @@
 
 ## Objectives
 
-- Decompose a small problem into methods with clear inputs and outputs Open
-- Test a method by calling it with ordinary, boundary and invalid inputs and checking the results Open
-- Refactor duplicated code into one reusable method without changing behavior Open
+- Decompose a small problem into methods with clear inputs and outputs
+- Test a method by calling it with ordinary, boundary and invalid inputs and checking the results
+- Refactor duplicated code into one reusable method without changing behavior
 
 ## Teaching
 

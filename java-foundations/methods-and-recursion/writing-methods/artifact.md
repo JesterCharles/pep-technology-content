@@ -2,9 +2,9 @@
 
 ## Objectives
 
-- Declare a method with typed parameters and a return type, and call it with matching arguments Open
-- Return a compatible value on every path that can finish normally, and use void when nothing is returned Open
-- Extract a repeated block of code into a well-named method Open
+- Declare a method with typed parameters and a return type, and call it with matching arguments
+- Return a compatible value on every path that can finish normally, and use void when nothing is returned
+- Extract a repeated block of code into a well-named method
 
 ## Teaching
 

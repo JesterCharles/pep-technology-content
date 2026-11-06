@@ -2,9 +2,9 @@
 
 ## Objectives
 
-- Predict that reassigning a primitive parameter leaves the caller's variable unchanged Open
-- Predict that reassigning a String parameter inside a method leaves the caller's variable referring to its original String Open
-- Explain that Java passes every argument by value, and that for an object the value copied is the reference Open
+- Predict that reassigning a primitive parameter leaves the caller's variable unchanged
+- Predict that reassigning a String parameter inside a method leaves the caller's variable referring to its original String
+- Explain that Java passes every argument by value, and that for an object the value copied is the reference
 
 ## Teaching
 

@@ -2,9 +2,9 @@
 
 ## Objectives
 
-- Build and return a reversed String by reading characters with two indexes that move toward each other Open
-- Count matching characters or pairs in a String with two indexes instead of nested loops Open
-- Choose the loop condition that stops two indexes exactly when they meet or cross Open
+- Build and return a reversed String by reading characters with two indexes that move toward each other
+- Count matching characters or pairs in a String with two indexes instead of nested loops
+- Choose the loop condition that stops two indexes exactly when they meet or cross
 
 ## Teaching
 

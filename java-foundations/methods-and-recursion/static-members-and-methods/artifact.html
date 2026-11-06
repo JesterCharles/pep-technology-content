@@ -104,15 +104,13 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 .pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; flex: 1 1 96px; width: 96px; max-width: 160px; }
 .pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-line-strong); opacity: 0.45; }
 .pep-progress > span.is-done { background: var(--pep-accent); opacity: 1; }
-.pep-goals-panel { flex: 1 1 100%; min-width: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
-.pep-goals-panel h2 { margin-bottom: 8px; font-size: 16px; line-height: 24px; }
-.pep-goals { margin: 0; padding: 0; list-style: none; }
-.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pep-line-strong); }
-.pep-goals > li:first-child { border-top: 0; }
-.pep-goals .state { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
-.pep-goals .is-done .state { color: var(--pep-success); }
+.pep-objectives { min-width: 0; break-inside: avoid; }
+.pep-objectives[open] { flex: 1 1 100%; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; min-width: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; }
+.pep-objectives > div { max-width: 100%; margin-top: 4px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; padding-inline-start: 20px; }
 .pep-topicbar .pep-btn { flex: 0 0 auto; }
-@media forced-colors { .pep-goals-panel { border-color: CanvasText; } .pep-goals .is-done .state { color: CanvasText; } }
+@media forced-colors { .pep-objectives > div { border-color: CanvasText; } }
 
 /* timeline */
 .pep-timeline { margin: 0 0 24px; }
@@ -364,14 +362,7 @@ button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) v
 <header class="pep-topicbar">
 <h1 id="page-title">static members and methods</h1>
 <span class="pep-topicbar__progress" data-pep-progress><span id="progress-text">Activity 1 of 3 · 0 of 3 done · about 15 min</span><span class="pep-progress" aria-hidden="true"><span></span><span></span><span></span></span></span>
-<section class="pep-goals-panel" data-pep-objectives aria-labelledby="goals-title">
-<h2 id="goals-title">Goals</h2>
-<ul class="pep-goals">
-<li data-pep-goal-activity="2"><span>Call a static method through its class name and explain why main is static</span><span class="state">Open</span></li>
-<li data-pep-goal-activity="2"><span>Use a static field shared by all calls and tell it from a local variable</span><span class="state">Open</span></li>
-<li data-pep-goal-activity="3"><span>Explain why a static method cannot use an instance field without an object</span><span class="state">Open</span></li>
-</ul>
-</section>
+<details class="pep-objectives" data-pep-objectives><summary aria-controls="pep-objectives-body">Objectives</summary><div id="pep-objectives-body"><ul><li>Call a static method through its class name and explain why main is static</li><li>Use a static field shared by all calls and tell it from a local variable</li><li>Explain why a static method cannot use an instance field without an object</li></ul></div></details>
 <button class="pep-btn" type="button" id="restart" data-pep-reset>Restart activity</button>
 </header>
 <nav class="pep-timeline" aria-label="Activities"><ol class="pep-steps">
@@ -1972,13 +1963,6 @@ var PepJava = (function () {
     if (progressText) progressText.textContent = 'Activity ' + current + ' of ' + activities.length + ' · ' + done + ' of ' + activities.length + ' done · about ' + minutes + ' min';
     if (progressBar) [].slice.call(progressBar.children).forEach(function (seg, i) { seg.className = state[i] && state[i].completed ? 'is-done' : ''; });
     lesson.setAttribute('data-pep-complete', String(done === activities.length));
-    [].slice.call(lesson.querySelectorAll('[data-pep-goal-activity]')).forEach(function (goal) {
-      var activity = Number(goal.getAttribute('data-pep-goal-activity')) - 1;
-      var isDone = !!(state[activity] && state[activity].completed);
-      goal.classList.toggle('is-done', isDone);
-      var label = goal.querySelector('.state');
-      if (label) label.textContent = isDone ? '✓ Done' : 'Open';
-    });
     links.forEach(function (link, i) {
       var st = link.querySelector('.pep-step__state');
       if (st) st.textContent = state[i].completed ? '(done)' : (i + 1 > unlocked ? '(locked)' : (i + 1 === current ? '(current)' : '(open)'));
@@ -2289,6 +2273,13 @@ var PepJava = (function () {
   }
   addEventListener('popstate', fromHistory);
   addEventListener('hashchange', fromHistory);
+
+  /* ---- objectives: informational disclosure; Escape and outside click close it ---- */
+  var objectives = lesson.querySelector('[data-pep-objectives]');
+  if (objectives) {
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); } });
+    document.addEventListener('click', function (ev) { if (objectives.open && !objectives.contains(ev.target)) objectives.open = false; });
+  }
 
   /* ---- print: open every disclosure, then restore exact prior states ---- */
   var printStates = null;

@@ -2,9 +2,9 @@
 
 ## Objectives
 
-- Set a breakpoint and run a program in the IDE debugger Open
-- Step over, step into and step out while watching variable values change Open
-- Locate the line where a variable first takes a wrong value Open
+- Set a breakpoint and run a program in the IDE debugger
+- Step over, step into and step out while watching variable values change
+- Locate the line where a variable first takes a wrong value
 
 ## Teaching
 

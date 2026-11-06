@@ -2,9 +2,9 @@
 
 ## Objectives
 
-- Write a recursive method with a base case and a recursive step that moves toward it Open
-- Trace the call stack of a recursive method, frame by frame, including the returns Open
-- Explain why a missing or unreachable base case ends in StackOverflowError Open
+- Write a recursive method with a base case and a recursive step that moves toward it
+- Trace the call stack of a recursive method, frame by frame, including the returns
+- Explain why a missing or unreachable base case ends in StackOverflowError
 
 ## Teaching
 
