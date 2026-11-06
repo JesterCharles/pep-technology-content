@@ -32,16 +32,16 @@ $CATEGORY: java-foundations/methods-and-recursion/recursion-and-the-call-stack
 ~The order cannot be known in advance#Not quite. A call always returns before the frame that made it continues.
 }
 
-::o3 a step that grows::The length method is changed so its step calls length(s + "x") instead of length(s.substring(1)). What happens when it runs on "ab"? {
-=It ends in StackOverflowError, because the String grows and never becomes empty#Correct. The base case is unreachable, so frames keep being pushed until the stack runs out.
-~It returns 2 as before#Not quite. The input never shrinks, so no call ever reaches the base case.
+::o3 a step that moves away::A method static int count(int n) returns 0 when n is 0, and otherwise returns count(n + 1). What happens when main calls count(1)? {
+=It ends in StackOverflowError, because n moves away from 0 and every call pushes another frame#Correct. The base case is unreachable from 1, so frames pile up until the call stack runs out.
+~It returns 0 once n wraps past the largest int and comes back around to 0#Not quite. That would take about four billion nested calls, and the call stack runs out long before.
 ~javac rejects it as infinite recursion#Not quite. javac does not detect this; the error happens while the program runs.
-~It ends in OutOfMemoryError#Not quite. The stack fills with frames first, which is StackOverflowError.
+~It returns 1#Not quite. No call ever returns before the stack runs out, so nothing is returned.
 }
 
 ::o3 why the stack overflows::Why does a recursive method with an unreachable base case end in StackOverflowError? {
 =Every call pushes another frame, and the call stack has a limited size#Correct. With nothing returning, frames pile up until the stack is full.
-~The int parameter grows past its largest value#Not quite. The stack usually runs out first, and a String version fails the same way.
+~The int parameter grows past its largest value#Not quite. Even when a step moves an int away from the base case, the stack runs out long before the value could reach its largest int.
 ~javac counts the calls and stops the program#Not quite. javac does not run the program; the JVM throws the error at run time.
 ~The method returns too many values at once#Not quite. In this case nothing returns at all.
 }
