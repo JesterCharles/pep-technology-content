@@ -27,20 +27,20 @@ The practice interpreter is unchanged from `7079124`. It was checked against a l
 
 ## 3. Exact bytes
 
-Every page carries the same module template blocks, derived from candidate `885207e034695aaf109ef0afe61fb1de50af9468` and the current root `DESIGN.md`; the CSS block is identical in all six pages, and the engine block is identical in five; the timed page carries a `v3-timebox` engine variant (inbox 016) that adds only the time-box completion rule. The interpreter portion of the engine is byte-identical to `7079124`; only the page-engine portion changed.
+Every page carries the same module template blocks, derived from candidate `885207e034695aaf109ef0afe61fb1de50af9468` and the current root `DESIGN.md`; the CSS block is identical in all six pages, and the engine block is identical in five; the timed page carries a `v3-timebox` engine variant (inboxes 016 and 018) that adds only the time-box completion rule, the synchronous deadline and its plan check, plus a page-local style for the plan controls after the shared CSS block. The interpreter portion of the engine is byte-identical to `7079124`; only the page-engine portion changed.
 
 - `pep:lambdas-streams-template-css v3`: 18,898 bytes, SHA-256 `94140f190cba0a7d6bc17b537bd79dbd396d5936b57481bff25deda03dd96138`
 - `pep:lambdas-streams-template-engine v3` (interpreter plus page engine): 158,719 bytes, SHA-256 `3b42ed50d613ba646d90d1b03913157196f718fcf6fa67e6d84e371d121636e0` (five pages)
-- `pep:lambdas-streams-template-engine v3-timebox` (timed page only): 159,792 bytes, SHA-256 `4b247b07103921df37324fea0e2d440deeaf4837bb3755013547949ed64f27eb`
+- `pep:lambdas-streams-template-engine v3-timebox` (timed page only): 163,637 bytes, SHA-256 `e5c489ea620cfe0a319bd89d9e75c6e1c227c91cc0d4a2e945198d0a671a841e`
 
 | Topic | artifact.html SHA-256 | artifact.md SHA-256 | P50 / worst / budget (min) |
 |---|---|---|---|
 | lambdas-and-functional-interfaces-in-depth | `fd798ea292386ac73336e7c167e6932af7c4d51e7bc1efab9f64c05e6a45f89b` | `c1e5e4be320b0d75a92a4e9654b5d29b2c9b106137f293e099639706e5f3ea31` | 12.30 / 14.97 / 15 |
 | method-references | `1f0f628f1a0517fcf5bdc25a8ede96609078a4ecdb29ce72ee7a44f4c0b047d4` | `8501af2de92b84835d6aba16f8449bd04c9b86e0106f26b0d3b9c31851662715` | 6.60 / 7.93 / 8 |
-| streams-over-data-loaded-from-the-database | `982d3dbde3431e22334b90c03c03ecf84bcbea4e9e44ada97fd1df697348324d` | `84bc61665a6e5c75d1c17995934e38c486d34ba00cf468caa051b04b689f118a` | 12.15 / 14.98 / 15 |
+| streams-over-data-loaded-from-the-database | `a32fb0e3fa0237fdab12f3619bb2426faf83c5a04b59aefa47a86b21e2b05d31` | `e0139cd6aa2470a100b0b7ee6ebe07c7e3ca350e30e5b95187b1b80d0e643da2` | 12.16 / 14.99 / 15 |
 | grouping-with-streams-and-optional | `7db704b09f91da1a42707f797aebcb6c0d02c09ed1c0b60826404fa799829e49` | `e8d0d1651ce04a384539b02fea4901448e1dc5349a6286290c113c261be34f94` | 8.15 / 10.23 / 11 |
 | collections-and-streams-review | `b4852d2ff0b25bd17435f0a6ab962c1af72c1943b081beecb266a2f5ff3e3311` | `051f0bddcb413f1a5c76b5d0c8d54596dc21f17bc4d636d881b3f26172af3deb` | 11.84 / 13.92 / 14 |
-| timed-coding-screen-patterns | `ea87e68fbadf2ed02611235dbf6032607fd422232e655f2cc5344864d2525519` | `a4cc280a55f6f6f59933e88e6260c0c520edd32f9a79e0e1ed04ab3828f1830a` | 12.24 / 14.99 / 15 |
+| timed-coding-screen-patterns | `4437f0984aaa0c367ccae305a920c2d2e312abe4d2d2afb0b36b65ea1836fd31` | `5dc239a1902c5049f336cc9d6d4f92203194a684f366f6d90a2b290ae1188f91` | 12.23 / 14.98 / 15 |
 
 Minutes come from the frozen estimator unchanged; budgets and about-labels are unchanged from `7079124`. Worst paths are modeled per graded unit in each `topic.json` `minutes.basis`.
 
@@ -69,6 +69,30 @@ Only the two pages the review returned were changed; the four education-approved
 - Timed patterns, time box: both the plan and the code are time-boxed (`a2p@timebox`, `a2c@timebox`). Check plan and Run use no attempt unless a time box is running. The activity completes, and earns credit and grade, only when the plan and the code both pass inside one running, unexpired time box. Stopping or expiry before then says the activity is not complete and to restart; a plan from an earlier box is reported in the Run feedback. Page completion uses the same activity rule.
 - New public regressions, each shown to fail on the `129438f` bytes and pass on these bytes: the lambdas method-reference shape edge; the timed edges for a plan check before the box starts, a Run before the box starts, and a stopped clock after a fitting plan. Expiry cannot be fast-forwarded by the public harness; it uses the same stop path. A private, uncommitted direct check with a controlled clock and passing input confirmed never-started, stopped, expired and earlier-box plans all stay completed=false, credit=0 and grade=0, and that plan plus code inside one box, in either order, gives completed=true, credit=1 and grade=1.
 - Minutes: lambdas P50 12.30 / worst 14.97 (one more modeled edit cycle for the two new lambdas); timed P50 12.24 / worst 14.99. Budgets are unchanged. Source receipts for the two pages were refreshed on 2026-11-06, and their visible source date and `topic.json` freshness now read 2026-11-06.
+
+## 5c. Inbox 018/019 timed corrections (focused education recheck)
+
+Only the timed page changed; the five education-approved pages and all four GIFT banks are byte-identical. This builds on the value-free publication commit `ebe7c89` (section 5d).
+
+- Planning is learner-produced. The learner assembles the contract from three blanks (input, result, value when nothing repeats), then writes the values of two edge cases of their own, each with a reason, and the two reasons must differ. The page checks each input against its stated reason by counting repeated values. It never evaluates firstRepeat or holds any implementation of it; there is no keyword or token grader. Feedback names what each entered input actually is, and the revealed explanations keep the expected outputs (List.of() gives Optional.empty; 1, 2, 2, 1 gives Optional[2]). The teaching now gives a problem statement instead of the full contract, so assembling it takes interpretation. The contract slots and reasons are radio chips rather than native selects, so keyboard (Space), touch and pointer behave the same.
+- The deadline is checked at the moment of every submission. Each Check plan and Run requires a running box with Date.now() strictly before its end. At or past the end, the page expires the box immediately and refuses the try without using an attempt, whether or not the 1-second interval callback has fired. Never-started, stopped, expired and earlier-box work stays completed=false, credit=0 and grade=0.
+- Public regressions, each shown to fail on the `ebe7c89` bytes: an input that does not match its reason, two identical reasons, a wrong contract slot, and a missing reason plus non-numeric values that use no attempt. The stopped-clock edge now expects the ended-box refusal.
+- A private, uncommitted controlled-clock matrix used the private passing code and printed only pass or fail. For code-last and plan-last, 1 s before the end, exactly at it, 1 ms after it, and 60 s late with the interval callback never fired, all 8 cases pass on the new bytes. On the `76a1f91` bytes, all 6 cases at or after the end fail (the activity wrongly reached completed, credit 1, grade 1), and the 2 just-before cases pass. Never-started, stopped, expired, earlier-box and both one-box orders also pass privately.
+- Minutes: timed P50 12.23 / worst 14.98, budget unchanged at 15. Its source receipt was refreshed on 2026-11-06.
+
+## 5d. Value-free publication ancestry (inbox 017)
+
+A counts-only scan of the 9 draft commits from main to `76a1f91` found one unsafe commit, `8145560`: each first-build page carried a `data-require` code-grading token key. No values were printed. The draft was never pushed, and its refs are preserved locally. The publication branch is one commit, `ebe7c89`, on clean main `668fb5e`, with module bytes identical to `76a1f91`; the later corrections build on it. Commit ids above that are not on the publication branch are local draft history.
+
+## 5e. Inbox 020 Streams correction (scoped Java/Streams-SME review of `ebe7c89`)
+
+Only the streams page and its GIFT bank changed for this item; the four SME-approved HTML topics and three SME-approved GIFT banks are byte-identical to `ebe7c89`.
+
+- Lifecycle teaching now says a terminal operation starts the pipeline and reads only what it needs, and that `count` may use a known size, skipping traversal and side effects. It no longer guarantees that `count()` traverses the source. The Activity 1 explanation now says a terminal operation starts the pipeline, and the filter/map/sorted/toList lifecycle question is unchanged.
+- The GIFT item `o2 terminal operation` now asks which operation is terminal and so starts the pipeline, and its feedback says `count` may use a known size without visiting elements. The bank still validates with 7 items.
+- `sources.json` now maps the Java SE 25 `Stream.count()` API note (an implementation may not execute the pipeline when it can compute the count from the source; then no elements are traversed and no intermediate operations are evaluated), confirmed in the live page on 2026-11-06. The receipts were refreshed that day, and the visible source date and `topic.json` freshness now read 2026-11-06.
+- A public regression asserts the corrected lifecycle teaching after reaching Activity 3 by the honest wrong-twice path; it fails on the `ebe7c89` bytes and passes on these bytes.
+- Minutes: P50 12.16 / worst 14.99, budget unchanged.
 
 ## 6. Remaining blockers and mismatches
 

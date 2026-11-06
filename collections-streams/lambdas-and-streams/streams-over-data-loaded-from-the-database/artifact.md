@@ -12,7 +12,7 @@ A stream pipeline has `filter` and `map` but no terminal operation yet. Predict 
 
 Move a `ResultSet` cursor with `next()`, which returns false after the last row. For each row, read its columns, build a record and add it to a list. A stream over that list then filters, maps and sorts in memory; `toList` or `collect` produces the result.
 
-Intermediate operations return a new stream and do no work yet; a terminal operation such as `toList` or `count` traverses the source. A stream may be used only once: the API allows `IllegalStateException` on reuse, and the JDK throws it. Create a new stream to traverse again.
+Intermediate operations return a new stream and do no work. A terminal operation like `toList` starts the pipeline, reading only what it needs; `count` may use a known size, skipping traversal and side effects. A stream may be used only once: reuse may throw `IllegalStateException` (the JDK does).
 
 `WHERE` removes rows, `GROUP BY` forms groups for aggregates, and `HAVING` filters groups. Reduce in SQL when the program needs only the reduced result; use the stream when rows are already loaded for another use or the logic exists only in Java.
 
@@ -40,7 +40,7 @@ Next step: filter compares status with "OPEN" using equals, map turns an Order i
 
 ## Sources
 
-Official sources checked live on 2026-11-04 for Java SE 25.
+Official sources checked live on 2026-11-06 for Java SE 25.
 
 - ResultSet API
 - Stream API

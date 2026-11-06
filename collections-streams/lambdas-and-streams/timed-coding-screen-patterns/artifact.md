@@ -10,7 +10,7 @@
 
 Match each prompt to the state it needs: counts by key, values seen, last-opened work, or positions moving toward each other.
 
-Under a time box: restate the contract, list edge cases, code simply, then test. `firstRepeat(List<Integer> values)` returns the first value seen a second time, left to right, as an `Optional`, or `Optional.empty()`.
+Problem: `firstRepeat` scans `values` left to right and reports the first value it sees a second time.
 
 Say the cost aloud with its assumption: how time and extra memory grow with n input values.
 
@@ -36,9 +36,9 @@ Next step: you only need “seen before?”. HashSet.add returns false when the 
 
 Another hint Another hint, 2 of 2 for Activity 2
 
-Where to act: in the plan’s 1, 2, 2, 1 example.
+Where to act: in your plan’s edge-case rows.
 
-Next step: walk 1, 2, 2, 1 and say what the set holds after each value; then check the empty list.
+Next step: walk each of your edge-case inputs and say what the set holds after each value.
 
 ## Sources
 
@@ -69,15 +69,15 @@ Find two values in a sorted array that sum to a target.
 
 ### mcq
 
-Restate the input and output.
+Assemble the contract from three blanks.
 
 ### mcq
 
-Name the edge case for the empty list.
+Write the values of edge case 1 and choose its reason.
 
 ### mcq
 
-Name the edge case for 1, 2, 2, 1.
+Write the values of edge case 2 and choose its reason.
 
 ### terminal
 
