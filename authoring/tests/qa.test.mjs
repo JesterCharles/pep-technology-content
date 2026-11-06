@@ -402,6 +402,8 @@ test("private QA action values resolve only from an environment-selected externa
 
 test("QA private-success proof binds only current public bytes", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "pep-private-qa-"));
+  const shallowRoot = `${root}-shallow`;
+  const fullRoot = `${root}-full`;
   const owner = "course/module/topic";
   const publicFiles = {
     [`${owner}/artifact.html`]: "<!doctype html><title>Public artifact</title>\n",
@@ -426,16 +428,81 @@ test("QA private-success proof binds only current public bytes", async () => {
     };
     const receiptRoot = path.join(root, "authoring/evidence/course");
     const receiptFile = path.join(root, `authoring/evidence/${owner}/qa-receipt.json`);
+    const writeProof = () => writeFile(receiptFile, `${JSON.stringify({ privateSuccessProof: proof })}\n`);
     assert.match(
       (await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "),
       /opt-in requires a current private success receipt/,
     );
-    await writeFile(receiptFile, `${JSON.stringify({ privateSuccessProof: proof })}\n`);
+    await writeProof();
     for (const args of [["add", path.relative(root, receiptFile)], ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit", "-qm", "record private proof"]]) {
       const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
       assert.equal(result.status, 0, result.stderr);
     }
+    await writeFile(path.join(root, "candidate.txt"), "candidate metadata only\n");
+    for (const args of [["add", "candidate.txt"], ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit", "-qm", "candidate head"]]) {
+      const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+      assert.equal(result.status, 0, result.stderr);
+    }
     assert.deepEqual(await validateQaPrivateProofs(root, receiptRoot), []);
+
+    const sourceUrl = pathToFileURL(root).href;
+    for (const [args, checkout] of [
+      [["clone", "-q", "--depth=1", sourceUrl, shallowRoot], shallowRoot],
+      [["clone", "-q", sourceUrl, fullRoot], fullRoot],
+    ]) {
+      const result = spawnSync("git", args, { encoding: "utf8" });
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(spawnSync("git", ["status", "--short"], { cwd: checkout, encoding: "utf8" }).stdout, "");
+    }
+    const shallowReceiptRoot = path.join(shallowRoot, "authoring/evidence/course");
+    assert.match(
+      (await validateQaPrivateProofs(shallowRoot, shallowReceiptRoot)).map((item) => item.message).join("; "),
+      /private success proof commit does not exist in this repository/,
+      "a depth-one checkout must expose the operator-visible missing-proof refusal",
+    );
+    assert.deepEqual(
+      await validateQaPrivateProofs(fullRoot, path.join(fullRoot, "authoring/evidence/course")),
+      [],
+      "the same receipt must pass when its history is present",
+    );
+
+    let result = spawnSync("git", ["fetch", "-q", "--depth=1", "origin", commit], { cwd: shallowRoot, encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    const targetedMessages = (await validateQaPrivateProofs(shallowRoot, shallowReceiptRoot)).map((item) => item.message).join("; ");
+    assert.doesNotMatch(targetedMessages, /does not exist/, "fetching the named object should make it readable");
+    assert.match(targetedMessages, /must be an ancestor of current HEAD/, "a detached proof object must not self-authorize");
+    assert.match(targetedMessages, /immediate child of its proof commit/, "the shallow boundary must not masquerade as receipt lineage");
+
+    const missingCommit = "f".repeat(40);
+    proof.commit = missingCommit;
+    proof.record = `validated at ${missingCommit} by run ${proof.runId}`;
+    await writeProof();
+    assert.match(
+      (await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "),
+      /private success proof commit does not exist in this repository/,
+    );
+
+    const tree = spawnSync("git", ["rev-parse", `${commit}^{tree}`], { cwd: root, encoding: "utf8" }).stdout.trim();
+    result = spawnSync(
+      "git",
+      ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit-tree", tree, "-m", "unreachable proof"],
+      { cwd: root, encoding: "utf8" },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    const unreachableCommit = result.stdout.trim();
+    assert.equal(spawnSync("git", ["cat-file", "-e", `${unreachableCommit}^{commit}`], { cwd: root }).status, 0);
+    assert.notEqual(spawnSync("git", ["merge-base", "--is-ancestor", unreachableCommit, "HEAD"], { cwd: root }).status, 0);
+    proof.commit = unreachableCommit;
+    proof.record = `validated at ${unreachableCommit} by run ${proof.runId}`;
+    await writeProof();
+    assert.match(
+      (await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "),
+      /private success proof commit must be an ancestor of current HEAD/,
+    );
+
+    proof.commit = commit;
+    proof.record = `validated at ${commit} by run ${proof.runId}`;
+    await writeProof();
     await writeFile(path.join(root, `${owner}/artifact.html`), "changed public artifact\n");
     assert.match((await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "), /stale private-success public binding/);
     proof.publicBindings.push({ file: `${owner}/correct-input.json`, reviewedSha256: "0".repeat(64) });
@@ -447,6 +514,8 @@ test("QA private-success proof binds only current public bytes", async () => {
     assert.match((await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "), /exact five approved public paths/);
   } finally {
     await rm(root, { recursive: true, force: true });
+    await rm(shallowRoot, { recursive: true, force: true });
+    await rm(fullRoot, { recursive: true, force: true });
   }
 });
 
