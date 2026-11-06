@@ -1,7 +1,7 @@
 # Readiness receipt: java-foundations/classes-and-objects (author checkpoint)
 
 Author-side evidence for the nine canonical learner HTML pages of this module.
-It is not critic or reconciliation evidence: independent education and Java-SME exact-byte reviews of all nine pages are still required, and no page is badged verified until they pass.
+It is not critic or reconciliation evidence. The independent education and Java-SME reviews, their rechecks and the non-author reconciliation are recorded separately in each topic's `critic-*.json`, `*-critic-*-recheck.json` and `reconciliation.json` (section 8).
 
 ## 1. Scope and objectives
 
@@ -94,10 +94,19 @@ For all nine pages:
   - `classes-and-objects` (CO-SME-R7): an `if` test in `isLong()` that contains a unary `!` is reported as not supported and is not a try, whichever way round it returns; direct, literal-if, local, flag and explicitly inverted return cases keep their reviewed results.
   - Two new value-free QA edges with incomplete fixtures pass on these bytes and fail on `1968d200`. The private proof (14 browser probes) has no mismatch here and three on `1968d200`. A runtime run of the accepted setter forms showed refused values leave the old field value unchanged, and the store-in-else form stores the refused value. It ran on JDK 17.0.12 because no JDK 25 is installed; the setter uses no Java 25 feature. The private staging and solutions were deleted after the proof.
   - Not taken, by firstmate decision: EDU-SI-02, EDU-AM-02, EDU-CO-02 and specialist notes N1 to N3.
-- Open, owned by the next steps: focused education re-review of the three corrected pages and focused education and Java-SME rechecks of the corrected HTML bytes (T25 critic coverage is expected to fail until they land), and the video and PDF companions.
+- Open, owned by the next steps: the video and PDF companions, and the deferred optional findings listed in each topic's `reconciliation.json`.
 
 ## 7. Formative GIFT banks (firstmate inbox 013)
 
 - Nine banks, one per topic at `java-foundations/classes-and-objects/<topic>/artifact.gift`, 54 items in all: six per topic, two for each of the topic's three objectives. They follow the structure of the existing `java-foundations/java-basics` banks: header comments, `$CATEGORY: java-foundations/classes-and-objects/<topic>`, titles that name the objective id, four options, exactly one correct answer, and feedback opening `Correct.` or `Not quite.` on every option.
 - Items test retention with new examples rather than repeating the page's own predictions, checks or coding tasks; distractors come from the misconceptions each page teaches against.
 - Each bank passes `authoring/tools/gift/validate.mjs` (ASCII only, GIFT escapes, no angle brackets) and gate T16, and each `topic.json` now records the GIFT companion as present. No platform-only key, rubric, hidden test, reference solution, private success input or lab content was added, and the learner HTML bytes are unchanged.
+
+## 8. Independent review and reconciliation (firstmate inbox 020)
+
+- Both independent final reviews approve exact checkpoint `e91fd7f90554a0db9e3837e05f716fafbd71e458`. Every learner byte (nine `artifact.html`, nine `artifact.md`, nine `artifact.gift`) is frozen at that checkpoint; this record and the review records change no learner byte.
+- For each topic, the review records preserve every round bound to its exact bytes: the first education and Java-SME reviews at `238f665d` (`critic-education.json`, `critic-sme.json`), and the rechecks at `bd531452`, `1968d200` and `e91fd7f9` (`bd531-`, `r1968-` and `final-critic-*-recheck.json`). Each recheck lists the status of every earlier finding for that topic. The final rechecks bind the current page, Markdown and GIFT hashes, so approvals of unchanged bytes transfer by exact identity.
+- Each topic's `reconciliation.json` was decided by firstmate as the non-author reconciler, from the decisions in steering inboxes 016 to 020. Every finding is accepted; fixed findings name the bytes they were fixed in, and the rest are recorded as deferred with their reason. That includes the education observations O-1 to O-3, EDU-SI-02, EDU-AM-02, EDU-CO-02, the earlier optional lows and the specialist notes, including NB-1.
+- The specialist's final review ran the encapsulation runtime claims on JDK 25.0.5, which closes the gap left by the author's JDK 17 run.
+- Publication ancestry audit: the nine branch commits after `b80bbc4` touch only this module's learner, catalog and evidence files, with no logs, screenshots, traces or Java sources. All 31 distinct code fixtures ever committed in QA routes score at most 3 of 5 checks against the current pages, so none is near complete. No local path, credential or private input appears in the branch history. All private staging used for the proofs has been deleted.
+
