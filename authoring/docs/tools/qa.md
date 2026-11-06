@@ -167,6 +167,11 @@ with exactly matching task selector, language and target names. A page may decla
 each declaration owns its activity scope and targets. The supported declarations are closed:
 
 - `python-comprehension`: CPython structural comprehension scanning of declared targets.
+- `python-scaffold`: explicit no-structural-scanner mode (`"scan": "none"`) only on the identified
+  `data-pep-adapter="python-scaffold@3"` root, with a matched `.py` file named by that shell's `.le-file` label. Its
+  protection is the private runner's exact in-memory value comparison plus mandatory independent review; it does not
+  claim a structural Python scanner guarantee. The adapter identity keeps this declaration distinct from
+  `python-comprehension`.
 - `java`: structural Java scanning that rejects a complete implementation body of any declared target method
   (loops, branches, assignments or multi-statement bodies); a trivial placeholder starter stays legal. The declared
   task must contain a matched `.java` editor.
@@ -175,7 +180,9 @@ each declaration owns its activity scope and targets. The supported declarations
   in-memory value comparison plus mandatory independent review.
 
 A declaration whose task names an editor file owned by a different supported language is a false language label and
-fails; a `java`, `javascript-editor` or `jsx-editor` declaration without its matched editor fails; an unsupported
+fails; a `python-scaffold` declaration without its exact adapter root and `.le-file`-named `.py` editor fails; a
+`python-comprehension` declaration on that adapter root also fails; a `java`, `javascript-editor` or `jsx-editor`
+declaration without its matched editor fails; an unsupported
 language fails. A declaration whose required protection is not effective is refused rather than accepted vacuously.
 
 Committed paths contain only public-safe starter, incomplete, malformed, unsupported-shape, reset and
