@@ -35,7 +35,7 @@ It is not critic or reconciliation evidence. The independent education and Java-
 - Each topic's `authoring/evidence/java-foundations/classes-and-objects/<topic>/sources.json` was produced by `authoring/tools/net/check-links.mjs`: every source returned HTTP 200, and the receipt binds the current page bytes.
 - Sources are the Java SE 25 JLS and JVMS, the Java SE 25 API (Object, String, StringBuilder, Enum, IllegalArgumentException) and dev.java tutorials.
 - The riskiest claims were re-read in the live text on 2026-10-16: default constructor and its access (JLS 8.8.9); enum constructors may not be public or protected (8.9.2); non-enhanced switch statements need not be exhaustive (14.11.2); identical string literals refer to the same instance (3.10.5); reachability (12.6.1); the `Object.toString` form; `String.trim` returning this string when nothing is removed.
-- `freshness.status` stays `unverified`, with the pending SME review listed as the unverified item.
+- `freshness.status` is `verified` with `checkedAt` 2026-11-06, the date of each `sources.json` receipt, and no unverified items: the independent education and Java/OOP SME final rechecks approve the exact current page, Markdown and GIFT hashes (section 8). Their remaining low findings are deferred checker-hardening notes, not unverified technical claims.
 
 ## 4. Direct artifact proof (headless Chrome, `file://`, network blocked)
 
