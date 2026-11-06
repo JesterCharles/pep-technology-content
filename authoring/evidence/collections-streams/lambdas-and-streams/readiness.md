@@ -31,7 +31,7 @@ Every page carries the same module template blocks, derived from candidate `8852
 
 - `pep:lambdas-streams-template-css v3`: 18,898 bytes, SHA-256 `94140f190cba0a7d6bc17b537bd79dbd396d5936b57481bff25deda03dd96138`
 - `pep:lambdas-streams-template-engine v3` (interpreter plus page engine): 158,719 bytes, SHA-256 `3b42ed50d613ba646d90d1b03913157196f718fcf6fa67e6d84e371d121636e0` (five pages)
-- `pep:lambdas-streams-template-engine v3-timebox` (timed page only): 163,637 bytes, SHA-256 `e5c489ea620cfe0a319bd89d9e75c6e1c227c91cc0d4a2e945198d0a671a841e`
+- `pep:lambdas-streams-template-engine v3-timebox` (timed page only): 163,598 bytes, SHA-256 `41953ee60b8bf24566a87e3643adbcd08060e766a5687fb35e416afd13739937`
 
 | Topic | artifact.html SHA-256 | artifact.md SHA-256 | P50 / worst / budget (min) |
 |---|---|---|---|
@@ -40,7 +40,7 @@ Every page carries the same module template blocks, derived from candidate `8852
 | streams-over-data-loaded-from-the-database | `a32fb0e3fa0237fdab12f3619bb2426faf83c5a04b59aefa47a86b21e2b05d31` | `e0139cd6aa2470a100b0b7ee6ebe07c7e3ca350e30e5b95187b1b80d0e643da2` | 12.16 / 14.99 / 15 |
 | grouping-with-streams-and-optional | `7db704b09f91da1a42707f797aebcb6c0d02c09ed1c0b60826404fa799829e49` | `e8d0d1651ce04a384539b02fea4901448e1dc5349a6286290c113c261be34f94` | 8.15 / 10.23 / 11 |
 | collections-and-streams-review | `b4852d2ff0b25bd17435f0a6ab962c1af72c1943b081beecb266a2f5ff3e3311` | `051f0bddcb413f1a5c76b5d0c8d54596dc21f17bc4d636d881b3f26172af3deb` | 11.84 / 13.92 / 14 |
-| timed-coding-screen-patterns | `4437f0984aaa0c367ccae305a920c2d2e312abe4d2d2afb0b36b65ea1836fd31` | `5dc239a1902c5049f336cc9d6d4f92203194a684f366f6d90a2b290ae1188f91` | 12.23 / 14.98 / 15 |
+| timed-coding-screen-patterns | `9cf270b474bfee118b95e6c78b9d7b48dacb8d7d8bfc2388e86adee2e2b9fe9b` | `5dc239a1902c5049f336cc9d6d4f92203194a684f366f6d90a2b290ae1188f91` | 12.23 / 14.98 / 15 |
 
 Minutes come from the frozen estimator unchanged; budgets and about-labels are unchanged from `7079124`. Worst paths are modeled per graded unit in each `topic.json` `minutes.basis`.
 
@@ -93,6 +93,15 @@ Only the streams page and its GIFT bank changed for this item; the four SME-appr
 - `sources.json` now maps the Java SE 25 `Stream.count()` API note (an implementation may not execute the pipeline when it can compute the count from the source; then no elements are traversed and no intermediate operations are evaluated), confirmed in the live page on 2026-11-06. The receipts were refreshed that day, and the visible source date and `topic.json` freshness now read 2026-11-06.
 - A public regression asserts the corrected lifecycle teaching after reaching Activity 3 by the honest wrong-twice path; it fails on the `ebe7c89` bytes and passes on these bytes.
 - Minutes: P50 12.16 / worst 14.99, budget unchanged.
+
+## 5f. Inbox 021 timed Run gate (final Java/Streams-SME delta)
+
+Only the timed page changed; the nine approved artifacts are byte-identical to `d2057e6`, and the plan and grading rules are unchanged.
+
+- The time-box check now runs first in every Run, before the compile-error and unchanged-starter early returns. At or after the end of the box, both paths expire the box at once and refuse without using an attempt.
+- Public regressions, each failing on `d2057e6`: an unchanged-starter Run and a non-compiling Run before the box starts, and both after the clock is stopped. The five earlier editor edge cases now start the box before running.
+- A value-free controlled-clock check covered both early-return paths exactly at the deadline, 1 ms after, and 60 s late with the interval callback never fired. All 6 cases pass on the new bytes (the ended-box refusal, 0 attempts, the clock showing 0:00 and Stop disabled), and all 6 fail on `d2057e6`. The private passing-code deadline matrix (8 cases) and the time-box scenarios (6) still pass.
+- Minutes are unchanged at P50 12.23 / worst 14.98.
 
 ## 6. Remaining blockers and mismatches
 
