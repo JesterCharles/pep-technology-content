@@ -9,7 +9,7 @@ import test from "node:test";
 import Ajv2020 from "ajv/dist/2020.js";
 import MarkdownIt from "markdown-it";
 import { run as runT01 } from "../tools/checks/T01-schema.mjs";
-import { validateLearnerGuidance, validateOptionalDisclosures } from "../tools/checks/T08-html-static.mjs";
+import { run as runT08, validateLearnerGuidance, validateOptionalDisclosures } from "../tools/checks/T08-html-static.mjs";
 import { run as runT09 } from "../tools/checks/T09-offline.mjs";
 import { run as runT10 } from "../tools/checks/T10-sandbox.mjs";
 import { run as runT11 } from "../tools/checks/T11-behavior.mjs";
@@ -90,6 +90,72 @@ function context(root) {
     scanRoots: [root],
     display: (file) => path.relative(root, file).split(path.sep).join("/") || ".",
   };
+}
+
+async function makeT08Repository(html, spec) {
+  const repository = await makeRepository("answer-sensitive-private.html", { spec, preserveGuidance: true });
+  const artifact = path.join(repository.topicRoot, "artifact.html");
+  const metadata = [
+    '<meta name="pep:course" content="course">',
+    '<meta name="pep:module" content="module">',
+    '<meta name="pep:topic" content="QA fixture">',
+    '<meta name="pep:topic-id" content="topic">',
+    '<meta name="pep:budget-minutes" content="10">',
+    '<meta name="pep:source" content="authoring/evidence/course/module/topic/sources.json">',
+  ].join("\n  ");
+  await writeFile(artifact, html
+    .replace("<head>", `<head>\n  ${metadata}`)
+    .replace("<main ", "<main data-interaction "));
+  await writeFile(path.join(repository.root, "authoring/catalog/course/module/topic/topic.json"), `${JSON.stringify({
+    id: "topic",
+    title: "QA fixture",
+    artifacts: {
+      html: { status: "present" },
+      md: { status: "absent", reason: "Synthetic T08 fixture" },
+      pdf: { status: "absent", reason: "Synthetic T08 fixture" },
+    },
+    minutes: { budget: 10 },
+    freshness: { sourcesRef: "authoring/evidence/course/module/topic/sources.json" },
+  }, null, 2)}\n`);
+  return repository;
+}
+
+async function runT08Document(html, spec) {
+  const repository = await makeT08Repository(html, spec);
+  try {
+    return await runT08(context(repository.root));
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+  }
+}
+
+function nonGuidanceScaffoldHtml(options = {}) {
+  const adapter = options.adapter === undefined ? "python-scaffold@3" : options.adapter;
+  const adapterAttribute = adapter === null ? "" : ` data-lesson-editor-adapter="${adapter}"`;
+  const language = options.language ?? "python-scaffold";
+  const extension = options.extension ?? "py";
+  const target = options.target ?? "placeholder";
+  const declaration = options.declaration === false ? "" :
+    `<section id="task-sensitive" data-pep-answer-sensitive="${language}" data-pep-answer-targets="${target}"><p>Complete the private activity.</p></section>`;
+  const scoped = options.outsideTarget ?
+    `<section${adapterAttribute}><span class="le-file">practice.${extension}</span></section>${declaration}` :
+    `<section${adapterAttribute}><span class="le-file">practice.${extension}</span>${declaration}</section>`;
+  const duplicate = options.duplicateDeclaration ? declaration : "";
+  return `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>QA fixture</title></head>
+<body><main id="lesson">${scoped}${duplicate}</main></body>
+</html>`;
+}
+
+function nonGuidanceScaffoldSpec(overrides = {}) {
+  return { answerSafety: { privateSuccessProof: true, tasks: [{
+    task: "#task-sensitive",
+    language: "python-scaffold",
+    targets: ["placeholder"],
+    scan: "none",
+    ...overrides,
+  }] } };
 }
 
 function answerSensitiveSpec() {
@@ -581,7 +647,7 @@ function declarePythonScaffold(html, options = {}) {
   const extension = options.extension ?? "py";
   const labelClass = options.labelClass ?? "le-file";
   const language = options.language ?? "python-scaffold";
-  const adapterAttribute = adapter === null ? "" : ` data-pep-adapter="${adapter}"`;
+  const adapterAttribute = adapter === null ? "" : ` data-lesson-editor-adapter="${adapter}"`;
   return html.replace(
     'id="task-safe" data-pep-task',
     `id="task-safe" data-pep-task data-pep-answer-sensitive="${language}" data-pep-answer-targets="placeholder"${adapterAttribute}`,
@@ -638,7 +704,7 @@ test("private overlay accepts an adapter-scoped python-scaffold declaration", { 
     spec,
     transformHtml: (html) => html.replace(
       '<section id="task-sensitive" data-pep-answer-sensitive="python-comprehension" data-pep-answer-targets="result">',
-      '<section id="task-sensitive" data-pep-answer-sensitive="python-scaffold" data-pep-answer-targets="placeholder" data-pep-adapter="python-scaffold@3"><span class="le-file">practice.py</span>',
+      '<section id="task-sensitive" data-pep-answer-sensitive="python-scaffold" data-pep-answer-targets="placeholder" data-lesson-editor-adapter="python-scaffold@3"><span class="le-file">practice.py</span>',
     ),
   });
   const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-python-scaffold-"));
@@ -758,6 +824,57 @@ test("Java answer scanning and language-to-editor matching guard declared tasks"
   assert.deepEqual(await validateLearnerGuidance(matchedJs, matchedJsSpec), []);
 });
 
+test("T08 admits a value-free non-guidance declaration only in the exact python scaffold scope", { timeout: 120000 }, async () => {
+  assert.deepEqual(await runT08Document(nonGuidanceScaffoldHtml(), nonGuidanceScaffoldSpec()), []);
+});
+
+test("T08 rejects every mismatched non-guidance answer declaration through real intake", { timeout: 180000 }, async () => {
+  const duplicateSpec = nonGuidanceScaffoldSpec();
+  duplicateSpec.answerSafety.tasks.push(structuredClone(duplicateSpec.answerSafety.tasks[0]));
+  const cases = [
+    ["missing adapter", nonGuidanceScaffoldHtml({ adapter: null }), nonGuidanceScaffoldSpec(), /exact python-scaffold@3 adapter scope/],
+    ["wrong adapter version", nonGuidanceScaffoldHtml({ adapter: "python-scaffold@2" }), nonGuidanceScaffoldSpec(), /exact python-scaffold@3 adapter scope/],
+    ["legacy adapter attribute", nonGuidanceScaffoldHtml().replace("data-lesson-editor-adapter", "data-pep-adapter"), nonGuidanceScaffoldSpec(), /exact python-scaffold@3 adapter scope/],
+    ["adapter outside target", nonGuidanceScaffoldHtml({ outsideTarget: true }), nonGuidanceScaffoldSpec(), /exact python-scaffold@3 adapter scope/],
+    ["missing declaration", nonGuidanceScaffoldHtml({ declaration: false }), nonGuidanceScaffoldSpec(), /HTML and QA must declare/],
+    ["duplicate declaration", nonGuidanceScaffoldHtml({ duplicateDeclaration: true }), nonGuidanceScaffoldSpec(), /uniquely identified task declarations/],
+    ["missing task id", nonGuidanceScaffoldHtml().replace('id="task-sensitive" ', ""), nonGuidanceScaffoldSpec(), /uniquely identified task declarations/],
+    ["duplicate task id", nonGuidanceScaffoldHtml().replace("</main>", '<div id="task-sensitive"></div></main>'), nonGuidanceScaffoldSpec(), /uniquely identified task declarations/],
+    ["mismatched target", nonGuidanceScaffoldHtml({ target: "different" }), nonGuidanceScaffoldSpec(), /match one-to-one and exactly/],
+    ["mismatched task", nonGuidanceScaffoldHtml(), nonGuidanceScaffoldSpec({ task: "#other-task" }), /match one-to-one and exactly/],
+    ["missing spec", nonGuidanceScaffoldHtml(), {}, /HTML and QA must declare/],
+    ["duplicate spec", nonGuidanceScaffoldHtml(), duplicateSpec, /match one-to-one and exactly/],
+    ["wrong extension", nonGuidanceScaffoldHtml({ extension: "java" }), nonGuidanceScaffoldSpec(), /false language label/],
+    ["unknown extension", nonGuidanceScaffoldHtml({ extension: "txt" }), nonGuidanceScaffoldSpec(), /requires a matched python-scaffold editor/],
+    ["wrong language", nonGuidanceScaffoldHtml({ language: "python-comprehension" }), {
+      answerSafety: { tasks: [{ task: "#task-sensitive", language: "python-comprehension", targets: ["placeholder"] }] },
+    }, /exact python-scaffold@3 adapter scope/],
+    ["unrelated unenrolled declaration", nonGuidanceScaffoldHtml({ adapter: null, language: "java", extension: "java" }), {
+      answerSafety: { tasks: [{ task: "#task-sensitive", language: "java", targets: ["placeholder"] }] },
+    }, /exact python-scaffold@3 adapter scope/],
+    ["public answer encoding", nonGuidanceScaffoldHtml().replace("Complete the private activity.", "placeholder uses atob(input)."), nonGuidanceScaffoldSpec(), /must not encode, assemble or hash/],
+  ];
+  for (const [name, html, spec, pattern] of cases) {
+    const errors = await runT08Document(html, spec);
+    assert.ok(errors.some((item) => pattern.test(item.message)), `${name} unexpectedly passed: ${JSON.stringify(errors)}`);
+  }
+});
+
+test("T08 preserves guidance-enrolled scaffold and python-comprehension intake", { timeout: 120000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "good.html"), "utf8");
+  const baseSpec = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
+  const scaffoldSpec = structuredClone(baseSpec);
+  scaffoldSpec.answerSafety = pythonScaffoldSpec().answerSafety;
+  assert.deepEqual(await runT08Document(declarePythonScaffold(baseHtml), scaffoldSpec), []);
+
+  const comprehensionSpec = structuredClone(baseSpec);
+  comprehensionSpec.answerSafety = { tasks: [
+    { task: "#task-safe", language: "python-comprehension", targets: ["placeholder"] },
+  ] };
+  const slicingHtml = declareAnswerTasks(baseHtml, [["task-safe", "python-comprehension", "placeholder"]]);
+  assert.deepEqual(await runT08Document(slicingHtml, comprehensionSpec), []);
+});
+
 test("python-scaffold answer declarations are limited to the identified adapter shell", { timeout: 120000 }, async () => {
   const baseHtml = await readFile(path.join(fixtures, "good.html"), "utf8");
   const scaffoldHtml = declarePythonScaffold(baseHtml);
@@ -772,7 +889,7 @@ test("python-scaffold answer declarations are limited to the identified adapter 
     ["wrong shell label", declarePythonScaffold(baseHtml, { labelClass: "pep-editor__file" }), /requires a matched python-scaffold editor/],
     ["duplicate adapter root", scaffoldHtml.replace(
       '<span class="le-file">practice.py</span>',
-      '<span data-pep-adapter="python-scaffold@3"><span class="le-file">other.py</span></span><span class="le-file">practice.py</span>',
+      '<span data-lesson-editor-adapter="python-scaffold@3"><span class="le-file">other.py</span></span><span class="le-file">practice.py</span>',
     ), /requires the python-scaffold@3 adapter root/],
   ]) {
     assert.match((await validateLearnerGuidance(mutation, scaffoldSpec)).join("; "), pattern, `${name} unexpectedly passed`);
@@ -802,7 +919,8 @@ test("python-scaffold answer declarations are limited to the identified adapter 
   assert.match((await validateLearnerGuidance(duplicateDeclaration, scaffoldSpec)).join("; "), /uniquely identified task declarations/);
 
   const unenrolled = scaffoldHtml.replace(" data-pep-guidance-contract", "");
-  assert.deepEqual(await validateLearnerGuidance(unenrolled), [], "an adapter marker must not enroll a non-guidance page");
+  assert.match((await validateLearnerGuidance(unenrolled)).join("; "), /HTML and QA must declare/,
+    "a non-guidance scaffold declaration must still have a matching QA spec");
 });
 
 test("private overlay proves multi-task Java success only when every declared editor genuinely passes", { timeout: 360000 }, async () => {

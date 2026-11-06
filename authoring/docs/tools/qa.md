@@ -168,10 +168,11 @@ each declaration owns its activity scope and targets. The supported declarations
 
 - `python-comprehension`: CPython structural comprehension scanning of declared targets.
 - `python-scaffold`: explicit no-structural-scanner mode (`"scan": "none"`) only on the identified
-  `data-pep-adapter="python-scaffold@3"` root, with a matched `.py` file named by that shell's `.le-file` label. Its
-  protection is the private runner's exact in-memory value comparison plus mandatory independent review; it does not
-  claim a structural Python scanner guarantee. The adapter identity keeps this declaration distinct from
-  `python-comprehension`.
+  `data-lesson-editor-adapter="python-scaffold@3"` root, with a matched `.py` file named by that shell's `.le-file`
+  label. Its protection is the private runner's exact in-memory value comparison plus mandatory independent review;
+  it does not claim a structural Python scanner guarantee. The adapter identity keeps this declaration distinct from
+  `python-comprehension`. A task inside this exact adapter scope is the only answer-sensitive declaration accepted
+  outside a `main[data-pep-guidance-contract]`; all declaration/spec binding and public-surface guards still apply.
 - `java`: structural Java scanning that rejects a complete implementation body of any declared target method
   (loops, branches, assignments or multi-statement bodies); a trivial placeholder starter stays legal. The declared
   task must contain a matched `.java` editor.

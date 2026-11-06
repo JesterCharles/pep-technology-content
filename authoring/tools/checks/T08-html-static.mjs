@@ -385,9 +385,99 @@ async function inspectHtml(html, browser, spec) {
         problems.optional.push("a code workspace requires a noscript[data-pep-no-js] reading");
       }
 
+      const collectAnswerContract = (sensitive, guidanceRoot = null) => {
+        if (!sensitive.length) return { answerDeclarations: null, answerSelectors: [] };
+        const answerDeclarations = [];
+        const seenTasks = new Set();
+        for (const declared of sensitive) {
+          const language = declared.dataset.pepAnswerSensitive ?? "";
+          if (!supportedLanguages.includes(language) || !declared.id || seenTasks.has(declared.id) ||
+              document.querySelectorAll(`#${CSS.escape(declared.id)}`).length !== 1) {
+            problems.guidance.push("answer-sensitive task declarations require supported, uniquely identified task declarations");
+            continue;
+          }
+          seenTasks.add(declared.id);
+          const targets = (declared.dataset.pepAnswerTargets ?? "").split(/\s+/u).filter(Boolean);
+          if (!targets.length) problems.guidance.push("answer-sensitive declarations require declared target names");
+          const ancestorAdapters = [];
+          for (let current = declared; current; current = current.parentElement) {
+            if (current.hasAttribute("data-lesson-editor-adapter")) ancestorAdapters.push(current);
+          }
+          const adapterRoots = [...new Set([
+            ...ancestorAdapters,
+            ...declared.querySelectorAll("[data-lesson-editor-adapter]"),
+          ])];
+          const adapterScope = ancestorAdapters[0] ?? null;
+          const adapter = adapterScope?.getAttribute("data-lesson-editor-adapter") ?? "";
+          const adapterIds = adapterRoots.map((node) => node.getAttribute("data-lesson-editor-adapter") ?? "");
+          const scaffoldRoots = adapterRoots.filter((node) => node.getAttribute("data-lesson-editor-adapter") === "python-scaffold@3");
+          if (!guidanceRoot?.contains(declared) &&
+              (language !== "python-scaffold" || adapter !== "python-scaffold@3" || adapterRoots.length !== 1)) {
+            problems.guidance.push("answer-sensitive declarations outside guidance require one task target inside the exact python-scaffold@3 adapter scope");
+          }
+          const editorNames = [
+            ...[...declared.querySelectorAll(".pep-editor__file, [data-pep-file-tab]")].map((node) => node.textContent ?? ""),
+            ...[...declared.querySelectorAll("[data-file]")].map((node) => node.getAttribute("data-file") ?? ""),
+          ];
+          const scaffoldEditorNames = scaffoldRoots.flatMap((root) => [
+            ...(root.matches(".le-file") ? [root] : []),
+            ...root.querySelectorAll(".le-file"),
+          ]).map((node) => node.textContent ?? "");
+          const extensions = (names) => [...new Set(names
+            .map((name) => normalize(name).toLowerCase().match(/\.([a-z0-9]+)$/u)?.[1] ?? "")
+            .filter(Boolean))];
+          answerDeclarations.push({
+            task: `#${declared.id}`,
+            language,
+            targets,
+            adapter,
+            adapterIds,
+            editorExtensions: extensions(editorNames),
+            scaffoldEditorExtensions: extensions(scaffoldEditorNames),
+          });
+        }
+        const scopes = sensitive.map((declared) => declared.closest("[data-pep-activity]") ?? declared);
+        const bearing = (node) => scopes.some((scope, index) => scope.contains(node) || sensitive[index].contains(node)) ||
+          Boolean(node.closest?.("noscript, [data-static-alt]") || node.matches?.("noscript, [data-static-alt]"));
+        const documentRoot = document.documentElement;
+        for (const node of [documentRoot, ...documentRoot.querySelectorAll("*")]) {
+          for (const child of node.childNodes) {
+            if (child.nodeType === Node.TEXT_NODE && normalize(child.textContent)) {
+              answerSources.push({
+                value: child.textContent,
+                answerBearing: bearing(node),
+                source: node.tagName === "STYLE" ? "style-text" : "html-text",
+              });
+            }
+          }
+          for (const attribute of node.attributes ?? []) {
+            answerSources.push({ value: attribute.value, answerBearing: bearing(node), source: `attribute:${attribute.name}` });
+          }
+          if (node.tagName === "TEMPLATE" && normalize(node.content.textContent)) {
+            answerSources.push({ value: node.content.textContent, answerBearing: bearing(node), source: "template" });
+          }
+        }
+        const comments = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT);
+        while (comments.nextNode()) {
+          const parent = comments.currentNode.parentElement;
+          answerSources.push({ value: comments.currentNode.textContent, answerBearing: parent ? bearing(parent) : false, source: "html-comment" });
+        }
+        const answerSelectors = scopes.flatMap((scope) => [...scope.querySelectorAll("[id]")].map((node) => `#${CSS.escape(node.id)}`));
+        return { answerDeclarations, answerSelectors };
+      };
+
       const enrolled = [...document.querySelectorAll("main[data-pep-guidance-contract]")];
       if (!enrolled.length) {
-        return { ...problems, anecdoteProse, answerSources, hasGuidanceMarker: false, hintCount: 0, answerDeclarations: null, scripts: [] };
+        const answer = collectAnswerContract([...document.querySelectorAll("[data-pep-answer-sensitive]")]);
+        return {
+          ...problems,
+          anecdoteProse,
+          answerSources,
+          ...answer,
+          hasGuidanceMarker: false,
+          hintCount: 0,
+          scripts: [...document.scripts].map((script) => script.textContent ?? ""),
+        };
       }
       if (enrolled.length !== 1) problems.guidance.push("guidance-contract pages require exactly one enrolled root main");
       const root = enrolled[0];
@@ -551,79 +641,9 @@ async function inspectHtml(html, browser, spec) {
         return matches.length !== 1;
       })) problems.guidance.push("hint ownership must resolve to exactly one task in the same activity");
 
-      const sensitive = [...root?.querySelectorAll("[data-pep-answer-sensitive]") ?? []];
-      let answerDeclarations = null;
-      let answerSelectors = [];
-      if (sensitive.length) {
-        answerDeclarations = [];
-        const seenTasks = new Set();
-        for (const declared of sensitive) {
-          const language = declared.dataset.pepAnswerSensitive ?? "";
-          if (!supportedLanguages.includes(language) || !declared.id || seenTasks.has(declared.id)) {
-            problems.guidance.push("answer-sensitive guidance requires supported, uniquely identified task declarations");
-            continue;
-          }
-          seenTasks.add(declared.id);
-          const targets = (declared.dataset.pepAnswerTargets ?? "").split(/\s+/u).filter(Boolean);
-          if (!targets.length) problems.guidance.push("answer-sensitive guidance requires declared target names");
-          const adapterRoots = [
-            ...(declared.matches("[data-pep-adapter]") ? [declared] : []),
-            ...declared.querySelectorAll("[data-pep-adapter]"),
-          ];
-          const adapter = declared.getAttribute("data-pep-adapter") ?? "";
-          const adapterIds = adapterRoots.map((node) => node.getAttribute("data-pep-adapter") ?? "");
-          const scaffoldRoots = adapterRoots.filter((node) => node.getAttribute("data-pep-adapter") === "python-scaffold@3");
-          const editorNames = [
-            ...[...declared.querySelectorAll(".pep-editor__file, [data-pep-file-tab]")].map((node) => node.textContent ?? ""),
-            ...[...declared.querySelectorAll("[data-file]")].map((node) => node.getAttribute("data-file") ?? ""),
-          ];
-          const scaffoldEditorNames = scaffoldRoots.flatMap((adapter) => [
-            ...(adapter.matches(".le-file") ? [adapter] : []),
-            ...adapter.querySelectorAll(".le-file"),
-          ]).map((node) => node.textContent ?? "");
-          const extensions = (names) => [...new Set(names
-            .map((name) => normalize(name).toLowerCase().match(/\.([a-z0-9]+)$/u)?.[1] ?? "")
-            .filter(Boolean))];
-          answerDeclarations.push({
-            task: `#${declared.id}`,
-            language,
-            targets,
-            adapter,
-            adapterIds,
-            editorExtensions: extensions(editorNames),
-            scaffoldEditorExtensions: extensions(scaffoldEditorNames),
-          });
-        }
-        const scopes = sensitive.map((declared) => declared.closest("[data-pep-activity]") ?? declared);
-        const bearing = (node) => scopes.some((scope, index) => scope.contains(node) || sensitive[index].contains(node)) ||
-          Boolean(node.closest?.("noscript, [data-static-alt]") || node.matches?.("noscript, [data-static-alt]"));
-        const documentRoot = document.documentElement;
-        for (const node of [documentRoot, ...documentRoot.querySelectorAll("*")]) {
-          for (const child of node.childNodes) {
-            if (child.nodeType === Node.TEXT_NODE && normalize(child.textContent)) {
-              answerSources.push({
-                value: child.textContent,
-                answerBearing: bearing(node),
-                source: node.tagName === "STYLE" ? "style-text" : "html-text",
-              });
-            }
-          }
-          for (const attribute of node.attributes ?? []) {
-            answerSources.push({ value: attribute.value, answerBearing: bearing(node), source: `attribute:${attribute.name}` });
-          }
-          if (node.tagName === "TEMPLATE" && normalize(node.content.textContent)) {
-            answerSources.push({ value: node.content.textContent, answerBearing: bearing(node), source: "template" });
-          }
-        }
-        const comments = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT);
-        while (comments.nextNode()) {
-          const parent = comments.currentNode.parentElement;
-          answerSources.push({ value: comments.currentNode.textContent, answerBearing: parent ? bearing(parent) : false, source: "html-comment" });
-        }
-        answerSelectors = scopes.flatMap((scope) => [...scope.querySelectorAll("[id]")].map((node) => `#${CSS.escape(node.id)}`));
-      }
+      const answer = collectAnswerContract([...document.querySelectorAll("[data-pep-answer-sensitive]")], root);
       const scripts = [...document.scripts].map((script) => script.textContent ?? "");
-      return { ...problems, anecdoteProse, answerSources, answerSelectors, hasGuidanceMarker: true, hintCount: hints.length, answerDeclarations, scripts };
+      return { ...problems, anecdoteProse, answerSources, ...answer, hasGuidanceMarker: true, hintCount: hints.length, scripts };
     }, Object.keys(ANSWER_LANGUAGES));
     if (snapshot.anecdoteProse.some((prose) => decodedSources(prose).some(containsAnecdoteTechnical))) {
       snapshot.optional.push("optional anecdote must not contain code, API calls, commands or exact exception/output text");
