@@ -17,12 +17,24 @@ const ANSWER_SCANNER = fileURLToPath(new URL("../qa/python-answer-scan.py", impo
 // reshaped, assembled or encoded leaks stay with independent review.
 export const ANSWER_LANGUAGES = {
   "python-comprehension": { scan: "python", extensions: ["py"], requiresEditor: false },
+  "python-scaffold": {
+    scan: "none",
+    extensions: ["py"],
+    requiresEditor: true,
+    adapter: "python-scaffold@3",
+  },
   "java": { scan: "java", extensions: ["java"], requiresEditor: true },
   "javascript-editor": { scan: "none", extensions: ["js", "mjs", "cjs"], requiresEditor: true },
   "jsx-editor": { scan: "none", extensions: ["jsx"], requiresEditor: true },
 };
-const EXTENSION_LANGUAGE = new Map(Object.entries(ANSWER_LANGUAGES)
-  .flatMap(([language, entry]) => entry.extensions.map((extension) => [extension, language])));
+const EXTENSION_LANGUAGES = new Map();
+for (const [language, entry] of Object.entries(ANSWER_LANGUAGES)) {
+  for (const extension of entry.extensions) {
+    const languages = EXTENSION_LANGUAGES.get(extension) ?? new Set();
+    languages.add(language);
+    EXTENSION_LANGUAGES.set(extension, languages);
+  }
+}
 
 function metas(html) {
   const out = {};
@@ -554,14 +566,33 @@ async function inspectHtml(html, browser, spec) {
           seenTasks.add(declared.id);
           const targets = (declared.dataset.pepAnswerTargets ?? "").split(/\s+/u).filter(Boolean);
           if (!targets.length) problems.guidance.push("answer-sensitive guidance requires declared target names");
+          const adapterRoots = [
+            ...(declared.matches("[data-pep-adapter]") ? [declared] : []),
+            ...declared.querySelectorAll("[data-pep-adapter]"),
+          ];
+          const adapter = declared.getAttribute("data-pep-adapter") ?? "";
+          const adapterIds = adapterRoots.map((node) => node.getAttribute("data-pep-adapter") ?? "");
+          const scaffoldRoots = adapterRoots.filter((node) => node.getAttribute("data-pep-adapter") === "python-scaffold@3");
           const editorNames = [
             ...[...declared.querySelectorAll(".pep-editor__file, [data-pep-file-tab]")].map((node) => node.textContent ?? ""),
             ...[...declared.querySelectorAll("[data-file]")].map((node) => node.getAttribute("data-file") ?? ""),
           ];
-          const editorExtensions = [...new Set(editorNames
+          const scaffoldEditorNames = scaffoldRoots.flatMap((adapter) => [
+            ...(adapter.matches(".le-file") ? [adapter] : []),
+            ...adapter.querySelectorAll(".le-file"),
+          ]).map((node) => node.textContent ?? "");
+          const extensions = (names) => [...new Set(names
             .map((name) => normalize(name).toLowerCase().match(/\.([a-z0-9]+)$/u)?.[1] ?? "")
             .filter(Boolean))];
-          answerDeclarations.push({ task: `#${declared.id}`, language, targets, editorExtensions });
+          answerDeclarations.push({
+            task: `#${declared.id}`,
+            language,
+            targets,
+            adapter,
+            adapterIds,
+            editorExtensions: extensions(editorNames),
+            scaffoldEditorExtensions: extensions(scaffoldEditorNames),
+          });
         }
         const scopes = sensitive.map((declared) => declared.closest("[data-pep-activity]") ?? declared);
         const bearing = (node) => scopes.some((scope, index) => scope.contains(node) || sensitive[index].contains(node)) ||
@@ -674,14 +705,28 @@ export async function validateHtmlContracts(html, options = {}) {
     for (const declaration of snapshot.answerDeclarations) {
       const registered = ANSWER_LANGUAGES[declaration.language];
       if (!registered) continue;
-      const foreign = declaration.editorExtensions.filter((extension) =>
-        EXTENSION_LANGUAGE.has(extension) && EXTENSION_LANGUAGE.get(extension) !== declaration.language);
+      if (registered.adapter) {
+        if (declaration.adapter !== registered.adapter || declaration.adapterIds.length !== 1) {
+          answerProblems.push(`answer-sensitive task ${declaration.task} requires the ${registered.adapter} adapter root`);
+          continue;
+        }
+      } else if (declaration.adapterIds.includes("python-scaffold@3")) {
+        answerProblems.push(`answer-sensitive task ${declaration.task} declares a false language label for its adapter`);
+        continue;
+      }
+      const allEditorExtensions = [...new Set([
+        ...declaration.editorExtensions,
+        ...declaration.scaffoldEditorExtensions,
+      ])];
+      const foreign = allEditorExtensions.filter((extension) =>
+        EXTENSION_LANGUAGES.has(extension) && !EXTENSION_LANGUAGES.get(extension).has(declaration.language));
       if (foreign.length) {
         answerProblems.push(`answer-sensitive task ${declaration.task} declares a false language label for its editor`);
         continue;
       }
+      const matchedExtensions = registered.adapter ? declaration.scaffoldEditorExtensions : declaration.editorExtensions;
       if (registered.requiresEditor &&
-          !declaration.editorExtensions.some((extension) => registered.extensions.includes(extension))) {
+          !matchedExtensions.some((extension) => registered.extensions.includes(extension))) {
         answerProblems.push(`answer-sensitive task ${declaration.task} requires a matched ${declaration.language} editor`);
       }
     }

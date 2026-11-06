@@ -204,6 +204,7 @@ test("qa-paths schema requires complete guidance and exact per-action operands",
   multiLanguage.answerSafety.tasks = [
     { task: "#task-2", language: "java", targets: ["reverse"] },
     { task: "#task-3", language: "java", targets: ["summarize"] },
+    { task: "#task-4", language: "python-scaffold", targets: ["placeholder"], scan: "none" },
     { task: "#task-5", language: "jsx-editor", targets: ["App"], scan: "none" },
     { task: "#task-6", language: "javascript-editor", targets: ["loadBooks"], scan: "none" },
   ];
@@ -215,6 +216,8 @@ test("qa-paths schema requires complete guidance and exact per-action operands",
     (value) => { value.answerSafety.tasks[0].scan = "none"; },
     (value) => { delete value.answerSafety.tasks[2].scan; },
     (value) => { value.answerSafety.tasks[2].scan = "python"; },
+    (value) => { delete value.answerSafety.tasks[3].scan; },
+    (value) => { value.answerSafety.tasks[3].scan = "python"; },
     (value) => { value.answerSafety.tasks[0].targets = []; },
   ]) {
     const invalid = structuredClone(multiLanguage);
@@ -573,6 +576,27 @@ function declareAnswerTasks(html, declarations) {
   ), html);
 }
 
+function declarePythonScaffold(html, options = {}) {
+  const adapter = options.adapter === undefined ? "python-scaffold@3" : options.adapter;
+  const extension = options.extension ?? "py";
+  const labelClass = options.labelClass ?? "le-file";
+  const language = options.language ?? "python-scaffold";
+  const adapterAttribute = adapter === null ? "" : ` data-pep-adapter="${adapter}"`;
+  return html.replace(
+    'id="task-safe" data-pep-task',
+    `id="task-safe" data-pep-task data-pep-answer-sensitive="${language}" data-pep-answer-targets="placeholder"${adapterAttribute}`,
+  ).replace(
+    '<label for="activity-input">Observation</label>',
+    `<span class="${labelClass}">practice.${extension}</span><label for="activity-input">Observation</label>`,
+  );
+}
+
+function pythonScaffoldSpec() {
+  return { answerSafety: { privateSuccessProof: true, tasks: [
+    { task: "#task-safe", language: "python-scaffold", targets: ["placeholder"], scan: "none" },
+  ] } };
+}
+
 const JAVA_GUIDED_TASKS = [
   { task: "#task-2", language: "java", targets: ["reverse"] },
   { task: "#task-3", language: "java", targets: ["summarize"] },
@@ -604,6 +628,46 @@ async function makeOverlayRepository(page, options) {
   }
   return repository;
 }
+
+test("private overlay accepts an adapter-scoped python-scaffold declaration", { timeout: 300000 }, async () => {
+  const spec = answerSensitiveSpec();
+  spec.answerSafety.tasks = [
+    { task: "#task-sensitive", language: "python-scaffold", targets: ["placeholder"], scan: "none" },
+  ];
+  const repository = await makeOverlayRepository("answer-sensitive-private.html", {
+    spec,
+    transformHtml: (html) => html.replace(
+      '<section id="task-sensitive" data-pep-answer-sensitive="python-comprehension" data-pep-answer-targets="result">',
+      '<section id="task-sensitive" data-pep-answer-sensitive="python-scaffold" data-pep-answer-targets="placeholder" data-pep-adapter="python-scaffold@3"><span class="le-file">practice.py</span>',
+    ),
+  });
+  const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-python-scaffold-"));
+  const overlayFile = path.join(staging, "overlay.json");
+  const inputsFile = path.join(staging, "inputs.json");
+  const route = [
+    { do: "fill", selector: "#private-input", valueFrom: "private:activityValue" },
+    { do: "click", selector: "#private-complete" },
+  ];
+  try {
+    await writeFile(overlayFile, `${JSON.stringify({
+      schemaVersion: 1,
+      runId: "local-safe-python-scaffold",
+      topic: "course/module/topic",
+      completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+      progress: { selector: "#progress", text: "^1 of 1$" },
+      routes: { success: route, wrongFirst: route, keyboard: route, sandbox: route },
+    })}\n`);
+    await writeFile(inputsFile, `${JSON.stringify({ activityValue: `runtime-placeholder-${process.pid}` })}\n`);
+    const result = await runPrivateOverlay(context(repository.root), overlayFile, {
+      environment: { PEP_QA_PRIVATE_INPUTS_FILE: inputsFile },
+    });
+    assert.equal(result.result, "pass");
+    assert.equal(result.publicBindings.length, 5);
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+    await rm(staging, { recursive: true, force: true });
+  }
+});
 
 test("T10 runs the guided answer-sensitive fixture with a settled incomplete prior in sandbox", { timeout: 300000 }, async () => {
   assert.deepEqual(await runFixture("T10", "guided-answer-sensitive.html", {
@@ -692,6 +756,53 @@ test("Java answer scanning and language-to-editor matching guard declared tasks"
     { task: "#task-3", language: "javascript-editor", targets: ["loadBooks"], scan: "none" },
   ] } };
   assert.deepEqual(await validateLearnerGuidance(matchedJs, matchedJsSpec), []);
+});
+
+test("python-scaffold answer declarations are limited to the identified adapter shell", { timeout: 120000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "good.html"), "utf8");
+  const scaffoldHtml = declarePythonScaffold(baseHtml);
+  const scaffoldSpec = pythonScaffoldSpec();
+  assert.deepEqual(await validateLearnerGuidance(scaffoldHtml, scaffoldSpec), []);
+
+  for (const [name, mutation, pattern] of [
+    ["missing adapter", declarePythonScaffold(baseHtml, { adapter: null }), /requires the python-scaffold@3 adapter root/],
+    ["wrong adapter", declarePythonScaffold(baseHtml, { adapter: "python-scaffold@2" }), /requires the python-scaffold@3 adapter root/],
+    ["wrong extension", declarePythonScaffold(baseHtml, { extension: "java" }), /false language label/],
+    ["unknown extension", declarePythonScaffold(baseHtml, { extension: "txt" }), /requires a matched python-scaffold editor/],
+    ["wrong shell label", declarePythonScaffold(baseHtml, { labelClass: "pep-editor__file" }), /requires a matched python-scaffold editor/],
+    ["duplicate adapter root", scaffoldHtml.replace(
+      '<span class="le-file">practice.py</span>',
+      '<span data-pep-adapter="python-scaffold@3"><span class="le-file">other.py</span></span><span class="le-file">practice.py</span>',
+    ), /requires the python-scaffold@3 adapter root/],
+  ]) {
+    assert.match((await validateLearnerGuidance(mutation, scaffoldSpec)).join("; "), pattern, `${name} unexpectedly passed`);
+  }
+
+  const comprehensionHtml = declarePythonScaffold(baseHtml, { language: "python-comprehension" });
+  const comprehensionSpec = { answerSafety: { tasks: [
+    { task: "#task-safe", language: "python-comprehension", targets: ["placeholder"] },
+  ] } };
+  assert.match(
+    (await validateLearnerGuidance(comprehensionHtml, comprehensionSpec)).join("; "),
+    /false language label for its adapter/,
+    "the scaffold adapter must not masquerade as python-comprehension",
+  );
+
+  const slicingHtml = declareAnswerTasks(baseHtml, [["task-safe", "python-comprehension", "placeholder"]]);
+  assert.deepEqual(await validateLearnerGuidance(slicingHtml, comprehensionSpec), [], "python-comprehension behavior must remain unchanged");
+  assert.match((await validateLearnerGuidance(scaffoldHtml)).join("; "), /HTML and QA must declare/);
+  assert.match((await validateLearnerGuidance(baseHtml, scaffoldSpec)).join("; "), /HTML and QA must declare/);
+  const mismatchedSpec = pythonScaffoldSpec();
+  mismatchedSpec.answerSafety.tasks[0].task = "#task-explain";
+  assert.match((await validateLearnerGuidance(scaffoldHtml, mismatchedSpec)).join("; "), /match one-to-one and exactly/);
+  const duplicateDeclaration = scaffoldHtml.replace(
+    '<span class="le-file">practice.py</span>',
+    '<span id="task-safe" data-pep-answer-sensitive="python-scaffold" data-pep-answer-targets="placeholder"></span><span class="le-file">practice.py</span>',
+  );
+  assert.match((await validateLearnerGuidance(duplicateDeclaration, scaffoldSpec)).join("; "), /uniquely identified task declarations/);
+
+  const unenrolled = scaffoldHtml.replace(" data-pep-guidance-contract", "");
+  assert.deepEqual(await validateLearnerGuidance(unenrolled), [], "an adapter marker must not enroll a non-guidance page");
 });
 
 test("private overlay proves multi-task Java success only when every declared editor genuinely passes", { timeout: 360000 }, async () => {
