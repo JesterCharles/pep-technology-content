@@ -275,6 +275,27 @@ test("qa-paths schema requires complete guidance and exact per-action operands",
     { task: "#task-6", language: "javascript-editor", targets: ["loadBooks"], scan: "none" },
   ];
   assert.equal(validate(multiLanguage), true, JSON.stringify(validate.errors));
+  const javaStarterStatements = answerSensitiveSpec();
+  javaStarterStatements.answerSafety.tasks = [
+    { task: "#task-2", language: "java", targets: ["reverse"], starter: { target: "reverse", sha256: "a".repeat(64) } },
+    { task: "#task-3", language: "java", targetMode: "statements", targets: ["total"] },
+  ];
+  assert.equal(validate(javaStarterStatements), true, JSON.stringify(validate.errors));
+  for (const mutateJava of [
+    (value) => { value.answerSafety.tasks[1].targetMode = "methods"; },
+    (value) => { value.answerSafety.tasks[0].starter.sha256 = "A".repeat(64); },
+    (value) => { value.answerSafety.tasks[0].starter.sha256 = "a".repeat(63); },
+    (value) => { delete value.answerSafety.tasks[0].starter.sha256; },
+    (value) => { delete value.answerSafety.tasks[0].starter.target; },
+    (value) => { value.answerSafety.tasks[0].starter.bytes = "starter"; },
+    (value) => { value.answerSafety.tasks[0].starter = "a".repeat(64); },
+    (value) => { value.answerSafety.tasks[1] = { task: "#task-3", language: "python-comprehension", targetMode: "statements", targets: ["total"] }; },
+    (value) => { value.answerSafety.tasks[0] = { task: "#task-2", language: "jsx-editor", scan: "none", targets: ["App"], starter: { target: "App", sha256: "a".repeat(64) } }; },
+  ]) {
+    const invalid = structuredClone(javaStarterStatements);
+    mutateJava(invalid);
+    assert.equal(validate(invalid), false, "Java starter/statement mutation unexpectedly matched qa-paths schema");
+  }
   for (const mutateAnswer of [
     (value) => { value.answerSafety = { task: "#task-2", language: "python-comprehension", targets: ["result"], privateSuccessProof: true }; },
     (value) => { value.answerSafety.tasks = []; },
@@ -822,6 +843,268 @@ test("Java answer scanning and language-to-editor matching guard declared tasks"
     { task: "#task-3", language: "javascript-editor", targets: ["loadBooks"], scan: "none" },
   ] } };
   assert.deepEqual(await validateLearnerGuidance(matchedJs, matchedJsSpec), []);
+});
+
+// Synthetic, value-free starters: each keeps a placeholder and a TODO, so no
+// fixture route or scan ever carries a successful input.
+const SYNTHETIC_STARTER = [
+  "int[] reverse(int[] values) {",
+  "    int left = 0;",
+  "    int right = ___;",
+  "    while (left < right) {",
+  "        // TODO swap the two ends, then move both indexes",
+  "    }",
+  "    return values;",
+  "}",
+  "",
+].join("\n");
+const SYNTHETIC_STATEMENT_STARTER = "int total = 0;\n// TODO add every value to total\n";
+const sha256Text = (value) => createHash("sha256").update(value, "utf8").digest("hex");
+const escapeText = (value) => value.replace(/&/gu, "&amp;").replace(/</gu, "&lt;");
+
+function declareStarterStatementTasks(html, options = {}) {
+  const starterAttribute = options.starterAttribute === null ? "" :
+    ` data-pep-answer-starter="${options.starterAttribute ?? "reverse"}"`;
+  const modeAttribute = options.statementMode === null ? "" :
+    ` data-pep-answer-target-mode="${options.statementMode ?? "statements"}"`;
+  return html
+    .replace('id="task-2" data-pep-task',
+      `id="task-2" data-pep-task data-pep-answer-sensitive="java" data-pep-answer-targets="${options.targets ?? "reverse"}"${starterAttribute}`)
+    .replace("// TODO complete reverse", escapeText(options.starter ?? SYNTHETIC_STARTER))
+    .replace('id="task-3" data-pep-task',
+      `id="task-3" data-pep-task data-pep-answer-sensitive="java" data-pep-answer-targets="total"${modeAttribute}`)
+    .replace('<span class="pep-editor__file">Report.java</span>',
+      `<span class="pep-editor__file">${options.statementFile ?? "Report.java (body of main)"}</span>`)
+    .replace("// TODO complete summarize", escapeText(SYNTHETIC_STATEMENT_STARTER));
+}
+
+function starterStatementTasks(reverse = {}, total = {}) {
+  return [
+    { task: "#task-2", language: "java", targets: ["reverse"], starter: { target: "reverse", sha256: sha256Text(SYNTHETIC_STARTER) }, ...reverse },
+    { task: "#task-3", language: "java", targetMode: "statements", targets: ["total"], ...total },
+  ];
+}
+
+function starterStatementSpec(reverse, total) {
+  return { answerSafety: { privateSuccessProof: true, tasks: starterStatementTasks(reverse, total) } };
+}
+
+test("Java starter binding exempts only the exact reviewed starter in its declared task", { timeout: 180000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "guided-answer-sensitive.html"), "utf8");
+  const html = declareStarterStatementTasks(baseHtml);
+  const spec = starterStatementSpec();
+  assert.deepEqual(await validateLearnerGuidance(html, spec), []);
+
+  const unboundSpec = starterStatementSpec();
+  delete unboundSpec.answerSafety.tasks[0].starter;
+  assert.match(
+    (await validateLearnerGuidance(declareStarterStatementTasks(baseHtml, { starterAttribute: null }), unboundSpec)).join("; "),
+    /complete target method implementation/,
+    "an unbound complete-looking starter must still be refused",
+  );
+
+  const starterLiteral = (value) => `(() => {\n      const starterCopy = ${JSON.stringify(value)};`;
+  const withCopies = html
+    .replace("(() => {", starterLiteral(SYNTHETIC_STARTER))
+    .replace('<label for="editor-2">', `<pre>${escapeText(SYNTHETIC_STARTER.slice(0, -1))}</pre><label for="editor-2">`);
+  assert.deepEqual(await validateLearnerGuidance(withCopies, spec), [],
+    "exact starter copies (script literal and <pre> reading without its final LF) stay exempt");
+
+  const drifted = SYNTHETIC_STARTER.replace("int left = 0;", "int left = 1;");
+  const completed = "int[] reverse(int[] values) { int[] out = new int[values.length]; for (int i = 0; i < values.length; i++) { out[values.length - 1 - i] = values[i]; } return out; }";
+  const twoTargetStarter = `${SYNTHETIC_STARTER}void swap(int[] v, int i, int j) { int t = v[i]; v[i] = v[j]; v[j] = t; }\n`;
+  const flippedHash = sha256Text(SYNTHETIC_STARTER).replace(/.$/u, (char) => (char === "0" ? "1" : "0"));
+  const cases = [
+    ["one-byte starter drift in its task", declareStarterStatementTasks(baseHtml, { starter: drifted }), spec,
+      [/starter binding does not match its exact authorized starter/, /complete target method implementation/]],
+    ["one-byte drift in an outside starter copy", html.replace("(() => {", starterLiteral(drifted)), spec,
+      [/complete target method implementation/]],
+    ["mismatched hash", html, starterStatementSpec({ starter: { target: "reverse", sha256: flippedHash } }),
+      [/starter binding does not match its exact authorized starter/]],
+    ["starter binding declared only in QA", declareStarterStatementTasks(baseHtml, { starterAttribute: null }), spec,
+      [/match one-to-one and exactly/]],
+    ["starter binding declared only in HTML", html, unboundSpec, [/match one-to-one and exactly/, /complete target method implementation/]],
+    ["starter outside its declared task", declareStarterStatementTasks(baseHtml, { starter: "// TODO complete reverse" })
+      .replace("<section data-pep-recap><h2>Recap</h2>", `<section data-pep-recap><h2>Recap</h2><pre>${escapeText(SYNTHETIC_STARTER)}</pre>`),
+    spec, [/starter binding does not match its exact authorized starter/]],
+    ["renamed target no longer declared by the starter", declareStarterStatementTasks(baseHtml, { targets: "reverseAll", starterAttribute: "reverseAll" }),
+      starterStatementSpec({ targets: ["reverseAll"], starter: { target: "reverseAll", sha256: sha256Text(SYNTHETIC_STARTER) } }),
+      [/starter binding does not match its exact authorized starter/]],
+    ["starter target outside declared targets", declareStarterStatementTasks(baseHtml, { starterAttribute: "helper" }),
+      starterStatementSpec({ starter: { target: "helper", sha256: sha256Text(SYNTHETIC_STARTER) } }),
+      [/unsupported target mode or starter binding/]],
+    ["HTML and QA bind different targets", declareStarterStatementTasks(baseHtml, { targets: "reverse swap", starterAttribute: "swap" }),
+      starterStatementSpec({ targets: ["reverse", "swap"] }), [/match one-to-one and exactly/]],
+    ["complete target implementation outside the bound starter", html.replace(
+      "Complete the reverse method", `${escapeText(completed)}. Complete the reverse method`), spec,
+    [/complete target method implementation/]],
+    ["starter superset value", html.replace(
+      '<label for="editor-2">', `<pre>${escapeText(`${SYNTHETIC_STARTER}// extended copy\n`)}</pre><label for="editor-2">`), spec,
+    [/complete target method implementation/]],
+    ["encoded starter", html.replace(
+      "Complete the reverse method", `${Buffer.from(SYNTHETIC_STARTER).toString("base64")} Complete the reverse method`), spec,
+    [/complete target method implementation/]],
+    ["other declared target inside the bound starter", declareStarterStatementTasks(baseHtml, { targets: "reverse swap", starter: twoTargetStarter }),
+      starterStatementSpec({ targets: ["reverse", "swap"], starter: { target: "reverse", sha256: sha256Text(twoTargetStarter) } }),
+      [/complete target method implementation/]],
+  ];
+  for (const [name, mutation, mutationSpec, patterns] of cases) {
+    const problems = (await validateLearnerGuidance(mutation, mutationSpec)).join("; ");
+    for (const pattern of patterns) assert.match(problems, pattern, `${name} unexpectedly passed`);
+  }
+});
+
+test("Java statement-body targets keep the body-of-main editor and refuse statement leaks", { timeout: 180000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "guided-answer-sensitive.html"), "utf8");
+  const html = declareStarterStatementTasks(baseHtml);
+  const spec = starterStatementSpec();
+  const statementLeak = "total += values[0]; total += values[1];";
+  const inTask = (text) => html.replace("Complete the summarize method", `${text} Complete the summarize method`);
+  const leaks = [
+    ["raw task prose", inTask(statementLeak), spec],
+    ["multiline HTML comment", html.replace("<section data-pep-recap>",
+      "<!-- total\n      += values[0];\n    total\n      += values[1]; -->\n    <section data-pep-recap>"), spec],
+    ["script literal", html.replace("(() => {", `(() => {\n      const example = ${JSON.stringify(statementLeak)};`), spec],
+    ["encoded value", inTask(Buffer.from(statementLeak).toString("base64")), spec],
+    ["prefix increments", inTask("++total; ++total;"), spec],
+    ["member calls", inTask("total.add(1); total.add(2);"), spec],
+    ["head attribute outside the enrolled main", html.replace("<head>", `<head>\n  <meta name="description" content="${statementLeak}">`), spec],
+    ["QA route string", html, { routes: { success: [{ do: "fill", selector: "#editor-3", value: statementLeak }] }, ...starterStatementSpec() }],
+  ];
+  for (const [name, mutation, mutationSpec] of leaks) {
+    assert.match((await validateLearnerGuidance(mutation, mutationSpec)).join("; "), /complete target statement body/,
+      `statement leak ${name} unexpectedly passed`);
+  }
+  for (const [name, harmless] of [
+    ["one target statement in teaching", inTask("Add each value with total += value; then print it.")],
+    ["target named in prose", inTask("The total ends as 6 and total is printed once.")],
+    ["other variable statements", inTask("sum += values[0]; sum += values[1];")],
+  ]) {
+    assert.deepEqual(await validateLearnerGuidance(harmless, spec), [], `${name} unexpectedly failed`);
+  }
+
+  for (const [name, mutation, mutationSpec, pattern] of [
+    ["statement mode on a plain Java file", declareStarterStatementTasks(baseHtml, { statementFile: "Report.java" }), spec,
+      /requires a matched java statement-body editor/],
+    ["method mode on a body-of-main surface", declareStarterStatementTasks(baseHtml, { statementMode: null }),
+      starterStatementSpec({}, { targetMode: undefined }), /requires a matched java editor/],
+    ["foreign body-of-main label", declareStarterStatementTasks(baseHtml, { statementFile: "Report.py (body of main)" }), spec,
+      /false language label/],
+    ["unsupported HTML target mode", declareStarterStatementTasks(baseHtml, { statementMode: "methods" }), spec,
+      /match one-to-one and exactly/],
+    ["unsupported QA target mode", declareStarterStatementTasks(baseHtml, { statementMode: "methods" }),
+      starterStatementSpec({}, { targetMode: "methods" }), /unsupported target mode or starter binding/],
+    ["statement mode on another language", declareAnswerTasks(baseHtml, [["task-2", "python-comprehension", "reverse"]]),
+      { answerSafety: { tasks: [{ task: "#task-2", language: "python-comprehension", targets: ["reverse"], targetMode: "statements" }] } },
+      /unsupported target mode or starter binding/],
+  ]) {
+    assert.match((await validateLearnerGuidance(mutation, mutationSpec)).join("; "), pattern, `${name} unexpectedly passed`);
+  }
+});
+
+test("decoder and digest associations with Java targets fail raw, decoded and multiline", { timeout: 120000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "guided-answer-sensitive.html"), "utf8");
+  const html = declareStarterStatementTasks(baseHtml);
+  const spec = starterStatementSpec();
+  // The recap sits outside every activity, so only target association applies.
+  const inRecap = (text) => html.replace("<section data-pep-recap><h2>Recap</h2>", `<section data-pep-recap><h2>Recap</h2><p>${text}</p>`);
+  for (const [name, mutation] of [
+    ["raw statement target", inRecap("total = atob(encoded)")],
+    ["raw method target", inRecap("reverse uses String.fromCharCode(118, 49)")],
+    ["multiline association", inRecap("total\n      = String.fromCharCode(\n        116, 111)")],
+    ["decoded association", inRecap(Buffer.from("total = atob(encoded)").toString("base64"))],
+    ["decoded multiline association", inRecap(Buffer.from("reverse\n  = decodeURIComponent(\n  part)").toString("base64"))],
+    ["associated digest", inRecap(`total digest ${"ab".repeat(32)}`)],
+  ]) {
+    assert.match((await validateLearnerGuidance(mutation, spec)).join("; "), /must not encode, assemble or hash/,
+      `${name} unexpectedly passed`);
+  }
+  assert.deepEqual(await validateLearnerGuidance(inRecap("Call atob(text) in the browser console."), spec), [],
+    "an unassociated decoder name outside answer surfaces stays legal");
+});
+
+function starterStatementGuidedSpec() {
+  const spec = guidedSpec("strict");
+  spec.answerSafety = starterStatementSpec().answerSafety;
+  // Starter routes: the success route runs the unchanged method starter and the
+  // keyboard route the unchanged statement starter, each twice; every route
+  // then proves both declared tasks stay incomplete at zero credit.
+  spec.routes.success = spec.routes.success.filter((action) => !(action.do === "fill" && action.selector === "#editor-2"));
+  spec.keyboard = spec.keyboard.filter((action) => !(action.do === "fill" && action.selector === "#editor-3"));
+  const zeroCredit = ["#activity-2", "#activity-3"].flatMap((selector) => [
+    { do: "expectAttribute", selector, attribute: "data-pep-completed", equals: "false" },
+    { do: "expectAttribute", selector, attribute: "data-pep-credit", equals: "0" },
+  ]);
+  for (const name of ["success", "wrongFirst", "wrongTwice"]) spec.routes[name].push(...zeroCredit);
+  spec.keyboard.push(...zeroCredit);
+  return spec;
+}
+
+test("T08 intake accepts the bound starter and statement task and refuses starter drift", { timeout: 120000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "guided-answer-sensitive.html"), "utf8");
+  const spec = starterStatementGuidedSpec();
+  assert.deepEqual(await runT08Document(declareStarterStatementTasks(baseHtml), spec), []);
+  const drifted = await runT08Document(declareStarterStatementTasks(baseHtml, {
+    starter: SYNTHETIC_STARTER.replace("int right = ___;", "int right = __;"),
+  }), spec);
+  assert.ok(drifted.some((item) => /starter binding does not match/.test(item.message)), JSON.stringify(drifted));
+});
+
+test("T11 keeps public starter and negative routes on bound Java tasks incomplete at zero credit", { timeout: 300000 }, async () => {
+  assert.deepEqual(await runFixture("T11", "guided-answer-sensitive.html", {
+    spec: starterStatementGuidedSpec(),
+    transformHtml: (html) => declareStarterStatementTasks(html.replace('data-pep-predict="settle"', 'data-pep-predict="strict"')),
+  }), []);
+});
+
+test("private overlay proves bound-starter and statement-body Java tasks only when both genuinely pass", { timeout: 420000 }, async () => {
+  const repository = await makeOverlayRepository("guided-answer-sensitive.html", {
+    spec: starterStatementGuidedSpec(),
+    transformHtml: (html) => declareStarterStatementTasks(html.replace('data-pep-predict="settle"', 'data-pep-predict="strict"')),
+  });
+  const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-java-starter-"));
+  const overlayFile = path.join(staging, "overlay.json");
+  const inputsFile = path.join(staging, "inputs.json");
+  const environment = { PEP_QA_PRIVATE_INPUTS_FILE: inputsFile };
+  const privateReverse = `runtime-only reverse placeholder ${process.pid}`;
+  const privateTotal = `runtime-only total placeholder ${process.pid}`;
+  const pass = (editor, check, key) => [{ do: "fill", selector: editor, valueFrom: `private:${key}` }, { do: "click", selector: check }];
+  const starterTwice = (check) => [{ do: "click", selector: check }, { do: "click", selector: check }];
+  const overlayFor = (route) => ({
+    schemaVersion: 1,
+    runId: "local-safe-java-starter-statements",
+    topic: "course/module/topic",
+    completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+    progress: { selector: "#progress", text: "^4 of 4 done$" },
+    routes: { success: route, wrongFirst: route, keyboard: route, sandbox: route },
+  });
+  try {
+    await writeFile(inputsFile, `${JSON.stringify({ reverse: privateReverse, total: privateTotal })}\n`);
+    const allPass = guidedOverlayRoutes(pass("#editor-2", "#check-2", "reverse"), pass("#editor-3", "#check-3", "total"));
+    await writeFile(overlayFile, `${JSON.stringify(overlayFor(allPass))}\n`);
+    const result = await runPrivateOverlay(context(repository.root), overlayFile, { environment });
+    assert.equal(result.result, "pass");
+    assert.equal(result.publicBindings.length, 5);
+    assert.ok(!JSON.stringify(result).includes(privateReverse) && !JSON.stringify(result).includes(privateTotal),
+      "overlay result must not echo private values");
+
+    for (const [name, route] of [
+      ["mixed: statement starter left unchanged", guidedOverlayRoutes(pass("#editor-2", "#check-2", "reverse"), starterTwice("#check-3"))],
+      ["mixed: method starter left unchanged", guidedOverlayRoutes(starterTwice("#check-2"), pass("#editor-3", "#check-3", "total"))],
+      ["all-fail: both starters left unchanged", guidedOverlayRoutes(starterTwice("#check-2"), starterTwice("#check-3"))],
+    ]) {
+      await writeFile(overlayFile, `${JSON.stringify(overlayFor(route))}\n`);
+      await assert.rejects(
+        runPrivateOverlay(context(repository.root), overlayFile, { environment }),
+        (error) => /private success route failed; no private values were recorded/.test(error.message) &&
+          !error.message.includes(privateReverse) && !error.message.includes(privateTotal),
+        `${name} must be refused`,
+      );
+    }
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+    await rm(staging, { recursive: true, force: true });
+  }
 });
 
 test("T08 admits a value-free non-guidance declaration only in the exact python scaffold scope", { timeout: 120000 }, async () => {
