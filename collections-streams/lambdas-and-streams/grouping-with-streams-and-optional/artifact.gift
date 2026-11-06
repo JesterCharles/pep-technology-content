@@ -1,0 +1,53 @@
+// Practice quiz: Grouping with streams and Optional
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: collections-streams/lambdas-and-streams/grouping-with-streams-and-optional
+
+::o1 mapping shape::The words "ant", "bee" and "apple" are collected with groupingBy, using the first letter as the classifier and mapping(String\:\:length, toList()) as the downstream collector. What does key a map to? {
+=The list [3, 5]#Correct. mapping turns each a-word into its length before toList collects the lengths.
+~2#Not quite. That would be counting(), not mapping.
+~The list [ant, apple]#Not quite. That would be toList() without mapping.
+~8#Not quite. mapping with toList keeps each length; it does not add them.
+}
+
+::o1 counting type::In the map that groupingBy(Product\:\:category, counting()) returns, what type are the values? {
+=Long#Correct. counting() counts elements as a Long.
+~Integer#Not quite. counting() produces a Long, not an Integer.
+~A List of Product#Not quite. That is what groupingBy gives without a downstream collector.
+~String#Not quite. The category is the key; the value is the count.
+}
+
+::o2 fallback value::first is the Optional returned by names.stream().findFirst(). Which expression gives the name, or the text none when the stream was empty? {
+=first.orElse("none")#Correct. orElse returns the value when present and the fallback otherwise.
+~first.get()#Not quite. get() throws NoSuchElementException when the Optional is empty.
+~first \=\= null ? "none" \: first.get()#Not quite. findFirst returns an Optional, never null, so the empty case still throws.
+~first.ifPresent("none")#Not quite. ifPresent takes an action to run on the value, not a fallback.
+}
+
+::o2 map on empty::priciest is an Optional of Product and is empty. What does priciest.map(Product\:\:name) return? {
+=An empty Optional#Correct. map runs only on a present value, so an empty Optional stays empty.
+~null#Not quite. map always returns an Optional, never null.
+~It throws NoSuchElementException#Not quite. map is safe on an empty Optional; get() is what throws.
+~An Optional holding the empty String#Not quite. No name exists, so nothing is put in the Optional.
+}
+
+::o2 absence is a bug::When an empty result would mean a bug, which call stops right there with NoSuchElementException? {
+=orElseThrow()#Correct. orElseThrow returns the value, or throws NoSuchElementException when empty.
+~orElse(null)#Not quite. That returns null and moves the failure to some later line.
+~isPresent()#Not quite. isPresent only returns a boolean; it does not give the value.
+~map(Product\:\:name)#Not quite. map keeps an empty Optional empty without throwing.
+}
+
+::o3 duplicate key::purchases holds two purchases by customer c7. What does collect(Collectors.toMap(Purchase\:\:customerId, Purchase\:\:cents)) do? {
+=It throws IllegalStateException#Correct. toMap without a merge function refuses a duplicate key.
+~It keeps the first purchase for c7#Not quite. Only a merge function can choose to keep the first value.
+~It keeps the last purchase for c7#Not quite. toMap does not overwrite silently.
+~It adds the two amounts for c7#Not quite. Adding needs a merge function such as Integer\:\:sum.
+}
+
+::o3 merge function::Customer c7 made purchases of 300 and 200 cents. What does c7 map to after toMap(Purchase\:\:customerId, Purchase\:\:cents, Integer\:\:sum)? {
+=500#Correct. The merge function Integer\:\:sum combines the two values for the repeated key.
+~300#Not quite. That keeps the first value; Integer\:\:sum adds both.
+~200#Not quite. That keeps the last value; Integer\:\:sum adds both.
+~It throws IllegalStateException#Not quite. With a merge function, a repeated key is combined instead of refused.
+}
