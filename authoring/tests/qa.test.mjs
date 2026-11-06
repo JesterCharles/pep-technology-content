@@ -273,6 +273,7 @@ test("qa-paths schema requires complete guidance and exact per-action operands",
     { task: "#task-4", language: "python-scaffold", targets: ["placeholder"], scan: "none" },
     { task: "#task-5", language: "jsx-editor", targets: ["App"], scan: "none" },
     { task: "#task-6", language: "javascript-editor", targets: ["loadBooks"], scan: "none" },
+    { task: "#task-7", language: "sql", targets: ["query"], scan: "none" },
   ];
   assert.equal(validate(multiLanguage), true, JSON.stringify(validate.errors));
   const javaStarterStatements = answerSensitiveSpec();
@@ -305,6 +306,8 @@ test("qa-paths schema requires complete guidance and exact per-action operands",
     (value) => { value.answerSafety.tasks[2].scan = "python"; },
     (value) => { delete value.answerSafety.tasks[3].scan; },
     (value) => { value.answerSafety.tasks[3].scan = "python"; },
+    (value) => { delete value.answerSafety.tasks[5].scan; },
+    (value) => { value.answerSafety.tasks[5].scan = "sql"; },
     (value) => { value.answerSafety.tasks[0].targets = []; },
   ]) {
     const invalid = structuredClone(multiLanguage);
@@ -684,6 +687,32 @@ function pythonScaffoldSpec() {
   ] } };
 }
 
+const SQL_GUIDED_TASKS = [
+  { task: "#task-2", language: "sql", targets: ["queryOne"], scan: "none" },
+  { task: "#task-3", language: "sql", targets: ["queryTwo"], scan: "none" },
+];
+
+function sqlGuidedHtml(html, options = {}) {
+  let out = options.declarations === false ? html : declareAnswerTasks(html, [
+    ["task-2", options.firstLanguage ?? "sql", "queryOne"],
+    ["task-3", options.secondLanguage ?? "sql", "queryTwo"],
+  ]);
+  const adapters = options.adapters ?? ["sql-practice@1", "sql-practice@1"];
+  for (const adapter of adapters) {
+    const attribute = adapter === null ? "" : ` data-lesson-editor-adapter="${adapter}"`;
+    out = out.replace('<div class="pep-editor__bar">', `<div class="pep-editor__bar"${attribute}>`);
+  }
+  const extensions = options.extensions ?? ["sql", "sql"];
+  return out.replaceAll("Reverse.java", `query-one.${extensions[0]}`)
+    .replaceAll("Report.java", `query-two.${extensions[1]}`);
+}
+
+function sqlGuidedSpec() {
+  const spec = guidedSpec("strict");
+  spec.answerSafety = { privateSuccessProof: true, tasks: structuredClone(SQL_GUIDED_TASKS) };
+  return spec;
+}
+
 const JAVA_GUIDED_TASKS = [
   { task: "#task-2", language: "java", targets: ["reverse"] },
   { task: "#task-3", language: "java", targets: ["summarize"] },
@@ -843,6 +872,158 @@ test("Java answer scanning and language-to-editor matching guard declared tasks"
     { task: "#task-3", language: "javascript-editor", targets: ["loadBooks"], scan: "none" },
   ] } };
   assert.deepEqual(await validateLearnerGuidance(matchedJs, matchedJsSpec), []);
+});
+
+test("SQL answer declarations require matched markers, adapters and editors", { timeout: 180000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "guided-answer-sensitive.html"), "utf8");
+  const html = sqlGuidedHtml(baseHtml);
+  const spec = sqlGuidedSpec();
+  assert.deepEqual(await validateLearnerGuidance(html, spec), []);
+  assert.deepEqual(await runT08Document(html, spec), []);
+
+  const missingMarker = html.replace(' data-pep-answer-sensitive="sql" data-pep-answer-targets="queryOne"', "");
+  assert.match((await validateLearnerGuidance(missingMarker, spec)).join("; "), /match one-to-one and exactly/);
+  const missingDeclaration = sqlGuidedSpec();
+  missingDeclaration.answerSafety.tasks.pop();
+  assert.match((await validateLearnerGuidance(html, missingDeclaration)).join("; "), /match one-to-one and exactly/);
+  assert.match(
+    (await validateLearnerGuidance(sqlGuidedHtml(baseHtml, { adapters: [null, "sql-practice@1"] }), spec)).join("; "),
+    /requires one contained sql-practice@1 adapter root/,
+  );
+  assert.match(
+    (await validateLearnerGuidance(sqlGuidedHtml(baseHtml, { adapters: ["sql-practice@2", "sql-practice@1"] }), spec)).join("; "),
+    /requires one contained sql-practice@1 adapter root/,
+  );
+  const ancestorAdapter = sqlGuidedHtml(baseHtml, { adapters: [null, "sql-practice@1"] }).replace(
+    'id="task-2" data-pep-task data-pep-answer-sensitive="sql"',
+    'id="task-2" data-pep-task data-lesson-editor-adapter="sql-practice@1" data-pep-answer-sensitive="sql"',
+  );
+  assert.match((await validateLearnerGuidance(ancestorAdapter, spec)).join("; "), /requires one contained sql-practice@1 adapter root/);
+  const duplicateAdapter = html.replace(
+    '<span class="pep-editor__file">query-one.sql</span>',
+    '<span data-lesson-editor-adapter="sql-practice@1"><span class="pep-editor__file">query-one.sql</span></span>',
+  );
+  assert.match((await validateLearnerGuidance(duplicateAdapter, spec)).join("; "), /requires one contained sql-practice@1 adapter root/);
+  assert.match(
+    (await validateLearnerGuidance(sqlGuidedHtml(baseHtml, { extensions: ["java", "sql"] }), spec)).join("; "),
+    /false language label/,
+  );
+  const wrongScan = sqlGuidedSpec();
+  delete wrongScan.answerSafety.tasks[0].scan;
+  assert.match((await validateLearnerGuidance(html, wrongScan)).join("; "), /registered scan mode/);
+
+  const reversible = Buffer.from("queryOne = atob(encoded)").toString("base64");
+  const encodedLeak = html.replace("Complete the reverse method", `${reversible}. Complete the reverse method`);
+  assert.match((await validateLearnerGuidance(encodedLeak, spec)).join("; "), /must not encode, assemble or hash/);
+});
+
+test("private SQL proof keeps receipts public-only and refuses mixed or all-fail routes", { timeout: 420000 }, async () => {
+  const spec = sqlGuidedSpec();
+  const repository = await makeOverlayRepository("guided-answer-sensitive.html", {
+    spec,
+    transformHtml: (html) => sqlGuidedHtml(html.replace('data-pep-predict="settle"', 'data-pep-predict="strict"')),
+  });
+  const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-sql-"));
+  const overlayFile = path.join(staging, "overlay.json");
+  const inputsFile = path.join(staging, "inputs.json");
+  const environment = { PEP_QA_PRIVATE_INPUTS_FILE: inputsFile };
+  const privateOne = `SELECT 'synthetic-one-${process.pid}' AS note;`;
+  const privateTwo = `SELECT 'synthetic-two-${process.pid}' AS note;`;
+  const privateForms = [
+    privateOne,
+    privateTwo,
+    Buffer.from(privateOne).toString("base64"),
+    Buffer.from(privateTwo).toString("base64"),
+    createHash("sha256").update(privateOne).digest("hex"),
+    createHash("sha256").update(privateTwo).digest("hex"),
+  ];
+  const pass = (editor, check, key) => [
+    { do: "fill", selector: editor, valueFrom: `private:${key}` },
+    { do: "click", selector: check },
+  ];
+  const miss = (editor, check) => [
+    { do: "fill", selector: editor, value: "-- TODO synthetic incomplete SQL" },
+    { do: "click", selector: check },
+    { do: "click", selector: check },
+  ];
+  const overlayFor = (route) => ({
+    schemaVersion: 1,
+    runId: "local-safe-sql",
+    topic: "course/module/topic",
+    completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+    progress: { selector: "#progress", text: "^4 of 4 done$" },
+    routes: { success: route, wrongFirst: route, keyboard: route, sandbox: route },
+  });
+  const allPass = guidedOverlayRoutes(pass("#editor-2", "#check-2", "one"), pass("#editor-3", "#check-3", "two"));
+  try {
+    await writeFile(inputsFile, `${JSON.stringify({ one: privateOne, two: privateTwo })}\n`);
+    await writeFile(overlayFile, `${JSON.stringify(overlayFor(allPass))}\n`);
+    const receiptRoot = path.join(repository.root, "authoring/evidence/course");
+    assert.match(
+      (await validateQaPrivateProofs(repository.root, receiptRoot)).map((item) => item.message).join("; "),
+      /opt-in requires a current private success receipt/,
+    );
+
+    const result = await runPrivateOverlay(context(repository.root), overlayFile, { environment });
+    assert.equal(result.result, "pass");
+    assert.equal(result.commit, spawnSync("git", ["rev-parse", "HEAD"], { cwd: repository.root, encoding: "utf8" }).stdout.trim());
+    assert.equal(result.publicBindings.length, 5);
+    for (const form of privateForms) assert.ok(!JSON.stringify(result).includes(form), "proof result must not contain private SQL or a derivative");
+    await assert.rejects(readFile(path.join(repository.root, "build", "qa", "qa-receipt.json")), { code: "ENOENT" });
+
+    for (const [name, route] of [
+      ["mixed", guidedOverlayRoutes(pass("#editor-2", "#check-2", "one"), miss("#editor-3", "#check-3"))],
+      ["all-fail", guidedOverlayRoutes(miss("#editor-2", "#check-2"), miss("#editor-3", "#check-3"))],
+    ]) {
+      await writeFile(overlayFile, `${JSON.stringify(overlayFor(route))}\n`);
+      await assert.rejects(
+        runPrivateOverlay(context(repository.root), overlayFile, { environment }),
+        (error) => /private success route failed; no private values were recorded/.test(error.message) &&
+          privateForms.every((form) => !error.message.includes(form)),
+        `${name} SQL proof must be refused without exposing private input`,
+      );
+    }
+
+    const receiptFile = path.join(repository.root, "authoring/evidence/course/module/topic/qa-receipt.json");
+    const receipt = { privateSuccessProof: {
+      record: `validated at ${result.commit} by run ${result.runId}`,
+      commit: result.commit,
+      runId: result.runId,
+      result: "pass",
+      publicBindings: result.publicBindings,
+    } };
+    const serializedReceipt = `${JSON.stringify(receipt)}\n`;
+    for (const form of privateForms) assert.ok(!serializedReceipt.includes(form), "receipt must not contain private SQL or a derivative");
+    await writeFile(receiptFile, serializedReceipt);
+    for (const args of [["add", path.relative(repository.root, receiptFile)], ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit", "-qm", "record SQL private proof"]]) {
+      const commit = spawnSync("git", args, { cwd: repository.root, encoding: "utf8" });
+      assert.equal(commit.status, 0, commit.stderr);
+    }
+    assert.deepEqual(await validateQaPrivateProofs(repository.root, receiptRoot), []);
+    const history = spawnSync("git", ["log", "-p", "--all"], { cwd: repository.root, encoding: "utf8" }).stdout;
+    for (const form of privateForms) assert.ok(!history.includes(form), "repository history must not contain private SQL or a derivative");
+
+    const mismatched = structuredClone(receipt);
+    mismatched.privateSuccessProof.publicBindings[0].reviewedSha256 = "0".repeat(64);
+    await writeFile(receiptFile, `${JSON.stringify(mismatched)}\n`);
+    assert.match(
+      (await validateQaPrivateProofs(repository.root, receiptRoot)).map((item) => item.message).join("; "),
+      /commit blob differs from receipt/,
+    );
+    await writeFile(receiptFile, serializedReceipt);
+
+    const checkerFile = path.join(repository.root, "authoring/tools/checks/T08-html-static.mjs");
+    const checkerBytes = await readFile(checkerFile);
+    await writeFile(checkerFile, Buffer.concat([checkerBytes, Buffer.from("// synthetic drift\n")]));
+    assert.match(
+      (await validateQaPrivateProofs(repository.root, receiptRoot)).map((item) => item.message).join("; "),
+      /stale private-success public binding/,
+    );
+    await writeFile(checkerFile, checkerBytes);
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+    await rm(staging, { recursive: true, force: true });
+  }
 });
 
 // Synthetic, value-free starters: each keeps a placeholder and a TODO, so no
