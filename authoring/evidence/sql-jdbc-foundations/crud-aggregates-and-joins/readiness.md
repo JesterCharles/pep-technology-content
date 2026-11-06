@@ -12,18 +12,18 @@ The pages also carry the answer-safe QA paths that QA-01 needed, using the priva
 
 ## 1. Inventory
 
-| Topic | artifact.html sha256 |
-| --- | --- |
-| insert-update-and-delete | `ee58712242863df67c7606a2cc889a43258084c07d76319d20de9fd39f19ca5f` |
-| seeding-sample-data | `c8178ba69e56d8d33a271a1d89942ea57ca0d130a449c62f2568a6a766329220` |
-| filtering-and-sorting | `db52c5886d71fd373400f2dd34604d2cdbbc69173c750007eaecc2ee6235c5ad` |
-| handling-nulls-coalesce-and-case | `6fba5958a3945ac2cf21a012dd70d888f3786530db41eb85f1069f4aacaea249` |
-| aggregate-functions | `53b552fc3baa547a153d7e27f0c1a1b95a9f293cdc0ef7c5370a9094492fc3c5` |
-| group-by-and-having | `e19553a08761d033250e9d0c971a1e1f040d8f809d15fa2191a1f646aae0ae0a` |
-| inner-and-left-joins | `4fcd22aab345fe38f13bf7d7e6fd7bac7503cccebbec8c13ecab2af8e36a52e3` |
-| anti-joins-and-self-joins | `b33cb645482a92277099275793bb680c1578840b4a640aa89cd91e1ef5aa67da` |
+| Topic | artifact.html sha256 (current) | Approved before the SQL markers (584aa77e) |
+| --- | --- | --- |
+| insert-update-and-delete | `8d2f36621ab26b178b793c5585dfa9791358874daff25f400c8b1d130960bdd6` | `ee58712242863df67c7606a2cc889a43258084c07d76319d20de9fd39f19ca5f` |
+| seeding-sample-data | `2d85267d3bdb2057c181b7a30fa7fe2735c8769b9bdc4bb638354e991b50f073` | `c8178ba69e56d8d33a271a1d89942ea57ca0d130a449c62f2568a6a766329220` |
+| filtering-and-sorting | `987c3f13c6d5bea0f53d7c8059c52d5cf1c8ca04bb5605f2dd44a105ac32cf2f` | `db52c5886d71fd373400f2dd34604d2cdbbc69173c750007eaecc2ee6235c5ad` |
+| handling-nulls-coalesce-and-case | `5e88982934d6833e105b6fe597705149920aefc82217fd9bafa66491186273dc` | `6fba5958a3945ac2cf21a012dd70d888f3786530db41eb85f1069f4aacaea249` |
+| aggregate-functions | `b0f314d813b90174db42328caa143c3875706c1969812ca0b8a247446cca06da` | `53b552fc3baa547a153d7e27f0c1a1b95a9f293cdc0ef7c5370a9094492fc3c5` |
+| group-by-and-having | `776cba1d1125c5314d21839c8836a6315c8a976020b0d3f7a1bcf78b0c363b00` | `e19553a08761d033250e9d0c971a1e1f040d8f809d15fa2191a1f646aae0ae0a` |
+| inner-and-left-joins | `292cef62ab31ad49e0caa0c8b1b704a1cfd84a31bc0582c6b1d87d5a37f29d45` | `4fcd22aab345fe38f13bf7d7e6fd7bac7503cccebbec8c13ecab2af8e36a52e3` |
+| anti-joins-and-self-joins | `64511025915b81676bd95785420b2508d46d1ed62e55e6e55a3c47bb449099c1` | `b33cb645482a92277099275793bb680c1578840b4a640aa89cd91e1ef5aa67da` |
 
-Objectives, catalog topics and syllabus are unchanged. Every `topic.json` minutes record was refreshed with the frozen estimator. filtering-and-sorting rises from 12 to 13 minutes, because its new NULL-placement teaching raises the modeled worst path to 12.05; every other label and budget is unchanged.
+The current bytes are the approved bytes plus the 16 SQL answer-sensitive marker attributes described in section 13; stripping those attributes reproduces the approved column exactly. Objectives, catalog topics and syllabus are unchanged. Every `topic.json` minutes record was refreshed with the frozen estimator. filtering-and-sorting rises from 12 to 13 minutes, because its new NULL-placement teaching raises the modeled worst path to 12.05; every other label and budget is unchanged.
 
 ## 2. Template and engine
 
@@ -70,7 +70,7 @@ Shared corrections:
 
 ## 4. Sources
 
-All eight `sources.json` receipts bind the hashes in section 1. The newest live official PostgreSQL retrievals are on 2026-10-27, all HTTP 200; the receipts list them per topic.
+All eight `sources.json` receipts bind the current hashes in section 1. They were re-retrieved live on 2026-11-06 for the marker bytes: every official PostgreSQL URL, HTTP 200 status and cited section is unchanged, and the receipts list the retrievals per topic.
 
 ## 5. QA paths and gates
 
@@ -84,7 +84,7 @@ Each topic has a committed `authoring/evidence/sql-jdbc-foundations/crud-aggrega
 - **Restart.** The restart route completes, restarts and repeats the prediction, and its credit assertion stays at `1 of 4 done`.
 - **Navigation setup.** The guidance navigation routes leave a settled grade-0 prediction plus one attempted, incomplete editor activity.
 
-`answerSafety` is omitted: the schema's only supported scanner language is `python-comprehension`, and these tasks are SQL.
+`answerSafety` declares the 16 SQL editor tasks: `#activity-2` and `#activity-3` on each page, each `language: "sql"` with `scan: "none"`, under `privateSuccessProof: true` (section 13). There is no SQL structural scan; the targets are underscore-normalized editor file stems used only by the generic encoded/digest guard.
 
 Gate results on these bytes:
 
@@ -97,7 +97,7 @@ Private completed-input proof (`run.mjs --private-overlay`) runs from uncommitte
 
 ## 6. Hard blockers and handoff
 
-Private completed-input proof, the source-owned private overlay mechanism with staging retired after each run:
+Private completed-input proof, the source-owned private overlay mechanism with staging retired after each run. **Historical, unpublished evidence:** the runs below were made under the pre-PR-59 contract at commits that exist only on the unpublished old branch and are not ancestors of the publication head. The current proof is the eight `-9` receipt chains in section 13.
 
 - aggregate-functions and group-by-and-having passed at public commit `7b83635f5340c47389553e8029911fd0c3b5ea6c`, in runs `crud-<topic>-6`.
 - anti-joins-and-self-joins, filtering-and-sorting, handling-nulls-coalesce-and-case and inner-and-left-joins are byte-identical to their proof at `3d3e264ee7b24511e93b5bf2df9c9ad54d6a6ffa`, in runs `crud-<topic>-5`.
@@ -124,7 +124,7 @@ Still required:
   - A placeholder scan found no TODO, TBD or placeholder text.
   - None of the editors' completed private inputs appears in any bank.
 - Correct-answer notation is the permitted formative GIFT exception. No assessment keys, rubrics, hidden tests, solutions or private inputs were added.
-- Learner HTML, `qa-paths.json` and the private-overlay proof above are unchanged.
+- At the time of this GIFT pass, learner HTML, `qa-paths.json` and the then-current private-overlay proof were unchanged. Section 13 later added the SQL markers and declarations and replaced that proof.
 
 ## 8. Combined correction pass (2026-11-06)
 
@@ -279,3 +279,35 @@ Both focused rechecks approve checkpoint `584aa77e0e984241068b518b6110a0816f3377
 - The education recheck's one new LOW, CEDU-20, was evidence-only: section 1 listed the two Markdown hashes in the HTML column for these two pages. It is corrected here in `readiness.md` only; no learner, lock-bound source or catalog byte changed for it.
 - CEDU-19 and the other deferred LOWs remain deferred as previously reconciled.
 - The SME report's tooling follow-up remains outside this module: either escape plain-text alternatives in `md-from-html.mjs` or document that `data-static-alt` is Markdown source.
+
+## 13. SQL answer-sensitive declarations and current private proof (2026-11-06)
+
+PR 59 (`44171c7aa628e5dc7f4a0880e5e8b85f2c16bfcb`) added the `sql` answer-sensitive language. The publication branch merges that main non-destructively and then adds only these bytes.
+
+- **HTML markers.** Each of the 16 `section.pep-activity` hosts `#activity-2` and `#activity-3` gains ` data-pep-answer-sensitive="sql" data-pep-answer-targets="<target>"`. Each host contains exactly one `sql-practice@1` editor root and its `.sql` file label, as the landed contract requires. Stripping the attributes reproduces the approved `584aa77e` bytes. No objective, task wording, SQL behaviour, feedback, static alternative, Markdown or GIFT byte changed.
+- **Targets.** The targets are underscore-normalized editor file stems, for example `student_counts` for `student-counts.sql`. Under `scan: "none"` there is no SQL structural scan; T08 feeds the targets only to the generic encoded, assembled and digest guard.
+- **Declarations.** Each `qa-paths.json` adds one `answerSafety` block with `privateSuccessProof: true` and the two matching `sql` / `scan: "none"` tasks; no other qa-paths byte changed. The public routes still settle both editor activities at `completed=false`, `credit=0`, `grade=0`.
+- **Proof chain.** Declarations and markers landed at P `7ca3bf4a66bd1d7a196c4a462b9b5eee5488fe33`. Each topic was then proved at the current tip, and its receipt was added in the immediate child commit, which changes only that receipt and the module lock:
+
+| Topic | Proof commit | Run | Receipt commit |
+| --- | --- | --- | --- |
+| aggregate-functions | `4e3eeee4b88ad04454a6782fbae58c613411fb11` | `crud-aggregate-functions-9` | `398b92de` |
+| anti-joins-and-self-joins | `398b92de` | `crud-anti-joins-and-self-joins-9` | `ac97b5da` |
+| filtering-and-sorting | `ac97b5da` | `crud-filtering-and-sorting-9` | `50aeea70` |
+| group-by-and-having | `50aeea70` | `crud-group-by-and-having-9` | `0176b327` |
+| handling-nulls-coalesce-and-case | `0176b327` | `crud-handling-nulls-coalesce-and-case-9` | `832acb40` |
+| inner-and-left-joins | `832acb40` | `crud-inner-and-left-joins-9` | `786400da` |
+| insert-update-and-delete | `786400da` | `crud-insert-update-and-delete-9` | `0ac252b7` |
+| seeding-sample-data | `0ac252b7` | `crud-seeding-sample-data-9` | `b11a8d85592be03480e824063c8aad7943b3cd5d` |
+
+- **Superseded receipts.** An earlier commit, `4e3eeee4`, recorded all eight `-8` receipts from one pass at P at once. That breaks T06's rule of one receipt per immediate child, so the chain above superseded it forward without rewriting any ref. No current receipt carries a `-8` run.
+- **Bindings.** Every receipt binds exactly five files: the topic's `artifact.html` and `qa-paths.json`, `authoring/tools/qa/harness.mjs`, `authoring/tools/qa/python-answer-scan.py` and `authoring/tools/checks/T08-html-static.mjs`. They are byte-identical from P to the head.
+- **Results.**
+  - Every run passed all four private routes, with both declared tasks reading `completed=true`, `credit=1` and `grade=1`, and the page complete.
+  - Mixed (one editor passing) and all-fail runs at P were refused 16/16 by the runner's own declared-task gate.
+  - Staging was created per topic outside the repository and deleted before each receipt.
+  - No private value, derivative or hash is recorded in any public byte or ancestor commit.
+- **Rechecks.** Two independent focused exact-byte rechecks of `b11a8d85` approve the marker, declaration and proof scope: education `pep-m-sql-crud-proof-edu-b11a` (no findings) and SQL `pep-m-sql-crud-proof-sme-b11a`. They are recorded per topic as `proof-critic-education-recheck.json` and `proof-critic-sme-recheck.json`.
+  - SME-P01 (medium, evidence-only) and SME-P02 (low, optional wording) are both accepted and corrected in this readiness refresh. The same edit folds in the education report's matching optional wording note.
+  - All earlier teaching, SQL, static-alternative, Markdown and GIFT approvals transfer by exact region identity.
+- **Superseded statements.** Gate statements in sections 5 and 6 describe earlier checkpoints. At the current head, T01–T08, T14–T16, T18, T20, T24, T25 and browser T09–T13 pass.
