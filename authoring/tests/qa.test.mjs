@@ -2293,6 +2293,62 @@ test("T18 catches Markdown parity mismatch against the exact file", { timeout: 6
   );
 });
 
+function steppedOptionalSpec() {
+  const success = [
+    { do: "click", selector: "#check-one" },
+    { do: "click", selector: "#next" },
+    { do: "click", selector: "#check-two" },
+  ];
+  return {
+    schemaVersion: 1,
+    completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+    progress: { selector: "#progress", text: "^2 of 2$" },
+    routes: {
+      success,
+      wrongFirst: [{ do: "click", selector: "#wrong-one" }, ...success],
+      wrongTwice: [{ do: "click", selector: "#wrong-one" }, { do: "click", selector: "#wrong-one" }, ...success],
+    },
+    simulatorEdges: [{
+      name: "a wrong answer leaves the step open",
+      actions: [
+        { do: "click", selector: "#wrong-one" },
+        { do: "expectAttribute", selector: "#lesson", attribute: "data-pep-complete", equals: "false" },
+      ],
+    }],
+    restart: {
+      actions: [{ do: "click", selector: "#check-one" }, { do: "click", selector: "#restart" }, { do: "click", selector: "#check-one" }],
+      credit: { selector: "#progress", text: "^1 of 2$" },
+    },
+    keyboard: success,
+  };
+}
+
+test("T11 reaches activity-owned optionals hidden in non-current stepped activities", { timeout: 120000 }, async () => {
+  assert.deepEqual(await runFixture("T11", "stepped-optional.html", { spec: steppedOptionalSpec() }), []);
+});
+
+test("T11 rejects a later-step stepped optional whose action changes required state", { timeout: 120000 }, async () => {
+  const errors = await runFixture("T11", "stepped-optional.html", {
+    spec: steppedOptionalSpec(),
+    transformHtml: (html) => html.replace(
+      "<p data-pep-success-criteria>",
+      "<button type=\"button\" onclick=\"document.getElementById('check-two').click()\">Mark done</button><p data-pep-success-criteria>",
+    ),
+  });
+  assertPreciseFailure(errors, "T11", /optional disclosure changed required state/);
+});
+
+test("T11 refuses a stepped optional whose owning activity the success route never reaches", { timeout: 120000 }, async () => {
+  const errors = await runFixture("T11", "stepped-optional.html", {
+    spec: steppedOptionalSpec(),
+    transformHtml: (html) => html.replace(
+      "    <p id=\"feedback\" aria-live=\"polite\"></p>",
+      "    <section data-step=\"3\" aria-labelledby=\"step-3-h\" hidden><h2 id=\"step-3-h\">Never shown</h2><details class=\"pep-optional pep-optional--challenge\" data-pep-optional=\"challenge\" data-section-skip><summary>Challenge (optional)</summary><div class=\"pep-optional__body\"><p data-pep-optional-time>Optional time: about 1 minute</p><p data-pep-success-criteria>Success criteria: none.</p></div></details></section>\n    <p id=\"feedback\" aria-live=\"polite\"></p>",
+    ),
+  });
+  assertPreciseFailure(errors, "T11", /owner step 3 is never reached by the success route/);
+});
+
 // Syntax-aware leak comparison. Every value here is a sentinel generated for this run: it answers no task,
 // and neither the value nor anything derived from it may reach an error, log or file outside the temporary repository.
 function leakSentinel() {

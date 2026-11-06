@@ -266,7 +266,10 @@ private value, private postcondition output or answer-derived hash is recorded.
   invariants include direct setup-state validation, authored-control Restart restoration and current task/check rendering
   against structural hiding, ordinary zero opacity and computed zero-valued `filter: opacity()` components;
   the latter is bounded full-element-transparency coverage, not arbitrary paint proof.
-- **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion. Enrolled
+- **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion. Every
+  optional disclosure is opened and must leave required state unchanged; on an unenrolled stepped page an optional hidden
+  in a non-current `[data-step]` activity is first reached by replaying the `success` route only until its summary shows,
+  and an owner the route never reaches fails. Enrolled
   pages additionally run navigation and objectives by pointer, keyboard and 320/390 px touch; owner/activity-aware
   nested hints by pointer, keyboard and phone touch after a public-safe wrong-twice route unlocks their activities;
   a direct locked-future activation and guarded future fragment; explicit destination focus; monotonic frontier/no-navigation-credit;

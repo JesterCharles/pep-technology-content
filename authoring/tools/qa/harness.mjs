@@ -1121,8 +1121,21 @@ async function checkBehavior(browser, topic) {
       }
       return required;
     };
-    for (let index = 0; index < await optionals.count(); index++) {
+    // Stepped pages hide every non-current step, so an activity-owned optional can be hidden at load. Reach its owner
+    // through the page's own forward navigation: replay the success route only until that optional's summary shows.
+    let ownerAction = 0;
+    let checkedOptionals = 0;
+    const optionalCount = await optionals.count();
+    for (let index = 0; index < optionalCount; index++) {
       const disclosure = optionals.nth(index);
+      if (!spec.guidance && !(await disclosure.locator(":scope > summary").isVisible())) {
+        const owner = await disclosure.evaluate((element) => element.closest("[data-step]")?.getAttribute("data-step") ?? null);
+        if (!owner) throw new Error("hidden optional disclosure has no owning step");
+        while (!(await disclosure.locator(":scope > summary").isVisible())) {
+          if (ownerAction >= spec.routes.success.length) throw new Error(`optional disclosure owner step ${owner} is never reached by the success route`);
+          await perform(page, spec.routes.success[ownerAction++]);
+        }
+      }
       if (spec.guidance) {
         const activityNumber = await disclosure.evaluate((element) => {
           const activities = [...document.querySelectorAll("[data-pep-activity]")];
@@ -1148,7 +1161,10 @@ async function checkBehavior(browser, topic) {
       if (JSON.stringify(after) !== JSON.stringify(before)) {
         throw new Error(`optional disclosure changed required state from ${JSON.stringify(before)} to ${JSON.stringify(after)}`);
       }
+      checkedOptionals++;
     }
+    const finalCount = await optionals.count();
+    if (checkedOptionals !== finalCount) throw new Error(`optional accounting checked ${checkedOptionals} of ${finalCount} disclosures`);
     if (spec.guidance?.hints) await exerciseSequentialHints(page, { prepared: true });
   });
 }
