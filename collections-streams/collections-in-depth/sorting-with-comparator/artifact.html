@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="collections-streams">
+<meta name="pep:module" content="collections-in-depth">
+<meta name="pep:topic" content="Sorting with Comparator">
+<meta name="pep:topic-id" content="sorting-with-comparator">
+<meta name="pep:budget-minutes" content="12">
+<meta name="pep:source" content="authoring/evidence/collections-streams/collections-in-depth/sorting-with-comparator/sources.json">
+<meta name="pep:position" content="9 of 9">
+<title>Sorting with Comparator · Collections in Depth</title>
+<style>
+/* pep:component predict@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+/* /pep:component predict css */
+/* pep:component mcq-with-confidence@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start}
+.feedback{width:100%;min-width:0;font-size:15px;line-height:1.35}
+.feedback:empty{display:none}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin:0}
+.feedback .verdict{font-weight:700}
+.feedback .ok{color:var(--teal)}
+.feedback .no{color:var(--red)}
+.feedback .set{color:var(--amber)}
+.feedback .info{color:var(--ink)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+/* /pep:component mcq-with-confidence css */
+/* DESIGN.md token reference */
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* Components bridge: embedded components/*@1 fragments read these older names */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+/* Base, focus and motion */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+pre { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; max-width: 100%; }
+pre code { font-size: 1em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+/* Buttons */
+button { cursor: pointer; min-height: 44px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); padding: 10px 20px; }
+.pep-btn, .ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.ghost:hover, .pep-btn:hover { border-color: var(--pep-accent); }
+.ghost[aria-pressed="true"] { background: var(--pep-accent-soft); border: 2px solid var(--pep-accent); }
+.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+button:disabled, .primary:disabled, .pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); color: var(--pep-text-muted); border: 1px solid var(--pep-line-strong); }
+/* Topic bar: the clearest accent surface */
+.pep-topicbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding: 12px 16px; margin: 0;
+  border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 4px; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress p { max-width: none; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; max-width: 220px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); outline: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); outline-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning); outline-color: var(--pep-warning); }
+.pep-progress > span.is-current { outline: 2px solid var(--pep-accent); }
+.pep-objectives { position: relative; break-inside: avoid; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; border-radius: var(--pep-radius-sm); }
+.pep-objectives > summary::marker { color: var(--pep-accent-text); }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; padding-left: 20px; }
+.pep-objectives li + li { margin-top: 8px; }
+@media (min-width: 640px) { .pep-objectives[open] > div { position: absolute; right: 0; z-index: 2; width: 360px; } }
+/* Activity timeline */
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px 6px 6px; border: 1px solid transparent; border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; }
+.pep-steps { counter-reset: pep-step; }
+.pep-step__n::before { counter-increment: pep-step; content: counter(pep-step); }
+.pep-step__n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--pep-control); color: var(--pep-text); font-size: 13px; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-current="step"] .pep-step__n { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-step.is-done .pep-step__n { background: var(--pep-accent-soft); color: var(--pep-accent-text); outline: 1px solid var(--pep-accent); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-step__state { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+/* Activities and regions */
+.pep-activity { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-activity > h2 { padding-bottom: 8px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region--workspace, [data-pep-workspace] {
+  padding: 24px; border: 1px solid var(--pep-line-strong);
+  border-radius: var(--pep-radius-lg); background: var(--pep-card);
+}
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
+.teach { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.teach ul, .teach ol { margin: 0; padding-left: 24px; }
+.task { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task .pep-task-q { font-weight: 600; color: var(--pep-text-strong); }
+/* Required activity checks: accent tint and rail, never success green */
+.pep-activity-checks, [data-pep-activity-checks] {
+  padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px;
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-activity-checks h3 { margin-bottom: 4px; }
+.pep-activity-checks ul { margin: 0; padding-left: 20px; }
+/* Where this fits */
+[data-pep-where-fits] {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-card);
+}
+[data-pep-where-fits] strong { color: var(--pep-text-strong); }
+/* Progressive optional hints */
+.pep-hint, details[data-pep-hint] {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md);
+  background: var(--pep-accent-soft); break-inside: avoid;
+}
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
+.pep-hint .pep-hint {
+  margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong);
+  border-radius: 0; background: transparent;
+}
+/* Optional Anecdote and Challenge disclosures */
+.pep-optional {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-card); break-inside: avoid;
+}
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer;
+  color: var(--pep-text-strong); font-weight: 600;
+}
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 16px; }
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+  .pep-step[aria-current="step"] { border-color: Highlight; }
+}
+/* Model, cells and lanes */
+.model { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-lists { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 600px) { .pep-lists { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pep-list { padding: 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.pep-list h3 { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 4px; }
+.pep-list__state { font-weight: 600; }
+.lk { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.sub { margin: 0 0 8px; font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.cells { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; padding: 0; list-style: none; min-height: 32px; }
+.cells li { font: 400 14px/20px var(--pep-font-mono); padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.lanebtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.lanebtns button { min-width: 120px; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.lane { padding: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); min-height: 80px; background: var(--pep-page); min-width: 0; }
+.lane .lk { overflow-wrap: anywhere; color: var(--pep-text-strong); }
+.cards { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.cards li { font-size: 14px; line-height: 20px; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); overflow-wrap: anywhere; }
+.cards li.revealed { border-style: dashed; border-color: var(--pep-warning); }
+.tag { display: inline-block; margin-left: 4px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--pep-warning); }
+/* Component overrides: DESIGN.md look for the embedded @1 fragments (their bytes stay unchanged) */
+legend { font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 8px; }
+.opts { gap: 8px; }
+.opt { position: relative; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); font-size: 16px; line-height: 24px; box-shadow: none; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; box-shadow: none; }
+.opt:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; box-shadow: none; }
+.opt.mine { border-color: var(--pep-accent); }
+.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.opt input:disabled { cursor: default; }
+.opt::before { content: ""; flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); }
+.opt:has(input:checked)::before { border: 6px solid var(--pep-accent); }
+.opt:has(input:disabled)::before { opacity: 0.6; }
+.opts.explained .opt { padding: 8px 16px; align-items: flex-start; }
+.opts.explained .opt::before { margin-top: 2px; }
+.oexp { font-size: 14px; line-height: 20px; color: var(--pep-text); border-top-color: var(--pep-line-strong); }
+.badge { font-size: 13px; line-height: 20px; font-weight: 600; border-radius: var(--pep-radius-pill); padding: 0 8px; }
+.badge.ok-b { color: var(--pep-success); border-color: var(--pep-success); }
+.badge.no-b { color: var(--pep-danger); border-color: var(--pep-danger); }
+.badge.mine-b { color: var(--pep-text-strong); border-color: var(--pep-line-strong); }
+.conf legend { line-height: 44px; }
+.conf .opt { min-width: 96px; }
+.row, .fbrow { gap: 12px; }
+.feedback { font-size: 14px; line-height: 20px; color: var(--pep-text); }
+.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.feedback .verdict { font-size: 16px; line-height: 24px; font-weight: 700; }
+.feedback .ok { color: var(--pep-success); }
+.feedback .no { color: var(--pep-danger); }
+.feedback .set { color: var(--pep-warning); }
+.feedback .info { color: var(--pep-text-strong); }
+.feedback .conf-report { color: var(--pep-text-muted); }
+.feedback ul { padding-left: 24px; }
+@media (max-width: 480px) { .opts, .lanes { grid-template-columns: minmax(0, 1fr); } }
+/* Editor workspace */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__scope { padding: 8px 12px; font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); background: var(--pep-sunken); }
+.pep-editor__panel pre { border: 0; padding: 0; background: transparent; }
+.pep-editor__empty { font-family: var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 700; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 700; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); max-width: none; }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn, .pep-editor__bar button { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__code { font-size: 16px; line-height: 24px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* Navigation */
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 0 1 auto; } }
+.pep-back a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+/* Recap */
+.recap { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--pep-line-strong); }
+.recap ul { margin: 0; padding-left: 24px; }
+.recap li + li { margin-top: 4px; }
+.recap details { padding: 0 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.recap details > summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: flex; align-items: center; }
+.recap details > :last-child { margin-bottom: 12px; }
+.recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+.sources ul { margin: 8px 0; padding-left: 24px; font-size: 14px; line-height: 20px; }
+.sources li { margin-bottom: 4px; overflow-wrap: anywhere; }
+.sources p { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.next-topic { font-weight: 600; color: var(--pep-text-strong); }
+.complete { padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete.settled { border-color: var(--pep-warning); background: var(--pep-warning-soft); }
+.complete:empty { display: none; }
+/* Static expected results: no-JavaScript reading only */
+.pep-expected { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.pep-expected ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-nojs-note { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text-strong); }
+.pep-nojs-code { display: flex; flex-direction: column; gap: 12px; }
+@media print {
+  [data-pep-activity][hidden], [data-pep-recap][hidden] { display: flex !important; }
+  .pep-nav, .pep-activity-actions, .pep-back, #reset, .pep-progress { display: none !important; }
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .pep-objectives[open] > div { position: static; width: auto; }
+  .pep-activity { break-before: auto; }
+}
+</style>
+<noscript><style>.pep-js-only{display:none!important}</style></noscript>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="12">
+<header class="pep-topicbar">
+  <h1 id="page-title">Sorting with Comparator</h1>
+  <div class="pep-topicbar__progress progress">
+    <p><span class="pep-js-only"><span id="pos-text">Activity 1 of 4</span> · <span id="prog-text">Activities done: 0 of 4</span> · </span>about 12 min</p>
+    <div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  </div>
+  <details class="pep-objectives" data-pep-objectives>
+    <summary aria-controls="objectives-body">Objectives</summary>
+    <div id="objectives-body"><ul>
+      <li>Sort a list by one or more keys with List.sort and Comparator.comparing, thenComparing and reversed</li>
+      <li>Distinguish a class's natural ordering (Comparable.compareTo) from a supplied Comparator, and order null values with Comparator.nullsFirst or nullsLast</li>
+    </ul></div>
+  </details>
+  <button type="button" class="pep-btn pep-js-only" id="reset" data-pep-reset>Restart activity</button>
+  <p class="vh" id="restart-status" role="status" aria-live="polite"></p>
+</header>
+<nav class="pep-nav" aria-label="Activities"><ol class="pep-steps">
+  <li><a class="pep-step" id="tl-1" href="#activity-1" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Guess</a></li>
+  <li><a class="pep-step" id="tl-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Keys</a></li>
+  <li><a class="pep-step" id="tl-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Ordering</a></li>
+  <li><a class="pep-step" id="tl-4" href="#activity-4" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Nulls</a></li>
+</ol></nav>
+<noscript data-section-skip><p class="pep-nojs-note"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. All four activities follow in order, each with its expected results and why.</p></noscript>
+
+<section id="activity-1" class="pep-activity" data-pep-activity aria-labelledby="a1-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a1-h" tabindex="-1">Activity 1: Guess first</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>Passing <code>null</code> to <code>List.sort</code> means the elements' own ordering. Predict before any explanation.</p>
+<pre><code>List&lt;String&gt; words = new ArrayList&lt;&gt;(List.of("pear", "Fig", "apple"));
+words.sort(null);
+System.out.println(words);</code></pre>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-1" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <p>Under <strong>Your prediction</strong>, choose what the last line prints and your confidence, then press <strong>Check prediction</strong>.</p>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to a guess, then read why each option is right or wrong.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict data-static-alt="Prediction (practice, not scored): a list of pear, Fig, apple is sorted with sort(null). Options: [apple, Fig, pear] (wrong: String natural ordering compares character codes, and uppercase letters come before lowercase); [Fig, apple, pear] (correct); [pear, Fig, apple] (wrong: sort(null) does sort, using natural ordering); NullPointerException (wrong: a null comparator means natural ordering, and no element is null).">
+            <legend>Your prediction</legend>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="predict" id="p-ci" value="ci" aria-describedby="task-1"><span class="ot"><code>[apple, Fig, pear]</code></span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-nat" value="nat" aria-describedby="task-1"><span class="ot"><code>[Fig, apple, pear]</code></span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-same" value="same" aria-describedby="task-1"><span class="ot"><code>[pear, Fig, apple]</code></span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-npe" value="npe" aria-describedby="task-1"><span class="ot"><code>NullPointerException</code></span></label>
+            </div>
+            <div class="row"><fieldset class="conf" id="conf0" data-pep-confidence aria-describedby="conf0-instr"><legend id="conf0-instr">How sure are you?</legend><label class="opt"><input type="radio" name="conf0" id="conf0-low" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-medium" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-high" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check aria-describedby="conf0-instr" disabled>Check prediction</button></div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-1" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> What does the last line print?</p><ul><li><code>[apple, Fig, pear]</code>: wrong. <code>String</code> natural ordering compares character codes, and every uppercase letter comes before every lowercase one.</li><li><code>[Fig, apple, pear]</code>: correct. A <code>null</code> comparator means natural ordering, so <code>"Fig"</code> comes first.</li><li><code>[pear, Fig, apple]</code>: wrong. <code>sort(null)</code> does sort, using natural ordering.</li><li><code>NullPointerException</code>: wrong. A <code>null</code> comparator is allowed and means natural ordering; no element is <code>null</code>.</li></ul></div></noscript>
+    </div>
+  </div>
+</section>
+
+<section id="activity-2" class="pep-activity" data-pep-activity aria-labelledby="a2-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a2-h" tabindex="-1">Activity 2: Comparators from keys</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <p data-pep-model>The model: sorting keeps asking which of two elements comes first. Natural ordering answers with the class's own <code>compareTo</code>; a <code>Comparator</code> answers from outside, built from keys.</p>
+      <div class="teach" data-pep-teaching>
+<pre><code>record Book(String title, int year) { }
+// comparing alone: oldest first; .reversed(): newest first
+books.sort(Comparator.comparing(Book::year).reversed());
+// oldest first; same year: title A to Z
+books.sort(Comparator.comparing(Book::year)
+                     .thenComparing(Book::title));</code></pre>
+        <p><code>Book::year</code> is shorthand for the lambda <code>b -&gt; b.year()</code>. <code>comparing</code> sorts by one key, <code>thenComparing</code> breaks ties with the next key, and <code>reversed()</code> flips everything built so far. Placement matters: before <code>thenComparing</code> it flips only the first key; at the end it flips the tie-breaker too. <code>List.sort</code> is stable: equal elements keep their previous order.</p>
+      </div>
+      <details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+        <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+        <div class="pep-optional__body">
+          <p data-pep-anecdote-story>A teacher pins marked essays to a wall: highest mark at the top, and when two essays share a mark, the student whose name comes first in the alphabet goes higher. Names matter only when marks tie. Turning the finished wall upside down would also flip that alphabetical order, not just the marks.</p>
+          <p data-pep-anecdote-map>A sorting rule built from keys works the same way: the first key decides, and later keys only settle ties.</p>
+        </div>
+      </details>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="code">
+      <div id="task-2" class="task" data-pep-task data-pep-may-stall>
+        <h3>Your task</h3>
+        <p>In <strong>Players.java</strong>, change the <code>players.sort</code> line: highest score first, tied scores by name A to Z. <strong>Run</strong> sorts both lists below.</p>
+        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip>
+          <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 3 for Activity 2</span></summary>
+          <div class="pep-hint__body">
+            <p data-pep-hint-target><strong>Where to act:</strong> Inside the parentheses of <code>players.sort(...)</code> on the last line of the editor.</p>
+            <p data-pep-hint-step><strong>Next step:</strong> In both targets the highest score comes first, so keep the score as the first key but make it run in the opposite direction to the starter.</p>
+            <details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="2" data-section-skip>
+              <summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 3 for Activity 2</span></summary>
+              <div class="pep-hint__body">
+                <p data-pep-hint-target><strong>Where to act:</strong> Directly after <code>Comparator.comparing(Player::score)</code>.</p>
+                <p data-pep-hint-step><strong>Next step:</strong> <code>comparing</code> sorts lowest first. Chain the method from the teaching that flips the order built so far, before you add any second key.</p>
+                <details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="3" data-section-skip>
+                  <summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 3 of 3 for Activity 2</span></summary>
+                  <div class="pep-hint__body">
+                    <p data-pep-hint-target><strong>Where to act:</strong> At the end of the chain, after the flip.</p>
+                    <p data-pep-hint-step><strong>Next step:</strong> Tied scores still keep their starting order, such as <code>ben</code> before <code>ana</code> in List 1. Chain the tie-breaking method with the name as its key, so only the ties are ordered A to Z.</p>
+                  </div>
+                </details>
+              </div>
+            </details>
+          </div>
+        </details>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><ul><li>List 1: <code>dee 95, ana 80, ben 80, cy 70</code></li><li>List 2: <code>bo 90, zed 90, al 60, cy 60</code></li></ul></section>
+      <noscript data-pep-no-js data-section-skip><div class="pep-nojs-code pep-expected"><p><strong>Practice editor, reading version.</strong> JavaScript is off, so the editor cannot run here. Work on paper or in any Java 25 setup you already use.</p><p><strong>Task:</strong> change the <code>players.sort</code> line so players sort by score, highest first, with tied scores broken by name from A to Z.</p><p><strong>Starter, Players.java:</strong></p><pre><code>// record Player(String name, int score) { }
+// List 1: ben 80, dee 95, ana 80, cy 70
+// List 2: zed 90, al 60, bo 90, cy 60
+// Target: highest score first, ties by name A to Z
+players.sort(Comparator.comparing(Player::score));</code></pre><p><strong>What the practice editor accepts:</strong> one <code>players.sort(...)</code> or <code>Collections.sort(players, ...)</code> statement whose comparator starts with <code>Comparator.comparing</code> or <code>Comparator.comparingInt</code>, with keys written as <code>Player::score</code>, <code>Player::name</code> or a lambda such as <code>p -&gt; p.score()</code>, an optional key order of <code>Comparator.reverseOrder()</code> or <code>Comparator.naturalOrder()</code>, and chained <code>reversed()</code> and <code>thenComparing</code> calls. Run applies the one statement to each list.</p><p><strong>How to compare:</strong> sort each list with your statement and check it position by position. List 1 must become <code>dee 95</code>, <code>ana 80</code>, <code>ben 80</code>, <code>cy 70</code>; List 2 must become <code>bo 90</code>, <code>zed 90</code>, <code>al 60</code>, <code>cy 60</code>. The starter gives <code>cy 70</code>, <code>ben 80</code>, <code>ana 80</code>, <code>dee 95</code> and <code>al 60</code>, <code>cy 60</code>, <code>zed 90</code>, <code>bo 90</code>: lowest first, and the stable sort keeps tied players in their starting order. Sorting by name alone gives <code>ana</code>, <code>ben</code>, <code>cy</code>, <code>dee</code>, which ignores the scores. If <code>ben 80</code> comes before <code>ana 80</code>, the scores run highest first but the tie is not broken by name, or a <code>reversed()</code> at the end of the chain has flipped the name order too. <code>players.sort(null)</code> compiles but throws <code>ClassCastException</code>, because <code>Player</code> does not implement <code>Comparable</code>.</p></div></noscript>
+      <div class="pep-js-only">
+          <fieldset id="x1" data-interaction="explore" data-pep-explore aria-describedby="task-2" data-static-alt="Java editor on two lists of players (record Player(String name, int score)); one players.sort statement is applied to each list, and both must match their targets. List 1 starts ben 80, dee 95, ana 80, cy 70; its target is dee 95, ana 80, ben 80, cy 70. List 2 starts zed 90, al 60, bo 90, cy 60; its target is bo 90, zed 90, al 60, cy 60. The starter, comparing by score alone, gives cy 70, ben 80, ana 80, dee 95 and al 60, cy 60, zed 90, bo 90: lowest first, and the stable sort keeps tied players in their starting order. Flipping only the score order gives dee 95, ben 80, ana 80, cy 70 and zed 90, bo 90, al 60, cy 60: highest first, but ties keep their starting order. Sorting by name alone gives ana 80, ben 80, cy 70, dee 95 and al 60, bo 90, cy 60, zed 90, which ignores the scores. A reversed() at the very end of a score-then-name chain gives dee 95, ben 80, ana 80, cy 70 and zed 90, bo 90, cy 60, al 60, because it flips the name order too. players.sort(null) compiles but throws ClassCastException, because Player does not implement Comparable.">
+            <legend>Write the comparator</legend>
+            <div class="pep-editor">
+              <div class="pep-editor__bar"><span class="pep-editor__file">Players.java</span><button type="button" class="primary" id="sort">Run</button><button type="button" class="ghost" id="ed-reset">Reset code</button></div>
+              <div class="pep-editor__code"><div class="pep-editor__gutter" id="ed-gutter" aria-hidden="true"></div><textarea id="ed" class="pep-editor__input" rows="5" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Java editor, Players.java" aria-describedby="task-2 ed-scope"></textarea></div>
+              <p class="pep-editor__scope" id="ed-scope">Runs one <code>players.sort(...)</code> statement on each list, offline.</p>
+              <div class="pep-editor__tabs" role="tablist" aria-label="Results"><button type="button" role="tab" id="tab-prob" aria-controls="ed-prob" aria-selected="true">Problems</button><button type="button" role="tab" id="tab-out" aria-controls="ed-out" aria-selected="false" tabindex="-1">Output</button></div>
+              <div class="pep-editor__panel" id="ed-prob" role="tabpanel" aria-labelledby="tab-prob" tabindex="0"></div>
+              <div class="pep-editor__panel" id="ed-out" role="tabpanel" aria-labelledby="tab-out" tabindex="0" hidden><pre class="out" id="ed-print">(no output yet)</pre></div>
+              <p class="pep-editor__status" id="ed-status"></p>
+            </div>
+          </fieldset>
+          <figure class="model" aria-label="Each list before and after your sort, with its target">
+            <div class="pep-lists" id="m-lists"></div>
+          </figure>
+      </div>
+      <div class="feedback" id="fb-2" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <p class="pep-back"><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-3" class="pep-activity" data-pep-activity aria-labelledby="a3-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a3-h" tabindex="-1">Activity 3: Natural ordering or a supplied Comparator</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>A class that implements <code>Comparable</code> has a <strong>natural ordering</strong>, defined by its <code>compareTo</code>: numbers by value, <code>String</code> by character code, so <code>"Fig"</code> comes before <code>"apple"</code>. <code>list.sort(null)</code> and <code>Collections.sort(list)</code> use it; elements that are not <code>Comparable</code> make the sort throw <code>ClassCastException</code>.</p>
+        <p>A <strong>Comparator</strong> supplies any other order without changing the class. Natural ordering throws <code>NullPointerException</code> on a <code>null</code> element; wrap a comparator to place nulls deliberately: <code>Comparator.nullsFirst(Comparator.naturalOrder())</code> or <code>Comparator.nullsLast(...)</code>.</p>
+      </div>
+      <section data-pep-where-fits aria-labelledby="where-fits-3">
+        <h2 id="where-fits-3">Where this fits</h2>
+        <p data-pep-fit-decision><strong>Decision:</strong> give the class a natural ordering, or pass a <code>Comparator</code>?</p>
+        <p data-pep-fit-good><strong>Good fit:</strong> <code>Comparable</code> for one obvious default order, as in <code>String</code>; a <code>Comparator</code> for task-specific orders or classes you cannot change.</p>
+        <p data-pep-fit-boundary><strong>Choose something else when:</strong> the collection must stay sorted as it changes: use a <code>TreeSet</code> or <code>TreeMap</code>.</p>
+      </section>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-3" class="task" data-pep-task data-pep-may-stall>
+        <h3>Your task</h3>
+        <p>For each call shown after <strong>Call:</strong>, press its ordering or <strong>Throws an exception</strong>. <code>words</code> holds only strings; <code>withNull</code> adds one <code>null</code>; <code>Team</code> is not <code>Comparable</code>.</p>
+        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
+          <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 3</span></summary>
+          <div class="pep-hint__body">
+            <p data-pep-hint-target><strong>Where to act:</strong> The call shown after <strong>Call:</strong>, above the three buttons.</p>
+            <p data-pep-hint-step><strong>Next step:</strong> First ask whether the call passes a comparator at all. If it does not, ask whether every element is <code>Comparable</code> and none is <code>null</code>.</p>
+          </div>
+        </details>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>All seven calls sit in the right lanes; a second miss on any call settles the activity.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="x2" data-interaction="drag" data-pep-explore aria-describedby="task-3" data-static-alt="Sorting activity: words.sort(null) uses natural ordering. Collections.sort(words) uses natural ordering. words.sort(Comparator.comparing(String::length)) uses a supplied Comparator. words.sort(Comparator.reverseOrder()) uses a supplied Comparator (the reverse of natural ordering). withNull.sort(null) throws NullPointerException, because natural ordering cannot compare null. withNull.sort(Comparator.nullsFirst(Comparator.naturalOrder())) uses a supplied Comparator that puts null first. teams.sort(null) throws ClassCastException, because Team does not implement Comparable.">
+            <legend id="ln-legend">Call: <span id="ln-name"></span></legend>
+            <div class="lanebtns" id="ln-btns"></div>
+            <p class="sub" id="ln-count"></p>
+          </fieldset>
+          <figure class="model" aria-label="Lanes so far">
+            <div class="lanes" id="m-lanes"></div>
+          </figure>
+      </div>
+      <div class="feedback" id="fb-3" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong></p><ul><li><code>words.sort(null)</code>: natural ordering, because a <code>null</code> comparator means <code>String.compareTo</code>.</li><li><code>Collections.sort(words)</code>: natural ordering; no comparator is passed.</li><li><code>words.sort(Comparator.comparing(String::length))</code>: a supplied Comparator, ordering by length.</li><li><code>words.sort(Comparator.reverseOrder())</code>: a supplied Comparator, the reverse of natural ordering.</li><li><code>withNull.sort(null)</code>: throws <code>NullPointerException</code>, because natural ordering cannot compare <code>null</code>.</li><li><code>withNull.sort(Comparator.nullsFirst(Comparator.naturalOrder()))</code>: a supplied Comparator that puts <code>null</code> first.</li><li><code>teams.sort(null)</code>: throws <code>ClassCastException</code>, because <code>Team</code> does not implement <code>Comparable</code>.</li></ul></div></noscript>
+      <p class="pep-back"><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-4" class="pep-activity" data-pep-activity aria-labelledby="a4-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a4-h" tabindex="-1">Activity 4: A list with gaps</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>A sign-up sheet stores a blank row as <code>null</code>; the printout must place blanks without crashing.</p>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-apply" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <p>Under <strong>What prints</strong>, choose the output and your confidence, then press <strong>Check answer</strong>.</p>
+        <div id="task-4">
+<pre><code>List&lt;String&gt; names = new ArrayList&lt;&gt;(Arrays.asList("cy", null, "ana"));
+names.sort(Comparator.nullsLast(Comparator.naturalOrder()));
+System.out.println(names);</code></pre></div>
+        <div id="task-4b" tabindex="-1" hidden><p class="pep-task-q">Retry: what does this print?</p>
+<pre><code>List&lt;String&gt; names = new ArrayList&lt;&gt;(Arrays.asList("cy", null, "ana"));
+names.sort(Comparator.nullsFirst(Comparator.reverseOrder()));
+System.out.println(names);</code></pre></div>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>You pick the printed list; a second miss settles the check.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="apply" data-interaction="mcq" data-confidence data-pep-apply data-static-alt="Apply question: [cy, null, ana] sorted with Comparator.nullsLast(Comparator.naturalOrder()) prints [ana, cy, null]. Wrong: [null, ana, cy] (that is nullsFirst); NullPointerException (nullsLast handles the null before natural ordering is asked); [cy, ana, null] (natural ordering of the non-null names is ana then cy). Retry form: Comparator.nullsFirst(Comparator.reverseOrder()) prints [null, cy, ana].">
+            <legend>What prints</legend>
+            <div class="opts one" id="a1">
+              <label class="opt"><input type="radio" name="a1" id="a1-first" value="first" aria-describedby="task-4"><span class="ot"><code>[null, ana, cy]</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-npe" value="npe" aria-describedby="task-4"><span class="ot"><code>NullPointerException</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-right" value="right" aria-describedby="task-4"><span class="ot"><code>[ana, cy, null]</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-rev" value="rev" aria-describedby="task-4"><span class="ot"><code>[cy, ana, null]</code></span></label>
+            </div>
+            <div class="opts one" id="a2" hidden>
+              <label class="opt"><input type="radio" name="a2" id="a2-last" value="last" aria-describedby="task-4b"><span class="ot"><code>[cy, ana, null]</code></span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-nat" value="nat" aria-describedby="task-4b"><span class="ot"><code>[null, ana, cy]</code></span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-right" value="right" aria-describedby="task-4b"><span class="ot"><code>[null, cy, ana]</code></span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-npe" value="npe" aria-describedby="task-4b"><span class="ot"><code>NullPointerException</code></span></label>
+            </div>
+          </fieldset>
+          <div class="row">
+            <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-instr">
+              <legend id="conf-instr">How sure are you?</legend>
+              <label class="opt"><input type="radio" name="conf" id="conf-low" value="low"><span class="ot">Low</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-medium" value="medium"><span class="ot">Medium</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-high" value="high"><span class="ot">High</span></label>
+            </fieldset>
+            <button type="button" class="primary" id="apply-check" data-pep-apply-check aria-describedby="conf-instr" disabled>Check answer</button>
+          </div>
+      </div>
+      <div class="feedback" id="fb-4" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> <code>Comparator.nullsLast(Comparator.naturalOrder())</code> prints <code>[ana, cy, null]</code>.</p><ul><li><code>[null, ana, cy]</code>: wrong; that is <code>nullsFirst</code>.</li><li><code>NullPointerException</code>: wrong; <code>nullsLast</code> handles the <code>null</code> before natural ordering is asked.</li><li><code>[cy, ana, null]</code>: wrong; natural ordering of the non-null names is <code>ana</code> then <code>cy</code>.</li></ul><p><strong>Retry form:</strong> <code>Comparator.nullsFirst(Comparator.reverseOrder())</code> prints <code>[null, cy, ana]</code>: <code>null</code> first, then the names Z to A.</p></div></noscript>
+      <details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+        <summary>Challenge (optional)</summary>
+        <div class="pep-optional__body">
+          <p data-pep-optional-time><strong>Optional time:</strong> about 5 minutes, in addition to this topic's time.</p>
+          <p>The sign-up sheet now holds players, and a blank row is stored as <code>null</code>: <code>cy 80</code>, <code>null</code>, <code>ana 95</code>, <code>ben 80</code>. Write one <code>players.sort(...)</code> statement that puts blank rows last and sorts the other players by score, highest first, with ties broken by name from A to Z. Build it only from the <code>Comparator</code> methods on this page, then check it on paper or in any Java 25 setup you already use.</p>
+          <p data-pep-success-criteria><strong>Success criteria:</strong> the statement does not throw, and the list ends in the order <code>ana 95</code>, <code>ben 80</code>, <code>cy 80</code>, <code>null</code>; you can say which method handles the <code>null</code> and why it must wrap the score-and-name comparator.</p>
+        </div>
+      </details>
+      <p class="pep-back"><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+    </div>
+  </div>
+</section>
+
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+  <button type="button" class="pep-btn" id="prev" data-pep-previous>Previous activity</button>
+  <button type="button" class="primary" id="next" data-pep-next>Next activity</button>
+</div>
+
+<section id="recap" class="recap" data-pep-recap aria-labelledby="recap-h">
+  <h2 id="recap-h" tabindex="-1">Recap</h2>
+  <p id="complete" class="complete" data-pep-completion></p>
+  <ul>
+    <li><code>list.sort(Comparator.comparing(key))</code> sorts by one key; <code>thenComparing</code> breaks ties; <code>reversed()</code> flips the comparator built so far.</li>
+    <li><code>List.sort</code> is stable: ties keep their order unless a later key breaks them.</li>
+    <li>Natural ordering comes from <code>Comparable.compareTo</code> and is what <code>sort(null)</code> uses; a <code>Comparator</code> supplies another order.</li>
+    <li>Natural ordering fails on <code>null</code>; <code>Comparator.nullsFirst</code> and <code>nullsLast</code> place nulls safely.</li>
+  </ul>
+  <details data-section-skip data-pep-cheat-sheet>
+    <summary>Cheat sheet</summary>
+    <table>
+      <tr><td>One key</td><td><code>books.sort(Comparator.comparing(Book::year));</code></td></tr>
+      <tr><td>Newest first, ties by title</td><td><code>Comparator.comparing(Book::year).reversed().thenComparing(Book::title)</code></td></tr>
+      <tr><td>Natural ordering</td><td><code>list.sort(null)</code>, <code>Collections.sort(list)</code></td></tr>
+      <tr><td>Reverse natural</td><td><code>list.sort(Comparator.reverseOrder())</code></td></tr>
+      <tr><td>Nulls at the end</td><td><code>Comparator.nullsLast(Comparator.naturalOrder())</code></td></tr>
+    </table>
+  </details>
+  <details data-section-skip data-pep-sources class="sources">
+    <summary>Sources and review date</summary>
+    <p>Claims on this page were checked against the live official pages below on 14 October 2026 (UTC), for Java SE 25. Program output was confirmed on OpenJDK 25.0.4. Links open outside this lesson.</p>
+    <ul>
+      <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html" rel="noopener">List (Java SE 25 API)</a>: sort(Comparator) is stable; a null comparator means natural ordering.</li>
+      <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Comparator.html" rel="noopener">Comparator (Java SE 25 API)</a>: comparing, thenComparing, reversed, naturalOrder, reverseOrder, nullsFirst, nullsLast.</li>
+      <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Comparable.html" rel="noopener">Comparable (Java SE 25 API)</a>: natural ordering and compareTo.</li>
+      <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Collections.html" rel="noopener">Collections (Java SE 25 API)</a>: sort(List).</li>
+      <li><a href="https://dev.java/learn/language/fp/lambdas/writing-comparators/" rel="noopener">Dev.java: Writing and Combining Comparators</a>.</li>
+    </ul>
+  </details>
+  <p class="next-topic">Next module: Lambdas and Streams</p>
+</section>
+</main>
+<script>
+(function(){
+'use strict';
+var D=document;
+function $(s,r){return (r||D).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||D).querySelectorAll(s));}
+function md(s){var f=D.createDocumentFragment(),re=/(`[^`]+`|\*\*[^*]+\*\*)/g,last=0,m;s=String(s);
+  while((m=re.exec(s))){if(m.index>last)f.appendChild(D.createTextNode(s.slice(last,m.index)));
+    var t=m[0],e=D.createElement(t.charAt(0)==='`'?'code':'strong');e.textContent=t.charAt(0)==='`'?t.slice(1,-1):t.slice(2,-2);f.appendChild(e);last=re.lastIndex;}
+  if(last<s.length)f.appendChild(D.createTextNode(s.slice(last)));return f;}
+function el(tag,cls,txt){var e=D.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.appendChild(typeof txt==='string'?md(txt):txt);return e;}
+function T(t){return D.createTextNode(t);}
+var P={};
+P.predict={ok:'nat',lead:'With null, List.sort uses the elements\' natural ordering. For String that compares character codes, and every uppercase letter comes before every lowercase one.',expl:{
+  ci:'Not quite: that ignores case. String\'s natural ordering puts "F" before "a".',
+  nat:'Right: natural ordering by character code puts "Fig" first.',
+  same:'Not quite: sort(null) does sort; null means "use natural ordering".',
+  npe:'Not quite: a null comparator is allowed and means natural ordering; no element is null.'}};
+P.lanes={key:'x2',model:'#m-lanes',btns:'#ln-btns',name:'#ln-name',count:'#ln-count',legend:'ln-legend',
+ lanes:[{id:'nat',label:'Natural ordering'},{id:'cmp',label:'Supplied Comparator'},{id:'throw',label:'Throws an exception'}],
+ done:'No comparator means natural ordering, which needs Comparable elements and no nulls. Anything passed in is a supplied Comparator.',
+ items:[
+  {n:'`words.sort(null)`',lane:'nat',ok:'A null comparator means the elements\' natural ordering, `String.compareTo`.',w:{cmp:'`null` is not a comparator; it asks for natural ordering.',throw:'Strings are `Comparable` and none is null, so this works.'}},
+  {n:'`Collections.sort(words)`',lane:'nat',ok:'`Collections.sort` with one argument sorts by natural ordering.',w:{cmp:'No comparator is passed.',throw:'Every element is a non-null `String`.'}},
+  {n:'`words.sort(Comparator.comparing(String::length))`',lane:'cmp',ok:'A comparator built from the length key supplies a different order.',w:{nat:'Length is not String\'s natural ordering.',throw:'Every string has a length, so nothing fails.'}},
+  {n:'`words.sort(Comparator.reverseOrder())`',lane:'cmp',ok:'`reverseOrder()` returns a Comparator: the reverse of natural ordering, supplied from outside.',w:{nat:'It is based on natural ordering, but the sort receives a comparator that reverses it.',throw:'Strings are `Comparable`, so reversing works.'}},
+  {n:'`withNull.sort(null)`',lane:'throw',ok:'Natural ordering cannot compare `null`, so the sort throws `NullPointerException`.',w:{nat:'Natural ordering is asked for, but it fails on the null element.',cmp:'No comparator is passed, so nothing handles the null.'}},
+  {n:'`withNull.sort(Comparator.nullsFirst(Comparator.naturalOrder()))`',lane:'cmp',ok:'`nullsFirst` wraps natural ordering in a null-friendly comparator: null goes first.',w:{nat:'The sort receives a comparator object, built from natural ordering.',throw:'`nullsFirst` handles the null, so nothing throws.'}},
+  {n:'`teams.sort(null)` where `Team` is not `Comparable`',lane:'throw',ok:'With no comparator, elements must implement `Comparable`; otherwise `ClassCastException` is thrown.',w:{nat:'Team has no natural ordering to use.',cmp:'No comparator is passed.'}}
+ ]};
+P.apply={
+ r1:{ok:'right',expl:{
+   first:'That is nullsFirst. nullsLast puts null after every name.',
+   npe:'nullsLast answers for null before natural ordering is asked, so nothing throws.',
+   right:'Names in natural order, then the null.',
+   rev:'Natural ordering puts ana before cy.'},
+   mis:{first:'nullsLast puts null at the end.',npe:'The null-friendly wrapper prevents the exception.',rev:'naturalOrder sorts A to Z.'}},
+ r2:{ok:'right',answer:'`[null, cy, ana]`: nullsFirst puts null first, and reverseOrder sorts the names Z to A.',expl:{
+   last:'nullsFirst, not nullsLast, so null leads.',
+   nat:'The wrapped comparator is reverseOrder, so cy comes before ana.',
+   right:'Null first, then the names in reverse natural order.',
+   npe:'The null is handled by nullsFirst.'},
+   mis:{last:'nullsFirst puts null at the front.',nat:'reverseOrder flips the names.',npe:'nullsFirst handles the null.'}}
+};
+
+/* Guidance state: current activity, a monotonic unlocked frontier and per-activity results kept apart */
+var main=$('#lesson'),ACTS=$$('[data-pep-activity]'),LINKS=$$('[data-pep-activity-link]'),prevBtn=$('#prev'),next=$('#next'),resetBtn=$('#reset'),recap=$('#recap');
+var KEYS=['predict','x1','x2','apply'],N=KEYS.length;
+var S={step:1,done:{},results:{}};
+function freshAct(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,cont:false};}
+var G={current:1,unlocked:1,complete:false,acts:KEYS.map(freshAct)};
+function fbOf(n){return $('[data-pep-feedback]',ACTS[n-1]);}
+function say(parts,focus){var fb=fbOf(G.current);fb.textContent='';(parts||[]).forEach(function(p){
+  if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li',it[2]||'');li.appendChild(el('strong',null,it[0]));li.appendChild(T(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
+  else if(p.pre){var pr=el('pre','out');pr.textContent=p.pre;fb.appendChild(pr);}
+  else{var q=el('p',p.c||'',p.s);if(p.attr)q.setAttribute(p.attr,'');fb.appendChild(q);}});
+  if(focus)fb.focus();}
+function optText(i){var l=i.closest('label');return l?l.textContent.replace(/\s+/g,' ').trim():i.value;}
+var WORD={'correct':'correct on the first try','correct-retry':'correct on the second try','settled':'answered and settled, not marked correct'};
+function reflect(){ACTS.forEach(function(sec,i){var a=G.acts[i];sec.setAttribute('data-pep-attempts',String(a.attempts));sec.setAttribute('data-pep-settled',String(a.settled));
+    sec.setAttribute('data-pep-completed',String(a.completed));sec.setAttribute('data-pep-credit',String(a.credit));sec.setAttribute('data-pep-grade',String(a.grade));sec.setAttribute('data-pep-continue',String(a.cont));});
+  main.setAttribute('data-pep-current-activity',String(G.current));main.setAttribute('data-pep-unlocked-through',String(G.unlocked));main.setAttribute('data-pep-complete',String(G.complete));}
+function progress(){var n=0,set=0,segs=$$('.pep-progress > span');KEYS.forEach(function(k,i){var s=segs[i];s.className='';
+    if(S.done[k]){n++;if(S.results[k]==='settled'){set++;s.className='is-settled';}else s.className='is-done';}
+    if(i+1===G.current)s.className+=(s.className?' ':'')+'is-current';});
+  $('#prog-text').textContent='Activities done: '+n+' of '+N+(set?' ('+set+(set>1?' checks':' check')+' settled, not correct)':'');}
+function attempt(n){G.acts[n-1].attempts++;reflect();}
+function finishPage(){var c=$('#complete'),labels={x2:'Ordering source',apply:'Final check'},parts=[],anySet=false;
+  KEYS.forEach(function(k){if(S.results[k]&&labels[k]){parts.push(labels[k]+': '+WORD[S.results[k]]+'.');if(S.results[k]==='settled')anySet=true;}});
+  c.className='complete'+(anySet?' settled':'');c.textContent='Topic complete. '+parts.join(' ')+(anySet?' Review the explanations before the practice quiz.':'');}
+function complete(k){var n=KEYS.indexOf(k)+1,a=G.acts[n-1];S.done[k]=true;
+  a.completed=true;a.settled=true;a.cont=true;
+  if(a.credit===0){a.credit=1;a.grade=(k==='predict'||S.results[k]==='settled')?0:1;}
+  G.unlocked=Math.max(G.unlocked,Math.min(n+1,N));
+  if(!G.complete&&KEYS.every(function(x){return !!S.done[x];})){G.complete=true;finishPage();}
+  progress();render(G.current);}
+function render(number,mode,moveFocus){
+  if(!(number>=1&&number<=N&&number<=G.unlocked))return false;
+  G.current=number;S.step=number;
+  ACTS.forEach(function(sec,i){sec.hidden=i+1!==number;});
+  LINKS.forEach(function(link,i){var n=i+1;
+    if(n===number)link.setAttribute('aria-current','step');else link.removeAttribute('aria-current');
+    if(n>G.unlocked)link.setAttribute('aria-disabled','true');else link.removeAttribute('aria-disabled');
+    link.classList.toggle('is-done',!!S.done[KEYS[i]]);});
+  prevBtn.disabled=number===1;
+  next.disabled=number===N||number>=G.unlocked||!G.acts[number-1].cont;
+  recap.hidden=!G.complete;
+  $('#pos-text').textContent='Activity '+number+' of '+N;
+  reflect();progress();
+  try{if(mode==='push')history.pushState({activity:number},'','#activity-'+number);
+    else if(mode==='replace')history.replaceState({activity:number},'','#activity-'+number);}
+  catch(e){if(mode&&location.hash!=='#activity-'+number)location.hash='activity-'+number;}
+  if(moveFocus){var h=$('#a'+number+'-h');if(h)h.focus();}
+  return true;}
+/* pep:component predict@1 js */
+/* predict */
+var pf=$('#predict'),pc=$('#predict-check');
+function pReady(){pc.disabled=!!S.done.predict||!($('input[name="predict"]:checked')&&$('input[name="conf0"]:checked'));}
+pf.addEventListener('change',pReady);
+function badges(l,arr){var b=l.querySelector('.badges');if(!b){b=el('span','badges');l.appendChild(b);}arr.forEach(function(x){b.appendChild(el('span','badge '+x[1],x[0]));});}
+pc.addEventListener('click',function(){var c=$('input[name="predict"]:checked'),cv=$('input[name="conf0"]:checked');if(!c||!cv)return;var okv=P.predict.ok,match=c.value===okv;
+  $$('input',pf).forEach(function(i){i.disabled=true;});pc.disabled=true;
+  $$('input[name="predict"]',pf).forEach(function(i){var l=i.closest('label');if(i===c){l.classList.add('mine');badges(l,[['Your prediction','mine-b'],[match?'Correct':'Not correct',match?'ok-b':'no-b']]);}else if(i.value===okv){badges(l,[[P.predict.okLabel||'Correct answer','ok-b']]);}if(i.value===okv)l.classList.add('right');l.appendChild(el('span','oexp',P.predict.expl[i.value]));});
+  pf.querySelector('.opts').classList.add('explained');pc.hidden=true;$('#conf0').closest('.row').hidden=true;
+  if(P.onPredict)P.onPredict();
+  say([{c:'verdict info',s:'Practice prediction, not scored. '+(match?'Your prediction matches the answer.':'Your prediction differs from the answer; nothing is lost.')},{c:'conf-report',s:'Your confidence: '+cv.value+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:P.predict.lead},{s:'Each option now shows its label and why, directly under it.'}],true);
+  complete('predict');});
+/* /pep:component predict js */
+/* pep:component mcq-with-confidence@1 js */
+/* graded checks: confidence first, retry in a second representation, settle after two misses */
+var checks={};
+function check(o){var st={att:0,conf:[],result:null,step:{x1:2,x2:3,apply:4}[o.key]},btn=$(o.btn),cf=$(o.conf),fs=$(o.fs),cn=o.confName||'conf';checks[o.key]=st;
+  function grp(){return st.att===0?o.g1:o.g2;}
+  function ready(){btn.disabled=!!st.result||!($('input[name="'+grp()+'"]:checked')&&$('input[name="'+cn+'"]:checked'));}
+  function lockConf(){$$('input[name="'+cn+'"]').forEach(function(i){i.disabled=true;});btn.disabled=true;}
+  function done(){S.results[o.key]=st.result;if(P.onCheck)P.onCheck(o.key,st.result);complete(o.key,o.label);}
+  fs.addEventListener('change',ready);cf.addEventListener('change',ready);
+  btn.addEventListener('click',function(){var g=grp(),r=st.att===0?o.data.r1:o.data.r2,c=$('input[name="'+g+'"]:checked'),cv=$('input[name="'+cn+'"]:checked');
+    if(!c||!cv||st.result)return;var ok=c.value===r.ok;st.conf.push(cv.value);
+    var confLine='Your confidence: '+cv.value+'. Confidence is your own read on how sure you were; it is reported, never scored.';
+    var expl=$$('input[name="'+g+'"]').map(function(i){return [optText(i)+(i===c?' (your answer):':':'),r.expl[i.value]];});
+    $$('input[name="'+g+'"]').forEach(function(i){i.disabled=true;});c.closest('label').classList.add(ok?'right':'wrong');badges(c.closest('label'),[['Your answer','mine-b'],[ok?'Correct':'Not correct',ok?'ok-b':'no-b']]);
+    if(ok){st.result=st.att===0?'correct':'correct-retry';lockConf();
+      say([{c:'verdict ok',s:st.att===0?'Correct.':'Correct on your second try.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}],true);done();}
+    else if(st.att===0){st.att=1;$('#'+o.g1).hidden=true;$('#'+o.g2).hidden=false;$(o.t1).hidden=true;$(o.t2).hidden=false;$$('input[name="'+cn+'"]').forEach(function(i){i.checked=false;});
+      say([{c:'verdict no',s:'Not yet. '+r.mis[c.value]+' Try again below: same idea, different form, with your confidence again.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}]);
+      ready();$(o.t2).focus();}
+    else{st.result='settled';lockConf();$$('input[name="'+o.g2+'"]').forEach(function(i){if(i.value===r.ok){i.closest('label').classList.add('right');badges(i.closest('label'),[['Correct answer','ok-b']]);}});
+      say([{c:'verdict set',s:'Answered and settled: this check is not marked correct. '+r.mis[c.value]},{c:'conf-report',s:'Confidence on each try: '+st.conf.join(', then ')+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:'The answer: '+r.answer},{list:expl}],true);done();}});
+  st.reset=function(){st.att=0;st.conf=[];st.result=null;$('#'+o.g1).hidden=false;$('#'+o.g2).hidden=true;$(o.t1).hidden=false;$(o.t2).hidden=true;btn.disabled=true;};
+  return st;}
+/* /pep:component mcq-with-confidence js */
+/* lane sort: each item gets one retry, then its lane is revealed; any reveal settles the activity */
+var lanesets={};
+function lanes(o){var st={idx:0,tries:{},placed:{},revealed:{}},box=$(o.model),btns=$(o.btns);lanesets[o.key]=st;
+  function laneName(id){for(var i=0;i<o.lanes.length;i++)if(o.lanes[i].id===id)return o.lanes[i].label;return id;}
+  function draw(){box.textContent='';var cnt=0;
+    o.lanes.forEach(function(ln){var d=el('div','lane'),h=el('p','lk',ln.label),u=el('ul','cards');h.id=o.key+'-lk-'+ln.id;u.setAttribute('aria-labelledby',h.id);d.appendChild(h);d.appendChild(u);box.appendChild(d);
+      o.items.forEach(function(it,i){if(st.placed[i]!==ln.id)return;cnt++;var li=el('li',st.revealed[i]?'revealed':'',it.n);if(st.revealed[i])li.appendChild(el('span','tag','shown after two tries'));u.appendChild(li);});});
+    var it=o.items[st.idx];$(o.name).textContent=it?'':'all sorted';$(o.name).appendChild(it?md(it.n):T(''));
+    $(o.count).textContent=cnt+' of '+o.items.length+' sorted';}
+  function finish(msg){var anyRev=Object.keys(st.revealed).length,anyRetry=Object.keys(st.tries).some(function(k){return st.tries[k]>0;});
+    var res=anyRev?'settled':(anyRetry?'correct-retry':'correct');S.results[o.key]=res;
+    $$('button',btns).forEach(function(b){b.disabled=true;});
+    msg.push({c:anyRev?'verdict set':'verdict ok',s:anyRev?'All sorted. Answered and settled: '+anyRev+(anyRev>1?' items were':' item was')+' shown after two tries, so this activity is not marked correct.':(anyRetry?'All sorted, some on a second try.':'All sorted on the first try.')});
+    if(o.done)msg.push({s:o.done});say(msg,true);complete(o.key);}
+  o.lanes.forEach(function(ln){var b=el('button','ghost',ln.label);b.type='button';b.id=o.key+'-to-'+ln.id;b.setAttribute('data-lane',ln.id);b.setAttribute('aria-describedby',o.legend);
+    b.addEventListener('click',function(){var i=st.idx,it=o.items[i];if(!it||S.done[o.key])return;attempt(3);
+      if(ln.id===it.lane){st.placed[i]=ln.id;st.idx++;var msg=[{c:'verdict ok',s:'Yes: '+laneName(ln.id)+'.'},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(msg);else say(msg);}
+      else{st.tries[i]=(st.tries[i]||0)+1;
+        if(st.tries[i]<2){say([{c:'verdict no',s:'Not '+laneName(ln.id)+'. '+it.w[ln.id]},{s:'Try another button for the same item.'}]);}
+        else{st.placed[i]=it.lane;st.revealed[i]=true;st.idx++;var m2=[{c:'verdict set',s:'Shown after two tries: '+laneName(it.lane)+'. '+it.w[ln.id]},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(m2);else say(m2);}}});
+    btns.appendChild(b);});
+  st.reset=function(){st.idx=0;st.tries={};st.placed={};st.revealed={};$$('button',btns).forEach(function(b){b.disabled=false;});draw();};
+  draw();return st;}
+
+/* Java practice editor: a bounded parser for one players.sort statement, applied to two visible lists */
+var LISTS=[{label:'List 1',start:[['ben',80],['dee',95],['ana',80],['cy',70]],goal:[['dee',95],['ana',80],['ben',80],['cy',70]]},
+           {label:'List 2',start:[['zed',90],['al',60],['bo',90],['cy',60]],goal:[['bo',90],['zed',90],['al',60],['cy',60]]}];
+var STARTER='// record Player(String name, int score) { }\n// List 1: ben 80, dee 95, ana 80, cy 70\n// List 2: zed 90, al 60, bo 90, cy 60\n// Target: highest score first, ties by name A to Z\nplayers.sort(Comparator.comparing(Player::score));';
+var KNOWN_STATIC=['comparing','comparingInt','comparingLong','comparingDouble','naturalOrder','reverseOrder','nullsFirst','nullsLast'];
+var KNOWN_CHAIN=['reversed','thenComparing','thenComparingInt','thenComparingLong','thenComparingDouble','compare','equals'];
+function Problem(kind,msg,pos){this.kind=kind;this.msg=msg;this.pos=pos;}
+/* comparator combinators: each returns a new function, so chained calls never share a mutable variable */
+function flip(f){return function(a,b){return -f(a,b);};}
+function then(f,g){return function(a,b){var r=f(a,b);return r!==0?r:g(a,b);};}
+function lex(src){var t=[],re=/\s+|\/\/[^\n]*|\/\*[\s\S]*?\*\/|(::|->|[A-Za-z_$][\w$]*|\d+|"(?:[^"\\\n]|\\.)*"|.)/g,m;
+  while((m=re.exec(src))){if(m[1]!==undefined)t.push({v:m[1],p:m.index});}return t;}
+function parse(src){var Tk=lex(src),i=0,info={k1:null,k2:null,r:'none',k2rev:false};
+  function pk(o){var x=Tk[i+(o||0)];return x?x.v:'';}
+  function at(){return Tk[i]?Tk[i].p:src.length;}
+  function eat(v,kind){if(pk()===v){i++;return;}throw new Problem(kind||'error',"error: '"+v+"' expected",at());}
+  function ident(){var v=pk();if(!/^[A-Za-z_$][\w$]*$/.test(v))throw new Problem('error','error: <identifier> expected',at());i++;return v;}
+  function cmpStr(a,b){return a<b?-1:a>b?1:0;}
+  function key(){var p0=at(),name;
+    if(pk()==='Player'&&pk(1)==='::'){i+=2;name=ident();}
+    else if(/^[a-z_$][\w$]*$/.test(pk())&&pk(1)==='->'){var v=ident();i++;if(pk()!==v)throw new Problem('limit','not supported in this practice editor: a lambda here must be '+v+' -> '+v+'.score() or '+v+' -> '+v+'.name()',at());i++;eat('.');name=ident();eat('(');eat(')');}
+    else throw new Problem('limit','not supported in this practice editor: use a key such as Player::score or p -> p.score()',p0);
+    if(name!=='score'&&name!=='name')throw new Problem('error','error: cannot find symbol: method '+name+'() in record Player',p0);
+    return name;}
+  function order(){var p0=at();if(pk()!=='Comparator')throw new Problem('limit','not supported in this practice editor: the second argument must be Comparator.reverseOrder() or Comparator.naturalOrder()',p0);
+    i++;eat('.');var m=ident();eat('(');eat(')');if(m==='reverseOrder')return -1;if(m==='naturalOrder')return 1;
+    throw new Problem('limit','not supported in this practice editor: Comparator.'+m+'() as a key order',p0);}
+  function byKey(k){return k==='score'?function(a,b){return a[1]-b[1];}:function(a,b){return cmpStr(a[0],b[0]);};}
+  function comparator(top){var p0=at();if(pk()!=='Comparator')throw new Problem('limit','not supported in this practice editor: build the comparator with Comparator.comparing(...)',p0);
+    i++;eat('.');var m=ident(),c;
+    if(m==='comparing'||m==='comparingInt'){eat('(');var k=key(),s=1;if(pk()===','){i++;s=order();}eat(')');
+      if(m==='comparingInt'&&k!=='score')throw new Problem('error','error: incompatible types: bad return type in method reference: String cannot be converted to int',p0);
+      c=s<0?flip(byKey(k)):byKey(k);if(top){info.k1=k;if(s<0)info.r='first';}}
+    else if(m==='naturalOrder'||m==='reverseOrder'){eat('(');eat(')');throw new Problem('error','error: no suitable method found for sort: Player does not implement Comparable, so Comparator.'+m+'() cannot order players',p0);}
+    else if(KNOWN_STATIC.indexOf(m)>=0)throw new Problem('limit','not supported in this practice editor: Comparator.'+m+'(...)',p0);
+    else throw new Problem('error','error: cannot find symbol: method '+m+' in interface Comparator',p0);
+    while(pk()==='.'){i++;var pm=at(),n=ident();eat('(');
+      if(n==='reversed'){eat(')');c=flip(c);if(top){if(info.k2)info.r=(info.r==='first'?'first+end':'end');else info.r=(info.r==='first'?'none2':'first');}}
+      else if(n==='thenComparing'||n==='thenComparingInt'){var t,k2=null,s2=1;
+        if(pk()==='Comparator'){t=comparator(false);}
+        else{k2=key();if(pk()===','){i++;s2=order();}if(n==='thenComparingInt'&&k2!=='score')throw new Problem('error','error: incompatible types: bad return type in method reference: String cannot be converted to int',pm);t=s2<0?flip(byKey(k2)):byKey(k2);}
+        eat(')');c=then(c,t);if(top&&!info.k2){info.k2=k2||'other';info.k2rev=s2<0;}}
+      else if(KNOWN_CHAIN.indexOf(n)>=0)throw new Problem('limit','not supported in this practice editor: .'+n+'(...) in a sort call',pm);
+      else throw new Problem('error','error: cannot find symbol: method '+n+' in interface Comparator',pm);}
+    return c;}
+  var cmp,p0=at();
+  if(!Tk.length)throw new Problem('error','error: the editor is empty; write one players.sort(...) statement',0);
+  if(pk()==='players'&&pk(1)==='.'&&pk(2)==='sort'){i+=3;eat('(');if(pk()==='null'){i++;cmp=null;}else cmp=comparator(true);eat(')');}
+  else if(pk()==='Collections'&&pk(1)==='.'&&pk(2)==='sort'){i+=3;eat('(');if(pk()!=='players')throw new Problem('limit','not supported in this practice editor: sort the list named players',at());i++;
+    if(pk()===')'){cmp=null;}else{eat(',');cmp=comparator(true);}eat(')');}
+  else throw new Problem('limit','not supported in this practice editor: write one statement that starts players.sort( or Collections.sort(players,',p0);
+  eat(';');
+  if(i<Tk.length)throw new Problem('limit','not supported in this practice editor: write only one statement',at());
+  return {cmp:cmp,info:info};}
+function lineOf(src,pos){return src.slice(0,pos).split('\n').length;}
+function gutter(){var n=$('#ed').value.split('\n').length,g=[];for(var k=1;k<=n;k++)g.push(k);$('#ed-gutter').textContent=g.join('\n');$('#ed').rows=Math.max(5,Math.min(20,n));}
+function tab(which){[['prob','#tab-prob','#ed-prob'],['out','#tab-out','#ed-out']].forEach(function(t){var on=t[0]===which;$(t[1]).setAttribute('aria-selected',on?'true':'false');$(t[1]).tabIndex=on?0:-1;$(t[2]).hidden=!on;});}
+function names(list){return list.map(function(p){return p[0]+' '+p[1];}).join(', ');}
+function cells(list){var u=el('ul','cells');list.forEach(function(p){u.appendChild(el('li','',p[0]+' '+p[1]));});return u;}
+function lists(outs){var box=$('#m-lists');box.textContent='';LISTS.forEach(function(L,i){var d=el('div','pep-list'),h=el('h3','',L.label);d.appendChild(h);
+    d.appendChild(el('p','lk','Before sorting'));d.appendChild(cells(L.start));
+    d.appendChild(el('p','lk','After sorting'));if(outs&&outs[i])d.appendChild(cells(outs[i]));else d.appendChild(el('p','sub','Not run yet'));
+    d.appendChild(el('p','lk','Target'));d.appendChild(cells(L.goal));
+    if(outs&&outs[i]){var ok=names(outs[i])===names(L.goal);d.appendChild(el('p','pep-list__state',ok?'Matches the target':'Differs from the target'));}
+    box.appendChild(d);});}
+function goLine(n){var ta=$('#ed'),ls=ta.value.split('\n'),pos=0;for(var k=0;k<n-1&&k<ls.length;k++)pos+=ls[k].length+1;ta.focus();ta.setSelectionRange(pos,pos);}
+function showProblem(src,pr){var box=$('#ed-prob'),ln=lineOf(src,pr.pos),b=el('button','pep-editor__problem');b.type='button';
+  var tag=el('span',pr.kind==='error'?'kind-error':'kind-limit',pr.kind==='error'?'Error':'Not supported');b.appendChild(tag);b.appendChild(T(' line '+ln+': '+pr.msg));
+  b.addEventListener('click',function(){goLine(ln);});box.textContent='';box.appendChild(b);tab('prob');
+  $('#ed-status').textContent=(pr.kind==='error'?'1 error: the code would not compile as written':'1 problem: outside what this practice editor runs')+'. Select the problem to jump to line '+ln+'.';}
+function runSort(){var src=$('#ed').value,res;attempt(2);lists(null);
+  try{res=parse(src);}catch(pr){if(!(pr instanceof Problem))throw pr;showProblem(src,pr);
+    say([{c:'verdict info',s:pr.kind==='error'?'Not run: the compiler would reject this line. Read the problem under the editor, fix it and run again.':'Not run: this practice editor cannot run that form. Read the problem under the editor.'}]);return;}
+  $('#ed-prob').textContent='';$('#ed-prob').appendChild(el('p','pep-editor__empty','No problems.'));
+  if(res.cmp===null){$('#ed-print').textContent='Exception in thread "main" java.lang.ClassCastException: class Player cannot be cast to class java.lang.Comparable';tab('out');
+    $('#ed-status').textContent='Ran: stopped with ClassCastException';
+    say([{c:'verdict info',s:'It compiles, but with no comparator the sort uses natural ordering, and `Player` does not implement `Comparable`, so it throws. Supply a comparator.'}]);return;}
+  var outs=LISTS.map(function(L){return L.start.slice().sort(res.cmp);});lists(outs);
+  $('#ed-print').textContent=outs.map(function(o,i){return LISTS[i].label+': ['+o.map(function(p){return 'Player[name='+p[0]+', score='+p[1]+']';}).join(', ')+']';}).join('\n');tab('out');
+  var oks=outs.map(function(o,i){return names(o)===names(LISTS[i].goal);}),ok=oks[0]&&oks[1],C=res.info;
+  var msg=[{c:ok?'verdict ok':'verdict info',s:outs.map(function(o,i){return LISTS[i].label+': '+names(o)+(oks[i]?' (matches).':' (differs).');}).join(' ')}];
+  $('#ed-status').textContent=ok?'Ran: both lists match their targets':'Ran: '+(oks[0]||oks[1]?'one list differs':'both lists differ')+' from the target';
+  if(ok){msg.push({s:'Both lists match: score decides, highest first, and only tied scores are ordered by name A to Z.'});if(!S.done.x1){say(msg,true);complete('x1');return;}}
+  else{var hint;
+    if(C.k1!=='score')hint='The first key decides the main order; here that must be the score.';
+    else if(C.r==='none'||C.r==='none2')hint='`comparing` sorts lowest first; something must flip the score order, such as `.reversed()` right after it.';
+    else if(C.r==='end'||C.r==='first+end')hint='`reversed()` at the end flips the whole comparator, so tied names now run Z to A. Flip only the score: put `.reversed()` before `thenComparing`.';
+    else if(!C.k2)hint='High scores are first, but tied players keep their starting order, because the sort is stable: `ben` stays before `ana`. Add a tie-breaker with `.thenComparing(...)`.';
+    else if(C.k2!=='name')hint='The tie-breaker must compare the names.';
+    else if(C.k2rev)hint='The tie-breaker runs Z to A; the targets want names A to Z.';
+    else hint='Compare each list with its target, one position at a time.';
+    msg.push({s:hint});}
+  say(msg);}
+function resetCode(){$('#ed').value=STARTER;gutter();$('#ed-prob').textContent='';$('#ed-prob').appendChild(el('p','pep-editor__empty','Not run yet. Edit the code, then press Run.'));$('#ed-print').textContent='(no output yet)';tab('prob');$('#ed-status').textContent='Not run yet';lists(null);}
+$('#ed').addEventListener('input',gutter);$('#sort').addEventListener('click',runSort);$('#ed-reset').addEventListener('click',resetCode);
+$('#tab-prob').addEventListener('click',function(){tab('prob');});$('#tab-out').addEventListener('click',function(){tab('out');});
+$$('[role="tab"]').forEach(function(t){t.addEventListener('keydown',function(ev){if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){var o=t.id==='tab-prob'?'out':'prob';tab(o);$('#tab-'+o).focus();ev.preventDefault();}});});
+
+/* Wire the activities */
+P.onPredict=function(){attempt(1);};
+resetCode();
+lanes(P.lanes);
+check({key:'apply',fs:'#apply',g1:'a1',g2:'a2',t1:'#task-4',t2:'#task-4b',conf:'#conf',confName:'conf',btn:'#apply-check',data:P.apply});
+$('#apply-check').addEventListener('click',function(){var n=checks.apply.conf.length;if(n!==G.acts[3].attempts){G.acts[3].attempts=n;reflect();}});
+
+/* Restart: only the current activity returns to its authored start; other work, the frontier and page completion stay */
+function clearChoices(scope){$$('input',scope).forEach(function(i){i.checked=false;i.disabled=false;});$$('.opt',scope).forEach(function(o){o.classList.remove('right','wrong','mine');});
+  $$('.oexp,.badges',scope).forEach(function(e){e.remove();});$$('.opts.explained',scope).forEach(function(o){o.classList.remove('explained');});}
+function restart(){var n=G.current,k=KEYS[n-1],sec=ACTS[n-1];
+  if(n===1){clearChoices(sec);pc.hidden=false;pc.disabled=true;$('#conf0').closest('.row').hidden=false;}
+  if(n===2)resetCode();
+  if(n===3)lanesets.x2.reset();
+  if(n===4){clearChoices(sec);checks.apply.reset();}
+  delete S.done[k];delete S.results[k];G.acts[n-1]=freshAct();
+  $$('[data-pep-feedback]',sec).forEach(function(f){f.textContent='';});
+  render(n);
+  $('#restart-status').textContent='Activity '+n+' restarted. Other activities keep their work.';}
+resetBtn.addEventListener('click',restart);
+
+/* Reversible navigation: buttons, timeline, back links and browser history change only the current activity */
+function numberOf(hash){var m=/^#activity-(\d+)$/.exec(hash||'');return m?Number(m[1]):0;}
+prevBtn.addEventListener('click',function(){render(G.current-1,'push',true);});
+next.addEventListener('click',function(){render(G.current+1,'push',true);});
+LINKS.forEach(function(link,i){link.addEventListener('click',function(ev){ev.preventDefault();render(i+1,'push',true);});});
+$$('[data-pep-back-link]').forEach(function(link){link.addEventListener('click',function(ev){ev.preventDefault();render(numberOf(link.getAttribute('href')),'push',true);});});
+var lastFocused=null;D.addEventListener('focusin',function(ev){lastFocused=ev.target;});
+function fromHistory(){var keep=lastFocused,n=numberOf(location.hash);
+  if(!render(n,null,false))render(G.current,'replace',false);
+  if(keep&&keep.isConnected&&!keep.closest('[hidden]'))keep.focus({preventScroll:true});}
+addEventListener('popstate',fromHistory);addEventListener('hashchange',fromHistory);
+
+/* Objectives: native disclosure; Escape and an outside click close it */
+var obj=$('[data-pep-objectives]');
+D.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&obj.open){obj.open=false;obj.querySelector('summary').focus();}});
+D.addEventListener('click',function(ev){if(obj.open&&!obj.contains(ev.target))obj.open=false;});
+
+/* Print: expand closed disclosures, then restore only those */
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=$$('details:not([open])');printOpened.forEach(function(d){d.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(d){d.open=false;});printOpened=[];});
+
+var first=numberOf(location.hash);
+render(first>=1&&first<=G.unlocked?first:1,'replace',false);
+})();
+</script>
+</body>
+</html>

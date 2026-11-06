@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="collections-streams">
+<meta name="pep:module" content="collections-in-depth">
+<meta name="pep:topic" content="The equals and hashCode contract">
+<meta name="pep:topic-id" content="the-equals-and-hashcode-contract">
+<meta name="pep:budget-minutes" content="12">
+<meta name="pep:source" content="authoring/evidence/collections-streams/collections-in-depth/the-equals-and-hashcode-contract/sources.json">
+<meta name="pep:position" content="6 of 9">
+<title>The equals and hashCode contract · Collections in Depth</title>
+<style>
+/* pep:component restart@1 css */
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* /pep:component restart css */
+/* pep:component progress@1 css */
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:repeating-linear-gradient(135deg,var(--amber) 0 3px,transparent 3px 6px);border-color:var(--amber)}
+/* /pep:component progress css */
+/* pep:component predict@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+/* /pep:component predict css */
+/* pep:component mcq-with-confidence@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start}
+.feedback{width:100%;min-width:0;font-size:15px;line-height:1.35}
+.feedback:empty{display:none}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin:0}
+.feedback .verdict{font-weight:700}
+.feedback .ok{color:var(--teal)}
+.feedback .no{color:var(--red)}
+.feedback .set{color:var(--amber)}
+.feedback .info{color:var(--ink)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+/* /pep:component mcq-with-confidence css */
+/* DESIGN.md token reference */
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* Components bridge: embedded components/*@1 fragments read these older names */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+/* Base, focus and motion */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; }
+p { margin: 0; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+pre { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; max-width: 100%; }
+pre code { font-size: 1em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[hidden] { display: none !important; }
+button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+.pep-page { max-width: 1200px; margin: 0 auto; padding: 24px; }
+@media (max-width: 480px) { .pep-page { padding: 16px; } }
+/* Topic bar */
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; min-width: 0; }
+.pep-topicbar__meta .progress { font: inherit; color: inherit; }
+.pep-topicbar__meta #prog-text { color: var(--pep-text-strong); }
+.pep-topicbar__meta .pips { gap: 4px; }
+.pep-topicbar__meta .pip { width: 20px; height: 6px; border: 0; border-radius: var(--pep-radius-pill); background: var(--pep-control); outline: 1px solid var(--pep-line-strong); outline-offset: 0; }
+.pep-topicbar__meta .pip.on { background: var(--pep-accent); outline-color: var(--pep-accent); }
+.pep-topicbar__meta .pip.settled { background: var(--pep-warning); outline-color: var(--pep-warning); }
+/* Regions */
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.teach > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.teach ul, .teach ol { margin: 0; padding-left: 24px; }
+.teach li + li { margin-top: 4px; }
+.pep-goalsbox { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); min-width: 0; }
+.pep-goalsbox h3 { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); text-transform: none; }
+.pep-goals { margin: 0; padding: 0; list-style: none; }
+.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-goals > li:first-child { border-top: 0; }
+.pep-goals .state { display: inline-flex; align-items: center; gap: 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; }
+.pep-goals .state svg { width: 16px; height: 16px; display: none; }
+.pep-goals .state::after { content: "open"; }
+.pep-goals > li[data-state="done"] .state { color: var(--pep-success); }
+.pep-goals > li[data-state="done"] .state svg { display: block; }
+.pep-goals > li[data-state="done"] .state::after { content: "done"; }
+.pep-goals > li[data-state="review"] .state { color: var(--pep-warning); }
+.pep-goals > li[data-state="review"] .state::after { content: "done, review"; }
+.pep-goal-summary { font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-steps-list { margin: 0; padding-left: 24px; }
+.pep-steps-list > li + li { margin-top: 8px; }
+.pep-steps-h { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-bottom: 4px; }
+/* Workspace */
+.task { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
+.task:not(:has(> div:not([hidden]))) { display: none; }
+.task p { font-weight: 600; color: var(--pep-text-strong); }
+.task > div, .task > div > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.model { margin: 0; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0 0 8px; }
+.model > div { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.model .note { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.control { min-width: 0; }
+.lk { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.sub { margin: 0 0 8px; font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.cells { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; padding: 0; list-style: none; min-height: 36px; }
+.cells li { font: 400 14px/20px var(--pep-font-mono); padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.cells li.hot { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 3px 7px; }
+.cells li.gone { border-style: dashed; color: var(--pep-text-muted); text-decoration: line-through; }
+.cells li .ix { display: block; font-size: 12px; line-height: 16px; color: var(--pep-text-muted); }
+.out { margin: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; min-height: 44px; }
+.out .err { color: var(--pep-danger); font-weight: 700; }
+.out .okl { color: var(--pep-success); font-weight: 700; }
+.ops { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.ops button { font-family: var(--pep-font-mono); font-size: 14px; }
+.ops button[aria-pressed="true"] { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); color: var(--pep-text-strong); }
+.lanebtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.lanebtns button { min-width: 120px; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+.lane .lk { overflow-wrap: anywhere; }
+.snip { margin: 0 0 4px; }
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.lane { padding: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); min-height: 80px; background: var(--pep-page); min-width: 0; }
+.cards { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.cards li { font-size: 14px; line-height: 20px; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); overflow-wrap: anywhere; }
+.cards li.revealed { border-style: dashed; border-color: var(--pep-warning); }
+.tag { display: inline-block; margin-left: 4px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--pep-warning); }
+table.grid, .recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+table.grid th, table.grid td { border: 1px solid var(--pep-line-strong); padding: 8px 12px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+table.grid th { background: var(--pep-card); font-weight: 600; color: var(--pep-text-strong); }
+.recap details { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.recap summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: flex; align-items: center; }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+.sources ul { margin: 8px 0; padding-left: 24px; font-size: 14px; line-height: 20px; }
+.sources li { margin-bottom: 4px; overflow-wrap: anywhere; }
+.sources p { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.next-topic { font-weight: 600; color: var(--pep-text-strong); }
+.complete { padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete.settled { border-color: var(--pep-warning); background: var(--pep-warning-soft); }
+/* Component overrides: DESIGN.md look for the embedded @1 fragments (their bytes stay unchanged) */
+button { border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); padding: 10px 20px; }
+.ghost { background: var(--pep-control); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); }
+.ghost:hover { background: var(--pep-control); border-color: var(--pep-accent); }
+.ghost[aria-pressed="true"] { background: var(--pep-accent-soft); border: 2px solid var(--pep-accent); }
+.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); filter: none; }
+.primary:active { transform: none; }
+button:disabled, .primary:disabled { background: var(--pep-control); color: var(--pep-text-muted); border: 1px solid var(--pep-line-strong); }
+legend { font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 8px; }
+.opts { gap: 8px; }
+.opt { min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); font-size: 16px; line-height: 24px; box-shadow: none; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; box-shadow: none; }
+.opt:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; box-shadow: none; }
+.opt.mine { border-color: var(--pep-accent); }
+.opt input { accent-color: var(--pep-accent-fill); }
+.opts.explained .opt { padding: 8px 16px; }
+.oexp { font-size: 14px; line-height: 20px; color: var(--pep-text); border-top-color: var(--pep-line-strong); }
+.badge { font-size: 13px; line-height: 20px; font-weight: 600; border-radius: var(--pep-radius-pill); padding: 0 8px; }
+.badge.ok-b { color: var(--pep-success); border-color: var(--pep-success); }
+.badge.no-b { color: var(--pep-danger); border-color: var(--pep-danger); }
+.badge.mine-b { color: var(--pep-text-strong); border-color: var(--pep-line-strong); }
+.conf legend { line-height: 44px; }
+.conf .opt { min-width: 96px; }
+.row { gap: 12px; }
+.fbrow { gap: 12px; }
+.feedback { font-size: 14px; line-height: 20px; color: var(--pep-text); }
+.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.feedback .verdict { font-size: 16px; line-height: 24px; font-weight: 700; }
+.feedback .ok { color: var(--pep-success); }
+.feedback .no { color: var(--pep-danger); }
+.feedback .set { color: var(--pep-warning); }
+.feedback .info { color: var(--pep-text-strong); }
+.feedback .conf-report { color: var(--pep-text-muted); }
+.feedback ul { padding-left: 24px; }
+/* Editor workspace */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-right: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: none; min-height: 160px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; width: 100%; min-width: 0; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__scope { padding: 8px 12px; font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); background: var(--pep-sunken); }
+.pep-editor__panel .out { border: 0; padding: 0; background: transparent; }
+.pep-editor__empty { font-family: var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 700; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 700; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); max-width: none; }
+/* No-JavaScript reading route */
+.pep-nojs-reading { display: flex; flex-direction: column; gap: 16px; max-width: 72ch; }
+.pep-nojs-reading section { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--pep-line-strong); }
+.pep-nojs-reading ul, .pep-nojs-reading ol { margin: 0; padding-left: 24px; }
+.pep-nojs-reading .pep-callout { padding: 12px 16px; border: 1px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); color: var(--pep-text-strong); }
+.pep-nojs-reading .pep-expected { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-nojs-reading details { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-nojs-reading summary { min-height: 44px; display: flex; align-items: center; font-weight: 600; color: var(--pep-text-strong); }
+.pep-nojs-reading table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+.pep-nojs-reading td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .opts, .lanes { grid-template-columns: minmax(0, 1fr); } }
+/* Responsive, touch and optional-disclosure contract (DESIGN.md, data-pep-responsive) */
+html, body { max-width: 100%; overflow-x: clip; }
+p, li { overflow-wrap: anywhere; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+input, select, textarea, summary { font: inherit; }
+.pep-page, .pep-app { min-width: 0; }
+@media (max-width: 480px) {
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+/* Topic bar: progress wraps, Restart stays a visible 44 px target */
+.pep-topicbar__meta { flex: 1 1 260px; }
+.pep-topicbar__meta .pips { flex-wrap: wrap; }
+.pep-topicbar .pep-js-only { flex: 0 0 auto; }
+/* Choice cards: the whole card is the touch target; the native radio stays the focusable control */
+.opt { position: relative; }
+.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.opt input:disabled { cursor: default; }
+.opt::before { content: ""; flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); }
+.opt:has(input:checked)::before { border: 6px solid var(--pep-accent); }
+.opt:has(input:disabled)::before { opacity: 0.6; }
+.opts.explained .opt::before { margin-top: 2px; }
+/* Editor: bounded, resizable, and reduced on phones without hiding Run, Reset, Problems, Output or status */
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; margin-right: 0; margin-inline-end: auto; }
+.pep-editor__code { overscroll-behavior: contain auto; }
+.pep-editor__input { resize: vertical; max-height: 400px; scroll-margin-block: 16px; }
+.pep-editor__panel { overscroll-behavior: contain auto; }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar button { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__code { font-size: 16px; line-height: 24px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* Optional Anecdote and Challenge disclosures */
+.pep-optional { min-width: 0; border-block: 1px solid var(--pep-line-strong); background: transparent; break-inside: avoid; }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; list-style: none; }
+.pep-optional > summary::-webkit-details-marker { display: none; }
+.pep-optional > summary::before { content: ""; flex: 0 0 auto; width: 8px; height: 8px; margin: 0 4px; border-right: 2px solid var(--pep-accent-text); border-bottom: 2px solid var(--pep-accent-text); transform: rotate(-45deg); }
+.pep-optional[open] > summary::before { transform: rotate(45deg); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__cue { margin-inline-start: auto; }
+.pep-optional__body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 16px; }
+.pep-optional__body ol { margin: 0; padding-left: 24px; }
+.pep-optional__body li + li { margin-top: 4px; }
+/* Reading version (no JavaScript) */
+.pep-nojs-code pre { margin: 0; }
+@media print {
+  .pep-optional > summary::before { display: none; }
+  .pep-optional { break-inside: avoid; }
+}
+</style>
+<noscript><style>.pep-js-only,.pep-reading>:not(noscript):not(.pep-optional),.pep-workspace>:not(noscript):not(.pep-optional){display:none!important}.pep-regions{display:flex!important;flex-direction:column}</style></noscript>
+</head>
+<body>
+<div class="pep-page">
+<header class="pep-topicbar">
+  <h1>The equals and hashCode contract</h1>
+  <div class="pep-topicbar__meta"><div class="pep-js-only">
+<!-- pep:component progress@1 html -->
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 4</span><span class="pips" aria-hidden="true"><span class="pip" data-k="predict"></span><span class="pip" data-k="x1"></span><span class="pip" data-k="x2"></span><span class="pip" data-k="apply"></span></span></div>
+<!-- /pep:component progress html -->
+</div><span class="pep-minutes">about 12 min</span></div>
+  <div class="pep-js-only">
+<!-- pep:component restart@1 html -->
+      <button type="button" class="ghost" id="reset" data-pep-reset>Restart this activity</button>
+<!-- /pep:component restart html -->
+  </div>
+</header>
+<main id="lesson" class="pep-app" data-pep-responsive data-pep-complete="false">
+  <div class="pep-regions" id="stage" data-at="1">
+    <section class="pep-region pep-reading" aria-label="Reading and steps" data-pep-instructions>
+      <noscript data-section-skip><div class="pep-nojs-reading">
+<p class="pep-callout"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. Every teaching step is below, and each activity is listed with its expected results and why.</p>
+<section><h2>Goals</h2><ul><li>State the equals contract (reflexive, symmetric, transitive, consistent, and false for null) and the rule that equal objects must have equal hash codes</li><li>Implement equals and hashCode for a value class with Objects.equals and Objects.hash, or use a record that provides them</li><li>Diagnose a HashSet or HashMap bug caused by overriding equals without hashCode, or by changing fields that participate in equals and hashCode while the object is stored as a key, and contrast it with changing an unrelated field, which does not break lookup</li></ul></section>
+<section><h2>Start with a guess</h2><p>A <code>Seat</code> class overrides <code>equals</code>, so two seats with the same row and number are equal. It does not override <code>hashCode</code>. Read this code before any explanation.</p><pre><code>Set&lt;Seat&gt; booked = new HashSet&lt;&gt;();
+booked.add(new Seat("A", 1));
+System.out.println(booked.contains(new Seat("A", 1)));</code></pre><h3>Activity 1 of 4: Prediction (practice, not scored)</h3><p>What does the last line print?</p><p class="pep-expected"><strong>Expected results and why:</strong> Prediction (practice, not scored): Seat overrides equals but not hashCode; a HashSet gets new Seat("A", 1), then contains(new Seat("A", 1)) is printed. Options: true (wrong in practice: the two seats can get different inherited hash codes, and in OpenJDK 25 they did, so the set looked in another place); false in practice (correct: OpenJDK 25 printed false in 10,000 of 10,000 runs; the set did not reach equals, though Java does not guarantee this); a compile error (wrong: overriding only equals compiles); an exception (wrong: nothing is thrown).</p></section>
+<section><h2>The model</h2><p>The model: a hash set first uses an object's <code>hashCode</code> to pick where to look, then uses <code>equals</code> to confirm the match there. Both steps must agree on which fields matter. If equal objects produce different hash codes, or a stored object's compared fields change, the set can look in the wrong place and report "not found".</p></section>
+</div></noscript>
+      <div id="current-teaching" class="teach">
+        <div data-step="1" data-pep-teaching>
+          <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+          <p>A <code>Seat</code> class overrides <code>equals</code>, so two seats with the same row and number are equal. It does not override <code>hashCode</code>. Read this code before any explanation.</p>
+<pre><code>Set&lt;Seat&gt; booked = new HashSet&lt;&gt;();
+booked.add(new Seat("A", 1));
+System.out.println(booked.contains(new Seat("A", 1)));</code></pre>
+        </div>
+        <div data-step="2" hidden data-pep-teaching>
+          <h2 id="teach-2-h" tabindex="-1">The contract: equals, then hashCode</h2>
+          <p>For non-null references, <code>equals</code> must be:</p>
+          <ul>
+            <li><strong>reflexive</strong>: <code>x.equals(x)</code> is true;</li>
+            <li><strong>symmetric</strong>: <code>x.equals(y)</code> exactly when <code>y.equals(x)</code>;</li>
+            <li><strong>transitive</strong>: if x equals y and y equals z, then x equals z;</li>
+            <li><strong>consistent</strong>: the same answer every call while the compared fields do not change;</li>
+            <li><strong>false for null</strong>: <code>x.equals(null)</code> returns false.</li>
+          </ul>
+          <p>And the rule that links them: <strong>equal objects must have equal hash codes</strong>. Unequal objects may share a hash code; that is allowed, only slower.</p>
+        </div>
+        <div data-step="3" hidden data-pep-teaching>
+          <h2 id="teach-3-h" tabindex="-1">Write both from the same fields, or use a record</h2>
+<pre><code>final class Seat {
+    private final String row;
+    private final int number;
+    Seat(String row, int number) { this.row = row; this.number = number; }
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Seat s)) return false;
+        return Objects.equals(row, s.row) &amp;&amp; number == s.number;
+    }
+    @Override public int hashCode() { return Objects.hash(row, number); }
+}
+
+record Seat(String row, int number) { }   // equals, hashCode, toString provided</code></pre>
+          <p><code>Objects.equals</code> is null-safe; <code>Objects.hash</code> combines the same fields <code>equals</code> compares. A record's provided <code>equals</code> and <code>hashCode</code> use every component.</p>
+        </div>
+        <div data-step="4" hidden data-pep-teaching>
+          <h2 id="teach-4-h" tabindex="-1">Two bugs that can break hash lookup</h2>
+          <ul>
+            <li><strong><code>equals</code> without <code>hashCode</code></strong>: equal objects can receive different inherited hash codes, so the set can look in the wrong place and a lookup can fail.</li>
+            <li><strong>Changing a key's compared field while it is stored</strong>: the Map documentation makes the behavior unspecified from then on. The hash code can change, so a lookup can fail even with the same object.</li>
+          </ul>
+          <p>Changing a field that <code>equals</code> and <code>hashCode</code> ignore is harmless: lookup still works.</p>
+        </div>
+        <div data-step="5" hidden data-pep-recap class="recap">
+          <h2 id="teach-5-h" tabindex="-1">Recap</h2>
+          <ul>
+            <li><code>equals</code> is reflexive, symmetric, transitive, consistent, and false for <code>null</code>; equal objects must have equal hash codes.</li>
+            <li>Build <code>equals</code> with <code>Objects.equals</code> and <code>hashCode</code> with <code>Objects.hash</code> over the same fields, or declare a record.</li>
+            <li>Overriding <code>equals</code> without <code>hashCode</code> can make <code>HashSet</code> and <code>HashMap</code> lookup fail. Changing a compared field of a stored key makes their behavior unspecified, and lookup can fail. Changing an unrelated field does not affect lookup.</li>
+          </ul>
+          <details data-section-skip data-pep-cheat-sheet>
+            <summary>Cheat sheet</summary>
+            <table>
+              <tr><td>equals start</td><td><code>if (this == o) return true; if (!(o instanceof T t)) return false;</code></td></tr>
+              <tr><td>Reference field</td><td><code>Objects.equals(name, t.name)</code></td></tr>
+              <tr><td>Primitive field</td><td><code>number == t.number</code></td></tr>
+              <tr><td>hashCode</td><td><code>Objects.hash(name, number)</code>: the same fields</td></tr>
+              <tr><td>Shortcut</td><td><code>record T(String name, int number) { }</code></td></tr>
+              <tr><td>Keys</td><td>do not change compared fields while stored</td></tr>
+            </table>
+          </details>
+          <details data-section-skip data-pep-sources class="sources">
+            <summary>Sources and review date</summary>
+            <p>Claims on this page were checked against the live official pages below on 14 October 2026 (UTC), for Java SE 25. Program output was confirmed on OpenJDK 25.0.4. Links open outside this lesson.</p>
+            <ul>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" rel="noopener">Object (Java SE 25 API)</a>: equals is an equivalence relation; the general contract of hashCode.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Objects.html" rel="noopener">Objects (Java SE 25 API)</a>: equals(Object, Object), hash(Object...).</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Record.html" rel="noopener">Record (Java SE 25 API)</a>: the implicitly provided equals and hashCode.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/HashSet.html" rel="noopener">HashSet (Java SE 25 API)</a>: backed by a hash table.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html" rel="noopener">Map (Java SE 25 API)</a>: behavior is not specified when a key changes in a way that affects equals.</li>
+              <li><a href="https://dev.java/learn/api/collections-and-streams/collections-framework/choosing-keys/" rel="noopener">Dev.java: Choosing Immutable Types for Your Key</a>; <a href="https://dev.java/learn/language/oop/inheritance/objects/" rel="noopener">Dev.java: Object as a Superclass</a>; <a href="https://dev.java/learn/language/oop/records/" rel="noopener">Dev.java: Using Record to Model Immutable Data</a>.</li>
+            </ul>
+            <p>Not promised by Java: that a lookup fails after the bugs above. The failures shown are what OpenJDK 25 did; the specification leaves a mutated key's behavior unspecified and identity hash codes are not guaranteed to differ.</p>
+          </details>
+          <p id="complete" class="complete" data-pep-completion></p>
+          <p class="next-topic">Next topic: How HashMap works</p>
+        </div>
+      </div>
+      <details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+        <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+        <div class="pep-optional__body">
+    <p><strong>Optional example.</strong> <em>Try the step 1 prediction before you read on: this example explains its answer.</em></p>
+    <p>Picture a library that works out a shelf number from a book's catalogue details (its <code>hashCode</code>), then checks the title page (<code>equals</code>) only among the books on that one shelf. Two copies of the same book must get the same shelf number; if they do not, the librarian can search the wrong shelf and answer "not here" while an identical copy sits elsewhere. Two different books may share a shelf: that only makes the check on that shelf a little longer.</p>
+    <p>If someone edits the catalogue details of a book while it sits on its shelf, the library makes no promise about later searches: one can start on the wrong shelf and fail, even for that very book.</p>
+        </div>
+      </details>
+      <noscript data-section-skip><div class="pep-nojs-reading">
+<section><h2>The contract: equals, then hashCode</h2><p>For non-null references, <code>equals</code> must be:</p><ul>
+            <li><strong>reflexive</strong>: <code>x.equals(x)</code> is true;</li>
+            <li><strong>symmetric</strong>: <code>x.equals(y)</code> exactly when <code>y.equals(x)</code>;</li>
+            <li><strong>transitive</strong>: if x equals y and y equals z, then x equals z;</li>
+            <li><strong>consistent</strong>: the same answer every call while the compared fields do not change;</li>
+            <li><strong>false for null</strong>: <code>x.equals(null)</code> returns false.</li>
+          </ul><p>And the rule that links them: <strong>equal objects must have equal hash codes</strong>. Unequal objects may share a hash code; that is allowed, only slower.</p><h3>Activity 2 of 4: Sorting practice</h3><p>For each description of a class, decide whether it keeps the contract or which part it breaks.</p><p class="pep-expected"><strong>Expected results and why:</strong> Sorting activity: equals compares name and id, hashCode is Objects.hash(name, id): keeps the contract. hashCode always returns 0: keeps the contract (allowed, but every object shares one bucket, which is slow). a.equals(b) is true but b.equals(a) is false: breaks equals (symmetric). x.equals(null) throws NullPointerException: breaks equals (must return false). equals compares id only, hashCode is Objects.hash(name, id): breaks the hash rule, because two equal objects with different names get different hash codes. hashCode returns a new random number on every call: breaks the hash rule.</p></section>
+<section><h2>Write both from the same fields, or use a record</h2><pre><code>final class Seat {
+    private final String row;
+    private final int number;
+    Seat(String row, int number) { this.row = row; this.number = number; }
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Seat s)) return false;
+        return Objects.equals(row, s.row) &amp;&amp; number == s.number;
+    }
+    @Override public int hashCode() { return Objects.hash(row, number); }
+}
+
+record Seat(String row, int number) { }   // equals, hashCode, toString provided</code></pre><p><code>Objects.equals</code> is null-safe; <code>Objects.hash</code> combines the same fields <code>equals</code> compares. A record's provided <code>equals</code> and <code>hashCode</code> use every component.</p><h3>Activity 3 of 4: Practice</h3><p>Run the seat program on each version of <code>Seat</code> and each change. Find the missing-hashCode failure, the mutated-key failure, and a change that is harmless.</p><p class="pep-expected"><strong>Expected results and why:</strong> Seat lab, on OpenJDK 25. A HashSet gets a Seat for row A, number 1. Version equals only (no hashCode): contains(new Seat("A", 1)) printed false. Version equals and hashCode, or the record: it printed true. With the full version, changing the note field (not used by equals or hashCode) and then calling contains on the same object printed true. Changing the row field (used by equals and hashCode) from A to B and then calling contains on the same object printed false in this run, although the set still had size 1. Java leaves the behavior after such a change unspecified: that false is one observed outcome, not a guarantee.</p></section>
+<section><h2>Two bugs that can break hash lookup</h2><ul>
+            <li><strong><code>equals</code> without <code>hashCode</code></strong>: equal objects can receive different inherited hash codes, so the set can look in the wrong place and a lookup can fail.</li>
+            <li><strong>Changing a key's compared field while it is stored</strong>: the Map documentation makes the behavior unspecified from then on. The hash code can change, so a lookup can fail even with the same object.</li>
+          </ul><p>Changing a field that <code>equals</code> and <code>hashCode</code> ignore is harmless: lookup still works.</p><h3>Activity 4 of 4: Final check</h3><div><p><code>User</code> has fields <code>email</code> and <code>nickname</code>. Its <code>equals</code> compares <code>email</code> only. Which <code>hashCode</code> keeps the contract and spreads users across buckets?</p></div><p><strong>Retry form, if the first answer is wrong:</strong></p><div><p>Other route, same goal. Which declaration gives <code>User</code> correct <code>equals</code> and <code>hashCode</code> over <code>email</code> and <code>nickname</code> with no handwritten methods?</p></div><p class="pep-expected"><strong>Expected results and why:</strong> Apply question: User.equals compares email only. Correct hashCode: return Objects.hash(email), the same field equals uses. Wrong: Objects.hash(email, nickname), because two equal users with different nicknames would get different hash codes; System.identityHashCode(this), because equal users would get different codes; return 0, which keeps the contract but puts every user in one bucket. Retry form: record User(String email, String nickname) { } provides equals and hashCode over both components with no handwritten methods.</p></section>
+<section><h2>Recap</h2><ul>
+            <li><code>equals</code> is reflexive, symmetric, transitive, consistent, and false for <code>null</code>; equal objects must have equal hash codes.</li>
+            <li>Build <code>equals</code> with <code>Objects.equals</code> and <code>hashCode</code> with <code>Objects.hash</code> over the same fields, or declare a record.</li>
+            <li>Overriding <code>equals</code> without <code>hashCode</code> can make <code>HashSet</code> and <code>HashMap</code> lookup fail. Changing a compared field of a stored key makes their behavior unspecified, and lookup can fail. Changing an unrelated field does not affect lookup.</li>
+          </ul><details>
+            <summary>Cheat sheet</summary>
+            <table>
+              <tbody><tr><td>equals start</td><td><code>if (this == o) return true; if (!(o instanceof T t)) return false;</code></td></tr>
+              <tr><td>Reference field</td><td><code>Objects.equals(name, t.name)</code></td></tr>
+              <tr><td>Primitive field</td><td><code>number == t.number</code></td></tr>
+              <tr><td>hashCode</td><td><code>Objects.hash(name, number)</code>: the same fields</td></tr>
+              <tr><td>Shortcut</td><td><code>record T(String name, int number) { }</code></td></tr>
+              <tr><td>Keys</td><td>do not change compared fields while stored</td></tr>
+            </tbody></table>
+          </details><details class="sources">
+            <summary>Sources and review date</summary>
+            <p>Claims on this page were checked against the live official pages below on 14 October 2026 (UTC), for Java SE 25. Program output was confirmed on OpenJDK 25.0.4. Links open outside this lesson.</p>
+            <ul>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" rel="noopener">Object (Java SE 25 API)</a>: equals is an equivalence relation; the general contract of hashCode.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Objects.html" rel="noopener">Objects (Java SE 25 API)</a>: equals(Object, Object), hash(Object...).</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Record.html" rel="noopener">Record (Java SE 25 API)</a>: the implicitly provided equals and hashCode.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/HashSet.html" rel="noopener">HashSet (Java SE 25 API)</a>: backed by a hash table.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html" rel="noopener">Map (Java SE 25 API)</a>: behavior is not specified when a key changes in a way that affects equals.</li>
+              <li><a href="https://dev.java/learn/api/collections-and-streams/collections-framework/choosing-keys/" rel="noopener">Dev.java: Choosing Immutable Types for Your Key</a>; <a href="https://dev.java/learn/language/oop/inheritance/objects/" rel="noopener">Dev.java: Object as a Superclass</a>; <a href="https://dev.java/learn/language/oop/records/" rel="noopener">Dev.java: Using Record to Model Immutable Data</a>.</li>
+            </ul>
+            <p>Not promised by Java: that a lookup fails after the bugs above. The failures shown are what OpenJDK 25 did; the specification leaves a mutated key's behavior unspecified and identity hash codes are not guaranteed to differ.</p>
+          </details><p class="next-topic">Next topic: How HashMap works</p></section>
+</div></noscript>
+      <div class="pep-goalsbox">
+        <h3 id="goals-h">Goals</h3>
+        <ul class="pep-goals" data-pep-objectives aria-labelledby="goals-h">
+            <li data-state="open"><span>State the equals contract (reflexive, symmetric, transitive, consistent, and false for null) and the rule that equal objects must have equal hash codes</span><span class="state"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></li>
+            <li data-state="open"><span>Implement equals and hashCode for a value class with Objects.equals and Objects.hash, or use a record that provides them</span><span class="state"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></li>
+            <li data-state="open"><span>Diagnose a HashSet or HashMap bug caused by overriding equals without hashCode, or by changing fields that participate in equals and hashCode while the object is stored as a key, and contrast it with changing an unrelated field, which does not break lookup</span><span class="state"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></li>
+        </ul>
+      </div>
+      <div id="current-steps">
+          <div data-step="1"><ol class="pep-steps-list" aria-label="Steps"><li>Read the example above.</li><li>Choose an answer, then how sure you are.</li><li>Press <strong>Check prediction</strong> to see why each option is right or wrong.</li></ol></div>
+          <div data-step="2" hidden><ol class="pep-steps-list" aria-label="Steps"><li id="task-2">For each description of a class, decide whether it keeps the contract or which part it breaks.</li><li>A wrong choice gets one retry, then the answer shows.</li></ol></div>
+          <div data-step="3" hidden><ol class="pep-steps-list" aria-label="Steps"><li id="task-3">Run the seat program on each version of <code>Seat</code> and each change. Find the missing-hashCode failure, the mutated-key failure, and a change that is harmless.</li><li><strong>Continue</strong> appears once the task is met.</li></ol></div>
+          <div data-step="4" hidden><ol class="pep-steps-list" aria-label="Steps"><li>Read the question in the workspace.</li><li>Choose an answer and how sure you are, then press <strong>Check answer</strong>.</li><li>A wrong first answer gets one retry.</li></ol></div>
+      </div>
+      <p class="pep-goal-summary" id="goal-summary" aria-live="polite"></p>
+    </section>
+    <section class="pep-region pep-workspace" aria-labelledby="ws-h" data-pep-workspace="practice">
+      <h2 id="ws-h"></h2>
+      <section id="current-task" class="task" aria-label="Current task">
+          <div data-step="1"><p id="task-1">What does the last line print?</p></div>
+          <div data-step="4" hidden>
+          <div id="task-4"><p><code>User</code> has fields <code>email</code> and <code>nickname</code>. Its <code>equals</code> compares <code>email</code> only. Which <code>hashCode</code> keeps the contract and spreads users across buckets?</p></div>
+          <div id="task-4b" tabindex="-1" hidden><p>Other route, same goal. Which declaration gives <code>User</code> correct <code>equals</code> and <code>hashCode</code> over <code>email</code> and <code>nickname</code> with no handwritten methods?</p></div>
+        </div>
+      </section>
+      <figure id="model" class="model" aria-labelledby="m-cap">
+        <figcaption id="m-cap">How a hash set finds an object</figcaption>
+        <div data-step="2">
+          <div class="lanes" id="m-lanes"></div>
+        </div>
+        <div data-step="3">
+<pre><code id="m-code"></code></pre>
+          <p class="lk" id="m-out-k">Printed (OpenJDK 25)</p>
+          <pre class="out" id="m-out" aria-labelledby="m-out-k">Choose a version and a change, then run.</pre>
+          <p class="lk" id="m-found-k">Found so far</p>
+          <ul class="cells" id="m-found" aria-labelledby="m-found-k"></ul>
+        </div>
+        <div data-step="1 4 5">
+          <p data-pep-model>The model: a hash set first uses an object's <code>hashCode</code> to pick where to look, then uses <code>equals</code> to confirm the match there. Both steps must agree on which fields matter. If equal objects produce different hash codes, or a stored object's compared fields change, the set can look in the wrong place and report "not found".</p>
+        </div>
+      </figure>
+      <div id="current-control" class="control">
+        <div data-step="1">
+          <fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict data-static-alt="Prediction (practice, not scored): Seat overrides equals but not hashCode; a HashSet gets new Seat(&quot;A&quot;, 1), then contains(new Seat(&quot;A&quot;, 1)) is printed. Options: true (wrong in practice: the two seats can get different inherited hash codes, and in OpenJDK 25 they did, so the set looked in another place); false in practice (correct: OpenJDK 25 printed false in 10,000 of 10,000 runs; the set did not reach equals, though Java does not guarantee this); a compile error (wrong: overriding only equals compiles); an exception (wrong: nothing is thrown).">
+            <legend>Your prediction</legend>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="predict" id="p-true" value="true" aria-describedby="task-1"><span class="ot"><code>true</code>: the seats are equal</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-false" value="false" aria-describedby="task-1"><span class="ot"><code>false</code>, in practice</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-compile" value="compile" aria-describedby="task-1"><span class="ot">A compile error</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-throw" value="throw" aria-describedby="task-1"><span class="ot">An exception</span></label>
+            </div>
+            <div class="row"><fieldset class="conf" id="conf0" data-pep-confidence aria-describedby="conf0-instr"><legend id="conf0-instr">How sure are you?</legend><label class="opt"><input type="radio" name="conf0" id="conf0-low" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-medium" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-high" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check aria-describedby="conf0-instr" disabled>Check prediction</button></div>
+          </fieldset>
+        </div>
+        <div data-step="2" hidden>
+          <fieldset id="x1" data-interaction="drag" data-pep-explore aria-describedby="task-2" data-static-alt="Sorting activity: equals compares name and id, hashCode is Objects.hash(name, id): keeps the contract. hashCode always returns 0: keeps the contract (allowed, but every object shares one bucket, which is slow). a.equals(b) is true but b.equals(a) is false: breaks equals (symmetric). x.equals(null) throws NullPointerException: breaks equals (must return false). equals compares id only, hashCode is Objects.hash(name, id): breaks the hash rule, because two equal objects with different names get different hash codes. hashCode returns a new random number on every call: breaks the hash rule.">
+            <legend id="ln-legend">Class: <span id="ln-name"></span></legend>
+            <div class="lanebtns" id="ln-btns"></div>
+            <p class="sub" id="ln-count">0 of 6 sorted</p>
+          </fieldset>
+        </div>
+        <div data-step="3" hidden>
+          <fieldset id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-static-alt="Seat lab, on OpenJDK 25. A HashSet gets a Seat for row A, number 1. Version equals only (no hashCode): contains(new Seat(&quot;A&quot;, 1)) printed false. Version equals and hashCode, or the record: it printed true. With the full version, changing the note field (not used by equals or hashCode) and then calling contains on the same object printed true. Changing the row field (used by equals and hashCode) from A to B and then calling contains on the same object printed false in this run, although the set still had size 1. Java leaves the behavior after such a change unspecified: that false is one observed outcome, not a guarantee.">
+            <legend>Run the seat program</legend>
+            <p class="lk" id="g-v">Version of Seat</p>
+            <div class="ops" role="group" aria-labelledby="g-v"><button type="button" class="ghost" id="v-eq" data-g="v" data-v="eq" aria-pressed="true">equals only</button><button type="button" class="ghost" id="v-both" data-g="v" data-v="both" aria-pressed="false">equals and hashCode</button><button type="button" class="ghost" id="v-rec" data-g="v" data-v="rec" aria-pressed="false">record</button></div>
+            <p class="lk" id="g-c">Before the lookup</p>
+            <div class="ops" role="group" aria-labelledby="g-c"><button type="button" class="ghost" id="c-none" data-g="c" data-v="none" aria-pressed="true">no change</button><button type="button" class="ghost" id="c-note" data-g="c" data-v="note" aria-pressed="false">seat.note = "window"</button><button type="button" class="ghost" id="c-row" data-g="c" data-v="row" aria-pressed="false">seat.row = "B"</button></div>
+            <div class="row"><button type="button" class="primary" id="run" aria-describedby="task-3">Run</button></div>
+          </fieldset>
+        </div>
+        <div data-step="4" hidden>
+          <fieldset id="apply" data-interaction="mcq" data-confidence data-pep-apply data-static-alt="Apply question: User.equals compares email only. Correct hashCode: return Objects.hash(email), the same field equals uses. Wrong: Objects.hash(email, nickname), because two equal users with different nicknames would get different hash codes; System.identityHashCode(this), because equal users would get different codes; return 0, which keeps the contract but puts every user in one bucket. Retry form: record User(String email, String nickname) { } provides equals and hashCode over both components with no handwritten methods.">
+            <legend>The hashCode</legend>
+            <div class="opts one" id="a1">
+              <label class="opt"><input type="radio" name="a1" id="a1-both" value="both" aria-describedby="task-4"><span class="ot"><code>return Objects.hash(email, nickname);</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-email" value="email" aria-describedby="task-4"><span class="ot"><code>return Objects.hash(email);</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-id" value="id" aria-describedby="task-4"><span class="ot"><code>return System.identityHashCode(this);</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-zero" value="zero" aria-describedby="task-4"><span class="ot"><code>return 0;</code></span></label>
+            </div>
+            <div class="opts one" id="a2" hidden>
+              <label class="opt"><input type="radio" name="a2" id="a2-class" value="class" aria-describedby="task-4b"><span class="ot"><code>final class User { final String email; final String nickname; ... }</code> with only a constructor</span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-rec" value="rec" aria-describedby="task-4b"><span class="ot"><code>record User(String email, String nickname) { }</code></span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-tostr" value="tostr" aria-describedby="task-4b"><span class="ot">A class that overrides only <code>toString()</code></span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-iface" value="iface" aria-describedby="task-4b"><span class="ot"><code>interface User { String email(); String nickname(); }</code></span></label>
+            </div>
+          </fieldset>
+          <div class="row">
+            <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-instr">
+              <legend id="conf-instr">How sure are you?</legend>
+              <label class="opt"><input type="radio" name="conf" id="conf-low" value="low"><span class="ot">Low</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-medium" value="medium"><span class="ot">Medium</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-high" value="high"><span class="ot">High</span></label>
+            </fieldset>
+            <button type="button" class="primary" id="apply-check" data-pep-apply-check aria-describedby="conf-instr" disabled>Check answer</button>
+          </div>
+        </div>
+      </div>
+      <div class="fbrow">
+        <div id="current-feedback" class="feedback" role="status" aria-live="polite" tabindex="-1" data-pep-predict-feedback data-pep-explore-feedback data-pep-apply-feedback></div>
+        <button type="button" class="primary" id="next" hidden>Continue</button>
+      </div>
+    </section>
+  </div>
+<script>
+var PAGE={};
+(function(){
+var E,$,$$,C={v:'eq',c:'none'},found={};
+var VN={eq:'equals only',both:'equals and hashCode',rec:'record'};
+function pick(g,v){C[g]=v;$$('[data-g="'+g+'"]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-v')===v?'true':'false');});code();}
+function code(){var lines=['// Seat version: '+VN[C.v]+(C.v==='rec'?' (components row and number)':' (mutable fields row, number, note; equals uses row and number'+(C.v==='both'?', and so does hashCode)':')')),'Seat seat = new Seat("A", 1);','Set<Seat> booked = new HashSet<>();','booked.add(seat);'];
+  if(C.c==='note')lines.push('seat.note = "window";');
+  if(C.c==='row')lines.push('seat.row = "B";');
+  lines.push(C.c==='none'?'System.out.println(booked.contains(new Seat("A", 1)));':'System.out.println(booked.contains(seat) + " size=" + booked.size());');
+  $('#m-code').textContent=lines.join('\n');}
+function renderFound(){var u=$('#m-found');u.textContent='';[['hash','missing hashCode can fail'],['row','mutated key can fail'],['note','harmless change works']].forEach(function(p){u.appendChild(E.el('li',found[p[0]]?'hot':'',p[1]+': '+(found[p[0]]?'yes':'not yet')));});}
+function run(){code();var out,why,key=null;
+  if(C.v==='rec'&&C.c!=='none'){$('#m-out').textContent='(not run)';E.say([{c:'verdict info',s:'Not available in this practice model: a record has no note field, and its row component is final, so this change cannot be written. That is one reason records make safe keys.'}]);return;}
+  if(C.v==='eq'&&C.c!=='none'){$('#m-out').textContent='(not run)';E.say([{c:'verdict info',s:'Choose "equals and hashCode" to test changes to a stored key: this version can already fail without any change.'}]);return;}
+  if(C.c==='none'){if(C.v==='eq'){out='false';key='hash';why='`equals` says the seats are equal, but without `hashCode` they can keep different inherited hash codes. In this OpenJDK 25 run they did, so the set looked somewhere else and never called `equals`. Java does not guarantee that outcome; it only makes lookup unreliable.';}
+    else{out='true';why='Equal seats now have equal hash codes, so the set looks in the right place and `equals` confirms the match.';}}
+  else if(C.c==='note'){out='true size=1';key='note';why='`note` is not used by `equals` or `hashCode`, so the stored seat\'s hash code did not change and lookup still works.';}
+  else{out='false size=1';key='row';why='`row` is used by `equals` and `hashCode`. In this OpenJDK 25 run, changing it from "A" to "B" changed the stored seat\'s hash code, and `contains` printed false for the very same object while the set still held it (size 1). Java does not promise this exact result: after such a change the behavior is unspecified, and a changed field need not even change the hash code. Lookup can fail, as it did here.';}
+  $('#m-out').textContent=out;if(key)found[key]=true;renderFound();
+  var msg=[{c:'verdict info',s:'Printed `'+out+'`.'},{s:why}];
+  if(found.hash&&found.row&&found.note&&!E.state().done.x2){msg.push({c:'verdict ok',s:'All three found: a missing hashCode can fail, a mutated compared field can fail, an unrelated field is harmless.'});E.say(msg,true);E.complete('x2');}
+  else E.say(msg);}
+PAGE.predict={ok:'false',lead:'A hash set uses hashCode first to decide where to look. Without an override, the two seats can get different inherited hash codes; in OpenJDK 25 they did, so equals was never asked.',expl:{
+  true:'Not quite: equals would say true, but in practice the set never gets that far, because the inherited hash codes differ.',
+  false:'Right: OpenJDK 25 printed false every time in 10,000 runs. Java does not promise identity hash codes differ, so it is "in practice".',
+  compile:'Not quite: overriding only equals compiles; tools may warn, javac does not reject it.',
+  throw:'Not quite: nothing throws; the lookup can quietly fail.'}};
+PAGE.lanes={key:'x1',model:'#m-lanes',btns:'#ln-btns',name:'#ln-name',count:'#ln-count',legend:'ln-legend',label:'Continue',
+ lanes:[{id:'ok',label:'Keeps the contract'},{id:'eq',label:'Breaks equals'},{id:'hash',label:'Breaks equal objects, equal hash codes'}],
+ done:'equals has five rules; hashCode has one hard rule: equal objects, equal hash codes.',
+ items:[
+  {n:'`equals` compares `name` and `id`; `hashCode` is `Objects.hash(name, id)`',lane:'ok',ok:'Both use the same fields, so equal objects always get equal hash codes.',w:{eq:'Comparing two fields is fine for equals.',hash:'Equal objects have the same name and id, so `Objects.hash` gives them the same code.'}},
+  {n:'`hashCode` always returns `0`',lane:'ok',ok:'Allowed: equal objects get equal codes. Unequal objects may share a code, but every object in one bucket makes lookups slow.',w:{eq:'This says nothing about equals.',hash:'Equal objects do get equal codes (all are 0). It is slow, not broken.'}},
+  {n:'`a.equals(b)` is true but `b.equals(a)` is false',lane:'eq',ok:'equals must be symmetric.',w:{ok:'Symmetry is one of the five equals rules.',hash:'The hash rule is about hash codes; this is about equals itself.'}},
+  {n:'`x.equals(null)` throws `NullPointerException`',lane:'eq',ok:'equals must return false for null, not throw.',w:{ok:'The contract says `x.equals(null)` returns false.',hash:'This is an equals rule, not a hash code rule.'}},
+  {n:'`equals` compares `id` only; `hashCode` is `Objects.hash(name, id)`',lane:'hash',ok:'Two objects with the same id but different names are equal, yet get different hash codes.',w:{ok:'The fields do not match: hashCode uses a field that equals ignores.',eq:'equals on id alone is a valid equivalence relation; the hash code is the problem.'}},
+  {n:'`hashCode` returns a new random number on every call',lane:'hash',ok:'Equal objects, even the same object twice, would get different codes.',w:{ok:'The hash code must be consistent and equal for equal objects.',eq:'equals is not involved; hashCode is.'}}
+ ]};
+PAGE.apply={
+ r1:{ok:'email',expl:{
+   both:'Two users with the same email but different nicknames are equal, yet would get different hash codes.',
+   email:'Uses exactly the field equals compares.',
+   id:'Equal users are different objects, so their identity hash codes can differ.',
+   zero:'Keeps the contract but puts every user in one bucket, so lookups become slow.'},
+   mis:{both:'hashCode must not use fields that equals ignores.',id:'Identity hash codes ignore your equals.',zero:'Legal, but it does not spread users across buckets.'}},
+ r2:{ok:'rec',answer:'`record User(String email, String nickname) { }`: the record provides `equals` and `hashCode` over both components.',expl:{
+   class:'Without overrides, the class inherits identity equals and hashCode from Object.',
+   rec:'A record provides equals, hashCode and toString from its components.',
+   tostr:'toString does not affect equality.',
+   iface:'An interface has no fields and gives no equals or hashCode implementation.'},
+   mis:{class:'A plain class keeps Object\'s identity-based equals.',tostr:'Only equals and hashCode affect hash collections.',iface:'An interface does not provide an implementation.'}}
+};
+PAGE.goals=[['x1'],['apply'],['x2']];
+PAGE.checkLabels={x1:'Contract rules',apply:'Final check'};
+PAGE.init=function(eng){E=eng;$=eng.$;$$=eng.$$;
+  $$('[data-g]').forEach(function(b){b.addEventListener('click',function(){pick(b.getAttribute('data-g'),b.getAttribute('data-v'));});});
+  $('#run').addEventListener('click',run);code();renderFound();E.lanes(PAGE.lanes);};
+PAGE.resetStep=function(st){if(st===3){found={};pick('v','eq');pick('c','none');$('#m-out').textContent='Choose a version and a change, then run.';renderFound();}};
+})();
+</script>
+</main>
+<!-- pep:nojs -->
+<!-- /pep:nojs -->
+</div>
+<script>
+(function(){
+'use strict';
+var D=document,R=D.documentElement;
+function $(s,r){return (r||D).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||D).querySelectorAll(s));}
+function md(s){var f=D.createDocumentFragment(),re=/(`[^`]+`|\*\*[^*]+\*\*)/g,last=0,m;s=String(s);
+  while((m=re.exec(s))){if(m.index>last)f.appendChild(D.createTextNode(s.slice(last,m.index)));
+    var t=m[0],e=D.createElement(t.charAt(0)==='`'?'code':'strong');e.textContent=t.charAt(0)==='`'?t.slice(1,-1):t.slice(2,-2);f.appendChild(e);last=re.lastIndex;}
+  if(last<s.length)f.appendChild(D.createTextNode(s.slice(last)));return f;}
+function el(tag,cls,txt){var e=D.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.appendChild(typeof txt==='string'?md(txt):txt);return e;}
+var main=$('#lesson'),stage=$('#stage'),fb=$('#current-feedback'),next=$('#next'),P=window.PAGE;
+var KEYS=['predict','x1','x2','apply'],S;
+function fresh(){S={step:1,done:{},results:{}};}
+fresh();
+function say(parts,focus){fb.textContent='';(parts||[]).forEach(function(p){
+  if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li',it[2]||'');li.appendChild(el('strong',null,it[0]));li.appendChild(D.createTextNode(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
+  else if(p.pre){var pr=el('pre','out');pr.textContent=p.pre;fb.appendChild(pr);}
+  else{var q=el('p',p.c||'',p.s);if(p.attr)q.setAttribute(p.attr,'');fb.appendChild(q);}});
+  if(focus)fb.focus();}
+function optText(i){var l=i.closest('label');return l?l.textContent.replace(/\s+/g,' ').trim():i.value;}
+/* pep:component progress@1 js */
+function progress(){var n=0,set=0;KEYS.forEach(function(k){var pip=$('.pip[data-k="'+k+'"]');pip.className='pip';if(S.done[k]){n++;if(S.results[k]==='settled')set++;pip.className='pip '+(S.results[k]==='settled'?'settled':'on');}});
+  $('#prog-text').textContent='Activities done: '+n+' of 4'+(set?' ('+set+(set>1?' checks':' check')+' settled, not correct)':'');}
+var WORD={'correct':'correct on the first try','correct-retry':'correct on the second try','settled':'answered and settled, not marked correct'};
+function complete(k,label){S.done[k]=true;progress();next.textContent=label||'Continue';next.hidden=false;}
+/* /pep:component progress js */
+/* page anatomy: goal states, paired step headings and the goal summary follow the activity state */
+var GOALS=P.goals||[],goalItems=$$('[data-pep-objectives] > li');
+function goalsUi(){var open=0;goalItems.forEach(function(li,i){var ks=GOALS[i]||[],done=ks.length>0&&ks.every(function(k){return !!S.done[k];}),rev=done&&ks.some(function(k){return S.results[k]==='settled';});
+  li.setAttribute('data-state',done?(rev?'review':'done'):'open');if(!done)open++;});
+  var n=goalItems.length;$('#goal-summary').textContent=open?open+' of '+n+(n>1?' goals':' goal')+' still open':'All '+n+' goals done'+(goalItems.some(function(li){return li.getAttribute('data-state')==='review';})?'; review the ones marked for review':'');}
+function stepUi(step){var h=$('#teach-'+step+'-h');$('#ws-h').textContent=h?h.textContent:'';goalsUi();}
+if(window.MutationObserver)new MutationObserver(goalsUi).observe($('#prog-text'),{childList:true,characterData:true,subtree:true});
+function show(step){S.step=step;stage.setAttribute('data-at',String(step));
+  $$('[data-step]',stage).forEach(function(e){e.hidden=e.getAttribute('data-step').split(' ').indexOf(String(step))<0;});
+  if(step===5){main.setAttribute('data-pep-complete','true');var c=$('#complete'),labels=P.checkLabels||{apply:'Final check'},parts=[],anySet=false;
+    KEYS.forEach(function(k){if(S.results[k]&&labels[k]){parts.push(labels[k]+': '+WORD[S.results[k]]+'.');if(S.results[k]==='settled')anySet=true;}});
+    c.className='complete'+(anySet?' settled':'');c.textContent='Topic complete. '+parts.join(' ')+(anySet?' Review the explanations before the practice quiz.':'');}
+  $('#reset').hidden=step>=5;stepUi(step);
+  if(P.onStep)P.onStep(step,S);}
+next.addEventListener('click',function(){next.hidden=true;fb.textContent='';show(S.step+1);var h=$('#teach-'+S.step+'-h');if(h)h.focus();});
+/* pep:component predict@1 js */
+/* predict */
+var pf=$('#predict'),pc=$('#predict-check');
+function pReady(){pc.disabled=!!S.done.predict||!($('input[name="predict"]:checked')&&$('input[name="conf0"]:checked'));}
+pf.addEventListener('change',pReady);
+function badges(l,arr){var b=l.querySelector('.badges');if(!b){b=el('span','badges');l.appendChild(b);}arr.forEach(function(x){b.appendChild(el('span','badge '+x[1],x[0]));});}
+pc.addEventListener('click',function(){var c=$('input[name="predict"]:checked'),cv=$('input[name="conf0"]:checked');if(!c||!cv)return;var okv=P.predict.ok,match=c.value===okv;
+  $$('input',pf).forEach(function(i){i.disabled=true;});pc.disabled=true;
+  $$('input[name="predict"]',pf).forEach(function(i){var l=i.closest('label');if(i===c){l.classList.add('mine');badges(l,[['Your prediction','mine-b'],[match?'Correct':'Not correct',match?'ok-b':'no-b']]);}else if(i.value===okv){badges(l,[[P.predict.okLabel||'Correct answer','ok-b']]);}if(i.value===okv)l.classList.add('right');l.appendChild(el('span','oexp',P.predict.expl[i.value]));});
+  pf.querySelector('.opts').classList.add('explained');pc.hidden=true;$('#conf0').closest('.row').hidden=true;
+  if(P.onPredict)P.onPredict();
+  say([{c:'verdict info',s:'Practice prediction, not scored. '+(match?'Your prediction matches the answer.':'Your prediction differs from the answer; nothing is lost.')},{c:'conf-report',s:'Your confidence: '+cv.value+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:P.predict.lead},{s:'Each option now shows its label and why, directly under it.'}],true);
+  complete('predict');});
+/* /pep:component predict js */
+/* pep:component mcq-with-confidence@1 js */
+/* graded checks: confidence first, retry in a second representation, settle after two misses */
+var checks={};
+function check(o){var st={att:0,conf:[],result:null,step:{x1:2,x2:3,apply:4}[o.key]},btn=$(o.btn),cf=$(o.conf),fs=$(o.fs),cn=o.confName||'conf';checks[o.key]=st;
+  function grp(){return st.att===0?o.g1:o.g2;}
+  function ready(){btn.disabled=!!st.result||!($('input[name="'+grp()+'"]:checked')&&$('input[name="'+cn+'"]:checked'));}
+  function lockConf(){$$('input[name="'+cn+'"]').forEach(function(i){i.disabled=true;});btn.disabled=true;}
+  function done(){S.results[o.key]=st.result;if(P.onCheck)P.onCheck(o.key,st.result);complete(o.key,o.label);}
+  fs.addEventListener('change',ready);cf.addEventListener('change',ready);
+  btn.addEventListener('click',function(){var g=grp(),r=st.att===0?o.data.r1:o.data.r2,c=$('input[name="'+g+'"]:checked'),cv=$('input[name="'+cn+'"]:checked');
+    if(!c||!cv||st.result)return;var ok=c.value===r.ok;st.conf.push(cv.value);
+    var confLine='Your confidence: '+cv.value+'. Confidence is your own read on how sure you were; it is reported, never scored.';
+    var expl=$$('input[name="'+g+'"]').map(function(i){return [optText(i)+(i===c?' (your answer):':':'),r.expl[i.value]];});
+    $$('input[name="'+g+'"]').forEach(function(i){i.disabled=true;});c.closest('label').classList.add(ok?'right':'wrong');badges(c.closest('label'),[['Your answer','mine-b'],[ok?'Correct':'Not correct',ok?'ok-b':'no-b']]);
+    if(ok){st.result=st.att===0?'correct':'correct-retry';lockConf();
+      say([{c:'verdict ok',s:st.att===0?'Correct.':'Correct on your second try.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}],true);done();}
+    else if(st.att===0){st.att=1;$('#'+o.g1).hidden=true;$('#'+o.g2).hidden=false;$(o.t1).hidden=true;$(o.t2).hidden=false;$$('input[name="'+cn+'"]').forEach(function(i){i.checked=false;});
+      say([{c:'verdict no',s:'Not yet. '+r.mis[c.value]+' Try again below: same idea, different form, with your confidence again.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}]);
+      ready();$(o.t2).focus();}
+    else{st.result='settled';lockConf();$$('input[name="'+o.g2+'"]').forEach(function(i){if(i.value===r.ok){i.closest('label').classList.add('right');badges(i.closest('label'),[['Correct answer','ok-b']]);}});
+      say([{c:'verdict set',s:'Answered and settled: this check is not marked correct. '+r.mis[c.value]},{c:'conf-report',s:'Confidence on each try: '+st.conf.join(', then ')+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:'The answer: '+r.answer},{list:expl}],true);done();}});
+  st.reset=function(){st.att=0;st.conf=[];st.result=null;$('#'+o.g1).hidden=false;$('#'+o.g2).hidden=true;$(o.t1).hidden=false;$(o.t2).hidden=true;btn.disabled=true;};
+  return st;}
+/* /pep:component mcq-with-confidence js */
+/* lane sort: each item gets one retry, then its lane is revealed; any reveal settles the activity */
+var lanesets={};
+function lanes(o){var st={idx:0,tries:{},placed:{},revealed:{}},box=$(o.model),btns=$(o.btns);lanesets[o.key]=st;
+  function laneName(id){for(var i=0;i<o.lanes.length;i++)if(o.lanes[i].id===id)return o.lanes[i].label;return id;}
+  function render(){box.textContent='';var cnt=0;
+    o.lanes.forEach(function(ln){var d=el('div','lane'),h=el('p','lk',ln.label),u=el('ul','cards');h.id=o.key+'-lk-'+ln.id;u.setAttribute('aria-labelledby',h.id);d.appendChild(h);d.appendChild(u);box.appendChild(d);
+      o.items.forEach(function(it,i){if(st.placed[i]!==ln.id)return;cnt++;var li=el('li',st.revealed[i]?'revealed':'',it.n);if(st.revealed[i])li.appendChild(el('span','tag','shown after two tries'));u.appendChild(li);});});
+    var it=o.items[st.idx];$(o.name).textContent=it?'':'all sorted';$(o.name).appendChild(it?md(it.n):D.createTextNode(''));
+    if(o.desc)$(o.desc).textContent=it&&it.d?it.d:'';
+    $(o.count).textContent=cnt+' of '+o.items.length+' sorted';}
+  function finish(msg){var anyRev=Object.keys(st.revealed).length,anyRetry=Object.keys(st.tries).some(function(k){return st.tries[k]>0;});
+    var res=anyRev?'settled':(anyRetry?'correct-retry':'correct');S.results[o.key]=res;
+    $$('button',btns).forEach(function(b){b.disabled=true;});
+    msg.push({c:anyRev?'verdict set':'verdict ok',s:anyRev?'All sorted. Answered and settled: '+anyRev+(anyRev>1?' items were':' item was')+' shown after two tries, so this activity is not marked correct.':(anyRetry?'All sorted, some on a second try.':'All sorted on the first try.')});
+    if(o.done)msg.push({s:o.done});say(msg,true);complete(o.key,o.label);}
+  o.lanes.forEach(function(ln){var b=el('button','ghost',ln.label);b.type='button';b.id=o.key+'-to-'+ln.id;b.setAttribute('data-lane',ln.id);b.setAttribute('aria-describedby',o.legend);
+    b.addEventListener('click',function(){var i=st.idx,it=o.items[i];if(!it||S.done[o.key])return;
+      if(ln.id===it.lane){st.placed[i]=ln.id;st.idx++;var msg=[{c:'verdict ok',s:'Yes: '+laneName(ln.id)+'.'},{s:it.ok}];render();if(st.idx>=o.items.length)finish(msg);else say(msg);}
+      else{st.tries[i]=(st.tries[i]||0)+1;
+        if(st.tries[i]<2){say([{c:'verdict no',s:'Not '+laneName(ln.id)+'. '+it.w[ln.id]},{s:'Try another button for the same item.'}]);}
+        else{st.placed[i]=it.lane;st.revealed[i]=true;st.idx++;var m2=[{c:'verdict set',s:'Shown after two tries: '+laneName(it.lane)+'. '+it.w[ln.id]},{s:it.ok}];render();if(st.idx>=o.items.length)finish(m2);else say(m2);}}});
+    btns.appendChild(b);});
+  st.reset=function(){st.idx=0;st.tries={};st.placed={};st.revealed={};$$('button',btns).forEach(function(b){b.disabled=false;});render();};
+  st.step={x1:2,x2:3,apply:4}[o.key];render();return st;}
+/* pep:component restart@1 js */
+/* restart the current activity only: earlier activities keep their results */
+var STEPKEY={1:'predict',2:'x1',3:'x2',4:'apply'};
+function restartStep(){var stp=S.step;if(stp>=5)return;var k=STEPKEY[stp];
+  $$('#current-control [data-step], #current-task [data-step]').forEach(function(p){if(p.getAttribute('data-step').split(' ').indexOf(String(stp))<0)return;
+    $$('input',p).forEach(function(i){i.checked=false;i.disabled=false;});$$('.opt',p).forEach(function(o){o.classList.remove('right','wrong','mine');});
+    $$('.oexp,.badges',p).forEach(function(e){e.remove();});$$('.opts.explained',p).forEach(function(o){o.classList.remove('explained');});});
+  if(stp===1){pc.hidden=false;pc.disabled=true;$('#conf0').closest('.row').hidden=false;}
+  Object.keys(checks).forEach(function(ck){if(checks[ck].step===stp)checks[ck].reset();});
+  delete S.done[k];delete S.results[k];next.hidden=true;fb.textContent='';
+  if(P.resetStep)P.resetStep(stp);
+  progress();say([{c:'verdict info',s:'Activity restarted. Earlier activities keep their results.'}]);var h=$('#teach-'+stp+'-h');if(h)h.focus();}
+$('#reset').addEventListener('click',restartStep);
+/* /pep:component restart js */
+var userReset=P.resetStep;P.resetStep=function(stp){Object.keys(lanesets).forEach(function(k){if(lanesets[k].step===stp)lanesets[k].reset();});if(userReset)userReset(stp);};
+window.ENG={say:say,complete:complete,check:check,lanes:lanes,md:md,el:el,$:$,$$:$$,state:function(){return S;}};
+if(P.init)P.init(window.ENG);
+check({key:'apply',fs:'#apply',g1:'a1',g2:'a2',t1:'#task-4',t2:'#task-4b',conf:'#conf',confName:'conf',btn:'#apply-check',data:P.apply,label:'Continue to recap'});
+progress();show(1);
+})();
+
+</script>
+<script>
+(function(){var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=[].slice.call(document.querySelectorAll('details.pep-optional:not([open])'));printOpened.forEach(function(d){d.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(d){d.open=false;});printOpened=[];});})();
+</script>
+</body>
+</html>

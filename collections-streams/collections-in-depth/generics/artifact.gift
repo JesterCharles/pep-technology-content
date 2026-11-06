@@ -1,0 +1,51 @@
+// Formative practice quiz for generics. Low-stakes; answers are visible by design.
+$CATEGORY: collections-streams/collections-in-depth/generics
+
+::generics o1 - where a generic method declares T::In a generic method that returns the last element of a list, where does the type parameter T go in the declaration static ... T last(List of T list)?{
+=In angle brackets between static and the return type T#Correct. A generic method declares its type parameter before the return type, as in static, then the bracketed T, then T last(...).
+~Nowhere\: T is predefined by Java#Not quite. T is just a name; a class or method must declare it before using it.
+~After the method name, before the parentheses#Not quite. That is where a generic class puts its type parameter, after the class name. A method puts it before the return type.
+~Only in the call, as last of T#Not quite. The caller usually lets the compiler infer T; the declaration must still introduce it.
+}
+
+::generics o1 - what a type argument does::A class Box declares the type parameter T and a method T get(). Code creates a Box with Integer as the type argument. What is the declared return type of get() for that box?{
+=Integer#Correct. The type argument replaces T everywhere in the class, so get() returns Integer and needs no cast.
+~Object#Not quite. That is what a raw Box would give you. With a type argument, T means Integer.
+~T#Not quite. T is only a placeholder; at the use site it is replaced by the type argument.
+~int#Not quite. Type arguments must be reference types such as Integer; T never becomes the primitive int.
+}
+
+::generics o2 - compile time, not run time::Code declares a list of String with String as its type argument and then calls add with the int 7. When is the mistake reported?{
+=At compile time\: incompatible types, int cannot be converted to String#Correct. Type-safe generic code is checked by the compiler, so the program never runs with the wrong element.
+~At run time, with ClassCastException when the 7 is added#Not quite. The compiler rejects the add before the program runs.
+~At run time, when the 7 is read back#Not quite. That is how raw-type mistakes show up. Here the compiler sees the type argument and rejects the add.
+~Never\: 7 is converted to the text 7#Not quite. Java does not convert an int argument into a String.
+}
+
+::generics o2 - what the type argument removes::Before generics, reading from a list needed a cast such as (String) list.get(0). With a list of String declared with String as its type argument, what changes?{
+=get(0) already has type String, so no cast is needed#Correct. The compiler knows the element type and inserts the conversion itself.
+~The cast is still required, but it can never fail#Not quite. No cast is written at all with a type argument.
+~get(0) returns Object, and the cast moves to the add call#Not quite. get returns the element type, String.
+~The list stores elements faster#Not quite. Generics change type checking, not storage speed.
+}
+
+::generics o2 - unchecked code fails later::A method takes a raw List parameter and adds an Integer to it. A caller passes its list of String, then reads element 0 into a String variable. What happens?{
+=It compiles with an unchecked warning and throws ClassCastException at the read#Correct. Raw types bypass the compile-time check, so the wrong element is caught only when it is read as a String.
+~The compiler rejects passing the list to the raw parameter#Not quite. A raw List parameter accepts any list; javac only warns about the unchecked call.
+~The add throws inside the method#Not quite. The add succeeds; nothing checks element types when they are stored.
+~The Integer is converted to a String when read#Not quite. There is no conversion; the cast to String fails.
+}
+
+::generics o3 - parameter that only reads::A method prints the total of a list that might be a list of Integer, of Double or of Number. It only reads elements. Which parameter type fits best?{
+=List of ? extends Number#Correct. An upper-bounded wildcard accepts a list of Number or any subtype, and reading gives Number values.
+~List of Number#Not quite. A list of Integer is not a list of Number, so this would reject it.
+~List of ? super Number#Not quite. A lower bound is for writing; it would reject a list of Integer.
+~List of Object#Not quite. That rejects lists of Integer or Double and gives Object values to read.
+}
+
+::generics o3 - parameter that only writes::A method adds the Integer values 1 to 5 into a list it receives. Callers may pass a list of Integer, of Number or of Object. Which parameter type fits best?{
+=List of ? super Integer#Correct. A lower-bounded wildcard accepts any list that can hold Integer values, and adding Integer is allowed.
+~List of ? extends Integer#Not quite. You cannot add to an upper-bounded wildcard list, because its real element type might be narrower.
+~List of Integer#Not quite. That rejects a list of Number or of Object.
+~List of ? extends Number#Not quite. Adding is not allowed through an upper-bounded wildcard.
+}

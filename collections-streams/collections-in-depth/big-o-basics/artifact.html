@@ -1,0 +1,877 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="collections-streams">
+<meta name="pep:module" content="collections-in-depth">
+<meta name="pep:topic" content="Big-O basics">
+<meta name="pep:topic-id" content="big-o-basics">
+<meta name="pep:budget-minutes" content="12">
+<meta name="pep:source" content="authoring/evidence/collections-streams/collections-in-depth/big-o-basics/sources.json">
+<meta name="pep:position" content="5 of 9">
+<title>Big-O basics · Collections in Depth</title>
+<style>
+/* pep:component restart@1 css */
+button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
+.ghost:hover{background:var(--surface);border-color:var(--ink)}
+.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
+.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
+.primary:hover{filter:brightness(1.08)}
+.primary:active{transform:translateY(1px)}
+button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+[tabindex="-1"]:focus{outline:none}
+[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+/* /pep:component restart css */
+/* pep:component progress@1 css */
+.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
+.pips{display:flex;gap:var(--s1)}
+.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
+.pip.on{background:var(--teal);border-color:var(--teal)}
+.pip.settled{background:repeating-linear-gradient(135deg,var(--amber) 0 3px,transparent 3px 6px);border-color:var(--amber)}
+/* /pep:component progress css */
+/* pep:component predict@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+/* /pep:component predict css */
+/* pep:component mcq-with-confidence@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start}
+.feedback{width:100%;min-width:0;font-size:15px;line-height:1.35}
+.feedback:empty{display:none}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin:0}
+.feedback .verdict{font-weight:700}
+.feedback .ok{color:var(--teal)}
+.feedback .no{color:var(--red)}
+.feedback .set{color:var(--amber)}
+.feedback .info{color:var(--ink)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+/* /pep:component mcq-with-confidence css */
+/* DESIGN.md token reference */
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* Components bridge: embedded components/*@1 fragments read these older names */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+/* Base, focus and motion */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; }
+p { margin: 0; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+pre { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; max-width: 100%; }
+pre code { font-size: 1em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[hidden] { display: none !important; }
+button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+.pep-page { max-width: 1200px; margin: 0 auto; padding: 24px; }
+@media (max-width: 480px) { .pep-page { padding: 16px; } }
+/* Topic bar */
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; min-width: 0; }
+.pep-topicbar__meta .progress { font: inherit; color: inherit; }
+.pep-topicbar__meta #prog-text { color: var(--pep-text-strong); }
+.pep-topicbar__meta .pips { gap: 4px; }
+.pep-topicbar__meta .pip { width: 20px; height: 6px; border: 0; border-radius: var(--pep-radius-pill); background: var(--pep-control); outline: 1px solid var(--pep-line-strong); outline-offset: 0; }
+.pep-topicbar__meta .pip.on { background: var(--pep-accent); outline-color: var(--pep-accent); }
+.pep-topicbar__meta .pip.settled { background: var(--pep-warning); outline-color: var(--pep-warning); }
+/* Regions */
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.teach > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.teach ul, .teach ol { margin: 0; padding-left: 24px; }
+.teach li + li { margin-top: 4px; }
+.pep-goalsbox { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); min-width: 0; }
+.pep-goalsbox h3 { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); text-transform: none; }
+.pep-goals { margin: 0; padding: 0; list-style: none; }
+.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-goals > li:first-child { border-top: 0; }
+.pep-goals .state { display: inline-flex; align-items: center; gap: 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; }
+.pep-goals .state svg { width: 16px; height: 16px; display: none; }
+.pep-goals .state::after { content: "open"; }
+.pep-goals > li[data-state="done"] .state { color: var(--pep-success); }
+.pep-goals > li[data-state="done"] .state svg { display: block; }
+.pep-goals > li[data-state="done"] .state::after { content: "done"; }
+.pep-goals > li[data-state="review"] .state { color: var(--pep-warning); }
+.pep-goals > li[data-state="review"] .state::after { content: "done, review"; }
+.pep-goal-summary { font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-steps-list { margin: 0; padding-left: 24px; }
+.pep-steps-list > li + li { margin-top: 8px; }
+.pep-steps-h { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-bottom: 4px; }
+/* Workspace */
+.task { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
+.task:not(:has(> div:not([hidden]))) { display: none; }
+.task p { font-weight: 600; color: var(--pep-text-strong); }
+.task > div, .task > div > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.model { margin: 0; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0 0 8px; }
+.model > div { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.model .note { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.control { min-width: 0; }
+.lk { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.sub { margin: 0 0 8px; font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.cells { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; padding: 0; list-style: none; min-height: 36px; }
+.cells li { font: 400 14px/20px var(--pep-font-mono); padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.cells li.hot { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 3px 7px; }
+.cells li.gone { border-style: dashed; color: var(--pep-text-muted); text-decoration: line-through; }
+.cells li .ix { display: block; font-size: 12px; line-height: 16px; color: var(--pep-text-muted); }
+.out { margin: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; min-height: 44px; }
+.out .err { color: var(--pep-danger); font-weight: 700; }
+.out .okl { color: var(--pep-success); font-weight: 700; }
+.ops { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.ops button { font-family: var(--pep-font-mono); font-size: 14px; }
+.ops button[aria-pressed="true"] { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); color: var(--pep-text-strong); }
+.lanebtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.lanebtns button { min-width: 120px; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+.lane .lk { overflow-wrap: anywhere; }
+.snip { margin: 0 0 4px; }
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.lane { padding: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); min-height: 80px; background: var(--pep-page); min-width: 0; }
+.cards { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.cards li { font-size: 14px; line-height: 20px; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); overflow-wrap: anywhere; }
+.cards li.revealed { border-style: dashed; border-color: var(--pep-warning); }
+.tag { display: inline-block; margin-left: 4px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--pep-warning); }
+table.grid, .recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+table.grid th, table.grid td { border: 1px solid var(--pep-line-strong); padding: 8px 12px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+table.grid th { background: var(--pep-card); font-weight: 600; color: var(--pep-text-strong); }
+.recap details { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.recap summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: flex; align-items: center; }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+.sources ul { margin: 8px 0; padding-left: 24px; font-size: 14px; line-height: 20px; }
+.sources li { margin-bottom: 4px; overflow-wrap: anywhere; }
+.sources p { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.next-topic { font-weight: 600; color: var(--pep-text-strong); }
+.complete { padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete.settled { border-color: var(--pep-warning); background: var(--pep-warning-soft); }
+/* Component overrides: DESIGN.md look for the embedded @1 fragments (their bytes stay unchanged) */
+button { border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); padding: 10px 20px; }
+.ghost { background: var(--pep-control); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); }
+.ghost:hover { background: var(--pep-control); border-color: var(--pep-accent); }
+.ghost[aria-pressed="true"] { background: var(--pep-accent-soft); border: 2px solid var(--pep-accent); }
+.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); filter: none; }
+.primary:active { transform: none; }
+button:disabled, .primary:disabled { background: var(--pep-control); color: var(--pep-text-muted); border: 1px solid var(--pep-line-strong); }
+legend { font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 8px; }
+.opts { gap: 8px; }
+.opt { min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); font-size: 16px; line-height: 24px; box-shadow: none; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; box-shadow: none; }
+.opt:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; box-shadow: none; }
+.opt.mine { border-color: var(--pep-accent); }
+.opt input { accent-color: var(--pep-accent-fill); }
+.opts.explained .opt { padding: 8px 16px; }
+.oexp { font-size: 14px; line-height: 20px; color: var(--pep-text); border-top-color: var(--pep-line-strong); }
+.badge { font-size: 13px; line-height: 20px; font-weight: 600; border-radius: var(--pep-radius-pill); padding: 0 8px; }
+.badge.ok-b { color: var(--pep-success); border-color: var(--pep-success); }
+.badge.no-b { color: var(--pep-danger); border-color: var(--pep-danger); }
+.badge.mine-b { color: var(--pep-text-strong); border-color: var(--pep-line-strong); }
+.conf legend { line-height: 44px; }
+.conf .opt { min-width: 96px; }
+.row { gap: 12px; }
+.fbrow { gap: 12px; }
+.feedback { font-size: 14px; line-height: 20px; color: var(--pep-text); }
+.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.feedback .verdict { font-size: 16px; line-height: 24px; font-weight: 700; }
+.feedback .ok { color: var(--pep-success); }
+.feedback .no { color: var(--pep-danger); }
+.feedback .set { color: var(--pep-warning); }
+.feedback .info { color: var(--pep-text-strong); }
+.feedback .conf-report { color: var(--pep-text-muted); }
+.feedback ul { padding-left: 24px; }
+/* Editor workspace */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-right: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: none; min-height: 160px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; width: 100%; min-width: 0; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__scope { padding: 8px 12px; font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); background: var(--pep-sunken); }
+.pep-editor__panel .out { border: 0; padding: 0; background: transparent; }
+.pep-editor__empty { font-family: var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 700; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 700; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); max-width: none; }
+/* No-JavaScript reading route */
+.pep-nojs-reading { display: flex; flex-direction: column; gap: 16px; max-width: 72ch; }
+.pep-nojs-reading section { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--pep-line-strong); }
+.pep-nojs-reading ul, .pep-nojs-reading ol { margin: 0; padding-left: 24px; }
+.pep-nojs-reading .pep-callout { padding: 12px 16px; border: 1px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); color: var(--pep-text-strong); }
+.pep-nojs-reading .pep-expected { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-nojs-reading details { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-nojs-reading summary { min-height: 44px; display: flex; align-items: center; font-weight: 600; color: var(--pep-text-strong); }
+.pep-nojs-reading table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+.pep-nojs-reading td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .opts, .lanes { grid-template-columns: minmax(0, 1fr); } }
+/* Responsive, touch and optional-disclosure contract (DESIGN.md, data-pep-responsive) */
+html, body { max-width: 100%; overflow-x: clip; }
+p, li { overflow-wrap: anywhere; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+input, select, textarea, summary { font: inherit; }
+.pep-page, .pep-app { min-width: 0; }
+@media (max-width: 480px) {
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+/* Topic bar: progress wraps, Restart stays a visible 44 px target */
+.pep-topicbar__meta { flex: 1 1 260px; }
+.pep-topicbar__meta .pips { flex-wrap: wrap; }
+.pep-topicbar .pep-js-only { flex: 0 0 auto; }
+/* Choice cards: the whole card is the touch target; the native radio stays the focusable control */
+.opt { position: relative; }
+.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.opt input:disabled { cursor: default; }
+.opt::before { content: ""; flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); }
+.opt:has(input:checked)::before { border: 6px solid var(--pep-accent); }
+.opt:has(input:disabled)::before { opacity: 0.6; }
+.opts.explained .opt::before { margin-top: 2px; }
+/* Editor: bounded, resizable, and reduced on phones without hiding Run, Reset, Problems, Output or status */
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; margin-right: 0; margin-inline-end: auto; }
+.pep-editor__code { overscroll-behavior: contain auto; }
+.pep-editor__input { resize: vertical; max-height: 400px; scroll-margin-block: 16px; }
+.pep-editor__panel { overscroll-behavior: contain auto; }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar button { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__code { font-size: 16px; line-height: 24px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* Optional Anecdote and Challenge disclosures */
+.pep-optional { min-width: 0; border-block: 1px solid var(--pep-line-strong); background: transparent; break-inside: avoid; }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; list-style: none; }
+.pep-optional > summary::-webkit-details-marker { display: none; }
+.pep-optional > summary::before { content: ""; flex: 0 0 auto; width: 8px; height: 8px; margin: 0 4px; border-right: 2px solid var(--pep-accent-text); border-bottom: 2px solid var(--pep-accent-text); transform: rotate(-45deg); }
+.pep-optional[open] > summary::before { transform: rotate(45deg); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__cue { margin-inline-start: auto; }
+.pep-optional__body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 16px; }
+.pep-optional__body ol { margin: 0; padding-left: 24px; }
+.pep-optional__body li + li { margin-top: 4px; }
+/* Reading version (no JavaScript) */
+.pep-nojs-code pre { margin: 0; }
+@media print {
+  .pep-optional > summary::before { display: none; }
+  .pep-optional { break-inside: avoid; }
+}
+</style>
+<noscript><style>.pep-js-only,.pep-reading>:not(noscript):not(.pep-optional),.pep-workspace>:not(noscript):not(.pep-optional){display:none!important}.pep-regions{display:flex!important;flex-direction:column}</style></noscript>
+</head>
+<body>
+<div class="pep-page">
+<header class="pep-topicbar">
+  <h1>Big-O basics</h1>
+  <div class="pep-topicbar__meta"><div class="pep-js-only">
+<!-- pep:component progress@1 html -->
+      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 4</span><span class="pips" aria-hidden="true"><span class="pip" data-k="predict"></span><span class="pip" data-k="x1"></span><span class="pip" data-k="x2"></span><span class="pip" data-k="apply"></span></span></div>
+<!-- /pep:component progress html -->
+</div><span class="pep-minutes">about 12 min</span></div>
+  <div class="pep-js-only">
+<!-- pep:component restart@1 html -->
+      <button type="button" class="ghost" id="reset" data-pep-reset>Restart this activity</button>
+<!-- /pep:component restart html -->
+  </div>
+</header>
+<main id="lesson" class="pep-app" data-pep-responsive data-pep-complete="false">
+  <div class="pep-regions" id="stage" data-at="1">
+    <section class="pep-region pep-reading" aria-label="Reading and steps" data-pep-instructions>
+      <noscript data-section-skip><div class="pep-nojs-reading">
+<p class="pep-callout"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. Every teaching step is below, and each activity is listed with its expected results and why.</p>
+<section><h2>Goals</h2><ul><li>Classify common collection operations (ArrayList get by index, contains on a list, HashMap get, TreeMap get) as constant, logarithmic or linear time using the costs the Java API documentation states</li><li>Predict how the running time of a constant, linear, n log n or quadratic piece of code grows when the input size doubles</li><li>Rewrite a nested-loop lookup as a HashSet or HashMap lookup and state its time complexity before and after</li></ul></section>
+<section><h2>Start with a guess</h2><p>A method checks a list of IDs for duplicates by comparing every ID with every other ID, using two nested loops. On 10,000 IDs it takes about 1 second.</p><h3>Activity 1 of 4: Prediction (practice, not scored)</h3><p>About how long will it take on 20,000 IDs?</p><p class="pep-expected"><strong>Expected results and why:</strong> Prediction (practice, not scored): a nested-loop duplicate check takes about 1 second on 10,000 IDs; about how long on 20,000? Options: about 1 second (wrong: the work depends on n); about 2 seconds (wrong: that is linear growth); about 4 seconds (correct: comparing every pair is quadratic, so doubling n multiplies the work by 4); about 20 seconds (wrong: doubling n multiplies quadratic work by 4, not 20).</p></section>
+<section><h2>The model</h2><p>The model: picture the work as a count of steps for n elements. One step whatever n is: O(1). Halving the problem each step: O(log n). One pass: O(n). Sorting: O(n log n). Every pair: O(n²). Doubling n leaves the first the same and quadruples the last. A loop that calls a linear method such as <code>list.contains</code> multiplies the costs.</p></section>
+</div></noscript>
+      <div id="current-teaching" class="teach">
+        <div data-step="1" data-pep-teaching>
+          <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+          <p>A method checks a list of IDs for duplicates by comparing every ID with every other ID, using two nested loops. On 10,000 IDs it takes about 1 second.</p>
+        </div>
+        <div data-step="2" hidden data-pep-teaching>
+          <h2 id="teach-2-h" tabindex="-1">Big-O names how cost grows with n</h2>
+          <p>Big-O ignores constant factors and asks: as the number of elements <em>n</em> grows, how does the work grow? The Java API documentation states these costs:</p>
+          <table class="grid">
+            <tr><th scope="col">Operation</th><th scope="col">Stated cost</th></tr>
+            <tr><td><code>ArrayList.get(i)</code></td><td>constant, O(1)</td></tr>
+            <tr><td><code>ArrayList.contains(x)</code></td><td>linear, O(n): "all of the other operations"</td></tr>
+            <tr><td><code>HashMap.get</code>, <code>HashSet.contains</code></td><td>constant, O(1), if the hash codes spread well</td></tr>
+            <tr><td><code>TreeMap.get</code></td><td>logarithmic, O(log n), guaranteed</td></tr>
+          </table>
+          <p><code>LinkedList.get(i)</code> walks from the nearer end: the documentation describes the walk, and O(n) is derived from it.</p>
+        </div>
+        <div data-step="3" hidden data-pep-teaching>
+          <h2 id="teach-3-h" tabindex="-1">What happens when n doubles</h2>
+          <table class="grid">
+            <tr><th scope="col">Class</th><th scope="col">Typical code</th><th scope="col">n doubles, time</th></tr>
+            <tr><td>O(1)</td><td>one <code>get</code> by index</td><td>stays the same</td></tr>
+            <tr><td>O(log n)</td><td>one <code>TreeMap.get</code></td><td>grows by one step</td></tr>
+            <tr><td>O(n)</td><td>one loop over the list</td><td>doubles</td></tr>
+            <tr><td>O(n log n)</td><td>sorting the list</td><td>a little more than doubles</td></tr>
+            <tr><td>O(n²)</td><td>a loop inside a loop over the list</td><td>quadruples</td></tr>
+          </table>
+          <p>Measured times are only a hint: small inputs, warm-up and the machine all add noise. The growth pattern across sizes is what Big-O predicts.</p>
+        </div>
+        <div data-step="4" hidden data-pep-teaching>
+          <h2 id="teach-4-h" tabindex="-1">Swap a nested scan for a hash lookup</h2>
+<pre><code>// Before: for each of n orders, contains scans m blocked IDs: O(n * m)
+for (String id : orders) {
+    if (blocked.contains(id)) { reject(id); }   // blocked is an ArrayList
+}
+// After: build the set once, O(m); then each lookup is O(1): O(n + m)
+Set&lt;String&gt; blockedSet = new HashSet&lt;&gt;(blocked);
+for (String id : orders) {
+    if (blockedSet.contains(id)) { reject(id); }
+}</code></pre>
+          <p>A hidden loop counts too: <code>contains</code> on a list is a loop. The hash version is expected O(1) per lookup, assuming hash codes spread well.</p>
+        </div>
+        <div data-step="5" hidden data-pep-recap class="recap">
+          <h2 id="teach-5-h" tabindex="-1">Recap</h2>
+          <ul>
+            <li>Stated costs: <code>ArrayList.get</code> O(1), <code>ArrayList.contains</code> O(n), <code>HashMap.get</code> O(1) with well-spread hash codes, <code>TreeMap.get</code> O(log n).</li>
+            <li>When n doubles: O(1) stays, O(log n) adds a step, O(n) doubles, O(n log n) slightly more than doubles, O(n²) quadruples.</li>
+            <li>A nested scan, including <code>list.contains</code> inside a loop, is O(n × m); building a <code>HashSet</code> once makes it O(n + m).</li>
+          </ul>
+          <details data-section-skip data-pep-cheat-sheet>
+            <summary>Cheat sheet</summary>
+            <table>
+              <tr><td>O(1)</td><td><code>list.get(i)</code>, <code>map.get(k)</code>, <code>set.contains(x)</code> on hash classes</td></tr>
+              <tr><td>O(log n)</td><td><code>treeMap.get(k)</code>, <code>treeMap.put(k, v)</code></td></tr>
+              <tr><td>O(n)</td><td>one loop; <code>list.contains(x)</code>; <code>linkedList.get(i)</code> (derived)</td></tr>
+              <tr><td>O(n log n)</td><td>sorting</td></tr>
+              <tr><td>O(n²)</td><td>every pair: a loop inside a loop</td></tr>
+            </table>
+          </details>
+          <details data-section-skip data-pep-sources class="sources">
+            <summary>Sources and review date</summary>
+            <p>Claims on this page were checked against the live official pages below on 13 October 2026 (UTC), for Java SE 25. Links open outside this lesson.</p>
+            <ul>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/ArrayList.html" rel="noopener">ArrayList (Java SE 25 API)</a>: get in constant time; add amortized constant; other operations linear.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/LinkedList.html" rel="noopener">LinkedList (Java SE 25 API)</a>: indexing traverses from the nearer end.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/HashMap.html" rel="noopener">HashMap (Java SE 25 API)</a>: constant-time get and put, assuming well-dispersed hashes.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/HashSet.html" rel="noopener">HashSet (Java SE 25 API)</a>: constant-time add, remove, contains under the same assumption.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/TreeMap.html" rel="noopener">TreeMap (Java SE 25 API)</a>: guaranteed log(n) containsKey, get, put, remove.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/ArrayDeque.html" rel="noopener">ArrayDeque (Java SE 25 API)</a>: most operations amortized constant; contains linear.</li>
+              <li><a href="https://dev.java/learn/api/collections-and-streams/collections-framework/arraylist-vs-linkedlist/" rel="noopener">Dev.java: Choosing Between ArrayList and LinkedList</a>.</li>
+            </ul>
+            <p>Derived, not stated: O(n) for <code>LinkedList.get(i)</code>, and the doubling behavior of each class, follow from the definitions. The timings in the practice model are illustrative numbers, not measurements.</p>
+          </details>
+          <p id="complete" class="complete" data-pep-completion></p>
+          <p class="next-topic">Next topic: The equals and hashCode contract</p>
+        </div>
+      </div>
+      <details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+        <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+        <div class="pep-optional__body">
+    <p><strong>Optional example.</strong> <em>Try the step 1 prediction before you read on: this example explains its answer.</em></p>
+    <p>Picture a corridor of n numbered lockers. Opening locker 37 when you know its number is one step, however long the corridor is: O(1), like <code>ArrayList.get(i)</code>. Finding the locker that holds a red scarf means opening them one by one, so twice the lockers is about twice the walk: O(n), like <code>contains</code> on a list.</p>
+    <p>Checking every locker against every other locker for matching scarves means counting pairs: twice the lockers gives about four times the pairs, O(n²). Big-O asks "if the corridor doubles, how much longer is the walk?", not "how many seconds does it take?".</p>
+        </div>
+      </details>
+      <noscript data-section-skip><div class="pep-nojs-reading">
+<section><h2>Big-O names how cost grows with n</h2><p>Big-O ignores constant factors and asks: as the number of elements <em>n</em> grows, how does the work grow? The Java API documentation states these costs:</p><table class="grid">
+            <tbody><tr><th scope="col">Operation</th><th scope="col">Stated cost</th></tr>
+            <tr><td><code>ArrayList.get(i)</code></td><td>constant, O(1)</td></tr>
+            <tr><td><code>ArrayList.contains(x)</code></td><td>linear, O(n): "all of the other operations"</td></tr>
+            <tr><td><code>HashMap.get</code>, <code>HashSet.contains</code></td><td>constant, O(1), if the hash codes spread well</td></tr>
+            <tr><td><code>TreeMap.get</code></td><td>logarithmic, O(log n), guaranteed</td></tr>
+          </tbody></table><p><code>LinkedList.get(i)</code> walks from the nearer end: the documentation describes the walk, and O(n) is derived from it.</p><h3>Activity 2 of 4: Sorting practice</h3><p>Choose the cost of each operation on a collection of n elements.</p><p class="pep-expected"><strong>Expected results and why:</strong> Sorting activity, cost on n elements: ArrayList.get(i) is O(1); ArrayList.contains(x) is O(n); HashMap.get(key) is O(1) when hash codes spread well; TreeMap.get(key) is O(log n); LinkedList.get(i) is O(n), derived from its walk from the nearer end; ArrayDeque.push(e) is O(1) amortized; HashSet.contains(x) is O(1) when hash codes spread well.</p></section>
+<section><h2>What happens when n doubles</h2><table class="grid">
+            <tbody><tr><th scope="col">Class</th><th scope="col">Typical code</th><th scope="col">n doubles, time</th></tr>
+            <tr><td>O(1)</td><td>one <code>get</code> by index</td><td>stays the same</td></tr>
+            <tr><td>O(log n)</td><td>one <code>TreeMap.get</code></td><td>grows by one step</td></tr>
+            <tr><td>O(n)</td><td>one loop over the list</td><td>doubles</td></tr>
+            <tr><td>O(n log n)</td><td>sorting the list</td><td>a little more than doubles</td></tr>
+            <tr><td>O(n²)</td><td>a loop inside a loop over the list</td><td>quadruples</td></tr>
+          </tbody></table><p>Measured times are only a hint: small inputs, warm-up and the machine all add noise. The growth pattern across sizes is what Big-O predicts.</p><h3>Activity 3 of 4: Practice</h3><p>Two mystery methods were timed at three input sizes. Try a growth class on each one and find the class that matches each set of times.</p><p class="pep-expected"><strong>Expected results and why:</strong> Growth bench with illustrative times. Mystery A takes 5, 20 and 80 ms at n = 1,000, 2,000 and 4,000: each doubling multiplies the time by 4, which matches O(n²). Mystery B takes 3, 6 and 12 ms: each doubling doubles the time, which matches O(n). O(1) would stay flat, O(log n) would barely grow, and O(n log n) would grow a little more than 2 times per doubling.</p></section>
+<section><h2>Swap a nested scan for a hash lookup</h2><pre><code>// Before: for each of n orders, contains scans m blocked IDs: O(n * m)
+for (String id : orders) {
+    if (blocked.contains(id)) { reject(id); }   // blocked is an ArrayList
+}
+// After: build the set once, O(m); then each lookup is O(1): O(n + m)
+Set&lt;String&gt; blockedSet = new HashSet&lt;&gt;(blocked);
+for (String id : orders) {
+    if (blockedSet.contains(id)) { reject(id); }
+}</code></pre><p>A hidden loop counts too: <code>contains</code> on a list is a loop. The hash version is expected O(1) per lookup, assuming hash codes spread well.</p><h3>Activity 4 of 4: Final check</h3><div><p>This finds the names that appear in both lists. <code>a</code> has n names and <code>b</code> has m. Which rewrite is best, with the right complexity?</p>
+<pre><code>for (String x : a) {
+    for (String y : b) {
+        if (x.equals(y)) { both.add(x); }
+    }
+}</code></pre></div><p><strong>Retry form, if the first answer is wrong:</strong></p><div><p>Same idea, new problem. To check whether a list of n numbers contains a repeated value, which approach and complexity are right?</p></div><p class="pep-expected"><strong>Expected results and why:</strong> Apply question: names in both lists, found with a loop over a (n names) inside which a loop over b (m names). Correct rewrite: copy b into a HashSet once, then loop over a and call contains: O(n + m) expected, down from O(n * m). Wrong: replace the inner loop with b.contains(x), still O(n * m) because contains on a list is a loop; build a HashSet of b inside the outer loop, still O(n * m); sort both lists and keep the loops, still O(n * m) plus sorting. Retry form: to find a repeated value in a list of n numbers, add each number to a HashSet and stop when add returns false: O(n) expected, instead of comparing every pair, O(n²).</p></section>
+<section><h2>Recap</h2><ul>
+            <li>Stated costs: <code>ArrayList.get</code> O(1), <code>ArrayList.contains</code> O(n), <code>HashMap.get</code> O(1) with well-spread hash codes, <code>TreeMap.get</code> O(log n).</li>
+            <li>When n doubles: O(1) stays, O(log n) adds a step, O(n) doubles, O(n log n) slightly more than doubles, O(n²) quadruples.</li>
+            <li>A nested scan, including <code>list.contains</code> inside a loop, is O(n × m); building a <code>HashSet</code> once makes it O(n + m).</li>
+          </ul><details>
+            <summary>Cheat sheet</summary>
+            <table>
+              <tbody><tr><td>O(1)</td><td><code>list.get(i)</code>, <code>map.get(k)</code>, <code>set.contains(x)</code> on hash classes</td></tr>
+              <tr><td>O(log n)</td><td><code>treeMap.get(k)</code>, <code>treeMap.put(k, v)</code></td></tr>
+              <tr><td>O(n)</td><td>one loop; <code>list.contains(x)</code>; <code>linkedList.get(i)</code> (derived)</td></tr>
+              <tr><td>O(n log n)</td><td>sorting</td></tr>
+              <tr><td>O(n²)</td><td>every pair: a loop inside a loop</td></tr>
+            </tbody></table>
+          </details><details class="sources">
+            <summary>Sources and review date</summary>
+            <p>Claims on this page were checked against the live official pages below on 13 October 2026 (UTC), for Java SE 25. Links open outside this lesson.</p>
+            <ul>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/ArrayList.html" rel="noopener">ArrayList (Java SE 25 API)</a>: get in constant time; add amortized constant; other operations linear.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/LinkedList.html" rel="noopener">LinkedList (Java SE 25 API)</a>: indexing traverses from the nearer end.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/HashMap.html" rel="noopener">HashMap (Java SE 25 API)</a>: constant-time get and put, assuming well-dispersed hashes.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/HashSet.html" rel="noopener">HashSet (Java SE 25 API)</a>: constant-time add, remove, contains under the same assumption.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/TreeMap.html" rel="noopener">TreeMap (Java SE 25 API)</a>: guaranteed log(n) containsKey, get, put, remove.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/ArrayDeque.html" rel="noopener">ArrayDeque (Java SE 25 API)</a>: most operations amortized constant; contains linear.</li>
+              <li><a href="https://dev.java/learn/api/collections-and-streams/collections-framework/arraylist-vs-linkedlist/" rel="noopener">Dev.java: Choosing Between ArrayList and LinkedList</a>.</li>
+            </ul>
+            <p>Derived, not stated: O(n) for <code>LinkedList.get(i)</code>, and the doubling behavior of each class, follow from the definitions. The timings in the practice model are illustrative numbers, not measurements.</p>
+          </details><p class="next-topic">Next topic: The equals and hashCode contract</p></section>
+</div></noscript>
+      <div class="pep-goalsbox">
+        <h3 id="goals-h">Goals</h3>
+        <ul class="pep-goals" data-pep-objectives aria-labelledby="goals-h">
+            <li data-state="open"><span>Classify common collection operations (ArrayList get by index, contains on a list, HashMap get, TreeMap get) as constant, logarithmic or linear time using the costs the Java API documentation states</span><span class="state"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></li>
+            <li data-state="open"><span>Predict how the running time of a constant, linear, n log n or quadratic piece of code grows when the input size doubles</span><span class="state"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></li>
+            <li data-state="open"><span>Rewrite a nested-loop lookup as a HashSet or HashMap lookup and state its time complexity before and after</span><span class="state"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></li>
+        </ul>
+      </div>
+      <div id="current-steps">
+          <div data-step="1"><ol class="pep-steps-list" aria-label="Steps"><li>Read the example above.</li><li>Choose an answer, then how sure you are.</li><li>Press <strong>Check prediction</strong> to see why each option is right or wrong.</li></ol></div>
+          <div data-step="2" hidden><ol class="pep-steps-list" aria-label="Steps"><li id="task-2">Choose the cost of each operation on a collection of n elements.</li><li>A wrong choice gets one retry, then the answer shows.</li></ol></div>
+          <div data-step="3" hidden><ol class="pep-steps-list" aria-label="Steps"><li id="task-3">Two mystery methods were timed at three input sizes. Try a growth class on each one and find the class that matches each set of times.</li><li><strong>Continue</strong> appears once the task is met.</li></ol></div>
+          <div data-step="4" hidden><ol class="pep-steps-list" aria-label="Steps"><li>Read the question in the workspace.</li><li>Choose an answer and how sure you are, then press <strong>Check answer</strong>.</li><li>A wrong first answer gets one retry.</li></ol></div>
+      </div>
+      <p class="pep-goal-summary" id="goal-summary" aria-live="polite"></p>
+    </section>
+    <section class="pep-region pep-workspace" aria-labelledby="ws-h" data-pep-workspace="practice">
+      <h2 id="ws-h"></h2>
+      <section id="current-task" class="task" aria-label="Current task">
+          <div data-step="1"><p id="task-1">About how long will it take on 20,000 IDs?</p></div>
+          <div data-step="4" hidden>
+          <div id="task-4"><p>This finds the names that appear in both lists. <code>a</code> has n names and <code>b</code> has m. Which rewrite is best, with the right complexity?</p>
+<pre><code>for (String x : a) {
+    for (String y : b) {
+        if (x.equals(y)) { both.add(x); }
+    }
+}</code></pre></div>
+          <div id="task-4b" tabindex="-1" hidden><p>Same idea, new problem. To check whether a list of n numbers contains a repeated value, which approach and complexity are right?</p></div>
+        </div>
+      </section>
+      <figure id="model" class="model" aria-labelledby="m-cap">
+        <figcaption id="m-cap">How work grows with n</figcaption>
+        <div data-step="2">
+          <div class="lanes" id="m-lanes"></div>
+        </div>
+        <div data-step="3">
+          <p class="lk" id="m-tab-k">Measured and predicted times (illustrative milliseconds)</p>
+          <table class="grid" id="m-tab" aria-labelledby="m-tab-k">
+            <tr><th scope="col">Method</th><th scope="col">n = 1,000</th><th scope="col">n = 2,000</th><th scope="col">n = 4,000</th></tr>
+            <tr><td>Mystery A, measured</td><td>5</td><td>20</td><td>80</td></tr>
+            <tr><td>Mystery B, measured</td><td>3</td><td>6</td><td>12</td></tr>
+            <tr><td id="m-pred-name">Prediction</td><td id="m-p1">-</td><td id="m-p2">-</td><td id="m-p3">-</td></tr>
+          </table>
+          <p class="lk" id="m-found-k">Matched</p>
+          <ul class="cells" id="m-found" aria-labelledby="m-found-k"></ul>
+        </div>
+        <div data-step="1 4 5">
+          <p data-pep-model>The model: picture the work as a count of steps for n elements. One step whatever n is: O(1). Halving the problem each step: O(log n). One pass: O(n). Sorting: O(n log n). Every pair: O(n²). Doubling n leaves the first the same and quadruples the last. A loop that calls a linear method such as <code>list.contains</code> multiplies the costs.</p>
+        </div>
+      </figure>
+      <div id="current-control" class="control">
+        <div data-step="1">
+          <fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict data-static-alt="Prediction (practice, not scored): a nested-loop duplicate check takes about 1 second on 10,000 IDs; about how long on 20,000? Options: about 1 second (wrong: the work depends on n); about 2 seconds (wrong: that is linear growth); about 4 seconds (correct: comparing every pair is quadratic, so doubling n multiplies the work by 4); about 20 seconds (wrong: doubling n multiplies quadratic work by 4, not 20).">
+            <legend>Your prediction</legend>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="predict" id="p-1" value="1" aria-describedby="task-1"><span class="ot">About 1 second</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-2" value="2" aria-describedby="task-1"><span class="ot">About 2 seconds</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-4" value="4" aria-describedby="task-1"><span class="ot">About 4 seconds</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-20" value="20" aria-describedby="task-1"><span class="ot">About 20 seconds</span></label>
+            </div>
+            <div class="row"><fieldset class="conf" id="conf0" data-pep-confidence aria-describedby="conf0-instr"><legend id="conf0-instr">How sure are you?</legend><label class="opt"><input type="radio" name="conf0" id="conf0-low" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-medium" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-high" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check aria-describedby="conf0-instr" disabled>Check prediction</button></div>
+          </fieldset>
+        </div>
+        <div data-step="2" hidden>
+          <fieldset id="x1" data-interaction="drag" data-pep-explore aria-describedby="task-2" data-static-alt="Sorting activity, cost on n elements: ArrayList.get(i) is O(1); ArrayList.contains(x) is O(n); HashMap.get(key) is O(1) when hash codes spread well; TreeMap.get(key) is O(log n); LinkedList.get(i) is O(n), derived from its walk from the nearer end; ArrayDeque.push(e) is O(1) amortized; HashSet.contains(x) is O(1) when hash codes spread well.">
+            <legend id="ln-legend">Operation: <span id="ln-name"></span></legend>
+            <div class="lanebtns" id="ln-btns"></div>
+            <p class="sub" id="ln-count">0 of 7 sorted</p>
+          </fieldset>
+        </div>
+        <div data-step="3" hidden>
+          <fieldset id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-static-alt="Growth bench with illustrative times. Mystery A takes 5, 20 and 80 ms at n = 1,000, 2,000 and 4,000: each doubling multiplies the time by 4, which matches O(n²). Mystery B takes 3, 6 and 12 ms: each doubling doubles the time, which matches O(n). O(1) would stay flat, O(log n) would barely grow, and O(n log n) would grow a little more than 2 times per doubling.">
+            <legend>Test a growth class</legend>
+            <p class="lk" id="g-m">Method</p>
+            <div class="ops" role="group" aria-labelledby="g-m"><button type="button" class="ghost" id="m-A" data-g="m" data-v="A" aria-pressed="true">Mystery A</button><button type="button" class="ghost" id="m-B" data-g="m" data-v="B" aria-pressed="false">Mystery B</button></div>
+            <p class="lk" id="g-c">Growth class</p>
+            <div class="ops" role="group" aria-labelledby="g-c" id="classes"></div>
+          </fieldset>
+        </div>
+        <div data-step="4" hidden>
+          <fieldset id="apply" data-interaction="mcq" data-confidence data-pep-apply data-static-alt="Apply question: names in both lists, found with a loop over a (n names) inside which a loop over b (m names). Correct rewrite: copy b into a HashSet once, then loop over a and call contains: O(n + m) expected, down from O(n * m). Wrong: replace the inner loop with b.contains(x), still O(n * m) because contains on a list is a loop; build a HashSet of b inside the outer loop, still O(n * m); sort both lists and keep the loops, still O(n * m) plus sorting. Retry form: to find a repeated value in a list of n numbers, add each number to a HashSet and stop when add returns false: O(n) expected, instead of comparing every pair, O(n²).">
+            <legend>The rewrite</legend>
+            <div class="opts one" id="a1">
+              <label class="opt"><input type="radio" name="a1" id="a1-contains" value="contains" aria-describedby="task-4"><span class="ot">Replace the inner loop with <code>b.contains(x)</code>: now O(n)</span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-set" value="set" aria-describedby="task-4"><span class="ot">Copy <code>b</code> into a <code>HashSet</code> once, then loop over <code>a</code> with <code>contains</code>: O(n + m)</span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-inner" value="inner" aria-describedby="task-4"><span class="ot">Inside the loop over <code>a</code>, build <code>new HashSet&lt;&gt;(b)</code> and call <code>contains</code>: O(n)</span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-sort" value="sort" aria-describedby="task-4"><span class="ot">Sort both lists first and keep both loops: O(log n)</span></label>
+            </div>
+            <div class="opts one" id="a2" hidden>
+              <label class="opt"><input type="radio" name="a2" id="a2-pairs" value="pairs" aria-describedby="task-4b"><span class="ot">Compare every pair with two nested loops: O(n)</span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-listc" value="listc" aria-describedby="task-4b"><span class="ot">For each number, call <code>contains</code> on the numbers before it in the list: O(n)</span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-tree" value="tree" aria-describedby="task-4b"><span class="ot">Add each number to a <code>TreeSet</code>: O(1) per number</span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-hash" value="hash" aria-describedby="task-4b"><span class="ot">Add each number to a <code>HashSet</code> and stop when <code>add</code> returns <code>false</code>: O(n)</span></label>
+            </div>
+          </fieldset>
+          <div class="row">
+            <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-instr">
+              <legend id="conf-instr">How sure are you?</legend>
+              <label class="opt"><input type="radio" name="conf" id="conf-low" value="low"><span class="ot">Low</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-medium" value="medium"><span class="ot">Medium</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-high" value="high"><span class="ot">High</span></label>
+            </fieldset>
+            <button type="button" class="primary" id="apply-check" data-pep-apply-check aria-describedby="conf-instr" disabled>Check answer</button>
+          </div>
+        </div>
+      </div>
+      <div class="fbrow">
+        <div id="current-feedback" class="feedback" role="status" aria-live="polite" tabindex="-1" data-pep-predict-feedback data-pep-explore-feedback data-pep-apply-feedback></div>
+        <button type="button" class="primary" id="next" hidden>Continue</button>
+      </div>
+      <details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+        <summary>Challenge (optional)</summary>
+        <div class="pep-optional__body">
+    <p data-pep-optional-time><strong>Optional challenge time:</strong> about 4 minutes, in addition to this topic's time.</p>
+    <p>A method receives a <code>List&lt;String&gt;</code> of n names and must report whether any name appears twice. Version A sorts a copy of the list with <code>copy.sort(null)</code>, then compares each name with the next one. Version B walks the list once, calls <code>seen.contains(name)</code> on a <code>HashSet</code>, stops if it is true and otherwise calls <code>seen.add(name)</code>, which the <code>HashSet</code> documentation also states as constant time. For each version, state its time complexity and what happens to its running time when n doubles.</p>
+    <p data-pep-success-criteria><strong>Success criteria:</strong> each version gets one growth class from this page, its doubling claim matches the step 3 table for that class, and the Version B answer names the assumption this page attaches to hash lookups.</p>
+        </div>
+      </details>
+    </section>
+  </div>
+<script>
+var PAGE={};
+(function(){
+var E,$,$$,cur='A',found={};
+var M={A:{t:[5,20,80],k:'n2'},B:{t:[3,6,12],k:'n'}};
+var K=[{k:'c',l:'O(1)',f:function(n){return 1;}},{k:'log',l:'O(log n)',f:function(n){return Math.log2(n);}},{k:'n',l:'O(n)',f:function(n){return n;}},{k:'nlog',l:'O(n log n)',f:function(n){return n*Math.log2(n);}},{k:'n2',l:'O(n²)',f:function(n){return n*n;}}];
+function pick(g,v){cur=v;$$('[data-g="m"]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-v')===v?'true':'false');});}
+function renderFound(){var u=$('#m-found');u.textContent='';['A','B'].forEach(function(m){u.appendChild(E.el('li',found[m]?'hot':'','Mystery '+m+': '+(found[m]||'not yet')));});}
+function fmt(x){return x>=10?String(Math.round(x)):String(Math.round(x*10)/10);}
+function test(k){var c=K.filter(function(x){return x.k===k;})[0],m=M[cur],base=m.t[0],p=[1000,2000,4000].map(function(n){return base*c.f(n)/c.f(1000);});
+  $('#m-pred-name').textContent=c.l+' from Mystery '+cur+"'s first time";$('#m-p1').textContent=fmt(p[0]);$('#m-p2').textContent=fmt(p[1]);$('#m-p3').textContent=fmt(p[2]);
+  var r1=fmt(p[1]/p[0]),ok=k===m.k,msg=[{c:'verdict '+(ok?'info':'no'),s:c.l+' predicts '+fmt(p[0])+', '+fmt(p[1])+', '+fmt(p[2])+' ms for Mystery '+cur+' (about '+r1+' times per doubling). Measured: '+m.t.join(', ')+' ms.'}];
+  if(ok){found[cur]=c.l;renderFound();msg.push({s:cur==='A'?'A match: the time multiplies by 4 each time n doubles, the pattern of comparing every pair.':'A match: the time doubles with n, the pattern of one pass over the data.'});}
+  else msg.push({s:'Not a match: compare how much the time grows from one size to the next.'});
+  if(found.A&&found.B&&!E.state().done.x2){msg.push({c:'verdict ok',s:'Both matched: A grows as O(n²), B as O(n).'});E.say(msg,true);E.complete('x2');}
+  else E.say(msg);}
+PAGE.predict={ok:'4',lead:'Comparing every ID with every other ID is about n × n steps. Double n and the work is (2n) × (2n) = 4n², so about four times as long.',expl:{
+  '1':'Not quite: the loops run over the IDs, so more IDs mean more work.',
+  '2':'Not quite: doubling the time is what one loop over the IDs would do; two nested loops grow faster.',
+  '4':'Right: every pair is quadratic, O(n²), so doubling n multiplies the work by 4.',
+  '20':'Not quite: doubling n multiplies quadratic work by 4, not by 20.'}};
+PAGE.lanes={key:'x1',model:'#m-lanes',btns:'#ln-btns',name:'#ln-name',count:'#ln-count',legend:'ln-legend',label:'Continue',
+ lanes:[{id:'c',label:'O(1)'},{id:'log',label:'O(log n)'},{id:'n',label:'O(n)'}],
+ done:'Index access and hash lookups are O(1), tree lookups O(log n), and anything that scans or walks the list O(n).',
+ items:[
+  {n:'`arrayList.get(i)`',lane:'c',ok:'The ArrayList documentation says `get` runs in constant time: it reads one array slot.',w:{log:'There is no halving search; the index points straight to the slot.',n:'Nothing is scanned; `get` jumps to the index.'}},
+  {n:'`arrayList.contains(x)`',lane:'n',ok:'`contains` is one of "all of the other operations" that run in linear time: it checks elements one by one.',w:{c:'`contains` must look through the elements, because a list has no index by value.',log:'An ArrayList is not sorted for searching; it scans.'}},
+  {n:'`hashMap.get(key)`',lane:'c',ok:'Constant time, assuming the hash codes spread the keys well among the buckets.',w:{log:'That is TreeMap. HashMap jumps to a bucket using the hash code.',n:'HashMap does not scan every entry; the hash code picks the bucket.'}},
+  {n:'`treeMap.get(key)`',lane:'log',ok:'The TreeMap documentation guarantees log(n) time for `get`.',w:{c:'TreeMap is a sorted tree, not a hash table; each lookup walks down the tree.',n:'It does not visit every entry; each step down the tree halves what is left.'}},
+  {n:'`linkedList.get(i)`',lane:'n',ok:'It walks node by node from the nearer end. The documentation describes the walk; O(n) is derived from it.',w:{c:'A linked list has no array to jump into; it must walk.',log:'The walk does not halve the problem; it goes one node at a time.'}},
+  {n:'`arrayDeque.push(e)`',lane:'c',ok:'Most ArrayDeque operations, push included, run in amortized constant time.',w:{log:'Adding at the head does not search anything.',n:'Nothing is scanned. Occasional growth is spread out: amortized constant.'}},
+  {n:'`hashSet.contains(x)`',lane:'c',ok:'HashSet offers constant time for `contains`, assuming well-spread hash codes.',w:{log:'That would be a TreeSet. HashSet uses hash codes.',n:'Unlike a list, a HashSet does not scan; it goes to one bucket.'}}
+ ]};
+PAGE.apply={
+ r1:{ok:'set',expl:{
+   contains:'b.contains(x) is itself a loop over m names, so the total stays O(n * m).',
+   set:'Building the set costs O(m) once; each of n lookups is O(1) expected: O(n + m).',
+   inner:'Building the set inside the loop costs O(m) on every pass, so the total is still O(n * m).',
+   sort:'Sorting adds work, and keeping both loops still compares every pair.'},
+   mis:{contains:'contains on a list hides a loop.',inner:'Build the set once, before the loop.',sort:'The nested loops are what make it slow; sorting does not remove them.'}},
+ r2:{ok:'hash',answer:'Add each number to a `HashSet`; `add` returns `false` for a value already seen. One pass with O(1) expected lookups: O(n).',expl:{
+   pairs:'Every pair is O(n²), not O(n).',
+   listc:'contains on the earlier part of a list is a hidden loop, so this is O(n²).',
+   tree:'TreeSet add is O(log n), so the pass is O(n log n), and it is not O(1) per number.',
+   hash:'One pass, O(1) expected per add: O(n).'},
+   mis:{pairs:'Nested loops over n are quadratic.',listc:'list.contains inside a loop is quadratic.',tree:'TreeSet operations cost O(log n).'}}
+};
+PAGE.goals=[['x1'],['x2'],['apply']];
+PAGE.checkLabels={x1:'Operation costs',apply:'Final check'};
+PAGE.init=function(eng){E=eng;$=eng.$;$$=eng.$$;
+  K.forEach(function(c){var b=E.el('button','ghost',c.l);b.type='button';b.id='k-'+c.k;b.addEventListener('click',function(){test(c.k);});$('#classes').appendChild(b);});
+  $$('[data-g="m"]').forEach(function(b){b.addEventListener('click',function(){pick('m',b.getAttribute('data-v'));});});
+  renderFound();E.lanes(PAGE.lanes);};
+PAGE.resetStep=function(st){if(st===3){found={};pick('m','A');['#m-p1','#m-p2','#m-p3'].forEach(function(s){$(s).textContent='-';});$('#m-pred-name').textContent='Prediction';renderFound();}};
+})();
+</script>
+</main>
+<!-- pep:nojs -->
+<!-- /pep:nojs -->
+</div>
+<script>
+(function(){
+'use strict';
+var D=document,R=D.documentElement;
+function $(s,r){return (r||D).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||D).querySelectorAll(s));}
+function md(s){var f=D.createDocumentFragment(),re=/(`[^`]+`|\*\*[^*]+\*\*)/g,last=0,m;s=String(s);
+  while((m=re.exec(s))){if(m.index>last)f.appendChild(D.createTextNode(s.slice(last,m.index)));
+    var t=m[0],e=D.createElement(t.charAt(0)==='`'?'code':'strong');e.textContent=t.charAt(0)==='`'?t.slice(1,-1):t.slice(2,-2);f.appendChild(e);last=re.lastIndex;}
+  if(last<s.length)f.appendChild(D.createTextNode(s.slice(last)));return f;}
+function el(tag,cls,txt){var e=D.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.appendChild(typeof txt==='string'?md(txt):txt);return e;}
+var main=$('#lesson'),stage=$('#stage'),fb=$('#current-feedback'),next=$('#next'),P=window.PAGE;
+var KEYS=['predict','x1','x2','apply'],S;
+function fresh(){S={step:1,done:{},results:{}};}
+fresh();
+function say(parts,focus){fb.textContent='';(parts||[]).forEach(function(p){
+  if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li',it[2]||'');li.appendChild(el('strong',null,it[0]));li.appendChild(D.createTextNode(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
+  else if(p.pre){var pr=el('pre','out');pr.textContent=p.pre;fb.appendChild(pr);}
+  else{var q=el('p',p.c||'',p.s);if(p.attr)q.setAttribute(p.attr,'');fb.appendChild(q);}});
+  if(focus)fb.focus();}
+function optText(i){var l=i.closest('label');return l?l.textContent.replace(/\s+/g,' ').trim():i.value;}
+/* pep:component progress@1 js */
+function progress(){var n=0,set=0;KEYS.forEach(function(k){var pip=$('.pip[data-k="'+k+'"]');pip.className='pip';if(S.done[k]){n++;if(S.results[k]==='settled')set++;pip.className='pip '+(S.results[k]==='settled'?'settled':'on');}});
+  $('#prog-text').textContent='Activities done: '+n+' of 4'+(set?' ('+set+(set>1?' checks':' check')+' settled, not correct)':'');}
+var WORD={'correct':'correct on the first try','correct-retry':'correct on the second try','settled':'answered and settled, not marked correct'};
+function complete(k,label){S.done[k]=true;progress();next.textContent=label||'Continue';next.hidden=false;}
+/* /pep:component progress js */
+/* page anatomy: goal states, paired step headings and the goal summary follow the activity state */
+var GOALS=P.goals||[],goalItems=$$('[data-pep-objectives] > li');
+function goalsUi(){var open=0;goalItems.forEach(function(li,i){var ks=GOALS[i]||[],done=ks.length>0&&ks.every(function(k){return !!S.done[k];}),rev=done&&ks.some(function(k){return S.results[k]==='settled';});
+  li.setAttribute('data-state',done?(rev?'review':'done'):'open');if(!done)open++;});
+  var n=goalItems.length;$('#goal-summary').textContent=open?open+' of '+n+(n>1?' goals':' goal')+' still open':'All '+n+' goals done'+(goalItems.some(function(li){return li.getAttribute('data-state')==='review';})?'; review the ones marked for review':'');}
+function stepUi(step){var h=$('#teach-'+step+'-h');$('#ws-h').textContent=h?h.textContent:'';goalsUi();}
+if(window.MutationObserver)new MutationObserver(goalsUi).observe($('#prog-text'),{childList:true,characterData:true,subtree:true});
+function show(step){S.step=step;stage.setAttribute('data-at',String(step));
+  $$('[data-step]',stage).forEach(function(e){e.hidden=e.getAttribute('data-step').split(' ').indexOf(String(step))<0;});
+  if(step===5){main.setAttribute('data-pep-complete','true');var c=$('#complete'),labels=P.checkLabels||{apply:'Final check'},parts=[],anySet=false;
+    KEYS.forEach(function(k){if(S.results[k]&&labels[k]){parts.push(labels[k]+': '+WORD[S.results[k]]+'.');if(S.results[k]==='settled')anySet=true;}});
+    c.className='complete'+(anySet?' settled':'');c.textContent='Topic complete. '+parts.join(' ')+(anySet?' Review the explanations before the practice quiz.':'');}
+  $('#reset').hidden=step>=5;stepUi(step);
+  if(P.onStep)P.onStep(step,S);}
+next.addEventListener('click',function(){next.hidden=true;fb.textContent='';show(S.step+1);var h=$('#teach-'+S.step+'-h');if(h)h.focus();});
+/* pep:component predict@1 js */
+/* predict */
+var pf=$('#predict'),pc=$('#predict-check');
+function pReady(){pc.disabled=!!S.done.predict||!($('input[name="predict"]:checked')&&$('input[name="conf0"]:checked'));}
+pf.addEventListener('change',pReady);
+function badges(l,arr){var b=l.querySelector('.badges');if(!b){b=el('span','badges');l.appendChild(b);}arr.forEach(function(x){b.appendChild(el('span','badge '+x[1],x[0]));});}
+pc.addEventListener('click',function(){var c=$('input[name="predict"]:checked'),cv=$('input[name="conf0"]:checked');if(!c||!cv)return;var okv=P.predict.ok,match=c.value===okv;
+  $$('input',pf).forEach(function(i){i.disabled=true;});pc.disabled=true;
+  $$('input[name="predict"]',pf).forEach(function(i){var l=i.closest('label');if(i===c){l.classList.add('mine');badges(l,[['Your prediction','mine-b'],[match?'Correct':'Not correct',match?'ok-b':'no-b']]);}else if(i.value===okv){badges(l,[[P.predict.okLabel||'Correct answer','ok-b']]);}if(i.value===okv)l.classList.add('right');l.appendChild(el('span','oexp',P.predict.expl[i.value]));});
+  pf.querySelector('.opts').classList.add('explained');pc.hidden=true;$('#conf0').closest('.row').hidden=true;
+  if(P.onPredict)P.onPredict();
+  say([{c:'verdict info',s:'Practice prediction, not scored. '+(match?'Your prediction matches the answer.':'Your prediction differs from the answer; nothing is lost.')},{c:'conf-report',s:'Your confidence: '+cv.value+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:P.predict.lead},{s:'Each option now shows its label and why, directly under it.'}],true);
+  complete('predict');});
+/* /pep:component predict js */
+/* pep:component mcq-with-confidence@1 js */
+/* graded checks: confidence first, retry in a second representation, settle after two misses */
+var checks={};
+function check(o){var st={att:0,conf:[],result:null,step:{x1:2,x2:3,apply:4}[o.key]},btn=$(o.btn),cf=$(o.conf),fs=$(o.fs),cn=o.confName||'conf';checks[o.key]=st;
+  function grp(){return st.att===0?o.g1:o.g2;}
+  function ready(){btn.disabled=!!st.result||!($('input[name="'+grp()+'"]:checked')&&$('input[name="'+cn+'"]:checked'));}
+  function lockConf(){$$('input[name="'+cn+'"]').forEach(function(i){i.disabled=true;});btn.disabled=true;}
+  function done(){S.results[o.key]=st.result;if(P.onCheck)P.onCheck(o.key,st.result);complete(o.key,o.label);}
+  fs.addEventListener('change',ready);cf.addEventListener('change',ready);
+  btn.addEventListener('click',function(){var g=grp(),r=st.att===0?o.data.r1:o.data.r2,c=$('input[name="'+g+'"]:checked'),cv=$('input[name="'+cn+'"]:checked');
+    if(!c||!cv||st.result)return;var ok=c.value===r.ok;st.conf.push(cv.value);
+    var confLine='Your confidence: '+cv.value+'. Confidence is your own read on how sure you were; it is reported, never scored.';
+    var expl=$$('input[name="'+g+'"]').map(function(i){return [optText(i)+(i===c?' (your answer):':':'),r.expl[i.value]];});
+    $$('input[name="'+g+'"]').forEach(function(i){i.disabled=true;});c.closest('label').classList.add(ok?'right':'wrong');badges(c.closest('label'),[['Your answer','mine-b'],[ok?'Correct':'Not correct',ok?'ok-b':'no-b']]);
+    if(ok){st.result=st.att===0?'correct':'correct-retry';lockConf();
+      say([{c:'verdict ok',s:st.att===0?'Correct.':'Correct on your second try.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}],true);done();}
+    else if(st.att===0){st.att=1;$('#'+o.g1).hidden=true;$('#'+o.g2).hidden=false;$(o.t1).hidden=true;$(o.t2).hidden=false;$$('input[name="'+cn+'"]').forEach(function(i){i.checked=false;});
+      say([{c:'verdict no',s:'Not yet. '+r.mis[c.value]+' Try again below: same idea, different form, with your confidence again.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}]);
+      ready();$(o.t2).focus();}
+    else{st.result='settled';lockConf();$$('input[name="'+o.g2+'"]').forEach(function(i){if(i.value===r.ok){i.closest('label').classList.add('right');badges(i.closest('label'),[['Correct answer','ok-b']]);}});
+      say([{c:'verdict set',s:'Answered and settled: this check is not marked correct. '+r.mis[c.value]},{c:'conf-report',s:'Confidence on each try: '+st.conf.join(', then ')+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:'The answer: '+r.answer},{list:expl}],true);done();}});
+  st.reset=function(){st.att=0;st.conf=[];st.result=null;$('#'+o.g1).hidden=false;$('#'+o.g2).hidden=true;$(o.t1).hidden=false;$(o.t2).hidden=true;btn.disabled=true;};
+  return st;}
+/* /pep:component mcq-with-confidence js */
+/* lane sort: each item gets one retry, then its lane is revealed; any reveal settles the activity */
+var lanesets={};
+function lanes(o){var st={idx:0,tries:{},placed:{},revealed:{}},box=$(o.model),btns=$(o.btns);lanesets[o.key]=st;
+  function laneName(id){for(var i=0;i<o.lanes.length;i++)if(o.lanes[i].id===id)return o.lanes[i].label;return id;}
+  function render(){box.textContent='';var cnt=0;
+    o.lanes.forEach(function(ln){var d=el('div','lane'),h=el('p','lk',ln.label),u=el('ul','cards');h.id=o.key+'-lk-'+ln.id;u.setAttribute('aria-labelledby',h.id);d.appendChild(h);d.appendChild(u);box.appendChild(d);
+      o.items.forEach(function(it,i){if(st.placed[i]!==ln.id)return;cnt++;var li=el('li',st.revealed[i]?'revealed':'',it.n);if(st.revealed[i])li.appendChild(el('span','tag','shown after two tries'));u.appendChild(li);});});
+    var it=o.items[st.idx];$(o.name).textContent=it?'':'all sorted';$(o.name).appendChild(it?md(it.n):D.createTextNode(''));
+    if(o.desc)$(o.desc).textContent=it&&it.d?it.d:'';
+    $(o.count).textContent=cnt+' of '+o.items.length+' sorted';}
+  function finish(msg){var anyRev=Object.keys(st.revealed).length,anyRetry=Object.keys(st.tries).some(function(k){return st.tries[k]>0;});
+    var res=anyRev?'settled':(anyRetry?'correct-retry':'correct');S.results[o.key]=res;
+    $$('button',btns).forEach(function(b){b.disabled=true;});
+    msg.push({c:anyRev?'verdict set':'verdict ok',s:anyRev?'All sorted. Answered and settled: '+anyRev+(anyRev>1?' items were':' item was')+' shown after two tries, so this activity is not marked correct.':(anyRetry?'All sorted, some on a second try.':'All sorted on the first try.')});
+    if(o.done)msg.push({s:o.done});say(msg,true);complete(o.key,o.label);}
+  o.lanes.forEach(function(ln){var b=el('button','ghost',ln.label);b.type='button';b.id=o.key+'-to-'+ln.id;b.setAttribute('data-lane',ln.id);b.setAttribute('aria-describedby',o.legend);
+    b.addEventListener('click',function(){var i=st.idx,it=o.items[i];if(!it||S.done[o.key])return;
+      if(ln.id===it.lane){st.placed[i]=ln.id;st.idx++;var msg=[{c:'verdict ok',s:'Yes: '+laneName(ln.id)+'.'},{s:it.ok}];render();if(st.idx>=o.items.length)finish(msg);else say(msg);}
+      else{st.tries[i]=(st.tries[i]||0)+1;
+        if(st.tries[i]<2){say([{c:'verdict no',s:'Not '+laneName(ln.id)+'. '+it.w[ln.id]},{s:'Try another button for the same item.'}]);}
+        else{st.placed[i]=it.lane;st.revealed[i]=true;st.idx++;var m2=[{c:'verdict set',s:'Shown after two tries: '+laneName(it.lane)+'. '+it.w[ln.id]},{s:it.ok}];render();if(st.idx>=o.items.length)finish(m2);else say(m2);}}});
+    btns.appendChild(b);});
+  st.reset=function(){st.idx=0;st.tries={};st.placed={};st.revealed={};$$('button',btns).forEach(function(b){b.disabled=false;});render();};
+  st.step={x1:2,x2:3,apply:4}[o.key];render();return st;}
+/* pep:component restart@1 js */
+/* restart the current activity only: earlier activities keep their results */
+var STEPKEY={1:'predict',2:'x1',3:'x2',4:'apply'};
+function restartStep(){var stp=S.step;if(stp>=5)return;var k=STEPKEY[stp];
+  $$('#current-control [data-step], #current-task [data-step]').forEach(function(p){if(p.getAttribute('data-step').split(' ').indexOf(String(stp))<0)return;
+    $$('input',p).forEach(function(i){i.checked=false;i.disabled=false;});$$('.opt',p).forEach(function(o){o.classList.remove('right','wrong','mine');});
+    $$('.oexp,.badges',p).forEach(function(e){e.remove();});$$('.opts.explained',p).forEach(function(o){o.classList.remove('explained');});});
+  if(stp===1){pc.hidden=false;pc.disabled=true;$('#conf0').closest('.row').hidden=false;}
+  Object.keys(checks).forEach(function(ck){if(checks[ck].step===stp)checks[ck].reset();});
+  delete S.done[k];delete S.results[k];next.hidden=true;fb.textContent='';
+  if(P.resetStep)P.resetStep(stp);
+  progress();say([{c:'verdict info',s:'Activity restarted. Earlier activities keep their results.'}]);var h=$('#teach-'+stp+'-h');if(h)h.focus();}
+$('#reset').addEventListener('click',restartStep);
+/* /pep:component restart js */
+var userReset=P.resetStep;P.resetStep=function(stp){Object.keys(lanesets).forEach(function(k){if(lanesets[k].step===stp)lanesets[k].reset();});if(userReset)userReset(stp);};
+window.ENG={say:say,complete:complete,check:check,lanes:lanes,md:md,el:el,$:$,$$:$$,state:function(){return S;}};
+if(P.init)P.init(window.ENG);
+check({key:'apply',fs:'#apply',g1:'a1',g2:'a2',t1:'#task-4',t2:'#task-4b',conf:'#conf',confName:'conf',btn:'#apply-check',data:P.apply,label:'Continue to recap'});
+progress();show(1);
+})();
+
+</script>
+<script>
+(function(){var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=[].slice.call(document.querySelectorAll('details.pep-optional:not([open])'));printOpened.forEach(function(d){d.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(d){d.open=false;});printOpened=[];});})();
+</script>
+</body>
+</html>

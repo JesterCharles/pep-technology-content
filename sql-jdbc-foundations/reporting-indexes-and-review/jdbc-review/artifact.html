@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="sql-jdbc-foundations">
+<meta name="pep:module" content="reporting-indexes-and-review">
+<meta name="pep:topic" content="Review: JDBC">
+<meta name="pep:topic-id" content="jdbc-review">
+<meta name="pep:budget-minutes" content="15">
+<meta name="pep:source" content="authoring/evidence/sql-jdbc-foundations/reporting-indexes-and-review/jdbc-review/sources.json">
+<title>Review: JDBC · Reporting Queries, Indexes and Review</title>
+<style>
+/* pep:component predict@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+/* /pep:component predict css */
+/* pep:component mcq-with-confidence@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start}
+.feedback{width:100%;min-width:0;font-size:15px;line-height:1.35}
+.feedback:empty{display:none}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin:0}
+.feedback .verdict{font-weight:700}
+.feedback .ok{color:var(--teal)}
+.feedback .no{color:var(--red)}
+.feedback .set{color:var(--amber)}
+.feedback .info{color:var(--ink)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+/* /pep:component mcq-with-confidence css */
+/* DESIGN.md token reference */
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* Components bridge: embedded components/*@1 fragments read these older names */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+/* Base, focus and motion */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+pre { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; max-width: 100%; }
+pre code { font-size: 1em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+/* Buttons */
+button { cursor: pointer; min-height: 44px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); padding: 10px 20px; }
+.pep-btn, .ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.ghost:hover, .pep-btn:hover { border-color: var(--pep-accent); }
+.ghost[aria-pressed="true"] { background: var(--pep-accent-soft); border: 2px solid var(--pep-accent); }
+.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+button:disabled, .primary:disabled, .pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); color: var(--pep-text-muted); border: 1px solid var(--pep-line-strong); }
+/* Topic bar: the clearest accent surface */
+.pep-topicbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding: 12px 16px; margin: 0;
+  border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 4px; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress p { max-width: none; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; max-width: 220px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); outline: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); outline-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning); outline-color: var(--pep-warning); }
+.pep-progress > span.is-current { outline: 2px solid var(--pep-accent); }
+.pep-objectives { position: relative; break-inside: avoid; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; border-radius: var(--pep-radius-sm); }
+.pep-objectives > summary::marker { color: var(--pep-accent-text); }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; padding-left: 20px; }
+.pep-objectives li + li { margin-top: 8px; }
+@media (min-width: 640px) { .pep-objectives[open] > div { position: absolute; right: 0; z-index: 2; width: 360px; } }
+/* Activity timeline */
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px 6px 6px; border: 1px solid transparent; border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; }
+.pep-steps { counter-reset: pep-step; }
+.pep-step__n::before { counter-increment: pep-step; content: counter(pep-step); }
+.pep-step__n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--pep-control); color: var(--pep-text); font-size: 13px; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-current="step"] .pep-step__n { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-step.is-done .pep-step__n { background: var(--pep-accent-soft); color: var(--pep-accent-text); outline: 1px solid var(--pep-accent); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-step__state { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+/* Activities and regions */
+.pep-activity { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-activity > h2 { padding-bottom: 8px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region--workspace, [data-pep-workspace] {
+  padding: 24px; border: 1px solid var(--pep-line-strong);
+  border-radius: var(--pep-radius-lg); background: var(--pep-card);
+}
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
+.teach { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.teach ul, .teach ol { margin: 0; padding-left: 24px; }
+.task { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task .pep-task-q { font-weight: 600; color: var(--pep-text-strong); }
+/* Required activity checks: accent tint and rail, never success green */
+.pep-activity-checks, [data-pep-activity-checks] {
+  padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px;
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-activity-checks h3 { margin-bottom: 4px; }
+.pep-activity-checks ul { margin: 0; padding-left: 20px; }
+/* Where this fits */
+[data-pep-where-fits] {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-card);
+}
+[data-pep-where-fits] strong { color: var(--pep-text-strong); }
+/* Progressive optional hints */
+.pep-hint, details[data-pep-hint] {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md);
+  background: var(--pep-accent-soft); break-inside: avoid;
+}
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
+.pep-hint .pep-hint {
+  margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong);
+  border-radius: 0; background: transparent;
+}
+/* Optional Anecdote and Challenge disclosures */
+.pep-optional {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-card); break-inside: avoid;
+}
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer;
+  color: var(--pep-text-strong); font-weight: 600;
+}
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 16px; }
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+  .pep-step[aria-current="step"] { border-color: Highlight; }
+}
+/* Model, cells and lanes */
+.model { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-lists { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 600px) { .pep-lists { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pep-list { padding: 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.pep-list h3 { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 4px; }
+.pep-list__state { font-weight: 600; }
+.lk { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.sub { margin: 0 0 8px; font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.cells { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; padding: 0; list-style: none; min-height: 32px; }
+.cells li { font: 400 14px/20px var(--pep-font-mono); padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.lanebtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.lanebtns button { min-width: 120px; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.lane { padding: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); min-height: 80px; background: var(--pep-page); min-width: 0; }
+.lane .lk { overflow-wrap: anywhere; color: var(--pep-text-strong); }
+.cards { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.cards li { font-size: 14px; line-height: 20px; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); overflow-wrap: anywhere; }
+.cards li.revealed { border-style: dashed; border-color: var(--pep-warning); }
+.tag { display: inline-block; margin-left: 4px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--pep-warning); }
+/* Component overrides: DESIGN.md look for the embedded @1 fragments (their bytes stay unchanged) */
+legend { font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 8px; }
+.opts { gap: 8px; }
+.opt { position: relative; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); font-size: 16px; line-height: 24px; box-shadow: none; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; box-shadow: none; }
+.opt:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; box-shadow: none; }
+.opt.mine { border-color: var(--pep-accent); }
+.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.opt input:disabled { cursor: default; }
+.opt::before { content: ""; flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); }
+.opt:has(input:checked)::before { border: 6px solid var(--pep-accent); }
+.opt:has(input:disabled)::before { opacity: 0.6; }
+.opts.explained .opt { padding: 8px 16px; align-items: flex-start; }
+.opts.explained .opt::before { margin-top: 2px; }
+.oexp { font-size: 14px; line-height: 20px; color: var(--pep-text); border-top-color: var(--pep-line-strong); }
+.badge { font-size: 13px; line-height: 20px; font-weight: 600; border-radius: var(--pep-radius-pill); padding: 0 8px; }
+.badge.ok-b { color: var(--pep-success); border-color: var(--pep-success); }
+.badge.no-b { color: var(--pep-danger); border-color: var(--pep-danger); }
+.badge.mine-b { color: var(--pep-text-strong); border-color: var(--pep-line-strong); }
+.conf legend { line-height: 44px; }
+.conf .opt { min-width: 96px; }
+.row, .fbrow { gap: 12px; }
+.feedback { font-size: 14px; line-height: 20px; color: var(--pep-text); }
+.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.feedback .verdict { font-size: 16px; line-height: 24px; font-weight: 700; }
+.feedback .ok { color: var(--pep-success); }
+.feedback .no { color: var(--pep-danger); }
+.feedback .set { color: var(--pep-warning); }
+.feedback .info { color: var(--pep-text-strong); }
+.feedback .conf-report { color: var(--pep-text-muted); }
+.feedback ul { padding-left: 24px; }
+@media (max-width: 480px) { .opts, .lanes { grid-template-columns: minmax(0, 1fr); } }
+/* Editor workspace */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__scope { padding: 8px 12px; font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); background: var(--pep-sunken); }
+.pep-editor__panel pre { border: 0; padding: 0; background: transparent; }
+.pep-editor__empty { font-family: var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 700; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 700; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); max-width: none; }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn, .pep-editor__bar button { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__code { font-size: 16px; line-height: 24px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* Navigation */
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 0 1 auto; } }
+.pep-back a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+/* Recap */
+.recap { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--pep-line-strong); }
+.recap ul { margin: 0; padding-left: 24px; }
+.recap li + li { margin-top: 4px; }
+.recap details { padding: 0 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.recap details > summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: flex; align-items: center; }
+.recap details > :last-child { margin-bottom: 12px; }
+.recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+.sources ul { margin: 8px 0; padding-left: 24px; font-size: 14px; line-height: 20px; }
+.sources li { margin-bottom: 4px; overflow-wrap: anywhere; }
+.sources p { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.next-topic { font-weight: 600; color: var(--pep-text-strong); }
+.complete { padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete.settled { border-color: var(--pep-warning); background: var(--pep-warning-soft); }
+.complete:empty { display: none; }
+/* Static expected results: no-JavaScript reading only */
+.pep-expected { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.pep-expected ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-nojs-note { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text-strong); }
+.pep-nojs-code { display: flex; flex-direction: column; gap: 12px; }
+@media print {
+  [data-pep-activity][hidden], [data-pep-recap][hidden] { display: flex !important; }
+  .pep-nav, .pep-activity-actions, .pep-back, #reset, .pep-progress { display: none !important; }
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .pep-objectives[open] > div { position: static; width: auto; }
+  .pep-activity { break-before: auto; }
+}
+</style>
+<style>
+/* Page-specific: the injection explorer's text field */
+#x2 label[for="city"] { display: block; font-weight: 600; color: var(--pep-text-strong); margin-bottom: 4px; }
+#city { display: block; width: 100%; max-width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 400 16px/24px var(--pep-font-mono); scroll-margin-block: 16px; }
+#inj-out { margin-top: 12px; }
+#inj-out pre { margin-top: 4px; }
+</style>
+<noscript><style>.pep-js-only{display:none!important}</style></noscript>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="15">
+<header class="pep-topicbar">
+  <h1 id="page-title">Review: JDBC</h1>
+  <div class="pep-topicbar__progress progress">
+    <p><span class="pep-js-only"><span id="pos-text">Activity 1 of 5</span> · <span id="prog-text">Activities done: 0 of 5</span> · </span>about 15 min</p>
+    <div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+  </div>
+  <details class="pep-objectives" data-pep-objectives>
+    <summary aria-controls="objectives-body">Objectives</summary>
+    <div id="objectives-body"><ul>
+      <li>Retrieve and apply the steps to query a database from Java: get a Connection, prepare a statement, execute it, read the ResultSet and close resources with try-with-resources</li>
+      <li>Explain why a PreparedStatement with ? parameters prevents SQL injection where string concatenation does not</li>
+      <li>Decide when to group statements in one transaction with setAutoCommit(false), commit and rollback</li>
+    </ul></div>
+  </details>
+  <button type="button" class="pep-btn pep-js-only" id="reset" data-pep-reset>Restart activity</button>
+  <p class="vh" id="restart-status" role="status" aria-live="polite"></p>
+</header>
+<nav class="pep-nav" aria-label="Activities"><ol class="pep-steps">
+  <li><a class="pep-step" id="tl-1" href="#activity-1" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Closing</a></li>
+  <li><a class="pep-step" id="tl-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Steps</a></li>
+  <li><a class="pep-step" id="tl-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Injection</a></li>
+  <li><a class="pep-step" id="tl-4" href="#activity-4" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Why ? works</a></li>
+  <li><a class="pep-step" id="tl-5" href="#activity-5" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Transactions</a></li>
+</ol></nav>
+<noscript data-section-skip><p class="pep-nojs-note"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. All five activities follow in order, each with its expected results and why.</p></noscript>
+
+<section id="activity-1" class="pep-activity" data-pep-activity aria-labelledby="a1-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a1-h" tabindex="-1">Activity 1: Recall the query steps</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>Answer from memory first. This is the shape of a JDBC query from the project, reading <code>customers(id, name, city)</code>:</p>
+<pre><code>String sql = "SELECT id, name FROM customers WHERE city = ?";
+try (Connection conn = DriverManager.getConnection(url, user, password);
+     PreparedStatement ps = conn.prepareStatement(sql)) {
+    ps.setString(1, city);
+    try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+            System.out.println(rs.getInt("id") + " " + rs.getString("name"));
+        }
+    }
+}</code></pre>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-1" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <p>Under <strong>Your prediction</strong>, choose when and in which order <code>conn</code>, <code>ps</code> and <code>rs</code> are closed and how sure you are, then press <strong>Check prediction</strong>.</p>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to an answer from memory, then read why each option is right or wrong.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict data-static-alt="Retrieval prediction (practice, not scored): the try-with-resources blocks open conn, then ps, then rs. Options: rs, then ps, then conn, each as its block ends, even if an exception is thrown (correct: resources close in the opposite order of their creation); conn, then ps, then rs (wrong: that is the opening order); only conn, because closing it is enough (wrong: try-with-resources closes every declared resource); nothing until garbage collection (wrong: try-with-resources closes them when the block ends).">
+            <legend>Your prediction</legend>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="predict" id="p-rev" value="rev" aria-describedby="task-1"><span class="ot"><code>rs</code>, then <code>ps</code>, then <code>conn</code>, even if an exception is thrown</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-fwd" value="fwd" aria-describedby="task-1"><span class="ot"><code>conn</code>, then <code>ps</code>, then <code>rs</code></span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-conn" value="conn" aria-describedby="task-1"><span class="ot">Only <code>conn</code>; closing it is enough</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-gc" value="gc" aria-describedby="task-1"><span class="ot">None, until the garbage collector runs</span></label>
+            </div>
+            <div class="row"><fieldset class="conf" id="conf0" data-pep-confidence aria-describedby="conf0-instr"><legend id="conf0-instr">How sure are you?</legend><label class="opt"><input type="radio" name="conf0" id="conf0-low" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-medium" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-high" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check aria-describedby="conf0-instr" disabled>Check prediction</button></div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-1" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> When are the resources closed?</p><ul><li><code>rs</code>, then <code>ps</code>, then <code>conn</code>: correct. Try-with-resources closes each resource when its block ends, in the opposite order of creation, even after an exception.</li><li><code>conn</code> first: wrong. That is the opening order.</li><li>Only <code>conn</code>: wrong. Every declared resource is closed.</li><li>Garbage collection: wrong. Closing happens when the block ends, not later.</li></ul></div></noscript>
+    </div>
+  </div>
+</section>
+
+<section id="activity-2" class="pep-activity" data-pep-activity aria-labelledby="a2-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a2-h" tabindex="-1">Activity 2: The steps in order</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <p data-pep-model>The model: each JDBC object comes from the one before it. <code>DriverManager</code> gives a <code>Connection</code>, the connection prepares a <code>PreparedStatement</code>, executing it gives a <code>ResultSet</code>, and the result set is a cursor you move with <code>next()</code>.</p>
+      <div class="teach" data-pep-teaching>
+        <p>A <code>ResultSet</code> cursor starts before the first row. <code>next()</code> moves it to the next row and returns <code>false</code> when no rows remain; only then can getters such as <code>getString("name")</code> read the current row. <code>executeQuery</code> returns a result set; <code>executeUpdate</code> returns the number of rows changed.</p>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-2" class="task" data-pep-task data-pep-may-stall>
+        <h3>Your task</h3>
+        <p>Under <strong>Which order</strong>, choose the correct sequence and your confidence, then press <strong>Check answer</strong>.</p>
+        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip>
+          <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary>
+          <div class="pep-hint__body">
+            <p data-pep-hint-target><strong>Where to act:</strong> The first two steps of each option, then the step that reads columns.</p>
+            <p data-pep-hint-step><strong>Next step:</strong> Ask which object each method belongs to: a step can only run once the object it is called on exists, and a getter needs a current row.</p>
+          </div>
+        </details>
+        <div id="task-2a"><p class="pep-task-q">Which order queries the database correctly?</p></div>
+        <div id="task-2b" tabindex="-1" hidden><p class="pep-task-q">Retry: this code throws an <code>SQLException</code> on the second line, although the customer exists. What is missing?</p>
+<pre><code>ResultSet rs = ps.executeQuery();
+String name = rs.getString("name");</code></pre></div>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>You pick the working order; a second miss settles the check.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="apply1" data-interaction="mcq" data-confidence data-pep-apply data-static-alt="Apply question: the JDBC query steps in order. Correct: get a Connection from DriverManager, prepare the statement on it, set the ? parameters, executeQuery, move with rs.next() and read the columns, close with try-with-resources. Wrong: preparing the statement before getting the connection (prepareStatement is a Connection method); executing before setting parameters (each ? needs a value first); reading columns before rs.next() (the cursor starts before the first row). Retry form: a getter called straight after executeQuery fails because rs.next() was never called to move to the first row.">
+            <legend>Which order</legend>
+            <div class="opts one" id="g2a">
+              <label class="opt"><input type="radio" name="g2a" id="g2a-prep" value="prep" aria-describedby="task-2a"><span class="ot">Prepare the statement · get a connection · set parameters · execute · read rows · close</span></label>
+              <label class="opt"><input type="radio" name="g2a" id="g2a-right" value="right" aria-describedby="task-2a"><span class="ot">Get a connection · prepare the statement · set parameters · execute · move with <code>next()</code> and read · close</span></label>
+              <label class="opt"><input type="radio" name="g2a" id="g2a-exec" value="exec" aria-describedby="task-2a"><span class="ot">Get a connection · prepare the statement · execute · set parameters · read rows · close</span></label>
+              <label class="opt"><input type="radio" name="g2a" id="g2a-read" value="read" aria-describedby="task-2a"><span class="ot">Get a connection · prepare the statement · set parameters · execute · read columns, then call <code>next()</code> · close</span></label>
+            </div>
+            <div class="opts one" id="g2b" hidden>
+              <label class="opt"><input type="radio" name="g2b" id="g2b-close" value="close" aria-describedby="task-2b"><span class="ot">A call to <code>rs.close()</code> before reading</span></label>
+              <label class="opt"><input type="radio" name="g2b" id="g2b-right" value="right" aria-describedby="task-2b"><span class="ot">A call to <code>rs.next()</code> to move to the first row</span></label>
+              <label class="opt"><input type="radio" name="g2b" id="g2b-update" value="update" aria-describedby="task-2b"><span class="ot"><code>executeUpdate()</code> instead of <code>executeQuery()</code></span></label>
+              <label class="opt"><input type="radio" name="g2b" id="g2b-commit" value="commit" aria-describedby="task-2b"><span class="ot">A call to <code>conn.commit()</code> before reading</span></label>
+            </div>
+          </fieldset>
+          <div class="row">
+            <fieldset class="conf" id="conf2" data-pep-confidence aria-describedby="conf2-instr">
+              <legend id="conf2-instr">How sure are you?</legend>
+              <label class="opt"><input type="radio" name="conf2" id="conf2-low" value="low"><span class="ot">Low</span></label>
+              <label class="opt"><input type="radio" name="conf2" id="conf2-medium" value="medium"><span class="ot">Medium</span></label>
+              <label class="opt"><input type="radio" name="conf2" id="conf2-high" value="high"><span class="ot">High</span></label>
+            </fieldset>
+            <button type="button" class="primary" id="check-2" data-pep-apply-check aria-describedby="conf2-instr" disabled>Check answer</button>
+          </div>
+      </div>
+      <div class="feedback" id="fb-2" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> Get a connection, prepare the statement, set parameters, execute, move with <code>next()</code> and read, close.</p><ul><li>Prepare before connecting: wrong; <code>prepareStatement</code> is a method of the connection.</li><li>Execute before setting parameters: wrong; every <code>?</code> needs a value first.</li><li>Read before <code>next()</code>: wrong; the cursor starts before the first row.</li></ul><p><strong>Retry form:</strong> the missing step is <code>rs.next()</code>, which moves the cursor to the first row.</p></div></noscript>
+      <p class="pep-back"><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-3" class="pep-activity" data-pep-activity aria-labelledby="a3-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a3-h" tabindex="-1">Activity 3: What concatenation does to SQL</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>Two ways to put a city typed by a user into the query:</p>
+<pre><code>// Concatenation: the value becomes part of the SQL text
+String sql = "SELECT id, name FROM customers WHERE city = '" + city + "'";
+// Parameter: the SQL text is fixed; the value is bound separately
+PreparedStatement ps = conn.prepareStatement(
+    "SELECT id, name FROM customers WHERE city = ?");
+ps.setString(1, city);</code></pre>
+        <p>SQL injection happens when typed input changes the meaning of the SQL text itself.</p>
+      </div>
+      <details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+        <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+        <div class="pep-optional__body">
+          <p data-pep-anecdote-story>A clerk reads instructions aloud to a warehouse crew: "Send the parcel to" followed by whatever the customer wrote on the form. One customer writes an address that ends "and also open the safe". Another clerk instead hands the crew a fixed instruction card with a blank box, and staples the customer's form to it; whatever the form says, it is only ever an address.</p>
+          <p data-pep-anecdote-map>Reading input as part of the instructions lets it change them; attaching it as a separate value keeps it data.</p>
+        </div>
+      </details>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-3" class="task" data-pep-task data-pep-may-stall>
+        <h3>Your task</h3>
+        <p>In <strong>City typed by the user</strong>, type a value that contains a single quote character, then press <strong>Build both queries</strong> and compare the two results under it.</p>
+        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
+          <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 3</span></summary>
+          <div class="pep-hint__body">
+            <p data-pep-hint-target><strong>Where to act:</strong> The <strong>City typed by the user</strong> field.</p>
+            <p data-pep-hint-step><strong>Next step:</strong> A real city such as <code>O'Fallon</code> already contains a quote; type one like it, then look at where the concatenated string literal now ends.</p>
+          </div>
+        </details>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>You build both queries from a value with a quote and can point to where the concatenated SQL text changes while the prepared SQL text stays the same.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-static-alt="Injection explorer. The concatenated query puts the typed city inside quotes in the SQL text. For Lyon the text is SELECT id, name FROM customers WHERE city = 'Lyon'. For a value with a quote, such as O'Fallon, the quote ends the string literal early and the rest of the value is read as SQL, so the statement is malformed; a crafted value such as x' OR '1'='1 turns the condition into city = 'x' OR '1'='1', which is true for every customer. The prepared statement's SQL text is always SELECT id, name FROM customers WHERE city = ?, and parameter 1 is bound to the exact typed text as one string value.">
+            <legend>Build the query</legend>
+            <label for="city">City typed by the user</label>
+            <input id="city" type="text" autocomplete="off" spellcheck="false" value="Lyon">
+            <div class="row"><button type="button" class="primary" id="build">Build both queries</button></div>
+            <div class="pep-lists" id="inj-out" aria-live="polite"></div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-3" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> For <code>Lyon</code>, concatenation builds <code>SELECT id, name FROM customers WHERE city = 'Lyon'</code>. For <code>O'Fallon</code>, the quote ends the string literal after <code>O</code>, and <code>Fallon'</code> is read as SQL, so the statement breaks. A crafted value such as <code>x' OR '1'='1</code> builds <code>WHERE city = 'x' OR '1'='1'</code>, which is true for every row. The prepared statement's text stays <code>SELECT id, name FROM customers WHERE city = ?</code> for every input, and parameter 1 holds the typed text as one value.</p></div></noscript>
+      <p class="pep-back"><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-4" class="pep-activity" data-pep-activity aria-labelledby="a4-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a4-h" tabindex="-1">Activity 4: Why a parameter prevents injection</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>With a <code>PreparedStatement</code>, the SQL text with its <code>?</code> placeholders is fixed before any value arrives. Each <code>setString</code> or <code>setInt</code> binds a value to a placeholder, and the database treats it only as a value, never as SQL. The OWASP SQL Injection Prevention Cheat Sheet names this, parameterized queries, as the first defense.</p>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-apply" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <p>Under <strong>Which explanation</strong>, choose one and your confidence, then press <strong>Check answer</strong>.</p>
+        <div id="task-4"><p class="pep-task-q">Why can a value bound to <code>?</code> not change the query?</p></div>
+        <div id="task-4b" tabindex="-1" hidden><p class="pep-task-q">Retry: which of these is still open to SQL injection?</p></div>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>You pick the accurate explanation; a second miss settles the check.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="apply2" data-interaction="mcq" data-confidence data-pep-apply data-static-alt="Apply question: why a bound ? value cannot change the query. Correct: the SQL text is fixed with its placeholders, and the value is sent separately and treated only as data. Wrong: PreparedStatement deletes quote characters from values (it keeps the value exactly); it rejects values that contain SQL keywords (it does not inspect values); it is safe because prepared statements run faster (speed has nothing to do with it). Retry form: conn.prepareStatement with the city concatenated into the SQL text is still open to injection, because the value is part of the text before preparing.">
+            <legend>Which explanation</legend>
+            <div class="opts one" id="g4a">
+              <label class="opt"><input type="radio" name="g4a" id="g4a-strip" value="strip" aria-describedby="task-4"><span class="ot">The driver deletes quote characters from every value</span></label>
+              <label class="opt"><input type="radio" name="g4a" id="g4a-words" value="words" aria-describedby="task-4"><span class="ot">The driver rejects values that contain SQL keywords such as <code>OR</code></span></label>
+              <label class="opt"><input type="radio" name="g4a" id="g4a-right" value="right" aria-describedby="task-4"><span class="ot">The SQL text is fixed with its placeholders, and the value is sent separately and treated only as data</span></label>
+              <label class="opt"><input type="radio" name="g4a" id="g4a-fast" value="fast" aria-describedby="task-4"><span class="ot">Prepared statements run faster, so there is no time to inject anything</span></label>
+            </div>
+            <div class="opts one" id="g4b" hidden>
+              <label class="opt"><input type="radio" name="g4b" id="g4b-set" value="set" aria-describedby="task-4b"><span class="ot"><code>conn.prepareStatement("… WHERE city = ?")</code>, then <code>ps.setString(1, city)</code></span></label>
+              <label class="opt"><input type="radio" name="g4b" id="g4b-right" value="right" aria-describedby="task-4b"><span class="ot"><code>conn.prepareStatement("… WHERE city = '" + city + "'")</code></span></label>
+              <label class="opt"><input type="radio" name="g4b" id="g4b-int" value="int" aria-describedby="task-4b"><span class="ot"><code>conn.prepareStatement("… WHERE id = ?")</code>, then <code>ps.setInt(1, id)</code></span></label>
+              <label class="opt"><input type="radio" name="g4b" id="g4b-const" value="const" aria-describedby="task-4b"><span class="ot"><code>conn.prepareStatement("… WHERE city = 'Lyon'")</code>, with no user input</span></label>
+            </div>
+          </fieldset>
+          <div class="row">
+            <fieldset class="conf" id="conf4" data-pep-confidence aria-describedby="conf4-instr">
+              <legend id="conf4-instr">How sure are you?</legend>
+              <label class="opt"><input type="radio" name="conf4" id="conf4-low" value="low"><span class="ot">Low</span></label>
+              <label class="opt"><input type="radio" name="conf4" id="conf4-medium" value="medium"><span class="ot">Medium</span></label>
+              <label class="opt"><input type="radio" name="conf4" id="conf4-high" value="high"><span class="ot">High</span></label>
+            </fieldset>
+            <button type="button" class="primary" id="check-4" data-pep-apply-check aria-describedby="conf4-instr" disabled>Check answer</button>
+          </div>
+      </div>
+      <div class="feedback" id="fb-4" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> The SQL text is fixed with its placeholders, and the value is sent separately and treated only as data.</p><ul><li>Deleting quotes: wrong; the value is kept exactly, quotes included.</li><li>Rejecting keywords: wrong; the driver does not inspect values for SQL words.</li><li>Speed: wrong; safety comes from separating text and values, not from speed.</li></ul><p><strong>Retry form:</strong> <code>conn.prepareStatement("… WHERE city = '" + city + "'")</code> is still open to injection, because the value is concatenated into the text before it is prepared.</p></div></noscript>
+      <p class="pep-back"><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-5" class="pep-activity" data-pep-activity aria-labelledby="a5-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a5-h" tabindex="-1">Activity 5: One transaction or auto-commit</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>A new connection is in auto-commit mode: each statement is committed as soon as it completes. When several statements must succeed or fail together, turn auto-commit off and end the transaction yourself:</p>
+<pre><code>conn.setAutoCommit(false);
+try {
+    debit.executeUpdate();   // take 50 from account A
+    credit.executeUpdate();  // add 50 to account B
+    conn.commit();
+} catch (SQLException e) {
+    conn.rollback();
+    throw e;
+}</code></pre>
+        <p>If the second update fails, <code>rollback()</code> undoes the first, so no money disappears.</p>
+      </div>
+      <section data-pep-where-fits aria-labelledby="where-fits-5">
+        <h2 id="where-fits-5">Where this fits</h2>
+        <p data-pep-fit-decision><strong>Decision:</strong> group statements in one transaction, or let auto-commit commit each one?</p>
+        <p data-pep-fit-good><strong>Good fit:</strong> several changes that only make sense together, such as an order row and its item rows, or a debit and its matching credit.</p>
+        <p data-pep-fit-boundary><strong>Choose something else when:</strong> the work is a single statement, or a read: auto-commit already makes one statement all or nothing, and holding a transaction open longer than needed only delays other work.</p>
+      </section>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-5" class="task" data-pep-task data-pep-may-stall>
+        <h3>Your task</h3>
+        <p>For each piece of work shown after <strong>Work:</strong>, press whether it needs one explicit transaction or auto-commit is enough.</p>
+        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-5" data-pep-hint-order="1" data-section-skip>
+          <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 5</span></summary>
+          <div class="pep-hint__body">
+            <p data-pep-hint-target><strong>Where to act:</strong> The work described after <strong>Work:</strong>.</p>
+            <p data-pep-hint-step><strong>Next step:</strong> Count the changing statements, then imagine the program crashing between two of them: would the data be left half done?</p>
+          </div>
+        </details>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-5"><h3 id="checks-5">What success looks like</h3><p>All five pieces of work sit in the right lanes; a second miss on any one settles the activity.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="x3" data-interaction="drag" data-pep-explore aria-describedby="task-5" data-static-alt="Sorting activity. Move 50 from account A to account B with two updates: one transaction. Insert an order row and its three item rows: one transaction. Delete a user, then that user's sessions: one transaction. Read one customer's name: auto-commit is enough. Change one customer's email with a single UPDATE: auto-commit is enough, because one statement is already all or nothing.">
+            <legend id="ln-legend">Work: <span id="ln-name"></span></legend>
+            <div class="lanebtns" id="ln-btns"></div>
+            <p class="sub" id="ln-count"></p>
+          </fieldset>
+          <figure class="model" aria-label="Lanes so far">
+            <div class="lanes" id="m-lanes"></div>
+          </figure>
+      </div>
+      <div class="feedback" id="fb-5" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong></p><ul><li>Move 50 from A to B: one transaction.</li><li>Insert an order and its three items: one transaction.</li><li>Delete a user, then their sessions: one transaction.</li><li>Read one customer's name: auto-commit is enough.</li><li>Change one email with a single <code>UPDATE</code>: auto-commit is enough.</li></ul></div></noscript>
+      <details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+        <summary>Challenge (optional)</summary>
+        <div class="pep-optional__body">
+          <p data-pep-optional-time><strong>Optional time:</strong> about 10 minutes, in addition to this topic's time.</p>
+          <p>In your JDBC project, add a repository method that saves an order and its items. Use only the steps on this page: one connection, prepared statements with <code>?</code> parameters, <code>setAutoCommit(false)</code>, <code>commit</code> and <code>rollback</code>, and try-with-resources.</p>
+          <p data-pep-success-criteria><strong>Success criteria:</strong> when an item insert fails, for example because of a constraint, neither the order nor any of its items remains in the database, and every resource is closed.</p>
+        </div>
+      </details>
+      <p class="pep-back"><a href="#activity-4" data-pep-back-link>Back to activity 4</a></p>
+    </div>
+  </div>
+</section>
+
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+  <button type="button" class="pep-btn" id="prev" data-pep-previous>Previous activity</button>
+  <button type="button" class="primary" id="next" data-pep-next>Next activity</button>
+</div>
+
+<section id="recap" class="recap" data-pep-recap aria-labelledby="recap-h">
+  <h2 id="recap-h" tabindex="-1">Recap</h2>
+  <p id="complete" class="complete" data-pep-completion></p>
+  <ul>
+    <li>Connection, then <code>prepareStatement</code>, then setters, then <code>executeQuery</code>, then <code>while (rs.next())</code> with getters; try-with-resources closes them in reverse order.</li>
+    <li>Concatenated input can change the SQL text; a <code>?</code> parameter is bound as a value and can never become SQL.</li>
+    <li>Use <code>setAutoCommit(false)</code>, <code>commit()</code> and <code>rollback()</code> when several changes must succeed or fail together.</li>
+  </ul>
+  <details data-section-skip data-pep-cheat-sheet>
+    <summary>Cheat sheet</summary>
+    <table>
+      <tr><td>Connect</td><td><code>DriverManager.getConnection(url, user, password)</code></td></tr>
+      <tr><td>Prepare and bind</td><td><code>conn.prepareStatement("… WHERE city = ?")</code>, <code>ps.setString(1, city)</code></td></tr>
+      <tr><td>Read rows</td><td><code>try (ResultSet rs = ps.executeQuery()) { while (rs.next()) { … } }</code></td></tr>
+      <tr><td>Change rows</td><td><code>int changed = ps.executeUpdate();</code></td></tr>
+      <tr><td>Transaction</td><td><code>conn.setAutoCommit(false); … conn.commit();</code> or <code>conn.rollback();</code></td></tr>
+    </table>
+  </details>
+  <details data-section-skip data-pep-sources class="sources">
+    <summary>Sources and review date</summary>
+    <p>Claims on this page were checked against the live official documentation below on 16 October 2026 (UTC), for Java SE 25 and the PostgreSQL JDBC driver. Links open outside this lesson.</p>
+    <ul>
+      <li><a href="https://docs.oracle.com/javase/tutorial/jdbc/basics/processingsqlstatements.html" rel="noopener">Processing SQL Statements with JDBC</a>: the steps, and closing with try-with-resources.</li>
+      <li><a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html" rel="noopener">The try-with-resources Statement</a>: resources close in the opposite order of their creation.</li>
+      <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/ResultSet.html" rel="noopener">ResultSet (Java SE 25)</a>: the cursor starts before the first row; <code>next</code>.</li>
+      <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/PreparedStatement.html" rel="noopener">PreparedStatement (Java SE 25)</a>: setters, <code>executeQuery</code> and <code>executeUpdate</code>.</li>
+      <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/Connection.html" rel="noopener">Connection (Java SE 25)</a>: auto-commit by default, <code>setAutoCommit</code>, <code>commit</code> and <code>rollback</code>.</li>
+      <li><a href="https://docs.oracle.com/javase/tutorial/jdbc/basics/transactions.html" rel="noopener">Using Transactions</a>.</li>
+      <li><a href="https://jdbc.postgresql.org/documentation/query/" rel="noopener">pgJDBC: Issuing a Query and Processing the Result</a>.</li>
+      <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html" rel="noopener">OWASP SQL Injection Prevention Cheat Sheet</a>: prepared statements with parameterized queries.</li>
+    </ul>
+  </details>
+  <p class="next-topic">Next: the SQL module check</p>
+</section>
+</main>
+<script>
+window.PEP_PAGE={
+keys:['predict','apply1','x2','apply2','x3'],
+kinds:{predict:'predict',apply1:'check',x2:'explore',apply2:'check',x3:'lanes'},
+labels:{apply1:'Query steps',apply2:'Why parameters work',x3:'Transactions'},
+predict:{ok:'rev',lead:'Try-with-resources closes every declared resource when its block ends, in the opposite order of creation, even when an exception is thrown: first `rs` as the inner block ends, then `ps`, then `conn`.',expl:{
+  rev:'Right: reverse order of opening, at the end of each block, exception or not.',
+  fwd:'Not quite: that is the order they were opened. Closing runs the other way, so nothing is closed under an object still using it.',
+  conn:'Not quite: try-with-resources closes every resource declared in its header, not just one.',
+  gc:'Not quite: closing happens as soon as the block ends; waiting for garbage collection is what try-with-resources avoids.'}},
+lanesets:[{key:'x3',model:'#m-lanes',btns:'#ln-btns',name:'#ln-name',count:'#ln-count',legend:'ln-legend',
+ lanes:[{id:'txn',label:'One transaction'},{id:'auto',label:'Auto-commit is enough'}],
+ done:'Several changes that must stand or fall together need one transaction; a single statement or a read is already all or nothing.',
+ items:[
+  {n:'Move 50 from account A to account B: two updates',lane:'txn',ok:'If only the debit succeeded, 50 would vanish; commit both or roll both back.',w:{auto:'With auto-commit the debit is committed before the credit runs, so a failure in between loses money.'}},
+  {n:'Read one customer\'s name',lane:'auto',ok:'A single read changes nothing, so there is nothing to keep together.',w:{txn:'One read statement has no partner change to protect.'}},
+  {n:'Insert an order row and its three item rows',lane:'txn',ok:'An order without its items, or items without their order, would be half saved.',w:{auto:'Each insert would commit on its own, so a failure midway leaves a partial order.'}},
+  {n:'Change one customer\'s email with a single UPDATE',lane:'auto',ok:'One statement is already all or nothing under auto-commit.',w:{txn:'There is only one change, and auto-commit commits it as a unit.'}},
+  {n:'Delete a user, then that user\'s sessions',lane:'txn',ok:'The two deletes belong together: either both happen or neither does.',w:{auto:'If the second delete fails, the first is already committed.'}}
+ ]}],
+checks:[
+ {key:'apply1',fs:'#apply1',g1:'g2a',g2:'g2b',t1:'#task-2a',t2:'#task-2b',conf:'#conf2',confName:'conf2',btn:'#check-2',data:{
+  r1:{ok:'right',expl:{
+    prep:'`prepareStatement` is a method of `Connection`, so the connection must exist first.',
+    right:'Each object comes from the previous one, and `next()` moves to a row before the getters read it.',
+    exec:'Every `?` needs a value before `executeQuery` runs.',
+    read:'The cursor starts before the first row, so a getter before `next()` has no row to read.'},
+    mis:{prep:'The statement comes from the connection.',exec:'Bind values before executing.',read:'Call next() before reading.'}},
+  r2:{ok:'right',answer:'`rs.next()` is missing: the cursor starts before the first row, so the getter has no current row until `next()` moves it.',expl:{
+    close:'Closing the result set would make reading impossible.',
+    right:'`next()` moves the cursor onto the first row and returns `true` when there is one.',
+    update:'`executeUpdate` is for statements that change rows; a `SELECT` needs `executeQuery`.',
+    commit:'Reading does not need a commit; the problem is the cursor position.'},
+    mis:{close:'Closing prevents reading.',update:'A SELECT needs executeQuery.',commit:'The cursor has not moved.'}}}},
+ {key:'apply2',fs:'#apply2',g1:'g4a',g2:'g4b',t1:'#task-4',t2:'#task-4b',conf:'#conf4',confName:'conf4',btn:'#check-4',data:{
+  r1:{ok:'right',expl:{
+    strip:'The value is kept exactly, quotes included; O\'Fallon stays O\'Fallon.',
+    words:'The driver does not inspect values for SQL words; any text is allowed as data.',
+    right:'The SQL text is fixed first, and each bound value is only ever data, so it cannot add conditions or end a string.',
+    fast:'Speed has nothing to do with safety; separating text and values does.'},
+    mis:{strip:'Values are kept exactly.',words:'Values are not scanned.',fast:'Safety is not about speed.'}},
+  r2:{ok:'right',answer:'`conn.prepareStatement("… WHERE city = \'" + city + "\'")`: the city is concatenated into the SQL text before preparing, so it can still change the query.',expl:{
+    set:'A `?` placeholder bound with `setString` is safe.',
+    right:'Preparing does not help when the value is already part of the SQL text.',
+    int:'A `?` bound with `setInt` is safe.',
+    const:'With no user input in the text, there is nothing to inject.'},
+    mis:{set:'That one binds the value safely.',int:'That one binds the value safely.',const:'There is no input in it.'}}}}
+]};
+/* Injection explorer: builds the two SQL texts from the typed value; it runs no SQL */
+(function(){var P=window.PEP_PAGE,A,tried=false;
+var PREFIX="SELECT id, name FROM customers WHERE city = '",SUFFIX="'",PREPARED='SELECT id, name FROM customers WHERE city = ?';
+function box(title,text,note){var d=A.el('div','pep-list');d.appendChild(A.el('h3','',title));var pre=A.el('pre');pre.textContent=text;d.appendChild(pre);if(note)d.appendChild(A.el('p','sub',note));return d;}
+function build(){var v=A.$('#city').value,out=A.$('#inj-out'),n=A.stepOf('x2'),q=v.indexOf("'")>=0;A.attempt(n);
+  var cat=PREFIX+v+SUFFIX;
+  var note=q?'The quote in the value ends the string literal early; every character after it is read as SQL, not as part of the city.':'No quote in the value, so the city stays inside one string literal.';
+  out.textContent='';out.appendChild(box('Concatenated SQL text',cat,note));
+  out.appendChild(box('Prepared SQL text and parameter',PREPARED+'\nparameter 1 = '+JSON.stringify(v),'The SQL text never changes; the typed text is bound as one string value.'));
+  if(!q){A.say([{c:'verdict info',s:'Both queries ask for the same city. Now type a value that contains a single quote and build again.'}]);return;}
+  var msg=[{c:'verdict ok',s:'Compare the two: the concatenated text changed shape around your quote, while the prepared text stayed the same and your value went into parameter 1 unchanged.'}];
+  if(!A.S.done.x2){tried=true;A.S.results.x2='correct';A.say(msg,true);A.complete('x2');}else A.say(msg);}
+P.init=function(api){A=api;A.$('#build').addEventListener('click',build);};
+P.reset={x2:function(){tried=false;A.$('#city').value='Lyon';A.$('#inj-out').textContent='';}};
+})();
+</script>
+<script>
+(function(){
+'use strict';
+var D=document;
+function $(s,r){return (r||D).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||D).querySelectorAll(s));}
+function md(s){var f=D.createDocumentFragment(),re=/(`[^`]+`|\*\*[^*]+\*\*)/g,last=0,m;s=String(s);
+  while((m=re.exec(s))){if(m.index>last)f.appendChild(D.createTextNode(s.slice(last,m.index)));
+    var t=m[0],e=D.createElement(t.charAt(0)==='`'?'code':'strong');e.textContent=t.charAt(0)==='`'?t.slice(1,-1):t.slice(2,-2);f.appendChild(e);last=re.lastIndex;}
+  if(last<s.length)f.appendChild(D.createTextNode(s.slice(last)));return f;}
+function el(tag,cls,txt){var e=D.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.appendChild(typeof txt==='string'?md(txt):txt);return e;}
+function T(t){return D.createTextNode(t);}
+/* Page data (questions, lanes, labels and any page simulator) comes from the page's own data script */
+var P=window.PEP_PAGE;
+
+/* Guidance state: current activity, a monotonic unlocked frontier and per-activity results kept apart */
+var main=$('#lesson'),ACTS=$$('[data-pep-activity]'),LINKS=$$('[data-pep-activity-link]'),prevBtn=$('#prev'),next=$('#next'),resetBtn=$('#reset'),recap=$('#recap');
+var KEYS=P.keys,N=KEYS.length,KIND=P.kinds;
+function stepOf(k){return KEYS.indexOf(k)+1;}
+var S={step:1,done:{},results:{}};
+function freshAct(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,cont:false};}
+var G={current:1,unlocked:1,complete:false,acts:KEYS.map(freshAct)};
+function fbOf(n){return $('[data-pep-feedback]',ACTS[n-1]);}
+function say(parts,focus){var fb=fbOf(G.current);fb.textContent='';(parts||[]).forEach(function(p){
+  if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li',it[2]||'');li.appendChild(el('strong',null,it[0]));li.appendChild(T(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
+  else if(p.pre){var pr=el('pre','out');pr.textContent=p.pre;fb.appendChild(pr);}
+  else{var q=el('p',p.c||'',p.s);if(p.attr)q.setAttribute(p.attr,'');fb.appendChild(q);}});
+  if(focus)fb.focus();}
+function optText(i){var l=i.closest('label');return l?l.textContent.replace(/\s+/g,' ').trim():i.value;}
+var WORD={'correct':'correct on the first try','correct-retry':'correct on the second try','settled':'answered and settled, not marked correct'};
+function reflect(){ACTS.forEach(function(sec,i){var a=G.acts[i];sec.setAttribute('data-pep-attempts',String(a.attempts));sec.setAttribute('data-pep-settled',String(a.settled));
+    sec.setAttribute('data-pep-completed',String(a.completed));sec.setAttribute('data-pep-credit',String(a.credit));sec.setAttribute('data-pep-grade',String(a.grade));sec.setAttribute('data-pep-continue',String(a.cont));});
+  main.setAttribute('data-pep-current-activity',String(G.current));main.setAttribute('data-pep-unlocked-through',String(G.unlocked));main.setAttribute('data-pep-complete',String(G.complete));}
+function progress(){var n=0,set=0,segs=$$('.pep-progress > span');KEYS.forEach(function(k,i){var s=segs[i];s.className='';
+    if(S.done[k]){n++;if(S.results[k]==='settled'){set++;s.className='is-settled';}else s.className='is-done';}
+    if(i+1===G.current)s.className+=(s.className?' ':'')+'is-current';});
+  $('#prog-text').textContent='Activities done: '+n+' of '+N+(set?' ('+set+(set>1?' checks':' check')+' settled, not correct)':'');}
+function attempt(n){G.acts[n-1].attempts++;reflect();}
+function finishPage(){var c=$('#complete'),labels=P.labels,parts=[],anySet=false;
+  KEYS.forEach(function(k){if(S.results[k]&&labels[k]){parts.push(labels[k]+': '+WORD[S.results[k]]+'.');if(S.results[k]==='settled')anySet=true;}});
+  c.className='complete'+(anySet?' settled':'');c.textContent='Topic complete. '+parts.join(' ')+(anySet?' Review the explanations before you move on.':'');}
+function complete(k){var n=stepOf(k),a=G.acts[n-1];S.done[k]=true;
+  a.completed=true;a.settled=true;a.cont=true;
+  if(a.credit===0){a.credit=1;a.grade=(KIND[k]==='predict'||KIND[k]==='explore'||S.results[k]==='settled')?0:1;}
+  G.unlocked=Math.max(G.unlocked,Math.min(n+1,N));
+  if(!G.complete&&KEYS.every(function(x){return !!S.done[x];})){G.complete=true;finishPage();}
+  progress();render(G.current);}
+function render(number,mode,moveFocus){
+  if(!(number>=1&&number<=N&&number<=G.unlocked))return false;
+  G.current=number;S.step=number;
+  ACTS.forEach(function(sec,i){sec.hidden=i+1!==number;});
+  LINKS.forEach(function(link,i){var n=i+1;
+    if(n===number)link.setAttribute('aria-current','step');else link.removeAttribute('aria-current');
+    if(n>G.unlocked)link.setAttribute('aria-disabled','true');else link.removeAttribute('aria-disabled');
+    link.classList.toggle('is-done',!!S.done[KEYS[i]]);});
+  prevBtn.disabled=number===1;
+  next.disabled=number===N||number>=G.unlocked||!G.acts[number-1].cont;
+  recap.hidden=!G.complete;
+  $('#pos-text').textContent='Activity '+number+' of '+N;
+  reflect();progress();
+  try{if(mode==='push')history.pushState({activity:number},'','#activity-'+number);
+    else if(mode==='replace')history.replaceState({activity:number},'','#activity-'+number);}
+  catch(e){if(mode&&location.hash!=='#activity-'+number)location.hash='activity-'+number;}
+  if(moveFocus){var h=$('#a'+number+'-h');if(h)h.focus();}
+  return true;}
+/* pep:component predict@1 js */
+/* predict */
+var pf=$('#predict'),pc=$('#predict-check');
+function pReady(){pc.disabled=!!S.done.predict||!($('input[name="predict"]:checked')&&$('input[name="conf0"]:checked'));}
+pf.addEventListener('change',pReady);
+function badges(l,arr){var b=l.querySelector('.badges');if(!b){b=el('span','badges');l.appendChild(b);}arr.forEach(function(x){b.appendChild(el('span','badge '+x[1],x[0]));});}
+pc.addEventListener('click',function(){var c=$('input[name="predict"]:checked'),cv=$('input[name="conf0"]:checked');if(!c||!cv)return;var okv=P.predict.ok,match=c.value===okv;
+  $$('input',pf).forEach(function(i){i.disabled=true;});pc.disabled=true;
+  $$('input[name="predict"]',pf).forEach(function(i){var l=i.closest('label');if(i===c){l.classList.add('mine');badges(l,[['Your prediction','mine-b'],[match?'Correct':'Not correct',match?'ok-b':'no-b']]);}else if(i.value===okv){badges(l,[[P.predict.okLabel||'Correct answer','ok-b']]);}if(i.value===okv)l.classList.add('right');l.appendChild(el('span','oexp',P.predict.expl[i.value]));});
+  pf.querySelector('.opts').classList.add('explained');pc.hidden=true;$('#conf0').closest('.row').hidden=true;
+  if(P.onPredict)P.onPredict();
+  say([{c:'verdict info',s:'Practice prediction, not scored. '+(match?'Your prediction matches the answer.':'Your prediction differs from the answer; nothing is lost.')},{c:'conf-report',s:'Your confidence: '+cv.value+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:P.predict.lead},{s:'Each option now shows its label and why, directly under it.'}],true);
+  complete('predict');});
+/* /pep:component predict js */
+/* pep:component mcq-with-confidence@1 js */
+/* graded checks: confidence first, retry in a second representation, settle after two misses */
+var checks={};
+function check(o){var st={att:0,conf:[],result:null,step:{x1:2,x2:3,apply:4}[o.key]},btn=$(o.btn),cf=$(o.conf),fs=$(o.fs),cn=o.confName||'conf';checks[o.key]=st;
+  function grp(){return st.att===0?o.g1:o.g2;}
+  function ready(){btn.disabled=!!st.result||!($('input[name="'+grp()+'"]:checked')&&$('input[name="'+cn+'"]:checked'));}
+  function lockConf(){$$('input[name="'+cn+'"]').forEach(function(i){i.disabled=true;});btn.disabled=true;}
+  function done(){S.results[o.key]=st.result;if(P.onCheck)P.onCheck(o.key,st.result);complete(o.key,o.label);}
+  fs.addEventListener('change',ready);cf.addEventListener('change',ready);
+  btn.addEventListener('click',function(){var g=grp(),r=st.att===0?o.data.r1:o.data.r2,c=$('input[name="'+g+'"]:checked'),cv=$('input[name="'+cn+'"]:checked');
+    if(!c||!cv||st.result)return;var ok=c.value===r.ok;st.conf.push(cv.value);
+    var confLine='Your confidence: '+cv.value+'. Confidence is your own read on how sure you were; it is reported, never scored.';
+    var expl=$$('input[name="'+g+'"]').map(function(i){return [optText(i)+(i===c?' (your answer):':':'),r.expl[i.value]];});
+    $$('input[name="'+g+'"]').forEach(function(i){i.disabled=true;});c.closest('label').classList.add(ok?'right':'wrong');badges(c.closest('label'),[['Your answer','mine-b'],[ok?'Correct':'Not correct',ok?'ok-b':'no-b']]);
+    if(ok){st.result=st.att===0?'correct':'correct-retry';lockConf();
+      say([{c:'verdict ok',s:st.att===0?'Correct.':'Correct on your second try.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}],true);done();}
+    else if(st.att===0){st.att=1;$('#'+o.g1).hidden=true;$('#'+o.g2).hidden=false;$(o.t1).hidden=true;$(o.t2).hidden=false;$$('input[name="'+cn+'"]').forEach(function(i){i.checked=false;});
+      say([{c:'verdict no',s:'Not yet. '+r.mis[c.value]+' Try again below: same idea, different form, with your confidence again.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}]);
+      ready();$(o.t2).focus();}
+    else{st.result='settled';lockConf();$$('input[name="'+o.g2+'"]').forEach(function(i){if(i.value===r.ok){i.closest('label').classList.add('right');badges(i.closest('label'),[['Correct answer','ok-b']]);}});
+      say([{c:'verdict set',s:'Answered and settled: this check is not marked correct. '+r.mis[c.value]},{c:'conf-report',s:'Confidence on each try: '+st.conf.join(', then ')+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:'The answer: '+r.answer},{list:expl}],true);done();}});
+  st.reset=function(){st.att=0;st.conf=[];st.result=null;$('#'+o.g1).hidden=false;$('#'+o.g2).hidden=true;$(o.t1).hidden=false;$(o.t2).hidden=true;btn.disabled=true;};
+  return st;}
+/* /pep:component mcq-with-confidence js */
+/* lane sort: each item gets one retry, then its lane is revealed; any reveal settles the activity */
+var lanesets={};
+function lanes(o){var st={idx:0,tries:{},placed:{},revealed:{}},box=$(o.model),btns=$(o.btns);lanesets[o.key]=st;
+  function laneName(id){for(var i=0;i<o.lanes.length;i++)if(o.lanes[i].id===id)return o.lanes[i].label;return id;}
+  function draw(){box.textContent='';var cnt=0;
+    o.lanes.forEach(function(ln){var d=el('div','lane'),h=el('p','lk',ln.label),u=el('ul','cards');h.id=o.key+'-lk-'+ln.id;u.setAttribute('aria-labelledby',h.id);d.appendChild(h);d.appendChild(u);box.appendChild(d);
+      o.items.forEach(function(it,i){if(st.placed[i]!==ln.id)return;cnt++;var li=el('li',st.revealed[i]?'revealed':'',it.n);if(st.revealed[i])li.appendChild(el('span','tag','shown after two tries'));u.appendChild(li);});});
+    var it=o.items[st.idx];$(o.name).textContent=it?'':'all sorted';$(o.name).appendChild(it?md(it.n):T(''));
+    $(o.count).textContent=cnt+' of '+o.items.length+' sorted';}
+  function finish(msg){var anyRev=Object.keys(st.revealed).length,anyRetry=Object.keys(st.tries).some(function(k){return st.tries[k]>0;});
+    var res=anyRev?'settled':(anyRetry?'correct-retry':'correct');S.results[o.key]=res;
+    $$('button',btns).forEach(function(b){b.disabled=true;});
+    msg.push({c:anyRev?'verdict set':'verdict ok',s:anyRev?'All sorted. Answered and settled: '+anyRev+(anyRev>1?' items were':' item was')+' shown after two tries, so this activity is not marked correct.':(anyRetry?'All sorted, some on a second try.':'All sorted on the first try.')});
+    if(o.done)msg.push({s:o.done});say(msg,true);complete(o.key);}
+  o.lanes.forEach(function(ln){var b=el('button','ghost',ln.label);b.type='button';b.id=o.key+'-to-'+ln.id;b.setAttribute('data-lane',ln.id);b.setAttribute('aria-describedby',o.legend);
+    b.addEventListener('click',function(){var i=st.idx,it=o.items[i];if(!it||S.done[o.key])return;attempt(stepOf(o.key));
+      if(ln.id===it.lane){st.placed[i]=ln.id;st.idx++;var msg=[{c:'verdict ok',s:'Yes: '+laneName(ln.id)+'.'},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(msg);else say(msg);}
+      else{st.tries[i]=(st.tries[i]||0)+1;
+        if(st.tries[i]<2){say([{c:'verdict no',s:'Not '+laneName(ln.id)+'. '+it.w[ln.id]},{s:'Try another button for the same item.'}]);}
+        else{st.placed[i]=it.lane;st.revealed[i]=true;st.idx++;var m2=[{c:'verdict set',s:'Shown after two tries: '+laneName(it.lane)+'. '+it.w[ln.id]},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(m2);else say(m2);}}});
+    btns.appendChild(b);});
+  st.reset=function(){st.idx=0;st.tries={};st.placed={};st.revealed={};$$('button',btns).forEach(function(b){b.disabled=false;});draw();};
+  draw();return st;}
+
+/* Wire the activities declared by the page data */
+var API={$:$,$$:$$,el:el,md:md,T:T,say:say,attempt:attempt,complete:complete,stepOf:stepOf,S:S,G:G};
+if(KIND.predict)P.onPredict=function(){attempt(stepOf('predict'));};
+(P.lanesets||[]).forEach(function(o){lanes(o);});
+(P.checks||[]).forEach(function(o){check(o);$(o.btn).addEventListener('click',function(){var n=stepOf(o.key),c=checks[o.key].conf.length;if(c!==G.acts[n-1].attempts){G.acts[n-1].attempts=c;reflect();}});});
+if(P.init)P.init(API);
+
+/* Restart: only the current activity returns to its authored start; other work, the frontier and page completion stay */
+function clearChoices(scope){$$('input',scope).forEach(function(i){i.checked=false;i.disabled=false;});$$('.opt',scope).forEach(function(o){o.classList.remove('right','wrong','mine');});
+  $$('.oexp,.badges',scope).forEach(function(e){e.remove();});$$('.opts.explained',scope).forEach(function(o){o.classList.remove('explained');});}
+function restart(){var n=G.current,k=KEYS[n-1],sec=ACTS[n-1],kind=KIND[k];
+  if(kind==='predict'){clearChoices(sec);pc.hidden=false;pc.disabled=true;$('#conf0').closest('.row').hidden=false;}
+  if(kind==='lanes')lanesets[k].reset();
+  if(kind==='check'){clearChoices(sec);checks[k].reset();}
+  if(P.reset&&P.reset[k])P.reset[k](API);
+  delete S.done[k];delete S.results[k];G.acts[n-1]=freshAct();
+  $$('[data-pep-feedback]',sec).forEach(function(f){f.textContent='';});
+  render(n);
+  $('#restart-status').textContent='Activity '+n+' restarted. Other activities keep their work.';}
+resetBtn.addEventListener('click',restart);
+
+/* Reversible navigation: buttons, timeline, back links and browser history change only the current activity */
+function numberOf(hash){var m=/^#activity-(\d+)$/.exec(hash||'');return m?Number(m[1]):0;}
+prevBtn.addEventListener('click',function(){render(G.current-1,'push',true);});
+next.addEventListener('click',function(){render(G.current+1,'push',true);});
+LINKS.forEach(function(link,i){link.addEventListener('click',function(ev){ev.preventDefault();render(i+1,'push',true);});});
+$$('[data-pep-back-link]').forEach(function(link){link.addEventListener('click',function(ev){ev.preventDefault();render(numberOf(link.getAttribute('href')),'push',true);});});
+var lastFocused=null;D.addEventListener('focusin',function(ev){lastFocused=ev.target;});
+function fromHistory(){var keep=lastFocused,n=numberOf(location.hash);
+  if(!render(n,null,false))render(G.current,'replace',false);
+  if(keep&&keep.isConnected&&!keep.closest('[hidden]'))keep.focus({preventScroll:true});}
+addEventListener('popstate',fromHistory);addEventListener('hashchange',fromHistory);
+
+/* Objectives: native disclosure; Escape and an outside click close it */
+var obj=$('[data-pep-objectives]');
+D.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&obj.open){obj.open=false;obj.querySelector('summary').focus();}});
+D.addEventListener('click',function(ev){if(obj.open&&!obj.contains(ev.target))obj.open=false;});
+
+/* Print: expand closed disclosures, then restore only those */
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=$$('details:not([open])');printOpened.forEach(function(d){d.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(d){d.open=false;});printOpened=[];});
+
+var first=numberOf(location.hash);
+render(first>=1&&first<=G.unlocked?first:1,'replace',false);
+})();
+</script>
+</body>
+</html>

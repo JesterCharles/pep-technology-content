@@ -1,0 +1,2225 @@
+<!doctype html>
+<html lang="en" class="pep-nojs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reading older Java code (8, 11, 17)</title>
+<meta name="description" content="Reading older Java code (8, 11, 17)">
+<meta name="pep:course" content="java-foundations">
+<meta name="pep:module" content="testing-and-java-review">
+<meta name="pep:topic" content="Reading older Java code (8, 11, 17)">
+<meta name="pep:topic-id" content="reading-older-java-code">
+<meta name="pep:budget-minutes" content="11">
+<meta name="pep:source" content="authoring/evidence/java-foundations/testing-and-java-review/reading-older-java-code/sources.json">
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0; }
+ul, ol { margin: 0; padding-left: 24px; }
+li + li { margin-top: 4px; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+.pep-sr { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; padding: 0; }
+
+/* topic bar and objectives */
+.pep-topicbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding: 12px 16px; margin: 0 0 16px;
+  border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { display: flex; flex: 1 1 220px; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; flex: 1 1 96px; width: 96px; max-width: 160px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-line-strong); opacity: 0.45; }
+.pep-progress > span.is-done { background: var(--pep-accent); opacity: 1; }
+.pep-objectives { position: relative; break-inside: avoid; min-width: 0; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; border-radius: var(--pep-radius-sm); }
+.pep-objectives > div { width: min(360px, 100%); margin-top: 4px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text); }
+.pep-objectives[open] { flex: 1 1 100%; }
+.pep-topicbar .pep-btn { flex: 0 0 auto; }
+@media print { .pep-objectives > div { display: block !important; width: auto; } }
+
+/* timeline */
+.pep-timeline { margin: 0 0 24px; }
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pep-steps > li + li { margin-top: 0; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px 6px 6px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; background: var(--pep-page); }
+.pep-step__n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--pep-control); color: var(--pep-text); font-size: 13px; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-current="step"] .pep-step__n { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); border-style: dashed; cursor: not-allowed; }
+.pep-step__state { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+
+/* activities and regions */
+.pep-activity { margin: 0 0 32px; min-width: 0; }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-teach { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pep-region--workspace, [data-pep-workspace] {
+  padding: 24px; border: 1px solid var(--pep-line-strong);
+  border-radius: var(--pep-radius-lg); background: var(--pep-card);
+}
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
+.pep-task { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pep-activity-checks, [data-pep-activity-checks] {
+  padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px;
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); color: var(--pep-text);
+}
+.pep-activity-checks h3 { margin-bottom: 4px; }
+.pep-back { margin-top: 16px; }
+.pep-back a, .pep-back-link { display: inline-flex; align-items: center; min-height: 44px; padding: 8px 12px; font-weight: 600; }
+.pep-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 4px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); background: var(--pep-control); color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); align-self: flex-start; }
+
+/* where this fits */
+[data-pep-where-fits] {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text);
+}
+[data-pep-where-fits] strong { color: var(--pep-text-strong); }
+
+/* hints */
+.pep-hint, details[data-pep-hint] {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md);
+  background: var(--pep-accent-soft); break-inside: avoid; color: var(--pep-text);
+}
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
+.pep-hint .pep-hint {
+  margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong);
+  border-radius: 0; background: transparent;
+}
+
+/* optional disclosures */
+.pep-optional {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-card); break-inside: avoid; color: var(--pep-text);
+}
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer;
+  color: var(--pep-text-strong); font-weight: 600;
+}
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { display: flex; flex-direction: column; gap: 8px; padding: 4px 0 16px; }
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional, [data-pep-workspace] { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+  .pep-option.is-correct, .pep-option.is-wrong, .pep-step[aria-current="step"] { border-color: Highlight; }
+}
+@media print {
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .pep-optional > summary, .pep-hint > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker, .pep-hint > summary::-webkit-details-marker { display: none; }
+}
+
+/* cards, callouts, code */
+.pep-callout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text); }
+.pep-callout strong { color: var(--pep-text-strong); }
+.pep-callout--info { background: var(--pep-page); border-color: var(--pep-accent); }
+.pep-callout--success { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-callout--warning { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-callout--danger { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-code {
+  margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong);
+  border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm);
+  font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4;
+}
+.pep-code .tok-key { color: var(--pep-accent-text); }
+.pep-code .tok-com { color: var(--pep-text-muted); }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.pep-figure { margin: 0; }
+.pep-figure svg { display: block; width: 100%; height: auto; }
+.pep-figure .node { fill: var(--pep-card); stroke: var(--pep-line-strong); stroke-width: 1.5; }
+.pep-figure .node.is-focus { fill: var(--pep-accent-soft); stroke: var(--pep-accent); stroke-width: 2; }
+.pep-figure .edge { fill: none; stroke: var(--pep-line-strong); stroke-width: 2; }
+.pep-figure .label { fill: var(--pep-text-strong); font: 600 16px var(--pep-font-sans); }
+.pep-figure .label-sm { fill: var(--pep-text); font: 400 15px var(--pep-font-sans); }
+.pep-figure figcaption { margin-top: 8px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-table-wrap { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); overflow-x: auto; }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); }
+.pep-table th { text-align: left; font-weight: 600; color: var(--pep-text-strong); background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); padding: 8px 12px; }
+.pep-table td { padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.pep-table code { white-space: pre-wrap; }
+
+/* buttons */
+.pep-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; min-width: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm);
+  font: 600 16px/24px var(--pep-font-sans); cursor: pointer;
+  border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong);
+}
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+.pep-btn:disabled, .pep-btn[aria-disabled="true"] { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 32px; }
+.pep-activity-actions .pep-btn { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn { flex: 0 1 auto; } }
+
+/* options and confidence */
+.pep-q { margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-q > legend { padding: 0; margin-bottom: 8px; font-weight: 600; color: var(--pep-text-strong); }
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-option {
+  position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 4px 12px; align-items: center;
+  min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer;
+}
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option.is-correct .pep-option__key { background: var(--pep-success); color: var(--pep-page); }
+.pep-option.is-wrong .pep-option__key { background: var(--pep-danger); color: var(--pep-page); }
+.pep-option input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pep-option input:disabled { cursor: default; }
+.pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-option:has(input:disabled) { cursor: default; }
+.pep-option__tag { grid-column: 2; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-explain { grid-column: 2; margin: 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-confidence .pep-options { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); }
+.pep-confidence .pep-option { grid-template-columns: minmax(0, 1fr); text-align: center; }
+@media (max-width: 480px) { .pep-confidence .pep-options { grid-template-columns: minmax(0, 1fr); } }
+.pep-feedback { min-height: 0; }
+.pep-feedback:empty { display: none; }
+.pep-feedback > * + * { margin-top: 8px; }
+.pep-verdict { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.pep-verdict--correct { color: var(--pep-success); } .pep-verdict--wrong { color: var(--pep-danger); } .pep-verdict--revealed { color: var(--pep-warning); }
+.pep-verdict svg { flex: 0 0 auto; width: 20px; height: 20px; }
+
+/* editor */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); min-width: 0; }
+.pep-editor__bar { border-radius: 11px 11px 0 0; }
+.pep-editor__status { border-radius: 0 0 11px 11px; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__secondary { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { margin: 0; padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font: inherit; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { display: block; width: 100%; margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; min-height: 200px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; flex-wrap: wrap; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; margin: 0; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); background: var(--pep-sunken); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; white-space: pre-wrap; cursor: pointer; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); border-top: 1px solid var(--pep-line-strong); }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__gutter { font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+
+/* trace and debugger */
+.pep-trace { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pep-listing { margin: 0; padding: 8px 0; list-style: none; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text-strong); counter-reset: none; min-width: 0; }
+.pep-listing > li { display: grid; grid-template-columns: 32px 20px minmax(0, 1fr); align-items: center; gap: 0 4px; margin: 0; min-height: 28px; padding: 0 8px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-listing > li + li { margin-top: 0; }
+.pep-listing .ln { color: var(--pep-text-muted); text-align: right; font-variant-numeric: tabular-nums; padding-right: 4px; }
+.pep-listing .mark { color: var(--pep-accent-text); font-weight: 700; text-align: center; }
+.pep-listing li.is-current { background: var(--pep-accent-soft); }
+.pep-listing .bp { display: grid; place-items: center; width: 44px; min-height: 44px; padding: 0; border: 0; background: none; color: var(--pep-text-muted); font: 600 13px/1 var(--pep-font-sans); cursor: pointer; }
+.pep-listing .bp[aria-pressed="true"] { color: var(--pep-danger); }
+.pep-listing .bp .dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 2px solid currentColor; }
+.pep-listing .bp[aria-pressed="true"] .dot { background: currentColor; }
+.pep-trace__panes { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 600px) { .pep-trace__panes { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.pep-pane { min-width: 0; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); }
+.pep-pane h4 { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-frames { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.pep-frames > li { margin: 0; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); overflow-wrap: anywhere; }
+.pep-frames > li.is-top { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); }
+.pep-vars { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; font: 400 14px/20px var(--pep-font-mono); }
+.pep-vars dt { color: var(--pep-text-strong); font-weight: 600; }
+.pep-vars dd { margin: 0; overflow-wrap: anywhere; }
+.pep-trace__status { font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-trace__out { margin: 0; min-height: 44px; padding: 8px 12px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--pep-text-strong); }
+.pep-static-trace { display: none; }
+.pep-nojs .pep-static-trace { display: block; }
+.pep-recap, .pep-sources { margin: 48px 0 0; display: flex; flex-direction: column; gap: 12px; }
+.pep-sources-box { border-top: 1px solid var(--pep-line-strong); padding-top: 12px; }
+.pep-sources-box > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; color: var(--pep-text-strong); }
+.pep-sources-box a { display: inline-block; min-height: 44px; padding: 10px 0; }
+.pep-cheat { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); }
+.pep-cheat h3 { margin-bottom: 8px; }
+@media print {
+  .pep-timeline, .pep-activity-actions, .pep-back, nav[aria-label="Activities"] { display: none !important; }
+  [data-pep-activity], [data-pep-activity][hidden] { display: block !important; }
+  .pep-static-trace { display: block !important; }
+  .pep-live-trace, .pep-editor__tabs, .pep-actions { display: none !important; }
+  .pep-regions { display: block; }
+  .pep-region + .pep-region { margin-top: 16px; }
+  .pep-editor__code { max-height: none; overflow: visible; }
+  .pep-sources-box a { min-height: 0; padding: 0; }
+}
+.pep-nojs .pep-live-trace, .pep-nojs .pep-editor, .pep-nojs .pep-actions, .pep-nojs .pep-activity-actions, .pep-nojs .pep-confidence { display: none; }
+.pep-optcode { display: block; margin-top: 4px; padding: 8px 12px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--pep-text-strong); }
+.pep-optcode .tok-key { color: var(--pep-accent-text); }
+.pep-form { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pep-field label { font-weight: 600; color: var(--pep-text-strong); }
+.pep-field__help { font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-field textarea { width: 100%; min-height: 88px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 400 16px/24px var(--pep-font-sans); resize: vertical; scroll-margin-block: 16px; }
+.pep-listing--debug > li { grid-template-columns: 44px 28px 20px minmax(0, 1fr); }
+</style>
+<style>
+/* testing-and-java-review add-on: practice JUnit workspace, coverage view and request tracer. Token roles only. */
+.pep-junit { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); min-width: 0; }
+.pep-junit__limits { margin: 0; padding: 0 12px 8px; border-top: 1px solid var(--pep-line-strong); background: var(--pep-card); border-radius: 0 0 11px 11px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-junit__limits > summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; color: var(--pep-text-strong); }
+.pep-junit__limits ul { margin: 0; padding-left: 20px; }
+.pep-junit .pep-editor__status { border-radius: 0; }
+.pep-code-label { margin: 0; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-readonly { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.pep-cov { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pep-cov ol { margin: 0; padding: 8px 0; list-style: none; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text-strong); min-width: 0; }
+.pep-cov__line { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 0 8px; margin: 0; padding: 2px 8px 2px 0; border-left: 4px solid transparent; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-cov__line .ln { color: var(--pep-text-muted); text-align: right; font-variant-numeric: tabular-nums; }
+.pep-cov__state { grid-column: 2; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-cov__line.is-full { background: var(--pep-success-soft); border-left-color: var(--pep-success); }
+.pep-cov__line.is-part { background: var(--pep-warning-soft); border-left-color: var(--pep-warning); border-left-style: dashed; }
+.pep-cov__line.is-none { background: var(--pep-danger-soft); border-left-color: var(--pep-danger); border-left-style: dotted; }
+.pep-cov__summary { margin: 0; font: 600 14px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-tracer { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pep-tracer__controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.pep-tracer__controls label { display: flex; flex-direction: column; gap: 4px; font: 600 14px/20px var(--pep-font-sans); color: var(--pep-text-strong); min-width: 0; }
+.pep-tracer select { min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 400 16px/24px var(--pep-font-mono); max-width: 100%; }
+.pep-tracer__steps { margin: 0; padding-left: 24px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-tracer__steps li + li { margin-top: 4px; }
+.pep-tracer__steps code { white-space: pre-wrap; }
+.pep-goals { list-style: none; margin: 0; padding: 0; }
+.pep-goals li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 4px 0; }
+.pep-goals .pep-goal__state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-goals li.is-done .pep-goal__state { color: var(--pep-success); }
+.pep-nojs .pep-junit, .pep-nojs .pep-js-only { display: none; }
+@media (max-width: 480px) {
+  .pep-tracer__controls label, .pep-tracer select { width: 100%; }
+  .pep-cov__line { grid-template-columns: 24px minmax(0, 1fr); }
+}
+@media forced-colors {
+  .pep-cov__line.is-full, .pep-cov__line.is-part, .pep-cov__line.is-none { border-left-color: CanvasText; }
+}
+@media print {
+  .pep-junit__limits[open], .pep-junit__limits { break-inside: avoid; }
+}
+.pep-junit .pep-editor__status, .pep-cov li, .pep-cov p, .pep-junit__limits li { max-width: none; }
+</style>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="11">
+<header class="pep-topicbar">
+<h1 id="page-title">Reading older Java code (8, 11, 17)</h1>
+<span class="pep-topicbar__progress" data-pep-progress><span id="progress-text">Activity 1 of 3 · 0 of 3 done · about 11 min</span><span class="pep-progress" aria-hidden="true"><span></span><span></span><span></span></span></span>
+<details class="pep-objectives" data-pep-objectives>
+<summary aria-controls="objectives-body">Objectives</summary>
+<div id="objectives-body"><ul><li>Recognize which Java release a feature needs, such as lambdas (8), var (10), switch expressions (14) and records (16)</li><li>Rewrite an older idiom, such as an anonymous class or a colon switch, in its modern form</li><li>Inspect a short Java 8, 11 or 17 example, predict whether it compiles on JDK 25, and name the feature or migration issue behind the prediction</li></ul></div>
+</details>
+<button class="pep-btn" type="button" id="restart" data-pep-reset>Restart activity</button>
+</header>
+<nav class="pep-timeline" aria-label="Activities"><ol class="pep-steps">
+<li><a class="pep-step" id="timeline-1" href="#activity-1" data-pep-activity-link><span class="pep-step__n">1</span><span>Predict the release</span><span class="pep-step__state"></span></a></li>
+<li><a class="pep-step" id="timeline-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n">2</span><span>Anonymous class to lambda</span><span class="pep-step__state"></span></a></li>
+<li><a class="pep-step" id="timeline-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n">3</span><span>Will it compile?</span><span class="pep-step__state"></span></a></li>
+</ol></nav>
+<section class="pep-activity" id="activity-1" data-pep-activity data-kind="choice" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div class="pep-teach" data-pep-teaching>
+<h2 id="activity-1-title" tabindex="-1">Activity 1 of 3: Predict which release a snippet needs</h2>
+<p>Before any explanation: you find this code in a project. Predict the oldest JDK release whose standard language features include everything it uses.</p>
+<pre class="pep-code"><code><span class="tok-key">var</span> label = <span class="tok-key">switch</span> (day) {
+    <span class="tok-key">case</span> 6, 7 -&gt; "weekend";
+    <span class="tok-key">default</span> -&gt; "weekday";
+};</code></pre>
+</div>
+
+</div>
+<div class="pep-region pep-region--workspace" data-pep-workspace="choice">
+<div class="pep-task" id="task-1" data-pep-task data-pep-may-stall>
+<h3>Your task</h3>
+<p>Choose the oldest release that accepts this code without preview features. Then choose how sure you are and press <strong>Check</strong>.</p>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-1" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 1</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The two newest-looking pieces: the word <code>var</code> and the <code>switch</code> that produces a value.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Each piece arrived in its own release; the snippet needs whichever of the two came later.</p>
+</div>
+</details>
+</div>
+<section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1">
+<h3 id="checks-1">What success looks like</h3>
+<ul><li>You chose one release and a confidence rating, then pressed Check.</li><li>You can name the release each piece of the snippet needs.</li></ul>
+</section>
+<fieldset class="pep-q" data-pep-q data-interaction="predict" data-confidence data-static-alt="Question: What is the oldest release that accepts it?. Option A: Java 8 - Not quite. Java 8 brought lambdas, but it had neither var nor a switch that yields a value. Option B: Java 10 - Not quite. Java 10 added var for local variables, but arrow case labels in a switch expression were not standard yet. Option C: Java 14 - Correct. var arrived in Java 10, and switch expressions with arrow labels became standard in Java 14, so Java 14 is the oldest release with both. Option D: Java 17 - Not quite. Java 17 accepts it, but so did Java 14 and 15, so 17 is not the oldest. Before feedback, the learner rates confidence: Guessing, Fairly sure or Certain.">
+<legend>What is the oldest release that accepts it?</legend>
+<div class="pep-options">
+<label class="pep-option" for="a1-a"><input type="radio" id="a1-a" name="a1" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Java 8</span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. Java 8 brought lambdas, but it had neither <code>var</code> nor a <code>switch</code> that yields a value.</span></label>
+<label class="pep-option" for="a1-b"><input type="radio" id="a1-b" name="a1" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Java 10</span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. Java 10 added <code>var</code> for local variables, but arrow <code>case</code> labels in a <code>switch</code> expression were not standard yet.</span></label>
+<label class="pep-option" for="a1-c"><input type="radio" id="a1-c" name="a1" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Java 14</span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Correct. <code>var</code> arrived in Java 10, and switch expressions with arrow labels became standard in Java 14, so Java 14 is the oldest release with both.</span></label>
+<label class="pep-option" for="a1-d"><input type="radio" id="a1-d" name="a1" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Java 17</span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. Java 17 accepts it, but so did Java 14 and 15, so 17 is not the oldest.</span></label>
+</div>
+</fieldset>
+<fieldset class="pep-q pep-confidence" data-confidence>
+<legend>How sure are you?</legend>
+<div class="pep-options">
+<label class="pep-option" for="a1-conf-0"><input type="radio" id="a1-conf-0" name="a1-conf" value="guess"><span class="pep-option__text">Guessing</span></label>
+<label class="pep-option" for="a1-conf-1"><input type="radio" id="a1-conf-1" name="a1-conf" value="fair"><span class="pep-option__text">Fairly sure</span></label>
+<label class="pep-option" for="a1-conf-2"><input type="radio" id="a1-conf-2" name="a1-conf" value="certain"><span class="pep-option__text">Certain</span></label>
+</div>
+</fieldset>
+<div class="pep-actions">
+<button type="button" class="pep-btn pep-btn--primary" id="check-1" data-pep-wrong-attempt>Check</button>
+<button type="button" class="pep-btn" id="reveal-1" data-pep-complete-activity>Show the explained answer</button>
+</div>
+<div class="pep-feedback" id="feedback-1" data-pep-feedback aria-live="polite"></div>
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-2" data-pep-activity data-kind="form" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div class="pep-teach" data-pep-teaching>
+<h2 id="activity-2-title" tabindex="-1">Activity 2 of 3: Rewrite an anonymous class as a lambda</h2>
+<p>Each release added features you will meet in older code: lambdas in <strong>8</strong>, <code>var</code> for local variables in <strong>10</strong>, switch expressions with <code>case X -&gt;</code> labels in <strong>14</strong>, text blocks in <strong>15</strong>, and records and <code>instanceof</code> patterns in <strong>16</strong>.</p>
+<p>Before Java 8, a one-method interface such as <code>Runnable</code> was filled in with an anonymous class: <code>new Runnable() { public void run() { … } }</code>. A lambda states the same thing as parameters, an arrow and a body: <code>Runnable hello = () -&gt; System.out.println("hi");</code>. Likewise, a colon <code>switch</code> with <code>break</code>s often becomes a switch expression.</p>
+<p>Refactor with tests in place: the behavior must not change.</p>
+<details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+<summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+<div class="pep-optional__body">
+<p data-pep-anecdote-story>An old recipe card says: take the stand mixer down from the shelf, plug it in, fit the whisk, and whisk two eggs. A newer card in the same box just says: whisk two eggs. Both make the same omelette; the second leaves out the ceremony.</p>
+<p data-pep-anecdote-map>A lambda is the shorter card: it keeps the one action and drops the surrounding boilerplate.</p>
+</div>
+</details>
+</div>
+
+</div>
+<div class="pep-region pep-region--workspace" data-pep-workspace="code">
+<div class="pep-task" id="task-2" data-pep-task data-pep-may-stall>
+<h3>Your task</h3>
+<p>In the <code>NamesTest.java</code> editor, <code>Names.byLength</code> is written the Java 7 way. The test below it already checks the behavior.</p>
+<ol>
+<li>Press <strong>Run tests</strong> first: the test passes with the anonymous class.</li>
+<li>Replace the whole anonymous class, from <code>new Comparator&lt;String&gt;()</code> to its closing <code>}</code>, with a lambda that compares the same way. Keep the <code>;</code> that ends the field.</li>
+<li>Leave <code>NamesTest</code> unchanged, run again until it still passes, then press <strong>Check my tests</strong>.</li>
+</ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 2</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The right-hand side of <code>static Comparator&lt;String&gt; byLength =</code>.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Keep only the parts that carry meaning: the two parameter names from <code>compare</code>, then an arrow, then what the method returns.</p>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="2" data-section-skip>
+<summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 2</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> After the arrow in your lambda.</p>
+<p data-pep-hint-step><strong>Next step:</strong> A single expression needs no braces and no <code>return</code>; reuse the expression from the old <code>return</code> line exactly.</p>
+</div>
+</details></div>
+</details>
+</div>
+<section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2">
+<h3 id="checks-2">What success looks like</h3>
+<ul><li><code>Names.byLength</code> is a lambda, and no anonymous <code>Comparator</code> class is left.</li><li>The provided test still passes, so the comparison behaves the same.</li><li><code>NamesTest</code> still makes its three checks.</li></ul>
+</section>
+<div class="pep-junit" data-interaction="explore" data-static-alt="Practice JUnit editor. NamesTest.java holds class Names with a static Comparator of String named byLength, written as an anonymous class whose compare method returns Integer.compare of the two lengths, and a provided test checking that Bo sorts before Ada, Grace after Ada, and Ada equal to Eve. Task: replace the anonymous class with a lambda that compares the same way, keeping the test unchanged and passing. Checks: byLength is a lambda with no anonymous class left; the test passes; the test keeps its three checks.">
+<div class="pep-editor__bar">
+<span class="pep-editor__file">NamesTest.java</span>
+<span class="pep-editor__secondary">Practice JUnit runner · runs offline in this page</span>
+<button type="button" class="pep-btn" data-junit-run id="run-2">Run tests</button>
+<button type="button" class="pep-btn" data-junit-reset id="reset-code-2">Reset code</button>
+</div>
+<div class="pep-editor__code">
+<pre class="pep-editor__gutter" aria-hidden="true" data-section-skip>1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22</pre>
+<textarea class="pep-editor__input" id="code-2" aria-label="NamesTest.java code editor for Activity 2" spellcheck="false" autocapitalize="off" autocomplete="off">import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import java.util.*;
+
+class Names {
+    // Java 7 style: rewrite this anonymous class as a lambda.
+    static Comparator&lt;String&gt; byLength = new Comparator&lt;String&gt;() {
+        @Override
+        public int compare(String a, String b) {
+            return Integer.compare(a.length(), b.length());
+        }
+    };
+}
+
+class NamesTest {
+    @Test
+    void shorterNameComesFirst() {
+        assertTrue(Names.byLength.compare("Bo", "Ada") &lt; 0);
+        assertTrue(Names.byLength.compare("Grace", "Ada") &gt; 0);
+        assertEquals(0, Names.byLength.compare("Ada", "Eve"));
+    }
+}</textarea>
+</div>
+<div class="pep-editor__tabs" role="tablist" aria-label="Results for Activity 2">
+<button type="button" role="tab" id="tab-problems-2" data-junit-tab="problems" aria-controls="problems-2" aria-selected="false">Problems</button>
+<button type="button" role="tab" id="tab-output-2" data-junit-tab="output" aria-controls="output-2" aria-selected="true">Output</button>
+</div>
+<div class="pep-editor__panel" role="tabpanel" id="problems-2" aria-labelledby="tab-problems-2" data-junit-panel="problems" tabindex="0"></div>
+<pre class="pep-editor__panel" role="tabpanel" id="output-2" aria-labelledby="tab-output-2" data-junit-panel="output" tabindex="0"></pre>
+<p class="pep-editor__status" aria-live="polite">Ready. Press Run tests to compile and run every @Test method; problems and results appear above.</p>
+<details class="pep-junit__limits" data-section-skip><summary>What this practice runner can and cannot do</summary><ul><li>It reads a small Java subset: classes and interfaces with fields, constructors and methods; <code>if</code>/<code>else</code>, for-each over a <code>List</code>, <code>return</code> and <code>throw</code>; <code>String</code>, <code>int</code>, <code>long</code>, <code>double</code>, <code>boolean</code>, <code>List</code> and <code>Map</code>; and lambdas.</li><li>It knows JUnit Jupiter <code>@Test</code>, <code>@BeforeEach</code> and the common <code>Assertions</code> methods, plus Mockito <code>mock</code>, <code>when</code>/<code>thenReturn</code>, <code>verify</code>, <code>times</code>, <code>never</code> and a few argument matchers.</li><li>Anything else shows <em>Not supported here</em>: that is a limit of this page, not a claim that the Java is wrong. <em>Error</em> is used only where javac or JUnit certainly rejects the code.</li><li>It is not javac or the JUnit Platform: it runs tests in source order (JUnit itself does not promise an order), shortens failure messages, and does not perform every compile-time check. Confirm real projects with Maven or your IDE.</li></ul></details>
+</div>
+<noscript data-pep-no-js data-section-skip><div class="pep-callout"><p><strong>Reading without JavaScript.</strong> Names.byLength is an anonymous Comparator class whose compare method returns Integer.compare(a.length(), b.length()). Rewrite it as a lambda with the same two parameters and the same comparison, leave NamesTest unchanged, and run the test in your IDE or with Maven: it should still pass.</p><p>Starter code for NamesTest.java:</p><code class="pep-optcode"><span class="tok-key">import</span> org.junit.jupiter.api.Test;
+<span class="tok-key">import</span> <span class="tok-key">static</span> org.junit.jupiter.api.Assertions.*;
+<span class="tok-key">import</span> java.util.*;
+
+<span class="tok-key">class</span> Names {
+    <span class="tok-com">// Java 7 style: rewrite this anonymous class as a lambda.</span>
+    <span class="tok-key">static</span> Comparator&lt;String&gt; byLength = <span class="tok-key">new</span> Comparator&lt;String&gt;() {
+        @Override
+        <span class="tok-key">public</span> <span class="tok-key">int</span> compare(String a, String b) {
+            <span class="tok-key">return</span> Integer.compare(a.length(), b.length());
+        }
+    };
+}
+
+<span class="tok-key">class</span> NamesTest {
+    @Test
+    <span class="tok-key">void</span> shorterNameComesFirst() {
+        assertTrue(Names.byLength.compare("Bo", "Ada") &lt; 0);
+        assertTrue(Names.byLength.compare("Grace", "Ada") &gt; 0);
+        assertEquals(0, Names.byLength.compare("Ada", "Eve"));
+    }
+}</code></div></noscript>
+<details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+<summary>Challenge (optional)</summary>
+<div class="pep-optional__body">
+<p data-pep-optional-time><strong>Optional time:</strong> about 3 minutes, in addition to the required activity.</p>
+<p>On paper or in your IDE, rewrite this colon <code>switch</code> as a switch expression that assigns <code>label</code> directly:</p><pre class="pep-code"><code>String label;
+<span class="tok-key">switch</span> (day) {
+    <span class="tok-key">case</span> 6:
+    <span class="tok-key">case</span> 7:
+        label = "weekend";
+        <span class="tok-key">break</span>;
+    <span class="tok-key">default</span>:
+        label = "weekday";
+}</code></pre>
+<p data-pep-success-criteria><strong>Success criteria:</strong> Your version has no <code>break</code>, uses <code>case … -&gt;</code> labels, and gives the same label for every day from 1 to 7.</p>
+</div>
+</details><div class="pep-actions">
+<button type="button" class="pep-btn pep-btn--primary" id="check-2" data-pep-wrong-attempt>Check my tests</button>
+<button type="button" class="pep-btn" id="reveal-2" data-pep-complete-activity>Show what passing needs</button>
+</div>
+<div class="pep-feedback" id="feedback-2" data-pep-feedback aria-live="polite"></div>
+</div>
+</div>
+<p class="pep-back"><a class="pep-back-link" href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</section>
+<section class="pep-activity" id="activity-3" data-pep-activity data-kind="choice" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div class="pep-teach" data-pep-teaching>
+<h2 id="activity-3-title" tabindex="-1">Activity 3 of 3: Predict whether old code compiles on JDK 25</h2>
+<p>Old source often compiles on a new JDK unchanged, but not always. When you inspect old code, look for three kinds of trouble:</p>
+<ul>
+<li><strong>Removed APIs and modules.</strong> JDK 11 removed the Java EE and CORBA modules, including JAXB (<code>javax.xml.bind</code>); code importing them no longer compiles without adding a library.</li>
+<li><strong>Removed tools and options</strong>, such as <code>javah</code>, removed in JDK 10.</li>
+<li><strong>New reserved words.</strong> <code>var</code> is only a reserved type name, so a variable called <code>var</code> still compiles.</li>
+</ul>
+<p>Name the cause, not just “old code”.</p>
+</div>
+<section class="pep-fit" data-pep-where-fits aria-labelledby="fit-3">
+<h2 id="fit-3">Where this fits</h2>
+<p data-pep-fit-decision><strong>Decision:</strong> Migrate old code to a new JDK by compiling it unchanged first, or rewrite it to modern style first?</p>
+<p data-pep-fit-good><strong>Good fit:</strong> Compile and test it unchanged on the new JDK first, then fix only what breaks, such as a removed module, before modernizing idioms under passing tests.</p>
+<p data-pep-fit-boundary><strong>Choose something else when:</strong> The project must keep running on its old JDK as well: keep the old idioms and pin the language level with <code>--release</code> rather than rewriting to features the old JDK lacks.</p>
+</section>
+</div>
+<div class="pep-region pep-region--workspace" data-pep-workspace="choice">
+<div class="pep-task" id="task-3" data-pep-task data-pep-may-stall>
+<h3>Your task</h3>
+<p>This Java 8 program converts bytes to hexadecimal text. Predict whether it compiles on JDK 25 with no extra libraries, and why. Rate your confidence, then press <strong>Check</strong>.</p>
+<pre class="pep-code"><code><span class="tok-key">import</span> javax.xml.bind.DatatypeConverter;
+
+<span class="tok-key">public</span> <span class="tok-key">class</span> Hex {
+    <span class="tok-key">public</span> <span class="tok-key">static</span> <span class="tok-key">void</span> main(String[] args) {
+        byte[] bytes = {10, 11};
+        System.out.println(DatatypeConverter.printHexBinary(bytes));
+    }
+}</code></pre>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 3</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The <code>import</code> line.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Ask which part of the JDK the package <code>javax.xml.bind</code> belonged to, and whether that part still ships with JDK 25.</p>
+</div>
+</details>
+</div>
+<section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3">
+<h3 id="checks-3">What success looks like</h3>
+<ul><li>You chose one prediction and a confidence rating, then pressed Check.</li><li>You can name the migration issue behind your prediction.</li></ul>
+</section>
+<fieldset class="pep-q" data-pep-q data-interaction="mcq" data-confidence data-static-alt="Question: Does it compile on JDK 25?. Option A: Yes: Java keeps every old API, so Java 8 code always compiles unchanged - Not quite. Most old source compiles, but some APIs and modules have been removed; this import is one of them. Option B: No: javax.xml.bind is JAXB, a Java EE module removed from the JDK in JDK 11, so javac reports that the package does not exist - Correct. JAXB left the JDK in JDK 11. The fix is to add a JAXB library as a dependency, or to use an API that is still in the JDK. Option C: No: array initializers such as {10, 11} were removed in a later release - Not quite. Array initializers are still ordinary Java; the problem is the import. Option D: Yes: JDK 25 downloads a missing package the first time it is imported - Not quite. The JDK never fetches libraries; a build tool such as Maven does that once you declare a dependency. Before feedback, the learner rates confidence: Guessing, Fairly sure or Certain.">
+<legend>Does it compile on JDK 25?</legend>
+<div class="pep-options">
+<label class="pep-option" for="a3-a"><input type="radio" id="a3-a" name="a3" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Yes: Java keeps every old API, so Java 8 code always compiles unchanged</span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. Most old source compiles, but some APIs and modules have been removed; this import is one of them.</span></label>
+<label class="pep-option" for="a3-b"><input type="radio" id="a3-b" name="a3" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">No: <code>javax.xml.bind</code> is JAXB, a Java EE module removed from the JDK in JDK 11, so javac reports that the package does not exist</span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Correct. JAXB left the JDK in JDK 11. The fix is to add a JAXB library as a dependency, or to use an API that is still in the JDK.</span></label>
+<label class="pep-option" for="a3-c"><input type="radio" id="a3-c" name="a3" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">No: array initializers such as <code>{10, 11}</code> were removed in a later release</span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. Array initializers are still ordinary Java; the problem is the import.</span></label>
+<label class="pep-option" for="a3-d"><input type="radio" id="a3-d" name="a3" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Yes: JDK 25 downloads a missing package the first time it is imported</span><span class="pep-option__tag" aria-live="off"></span><span class="pep-explain">Not quite. The JDK never fetches libraries; a build tool such as Maven does that once you declare a dependency.</span></label>
+</div>
+</fieldset>
+<fieldset class="pep-q pep-confidence" data-confidence>
+<legend>How sure are you?</legend>
+<div class="pep-options">
+<label class="pep-option" for="a3-conf-0"><input type="radio" id="a3-conf-0" name="a3-conf" value="guess"><span class="pep-option__text">Guessing</span></label>
+<label class="pep-option" for="a3-conf-1"><input type="radio" id="a3-conf-1" name="a3-conf" value="fair"><span class="pep-option__text">Fairly sure</span></label>
+<label class="pep-option" for="a3-conf-2"><input type="radio" id="a3-conf-2" name="a3-conf" value="certain"><span class="pep-option__text">Certain</span></label>
+</div>
+</fieldset>
+<div class="pep-actions">
+<button type="button" class="pep-btn pep-btn--primary" id="check-3" data-pep-wrong-attempt>Check</button>
+<button type="button" class="pep-btn" id="reveal-3" data-pep-complete-activity>Show the explained answer</button>
+</div>
+<div class="pep-feedback" id="feedback-3" data-pep-feedback aria-live="polite"></div>
+</div>
+</div>
+<p class="pep-back"><a class="pep-back-link" href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</section>
+<div class="pep-activity-actions" role="group" aria-label="Activity navigation">
+<button type="button" class="pep-btn" id="previous-activity" data-pep-previous>Previous activity</button>
+<button type="button" class="pep-btn pep-btn--primary" id="next-activity" data-pep-next>Next activity</button>
+</div>
+<p class="pep-sr" id="pep-announce" aria-live="polite"></p>
+<section class="pep-recap" data-pep-recap aria-labelledby="recap-title">
+<h2 id="recap-title">Recap</h2>
+<ul>
+<li>Feature releases to recognize: lambdas 8, <code>var</code> 10, switch expressions 14, text blocks 15, records and <code>instanceof</code> patterns 16.</li>
+<li>An anonymous class for a one-method interface usually becomes a lambda; a colon <code>switch</code> with <code>break</code>s often becomes a switch expression.</li>
+<li>Refactor under tests: run them before and after, and keep them unchanged.</li>
+<li>Old code often compiles on JDK 25, but removed APIs such as JAXB (gone since JDK 11), removed tools and options can break it; name the cause.</li>
+</ul>
+<div class="pep-cheat" data-section-skip>
+<h3>Cheat sheet</h3>
+<pre class="pep-code"><code><span class="tok-com">// Java 7: anonymous class</span>
+Runnable old = <span class="tok-key">new</span> Runnable() {
+    @Override
+    <span class="tok-key">public</span> <span class="tok-key">void</span> run() { System.out.println("hi"); }
+};
+<span class="tok-com">// Java 8+: lambda</span>
+Runnable now = () -&gt; System.out.println("hi");
+
+<span class="tok-com">// Java 10+: var for local variables</span>
+<span class="tok-key">var</span> names = <span class="tok-key">new</span> ArrayList&lt;String&gt;();
+
+<span class="tok-com">// Java 14+: switch expression</span>
+String size = <span class="tok-key">switch</span> (n) {
+    <span class="tok-key">case</span> 1, 2 -&gt; "small";
+    <span class="tok-key">default</span> -&gt; "large";
+};</code></pre>
+</div>
+</section>
+<section class="pep-sources" data-pep-sources aria-labelledby="sources-title">
+<h2 id="sources-title" class="pep-sr">Sources</h2>
+<details class="pep-sources-box" data-section-skip>
+<summary>Sources and review date</summary>
+<p>Claims on this page were checked against these official sources, retrieved 2026-10-16. Release numbers come from each feature’s JEP. The practice runner checks behavior with the provided test; it does not know every javac rule.</p>
+<ul>
+<li><a href="https://dev.java/learn/first-steps/evolution/" rel="noopener">Dev.java: The Evolution of the Java Language</a> — lambdas in Java 8 and var in Java 10</li>
+<li><a href="https://openjdk.org/jeps/126" rel="noopener">JEP 126: Lambda Expressions</a> — release 8</li>
+<li><a href="https://openjdk.org/jeps/286" rel="noopener">JEP 286: Local-Variable Type Inference</a> — release 10; var is a reserved type name, not a keyword</li>
+<li><a href="https://openjdk.org/jeps/361" rel="noopener">JEP 361: Switch Expressions</a> — release 14</li>
+<li><a href="https://openjdk.org/jeps/378" rel="noopener">JEP 378: Text Blocks</a> — release 15</li>
+<li><a href="https://openjdk.org/jeps/394" rel="noopener">JEP 394: Pattern Matching for instanceof</a> — release 16</li>
+<li><a href="https://openjdk.org/jeps/395" rel="noopener">JEP 395: Records</a> — release 16</li>
+<li><a href="https://docs.oracle.com/en/java/javase/25/migrate/removed-tools-and-components.html" rel="noopener">JDK 25 Migration Guide: Removed Tools and Components</a> — Java EE and CORBA modules, including JAXB, removed in JDK 11; javah removed in JDK 10</li>
+<li><a href="https://docs.oracle.com/en/java/javase/25/migrate/preparing-migration.html" rel="noopener">JDK 25 Migration Guide: Preparing for Migration</a> — try existing code on the new JDK first; most code works without changes, and some libraries need upgrades</li>
+</ul>
+</details>
+</section>
+</main>
+<script>
+window.PEP_PAGE = {"correct": {"activity-1": "c", "activity-3": "b"}, "explain": {"activity-2": "A passing version assigns byLength a lambda: the two parameter names in parentheses, an arrow, and then the same Integer.compare expression the old return line used, with no braces and no return keyword. The field still ends with a semicolon, and NamesTest stays exactly as it was."}};
+window.PEP_PAGE.junit = {"activity-2": {"file": "NamesTest.java"}};
+window.PEP_PAGE.checks = {
+  'activity-2': function () {
+    var res = PepJunit.run('activity-2'), notes = [];
+    if (!res || !res.compiled) return { pass: false, notes: ['<strong>Missing:</strong> the file must compile first. Press Run tests and fix the line Problems names.'] };
+    var names = null; res.program.units.forEach(function (u) { u.types.forEach(function (t) { if (t.name === 'Names') names = t; }); });
+    var f = names && names.fields.filter(function (x) { return x.name === 'byLength'; })[0];
+    var isLambda = !!f && !!f.init && f.init.k === 'lambda';
+    var anon = names && names.fields.some(function (x) { return x.init && x.init.k === 'new' && x.init.body; });
+    notes.push((isLambda && !anon ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'byLength is a lambda and no anonymous Comparator class is left.');
+    var t = res.tests.filter(function (x) { return x.name === 'shorterNameComesFirst'; })[0];
+    var pass = !!t && t.status === 'pass';
+    notes.push((pass ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the provided test still passes.' + (t && !pass ? ' Output shows which comparison changed.' : ''));
+    var m = res.analysis.methods.filter(function (x) { return x.name === 'shorterNameComesFirst'; })[0];
+    var kept = !!m && m.stmts.filter(function (s) { return s.calls.some(function (c) { return /^assert/.test(c.name); }) && s.calls.some(function (c) { return c.name === 'compare'; }); }).length >= 3;
+    notes.push((kept ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'NamesTest still makes its three checks.');
+    return { pass: isLambda && !anon && pass && kept, notes: notes };
+  }
+};
+</script>
+<script>
+/* PEP practice JUnit runner: a bounded, offline Java subset with JUnit Jupiter assertions and basic Mockito.
+   Lexer, parser, symbol check and tree-walking interpreter in one file; no network, storage or timers.
+   It reads small classes and interfaces (fields, constructors, methods, if/else, for-each, return, throw),
+   JUnit @Test and @BeforeEach methods, the Assertions methods listed in LIMITS, and mock/when/thenReturn/verify.
+   Anything else is reported as a practice-editor limit, never as invalid Java. "Error" is used only where
+   javac or JUnit certainly rejects the code. Messages imitate JUnit 6 and Mockito 5 wording, shortened. */
+var PepTest = (function () {
+  'use strict';
+  var KW = ['class', 'interface', 'implements', 'extends', 'public', 'private', 'protected', 'static', 'final', 'abstract', 'void', 'int', 'long', 'double', 'boolean', 'char', 'new', 'return', 'if', 'else', 'throw', 'true', 'false', 'null', 'this', 'import', 'package', 'for', 'while', 'do', 'switch', 'case', 'default', 'try', 'catch', 'finally', 'break', 'continue', 'super', 'enum', 'synchronized', 'instanceof', 'throws', 'byte', 'short', 'float', 'assert', 'transient', 'volatile', 'native', 'strictfp', 'goto', 'const'];
+  var PRIM = { int: 1, long: 1, double: 1, boolean: 1, char: 1, void: 1 };
+  var NOT_HERE = { while: 'while loops', do: 'do-while loops', switch: 'switch', try: 'try/catch', catch: 'try/catch', finally: 'try/catch', break: 'break', continue: 'continue', super: 'super', enum: 'enums', synchronized: 'synchronized', instanceof: 'instanceof', byte: 'the byte type', short: 'the short type', float: 'the float type', assert: 'the assert statement', package: 'package declarations', extends: 'extends (class inheritance)', abstract: 'abstract', throws: 'throws clauses', transient: 'transient', volatile: 'volatile', native: 'native', strictfp: 'strictfp', goto: 'goto', const: 'const' };
+  var EXC = { Throwable: null, Exception: 'Throwable', RuntimeException: 'Exception', IllegalArgumentException: 'RuntimeException', IllegalStateException: 'RuntimeException', ArithmeticException: 'RuntimeException', NullPointerException: 'RuntimeException', UnsupportedOperationException: 'RuntimeException', IndexOutOfBoundsException: 'RuntimeException', NumberFormatException: 'IllegalArgumentException', Error: 'Throwable', AssertionError: 'Error', StackOverflowError: 'Error' };
+  var EXC_PKG = { AssertionError: 'java.lang' };
+  function fqcn(t) { return (EXC_PKG[t] || 'java.lang') + '.' + t; }
+  function isSub(t, of) { while (t) { if (t === of) return true; t = EXC[t]; } return false; }
+
+  function Problem(line, col, message, kind) { this.line = line; this.col = col || 1; this.message = message; this.kind = kind || 'error'; }
+  function err(tok, msg) { return new Problem(tok ? tok.line : 1, tok ? tok.col : 1, msg, 'error'); }
+  function limit(tok, msg) { return new Problem(tok ? tok.line : 1, tok ? tok.col : 1, msg, 'limit'); }
+
+  /* ---------- lexer ---------- */
+  function lex(src) {
+    var out = [], i = 0, line = 1, col = 1, n = src.length;
+    function adv(k) { for (var q = 0; q < k; q++) { if (src[i] === '\n') { line++; col = 1; } else col++; i++; } }
+    function push(t, v, l, c) { out.push({ t: t, v: v, line: l, col: c }); }
+    while (i < n) {
+      var ch = src[i], l = line, c = col;
+      if (ch === '\n' || ch === ' ' || ch === '\t' || ch === '\r') { adv(1); continue; }
+      if (ch === '/' && src[i + 1] === '/') { while (i < n && src[i] !== '\n') adv(1); continue; }
+      if (ch === '/' && src[i + 1] === '*') { adv(2); while (i < n && !(src[i] === '*' && src[i + 1] === '/')) adv(1); if (i >= n) throw err({ line: l, col: c }, 'unclosed comment'); adv(2); continue; }
+      if (/[A-Za-z_$]/.test(ch)) { var j = i; while (j < n && /[A-Za-z0-9_$]/.test(src[j])) j++; var w = src.slice(i, j); adv(j - i); push(KW.indexOf(w) >= 0 ? 'kw' : 'id', w, l, c); continue; }
+      if (/[0-9]/.test(ch)) {
+        var k = i; while (k < n && /[0-9_]/.test(src[k])) k++;
+        var isD = false;
+        if (src[k] === '.' && /[0-9]/.test(src[k + 1] || '')) { isD = true; k++; while (k < n && /[0-9_]/.test(src[k])) k++; }
+        var txt = src.slice(i, k).replace(/_/g, ''), t = isD ? 'double' : 'int';
+        if (src[k] === 'L' || src[k] === 'l') { t = 'long'; k++; } else if (src[k] === 'd' || src[k] === 'D') { t = 'double'; k++; } else if (src[k] === 'f' || src[k] === 'F') { throw limit({ line: l, col: c }, 'float literals are outside this practice editor; use double.'); }
+        if (/[A-Za-z_]/.test(src[k] || '')) throw err({ line: l, col: c }, 'malformed number ' + src.slice(i, k + 1));
+        if (t !== 'double' && txt.length > 1 && txt[0] === '0') throw limit({ line: l, col: c }, 'octal and leading-zero numbers are outside this practice editor.');
+        adv(k - i); push(t, txt, l, c); continue;
+      }
+      if (ch === '"') {
+        if (src.slice(i, i + 3) === '"""') throw limit({ line: l, col: c }, 'text blocks are outside this practice editor; use an ordinary "string".');
+        var s = '', p = i + 1;
+        while (p < n && src[p] !== '"') {
+          if (src[p] === '\n') throw err({ line: l, col: c }, 'unclosed string literal');
+          if (src[p] === '\\') { var e = src[p + 1]; s += e === 'n' ? '\n' : e === 't' ? '\t' : e === '"' ? '"' : e === '\\' ? '\\' : e === "'" ? "'" : (function () { throw limit({ line: l, col: c }, 'that escape sequence is outside this practice editor.'); })(); p += 2; continue; }
+          s += src[p]; p++;
+        }
+        if (p >= n) throw err({ line: l, col: c }, 'unclosed string literal');
+        adv(p + 1 - i); push('str', s, l, c); continue;
+      }
+      if (ch === "'") {
+        var cv = src[i + 1], len = 3;
+        if (cv === '\\') { var e2 = src[i + 2]; cv = e2 === 'n' ? '\n' : e2 === 't' ? '\t' : e2; len = 4; }
+        if (src[i + len - 1] !== "'") throw err({ line: l, col: c }, 'unclosed character literal');
+        adv(len); push('char', cv, l, c); continue;
+      }
+      if (ch === '@') { var a = i + 1; while (a < n && /[A-Za-z0-9_.]/.test(src[a])) a++; push('ann', src.slice(i + 1, a), l, c); adv(a - i); continue; }
+      var ops = ['->', '::', '++', '--', '&&', '||', '==', '!=', '<=', '>=', '+=', '-=', '*=', '/=', '%=', '...'];
+      var two = src.slice(i, i + 3) === '...' ? '...' : src.slice(i, i + 2);
+      if (ops.indexOf(two) >= 0) { adv(two.length); push('op', two, l, c); continue; }
+      if ('{}()[];,.=<>+-*/%!?:&|^~'.indexOf(ch) >= 0) { adv(1); push('op', ch, l, c); continue; }
+      throw err({ line: l, col: c }, "illegal character: '" + ch + "'");
+    }
+    out.push({ t: 'eof', v: '', line: line, col: col });
+    return out;
+  }
+
+  /* ---------- parser ---------- */
+  function parse(src, fileName) {
+    var toks = lex(src), p = 0;
+    function peek(k) { return toks[p + (k || 0)]; }
+    function next() { return toks[p++]; }
+    function is(v, k) { var t = peek(k); return (t.t === 'op' || t.t === 'kw') && t.v === v; }
+    function eat(v) { if (is(v)) { p++; return true; } return false; }
+    function want(v, what) { if (!is(v)) { var t = peek(); if (t.t === 'eof') throw err(t, 'reached end of file while parsing (missing ' + (what || "'" + v + "'") + ')'); throw err(t, (what || "'" + v + "'") + ' expected'); } return next(); }
+    function ident(what) { var t = peek(); if (t.t !== 'id') { if (t.t === 'kw' && NOT_HERE[t.v]) throw limit(t, NOT_HERE[t.v] + ' are outside this practice editor.'); throw err(t, '<identifier> expected' + (what ? ' (' + what + ')' : '')); } return next(); }
+    function notHere(t) { if (t.t === 'kw' && NOT_HERE[t.v]) throw limit(t, NOT_HERE[t.v] + (/s$/.test(NOT_HERE[t.v]) ? ' are' : ' is') + ' outside this practice editor.'); }
+
+    var unit = { imports: [], types: [], file: fileName };
+    while (is('import') || is('package')) {
+      var it = next(); if (it.v === 'package') throw limit(it, 'package declarations are outside this practice editor; leave them out.');
+      var stat = eat('static'), name = ident('import name').v, star = false;
+      while (eat('.')) { if (eat('*')) { star = true; break; } name += '.' + ident('import name').v; }
+      want(';', "';'");
+      unit.imports.push({ name: name, isStatic: stat, star: star, line: it.line, col: it.col });
+    }
+    while (peek().t !== 'eof') unit.types.push(typeDecl());
+    return unit;
+
+    function annotations() { var list = []; while (peek().t === 'ann') { var a = next(); if (is('(')) throw limit(a, 'annotation arguments are outside this practice editor.'); list.push({ name: a.v, line: a.line, col: a.col }); } return list; }
+    function modifiers() { var m = {}; for (;;) { var t = peek(); if (t.t === 'kw' && /^(public|private|protected|static|final|default)$/.test(t.v)) { if (t.v === 'default') throw limit(t, 'default methods are outside this practice editor.'); m[t.v] = true; next(); } else if (t.t === 'kw' && NOT_HERE[t.v]) { notHere(t); } else return m; } }
+    function type(allowVar) {
+      var t = peek();
+      if (t.t === 'kw' && PRIM[t.v]) { next(); var d = 0; while (is('[')) throw limit(peek(), 'arrays are outside this practice editor; use a List.'); return { name: t.v, args: [], line: t.line }; }
+      notHere(t);
+      var id = ident('type').v, args = [];
+      while (is('.') && peek(1).t === 'id') { next(); id += '.' + next().v; }
+      if (is('<')) { next(); if (is('>')) { next(); args = null; } else { do { if (is('?')) throw limit(peek(), 'wildcard types are outside this practice editor.'); args.push(type()); } while (eat(',')); closeAngle(); } }
+      if (is('[')) throw limit(peek(), 'arrays are outside this practice editor; use a List.');
+      return { name: id, args: args, line: t.line, isVar: allowVar && id === 'var' };
+    }
+    function closeAngle() { var t = peek(); if (t.t === 'op' && t.v === '>') { next(); return; } if (t.t === 'op' && t.v === '>=') throw err(t, "'>' expected"); throw err(t, "'>' expected"); }
+    function typeDecl() {
+      var annos = annotations(), mods = modifiers(), t = peek();
+      if (t.t === 'kw' && t.v === 'enum') throw limit(t, 'enums are outside this practice editor.');
+      if (t.t === 'id' && t.v === 'record') throw limit(t, 'records are outside this practice editor.');
+      if (!(is('class') || is('interface'))) throw err(t, 'class, interface, enum, or record expected');
+      var kind = next().v, name = ident('type name'), impl = [];
+      if (is('<')) throw limit(peek(), 'generic class declarations are outside this practice editor.');
+      if (is('extends')) throw limit(peek(), 'extends (class inheritance) is outside this practice editor; implement an interface instead.');
+      if (eat('implements')) { if (kind === 'interface') throw err(peek(), "'{' expected"); do { impl.push(type()); } while (eat(',')); }
+      want('{', "'{'");
+      var decl = { kind: kind, name: name.v, impl: impl, fields: [], methods: [], ctors: [], line: name.line, col: name.col, mods: mods, file: fileName, annos: annos };
+      while (!is('}')) { if (peek().t === 'eof') throw err(peek(), "reached end of file while parsing (missing '}')"); member(decl); }
+      next();
+      return decl;
+    }
+    function member(decl) {
+      if (eat(';')) return;
+      var annos = annotations(), mods = modifiers(), start = peek();
+      if (is('class') || is('interface')) throw limit(start, 'nested classes are outside this practice editor; declare each class at the top level.');
+      if (start.t === 'id' && start.v === decl.name && is('(', 1)) {
+        next(); var ps = params(); var body = block();
+        decl.ctors.push({ params: ps, body: body, line: start.line, mods: mods });
+        return;
+      }
+      if (is('<')) throw limit(start, 'generic methods are outside this practice editor.');
+      var ty = type(), nm = ident('member name');
+      if (is('(')) {
+        var pr = params(), bd = null;
+        if (decl.kind === 'interface' && !mods.static && !mods.default) { want(';', "';'"); }
+        else if (is(';')) { throw err(peek(), 'missing method body, or declare abstract'); }
+        else bd = block();
+        decl.methods.push({ name: nm.v, type: ty, params: pr, body: bd, annos: annos, mods: mods, line: nm.line, col: nm.col, cls: decl.name });
+        return;
+      }
+      if (decl.kind === 'interface') throw limit(nm, 'fields in interfaces are outside this practice editor.');
+      do {
+        var init = null; if (eat('=')) init = expr();
+        decl.fields.push({ name: nm.v, type: ty, init: init, mods: mods, line: nm.line });
+        if (eat(',')) { nm = ident('field name'); continue; } break;
+      } while (true);
+      want(';', "';'");
+    }
+    function params() {
+      want('('); var ps = [];
+      if (!is(')')) { do { annotations(); eat('final'); var ty = type(); if (is('...')) throw limit(peek(), 'varargs are outside this practice editor.'); ps.push({ type: ty, name: ident('parameter name').v }); } while (eat(',')); }
+      want(')', "')'");
+      return ps;
+    }
+    function block() { var t = want('{', "'{'"), body = []; while (!is('}')) { if (peek().t === 'eof') throw err(peek(), "reached end of file while parsing (missing '}')"); body.push(stmt()); } next(); return { k: 'block', body: body, line: t.line }; }
+    function looksLikeDecl() {
+      var save = p, ok = false;
+      try { var t = peek(); if (t.t === 'kw' && PRIM[t.v] && t.v !== 'void') ok = true; else if (t.t === 'id' || (t.t === 'kw' && t.v === 'final')) { eat('final'); type(true); ok = peek().t === 'id' && (is('=', 1) || is(';', 1) || is(',', 1)); } }
+      catch (e) { ok = false; }
+      p = save; return ok;
+    }
+    function stmt() {
+      var t = peek();
+      if (is('{')) return block();
+      if (eat(';')) return { k: 'empty', line: t.line };
+      if (t.t === 'ann') throw limit(t, 'annotations on statements are outside this practice editor.');
+      if (t.t === 'kw') {
+        if (t.v === 'return') { next(); var e = is(';') ? null : expr(); want(';', "';'"); return { k: 'return', e: e, line: t.line, col: t.col }; }
+        if (t.v === 'if') { next(); want('(', "'('"); var c = expr(); want(')', "')'"); var th = stmt(), el = null; if (eat('else')) el = stmt(); return { k: 'if', c: c, th: th, el: el, line: t.line, col: t.col }; }
+        if (t.v === 'throw') { next(); var te = expr(); want(';', "';'"); return { k: 'throw', e: te, line: t.line, col: t.col }; }
+        if (t.v === 'for') {
+          next(); want('(', "'('");
+          var save = p;
+          try { eat('final'); var fty = type(true); var fv = ident(); if (eat(':')) { var src2 = expr(); want(')', "')'"); var fb = stmt(); return { k: 'foreach', ty: fty, name: fv.v, src: src2, body: fb, line: t.line, col: t.col }; } } catch (ex) { if (ex instanceof Problem && ex.kind === 'limit') throw ex; }
+          p = save; throw limit(t, 'only the for-each form, for (Type x : list), is inside this practice editor.');
+        }
+        if (t.v === 'else') throw err(t, "'else' without 'if'");
+        notHere(t);
+      }
+      if (looksLikeDecl()) {
+        eat('final'); var ty = type(true), decls = [];
+        do { var nm = ident('variable name'), init = null; if (eat('=')) init = expr(); else if (ty.isVar) throw err(nm, "cannot infer type for local variable " + nm.v + " (variable initializer is required)"); decls.push({ name: nm.v, init: init, line: nm.line, col: nm.col }); } while (eat(','));
+        want(';', "';'");
+        return { k: 'decl', ty: ty, decls: decls, line: t.line, col: t.col };
+      }
+      var ex2 = expr();
+      if (!/^(assign|call|new|incdec)$/.test(ex2.k)) throw err(t, 'not a statement');
+      want(';', "';'");
+      return { k: 'expr', e: ex2, line: t.line, col: t.col };
+    }
+    /* expressions */
+    function expr() { return assign(); }
+    function assign() {
+      var left = ternary(), t = peek();
+      if (t.t === 'op' && /^(=|\+=|-=|\*=|\/=|%=)$/.test(t.v)) {
+        if (left.k !== 'name' && left.k !== 'field') throw err(t, 'unexpected type (required: variable)');
+        next(); var right = assign();
+        return { k: 'assign', op: t.v, target: left, e: right, line: t.line, col: t.col };
+      }
+      return left;
+    }
+    function ternary() { var c = or(); if (is('?')) { var t = next(); var a = ternary(); want(':', "':'"); var b = ternary(); return { k: 'cond', c: c, a: a, b: b, line: t.line }; } return c; }
+    function bin(nextFn, opsList) { return function () { var l = nextFn(); for (;;) { var t = peek(); if (t.t === 'op' && opsList.indexOf(t.v) >= 0) { next(); l = { k: 'bin', op: t.v, a: l, b: nextFn(), line: t.line, col: t.col }; } else return l; } }; }
+    function or() { return bin(and, ['||'])(); }
+    function and() { return bin(eq, ['&&'])(); }
+    function eq() { return bin(rel, ['==', '!='])(); }
+    function rel() { var l = add(); for (;;) { var t = peek(); if (t.t === 'op' && /^(<|>|<=|>=)$/.test(t.v)) { next(); l = { k: 'bin', op: t.v, a: l, b: add(), line: t.line, col: t.col }; } else if (t.t === 'kw' && t.v === 'instanceof') { throw limit(t, 'instanceof is outside this practice editor.'); } else return l; } }
+    function add() { return bin(mul, ['+', '-'])(); }
+    function mul() { return bin(unary, ['*', '/', '%'])(); }
+    function unary() {
+      var t = peek();
+      if (t.t === 'op' && (t.v === '!' || t.v === '-' || t.v === '+')) { next(); return { k: 'un', op: t.v, a: unary(), line: t.line }; }
+      if (t.t === 'op' && (t.v === '++' || t.v === '--')) { next(); var tg = unary(); return { k: 'incdec', op: t.v, target: tg, pre: true, line: t.line }; }
+      if (t.t === 'op' && (t.v === '&' || t.v === '|' || t.v === '^' || t.v === '~')) throw limit(t, 'bitwise operators are outside this practice editor.');
+      if (t.t === 'op' && t.v === '(' && peek(1).t === 'kw' && PRIM[peek(1).v] && is(')', 2)) throw limit(t, 'casts are outside this practice editor.');
+      return postfix(primary());
+    }
+    function args() { want('(', "'('"); var a = []; if (!is(')')) { do { a.push(expr()); } while (eat(',')); } want(')', "')'"); return a; }
+    function postfix(e) {
+      for (;;) {
+        var t = peek();
+        if (is('.')) {
+          next(); var nm = peek();
+          if (nm.t === 'kw' && nm.v === 'class') throw err(nm, '<identifier> expected');
+          if (is('<')) throw limit(nm, 'explicit type arguments are outside this practice editor.');
+          nm = ident('member name');
+          if (is('(')) e = { k: 'call', recv: e, name: nm.v, args: args(), line: nm.line, col: nm.col };
+          else if (nm.v === 'class' ) e = { k: 'classlit', name: e.name, line: nm.line };
+          else e = { k: 'field', recv: e, name: nm.v, line: nm.line, col: nm.col };
+          continue;
+        }
+        if (is('::')) throw limit(t, 'method references such as String::length are outside this practice editor; write a lambda instead.');
+        if (is('[')) throw limit(t, 'arrays are outside this practice editor; use a List.');
+        if (t.t === 'op' && (t.v === '++' || t.v === '--')) { next(); e = { k: 'incdec', op: t.v, target: e, pre: false, line: t.line }; continue; }
+        return e;
+      }
+    }
+    function lambdaAhead() {
+      if (peek().t === 'id' && is('->', 1)) return true;
+      if (!is('(')) return false;
+      var depth = 0, k = 0;
+      for (;;) { var t = peek(k); if (t.t === 'eof') return false; if (t.t === 'op' && t.v === '(') depth++; if (t.t === 'op' && t.v === ')') { depth--; if (depth === 0) return is('->', k + 1); } k++; }
+    }
+    function lambda() {
+      var t = peek(), ps = [];
+      if (t.t === 'id') { next(); ps.push(t.v); }
+      else { next(); if (!is(')')) { do { if (peek().t === 'id' && (is(',', 1) || is(')', 1))) ps.push(next().v); else { type(true); ps.push(ident('lambda parameter').v); } } while (eat(',')); } want(')', "')'"); }
+      want('->');
+      var body = is('{') ? block() : expr();
+      return { k: 'lambda', params: ps, body: body, line: t.line, col: t.col };
+    }
+    function primary() {
+      var t = peek();
+      if (lambdaAhead()) return lambda();
+      if (t.t === 'int' || t.t === 'long' || t.t === 'double') {
+        next(); var v = Number(t.v);
+        if (t.t === 'int' && v > 2147483648) throw err(t, 'integer number too large');
+        return { k: 'lit', v: { k: t.t, v: v }, line: t.line, col: t.col };
+      }
+      if (t.t === 'str') { next(); return { k: 'lit', v: t.v, line: t.line }; }
+      if (t.t === 'char') { next(); return { k: 'lit', v: { k: 'char', v: t.v.charCodeAt(0) }, line: t.line }; }
+      if (t.t === 'kw') {
+        if (t.v === 'true' || t.v === 'false') { next(); return { k: 'lit', v: t.v === 'true', line: t.line }; }
+        if (t.v === 'null') { next(); return { k: 'lit', v: null, line: t.line }; }
+        if (t.v === 'this') { next(); return { k: 'this', line: t.line, col: t.col }; }
+        if (t.v === 'new') {
+          next(); var ty = type();
+          var a = args(), body = null;
+          if (is('{')) { body = { kind: 'class', name: ty.name + ' (anonymous)', impl: [ty], fields: [], methods: [], ctors: [], line: t.line, anon: true, file: fileName }; next(); while (!is('}')) { if (peek().t === 'eof') throw err(peek(), "reached end of file while parsing (missing '}')"); member(body); } next(); }
+          return { k: 'new', ty: ty, args: a, body: body, line: t.line, col: t.col };
+        }
+        if (PRIM[t.v] && is('.', 1) && peek(2).v === 'class') { next(); next(); next(); return { k: 'classlit', name: t.v, line: t.line }; }
+        notHere(t);
+        throw err(t, 'illegal start of expression');
+      }
+      if (t.t === 'id') {
+        next();
+        if (is('(')) return { k: 'call', recv: null, name: t.v, args: args(), line: t.line, col: t.col };
+        if (is('.') && peek(1).t === 'kw' && peek(1).v === 'class') { next(); next(); return { k: 'classlit', name: t.v, line: t.line, col: t.col }; }
+        return { k: 'name', name: t.v, line: t.line, col: t.col };
+      }
+      if (eat('(')) { var e = expr(); want(')', "')'"); return e; }
+      if (t.t === 'eof') throw err(t, 'reached end of file while parsing');
+      throw err(t, 'illegal start of expression');
+    }
+  }
+
+  /* ---------- values ---------- */
+  function num(k, v) { if (k === 'int') v = v | 0; return { k: k, v: v }; }
+  function isNum(x) { return x !== null && typeof x === 'object' && (x.k === 'int' || x.k === 'long' || x.k === 'double' || x.k === 'char'); }
+  function wider(a, b) { if (a.k === 'double' || b.k === 'double') return 'double'; if (a.k === 'long' || b.k === 'long') return 'long'; return 'int'; }
+  function show(x) {
+    if (x === null || x === undefined) return 'null';
+    if (typeof x === 'string') return x;
+    if (typeof x === 'boolean') return String(x);
+    if (isNum(x)) { if (x.k === 'char') return String.fromCharCode(x.v); if (x.k === 'double') { if (!isFinite(x.v)) return x.v > 0 ? 'Infinity' : x.v < 0 ? '-Infinity' : 'NaN'; return Number.isInteger(x.v) ? x.v.toFixed(1) : String(x.v); } return String(x.v); }
+    if (x.jt === 'list') return '[' + x.items.map(show).join(', ') + ']';
+    if (x.jt === 'map') return '{' + x.keys.map(function (k, i) { return show(k) + '=' + show(x.vals[i]); }).join(', ') + '}';
+    if (x.jt === 'mock') return 'Mock for ' + x.iface.name + ', hashCode: ' + x.id;
+    if (x.jt === 'exc') return fqcn(x.type) + (x.message !== null ? ': ' + x.message : '');
+    if (x.jt === 'lambda') return 'lambda';
+    if (x.jt === 'obj') return x.cls.name + '@' + x.id.toString(16);
+    if (x.jt === 'classlit') return 'class ' + x.name;
+    return String(x);
+  }
+  function jEquals(a, b) {
+    if (a === b) return true;
+    if (a === null || b === null || a === undefined || b === undefined) return false;
+    if (isNum(a) && isNum(b)) return a.v === b.v;
+    if (typeof a === 'string' && typeof b === 'string') return a === b;
+    if (a.jt === 'list' && b.jt === 'list') return a.items.length === b.items.length && a.items.every(function (x, i) { return jEquals(x, b.items[i]); });
+    if (a.jt === 'map' && b.jt === 'map') return a.keys.length === b.keys.length && a.keys.every(function (k, i) { var j = mapIndex(b, k); return j >= 0 && jEquals(a.vals[i], b.vals[j]); });
+    return false;
+  }
+  function mapIndex(m, k) { for (var i = 0; i < m.keys.length; i++) if (jEquals(m.keys[i], k)) return i; return -1; }
+
+  function JThrow(exc) { this.exc = exc; }
+  function Stop(msg) { this.msg = msg; }
+  function exc(type, message) { return { jt: 'exc', type: type, message: message === undefined ? null : message }; }
+  function AssertFail(message, type) { this.message = message; this.type = type || 'org.opentest4j.AssertionFailedError'; }
+
+  /* ---------- program ---------- */
+  var ASSERTS = ['assertEquals', 'assertNotEquals', 'assertTrue', 'assertFalse', 'assertNull', 'assertNotNull', 'assertThrows', 'assertSame', 'fail'];
+  var MOCKITO = ['mock', 'when', 'verify', 'times', 'never', 'atLeastOnce', 'any', 'anyInt', 'anyString', 'eq'];
+  var UTIL = ['List', 'ArrayList', 'Map', 'HashMap'];
+
+  function compile(sources) {
+    var problems = [], units = [], classes = {}, statics = {}, typesIn = {};
+    sources.forEach(function (s) {
+      try { var u = parse(s.code, s.file); u.editable = s.editable; units.push(u); }
+      catch (e) { if (e instanceof Problem) { e.file = s.file; problems.push(e); } else throw e; }
+    });
+    if (problems.length) return { problems: problems };
+    units.forEach(function (u) {
+      var imp = { test: false, junitStar: false, util: {}, utilStar: false };
+      u.imports.forEach(function (im) {
+        var bad = function (msg) { var pr = limit(im, msg); pr.file = u.file; problems.push(pr); };
+        if (im.isStatic) {
+          if (im.name === 'org.junit.jupiter.api.Assertions' && im.star) ASSERTS.forEach(function (a) { statics[a] = 'junit'; });
+          else if (/^org\.junit\.jupiter\.api\.Assertions\.[A-Za-z]+$/.test(im.name)) { var nm = im.name.split('.').pop(); if (ASSERTS.indexOf(nm) < 0) bad('this practice editor knows only these assertions: ' + ASSERTS.join(', ') + '.'); else statics[nm] = 'junit'; }
+          else if ((im.name === 'org.mockito.Mockito' || im.name === 'org.mockito.ArgumentMatchers') && im.star) MOCKITO.forEach(function (a) { if (im.name === 'org.mockito.Mockito' || /^(any|anyInt|anyString|eq)$/.test(a)) statics[a] = 'mockito'; });
+          else if (/^org\.mockito\.(Mockito|ArgumentMatchers)\.[A-Za-z]+$/.test(im.name)) { var mn = im.name.split('.').pop(); if (MOCKITO.indexOf(mn) < 0) bad('this practice editor knows only these Mockito methods: ' + MOCKITO.join(', ') + '.'); else statics[mn] = 'mockito'; }
+          else bad('this practice editor knows only static imports from org.junit.jupiter.api.Assertions and org.mockito.Mockito.');
+        } else {
+          if (im.name === 'org.junit.jupiter.api.Test' || im.name === 'org.junit.jupiter.api.BeforeEach') imp.test = true;
+          else if (im.name === 'org.junit.jupiter.api' && im.star) { imp.test = true; imp.junitStar = true; }
+          else if (im.name === 'java.util' && im.star) imp.utilStar = true;
+          else if (/^java\.util\.(List|ArrayList|Map|HashMap|Comparator)$/.test(im.name)) imp.util[im.name.split('.').pop()] = true;
+          else bad('this practice editor knows only JUnit Jupiter, Mockito and java.util List, ArrayList, Map, HashMap and Comparator imports.');
+        }
+      });
+      u.imp = imp;
+      u.types.forEach(function (t) {
+        if (classes[t.name]) { var pr = err(t, 'duplicate class: ' + t.name); pr.file = u.file; problems.push(pr); }
+        classes[t.name] = t; typesIn[t.name] = u;
+      });
+    });
+    if (problems.length) return { problems: problems };
+    /* symbol check: unknown names, methods and types, javac-certain errors */
+    var analysis = { methods: [] };
+    units.forEach(function (u) { u.types.forEach(function (t) { checkType(t, u); }); });
+    return { problems: problems, units: units, classes: classes, statics: statics, analysis: analysis };
+
+    function report(node, msg, kind) { var pr = new Problem(node.line, node.col || 1, msg, kind || 'error'); pr.file = currentFile; problems.push(pr); }
+    var currentFile = null;
+    function knownType(ty, u) {
+      if (!ty) return true;
+      if (PRIM[ty.name] || ty.name === 'String' || ty.name === 'Object' || ty.name === 'Integer' || ty.name === 'Long' || ty.name === 'Double' || ty.name === 'Boolean' || EXC.hasOwnProperty(ty.name) || classes[ty.name] || ty.isVar) return true;
+      if (ty.name === 'Comparator' || ty.name === 'Runnable' || ty.name === 'Supplier' || ty.name === 'Predicate' || ty.name === 'Function') {
+        if (ty.name !== 'Comparator' && ty.name !== 'Runnable') { report(ty, ty.name + ' is outside this practice editor; declare your own interface.', 'limit'); return true; }
+        if (ty.name === 'Comparator' && !(u.imp.utilStar || u.imp.util.Comparator)) { if (!u.imp.utilStar) { report(ty, 'cannot find symbol\n  symbol: class Comparator (add import java.util.Comparator; or import java.util.*;)'); return true; } }
+        return true;
+      }
+      if (UTIL.indexOf(ty.name) >= 0) { if (!(u.imp.utilStar || u.imp.util[ty.name])) report(ty, 'cannot find symbol\n  symbol: class ' + ty.name + ' (add import java.util.' + ty.name + ';)'); return true; }
+      report(ty, 'cannot find symbol\n  symbol: class ' + ty.name, 'error');
+      return false;
+    }
+    function checkType(t, u) {
+      currentFile = u.file;
+      t.impl.forEach(function (it) { if (it.name === 'Comparator' || it.name === 'Runnable') return; if (!classes[it.name]) report(it, 'cannot find symbol\n  symbol: class ' + it.name); else if (classes[it.name].kind !== 'interface') report(it, 'interface expected here'); });
+      if (t.kind === 'class') {
+        t.impl.forEach(function (it) {
+          var iface = classes[it.name]; if (!iface || iface.kind !== 'interface') return;
+          iface.methods.forEach(function (im) { var mine = t.methods.filter(function (m) { return m.name === im.name && m.params.length === im.params.length; })[0];
+            if (!mine) report(t, t.name + ' is not abstract and does not override abstract method ' + im.name + '(' + im.params.map(function (pp) { return pp.type.name; }).join(',') + ') in ' + iface.name);
+            else if (!mine.mods.public) report(mine, im.name + '(' + im.params.map(function (pp) { return pp.type.name; }).join(',') + ') in ' + t.name + ' cannot implement ' + im.name + '(' + im.params.map(function (pp) { return pp.type.name; }).join(',') + ') in ' + iface.name + '\n  attempting to assign weaker access privileges; was public'); });
+        });
+      }
+      t.fields.forEach(function (f) { knownType(f.type, u); if (f.init) walkExpr(f.init, scopeFor(t, null), u, t); });
+      t.ctors.forEach(function (c) { var sc = scopeFor(t, c.params); c.params.forEach(function (pp) { knownType(pp.type, u); }); walkBlock(c.body, sc, u, t, { type: { name: 'void' } }); });
+      t.methods.forEach(function (m) {
+        m.annos.forEach(function (a) {
+          if (a.name === 'Test' || a.name === 'BeforeEach') { if (!u.imp.test) report(a, 'cannot find symbol\n  symbol: class ' + a.name + ' (add import org.junit.jupiter.api.' + a.name + ';)'); }
+          else if (a.name === 'Override') { var found = t.impl.some(function (it) { var ifc = classes[it.name]; return (ifc && ifc.methods.some(function (im) { return im.name === m.name; })) || (it.name === 'Comparator' && m.name === 'compare') || (it.name === 'Runnable' && m.name === 'run'); }); if (!found) report(a, 'method does not override or implement a method from a supertype'); }
+          else if (a.name.indexOf('.') >= 0) report(a, 'qualified annotations are outside this practice editor; import the annotation and write @' + a.name.split('.').pop() + '.', 'limit');
+          else report(a, '@' + a.name + ' is outside this practice editor; it knows @Test, @BeforeEach and @Override.', 'limit');
+        });
+        if (m.annos.some(function (a) { return a.name === 'Test' || a.name === 'BeforeEach'; })) {
+          if (m.type.name !== 'void') report(m, 'JUnit runs only test methods declared void; this one returns ' + m.type.name + '.');
+          if (m.params.length) report(m, 'parameters on a @Test method are outside this practice editor.', 'limit');
+          if (m.mods.private) report(m, 'JUnit does not run private test methods; leave out private.');
+          if (m.mods.static) report(m, 'JUnit does not run static test methods; leave out static.');
+        }
+        knownType(m.type, u);
+        m.params.forEach(function (pp) { knownType(pp.type, u); });
+        if (m.body) walkBlock(m.body, scopeFor(t, m.params), u, t, m);
+        if (m.body && m.type.name !== 'void' && completesNormally(m.body)) report({ line: lastLine(m.body), col: 1 }, 'missing return statement');
+        if (m.annos.some(function (a) { return a.name === 'Test'; })) analysis.methods.push(summarize(t, m, u));
+      });
+    }
+    function lastLine(b) { return b.body.length ? b.body[b.body.length - 1].line : b.line; }
+    function completesNormally(s) {
+      if (!s) return true;
+      if (s.k === 'return' || s.k === 'throw') return false;
+      if (s.k === 'block') { for (var i = 0; i < s.body.length; i++) if (!completesNormally(s.body[i])) return false; return true; }
+      if (s.k === 'if') return !s.el || completesNormally(s.th) || completesNormally(s.el);
+      return true;
+    }
+    function scopeFor(t, ps) { var sc = { vars: {}, parent: null, cls: t }; (ps || []).forEach(function (pp) { sc.vars[pp.name] = pp.type; }); return sc; }
+    function lookup(sc, n) { for (var s = sc; s; s = s.parent) if (Object.prototype.hasOwnProperty.call(s.vars, n)) return s.vars[n]; return undefined; }
+    function fieldOf(t, n) { for (var i = 0; i < t.fields.length; i++) if (t.fields[i].name === n) return t.fields[i]; return null; }
+    function walkBlock(b, sc, u, t, m) { var inner = { vars: {}, parent: sc, cls: t }; b.body.forEach(function (s) { walkStmt(s, inner, u, t, m); }); }
+    function walkStmt(s, sc, u, t, m) {
+      if (s.k === 'block') return walkBlock(s, sc, u, t, m);
+      if (s.k === 'decl') { knownType(s.ty, u); s.decls.forEach(function (d) { if (lookup(sc, d.name) !== undefined) report(d, 'variable ' + d.name + ' is already defined in method ' + (m.name || t.name)); var it = d.init ? walkExpr(d.init, sc, u, t) : null; if (d.init && !s.ty.isVar) typeCompat(s.ty, it, d.init); sc.vars[d.name] = s.ty.isVar ? (it || { name: 'Object' }) : s.ty; }); return; }
+      if (s.k === 'expr') { walkExpr(s.e, sc, u, t); return; }
+      if (s.k === 'return') { if (s.e && m.type && m.type.name === 'void') report(s, 'incompatible types: unexpected return value'); else if (!s.e && m.type && m.type.name !== 'void') report(s, 'incompatible types: missing return value'); if (s.e) { var rt = walkExpr(s.e, sc, u, t); if (m.type) typeCompat(m.type, rt, s.e); } return; }
+      if (s.k === 'if') { var ct = walkExpr(s.c, sc, u, t); if (ct && ct.name !== 'boolean' && ct.name !== 'Boolean') report(s.c, 'incompatible types: ' + ct.name + ' cannot be converted to boolean'); walkStmt(s.th, { vars: {}, parent: sc, cls: t }, u, t, m); if (s.el) walkStmt(s.el, { vars: {}, parent: sc, cls: t }, u, t, m); return; }
+      if (s.k === 'throw') { walkExpr(s.e, sc, u, t); return; }
+      if (s.k === 'foreach') { knownType(s.ty, u); walkExpr(s.src, sc, u, t); var fs = { vars: {}, parent: sc, cls: t }; fs.vars[s.name] = s.ty; walkStmt(s.body, fs, u, t, m); return; }
+    }
+    function isLocal(sc, n) { for (var s = sc; s && s.parent; s = s.parent) if (Object.prototype.hasOwnProperty.call(s.vars, n)) return true; return false; }
+    function typeCompat(want, got, node) {
+      if (!want || !got) return;
+      var w = want.name, g = got.name;
+      if (w === g || g === 'null' && !PRIM[w] || w === 'Object' && g !== 'void') return;
+      var nums = { char: 1, int: 2, long: 3, double: 4 };
+      if (nums[w] && nums[g]) { if (nums[g] > nums[w]) report(node, 'incompatible types: possible lossy conversion from ' + g + ' to ' + w); return; }
+      var box = { Integer: 'int', Long: 'long', Double: 'double', Boolean: 'boolean' };
+      if (box[w] === g || box[g] === w) return;
+      if ((PRIM[w] || w === 'String') && (PRIM[g] || g === 'String')) { report(node, 'incompatible types: ' + g + ' cannot be converted to ' + w); return; }
+      if (g === 'void') report(node, "incompatible types: void cannot be converted to " + w);
+    }
+    function methodsNamed(t, n) { return t.methods.filter(function (m) { return m.name === n; }); }
+    function walkExpr(e, sc, u, t) {
+      if (!e) return null;
+      switch (e.k) {
+        case 'lit': return { name: e.v === null ? 'null' : typeof e.v === 'string' ? 'String' : typeof e.v === 'boolean' ? 'boolean' : e.v.k };
+        case 'this': return { name: t.name };
+        case 'name': {
+          var lt = lookup(sc, e.name); if (lt !== undefined) return lt;
+          var f = fieldOf(t, e.name); if (f) return f.type;
+          if (classes[e.name] || EXC.hasOwnProperty(e.name) || /^(Integer|Math|String|System|Long|Double)$/.test(e.name)) return { name: e.name, isClassRef: true };
+          report(e, 'cannot find symbol\n  symbol: variable ' + e.name); return null;
+        }
+        case 'field': {
+          var rt = walkExpr(e.recv, sc, u, t);
+          if (e.recv.k === 'name' && e.recv.name === 'System' && e.name === 'out') return { name: 'PrintStream' };
+          if (rt && classes[rt.name]) { var ff = fieldOf(classes[rt.name], e.name); if (!ff) { report(e, 'cannot find symbol\n  symbol: variable ' + e.name); return null; } if (ff.mods.private && classes[rt.name] !== t) report(e, e.name + ' has private access in ' + rt.name); return ff.type; }
+          if (rt && rt.isClassRef && classes[rt.name]) { var sf = fieldOf(classes[rt.name], e.name); if (!sf) { report(e, 'cannot find symbol\n  symbol: variable ' + e.name + '\n  location: class ' + rt.name); return null; } if (!sf.mods.static) report(e, 'non-static variable ' + e.name + ' cannot be referenced from a static context'); return sf.type; }
+          if (rt && rt.isClassRef) { report(e, 'static fields such as ' + rt.name + '.' + e.name + ' are outside this practice editor.', 'limit'); return null; }
+          return null;
+        }
+        case 'assign': { var tt = walkExpr(e.target, sc, u, t), vt = walkExpr(e.e, sc, u, t); if (e.op === '=') typeCompat(tt, vt, e.e); return tt; }
+        case 'incdec': return walkExpr(e.target, sc, u, t);
+        case 'un': { var at = walkExpr(e.a, sc, u, t); return e.op === '!' ? { name: 'boolean' } : at; }
+        case 'cond': walkExpr(e.c, sc, u, t); var a1 = walkExpr(e.a, sc, u, t); walkExpr(e.b, sc, u, t); return a1;
+        case 'bin': {
+          var l = walkExpr(e.a, sc, u, t), r = walkExpr(e.b, sc, u, t);
+          if (/^(==|!=|<|>|<=|>=|&&|\|\|)$/.test(e.op)) {
+            if ((e.op === '&&' || e.op === '||') && ((l && l.name !== 'boolean' && l.name !== 'Boolean') || (r && r.name !== 'boolean' && r.name !== 'Boolean'))) report(e, "bad operand types for binary operator '" + e.op + "'");
+            return { name: 'boolean' };
+          }
+          if (e.op === '+' && ((l && l.name === 'String') || (r && r.name === 'String'))) return { name: 'String' };
+          if (l && r && (l.name === 'boolean' || r.name === 'boolean')) report(e, "bad operand types for binary operator '" + e.op + "'");
+          if (l && r && l.name === 'String' || r && r.name === 'String') { if (e.op !== '+') report(e, "bad operand types for binary operator '" + e.op + "'"); }
+          var order = ['char', 'int', 'long', 'double'];
+          if (l && r && order.indexOf(l.name) >= 0 && order.indexOf(r.name) >= 0) return { name: order[Math.max(1, order.indexOf(l.name), order.indexOf(r.name))] };
+          return l || r;
+        }
+        case 'classlit': if (!(classes[e.name] || EXC.hasOwnProperty(e.name) || PRIM[e.name] || e.name === 'String')) report(e, 'cannot find symbol\n  symbol: class ' + e.name); return { name: 'Class' };
+        case 'lambda': { var ls = { vars: {}, parent: sc, cls: t }; e.params.forEach(function (pn) { ls.vars[pn] = null; }); if (e.body.k === 'block') walkBlock(e.body, ls, u, t, { name: 'lambda', type: null }); else walkExpr(e.body, ls, u, t); return { name: 'lambda' }; }
+        case 'new': {
+          knownType(e.ty, u); e.args.forEach(function (a) { walkExpr(a, sc, u, t); });
+          var c = classes[e.ty.name];
+          if (c && c.kind === 'interface' && !e.body) report(e, c.name + ' is abstract; cannot be instantiated');
+          if (c && c.kind === 'class') { var arity = e.args.length; if (c.ctors.length ? !c.ctors.some(function (k) { return k.params.length === arity; }) : arity !== 0) report(e, 'constructor ' + c.name + ' in class ' + c.name + ' cannot be applied to given types;\n  found: ' + arity + ' argument' + (arity === 1 ? '' : 's')); }
+          if (e.body) { var anonScope = { vars: {}, parent: sc, cls: e.body }; e.body.methods.forEach(function (m) { var ms = { vars: {}, parent: anonScope, cls: e.body }; m.params.forEach(function (pp) { ms.vars[pp.name] = pp.type; }); if (m.body) walkBlock(m.body, ms, u, e.body, m); }); }
+          return { name: e.ty.name, args: e.ty.args };
+        }
+        case 'call': {
+          e.args.forEach(function (a) { walkExpr(a, sc, u, t); });
+          if (!e.recv) {
+            if (methodsNamed(t, e.name).length) { var mm = methodsNamed(t, e.name).filter(function (x) { return x.params.length === e.args.length; })[0]; if (!mm) report(e, 'method ' + e.name + ' in class ' + t.name + ' cannot be applied to given types'); return mm ? mm.type : null; }
+            if (statics[e.name]) return builtinStaticType(e.name);
+            if (ASSERTS.indexOf(e.name) >= 0) { report(e, 'cannot find symbol\n  symbol: method ' + e.name + ' (add import static org.junit.jupiter.api.Assertions.*;)'); return null; }
+            if (MOCKITO.indexOf(e.name) >= 0) { report(e, 'cannot find symbol\n  symbol: method ' + e.name + ' (add import static org.mockito.Mockito.*;)'); return null; }
+            report(e, 'cannot find symbol\n  symbol: method ' + e.name); return null;
+          }
+          var rt2 = walkExpr(e.recv, sc, u, t);
+          if (!rt2) return null;
+          if (rt2.name === 'PrintStream') { if (e.name !== 'println' && e.name !== 'print') report(e, 'System.out.' + e.name + ' is outside this practice editor; use println.', 'limit'); return { name: 'void' }; }
+          if (rt2.isClassRef) {
+            var key = rt2.name + '.' + e.name;
+            if (/^(Integer\.compare|Integer\.parseInt|Math\.max|Math\.min|Math\.abs|String\.valueOf)$/.test(key)) return { name: key === 'String.valueOf' ? 'String' : 'int' };
+            if (classes[rt2.name]) { var sm = methodsNamed(classes[rt2.name], e.name)[0]; if (!sm) { report(e, 'cannot find symbol\n  symbol: method ' + e.name); return null; } if (!sm.mods.static) report(e, 'non-static method ' + e.name + '() cannot be referenced from a static context'); return sm.type; }
+            report(e, key + ' is outside this practice editor.', 'limit'); return null;
+          }
+          var rc = classes[rt2.name];
+          if (rc) {
+            var cands = methodsNamed(rc, e.name);
+            rc.impl.forEach(function (it) { if (classes[it.name]) cands = cands.concat(methodsNamed(classes[it.name], e.name)); });
+            if (!cands.length) { report(e, 'cannot find symbol\n  symbol: method ' + e.name + '\n  location: ' + (rc.kind === 'interface' ? 'interface ' : 'class ') + rc.name); return null; }
+            var fit = cands.filter(function (x) { return x.params.length === e.args.length; })[0];
+            if (!fit) { report(e, 'method ' + e.name + ' in ' + (rc.kind === 'interface' ? 'interface ' : 'class ') + rc.name + ' cannot be applied to given types;\n  required: ' + cands[0].params.map(function (pp) { return pp.type.name; }).join(',') + '\n  found: ' + e.args.length + ' argument' + (e.args.length === 1 ? '' : 's')); return null; }
+            if (fit.mods.private && rc !== t) report(e, e.name + '(' + fit.params.map(function (pp) { return pp.type.name; }).join(',') + ') has private access in ' + rc.name);
+            return fit.type;
+          }
+          var B = { String: { length: 'int', equals: 'boolean', isEmpty: 'boolean', toUpperCase: 'String', toLowerCase: 'String', charAt: 'char', contains: 'boolean', compareTo: 'int', startsWith: 'boolean', trim: 'String', substring: 'String' },
+            List: { add: 'boolean', get: 'Object', size: 'int', contains: 'boolean', isEmpty: 'boolean', remove: 'Object', clear: 'void' },
+            Map: { put: 'Object', get: 'Object', containsKey: 'boolean', size: 'int', getOrDefault: 'Object', remove: 'Object', isEmpty: 'boolean' },
+            Comparator: { compare: 'int' }, Runnable: { run: 'void' }, Integer: { equals: 'boolean', intValue: 'int' } };
+          var bn = rt2.name === 'ArrayList' ? 'List' : rt2.name === 'HashMap' ? 'Map' : rt2.name;
+          if (B[bn]) {
+            if (!B[bn][e.name]) { report(e, bn + '.' + e.name + ' is outside this practice editor.', 'limit'); return null; }
+            var r0 = B[bn][e.name];
+            if (r0 === 'Object' && rt2.args && rt2.args.length) r0 = bn === 'Map' ? (rt2.args[1] || {}).name : rt2.args[0].name;
+            return { name: r0 };
+          }
+          if (rt2.name === 'lambda' || rt2.name === 'Object' || rt2.name === 'Class' || EXC.hasOwnProperty(rt2.name)) {
+            if (EXC.hasOwnProperty(rt2.name) && e.name === 'getMessage') return { name: 'String' };
+            return null;
+          }
+          if (rt2.name === 'int' || rt2.name === 'long' || rt2.name === 'double' || rt2.name === 'boolean' || rt2.name === 'char') { report(e, rt2.name + ' cannot be dereferenced'); return null; }
+          return null;
+        }
+      }
+      return null;
+    }
+    function builtinStaticType(n) { if (n === 'mock') return null; if (n === 'assertThrows') return { name: 'Throwable' }; return { name: 'void' }; }
+    function summarize(t, m, u) {
+      var out = { cls: t.name, name: m.name, line: m.line, stmts: [] };
+      function calls(e, acc) {
+        if (!e || typeof e !== 'object') return acc;
+        if (e.k === 'call') acc.push({ name: e.name, recv: e.recv && e.recv.k === 'name' ? e.recv.name : e.recv && e.recv.k === 'call' ? '(' + e.recv.name + ')' : e.recv ? '?' : null, args: e.args.length, node: e });
+        if (e.k === 'new') acc.push({ name: 'new ' + e.ty.name, isNew: true, cls: e.ty.name });
+        ['recv', 'a', 'b', 'c', 'e', 'target'].forEach(function (k) { if (e[k] && typeof e[k] === 'object' && e[k].k) calls(e[k], acc); });
+        if (e.args) e.args.forEach(function (a) { calls(a, acc); });
+        if (e.k === 'lambda') { if (e.body.k === 'block') e.body.body.forEach(function (s) { stmtCalls(s, acc); }); else calls(e.body, acc); }
+        return acc;
+      }
+      function stmtCalls(s, acc) { if (s.k === 'expr' || s.k === 'return' || s.k === 'throw') calls(s.e, acc); if (s.k === 'decl') s.decls.forEach(function (d) { calls(d.init, acc); }); if (s.k === 'block') s.body.forEach(function (x) { stmtCalls(x, acc); }); if (s.k === 'if') { calls(s.c, acc); stmtCalls(s.th, acc); if (s.el) stmtCalls(s.el, acc); } return acc; }
+      (m.body ? m.body.body : []).forEach(function (s) {
+        var cs = stmtCalls(s, []);
+        var top = s.k === 'expr' && s.e.k === 'call' ? s.e : s.k === 'decl' && s.decls[0].init && s.decls[0].init.k === 'call' ? s.decls[0].init : null;
+        out.stmts.push({ k: s.k, line: s.line, calls: cs, top: top ? top.name : null, decl: s.k === 'decl' ? s.decls.map(function (d) { return d.name; }) : [], declType: s.k === 'decl' ? s.ty.name : null, node: s });
+      });
+      return out;
+    }
+  }
+
+  /* ---------- interpreter ---------- */
+  function Runner(prog, opts) {
+    var classes = prog.classes, statics = prog.statics, steps = 0, ids = 1, out = [];
+    var maxSteps = opts.maxSteps || 20000, cov = opts.cover ? {} : null, blank = opts.blank || {};
+    var lastInvocation = null, verifying = null, staticStore = {};
+    function staticsOf(cls) {
+      if (!staticStore[cls.name]) { var st = staticStore[cls.name] = {}; cls.fields.forEach(function (fd) { if (fd.mods.static) st[fd.name] = defaultOf(fd.type); }); cls.fields.forEach(function (fd) { if (fd.mods.static && fd.init) st[fd.name] = coerce(fd.type, evalE(fd.init, { vars: {}, parent: null, cls: cls })); }); }
+      return staticStore[cls.name];
+    }
+    function staticHolder(sc, n) { for (var s = sc; s; s = s.parent) if (s.cls && classes[s.cls.name] && classes[s.cls.name].fields.some(function (f) { return f.name === n && f.mods.static; })) return staticsOf(classes[s.cls.name]); return null; }
+    function tick(node) { if (++steps > maxSteps) throw new Stop('more than ' + maxSteps + ' steps; is there a loop that never ends?'); if (cov && node && node.cls && opts.cover[node.cls]) { var c = cov[node.cls] || (cov[node.cls] = { lines: {}, branches: {} }); c.lines[node.line] = (c.lines[node.line] || 0) + 1; } }
+    function npe(what) { throw new JThrow(exc('NullPointerException', 'Cannot invoke "' + what + '" because value is null')); }
+    function newObj(cls, args, env) {
+      if (cls.kind === 'interface') throw new Stop('cannot instantiate ' + cls.name);
+      var o = { jt: 'obj', cls: cls, f: {}, id: 0x1b6d3586 + (ids++ * 97), env: env || null };
+      cls.fields.forEach(function (fd) { if (!fd.mods.static) o.f[fd.name] = defaultOf(fd.type); });
+      cls.fields.forEach(function (fd) { if (fd.init && !fd.mods.static) o.f[fd.name] = coerce(fd.type, evalE(fd.init, { vars: {}, parent: null, self: o, cls: cls, outer: env })); });
+      var ctor = cls.ctors.filter(function (c) { return c.params.length === args.length; })[0];
+      if (ctor) { var sc = { vars: {}, parent: null, self: o, cls: cls }; ctor.params.forEach(function (pp, i) { sc.vars[pp.name] = { v: coerce(pp.type, args[i]), ty: pp.type }; }); execBlock(ctor.body, sc, cls); }
+      return o;
+    }
+    function defaultOf(ty) { if (!ty) return null; if (ty.name === 'int' || ty.name === 'char') return num('int', 0); if (ty.name === 'long') return num('long', 0); if (ty.name === 'double') return num('double', 0); if (ty.name === 'boolean') return false; return null; }
+    function coerce(ty, v) {
+      if (!ty || !isNum(v)) { if (ty && ty.name === 'char' && isNum(v)) return num('char', v.v); return v; }
+      if (ty.name === 'long') return num('long', v.v); if (ty.name === 'double' || ty.name === 'Double') return num('double', v.v); if (ty.name === 'int' || ty.name === 'Integer') return num('int', v.v); if (ty.name === 'char') return { k: 'char', v: v.v };
+      return v;
+    }
+    function lookupVar(sc, n) { for (var s = sc; s; s = s.parent) if (Object.prototype.hasOwnProperty.call(s.vars, n)) return s.vars[n]; return null; }
+    function selfOf(sc) { for (var s = sc; s; s = s.parent) if (s.self) return s; return null; }
+    function execBlock(b, sc, cls) { var inner = { vars: {}, parent: sc, cls: cls }; for (var i = 0; i < b.body.length; i++) { var r = exec(b.body[i], inner, cls); if (r) return r; } return null; }
+    function exec(s, sc, cls) {
+      s.cls = s.cls || cls.name; tick(s);
+      switch (s.k) {
+        case 'block': return execBlock(s, sc, cls);
+        case 'empty': return null;
+        case 'decl': s.decls.forEach(function (d) { var v = d.init ? evalE(d.init, sc) : undefined; sc.vars[d.name] = { v: s.ty.isVar ? v : coerce(s.ty, v), ty: s.ty }; }); return null;
+        case 'expr': evalE(s.e, sc); return null;
+        case 'return': return { ret: s.e ? evalE(s.e, sc) : undefined };
+        case 'if': {
+          var c = evalE(s.c, sc);
+          if (cov && opts.cover[s.cls]) { var cv = cov[s.cls] || (cov[s.cls] = { lines: {}, branches: {} }); var br = cv.branches[s.line] || (cv.branches[s.line] = { t: 0, f: 0 }); if (c) br.t++; else br.f++; }
+          if (c) return exec(s.th, { vars: {}, parent: sc, cls: cls }, cls);
+          if (s.el) return exec(s.el, { vars: {}, parent: sc, cls: cls }, cls);
+          return null;
+        }
+        case 'throw': { var ev = evalE(s.e, sc); if (ev === null) npe('throw'); if (!ev || ev.jt !== 'exc') throw new Stop('only exceptions can be thrown'); throw new JThrow(ev); }
+        case 'foreach': {
+          var src = evalE(s.src, sc); if (src === null) npe('java.util.List.iterator()');
+          if (!src || src.jt !== 'list') throw new Stop('for-each here works only over a List');
+          var items = src.items.slice();
+          for (var i = 0; i < items.length; i++) { var fs = { vars: {}, parent: sc, cls: cls }; fs.vars[s.name] = { v: items[i], ty: s.ty }; var r = exec(s.body, fs, cls); if (r) return r; }
+          return null;
+        }
+      }
+      throw new Stop('unsupported statement');
+    }
+    function setVar(target, sc, v) {
+      if (target.k === 'name') { var slot = lookupVar(sc, target.name); if (slot) { slot.v = coerce(slot.ty, v); return; } var self = selfOf(sc); if (self && Object.prototype.hasOwnProperty.call(self.self.f, target.name)) { var fd = self.cls.fields.filter(function (f) { return f.name === target.name; })[0]; self.self.f[target.name] = coerce(fd && fd.type, v); return; } var sh2 = staticHolder(sc, target.name); if (sh2) { sh2[target.name] = v; return; } throw new Stop('cannot assign ' + target.name); }
+      if (target.k === 'field') { var o = evalE(target.recv, sc); if (o === null) npe(target.name); var fd2 = o.cls.fields.filter(function (f) { return f.name === target.name; })[0]; o.f[target.name] = coerce(fd2 && fd2.type, v); return; }
+      throw new Stop('cannot assign');
+    }
+    function arith(op, a, b, node) {
+      if (op === '+' && (typeof a === 'string' || typeof b === 'string')) return show(a) + show(b);
+      if (!isNum(a) || !isNum(b)) { if (a === null || b === null) throw new JThrow(exc('NullPointerException', null)); throw new Stop('cannot apply ' + op); }
+      var k = wider(a, b), x = a.v, y = b.v, r;
+      if (op === '+') r = x + y; else if (op === '-') r = x - y;
+      else if (op === '*') r = k === 'int' ? Math.imul(x, y) : x * y;
+      else if (op === '/') { if (k !== 'double' && y === 0) throw new JThrow(exc('ArithmeticException', '/ by zero')); r = k === 'double' ? x / y : Math.trunc(x / y); }
+      else if (op === '%') { if (k !== 'double' && y === 0) throw new JThrow(exc('ArithmeticException', '/ by zero')); r = x % y; }
+      if (k === 'long' && !Number.isSafeInteger(r)) throw new Stop('long overflow is outside this practice editor');
+      return num(k, r);
+    }
+    function cmp(op, a, b) {
+      if (op === '==' || op === '!=') { var same = (isNum(a) && isNum(b)) ? a.v === b.v : a === b; return op === '==' ? same : !same; }
+      if (!isNum(a) || !isNum(b)) throw new Stop('cannot compare');
+      return op === '<' ? a.v < b.v : op === '>' ? a.v > b.v : op === '<=' ? a.v <= b.v : a.v >= b.v;
+    }
+    function evalE(e, sc) {
+      tick(null);
+      switch (e.k) {
+        case 'lit': return e.v;
+        case 'this': { var s0 = selfOf(sc); return s0 ? s0.self : null; }
+        case 'name': {
+          var slot = lookupVar(sc, e.name); if (slot) return slot.v;
+          var self = selfOf(sc); if (self && Object.prototype.hasOwnProperty.call(self.self.f, e.name)) return self.self.f[e.name];
+          if (self && self.self.env) { var outer = lookupVar(self.self.env, e.name); if (outer) return outer.v; }
+          if (sc.outer) { var o2 = lookupVar(sc.outer, e.name); if (o2) return o2.v; }
+          var sh = staticHolder(sc, e.name); if (sh) return sh[e.name];
+          return { jt: 'classref', name: e.name };
+        }
+        case 'field': { var o = evalE(e.recv, sc); if (o && o.jt === 'classref' && o.name === 'System' && e.name === 'out') return { jt: 'out' }; if (o && o.jt === 'classref' && classes[o.name]) return staticsOf(classes[o.name])[e.name]; if (o === null) npe(e.name); return o.f[e.name]; }
+        case 'classlit': return { jt: 'classlit', name: e.name };
+        case 'assign': {
+          var v = evalE(e.e, sc);
+          if (e.op !== '=') { var cur = evalE(e.target, sc); v = arith(e.op[0], cur, v, e); if (isNum(cur) && isNum(v)) v = num(cur.k, cur.k === 'int' ? v.v | 0 : v.v); }
+          setVar(e.target, sc, v); return v;
+        }
+        case 'incdec': { var c0 = evalE(e.target, sc); var nv = num(c0.k, c0.v + (e.op === '++' ? 1 : -1)); setVar(e.target, sc, nv); return e.pre ? nv : c0; }
+        case 'un': { var a = evalE(e.a, sc); if (e.op === '!') return !a; if (e.op === '-') return num(a.k === 'char' ? 'int' : a.k, -a.v); return a; }
+        case 'cond': return evalE(e.c, sc) ? evalE(e.a, sc) : evalE(e.b, sc);
+        case 'bin': {
+          if (e.op === '&&') return !!evalE(e.a, sc) && !!evalE(e.b, sc);
+          if (e.op === '||') return !!evalE(e.a, sc) || !!evalE(e.b, sc);
+          var l = evalE(e.a, sc), r = evalE(e.b, sc);
+          if (/^(==|!=|<|>|<=|>=)$/.test(e.op)) return cmp(e.op, l, r);
+          return arith(e.op, l, r, e);
+        }
+        case 'lambda': return { jt: 'lambda', params: e.params, body: e.body, sc: sc };
+        case 'new': {
+          var args = e.args.map(function (x) { return evalE(x, sc); });
+          if (EXC.hasOwnProperty(e.ty.name)) return exc(e.ty.name, args.length ? (args[0] === null ? null : show(args[0])) : null);
+          if (e.ty.name === 'ArrayList') return { jt: 'list', items: args.length && args[0] && args[0].jt === 'list' ? args[0].items.slice() : [] };
+          if (e.ty.name === 'HashMap') return { jt: 'map', keys: [], vals: [] };
+          if (e.body) { e.body.name = e.body.name || 'anonymous'; return newObj(e.body, [], sc); }
+          var cls = classes[e.ty.name]; if (!cls) throw new Stop('cannot create ' + e.ty.name);
+          return newObj(cls, args);
+        }
+        case 'call': return call(e, sc);
+      }
+      throw new Stop('unsupported expression');
+    }
+    var depth = 0;
+    function invoke(obj, m, args) {
+      if (depth > 400) throw new JThrow(exc('StackOverflowError', null));
+      depth++;
+      try { return invoke0(obj, m, args); } finally { depth--; }
+    }
+    function invoke0(obj, m, args) {
+      if (blank[obj.cls.name + '.' + m.name]) return m.type.name === 'void' ? undefined : defaultOf(m.type);
+      var sc = { vars: {}, parent: null, self: obj, cls: obj.cls };
+      if (obj.env) sc.parent = obj.env;
+      m.params.forEach(function (pp, i) { sc.vars[pp.name] = { v: coerce(pp.type, args[i]), ty: pp.type }; });
+      var r = execBlock(m.body, sc, obj.cls);
+      return r ? coerce(m.type, r.ret) : undefined;
+    }
+    function callLambda(fn, args) {
+      var sc = { vars: {}, parent: fn.sc, cls: fn.sc.cls };
+      fn.params.forEach(function (pn, i) { sc.vars[pn] = { v: args[i], ty: null }; });
+      if (fn.body.k === 'block') { var r = execBlock(fn.body, sc, fn.sc.cls || { name: 'lambda' }); return r ? r.ret : undefined; }
+      return evalE(fn.body, sc);
+    }
+    function findMethod(cls, name, n) { var ms = cls.methods.filter(function (m) { return m.name === name && m.params.length === n && m.body; }); return ms[0] || null; }
+    function ifaceMethod(iface, name) { var ms = iface.methods.filter(function (m) { return m.name === name; }); return ms[0] || null; }
+    function describeCall(mockName, name, args) { return mockName + '.' + name + '(' + args.map(function (a) { return a && a.jt === 'matcher' ? a.label : typeof a === 'string' ? '"' + a + '"' : show(a); }).join(', ') + ');'; }
+    function argsMatch(pattern, args) { if (pattern.length !== args.length) return false; return pattern.every(function (p, i) { return p && p.jt === 'matcher' ? p.test(args[i]) : jEquals(p, args[i]); }); }
+    function mockCall(mk, name, args, node) {
+      var hasMatcher = args.some(function (a) { return a && a.jt === 'matcher'; });
+      if (hasMatcher && !args.every(function (a) { return a && a.jt === 'matcher'; })) throw new JThrow(exc('InvalidUseOfMatchersException', 'Invalid use of argument matchers! ' + args.length + ' matchers expected, ' + args.filter(function (a) { return a && a.jt === 'matcher'; }).length + ' recorded. When using matchers, all arguments have to be provided by matchers.'));
+      var im = ifaceMethod(mk.iface, name);
+      if (verifying) {
+        var vf = verifying; verifying = null;
+        var count = mk.calls.filter(function (c) { return c.name === name && argsMatch(args, c.args); }).length;
+        var desc = describeCall(mk.name, name, args);
+        if (vf.mode === 'times' && count !== vf.n) {
+          if (vf.n === 0) throw new AssertFail('Never wanted here:\n' + desc + '\nBut invoked ' + count + ' time' + (count === 1 ? '' : 's') + '.', 'org.mockito.exceptions.verification.NeverWantedButInvoked');
+          if (count === 0) {
+            var others = mk.calls.filter(function (c) { return c.name === name; });
+            if (others.length) throw new AssertFail('Argument(s) are different! Wanted:\n' + desc + '\nActual invocation has different arguments:\n' + describeCall(mk.name, name, others[0].args), 'org.mockito.exceptions.verification.opentest4j.ArgumentsAreDifferent');
+            throw new AssertFail('Wanted but not invoked:\n' + desc + (mk.calls.length ? '\nHowever, there ' + (mk.calls.length === 1 ? 'was exactly 1 interaction' : 'were exactly ' + mk.calls.length + ' interactions') + ' with this mock.' : '\nActually, there were zero interactions with this mock.'), 'org.mockito.exceptions.verification.WantedButNotInvoked');
+          }
+          throw new AssertFail(desc + '\nWanted ' + vf.n + ' time' + (vf.n === 1 ? '' : 's') + ' but was ' + count + '.', count < vf.n ? 'org.mockito.exceptions.verification.TooFewActualInvocations' : 'org.mockito.exceptions.verification.TooManyActualInvocations');
+        }
+        if (vf.mode === 'atLeastOnce' && count < 1) throw new AssertFail('Wanted but not invoked:\n' + desc, 'org.mockito.exceptions.verification.WantedButNotInvoked');
+        return defaultOf(im.type);
+      }
+      if (!hasMatcher) mk.calls.push({ name: name, args: args, line: node.line });
+      lastInvocation = { mock: mk, name: name, args: args, im: im, matchers: hasMatcher };
+      var st = mk.stubs.filter(function (s) { return s.name === name && argsMatch(s.args, args); }).pop();
+      if (st && !hasMatcher) { if (st.throwExc) throw new JThrow(st.throwExc); return st.value; }
+      var rt = im.type.name;
+      if (rt === 'List' || rt === 'ArrayList') return { jt: 'list', items: [] };
+      if (rt === 'Map' || rt === 'HashMap') return { jt: 'map', keys: [], vals: [] };
+      if (rt === 'String') return null;
+      if (rt === 'Integer' || rt === 'Long' || rt === 'Double') return defaultOf({ name: rt === 'Integer' ? 'int' : rt === 'Long' ? 'long' : 'double' });
+      if (rt === 'Boolean') return false;
+      return defaultOf(im.type);
+    }
+    function call(e, sc) {
+      var name = e.name;
+      if (!e.recv) {
+        var self = selfOf(sc);
+        if (self) { var own = findMethod(self.cls, name, e.args.length); if (own) { var a0 = e.args.map(function (x) { return evalE(x, sc); }); return invoke(self.self, own, a0); } }
+        if (statics[name] === 'junit') return assertion(name, e, sc);
+        if (statics[name] === 'mockito') return mockito(name, e, sc);
+        throw new Stop('cannot find ' + name);
+      }
+      var recv = evalE(e.recv, sc);
+      var args = e.args.map(function (x) { return evalE(x, sc); });
+      if (recv && recv.jt === 'out') { out.push((args.length ? show(args[0]) : '')); return undefined; }
+      if (recv && recv.jt === 'classref') return staticCall(recv.name, name, args, e);
+      if (recv && recv.jt === 'stubbing') {
+        var inv = recv.inv;
+        if (name === 'thenReturn') { inv.mock.stubs.push({ name: inv.name, args: inv.args, value: coerce(inv.im.type, args[0]) }); return recv; }
+        if (name === 'thenThrow') { inv.mock.stubs.push({ name: inv.name, args: inv.args, throwExc: args[0] }); return recv; }
+        throw new Stop('only thenReturn and thenThrow follow when(...) in this practice editor');
+      }
+      if (recv === null || recv === undefined) npe(name + '()');
+      if (recv.jt === 'mock') return mockCall(recv, name, args, e);
+      if (recv.jt === 'lambda') return callLambda(recv, args);
+      if (recv.jt === 'obj') {
+        var m = findMethod(recv.cls, name, args.length);
+        if (!m) throw new Stop('cannot find method ' + name);
+        return invoke(recv, m, args);
+      }
+      if (recv.jt === 'exc') { if (name === 'getMessage') return recv.message; throw new Stop('only getMessage() is supported on exceptions'); }
+      if (typeof recv === 'string') return stringCall(recv, name, args);
+      if (recv.jt === 'list') return listCall(recv, name, args);
+      if (recv.jt === 'map') return mapCall(recv, name, args);
+      if (isNum(recv) && name === 'equals') return isNum(args[0]) && args[0].v === recv.v && args[0].k === recv.k;
+      if (isNum(recv) && name === 'intValue') return num('int', recv.v);
+      throw new Stop('method ' + name + ' is not available here');
+    }
+    function staticCall(cls, name, args, e) {
+      var key = cls + '.' + name;
+      if (key === 'Integer.compare') return num('int', args[0].v < args[1].v ? -1 : args[0].v > args[1].v ? 1 : 0);
+      if (key === 'Integer.parseInt') { if (!/^[-+]?\d+$/.test(args[0])) throw new JThrow(exc('NumberFormatException', 'For input string: "' + args[0] + '"')); return num('int', parseInt(args[0], 10)); }
+      if (key === 'Math.max') return num(wider(args[0], args[1]), Math.max(args[0].v, args[1].v));
+      if (key === 'Math.min') return num(wider(args[0], args[1]), Math.min(args[0].v, args[1].v));
+      if (key === 'Math.abs') return num(args[0].k, Math.abs(args[0].v));
+      if (key === 'String.valueOf') return show(args[0]);
+      if (classes[cls]) { var m = classes[cls].methods.filter(function (x) { return x.name === name && x.mods.static; })[0]; if (m) { var sc = { vars: {}, parent: null, cls: classes[cls] }; m.params.forEach(function (pp, i) { sc.vars[pp.name] = { v: coerce(pp.type, args[i]), ty: pp.type }; }); var r = execBlock(m.body, sc, classes[cls]); return r ? r.ret : undefined; } }
+      throw new Stop(key + ' is not available here');
+    }
+    function stringCall(s, name, args) {
+      switch (name) {
+        case 'length': return num('int', s.length);
+        case 'equals': return typeof args[0] === 'string' && args[0] === s;
+        case 'isEmpty': return s.length === 0;
+        case 'toUpperCase': return s.toUpperCase();
+        case 'toLowerCase': return s.toLowerCase();
+        case 'trim': return s.trim();
+        case 'contains': if (args[0] === null) npe('java.lang.CharSequence.toString()'); return s.indexOf(args[0]) >= 0;
+        case 'startsWith': return s.indexOf(args[0]) === 0;
+        case 'compareTo': { if (args[0] === null) npe('String.compareTo'); var a = s, b = args[0], n = Math.min(a.length, b.length); for (var i = 0; i < n; i++) if (a.charCodeAt(i) !== b.charCodeAt(i)) return num('int', a.charCodeAt(i) - b.charCodeAt(i)); return num('int', a.length - b.length); }
+        case 'charAt': { var k = args[0].v; if (k < 0 || k >= s.length) throw new JThrow(exc('StringIndexOutOfBoundsException' in EXC ? 'StringIndexOutOfBoundsException' : 'IndexOutOfBoundsException', 'Index ' + k + ' out of bounds for length ' + s.length)); return { k: 'char', v: s.charCodeAt(k) }; }
+        case 'substring': { var b0 = args[0].v, e0 = args.length > 1 ? args[1].v : s.length; if (b0 < 0 || e0 > s.length || b0 > e0) throw new JThrow(exc('IndexOutOfBoundsException', 'begin ' + b0 + ', end ' + e0 + ', length ' + s.length)); return s.slice(b0, e0); }
+      }
+      throw new Stop('String.' + name + ' is not available here');
+    }
+    function listCall(l, name, args) {
+      switch (name) {
+        case 'add': l.items.push(args[0]); return true;
+        case 'get': { var k = args[0].v; if (k < 0 || k >= l.items.length) throw new JThrow(exc('IndexOutOfBoundsException', 'Index ' + k + ' out of bounds for length ' + l.items.length)); return l.items[k]; }
+        case 'size': return num('int', l.items.length);
+        case 'contains': return l.items.some(function (x) { return jEquals(x, args[0]); });
+        case 'isEmpty': return l.items.length === 0;
+        case 'clear': l.items.length = 0; return undefined;
+        case 'remove': { if (isNum(args[0]) && args[0].k === 'int') { var j = args[0].v; if (j < 0 || j >= l.items.length) throw new JThrow(exc('IndexOutOfBoundsException', 'Index ' + j + ' out of bounds for length ' + l.items.length)); return l.items.splice(j, 1)[0]; } for (var q = 0; q < l.items.length; q++) if (jEquals(l.items[q], args[0])) { l.items.splice(q, 1); return true; } return false; }
+      }
+      throw new Stop('List.' + name + ' is not available here');
+    }
+    function mapCall(m, name, args) {
+      var i = mapIndex(m, args[0]);
+      switch (name) {
+        case 'put': if (i >= 0) { var old = m.vals[i]; m.vals[i] = args[1]; return old; } m.keys.push(args[0]); m.vals.push(args[1]); return null;
+        case 'get': return i >= 0 ? m.vals[i] : null;
+        case 'getOrDefault': return i >= 0 ? m.vals[i] : args[1];
+        case 'containsKey': return i >= 0;
+        case 'size': return num('int', m.keys.length);
+        case 'isEmpty': return m.keys.length === 0;
+        case 'remove': if (i >= 0) { var v = m.vals[i]; m.keys.splice(i, 1); m.vals.splice(i, 1); return v; } return null;
+      }
+      throw new Stop('Map.' + name + ' is not available here');
+    }
+    function fmt(x) { return show(x); }
+    function assertion(name, e, sc) {
+      var A = e.args;
+      if (name === 'assertThrows') {
+        if (A.length < 2) throw new Stop('assertThrows needs a class and a lambda');
+        var want = evalE(A[0], sc), fn = evalE(A[1], sc);
+        if (!want || want.jt !== 'classlit') throw new Stop('the first argument of assertThrows is an exception class, such as IllegalArgumentException.class');
+        if (!fn || fn.jt !== 'lambda') throw new Stop('the second argument of assertThrows is a lambda, such as () -> ...');
+        try { callLambda(fn, []); }
+        catch (ex) {
+          if (ex instanceof JThrow) { if (isSub(ex.exc.type, want.name) || ex.exc.type === want.name) return ex.exc; throw new AssertFail('Unexpected exception type thrown, expected: <' + fqcn(want.name) + '> but was: <' + fqcn(ex.exc.type) + '>'); }
+          throw ex;
+        }
+        throw new AssertFail('Expected ' + fqcn(want.name) + ' to be thrown, but nothing was thrown.');
+      }
+      var vals = A.map(function (x) { return evalE(x, sc); });
+      var msg = function (i) { return vals.length > i && typeof vals[i] === 'string' ? vals[i] + ' ==> ' : ''; };
+      switch (name) {
+        case 'assertEquals': if (vals.length < 2) throw new Stop('assertEquals needs expected and actual'); if (!jEquals(vals[0], vals[1])) throw new AssertFail(msg(2) + 'expected: <' + fmt(vals[0]) + '> but was: <' + fmt(vals[1]) + '>'); return undefined;
+        case 'assertNotEquals': if (jEquals(vals[0], vals[1])) throw new AssertFail(msg(2) + 'expected: not equal but was: <' + fmt(vals[1]) + '>'); return undefined;
+        case 'assertTrue': if (vals[0] !== true) throw new AssertFail(msg(1) + 'expected: <true> but was: <false>'); return undefined;
+        case 'assertFalse': if (vals[0] !== false) throw new AssertFail(msg(1) + 'expected: <false> but was: <true>'); return undefined;
+        case 'assertNull': if (vals[0] !== null) throw new AssertFail(msg(1) + 'expected: <null> but was: <' + fmt(vals[0]) + '>'); return undefined;
+        case 'assertNotNull': if (vals[0] === null) throw new AssertFail(msg(1) + 'expected: not <null>'); return undefined;
+        case 'assertSame': if (vals[0] !== vals[1] && !(isNum(vals[0]) && isNum(vals[1]) && vals[0].v === vals[1].v)) throw new AssertFail(msg(2) + 'expected: <' + fmt(vals[0]) + '> but was: <' + fmt(vals[1]) + '>'); return undefined;
+        case 'fail': throw new AssertFail(vals.length ? show(vals[0]) : '');
+      }
+      throw new Stop(name + ' is not available here');
+    }
+    function matcher(label, test) { var m = { jt: 'matcher', label: label, test: test }; return m; }
+    function mockito(name, e, sc) {
+      var A = e.args;
+      if (name === 'mock') {
+        var c = evalE(A[0], sc); if (!c || c.jt !== 'classlit') throw new Stop('mock needs a class literal, such as PaymentGateway.class');
+        var iface = classes[c.name]; if (!iface) throw new Stop('cannot mock ' + c.name);
+        if (iface.kind !== 'interface') throw new Stop('this practice editor mocks interfaces only; ' + c.name + ' is a class');
+        var holder = c.name.charAt(0).toLowerCase() + c.name.slice(1);
+        return { jt: 'mock', iface: iface, name: holder, calls: [], stubs: [], id: (0x2f0e140b + ids++ * 31).toString(16) };
+      }
+      if (name === 'when') {
+        lastInvocation = null;
+        evalE(A[0], sc);
+        var inv = lastInvocation;
+        if (!inv) throw new JThrow(exc('MissingMethodInvocationException', 'when() requires an argument which has to be \'a method call on a mock\'.'));
+        if (!inv.matchers) inv.mock.calls.pop();
+        return { jt: 'stubbing', inv: inv };
+      }
+      if (name === 'verify') {
+        var mk = evalE(A[0], sc); if (!mk || mk.jt !== 'mock') throw new JThrow(exc('NotAMockException', 'Argument passed to verify() is not a mock!'));
+        var mode = A.length > 1 ? evalE(A[1], sc) : { jt: 'mode', mode: 'times', n: 1 };
+        return { jt: 'verifier', mock: mk, mode: mode };
+      }
+      if (name === 'times') { var n = evalE(A[0], sc); return { jt: 'mode', mode: 'times', n: n.v }; }
+      if (name === 'never') return { jt: 'mode', mode: 'times', n: 0 };
+      if (name === 'atLeastOnce') return { jt: 'mode', mode: 'atLeastOnce' };
+      if (name === 'any') return matcher('any()', function () { return true; });
+      if (name === 'anyInt') return matcher('anyInt()', function (x) { return isNum(x) && x.k === 'int'; });
+      if (name === 'anyString') return matcher('anyString()', function (x) { return typeof x === 'string'; });
+      if (name === 'eq') { var v = evalE(A[0], sc); return matcher(typeof v === 'string' ? '"' + v + '"' : show(v), function (x) { return jEquals(x, v); }); }
+      throw new Stop(name + ' is not available here');
+    }
+    /* verify(m).method(args): the verifier receives the call */
+    var baseCall = call;
+    call = function (e, sc) {
+      if (e.recv) {
+        var r0 = null, isVerify = e.recv.k === 'call' && !e.recv.recv && e.recv.name === 'verify' && statics.verify === 'mockito';
+        if (isVerify) {
+          r0 = evalE(e.recv, sc);
+          var args = e.args.map(function (x) { return evalE(x, sc); });
+          verifying = r0.mode;
+          return mockCall(r0.mock, e.name, args, e);
+        }
+      }
+      return baseCall(e, sc);
+    };
+    return { newObj: newObj, invoke: invoke, call: function () { }, out: out, cov: cov, findMethod: findMethod, steps: function () { return steps; } };
+  }
+
+  /* ---------- public API ---------- */
+  function run(sources, opts) {
+    opts = opts || {};
+    var res = { compiled: false, problems: [], tests: [], out: [], coverage: null, analysis: null, stopped: null };
+    var prog;
+    try { prog = compile(sources); }
+    catch (e) { if (e instanceof Problem) { res.problems = [e]; return res; } throw e; }
+    res.problems = prog.problems || [];
+    if (res.problems.length) return res;
+    res.compiled = true; res.analysis = prog.analysis; res.program = prog;
+    var rn = Runner(prog, { cover: opts.cover, blank: opts.blank, maxSteps: opts.maxSteps });
+    res.out = rn.out;
+    var testClasses = [];
+    prog.units.forEach(function (u) { u.types.forEach(function (t) { if (t.kind === 'class' && t.methods.some(function (m) { return m.annos.some(function (a) { return a.name === 'Test'; }); })) testClasses.push(t); }); });
+    testClasses.forEach(function (tc) {
+      tc.methods.filter(function (m) { return m.annos.some(function (a) { return a.name === 'Test'; }); }).forEach(function (m) {
+        var r = { cls: tc.name, name: m.name, line: m.line, status: 'pass', message: '' };
+        try {
+          var inst = rn.newObj(tc, []);
+          tc.methods.filter(function (b) { return b.annos.some(function (a) { return a.name === 'BeforeEach'; }); }).forEach(function (b) { rn.invoke(inst, b, []); });
+          rn.invoke(inst, m, []);
+        } catch (e) {
+          if (e instanceof AssertFail) { r.status = 'fail'; r.message = e.type + ': ' + e.message; r.failType = e.type; }
+          else if (e instanceof JThrow) { r.status = 'error'; r.message = fqcn(e.exc.type).replace('java.lang.InvalidUseOfMatchersException', 'org.mockito.exceptions.misusing.InvalidUseOfMatchersException').replace('java.lang.MissingMethodInvocationException', 'org.mockito.exceptions.misusing.MissingMethodInvocationException').replace('java.lang.NotAMockException', 'org.mockito.exceptions.misusing.NotAMockException') + (e.exc.message !== null ? ': ' + e.exc.message : ''); r.exception = e.exc.type; }
+          else if (e instanceof Stop) { r.status = 'stopped'; r.message = 'Practice editor stopped: ' + e.msg; res.stopped = e.msg; }
+          else throw e;
+        }
+        res.tests.push(r);
+      });
+    });
+    res.coverage = rn.cov;
+    return res;
+  }
+  function report(res, fileLabel) {
+    var lines = [];
+    if (!res.compiled) return lines;
+    if (!res.tests.length) lines.push('No tests found: a test is a method marked @Test in a class.');
+    var byCls = {};
+    res.tests.forEach(function (t) { (byCls[t.cls] = byCls[t.cls] || []).push(t); });
+    Object.keys(byCls).forEach(function (c) {
+      lines.push(c);
+      byCls[c].forEach(function (t) { lines.push('  ' + (t.status === 'pass' ? '[PASS] ' : t.status === 'fail' ? '[FAIL] ' : t.status === 'error' ? '[ERROR] ' : '[STOPPED] ') + t.name + '()' + (t.message ? '\n      ' + t.message.replace(/\n/g, '\n      ') : '')); });
+    });
+    if (res.out.length) { lines.push(''); lines.push('Printed by the code:'); res.out.forEach(function (o) { lines.push('  ' + o); }); }
+    var p = res.tests.filter(function (t) { return t.status === 'pass'; }).length;
+    lines.push(''); lines.push(res.tests.length + ' test' + (res.tests.length === 1 ? '' : 's') + ' run: ' + p + ' passed, ' + (res.tests.length - p) + ' not passed.');
+    return lines;
+  }
+  return { run: run, report: report, lex: lex, parse: parse, show: show };
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  var PAGE = window.PEP_PAGE || {};
+  var lesson = document.querySelector('[data-pep-guidance-contract]');
+  if (!lesson) return;
+  document.documentElement.classList.remove('pep-nojs');
+  var activities = [].slice.call(lesson.querySelectorAll('section[data-pep-activity]'));
+  var links = [].slice.call(lesson.querySelectorAll('a[data-pep-activity-link]'));
+  var prevBtn = lesson.querySelector('[data-pep-previous]');
+  var nextBtn = lesson.querySelector('[data-pep-next]');
+  var restartBtn = lesson.querySelector('[data-pep-reset]');
+  var progressText = document.getElementById('progress-text');
+  var progressBar = lesson.querySelector('.pep-progress');
+  var minutes = lesson.getAttribute('data-pep-required-minutes');
+  var current = 1, unlocked = 1;
+  var ICON_OK = '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+  var ICON_NO = '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+  var ICON_INFO = '<svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 9v5M10 6v.5" stroke="currentColor" stroke-width="2"/></svg>';
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function freshState() { return { attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false }; }
+  var state = activities.map(freshState);
+  var authored = activities.map(function (a) {
+    return [].slice.call(a.querySelectorAll('input, textarea, select')).map(function (c) { return { control: c, value: c.value, checked: c.checked, selectedIndex: c.selectedIndex }; });
+  });
+  var widgets = activities.map(function () { return {}; });
+
+  function reflect(i) {
+    var a = activities[i], s = state[i];
+    a.setAttribute('data-pep-attempts', String(s.attempts));
+    a.setAttribute('data-pep-settled', String(s.settled));
+    a.setAttribute('data-pep-completed', String(s.completed));
+    a.setAttribute('data-pep-credit', String(s.credit));
+    a.setAttribute('data-pep-grade', String(s.grade));
+    a.setAttribute('data-pep-continue', String(s.canContinue));
+  }
+  function doneCount() { return state.filter(function (s) { return s.completed; }).length; }
+  function renderProgress() {
+    var done = doneCount();
+    if (progressText) progressText.textContent = 'Activity ' + current + ' of ' + activities.length + ' · ' + done + ' of ' + activities.length + ' done · about ' + minutes + ' min';
+    if (progressBar) [].slice.call(progressBar.children).forEach(function (seg, i) { seg.className = state[i] && state[i].completed ? 'is-done' : ''; });
+    lesson.setAttribute('data-pep-complete', String(done === activities.length));
+    links.forEach(function (link, i) {
+      var st = link.querySelector('.pep-step__state');
+      if (st) st.textContent = state[i].completed ? '(done)' : (i + 1 > unlocked ? '(locked)' : (i + 1 === current ? '(current)' : '(open)'));
+    });
+  }
+  function render(n, mode, focus) {
+    if (!(n >= 1 && n <= activities.length && n <= unlocked)) return false;
+    current = n;
+    lesson.setAttribute('data-pep-current-activity', String(current));
+    lesson.setAttribute('data-pep-unlocked-through', String(unlocked));
+    activities.forEach(function (a, i) { a.hidden = i + 1 !== current; });
+    links.forEach(function (link, i) {
+      if (i + 1 === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+      if (i + 1 > unlocked) link.setAttribute('aria-disabled', 'true'); else link.removeAttribute('aria-disabled');
+    });
+    prevBtn.disabled = current === 1;
+    var s = state[current - 1];
+    nextBtn.disabled = current === activities.length || !s.canContinue || current >= unlocked;
+    renderProgress();
+    try {
+      var target = location.href.split('#')[0] + '#activity-' + current;
+      if (mode === 'push') history.pushState({ activity: current }, '', target);
+      if (mode === 'replace') history.replaceState({ activity: current }, '', target);
+    } catch (e) {
+      if (mode && mode !== 'none' && location.hash !== '#activity-' + current) location.hash = 'activity-' + current;
+    }
+    if (focus) { var h = activities[current - 1].querySelector('h2[tabindex]'); if (h) h.focus(); }
+    return true;
+  }
+  function settle(i, grade, html) {
+    var s = state[i];
+    if (s.settled) return;
+    s.settled = true; s.completed = true; s.canContinue = true; s.grade = grade;
+    if (s.credit === 0) s.credit = 1;
+    reflect(i);
+    if (html !== undefined) feedback(i, html);
+    unlocked = Math.max(unlocked, Math.min(i + 2, activities.length));
+    render(current);
+  }
+  function feedback(i, html) { var f = activities[i].querySelector('[data-pep-feedback]'); if (f) f.innerHTML = html; }
+  function verdict(kind, text) {
+    var cls = kind === 'ok' ? 'pep-verdict--correct' : kind === 'no' ? 'pep-verdict--wrong' : 'pep-verdict--revealed';
+    return '<p class="pep-verdict ' + cls + '">' + (kind === 'ok' ? ICON_OK : kind === 'no' ? ICON_NO : ICON_INFO) + '<span>' + esc(text) + '</span></p>';
+  }
+
+  /* ---- choice activities ---- */
+  function setupChoice(i) {
+    var a = activities[i], w = widgets[i];
+    w.q = a.querySelector('fieldset[data-pep-q]');
+    if (!w.q) return;
+    w.conf = a.querySelector('fieldset.pep-confidence');
+    w.correct = (PAGE.correct || {})[a.id];
+    w.options = [].slice.call(w.q.querySelectorAll('.pep-option'));
+    w.options.forEach(function (o) { var ex = o.querySelector('.pep-explain'); if (ex) ex.hidden = true; });
+  }
+  function chosen(fs) { var c = fs && fs.querySelector('input:checked'); return c ? c.value : null; }
+  function confLabel(w) { var c = w.conf && w.conf.querySelector('input:checked'); return c ? c.parentNode.querySelector('.pep-option__text').textContent : null; }
+  function lockChoice(i, picked) {
+    var w = widgets[i];
+    w.options.forEach(function (o) {
+      var input = o.querySelector('input'); input.disabled = true;
+      var ex = o.querySelector('.pep-explain'); if (ex) ex.hidden = false;
+      var tag = o.querySelector('.pep-option__tag');
+      if (input.value === w.correct) { o.classList.add('is-correct'); if (tag) tag.textContent = 'Correct answer'; }
+      else if (input.value === picked) { o.classList.add('is-wrong'); if (tag) tag.textContent = 'Your answer'; }
+    });
+    if (w.conf) [].slice.call(w.conf.querySelectorAll('input')).forEach(function (x) { x.disabled = true; });
+  }
+  function checkChoice(i) {
+    var s = state[i], w = widgets[i];
+    if (s.settled) { feedback(i, verdict('info', 'This activity is settled. Use Restart activity to try it again.') + (w.lastHtml || '')); return; }
+    var picked = chosen(w.q);
+    if (!picked || (w.conf && !chosen(w.conf))) { feedback(i, '<div class="pep-callout pep-callout--danger"><p><strong>Not checked yet.</strong> Choose one answer' + (w.conf ? ' and how sure you are' : '') + ', then press Check.</p></div>'); return; }
+    s.attempts += 1; reflect(i);
+    var ex = w.q.querySelector('input[value="' + picked + '"]').closest('.pep-option').querySelector('.pep-explain');
+    var why = ex ? ex.innerHTML : '';
+    var conf = confLabel(w);
+    var confNote = conf ? '<p>You rated your confidence: <strong>' + esc(conf) + '</strong>.</p>' : '';
+    if (picked === w.correct) {
+      lockChoice(i, picked);
+      w.lastHtml = '<div class="pep-callout pep-callout--success">' + verdict('ok', s.attempts === 1 ? 'Correct' : 'Correct on your second try') + confNote + '<p>' + why + '</p><p>Every option is explained above.</p></div>';
+      settle(i, 1, w.lastHtml);
+    } else if (s.attempts < 2) {
+      feedback(i, '<div class="pep-callout pep-callout--danger">' + verdict('no', 'Not quite — try once more') + confNote + '<p>' + why + '</p><p>Change your answer and press Check again.</p></div>');
+    } else {
+      lockChoice(i, picked);
+      w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Answered and settled, not correct') + confNote + '<p>' + why + '</p><p>The correct answer is marked above, and every option is explained.</p></div>';
+      settle(i, 0, w.lastHtml);
+    }
+  }
+  function revealChoice(i) {
+    var s = state[i], w = widgets[i];
+    if (s.settled) { feedback(i, verdict('info', 'This activity is already settled.') + (w.lastHtml || '')); return; }
+    lockChoice(i, null);
+    w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Explained answer shown — settled without a grade') + '<p>The correct answer is marked above, and every option is explained. Restart activity if you want to try it yourself.</p></div>';
+    settle(i, 0, w.lastHtml);
+  }
+
+  /* ---- code editor ---- */
+  function setupEditor(i) {
+    var a = activities[i], w = widgets[i];
+    var ed = a.querySelector('.pep-editor'); if (!ed) return;
+    w.ed = ed; w.input = ed.querySelector('.pep-editor__input'); w.gutter = ed.querySelector('.pep-editor__gutter');
+    w.problems = ed.querySelector('[data-panel="problems"]'); w.output = ed.querySelector('[data-panel="output"]');
+    w.status = ed.querySelector('.pep-editor__status'); w.starter = w.input.defaultValue;
+    w.tabs = [].slice.call(ed.querySelectorAll('[role="tab"]'));
+    function lines() { var n = w.input.value.split('\n').length; var t = ''; for (var k = 1; k <= n; k++) t += k + (k < n ? '\n' : ''); w.gutter.textContent = t; }
+    w.lines = lines; lines();
+    w.input.addEventListener('input', lines);
+    w.tabs.forEach(function (tab) { tab.addEventListener('click', function () { selectTab(w, tab.getAttribute('data-tab')); }); });
+    w.tabs.forEach(function (tab, k) { tab.addEventListener('keydown', function (ev) { if (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft') { ev.preventDefault(); var o = w.tabs[(k + 1) % w.tabs.length]; o.focus(); selectTab(w, o.getAttribute('data-tab')); } }); });
+    var run = ed.querySelector('[data-run]'), reset = ed.querySelector('[data-reset-code]');
+    run.addEventListener('click', function () { runCode(i); });
+    reset.addEventListener('click', function () { w.input.value = w.starter; lines(); w.status.textContent = 'Starter code restored. Your credit for this activity did not change.'; });
+    selectTab(w, 'output');
+  }
+  function selectTab(w, name) {
+    w.tabs.forEach(function (t) { var on = t.getAttribute('data-tab') === name; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; });
+    w.problems.hidden = name !== 'problems'; w.output.hidden = name !== 'output';
+  }
+  function runCode(i, quiet) {
+    var w = widgets[i];
+    var res = PepJava.run(w.input.value, { maxDepth: (PAGE.maxDepth || 1000) });
+    w.problems.innerHTML = '';
+    if (!res.compiled) {
+      res.errors.forEach(function (e) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'pep-editor__problem';
+        b.innerHTML = '<span class="' + (e.kind === 'limit' ? 'kind-limit">Not supported here' : 'kind-error">Error') + '</span> Main.java line ' + e.line + ': ' + esc(e.message) + (e.extra && e.extra.length ? '\n' + esc(e.extra.join('\n')) : '');
+        b.addEventListener('click', function () { focusLine(w, e.line); });
+        w.problems.appendChild(b);
+      });
+      w.output.textContent = res.errors[0].kind === 'limit' ? 'Not run: this code uses something outside the practice editor\'s Java subset.' : 'Not run: javac would stop with the compile error shown in Problems.';
+      selectTab(w, 'problems');
+      w.status.textContent = (res.errors[0].kind === 'limit' ? 'Not supported in this practice editor: ' : 'Compile error: ') + res.errors.length + ' problem' + (res.errors.length > 1 ? 's' : '') + ' — see Problems.';
+    } else {
+      w.problems.textContent = 'No problems.';
+      var out = res.out;
+      if (res.stopped) out += (out ? '\n' : '') + '[Practice editor stopped: ' + res.stopped + ']';
+      if (res.exception === 'StackOverflowError') out += '[Practice editor note: this simulated stack holds about ' + (PAGE.maxDepth || 1000) + ' frames; a real JVM stack is usually deeper, but unbounded recursion still overflows it.]\n';
+      w.output.textContent = out || '(no output)';
+      selectTab(w, 'output');
+      w.status.textContent = res.exception ? 'Run ended with ' + res.exception + ' — see Output.' : res.stopped ? 'Run stopped by the practice editor — see Output.' : 'Run finished. Output shows what the program printed.';
+    }
+    w.last = res;
+    return res;
+  }
+  function focusLine(w, line) {
+    var parts = w.input.value.split('\n'), pos = 0;
+    for (var k = 0; k < line - 1 && k < parts.length; k++) pos += parts[k].length + 1;
+    w.input.focus(); w.input.setSelectionRange(pos, pos + (parts[line - 1] || '').length);
+  }
+  function checkCode(i) {
+    var s = state[i], w = widgets[i], a = activities[i];
+    if (s.settled) { feedback(i, verdict('info', 'This activity is settled. Run still works for practice; use Restart activity to be checked again.') + (w.lastHtml || '')); return; }
+    var res = runCode(i, true);
+    s.attempts += 1; reflect(i);
+    var fn = (PAGE.checks || {})[a.id];
+    var verdictObj = fn ? fn(res, w.input.value) : { pass: false, notes: ['No checks are defined for this activity.'] };
+    var list = '<ul>' + verdictObj.notes.map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul>';
+    if (verdictObj.pass) {
+      w.lastHtml = '<div class="pep-callout pep-callout--success">' + verdict('ok', s.attempts === 1 ? 'All checks pass' : 'All checks pass on this try') + list + '</div>';
+      settle(i, 1, w.lastHtml);
+    } else if (s.attempts < 2) {
+      feedback(i, '<div class="pep-callout pep-callout--danger">' + verdict('no', 'Not yet — one more check before the explanation appears') + list + '<p>Edit the code, press Run to look at Output, then press Check again.</p></div>');
+    } else {
+      w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Checked twice and settled, not passing yet') + list + (PAGE.explain && PAGE.explain[a.id] ? '<p>' + PAGE.explain[a.id] + '</p>' : '') + '<p>You can keep editing and running for practice.</p></div>';
+      settle(i, 0, w.lastHtml);
+    }
+  }
+  function revealCode(i) {
+    var s = state[i], w = widgets[i], a = activities[i];
+    if (s.settled) { feedback(i, verdict('info', 'This activity is already settled.') + (w.lastHtml || '')); return; }
+    w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Explanation shown — settled without a grade') + '<p>' + ((PAGE.explain || {})[a.id] || '') + '</p><p>You can keep editing and running for practice.</p></div>';
+    settle(i, 0, w.lastHtml);
+  }
+
+  /* ---- form activities (written records) ---- */
+  function checkForm(i) {
+    var s = state[i], a = activities[i], w = widgets[i];
+    if (s.settled) { feedback(i, verdict('info', 'This activity is settled. Use Restart activity to be checked again.') + (w.lastHtml || '')); return; }
+    s.attempts += 1; reflect(i);
+    var fn = (PAGE.checks || {})[a.id];
+    var v = fn ? fn(a) : { pass: false, notes: [] };
+    var list = '<ul>' + v.notes.map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul>';
+    if (v.pass) { w.lastHtml = '<div class="pep-callout pep-callout--success">' + verdict('ok', 'Record complete') + list + '</div>'; settle(i, 1, w.lastHtml); }
+    else if (s.attempts < 2) feedback(i, '<div class="pep-callout pep-callout--danger">' + verdict('no', 'Not yet — one more check before the explanation appears') + list + '</div>');
+    else { w.lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Checked twice and settled, not complete yet') + list + '<p>' + ((PAGE.explain || {})[a.id] || '') + '</p></div>'; settle(i, 0, w.lastHtml); }
+  }
+
+  /* ---- traces and the practice debugger ---- */
+  function setupTrace(i) {
+    var a = activities[i], w = widgets[i];
+    var box = a.querySelector('.pep-live-trace'); if (!box) return;
+    var srcEl = document.getElementById(box.getAttribute('data-trace-src'));
+    var res = PepJava.run(srcEl.textContent, { trace: true, maxTrace: 4000 });
+    var src = srcEl.textContent.replace(/\n$/, '').split('\n');
+    var debug = box.hasAttribute('data-debugger');
+    var events = [];
+    (res.trace || []).forEach(function (ev, k) {
+      if (debug) {
+        if (ev.kind === 'line' || ev.kind === 'loop') events.push(ev);
+        else if (ev.kind === 'return' && ev.frames.length > 1) {
+          var caller = ev.frames.slice(0, -1);
+          events.push({ kind: 'after-call', line: caller[caller.length - 1].line, depth: ev.depth - 1, frames: caller, out: ev.out, note: ev.frames[ev.frames.length - 1].name.replace(/^.*\./, '') + ' returned' + (ev.ret ? ' ' + ev.ret : '') });
+        } else if (ev.kind === 'exception') events.push(ev);
+      } else events.push(ev);
+    });
+    w.events = events; w.pos = debug ? -1 : 0; w.debug = debug; w.box = box; w.src = src;
+    w.bps = {};
+    [].slice.call(box.querySelectorAll('[data-bp]')).forEach(function (b) { if (b.getAttribute('aria-pressed') === 'true') w.bps[b.getAttribute('data-bp')] = true; });
+    w.authoredBps = JSON.parse(JSON.stringify(w.bps));
+    [].slice.call(box.querySelectorAll('[data-bp]')).forEach(function (b) {
+      b.addEventListener('click', function () { var ln = b.getAttribute('data-bp'); var on = !w.bps[ln]; if (on) w.bps[ln] = true; else delete w.bps[ln]; b.setAttribute('aria-pressed', String(on)); traceStatus(w, (on ? 'Breakpoint set on line ' : 'Breakpoint removed from line ') + ln + '.'); });
+    });
+    function on(sel, fn) { var b = box.querySelector(sel); if (b) b.addEventListener('click', fn); }
+    on('[data-step="back"]', function () { if (w.pos > 0) { w.pos--; drawTrace(w); } });
+    on('[data-step="next"]', function () { if (w.pos < w.events.length - 1) { w.pos++; drawTrace(w); } else traceStatus(w, 'End of the program: there are no more steps.'); });
+    on('[data-step="restart"]', function () { w.pos = w.debug ? -1 : 0; drawTrace(w); });
+    on('[data-dbg="debug"]', function () { w.pos = -1; dbgMove(w, function () { return true; }, true); });
+    on('[data-dbg="over"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); var d = w.events[w.pos].depth; dbgMove(w, function (ev) { return ev.depth <= d; }); });
+    on('[data-dbg="into"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); dbgMove(w, function () { return true; }); });
+    on('[data-dbg="out"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); var d = w.events[w.pos].depth; dbgMove(w, function (ev) { return ev.depth < d; }); });
+    on('[data-dbg="resume"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); dbgMove(w, function () { return true; }, true); });
+    on('[data-dbg="stop"]', function () { w.pos = -1; drawTrace(w); traceStatus(w, 'Debug session stopped.'); });
+    drawTrace(w);
+  }
+  function dbgMove(w, ok, toBreakpoint) {
+    for (var k = w.pos + 1; k < w.events.length; k++) {
+      var ev = w.events[k];
+      if (toBreakpoint ? (w.bps[ev.line] && ev.kind !== 'after-call') : ok(ev)) { w.pos = k; drawTrace(w); return; }
+    }
+    w.pos = w.events.length; drawTrace(w);
+  }
+  function traceStatus(w, text) { var st = w.box.querySelector('.pep-trace__status'); if (st) st.textContent = text; }
+  function drawTrace(w) {
+    var ev = w.events[w.pos];
+    var listing = [].slice.call(w.box.querySelectorAll('.pep-listing > li'));
+    listing.forEach(function (li) { var on = ev && Number(li.getAttribute('data-line')) === ev.line; li.classList.toggle('is-current', !!on); var m = li.querySelector('.mark'); if (m) m.textContent = on ? '▶' : ''; if (on) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current'); });
+    var frames = w.box.querySelector('.pep-frames'), vars = w.box.querySelector('.pep-vars'), out = w.box.querySelector('.pep-trace__out');
+    var counter = w.box.querySelector('.pep-trace__count');
+    if (!ev) {
+      frames.innerHTML = '<li>(no frames)</li>'; vars.innerHTML = '<dt>—</dt><dd>' + (w.debug && w.pos < 0 ? 'Not debugging yet' : 'Program finished') + '</dd>';
+      var lastOut = w.events.length ? w.events[w.events.length - 1].out : '';
+      out.textContent = w.debug && w.pos < 0 ? '' : lastOut;
+      if (counter) counter.textContent = w.debug && w.pos < 0 ? 'Not started' : 'Finished';
+      traceStatus(w, w.debug && w.pos < 0 ? 'Not debugging. Set a breakpoint if you like, then press Debug.' : 'The program finished. Step back or restart to look again.');
+      return;
+    }
+    var fs = ev.frames.slice().reverse();
+    frames.innerHTML = fs.map(function (f, k) { return '<li' + (k === 0 ? ' class="is-top"' : '') + '>' + esc(f.name.replace(/^Main\./, '')) + (k === 0 ? ' (top)' : '') + '</li>'; }).join('');
+    var top = ev.frames[ev.frames.length - 1];
+    var statics = (w.box.getAttribute('data-statics') || '').split(' ').filter(Boolean);
+    vars.innerHTML = top && top.vars.length ? top.vars.filter(function (v) { return v.name !== 'args'; }).map(function (v) { return '<dt>' + esc(v.name) + '</dt><dd>' + esc(v.value) + '</dd>'; }).join('') || '<dt>—</dt><dd>no local variables yet</dd>' : '<dt>—</dt><dd>no local variables yet</dd>';
+    out.textContent = ev.out;
+    if (counter) counter.textContent = 'Step ' + (w.pos + 1) + ' of ' + w.events.length;
+    var what = ev.kind === 'call' ? 'Entered ' + top.name.replace(/^Main\./, '') + ' — a new frame was pushed.' :
+      ev.kind === 'return' ? top.name.replace(/^Main\./, '') + (ev.ret ? ' returns ' + ev.ret : ' finishes') + ' — its frame is popped next.' :
+      ev.kind === 'after-call' ? 'Back on line ' + ev.line + ' in ' + top.name.replace(/^Main\./, '') + ': ' + ev.note + '.' :
+      ev.kind === 'exception' ? 'An exception was thrown on line ' + ev.line + '.' :
+      (w.debug ? 'Paused before line ' + ev.line + ' runs.' : 'About to run line ' + ev.line + '.');
+    traceStatus(w, what + ' ' + (top.vars.filter(function (v) { return v.name !== 'args'; }).map(function (v) { return v.name + ' = ' + v.value; }).join(', ')));
+  }
+
+  /* ---- wiring ---- */
+  activities.forEach(function (a, i) {
+    setupChoice(i); setupEditor(i); setupTrace(i);
+    var check = a.querySelector('[data-pep-wrong-attempt]');
+    var reveal = a.querySelector('[data-pep-complete-activity]');
+    var kind = a.getAttribute('data-kind');
+    if (check) check.addEventListener('click', function () { if (kind === 'code') checkCode(i); else if (kind === 'form') checkForm(i); else checkChoice(i); });
+    if (reveal) reveal.addEventListener('click', function () { if (kind === 'code') revealCode(i); else if (kind === 'form') { var s = state[i]; if (s.settled) { feedback(i, verdict('info', 'This activity is already settled.') + (widgets[i].lastHtml || '')); return; } widgets[i].lastHtml = '<div class="pep-callout pep-callout--warning">' + verdict('info', 'Explanation shown — settled without a grade') + '<p>' + ((PAGE.explain || {})[a.id] || '') + '</p></div>'; settle(i, 0, widgets[i].lastHtml); } else revealChoice(i); });
+    reflect(i);
+  });
+  restartBtn.addEventListener('click', function () {
+    var i = current - 1, a = activities[i], w = widgets[i];
+    authored[i].forEach(function (c) {
+      var el = c.control;
+      if (el.type === 'checkbox' || el.type === 'radio') el.checked = c.checked; else if (el.tagName === 'SELECT') el.selectedIndex = c.selectedIndex; else el.value = c.value;
+      el.disabled = false;
+    });
+    state[i] = freshState(); reflect(i);
+    [].slice.call(a.querySelectorAll('[data-pep-feedback]')).forEach(function (f) { f.innerHTML = ''; });
+    if (w.options) w.options.forEach(function (o) { o.classList.remove('is-correct', 'is-wrong'); var t = o.querySelector('.pep-option__tag'); if (t) t.textContent = ''; var ex = o.querySelector('.pep-explain'); if (ex) ex.hidden = true; });
+    w.lastHtml = '';
+    if (w.input) { w.lines(); w.problems.textContent = ''; w.output.textContent = ''; w.status.textContent = 'Restarted: starter code restored.'; selectTab(w, 'output'); }
+    if (w.events) { w.pos = w.debug ? -1 : 0; w.bps = JSON.parse(JSON.stringify(w.authoredBps)); [].slice.call(w.box.querySelectorAll('[data-bp]')).forEach(function (b) { b.setAttribute('aria-pressed', String(!!w.bps[b.getAttribute('data-bp')])); }); drawTrace(w); }
+    render(current);
+    var live = document.getElementById('pep-announce'); if (live) live.textContent = 'Activity ' + current + ' restarted.';
+  });
+  links.forEach(function (link, i) { link.addEventListener('click', function (ev) { ev.preventDefault(); if (i + 1 > unlocked) return; render(i + 1, 'push', true); }); });
+  [].slice.call(lesson.querySelectorAll('a[data-pep-back-link]')).forEach(function (link) {
+    link.addEventListener('click', function (ev) { ev.preventDefault(); var n = Number((/activity-(\d+)/.exec(link.getAttribute('href')) || [])[1]); render(n, 'push', true); });
+  });
+  prevBtn.addEventListener('click', function () { render(current - 1, 'push', true); });
+  nextBtn.addEventListener('click', function () { render(current + 1, 'push', true); });
+  var lastFocus = null;
+  document.addEventListener('focusin', function (ev) { lastFocus = ev.target; });
+  function fromHistory() {
+    var keep = lastFocus;
+    var m = /^#activity-(\d+)$/.exec(location.hash);
+    var n = m ? Number(m[1]) : 1;
+    if (!render(n, 'none', false)) render(Math.min(current, unlocked), 'replace', false);
+    if (keep && keep.isConnected && !keep.closest('[hidden]')) keep.focus({ preventScroll: true });
+  }
+  addEventListener('popstate', fromHistory);
+  addEventListener('hashchange', fromHistory);
+
+  /* ---- objectives disclosure ---- */
+  var objectives = lesson.querySelector('details[data-pep-objectives]');
+  if (objectives) {
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); } });
+    document.addEventListener('click', function (ev) { if (objectives.open && !objectives.contains(ev.target)) objectives.open = false; });
+  }
+  /* ---- print: open every disclosure, then restore exact prior states ---- */
+  var printStates = null;
+  addEventListener('beforeprint', function () {
+    var all = [].slice.call(document.querySelectorAll('details'));
+    printStates = all.map(function (d) { return [d, d.open]; });
+    all.forEach(function (d) { d.open = true; });
+    [].slice.call(document.querySelectorAll('.pep-explain')).forEach(function (e) { e.setAttribute('data-print-hidden', String(e.hidden)); e.hidden = false; });
+  });
+  addEventListener('afterprint', function () {
+    if (printStates) printStates.forEach(function (p) { p[0].open = p[1]; });
+    printStates = null;
+    [].slice.call(document.querySelectorAll('.pep-explain[data-print-hidden]')).forEach(function (e) { e.hidden = e.getAttribute('data-print-hidden') === 'true'; e.removeAttribute('data-print-hidden'); });
+  });
+  var req = /^#activity-(\d+)$/.exec(location.hash);
+  render(req && Number(req[1]) <= unlocked ? Number(req[1]) : 1, 'replace');
+})();
+</script>
+<script>
+/* PEP practice JUnit editor: binds every .pep-junit workspace to PepTest. Run compiles the editable file with any
+   read-only production files named in PEP_PAGE.junit, runs every @Test method and shows Problems or Output.
+   Restart activity (handled by the page engine) restores the starter; this script then clears its panels.
+   An optional coverage view marks the production lines and if-branches the last run executed. */
+(function () {
+  'use strict';
+  var PAGE = window.PEP_PAGE || {};
+  var CFG = PAGE.junit || {};
+  var lesson = document.querySelector('[data-pep-guidance-contract]');
+  if (!lesson || typeof PepTest === 'undefined') return;
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var widgets = {};
+  function sources(id, code) {
+    var c = CFG[id] || {};
+    return (c.prelude || []).map(function (p) { return { file: p.file, code: p.code, editable: false }; }).concat([{ file: c.file || 'Test.java', code: code, editable: true }]);
+  }
+  function runFor(id, opts) {
+    var w = widgets[id]; if (!w) return null;
+    var c = CFG[id] || {};
+    var o = { cover: c.cover || null, blank: (opts && opts.blank) || null };
+    return PepTest.run(sources(id, (opts && opts.code !== undefined) ? opts.code : w.input.value), o);
+  }
+  function statementLines(code) {
+    var lines = {}, branches = {};
+    try {
+      var u = PepTest.parse(code, 'x');
+      var walk = function (s) {
+        if (!s) return;
+        if (s.k === 'block') { s.body.forEach(walk); return; }
+        lines[s.line] = true;
+        if (s.k === 'if') { branches[s.line] = true; walk(s.th); walk(s.el); }
+        if (s.k === 'foreach') walk(s.body);
+      };
+      u.types.forEach(function (t) { t.methods.forEach(function (m) { if (m.body) walk(m.body); }); t.ctors.forEach(function (k) { walk(k.body); }); });
+    } catch (e) { }
+    return { lines: lines, branches: branches };
+  }
+  function renderCoverage(w, res) {
+    var c = CFG[w.id] || {};
+    if (!c.coverView || !c.prelude) return;
+    var box = document.getElementById(c.coverView); if (!box) return;
+    var src = c.prelude[0], cls = Object.keys(c.cover || {})[0];
+    var sl = statementLines(src.code), data = res && res.coverage && res.coverage[cls] || { lines: {}, branches: {} };
+    var ran = !!(res && res.compiled && res.tests.length);
+    var counts = { full: 0, part: 0, none: 0 }, bTotal = 0, bHit = 0;
+    var html = src.code.replace(/\n$/, '').split('\n').map(function (text, k) {
+      var ln = k + 1, state = '', label = '', bnote = '';
+      if (sl.lines[ln] && ran) {
+        var hit = ran && data.lines[ln];
+        if (sl.branches[ln]) {
+          var b = data.branches[ln] || { t: 0, f: 0 }, n = (b.t ? 1 : 0) + (b.f ? 1 : 0);
+          bTotal += 2; bHit += n;
+          if (n === 0) { state = 'none'; label = 'not covered'; bnote = 'branches: 0 of 2 taken'; }
+          else if (n === 1) { state = 'part'; label = 'partly covered'; bnote = 'branches: 1 of 2 taken (only the ' + (b.t ? 'true' : 'false') + ' side ran)'; }
+          else { state = 'full'; label = 'fully covered'; bnote = 'branches: 2 of 2 taken'; }
+        } else if (hit) { state = 'full'; label = 'fully covered'; }
+        else { state = 'none'; label = 'not covered'; }
+        counts[state]++;
+      }
+      return '<li class="pep-cov__line' + (state ? ' is-' + state : '') + '"><span class="ln">' + ln + '</span><span class="code">' + (esc(text) || ' ') + '</span>' + (state ? '<span class="pep-cov__state">' + label + (bnote ? '; ' + bnote : '') + '</span>' : '') + '</li>';
+    }).join('');
+    var total = counts.full + counts.part + counts.none;
+    box.querySelector('ol').innerHTML = html;
+    var sum = box.querySelector('[data-cov-summary]');
+    if (sum) sum.textContent = ran ? 'Lines: ' + (counts.full + counts.part) + ' of ' + total + ' executed (' + counts.part + ' partly). Branches: ' + bHit + ' of ' + bTotal + ' taken.' : 'Not run yet: press Run tests to see which lines and branches your tests execute.';
+    w.lastCoverage = { lines: counts, total: total, branchesHit: bHit, branchesTotal: bTotal, ran: ran, data: data, statementLines: sl };
+  }
+  function selectTab(w, name) {
+    w.tabs.forEach(function (t) { var on = t.getAttribute('data-junit-tab') === name; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; });
+    w.problems.hidden = name !== 'problems'; w.output.hidden = name !== 'output';
+  }
+  function gutter(w) { var n = w.input.value.split('\n').length, t = ''; for (var k = 1; k <= n; k++) t += k + (k < n ? '\n' : ''); w.gutter.textContent = t; }
+  function focusLine(w, line) {
+    var parts = w.input.value.split('\n'), pos = 0;
+    for (var k = 0; k < line - 1 && k < parts.length; k++) pos += parts[k].length + 1;
+    w.input.focus(); w.input.setSelectionRange(pos, pos + (parts[line - 1] || '').length);
+  }
+  function clear(w, note) {
+    w.problems.textContent = ''; w.output.textContent = ''; w.status.textContent = note; w.last = null;
+    selectTab(w, 'output'); gutter(w); renderCoverage(w, null);
+  }
+  function doRun(w) {
+    var c = CFG[w.id] || {};
+    var res = runFor(w.id);
+    w.last = res;
+    w.problems.innerHTML = '';
+    if (!res.compiled) {
+      res.problems.forEach(function (p) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'pep-editor__problem';
+        b.innerHTML = '<span class="' + (p.kind === 'limit' ? 'kind-limit">Not supported here' : 'kind-error">Error') + '</span> ' + esc(p.file || c.file) + ' line ' + p.line + ': ' + esc(p.message);
+        if (!p.file || p.file === c.file) b.addEventListener('click', function () { focusLine(w, p.line); });
+        w.problems.appendChild(b);
+      });
+      var lim = res.problems.every(function (p) { return p.kind === 'limit'; });
+      w.output.textContent = lim ? 'Not run: this code uses something outside the practice runner\'s Java subset. See Problems.' : 'Not run: javac would stop with the compile error shown in Problems, so no test runs.';
+      selectTab(w, 'problems');
+      w.status.textContent = (lim ? 'Not supported in this practice editor: ' : 'Compile error: ') + res.problems.length + ' problem' + (res.problems.length > 1 ? 's' : '') + ' — see Problems.';
+    } else {
+      w.problems.textContent = 'No problems.';
+      w.output.textContent = PepTest.report(res).join('\n');
+      selectTab(w, 'output');
+      var pass = res.tests.filter(function (t) { return t.status === 'pass'; }).length;
+      w.status.textContent = !res.tests.length ? 'Compiled, but no @Test method was found.' : 'Ran ' + res.tests.length + ' test' + (res.tests.length === 1 ? '' : 's') + ': ' + pass + ' passed (green), ' + (res.tests.length - pass) + ' not passed (red). See Output.';
+    }
+    renderCoverage(w, res);
+    if (c.onRun) c.onRun(res, w);
+    return res;
+  }
+  [].slice.call(lesson.querySelectorAll('.pep-junit')).forEach(function (ed) {
+    var sec = ed.closest('section[data-pep-activity]'); if (!sec) return;
+    var w = { id: sec.id, ed: ed, input: ed.querySelector('.pep-editor__input'), gutter: ed.querySelector('.pep-editor__gutter'), problems: ed.querySelector('[data-junit-panel="problems"]'), output: ed.querySelector('[data-junit-panel="output"]'), status: ed.querySelector('.pep-editor__status'), tabs: [].slice.call(ed.querySelectorAll('[data-junit-tab]')) };
+    w.starter = w.input.defaultValue;
+    widgets[sec.id] = w;
+    w.input.addEventListener('input', function () { gutter(w); });
+    w.input.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && (ev.ctrlKey || ev.metaKey)) { ev.preventDefault(); doRun(w); } });
+    w.tabs.forEach(function (tab, k) {
+      tab.addEventListener('click', function () { selectTab(w, tab.getAttribute('data-junit-tab')); });
+      tab.addEventListener('keydown', function (ev) { if (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft') { ev.preventDefault(); var o = w.tabs[(k + 1) % w.tabs.length]; o.focus(); selectTab(w, o.getAttribute('data-junit-tab')); } });
+    });
+    ed.querySelector('[data-junit-run]').addEventListener('click', function () { doRun(w); });
+    ed.querySelector('[data-junit-reset]').addEventListener('click', function () { w.input.value = w.starter; clear(w, 'Starter code restored. Your credit for this activity did not change.'); });
+    gutter(w); selectTab(w, 'output'); renderCoverage(w, null);
+  });
+  var restart = lesson.querySelector('[data-pep-reset]');
+  if (restart) restart.addEventListener('click', function () {
+    var cur = 'activity-' + lesson.getAttribute('data-pep-current-activity');
+    if (widgets[cur]) clear(widgets[cur], 'Restarted: starter code restored.');
+  });
+  window.PepJunit = { run: runFor, last: function (id) { return widgets[id] && widgets[id].last; }, coverage: function (id) { return widgets[id] && widgets[id].lastCoverage; }, statementLines: statementLines };
+})();
+</script>
+</body>
+</html>
