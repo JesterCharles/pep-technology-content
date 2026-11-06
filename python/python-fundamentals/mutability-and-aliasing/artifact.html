@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="python">
+<meta name="pep:module" content="python-fundamentals">
+<meta name="pep:topic" content="Mutability and aliasing">
+<meta name="pep:topic-id" content="mutability-and-aliasing">
+<meta name="pep:budget-minutes" content="11">
+<meta name="pep:source" content="authoring/evidence/python/python-fundamentals/mutability-and-aliasing/sources.json">
+<title>Mutability and aliasing · Python Fundamentals for Java Developers</title>
+<script>document.documentElement.classList.add('pep-js');</script>
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* Components bridge: embedded components/*@1 and editor fragments read these older names. */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+/* Base, focus and motion */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp, .mono { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  #lesson :is(input, select, textarea) { font-size: 16px; scroll-margin-block: 16px; }
+}
+button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.nojs { display: block; margin: 16px; padding: 12px 16px; border: 1px solid var(--pep-warning); border-radius: var(--pep-radius-md); background: var(--pep-warning-soft); color: var(--pep-text-strong); }
+.nojs h2 { margin-bottom: 8px; }
+.nojs p { margin: 0 0 8px; }
+/* Topic bar */
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { display: flex; flex: 1 1 260px; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; width: 96px; }
+.pep-topicbar__progress .pep-progress { flex: 1 1 96px; max-width: 160px; }
+.pep-topicbar button { flex: 0 0 auto; }
+.pep-progress > .seg { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); }
+.pep-progress > .seg.is-current, .pep-progress > .seg.is-done { background: var(--pep-accent); }
+.pep-progress > .seg.is-settled { background: var(--pep-warning); }
+/* Regions */
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-label { margin: 0 0 8px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.teach h2 { margin: 0 0 8px; }
+.teach p { margin: 0 0 12px; }
+.teach ul { margin: 0 0 12px; padding-left: 24px; }
+.teach li { margin-bottom: 4px; }
+.teach ul.chunks { list-style: none; padding: 0; }
+.teach ul.chunks li { margin-bottom: 8px; }
+.teach > div > :last-child { margin-bottom: 0; }
+/* Goals (objectives) and activity checks */
+.pep-goals { margin: 0; padding: 4px 16px; list-style: none; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 8px 0; max-width: none; }
+.pep-goals > li + li { border-top: 1px solid var(--pep-line-strong); }
+.pep-goals > li::after { content: "open"; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; }
+.pep-goals > li.is-done::after { content: "\2713\00a0 done"; color: var(--pep-success); }
+.task { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+.task > div { display: flex; flex-direction: column; gap: 12px; }
+.task p { margin: 0; }
+.goals { list-style: none; margin: 0; padding: 0; }
+.goals li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 8px 0; max-width: none; }
+.goals li + li { border-top: 1px solid var(--pep-line-strong); }
+.goals .st { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; text-align: right; }
+.goals li.done .st { color: var(--pep-success); }
+.goals li.done .st::before { content: "\2713\00a0"; }
+.goal-sum { margin: 0; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.steps { margin: 0; padding-left: 24px; }
+.steps li { margin: 0; padding-left: 4px; }
+.steps li + li { margin-top: 8px; }
+/* Workspace */
+.ask > div { display: flex; flex-direction: column; gap: 8px; }
+.ask p { margin: 0; font-weight: 600; color: var(--pep-text-strong); }
+.ask p.simnote { font-weight: 400; color: var(--pep-text-muted); }
+.ask .ws-h { margin: 0; }
+.model { margin: 0; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
+.model figcaption { margin: 0 0 8px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.model code { font-size: 1em; }
+.model > div > :last-child { margin-bottom: 0; }
+.control { min-width: 0; }
+fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+legend { padding: 0; margin-bottom: 8px; font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
+pre.code { margin: 0 0 8px; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 4; }
+pre.code .cm { color: var(--pep-text-muted); }
+pre.code .hl { background: var(--pep-accent-soft); outline: 2px solid var(--pep-accent); border-radius: 4px; }
+pre.code .hx { background: var(--pep-warning-soft); outline: 2px dashed var(--pep-warning); border-radius: 4px; }
+.teach pre.code { max-width: 68ch; }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.pair p { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+@media (max-width: 600px) { .pair { grid-template-columns: minmax(0, 1fr); } }
+.simnote { margin: 4px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.out { margin: 8px 0 0; min-height: 44px; max-height: 240px; overflow: auto; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.out .e { color: var(--pep-danger); }
+.out .h { color: var(--pep-text-muted); font-family: var(--pep-font-sans); }
+.kv { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; font: 400 14px/20px var(--pep-font-sans); }
+.kv dt { font-weight: 600; color: var(--pep-text-muted); }
+.kv dd { margin: 0; font-family: var(--pep-font-mono); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.mtable { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); }
+.mtable th, .mtable td { padding: 8px 12px; text-align: left; vertical-align: top; overflow-wrap: anywhere; border-bottom: 1px solid var(--pep-line-strong); }
+.mtable tr:last-child > td, .mtable tr:last-child > th { border-bottom: 0; }
+.mtable th { font-weight: 600; color: var(--pep-text-strong); }
+.mtable td { color: var(--pep-text); }
+.mtable td.mono { font-family: var(--pep-font-mono); color: var(--pep-text-strong); }
+.mtable tr.on td { background: var(--pep-accent-soft); }
+.model svg { display: block; width: 100%; max-width: 100%; height: auto; }
+.model svg text { font-family: var(--pep-font-mono); font-size: 14px; fill: var(--pep-text-strong); }
+.model svg .lbl { font-family: var(--pep-font-sans); fill: var(--pep-text-muted); }
+.model svg .box { fill: var(--pep-page); stroke: var(--pep-line-strong); stroke-width: 1.5; }
+.model svg .box.on { fill: var(--pep-accent-soft); stroke: var(--pep-accent); stroke-width: 2; }
+.model svg .arr { stroke: var(--pep-line-strong); stroke-width: 2; fill: none; }
+.model svg .arr.on { stroke: var(--pep-accent); stroke-width: 2.5; }
+.model svg .ah { fill: var(--pep-line-strong); }
+.model svg .ah.on { fill: var(--pep-accent); }
+/* Buttons */
+button { font: 600 16px/24px var(--pep-font-sans); min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); cursor: pointer; }
+.ghost { background: var(--pep-control); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); }
+.ghost:hover { border-color: var(--pep-accent); }
+.ghost[aria-pressed="true"] { background: var(--pep-accent-soft); border: 2px solid var(--pep-accent); padding: 9px 19px; }
+.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+button:disabled, .primary:disabled, .ghost:disabled { cursor: not-allowed; background: var(--pep-control); border: 1px solid var(--pep-line-strong); color: var(--pep-text-muted); }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.acts button { padding: 10px 12px; font: 400 14px/20px var(--pep-font-mono); text-align: left; overflow-wrap: anywhere; }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 16px; }
+.pick { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 8px; }
+.pick label { font: 600 14px/20px var(--pep-font-sans); }
+select { font: 400 14px/20px var(--pep-font-mono); min-height: 44px; padding: 8px 12px; color: var(--pep-text-strong); background: var(--pep-page); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); max-width: 100%; }
+/* Options and confidence */
+.opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.opts.one { grid-template-columns: minmax(0, 1fr); }
+.opt { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; min-width: 0; }
+.opt > span { min-width: 0; overflow-wrap: anywhere; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.opt:has(input:disabled) { cursor: default; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.opt input { appearance: none; -webkit-appearance: none; flex: 0 0 auto; width: 44px; height: 44px; margin: -12px; border: 0; border-radius: 50%; background: radial-gradient(circle, var(--pep-page) 0 8px, var(--pep-line-strong) 8.5px 10px, transparent 10.5px); cursor: pointer; }
+.opt input:checked { background: radial-gradient(circle, var(--pep-accent-fill) 0 5px, var(--pep-page) 5.5px 7.5px, var(--pep-accent-fill) 8px 10px, transparent 10.5px); }
+.opt input:disabled { cursor: default; opacity: 0.7; }
+.opt input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -8px; }
+.opt .why { display: block; margin-top: 4px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.opt .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.rg { margin: 0 0 12px; }
+.rg legend { font: 600 14px/20px var(--pep-font-sans); margin-bottom: 8px; }
+.rg .opts { grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); }
+.rg .opt span { font: 400 14px/20px var(--pep-font-mono); }
+.confrow { margin-top: 16px; }
+.conf { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.conf legend { float: left; margin: 0 8px 0 0; line-height: 44px; font: 600 14px/44px var(--pep-font-sans); }
+.conf .opt { min-width: 96px; }
+@media (max-width: 480px) { .opts { grid-template-columns: minmax(0, 1fr); } }
+/* Feedback row */
+.fbrow { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.feedback { width: 100%; min-width: 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.feedback > div:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.feedback p { margin: 0 0 4px; }
+.feedback p:last-child { margin-bottom: 0; }
+.feedback ul { margin: 4px 0 0; padding-left: 20px; }
+.feedback li { margin-bottom: 4px; }
+.feedback details { margin: 4px 0; }
+.feedback summary, .recap summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: list-item; padding: 10px 0; }
+.verdict { font: 700 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
+.verdict.ok { color: var(--pep-success); }
+.verdict.no { color: var(--pep-danger); }
+.verdict.set { color: var(--pep-warning); }
+.feedback .on { font-weight: 600; color: var(--pep-text-strong); }
+.badge { display: inline-flex; align-items: center; margin: 0 4px 0 0; padding: 0 8px; min-height: 24px; border: 1px solid currentColor; border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); vertical-align: baseline; }
+.badge.ok { color: var(--pep-success); background: var(--pep-success-soft); }
+.badge.ok::before { content: "\2713\00a0"; }
+.badge.no { color: var(--pep-danger); background: var(--pep-danger-soft); }
+.badge.no::before { content: "\2717\00a0"; }
+.badge.me { color: var(--pep-accent-text); background: var(--pep-accent-soft); }
+.explain { list-style: none; padding: 0; margin: 4px 0 0; }
+.explain li { margin: 0; padding: 4px 0 4px 12px; border-left: 2px solid var(--pep-line-strong); }
+.explain li + li { margin-top: 4px; }
+.explain li.mine { border-left-color: var(--pep-accent); }
+.explain .on, .explain .ex { display: block; }
+.explain .ex::first-letter { text-transform: uppercase; }
+.conf-report { color: var(--pep-text-muted); }
+.complete { margin: 0; padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete:empty { display: none; }
+/* Recap */
+.recap ul { padding-left: 24px; }
+.recap details { margin: 8px 0; padding: 0 16px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.recap table { border-collapse: collapse; margin-top: 8px; font: 400 14px/20px var(--pep-font-sans); }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; }
+.next-topic { font-weight: 600; }
+/* Sorter (collections) */
+.card { margin: 0 0 8px; padding: 12px 16px; border: 2px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-sans); overflow-wrap: anywhere; }
+.card code { white-space: normal; }
+.sorted { list-style: none; margin: 8px 0 0; padding: 0; font: 400 14px/20px var(--pep-font-sans); }
+.sorted li { padding: 4px 0; overflow-wrap: anywhere; }
+.sorted li + li { border-top: 1px solid var(--pep-line-strong); }
+.sorted .ln { font-weight: 600; }
+/* Embedded component and editor skin (components bridge rules; fragment bytes stay unchanged) */
+#lesson .term { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); }
+#lesson .term:focus-within { border-color: var(--pep-focus); box-shadow: 0 0 0 1px var(--pep-focus); }
+#lesson .term .log { font: 400 14px/20px var(--pep-font-mono); }
+#lesson .term-top { font: 600 13px/20px var(--pep-font-sans); }
+#lesson .cmdline .runbtn { min-height: 44px; padding: 8px 16px; border-radius: var(--pep-radius-sm); border-color: var(--pep-line-strong); font: 600 14px/20px var(--pep-font-sans); }
+#lesson .le { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); }
+#lesson .le legend { padding: 12px 12px 0; font: 600 16px/24px var(--pep-font-sans); }
+#lesson .le .le-gutter, #lesson .le .le-code { font: 400 14px/20px var(--pep-font-mono); height: 20em; }
+#lesson .le .le-status { border-radius: 0; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+#lesson .le .le-jump { border-radius: var(--pep-radius-sm); }
+#lesson .le .le-output pre { font: 400 14px/20px var(--pep-font-mono); }
+#lesson .le .le-limits { font: 400 14px/20px var(--pep-font-sans); }
+@media (max-width: 620px) { #lesson .le .le-gutter, #lesson .le .le-code { font-size: 16px; line-height: 24px; height: 16em; } }
+.task:not(:has(> div:not([hidden]):not(:empty))) { display: none; }
+/* Per-activity source order: the script shows one activity at a time; without JavaScript every activity reads in
+   order with its teaching, steps, workspace prompt and static result, and only the inert controls are hidden. */
+.stage { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+html:not(.pep-js) .pep-act + .pep-act { padding-top: 24px; border-top: 1px solid var(--pep-line-strong); }
+html:not(.pep-js) .pep-js-only, html:not(.pep-js) [data-region="current-control"], html:not(.pep-js) [data-region="current-feedback"], html:not(.pep-js) .pep-next-row, html:not(.pep-js) #reset, html:not(.pep-js) .pep-topicbar__progress { display: none !important; }
+.nojs-static { display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.nojs-static p { margin: 0; }
+/* Phone layout (DESIGN.md mobile contract): bounded editor, output and terminal; wrapping controls */
+#lesson .le [role=tabpanel], #lesson .out, #lesson .term .log, #lesson .le .le-code { overscroll-behavior: contain auto; }
+@media (max-width: 480px) {
+  #lesson .le .le-badge, #lesson .le .le-keys { display: none; }
+  #lesson .le .le-file { flex: 1 1 100%; overflow-wrap: anywhere; }
+  #lesson .le .le-actions button { flex: 1 1 calc(50% - 4px); }
+  #lesson .le .le-gutter, #lesson .le .le-code { height: 15em; }
+  #lesson .le .le-tabs { flex-wrap: wrap; }
+  #lesson .le [role=tab] { flex: 1 1 120px; }
+  #lesson .le [role=tabpanel], #lesson .out { max-height: 180px; }
+  #lesson .term .log { height: 180px; }
+  .acts button, .row > button, .fbrow > button { flex: 1 1 auto; }
+}
+/* Optional Anecdote and Challenge disclosures (never required, never counted) */
+.extras { display: flex; flex-direction: column; gap: 8px; margin: 48px 0 0; padding: 16px 0 0; border-top: 1px solid var(--pep-line-strong); min-width: 0; }
+.extras > p { margin: 0; color: var(--pep-text-muted); font: 400 14px/20px var(--pep-font-sans); }
+.pep-optional { min-width: 0; border-block: 1px solid var(--pep-line-strong); background: transparent; break-inside: avoid; }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body p { margin: 0 0 8px; }
+.pep-optional__body ul { margin: 0 0 8px; padding-left: 24px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+@media print {
+  .pep-optional > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker { display: none; }
+}
+/* Every disclosure summary is a 44 px touch target */
+#lesson summary { min-height: 44px; }
+.next-topic a { display: inline-flex; align-items: center; min-height: 44px; }
+</style>
+</head>
+<body>
+<noscript><div class="nojs"><p>JavaScript is off. Every activity below is still readable in order, with its steps, a static result and the recap; the checks, simulators and editors do not run.</p></div></noscript>
+<main id="lesson" class="pep-main" data-pep-responsive>
+  <header class="pep-topicbar">
+    <h1>Mutability and aliasing</h1>
+    <div class="pep-topicbar__progress progress" data-pep-progress id="progress"><span id="prog-text">Activity 1 of 4 · 0 of 4 done · about 11 min</span><span class="pep-progress" aria-hidden="true"><span class="seg is-current"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span></span></div>
+    <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+    <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+  </header>
+  <div class="stage" id="stage" data-step="1">
+    <section class="goals-panel" aria-labelledby="goals-h">
+        <p class="pep-label" id="goals-h">Goals</p>
+        <ul class="pep-goals" data-pep-objectives>
+          <li>Predict when two names refer to the same object after assignment, list append and passing a list to a function, and confirm it with `is`</li>
+          <li>Classify list, dict and set as mutable and int, str and tuple as immutable by predicting whether an operation changes the original object</li>
+          <li>Fix an aliasing bug by copying (slice, list(), dict.copy() or copy.deepcopy) or by replacing a mutable default argument with None</li>
+        </ul>
+      </section>
+  <section class="pep-regions pep-act" data-step="1" aria-labelledby="teach-1-h">
+    <div class="pep-region reading" data-pep-instructions>
+      <div class="teach" data-region="current-teaching">
+<div data-step="1">
+  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+  <p>Practice prediction, not scored. In Java, two variables can refer to one <code>ArrayList</code>. Guess whether Python's <code>b = a</code> copies.</p>
+</div>
+      </div>
+      <div class="task" data-region="current-task">
+<div data-step="1"><p class="pep-label">This activity</p>
+  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the code in the workspace on the right (below these steps on a narrow screen).</li><li><strong>What to do or type:</strong> Under <em>Prediction</em>, pick the result you expect.</li><li><strong>What to expect:</strong> Pick Low, Medium or High confidence, then press <em>Check my prediction</em>.</li><li><strong>How to know it's done:</strong> Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.</li></ol></div>
+      </div>
+    </div>
+    <div class="pep-region workspace" data-pep-workspace="activity">
+      <div class="ask" data-region="current-ask">
+<div data-step="1"><h2 class="ws-h" id="ws-1-h"><span class="vh">Workspace: </span>Start with a guess</h2>
+  <p id="task-1">What does the code below print?</p></div>
+      </div>
+      <figure class="model" data-pep-model data-region="live-model" aria-labelledby="model-cap-1"><figcaption id="model-cap-1">Names point at objects. The diagram is redrawn from the statements you run; results match real Python 3.</figcaption>
+<div data-step="1"><pre class="code">a = [1, 2]
+b = a
+b.append(3)
+print(a)</pre></div>
+      </figure>
+      <div class="control" data-region="current-control">
+<div data-step="1">
+  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): a = [1, 2]; b = a; b.append(3); print(a). Options: [1, 2]; [1, 2, 3]; [3]; an error. Answer: [1, 2, 3]. b = a makes b a second name for the same list, so appending through b changes the one list that a also refers to. Assignment never copies.">
+    <legend>Prediction</legend>
+    <div class="opts"><label class="opt"><input type="radio" name="predict" value="a"> <span>[1, 2]</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span>[1, 2, 3]</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span>[3]</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span>An error: a and b are the same name</span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
+    <legend id="pconf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="pconf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="pconf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+  </div>
+</div>
+      </div>
+      <noscript data-section-skip><div class="nojs-static"><p class="pep-label">Without JavaScript: the result</p><p>Prediction (practice, not scored): a = [1, 2]; b = a; b.append(3); print(a). Options: [1, 2]; [1, 2, 3]; [3]; an error. Answer: [1, 2, 3]. b = a makes b a second name for the same list, so appending through b changes the one list that a also refers to. Assignment never copies.</p></div></noscript>
+      <div class="feedback" data-region="current-feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+      </div>
+    </div>
+  </section>
+  <section class="pep-regions pep-act" data-step="2" aria-labelledby="teach-2-h">
+    <div class="pep-region reading" data-pep-instructions>
+      <div class="teach" data-region="current-teaching">
+<div data-step="2" data-pep-teaching>
+  <h2 id="teach-2-h" tabindex="-1">Names point at objects</h2>
+  <p>A Python variable is a name that points at an object, much like a Java reference. <code>b = a</code> copies the pointer, not the list: both names now share one object, so a change made through either name shows through both.</p>
+  <p>Passing a list to a function works the same way: the parameter becomes another name for the caller's list, so <code>items.append(0)</code> inside the function changes it.</p>
+  <p><code>list(a)</code> builds a new list with the same items. <code>x is y</code> is <code>True</code> only when both names point at the same object.</p>
+</div>
+      </div>
+      <div class="task" data-region="current-task">
+<div data-step="2"><p class="pep-label">This activity</p>
+  <ul class="goals"><li data-goal="alias"><span>A change made through <code>b</code> that also shows in <code>a</code></span><span class="st"></span></li><li data-goal="func"><span>A function that changes the caller's list</span><span class="st"></span></li><li data-goal="is"><span><code>is</code> telling a shared list from a copy</span><span class="st"></span></li></ul>
+  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> In <em>Run a statement</em>, press the statement buttons, starting with <code>b = a</code>.</li><li><strong>What to do or type:</strong> The output box shows each result, and the arrows in the panel show which names point at which list.</li><li><strong>What to expect:</strong> Statements run in the order you press them: pressing <code>c.append(4)</code> before <code>c = list(a)</code> gives a <code>NameError</code>.</li><li><strong>How to know it's done:</strong> Each check above changes from <em>open</em> to <em>done</em> when a run shows it. Continue appears when every check is done.</li></ol></div>
+      </div>
+    </div>
+    <div class="pep-region workspace" data-pep-workspace="activity">
+      <div class="ask" data-region="current-ask">
+<div data-step="2"><h2 class="ws-h" id="ws-2-h"><span class="vh">Workspace: </span>Names point at objects</h2>
+  <p id="task-2">Run statements on <code>a = [1, 2]</code> and watch the arrows.</p>
+  <p class="simnote">Examples use Python 3.10 or later.</p></div>
+      </div>
+      <figure class="model" data-pep-model data-region="live-model" aria-labelledby="ws-2-h">
+<div data-step="2"><svg id="nm-svg" viewBox="0 0 420 210" role="img" aria-labelledby="nm-t nm-d"><title id="nm-t">Names and the objects they point to</title><desc id="nm-d">Diagram of names a, b and c and the list objects they refer to.</desc><g id="nm-g"></g></svg><p class="vh" id="nm-alt"></p>
+  <pre class="code">def add_zero(items):
+    items.append(0)</pre></div>
+      </figure>
+      <div class="control" data-region="current-control">
+<div data-step="2">
+  <fieldset data-interaction="explore" data-pep-explore aria-describedby="task-2" data-static-alt="Names activity starting from a = [1, 2], with real Python 3 results. b = a points b at the same list. b.append(3) then makes a show [1, 2, 3]. c = list(a) builds a new list with the same items; c.append(4) changes only c. add_zero(a), where add_zero appends 0 to its parameter, changes a itself to end in 0, because the parameter is another name for the same list. print(a is b, a is c) prints True False after b = a and c = list(a): b shares a's list, c is a separate copy even though its items started equal.">
+    <legend>Run a statement</legend>
+    <div class="acts"><button type="button" class="ghost" data-act="nm:ba">b = a</button><button type="button" class="ghost" data-act="nm:bp">b.append(3)</button><button type="button" class="ghost" data-act="nm:ca">c = list(a)</button><button type="button" class="ghost" data-act="nm:cp">c.append(4)</button><button type="button" class="ghost" data-act="nm:fz">add_zero(a)</button><button type="button" class="ghost" data-act="nm:is">print(a is b, a is c)</button></div>
+    <pre class="out" id="out-nm" aria-label="Statement output"></pre>
+  </fieldset></div>
+      </div>
+      <noscript data-section-skip><div class="nojs-static"><p class="pep-label">Without JavaScript: the result</p><p>Names activity starting from a = [1, 2], with real Python 3 results. b = a points b at the same list. b.append(3) then makes a show [1, 2, 3]. c = list(a) builds a new list with the same items; c.append(4) changes only c. add_zero(a), where add_zero appends 0 to its parameter, changes a itself to end in 0, because the parameter is another name for the same list. print(a is b, a is c) prints True False after b = a and c = list(a): b shares a's list, c is a separate copy even though its items started equal.</p></div></noscript>
+      <div class="feedback" data-region="current-feedback" aria-live="polite">
+<div data-step="2" data-pep-explore-feedback></div>
+      </div>
+    </div>
+  </section>
+  <section class="pep-regions pep-act" data-step="3" aria-labelledby="teach-3-h">
+    <div class="pep-region reading" data-pep-instructions>
+      <div class="teach" data-region="current-teaching">
+<div data-step="3" data-pep-teaching>
+  <h2 id="teach-3-h" tabindex="-1">Mutable and immutable</h2>
+  <p>Lists, dicts and sets are <strong>mutable</strong>: methods such as <code>append</code>, <code>add</code>, <code>sort</code> and item assignment change the object itself, so every name pointing at it sees the change.</p>
+  <p>Ints, floats, strings and tuples are <strong>immutable</strong>: nothing changes them in place. <code>s.upper()</code>, <code>t + (3,)</code> and <code>n += 1</code> build a new object, and only the name on the left of an assignment is moved to it; other names keep the old object.</p>
+</div>
+      </div>
+      <div class="task" data-region="current-task">
+<div data-step="3"><p class="pep-label">This activity</p>
+  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> In <em>What does this operation do?</em>, read the item on the card.</li><li><strong>What to do or type:</strong> Press the button for the group it belongs to: <em>Changes the original</em> or <em>Makes a new object</em>.</li><li><strong>What to expect:</strong> Right: the item moves to <em>Sorted so far</em> and the next item appears. Wrong: the feedback says <em>Not this group</em> and the card stays, so try another button.</li><li><strong>How to know it's done:</strong> Continue appears when every item is sorted.</li></ol></div>
+      </div>
+    </div>
+    <div class="pep-region workspace" data-pep-workspace="activity">
+      <div class="ask" data-region="current-ask">
+<div data-step="3"><h2 class="ws-h" id="ws-3-h"><span class="vh">Workspace: </span>Mutable and immutable</h2>
+  <p id="task-3">For each operation, decide whether it changes the original object or makes a new one.</p></div>
+      </div>
+      <figure class="model" data-pep-model data-region="live-model" aria-labelledby="ws-3-h">
+<div data-step="3"><table class="mtable" aria-label="Mutable and immutable built-in types"><thead><tr><th scope="col">Mutable: can change in place</th><th scope="col">Immutable: operations make a new object</th></tr></thead><tbody><tr><td>list, dict, set</td><td>int, float, str, tuple</td></tr></tbody></table></div>
+      </figure>
+      <div class="control" data-region="current-control">
+<div data-step="3">
+  <fieldset data-interaction="drag" data-pep-explore data-sorter id="sorter-3" aria-describedby="task-3" data-static-alt="Sorting activity, real Python 3 behaviour. nums.append(4) on a list: changes the original. name.upper() on a str: makes a new string; name is unchanged. point + (3,) on a tuple: makes a new tuple. prices[&quot;pen&quot;] = 3 on a dict: changes the original. count += 1 on an int: makes a new int and moves count to it. tags.add(&quot;py&quot;) on a set: changes the original. sorted(nums) on a list: makes a new sorted list and leaves nums unchanged (nums.sort() would change it).">
+    <legend>What does this operation do?</legend>
+    <div class="card" aria-live="off"></div>
+    <div class="acts"><button type="button" class="ghost" data-act="lane:change">Changes the original</button><button type="button" class="ghost" data-act="lane:fresh">Makes a new object</button></div>
+    <p class="simnote count"></p>
+    <ul class="sorted" aria-label="Sorted so far"></ul>
+  </fieldset>
+</div>
+      </div>
+      <noscript data-section-skip><div class="nojs-static"><p class="pep-label">Without JavaScript: the result</p><p>Sorting activity, real Python 3 behaviour. nums.append(4) on a list: changes the original. name.upper() on a str: makes a new string; name is unchanged. point + (3,) on a tuple: makes a new tuple. prices["pen"] = 3 on a dict: changes the original. count += 1 on an int: makes a new int and moves count to it. tags.add("py") on a set: changes the original. sorted(nums) on a list: makes a new sorted list and leaves nums unchanged (nums.sort() would change it).</p></div></noscript>
+      <div class="feedback" data-region="current-feedback" aria-live="polite">
+<div data-step="3" data-pep-explore-feedback></div>
+      </div>
+    </div>
+  </section>
+  <section class="pep-regions pep-act" data-step="4" aria-labelledby="teach-4-h">
+    <div class="pep-region reading" data-pep-instructions>
+      <div class="teach" data-region="current-teaching">
+<div data-step="4" data-pep-teaching>
+  <h2 id="teach-4-h" tabindex="-1">Copy, or start fresh with None</h2>
+  <p>To change a list without touching the caller's, copy it first: <code>a[:]</code>, <code>list(a)</code> or, for a dict, <code>d.copy()</code>. These are shallow copies: nested lists inside are still shared, so use <code>copy.deepcopy(a)</code> for nested data.</p>
+  <p>A default value is created once, when <code>def</code> runs, so a mutable default such as <code>tags=[]</code> is shared by every call (see the right). Use <code>tags=None</code> and create the list inside: <code>if tags is None: tags = []</code>.</p>
+
+<details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+  <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+  <div class="pep-optional__body">
+    <p data-pep-anecdote-story>A meeting room has a whiteboard screwed to the wall when the room is built. A meeting that brings its own board uses that one, but a meeting that forgets writes on the wall board, and the notes from every earlier meeting are still on it. A careful office instead keeps a stack of fresh boards by the door and hands a new one to each meeting that arrives without one.</p>
+    <p data-pep-anecdote-map>A mutable default is made once, like the wall board; checking for nothing and making a fresh one on each call is the stack.</p>
+  </div>
+</details>
+</div>
+      </div>
+      <div class="task" data-region="current-task">
+<div data-step="4"><p class="pep-label">This activity</p>
+  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the question and the code it names in the workspace on the right.</li><li><strong>What to do or type:</strong> Pick one answer, pick your confidence, then press <em>Check answer</em>.</li><li><strong>What to expect:</strong> Feedback appears below. If the first answer is not right, a second question appears; answer it and press <em>Check second try</em>.</li><li><strong>How to know it's done:</strong> Either way, Continue then shows and takes you to the recap.</li></ol></div>
+      </div>
+    </div>
+    <div class="pep-region workspace" data-pep-workspace="activity">
+      <div class="ask" data-region="current-ask">
+<div data-step="4"><h2 class="ws-h" id="ws-4-h"><span class="vh">Workspace: </span>Copy, or start fresh with None</h2>
+  <p id="task-apply"><code>add_tag</code> below keeps tags from earlier calls. Which fix gives each call that omits <code>tags</code> its own new list?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same idea, new form: <code>grid = [[1, 2], [3, 4]]</code>. You need <code>grid2</code> to change freely, including <code>grid2[0].append(9)</code>, without touching <code>grid</code>. Which copy works?</p></div>
+      </div>
+      <figure class="model" data-pep-model data-region="live-model" aria-labelledby="ws-4-h">
+<div data-step="4"><pre class="code">def add_tag(tag, tags=[]):
+    tags.append(tag)
+    return tags
+
+add_tag("a")   # ['a']
+add_tag("b")   # ['a', 'b']  the same default list</pre></div>
+      </figure>
+      <div class="control" data-region="current-control">
+<div data-step="4">
+  <div data-first>
+  <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: def add_tag(tag, tags=[]): tags.append(tag); return tags keeps tags between calls because the default list is created once. Fixes: tags=list() (still evaluated once when def runs, so still shared); tags=None then if tags is None: tags = [] (correct: a new list on every call that omits tags); calling tags.clear() at the end (the caller would receive an emptied list); returning tags.copy() (the hidden default still keeps growing). Retry: grid = [[1, 2], [3, 4]]; to change grid2[0] without touching grid, use copy.deepcopy(grid). grid2 = grid is no copy; grid.copy() and list(grid) are shallow, so grid2[0] is still the same inner list as grid[0].">
+    <legend>Choose the fix</legend>
+    <div class="opts one"><label class="opt"><input type="radio" name="apply-a" value="a"> <span>def add_tag(tag, tags=list()):</span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span>def add_tag(tag, tags=None): then if tags is None: tags = []</span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span>Keep tags=[] and call tags.clear() at the end</span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span>Keep tags=[] and return tags.copy()</span></label></div>
+  </fieldset>
+  <div class="row confrow">
+  <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
+    <legend id="conf-help">Confidence, then check</legend>
+    <label class="opt"><input type="radio" name="conf" value="low"> <span>Low</span></label>
+    <label class="opt"><input type="radio" name="conf" value="medium"> <span>Medium</span></label>
+    <label class="opt"><input type="radio" name="conf" value="high"> <span>High</span></label>
+  </fieldset>
+  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
+  </div>
+  </div>
+  <div data-retry hidden>
+    <fieldset id="apply-b" aria-describedby="task-apply-b">
+      <legend>Choose the copy</legend>
+      <div class="opts"><label class="opt"><input type="radio" name="apply-b" value="a"> <span>grid2 = grid</span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span>grid2 = grid.copy()</span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span>grid2 = list(grid)</span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span>grid2 = copy.deepcopy(grid)</span></label></div>
+    </fieldset>
+    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+  </div>
+</div>
+      </div>
+      <noscript data-section-skip><div class="nojs-static"><p class="pep-label">Without JavaScript: the result</p><p>Apply question: def add_tag(tag, tags=[]): tags.append(tag); return tags keeps tags between calls because the default list is created once. Fixes: tags=list() (still evaluated once when def runs, so still shared); tags=None then if tags is None: tags = [] (correct: a new list on every call that omits tags); calling tags.clear() at the end (the caller would receive an emptied list); returning tags.copy() (the hidden default still keeps growing). Retry: grid = [[1, 2], [3, 4]]; to change grid2[0] without touching grid, use copy.deepcopy(grid). grid2 = grid is no copy; grid.copy() and list(grid) are shallow, so grid2[0] is still the same inner list as grid[0].</p></div></noscript>
+      <div class="feedback" data-region="current-feedback" aria-live="polite">
+<div data-step="4" data-pep-apply-feedback></div>
+      </div>
+    </div>
+  </section>
+  <section class="pep-regions pep-act" data-step="5" aria-labelledby="teach-5-h">
+    <div class="pep-region reading" data-pep-instructions>
+      <div class="teach" data-region="current-teaching">
+<div data-step="5" data-pep-recap class="recap">
+  <h2 id="teach-5-h" tabindex="-1">Recap</h2>
+  <ul><li>Assignment and argument passing never copy; they add another name for the same object.</li><li><code>is</code> asks "same object?"; <code>==</code> asks "equal values?".</li><li>list, dict and set change in place; int, str and tuple never do.</li><li>Copy with <code>[:]</code>, <code>list()</code>, <code>dict.copy()</code> or <code>copy.deepcopy()</code>; use <code>None</code> instead of a mutable default.</li></ul>
+  <details data-section-skip><summary>Activity procedures (text alternative)</summary><p>Use these same observable steps when working from the text alternative.</p><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the code in the workspace on the right (below these steps on a narrow screen).</li><li><strong>What to do or type:</strong> Under <em>Prediction</em>, pick the result you expect.</li><li><strong>What to expect:</strong> Pick Low, Medium or High confidence, then press <em>Check my prediction</em>.</li><li><strong>How to know it's done:</strong> Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.</li></ol><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> In <em>Run a statement</em>, press the statement buttons, starting with <code>b = a</code>.</li><li><strong>What to do or type:</strong> The output box shows each result, and the arrows in the panel show which names point at which list.</li><li><strong>What to expect:</strong> Statements run in the order you press them: pressing <code>c.append(4)</code> before <code>c = list(a)</code> gives a <code>NameError</code>.</li><li><strong>How to know it's done:</strong> Each check above changes from <em>open</em> to <em>done</em> when a run shows it. Continue appears when every check is done.</li></ol><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> In <em>What does this operation do?</em>, read the item on the card.</li><li><strong>What to do or type:</strong> Press the button for the group it belongs to: <em>Changes the original</em> or <em>Makes a new object</em>.</li><li><strong>What to expect:</strong> Right: the item moves to <em>Sorted so far</em> and the next item appears. Wrong: the feedback says <em>Not this group</em> and the card stays, so try another button.</li><li><strong>How to know it's done:</strong> Continue appears when every item is sorted.</li></ol><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the question and the code it names in the workspace on the right.</li><li><strong>What to do or type:</strong> Pick one answer, pick your confidence, then press <em>Check answer</em>.</li><li><strong>What to expect:</strong> Feedback appears below. If the first answer is not right, a second question appears; answer it and press <em>Check second try</em>.</li><li><strong>How to know it's done:</strong> Either way, Continue then shows and takes you to the recap.</li></ol></details>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <table><tr><td><code>b = a</code></td><td>same object</td></tr><tr><td><code>a is b</code></td><td>identity test</td></tr><tr><td><code>a[:]</code>, <code>list(a)</code>, <code>d.copy()</code></td><td>shallow copy</td></tr><tr><td><code>copy.deepcopy(a)</code></td><td>deep copy (import copy)</td></tr><tr><td><code>def f(items=None):</code> / <code>if items is None: items = []</code></td><td>safe default</td></tr></table>
+  </details>
+  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live official Python 3 documentation pages on 2026-10-13. Every result shown was produced by running the exact statements in CPython 3.14.</p><ul><li><a href="https://docs.python.org/3/reference/datamodel.html" rel="noopener">Language reference: Data model (objects, identity, mutability)</a></li><li><a href="https://docs.python.org/3/faq/programming.html" rel="noopener">Programming FAQ: shared default values and changing lists through other names</a></li><li><a href="https://docs.python.org/3/tutorial/controlflow.html" rel="noopener">Python tutorial: Default argument values are evaluated only once</a></li><li><a href="https://docs.python.org/3/library/copy.html" rel="noopener">copy: Shallow and deep copy operations</a></li></ul></details>
+  <p class="next-topic">Next topic: <a href="../modules-imports-and-virtual-environments/artifact.html" rel="noopener">Modules, imports and virtual environments</a></p>
+</div>
+      </div>
+      <div class="task" data-region="current-task">
+<div data-step="5"></div>
+      </div>
+    </div>
+    <div class="pep-region workspace" data-pep-workspace="activity">
+      <div class="ask" data-region="current-ask">
+<div data-step="5"><h2 class="ws-h" id="ws-5-h"><span class="vh">Workspace: </span>Recap</h2>
+  <p class="pep-js-only">All activities finished.</p>
+  <p id="complete-msg" class="complete"></p></div>
+      </div>
+      <figure class="model" data-pep-model data-region="live-model" aria-labelledby="ws-5-h">
+<div data-step="5"><table class="mtable" aria-label="Copy tools"><tbody><tr><td class="mono">b = a</td><td>no copy: one object, two names</td></tr><tr><td class="mono">a[:] / list(a) / d.copy()</td><td>shallow copy: new outer object</td></tr><tr><td class="mono">copy.deepcopy(a)</td><td>copies nested objects too</td></tr><tr><td class="mono">def f(x, items=None):</td><td>fresh list per call</td></tr></tbody></table></div>
+      </figure>
+      <div class="control" data-region="current-control">
+<div data-step="5"></div>
+      </div>
+      <div class="feedback" data-region="current-feedback" aria-live="polite">
+<div data-step="5"></div>
+      </div>
+    </div>
+  </section>
+  <p id="goal-sum" class="goal-sum" hidden></p>
+  <div class="fbrow pep-next-row"><button type="button" class="primary" id="next" hidden>Continue</button></div>
+</div>
+</main>
+<script>
+var TOPIC={
+steps:5,acts:['predict','x1','x2','apply'],obj:[['x1'],['x2'],['apply']],need:{2:['alias','func','is']},
+init:function(){return {o:{1:[1,2]},n:{a:1},next:2,hist:[]};},
+sort:{3:{lanes:{change:'Changes the original',fresh:'Makes a new object'},done:'Lists, dicts and sets change in place; ints, strings and tuples never do.',items:[
+ {t:'<code>nums.append(4)</code> where nums is a list',lane:'change',ok:'append changes the list itself; every name for it sees 4.',w:{fresh:'append returns None and changes the existing list.'}},
+ {t:'<code>name.upper()</code> where name is a str',lane:'fresh',ok:'Strings are immutable; upper() returns a new string and name is unchanged.',w:{change:'A str can never change in place; upper() returns a new string.'}},
+ {t:'<code>point + (3,)</code> where point is a tuple',lane:'fresh',ok:'Tuples are immutable; + builds a new, longer tuple.',w:{change:'Tuples cannot change; + makes a new tuple.'}},
+ {t:'<code>prices["pen"] = 3</code> where prices is a dict',lane:'change',ok:'Item assignment changes the dict in place.',w:{fresh:'Assigning to a key changes the existing dict; no new dict is made.'}},
+ {t:'<code>count += 1</code> where count is an int',lane:'fresh',ok:'Ints are immutable; count is moved to a new int, and other names keep the old one.',w:{change:'An int cannot change; += makes a new int and moves only count.'}},
+ {t:'<code>tags.add("py")</code> where tags is a set',lane:'change',ok:'add changes the set in place.',w:{fresh:'add returns None and changes the existing set.'}},
+ {t:'<code>sorted(nums)</code> where nums is a list',lane:'fresh',ok:'sorted() returns a new list and leaves nums alone; nums.sort() would change it.',w:{change:'sorted() builds a new list; it is nums.sort() that sorts in place.'}}]}},
+predict:{correct:'b',why:{
+ a:'that would need a copy; b = a only adds a second name for the same list.',
+ b:'a and b are two names for one list, so the append shows through a.',
+ c:'append adds to the existing items; nothing is replaced.',
+ d:'b = a is an ordinary assignment; a and b are different names.'}},
+apply:{A:{fs:'apply-a',correct:'b',okNote:'<p>A <code>None</code> default plus a new list inside the body gives every call its own list.</p>',
+  why:{a:'list() still runs only once, when def runs, so the default is still shared.',b:'None is immutable; a new list is created inside each call that omits tags.',c:'the caller would get back an emptied list, and calls in between still share it.',d:'the hidden default still grows on every call.'},
+  miss:{a:'A default expression runs once, when <code>def</code> runs, whatever it is.',c:'Clearing empties the very list you just returned to the caller.',d:'Copying the result does not stop the shared default from growing.'},
+  hint:'When is a default value created: at each call, or once?'},
+ B:{fs:'apply-b',correct:'d',reveal:'Only <code>copy.deepcopy(grid)</code> copies the inner lists too.',
+  why:{a:'no copy at all: one object, two names.',b:'a shallow copy: the inner lists are still shared.',c:'also shallow: grid2[0] is grid[0].',d:'copies the outer list and every inner list.'}}},
+step:function(k,t){var o=t.o,n=t.n,out=[],msg='',g=null,self=this;
+ function show(v){return '['+v.join(', ')+']';}
+ if(k==='ba'){n.b=n.a;msg='b now points at the same list as a. No copy was made.';}
+ else if(k==='bp'){if(!n.b){out.push(['e',"NameError: name 'b' is not defined"]);msg='Run b = a first.';}else{o[n.b].push(3);msg='Appended 3 through b.';if(n.b===n.a){g='alias';msg+=' a also shows '+show(o[n.a])+', because they share one list.';}}}
+ else if(k==='ca'){var id=t.next++;o[id]=o[n.a].slice();n.c=id;msg='c points at a new list holding the same items.';}
+ else if(k==='cp'){if(!n.c){out.push(['e',"NameError: name 'c' is not defined"]);msg='Run c = list(a) first.';}else{o[n.c].push(4);msg='Appended 4 to c only; a is still '+show(o[n.a])+'.';}}
+ else if(k==='fz'){o[n.a].push(0);g='func';msg='Inside add_zero, items was another name for a\'s list, so a is now '+show(o[n.a])+'.';}
+ else if(k==='is'){if(!n.b||!n.c){out.push(['e',"NameError: name '"+(!n.b?'b':'c')+"' is not defined"]);msg='Run b = a and c = list(a) first.';}
+  else{out.push(['',(n.a===n.b?'True':'False')+' '+(n.a===n.c?'True':'False')]);msg='a is b: '+(n.a===n.b?'True':'False')+'; a is c: '+(n.a===n.c?'True':'False')+'.';if(n.a===n.b&&n.a!==n.c){g='is';msg='a is b is True (shared list); a is c is False (a copy), even if their items were equal.';}}}
+ return {out:out,msg:msg,g:g};},
+act:function(a,b,S,api){var k=a.split(':')[1],r=this.step(k,S.t);api.out('out-nm',[['','>>> '+b.textContent]].concat(r.out));api.hit(r.g,r.msg);},
+render:function(S,api){var g=api.$('nm-g');if(!g){return;}var t=S.t,ids=[],names=['a','b','c'].filter(function(x){return t.n[x];});
+ names.forEach(function(x){if(ids.indexOf(t.n[x])<0){ids.push(t.n[x]);}});
+ var h='',alt=[];ids.forEach(function(id,i){var y=20+i*80;h+='<rect class="box on" x="200" y="'+y+'" width="210" height="44" rx="4"></rect><text x="212" y="'+(y+27)+'">list #'+id+' ['+api.esc(t.o[id].join(', '))+']</text>';});
+ names.forEach(function(x,i){var y=34+i*60,oy=42+ids.indexOf(t.n[x])*80;h+='<text x="20" y="'+(y+5)+'">'+x+'</text><line class="arr" x1="44" y1="'+y+'" x2="190" y2="'+oy+'"></line><path class="ah" d="M190 '+oy+' l-10 -5 l0 10 z"></path>';
+  alt.push(x+' points at list #'+t.n[x]+' ['+t.o[t.n[x]].join(', ')+']');});
+ g.innerHTML=h;var txt=alt.join('; ')+'.';api.$('nm-d').textContent='Names and objects now: '+txt;api.$('nm-alt').textContent=txt;}
+};
+
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
+var SNAP={},MIN=(d.querySelector('meta[name="pep:budget-minutes"]')||{}).content||'';
+function clone(o){return JSON.parse(JSON.stringify(o));}
+var LAST=TOPIC.steps,S;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fresh(){var t=TOPIC.init();t.g=t.g||{};t.sort=t.sort||{};S={step:1,done:{},settled:{},conf:null,tries:0,t:t};}
+var api={$:$,qa:qa,esc:esc,checked:function(n){return checked(n);},say:say,complete:complete,hit:hit,out:out,get S(){return S;}};
+function fbFor(step){return qa('[data-region="current-feedback"] > [data-step="'+step+'"]')[0];}
+function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}}
+function out(id,lines){var o=$(id);if(!o){return;}o.innerHTML=lines.map(function(l){return l[0]?'<span class="'+l[0]+'">'+esc(l[1])+'</span>':esc(l[1]);}).join('\n');}
+function actFor(step){return TOPIC.acts[step-1];}
+function hit(k,msg){var need=(TOPIC.need||{})[S.step]||[];if(k){S.t.g[k]=1;}
+  var left=need.filter(function(n){return !S.t.g[n];}).length;
+  say('<p>'+msg+'</p><p>'+(left?left+' of '+need.length+' checks still open.':'<strong>All checks done.</strong> Continue when ready.')+'</p>');
+  if(!left&&need.length&&!S.done[actFor(S.step)]){complete(actFor(S.step));}
+  render();}
+function progress(){
+  var acts=TOPIC.acts,n=0,set=0;
+  acts.forEach(function(a,i){var p=qa('.seg',$('progress'))[i];var on=!!S.done[a],st=!on&&!!S.settled[a];if(on){n++;}if(st){set++;}
+    p.className='seg'+(on?' is-done':(st?' is-settled':(i===S.step-1?' is-current':'')));});
+  $('prog-text').textContent=(S.step<=acts.length?'Activity '+S.step+' of '+acts.length:'Recap')+' · '+n+' of '+acts.length+' done'+(set?' · '+set+' settled, not passed':'')+' · about '+MIN+' min';
+  qa('[data-pep-objectives] li').forEach(function(li,i){var need=(TOPIC.obj||[])[i]||[],ok=need.length&&need.every(function(a){return !!S.done[a];});li.classList.toggle('is-done',!!ok);});
+}
+function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
+/* A settled miss may continue but is not done: no credit, and the page completes only when every activity passed. */
+function settle(act){S.settled[act]=true;delete S.done[act];progress();var nb=$('next');nb.hidden=false;}
+function sortBox(){return qa('[data-region="current-control"] > [data-step="'+S.step+'"] [data-sorter]')[0];}
+function renderSort(){var box=sortBox(),cfg=(TOPIC.sort||{})[S.step];if(!box||!cfg){return;}
+  var st=S.t.sort[S.step]||{idx:0,placed:[]},it=cfg.items[st.idx];
+  box.querySelector('.card').innerHTML=it?'<span class="vh">Item '+(st.idx+1)+' of '+cfg.items.length+': </span>'+it.t:'All items sorted.';
+  box.querySelector('.count').textContent=st.idx+' of '+cfg.items.length+' sorted';
+  var ul=box.querySelector('.sorted');ul.innerHTML=st.placed.map(function(p){return '<li><span class="ln">'+esc(cfg.lanes[p.lane])+':</span> '+cfg.items[p.i].t+'</li>';}).join('');
+  qa('button[data-act^="lane:"]',box).forEach(function(b){b.disabled=!it;});}
+function sortLane(lane){var cfg=(TOPIC.sort||{})[S.step];if(!cfg){return;}
+  var st=S.t.sort[S.step]||(S.t.sort[S.step]={idx:0,placed:[]}),it=cfg.items[st.idx];if(!it){return;}
+  if(lane===it.lane){st.placed.push({i:st.idx,lane:lane});st.idx++;
+    var msg='<p class="verdict ok">'+esc(cfg.lanes[lane])+': correct.</p><p>'+it.ok+'</p>';
+    if(st.idx>=cfg.items.length){say(msg+'<p><strong>All '+cfg.items.length+' sorted.</strong> '+(cfg.done||'')+' Continue when ready.</p>');complete(actFor(S.step));}
+    else{say(msg+'<p>Next item is shown above.</p>');}}
+  else{say('<p class="verdict no">Not this group: '+esc(cfg.lanes[lane])+'.</p><p>'+it.w[lane]+'</p><p>Choose another group for the same item.</p>');}
+  render();var c=sortBox();if(c){var card=c.querySelector('.card');card.setAttribute('tabindex','-1');}}
+function render(){renderSort();
+  var g=S.t.g;qa('[data-region="current-task"] > [data-step="'+S.step+'"] .goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!g[k]);li.querySelector('.st').textContent=g[k]?'done':'open';});
+  var need=(TOPIC.need||{})[S.step]||[],gs=$('goal-sum'),left=need.filter(function(k){return !g[k];}).length;
+  if(gs){gs.hidden=!need.length;gs.textContent=left?left+' of '+need.length+' checks still open':'All '+need.length+' checks done';}
+  if(TOPIC.render){TOPIC.render(S,api);}}
+function show(step,focus){
+  S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
+  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
+  if(!SNAP[step]){var h={};['current-ask','current-task','current-control','current-feedback'].forEach(function(c){var n=qa('[data-region="'+c+'"] > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
+    SNAP[step]={html:h,t:clone(S.t)};}
+  var rb=$('reset');rb.disabled=(step===LAST);
+  $('next').hidden=true;
+  if(step===LAST){var miss=TOPIC.acts.filter(function(a){return !S.done[a];}).length;main.setAttribute('data-pep-complete',miss?'false':'true');var c=$('complete-msg');if(c){
+    c.textContent=miss?'This page is not complete yet: '+miss+' of '+TOPIC.acts.length+' activities settled without passing. Review the explanations above; to finish, reload the page and work through it again.':'All '+TOPIC.acts.length+' activities finished.';}}
+  else{main.removeAttribute('data-pep-complete');}
+  render();progress();
+  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+}
+function optLabel(inp){return inp.closest('label');}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function explainList(set,chosen,mark){
+  var html='<ul>';
+  Object.keys(set.why).forEach(function(k){
+    var txt=qa('input[value="'+k+'"]',$(set.fs))[0];var lab=txt?optLabel(txt).textContent.trim():k;
+    var tag=(k===set.correct)?'<strong>Correct: </strong>':'<strong>Not this: </strong>';
+    html+='<li>'+(mark?tag:'')+'<span class="on">'+esc(lab)+'</span>: '+set.why[k]+(k===chosen?' <em>(your choice)</em>':'')+'</li>';
+  });
+  return html+'</ul>';
+}
+function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===set.correct&&(chosen===set.correct)){l.classList.add('right');}
+  if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
+function firstDetails(){return '<details><summary>First question: every option explained</summary>'+explainList(TOPIC.apply.A,null,true)+'</details>';}
+function badges(ok,mine,who){return '<span class="badges">'+(mine?'<span class="badge me">'+who+'</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
+function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
+  w.innerHTML=badges(i.value===set.correct,i.value===chosen,'Your answer')+set.why[i.value];sp.appendChild(w);});}
+function focusVerdict(){var v=qa('[data-region="current-feedback"] > [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
+function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
+  var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
+  var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function checkApply(which){
+  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  if(which==='a'){
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
+    if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText());complete('apply');render();focusVerdict();return;}
+    S.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
+    say('<p class="verdict no">Not yet. Try once more with the same idea shown a different way.</p><p>Your first answer, <span class="on">'+esc(S.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
+    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});render();
+    var t=$('task-apply-b');if(t){t.focus();}
+  } else {
+    var c2=checked('apply-b');if(!c2){return;}
+    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
+    if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+firstDetails()+confText());}
+    else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
+      say('<p class="verdict set">Answered, not marked correct: settled, no penalty, but not complete and no credit. Choose Restart activity to try again for credit, or Continue to the recap; the page then stays incomplete.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+firstDetails()+confText());}
+    if(S.settled.apply){settle('apply');}else{complete('apply');}render();focusVerdict();
+  }
+}
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
+  if(!ch||!pc){return;}
+  qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
+    if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
+  var html='<p class="verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+' Each option, explained:</p><ul class="explain">';
+  Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
+    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
+  say(html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||''),1);complete('predict');
+}
+function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
+function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
+  Object.keys(sn.html).forEach(function(c){var n=qa('[data-region="'+c+'"] > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
+  qa('[data-region="current-control"] > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
+  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  show(step,false);syncPrompt();var h=$('teach-'+step+'-h');if(h){h.focus();}}
+var topicAct=TOPIC.act;
+TOPIC.act=function(a,b,st,ap){if(a.indexOf('lane:')===0){sortLane(a.slice(5));return;}if(topicAct){topicAct.call(TOPIC,a,b,st,ap);}};
+var topicRun=TOPIC.run;
+if(topicRun){TOPIC.run=function(line,term,st,ap){topicRun.call(TOPIC,line,term,st,ap);render();};}
+d.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b){return;}
+  if(b.id==='reset'){restart();return;}
+  if(b.id==='next'){show(S.step+1);return;}
+  if(b.id==='predict-check'){checkPredict();return;}
+  if(b.id==='apply-check'){checkApply('a');return;}
+  if(b.id==='apply-check-b'){checkApply('b');return;}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+});
+d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
+var HIST={};
+function syncPrompt(){}
+if(TOPIC.termAlt){qa('.term').forEach(function(n){n.setAttribute('data-static-alt',TOPIC.termAlt);});}
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+setTheme(mq&&mq.matches?'dark':'light');
+if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+fresh();show(1,false);syncPrompt();
+})();
+</script>
+<script>
+  (() => {
+    let printOpened = [];
+    addEventListener('beforeprint', () => {
+      printOpened = [...document.querySelectorAll('details[data-pep-optional]:not([open])')];
+      printOpened.forEach(details => { details.open = true; });
+    });
+    addEventListener('afterprint', () => {
+      printOpened.forEach(details => { details.open = false; });
+      printOpened = [];
+    });
+  })();
+</script>
+</body>
+</html>
