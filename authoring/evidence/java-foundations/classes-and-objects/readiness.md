@@ -11,15 +11,15 @@ It is not critic or reconciliation evidence: independent education and Java-SME 
 
 | Topic | Kind | Objectives | Activities | P50 / worst path / budget (min) | Page sha256 (prefix) |
 | --- | --- | --- | --- | --- | --- |
-| `access-modifiers` | core | 3 | predict → lanes → code → mcq | 7.77 / 14.35 / 15 | `2939c929d934ca25` |
-| `classes-and-objects` | core | 3 | predict → lanes → code → mcq | 8.32 / 14.65 / 15 | `e81ed4178e686936` |
-| `constructors` | core | 3 | predict → lanes → code → mcq | 8.63 / 14.96 / 15 | `98e0942797f484f5` |
+| `access-modifiers` | core | 3 | predict → lanes → code → mcq | 7.77 / 14.35 / 15 | `3dd05714e10a8d77` |
+| `classes-and-objects` | core | 3 | predict → lanes → code → mcq | 8.32 / 14.65 / 15 | `eada812cd8d1dae3` |
+| `constructors` | core | 3 | predict → lanes → code → mcq | 8.6 / 14.93 / 15 | `0cf715fe375c50db` |
 | `double-equals-vs-equals` | core | 3 | predict → lanes → code → mcq | 8.24 / 14.57 / 15 | `0a4d07b90f54c928` |
-| `encapsulation-with-getters-and-setters` | core | 3 | predict → lanes → code → mcq | 7.81 / 14.14 / 15 | `08c7e3656a2db07e` |
+| `encapsulation-with-getters-and-setters` | core | 3 | predict → lanes → code → mcq | 7.81 / 14.14 / 15 | `cc04499c1f874084` |
 | `enums` | core | 3 | predict → lanes → code → mcq | 9.15 / 14.98 / 15 | `d1ef5c984baf178c` |
 | `final-and-tostring` | reading | 3 | predict → lanes → code → mcq | 7.95 / 14.78 / 15 | `ac7082334bd73fd3` |
 | `stack-vs-heap-and-object-references` | core | 3 | predict → lanes → mselect → mcq | 10.1 / 14.18 / 15 | `5ea5142002d89244` |
-| `string-immutability` | core | 3 | predict → lanes → code → mcq | 7.58 / 14.16 / 15 | `fef6d70d20491728` |
+| `string-immutability` | core | 3 | predict → lanes → code → mcq | 7.58 / 14.16 / 15 | `d9c0024afac1f183` |
 
 ## 2. Template and engine provenance
 
@@ -81,6 +81,14 @@ For all nine pages:
   - `stack-vs-heap-and-object-references` (EDU-SVH-01): Activity 2 begins with a paper sketch of the frame, the objects and the arrows before the placements, keeping the "Draw" objective; the page's time label moves from 14 to 15 minutes.
   - New QA edges, all value-free: on every page the recap is hidden on load, shown after the wrong-twice route and hidden again after Restart with route settlement cleared; on `stack-vs-heap-and-object-references` a completed topic that is restarted and failed is no longer complete; and partial, non-solution code shows the new refusals or the not-supported report. Every new edge fails on the old `238f665` bytes. The source-owned private proof (private solutions and positive or near-complete witnesses, kept in scratch and never printed) passes on these bytes; on the old bytes the reviewers' bypasses passed and the valid inverse guard and Java 25 prologue failed.
   - The nine GIFT banks are byte-identical to `238f665`. Deferred by firstmate decision: EDU-GIFT-01, EDU-GIFT-SI-01, CO-SME-10, EDU-ENG-03/04, EDU-CO-01, EDU-TIME-01, CO-SME-09 and CO-SME-11.
+- Narrow correction after the education and Java-SME rechecks of `bd531452` (firstmate inboxes 017 and 018). Only five pages changed; the shared engine, the stack-vs-heap, double-equals-vs-equals, final-and-tostring and enums pages and all nine GIFT banks are byte-identical to `bd531452`.
+  - `encapsulation-with-getters-and-setters` (CO-SME-R1): the in-range if/else shortcut passes only when no earlier top-level statement stores the field.
+  - `string-immutability` (CO-SME-R2): any return inside the `for` block is refused, even with another return after the loop.
+  - `constructors` (CO-SME-R3): a Java 25 prologue that only checks arguments or assigns a field declared without an initializer, or another shape the checker cannot prove invalid, is reported as not supported and is not a try; a prologue that reads a field, or uses `this` other than to assign a field, is refused. The teaching line, recap, feedback and `artifact.md` state that rule, and the modeled P50 is 8.6 min with a 14.93 min worst path.
+  - `classes-and-objects` (CO-SME-R4 with EDU-BD-01): recognised inverted `isLong()` forms are still refused; any other return shape, such as a boolean local or a flag, is reported as not supported and is not a try.
+  - `access-modifiers` (CO-SME-R5): `final`, `abstract` or `static` on `Thermostat` itself is refused, alongside the member-level check.
+  - Six new value-free QA edges, one or two per finding, pass on these bytes and fail on `bd531452`; their code fixtures stay far below a solution. The private proof (22 probes: private solutions plus positive, negative and not-supported witnesses, never printed) has no mismatch here and nine on `bd531452`, one per finding form; its script was deleted after the run.
+  - Not taken, by firstmate decision: EDU-SVH-02 and EDU-FT-02 (on approved pages) and every earlier deferred finding.
 - Open, owned by the next steps: focused education re-review of the three corrected pages and focused education and Java-SME rechecks of the corrected HTML bytes (T25 critic coverage is expected to fail until they land), and the video and PDF companions.
 
 ## 7. Formative GIFT banks (firstmate inbox 013)

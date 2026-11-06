@@ -396,7 +396,7 @@ System.out.println(p.x + "," + p.y);</code></pre></div></div>
         this(label, 60);   // default: 60 seconds
     }
 }</code></pre>
-<p>In this task, write <code>this(...)</code> as the first statement of the constructor that uses it. Since Java 25 a constructor may run a few statements before <code>this(...)</code>, such as an argument check, but those statements cannot use the object being built.</p></div>
+<p>In this task, write <code>this(...)</code> as the first statement. Since Java 25, statements before it may check arguments or assign a field declared without an initializer, but cannot otherwise use the object.</p></div>
 <section data-pep-where-fits aria-labelledby="where-fits-3"><h2 id="where-fits-3">Where this fits</h2>
 <p data-pep-fit-decision><strong>Decision:</strong> add a second constructor that chains with <code>this(...)</code>, or make every caller pass every value?</p>
 <p data-pep-fit-good><strong>Good fit:</strong> one or two common shortcuts with a sensible default value, while one full constructor does all the field assignments.</p>
@@ -435,7 +435,7 @@ System.out.println(p.x + "," + p.y);</code></pre></div></div>
 <section id="recap" class="recap" data-pep-recap aria-labelledby="recap-h">
 <h2 id="recap-h">Recap</h2>
 <p id="complete" class="complete" data-pep-completion></p>
-<ul><li>A constructor has the class name and no return type; it runs for each <code>new</code> and sets the object's starting state.</li><li>When a parameter has a field's name, <code>this.name</code> is the field and plain <code>name</code> is the parameter.</li><li><code>this(...)</code> runs another constructor of the same class, so assignments stay in one place; any statement before it (allowed since Java 25) cannot use the object being built.</li><li>The compiler supplies a no-argument default constructor only when a class declares no constructor.</li></ul>
+<ul><li>A constructor has the class name and no return type; it runs for each <code>new</code> and sets the object's starting state.</li><li>When a parameter has a field's name, <code>this.name</code> is the field and plain <code>name</code> is the parameter.</li><li><code>this(...)</code> runs another constructor of the same class, so assignments stay in one place; statements before it may check arguments or assign a field declared without an initializer, never read the object.</li><li>The compiler supplies a no-argument default constructor only when a class declares no constructor.</li></ul>
 <details data-section-skip data-pep-cheat-sheet><summary>Cheat sheet</summary><table><tr><td>Constructor</td><td><code>Timer(String label, int seconds) { this.label = label; this.seconds = seconds; }</code></td></tr><tr><td>Chain</td><td><code>Timer(String label) { this(label, 60); }</code></td></tr><tr><td>Default constructor</td><td>Supplied only if the class declares no constructor</td></tr><tr><td>Call</td><td><code>new Timer("tea", 180)</code></td></tr></table></details>
 <details data-section-skip data-pep-sources class="sources"><summary>Sources and review date</summary>
 <p>Claims on this page were checked against the live official pages below on 16 October 2026 (UTC), for Java SE 25. Links open outside this lesson.</p>
@@ -453,9 +453,12 @@ window.PEP_PAGE={acts:[
   {label:"The one-parameter constructor delegates with `this(...)` as its first statement.",fail:"Call the other constructor with `this(...)`.",test:function(m,J){var t=J.type(m,'Ticket'),c=t&&t.ctors.filter(function(x){return x.params.length===1;})[0];if(!c)return false;var v=J.vals(c.body);if(J.has(c.body,['this','('])<0)return 'Call the two-parameter constructor with this( ... ).';
     if(v[0]!=='this'||v[1]!=='('){var S=J.top(c.body),k=-1;for(var q=0;q<S.length;q++){var w=J.vals(S[q].toks);if(w[0]==='this'&&w[1]==='('){k=q;break;}}
       if(k<0)return 'Make this(...) the first statement in the constructor.';
-      /* A Java 25 prologue may not use the object being built; one that does not is valid Java this task does not check */
-      var pro=[].concat.apply([],S.slice(0,k).map(function(st){return st.toks;}));
-      if(J.has(pro,['this'])>=0||J.has(pro,['seat'])>=0)return 'Statements before this(...) cannot use the object being built; make this(...) the first statement.';
+      /* A Java 25 prologue may not read the object being built, but may assign a field that has no initializer; other valid prologues are not checked here */
+      var pro=[].concat.apply([],S.slice(0,k).map(function(st){return st.toks;})),pv=J.vals(pro),own=c.params.map(function(x){return x.name;});
+      for(var z=0;z<pv.length;z++){var fd=pv[z]==='this'&&pv[z+1]==='.'?J.field(t,pv[z+2]):(pv[z-1]!=='.'&&own.indexOf(pv[z])<0?J.field(t,pv[z]):null),at=pv[z]==='this'?z+3:z+1;
+        if(pv[z]==='this'&&!fd)return 'Statements before this(...) cannot read fields, call methods or otherwise use the object being built; make this(...) the first statement.';
+        if(fd&&/^[A-Za-z_$][\w$]*$/.test(pv[z-1]||'')&&pv[z-1]!=='return')return J.limit('a local variable before this(...) that shares a field name',c.body[0].p);
+        if(fd){if(pv[at]!=='='||fd.init)return 'Statements before this(...) cannot read fields, call methods or otherwise use the object being built; they may only initialize a field declared without an initializer, with a simple =.';z=at;}}
       return J.limit('statements before this(...). Java 25 allows them, but this task checks a body that starts with this(...)',c.body[0].p);}
     if(J.has(c.body,['new','Ticket'])>=0)return 'new Ticket(...) would build a second object; this(...) runs the other constructor on the same one.';return true;}},
   {label:"The `this(...)` call passes the event, then seat 0.",fail:"Pass two arguments that match the first constructor.",test:function(m,J){var t=J.type(m,'Ticket'),c=t&&t.ctors.filter(function(x){return x.params.length===1;})[0];if(!c)return false;var p=c.params[0].name;if(J.has(c.body,['this','(',p,',','0',')'])>=0)return true;if(J.has(c.body,['this','(','0'])>=0)return 'The order matters: the event comes first, then the seat.';return 'Pass the parameter '+p+' and then the seat number 0.';}}]},

@@ -46,7 +46,7 @@ class Timer {
 }
 ```
 
-In this task, write `this(...)` as the first statement of the constructor that uses it. Since Java 25 a constructor may run a few statements before `this(...)`, such as an argument check, but those statements cannot use the object being built.
+In this task, write `this(...)` as the first statement. Since Java 25, statements before it may check arguments or assign a field declared without an initializer, but cannot otherwise use the object.
 
 Match each `new` expression against the constructors the class really has, remembering when the compiler supplies a default one.
 
@@ -58,7 +58,7 @@ The model: a constructor has the class's name and no return type, and it runs on
 
 - A constructor has the class name and no return type; it runs for each `new` and sets the object's starting state.
 - When a parameter has a field's name, `this.name` is the field and plain `name` is the parameter.
-- `this(...)` runs another constructor of the same class, so assignments stay in one place; any statement before it (allowed since Java 25) cannot use the object being built.
+- `this(...)` runs another constructor of the same class, so assignments stay in one place; statements before it may check arguments or assign a field declared without an initializer, never read the object.
 - The compiler supplies a no-argument default constructor only when a class declares no constructor.
 
 ## Cheat sheet
