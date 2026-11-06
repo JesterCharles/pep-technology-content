@@ -12,10 +12,10 @@ It is not critic or reconciliation evidence: independent education and Java-SME 
 | Topic | Kind | Objectives | Activities | P50 / worst path / budget (min) | Page sha256 (prefix) |
 | --- | --- | --- | --- | --- | --- |
 | `access-modifiers` | core | 3 | predict → lanes → code → mcq | 7.77 / 14.35 / 15 | `3dd05714e10a8d77` |
-| `classes-and-objects` | core | 3 | predict → lanes → code → mcq | 8.32 / 14.65 / 15 | `eada812cd8d1dae3` |
+| `classes-and-objects` | core | 3 | predict → lanes → code → mcq | 8.32 / 14.65 / 15 | `6d3e91bdcc3f7b64` |
 | `constructors` | core | 3 | predict → lanes → code → mcq | 8.6 / 14.93 / 15 | `0cf715fe375c50db` |
 | `double-equals-vs-equals` | core | 3 | predict → lanes → code → mcq | 8.24 / 14.57 / 15 | `0a4d07b90f54c928` |
-| `encapsulation-with-getters-and-setters` | core | 3 | predict → lanes → code → mcq | 7.81 / 14.14 / 15 | `cc04499c1f874084` |
+| `encapsulation-with-getters-and-setters` | core | 3 | predict → lanes → code → mcq | 7.81 / 14.14 / 15 | `207160429157f800` |
 | `enums` | core | 3 | predict → lanes → code → mcq | 9.15 / 14.98 / 15 | `d1ef5c984baf178c` |
 | `final-and-tostring` | reading | 3 | predict → lanes → code → mcq | 7.95 / 14.78 / 15 | `ac7082334bd73fd3` |
 | `stack-vs-heap-and-object-references` | core | 3 | predict → lanes → mselect → mcq | 10.1 / 14.18 / 15 | `5ea5142002d89244` |
@@ -89,6 +89,11 @@ For all nine pages:
   - `access-modifiers` (CO-SME-R5): `final`, `abstract` or `static` on `Thermostat` itself is refused, alongside the member-level check.
   - Six new value-free QA edges, one or two per finding, pass on these bytes and fail on `bd531452`; their code fixtures stay far below a solution. The private proof (22 probes: private solutions plus positive, negative and not-supported witnesses, never printed) has no mismatch here and nine on `bd531452`, one per finding form; its script was deleted after the run.
   - Not taken, by firstmate decision: EDU-SVH-02 and EDU-FT-02 (on approved pages) and every earlier deferred finding.
+- Final narrow correction after the delta rechecks of `1968d200` (firstmate inbox 019). Only two pages changed; every other learner file, the shared engine and all nine GIFT banks are byte-identical to `1968d200`.
+  - `encapsulation-with-getters-and-setters` (CO-SME-R6): the in-range if/else shortcut also requires that its else branch does not store the value; a store there before the throw gets the existing "Store the value after the check" feedback.
+  - `classes-and-objects` (CO-SME-R7): an `if` test in `isLong()` that contains a unary `!` is reported as not supported and is not a try, whichever way round it returns; direct, literal-if, local, flag and explicitly inverted return cases keep their reviewed results.
+  - Two new value-free QA edges with incomplete fixtures pass on these bytes and fail on `1968d200`. The private proof (14 browser probes) has no mismatch here and three on `1968d200`. A runtime run of the accepted setter forms showed refused values leave the old field value unchanged, and the store-in-else form stores the refused value. It ran on JDK 17.0.12 because no JDK 25 is installed; the setter uses no Java 25 feature. The private staging and solutions were deleted after the proof.
+  - Not taken, by firstmate decision: EDU-SI-02, EDU-AM-02, EDU-CO-02 and specialist notes N1 to N3.
 - Open, owned by the next steps: focused education re-review of the three corrected pages and focused education and Java-SME rechecks of the corrected HTML bytes (T25 critic coverage is expected to fail until they land), and the video and PDF companions.
 
 ## 7. Formative GIFT banks (firstmate inbox 013)
