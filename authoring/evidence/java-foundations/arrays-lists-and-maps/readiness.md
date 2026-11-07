@@ -1,6 +1,6 @@
 # Readiness receipt: java-foundations/arrays-lists-and-maps
 
-Author correction checkpoint, 2026-11-07. This is author-owned readiness evidence, not critic or reconciliation evidence. Focused independent education and Java-SME review of changed bytes remains required.
+Author correction checkpoint, 2026-11-07. This is author-owned readiness evidence. Independent critic approval is recorded in section 7.
 
 ## 1. Scope, objectives and sources
 
@@ -43,4 +43,10 @@ Author correction checkpoint, 2026-11-07. This is author-owned readiness evidenc
 - `build.mjs --check`, progression regression, the 47-case JDK 25 differential and focused T01-T08, T14-T16, T18 and T20 checks pass on the final public bytes. Each `qa-receipt.json` is refreshed by its required private proof sequence.
 - Final page hashes: arrays `307d37a19eca73a9a9cfd0a7459826894fefdfd04118830e6f18c0c01f2adb63`; search `8767f831d479feff18f4816efbe23192625e7a57674acb18001feb3fa880bf57`; lists `b4b4cac18fbb3ef01a3ba4eb07c7ade8826d0447257c8fb2a954b0ea8d1dcd71`; maps `1a55acb8a9b3522198e2f2dea0a273b0cf0ae1861e183cf4bd76dad66596431b`.
 - Four fresh private proofs ran sequentially with mixed/all-fail refusal controls and retired staging. Arrays was validated at `aaf35c7b80c2914f1791c707512342ccb6ee1312` by `alm-a16-arrays-1794064089-success` with receipt child `a935c08b15bd3117c85f90c5ba6b9a0c73a3da11`; search at `a935c08b15bd3117c85f90c5ba6b9a0c73a3da11` by `alm-a16-search-1794064157-success` with child `147b37606a70b2de176d7490a340aa433695d4b6`; ArrayList at `147b37606a70b2de176d7490a340aa433695d4b6` by `alm-a16-arraylist-1794064184-success` with child `641c973acba41c2d92df55e869e4062937202ce8`; HashMap at `641c973acba41c2d92df55e869e4062937202ce8` by `alm-a16-hashmap-1794064212-success` with child `e6f944dc587684dc9b2351a2d16b2c6e3d2e7206`. Every child changes only its topic receipt and generated module lock.
-- Safe publication ancestry excludes `9448be20`, `60e83fcd` and `86d811ac`; all earlier receipts remain historical. **Current hard blockers before selected delivery validation:** the same education and Java specialist roles must micro-recheck only the A16 equality hunk, two named uncertainty controls, rebuilt embeds, readiness, safe ancestry and fresh receipts. All unchanged approvals and all four exact GIFT approvals transfer.
+- Safe publication ancestry excludes `9448be20`, `60e83fcd` and `86d811ac`; all earlier receipts remain historical. All unchanged approvals and all four exact GIFT approvals transfer.
+
+## 7. Independent critic recheck
+
+- After the supervisor-reconciled A16 correction, the independent education/privacy critic and the independent Java specialist critic each micro-rechecked the A16 equality hunk, the two named uncertainty controls, rebuilt embeds, readiness, safe ancestry and fresh receipts, and both approved exact checkpoint `8b1e98ffba39f3226e86b42c084f66ac140dc2fb` with no open findings.
+- Both recheck reports are external review reports; they are not committed project files. Each topic's value-free `critic-education.json` and `critic-sme.json` record only that approval, bound to the approved `artifact.html`, `artifact.md` and `artifact.gift` hashes, with no findings, so no reconciliation record is required.
+- No pending critic review blocks selected delivery validation.
