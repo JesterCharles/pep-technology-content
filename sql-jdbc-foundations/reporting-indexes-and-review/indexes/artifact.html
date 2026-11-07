@@ -732,7 +732,7 @@ function parse(src){var Tk=lex(src),i=0;
   for(;;){cps.push(at());
     if(pk()==='(')throw new Problem('limit','not supported in this practice editor: index expressions',at());
     var c=ident();cols.push(c);
-    if(pk()==='(')throw new Problem('limit','not supported in this practice editor: index expressions',at());
+    if(pk()==='('||pk()==='.')throw new Problem('limit','not supported in this practice editor: index expressions',at());
     if(lw()==='collate')throw new Problem('limit','not supported in this practice editor: COLLATE in an index column',at());
     if(lw()==='asc'||lw()==='desc')i++;
     if(lw()==='nulls')throw new Problem('limit','not supported in this practice editor: NULLS FIRST or LAST',at());
@@ -775,6 +775,7 @@ function run(){var src=ed.value,sig=signature(src),ix,n=A.stepOf('x1');clearTime
   var r=analyse(ix);$('#ed-print').textContent='CREATE INDEX\n\nIndex: '+ix.name+' on '+ix.table+' ('+ix.cols.join(', ')+')\n'+r.lines.join('\n');tab('out');
   $('#ed-status').textContent=r.ok?'Created: both conditions narrow the index read':'Created: the index does not fit both conditions';
   var msg=[{c:r.ok?'verdict ok':'verdict info',s:r.ok?'This index suits the query: the equality test and then the range test both narrow the part of the index that is read.':'PostgreSQL would create this index, but it does not let both conditions narrow the read. Read the analysis in Output.'}];
+  if(A.S.done.x1&&A.S.results.x1==='settled'){A.say([{c:'verdict set',s:(r.ok?'This run fits the query, but ':'This run does not fit the query, and ')+'this activity already settled after two misses. Restart activity is required before another run can count toward completion.'}]);return;}
   if(A.S.done.x1&&r.ok&&passedSource!==null&&sig===passedSignature){if(!matched){matched=true;msg.push({s:'This run matches the successful statement, so its recorded result stays complete.'});}A.say(msg);return;}
   A.attempt(n);
   if(r.ok){passedSource=src;passedSignature=sig;A.S.results.x1=miss?'correct-retry':'correct';A.say(msg,true);A.complete('x1');return;}
