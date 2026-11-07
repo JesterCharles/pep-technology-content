@@ -97,7 +97,7 @@ Private completed-input proof (`run.mjs --private-overlay`) runs from uncommitte
 
 ## 6. Hard blockers and handoff
 
-Private completed-input proof, the source-owned private overlay mechanism with staging retired after each run. **Historical, unpublished evidence:** the runs below were made under the pre-PR-59 contract at commits that exist only on the unpublished old branch and are not ancestors of the publication head. The current proof is the eight `-9` receipt chains in section 13.
+Private completed-input proof, the source-owned private overlay mechanism with staging retired after each run. **Historical, unpublished evidence:** the runs below were made under the pre-PR-59 contract at commits that exist only on the unpublished old branch and are not ancestors of the publication head. The current proof is the eight `-10` receipt chains in section 14; the `-9` chains in section 13 are superseded.
 
 - aggregate-functions and group-by-and-having passed at public commit `7b83635f5340c47389553e8029911fd0c3b5ea6c`, in runs `crud-<topic>-6`.
 - anti-joins-and-self-joins, filtering-and-sorting, handling-nulls-coalesce-and-case and inner-and-left-joins are byte-identical to their proof at `3d3e264ee7b24511e93b5bf2df9c9ad54d6a6ffa`, in runs `crud-<topic>-5`.
@@ -280,7 +280,7 @@ Both focused rechecks approve checkpoint `584aa77e0e984241068b518b6110a0816f3377
 - CEDU-19 and the other deferred LOWs remain deferred as previously reconciled.
 - The SME report's tooling follow-up remains outside this module: either escape plain-text alternatives in `md-from-html.mjs` or document that `data-static-alt` is Markdown source.
 
-## 13. SQL answer-sensitive declarations and current private proof (2026-11-06)
+## 13. SQL answer-sensitive declarations and private proof (2026-11-06, receipts superseded by section 14)
 
 PR 59 (`44171c7aa628e5dc7f4a0880e5e8b85f2c16bfcb`) added the `sql` answer-sensitive language. The publication branch merges that main non-destructively and then adds only these bytes.
 
@@ -311,3 +311,25 @@ PR 59 (`44171c7aa628e5dc7f4a0880e5e8b85f2c16bfcb`) added the `sql` answer-sensit
   - SME-P01 (medium, evidence-only) and SME-P02 (low, optional wording) are both accepted and corrected in this readiness refresh. The same edit folds in the education report's matching optional wording note.
   - All earlier teaching, SQL, static-alternative, Markdown and GIFT approvals transfer by exact region identity.
 - **Superseded statements.** Gate statements in sections 5 and 6 describe earlier checkpoints. At the current head, T01–T08, T14–T16, T18, T20, T24, T25 and browser T09–T13 pass.
+
+## 14. Private proof refresh after the diagnostic harness (2026-11-07)
+
+PR 63 (`3e43db3f`) changed the bound `authoring/tools/qa/harness.mjs` to name private proof failures, which made all eight `-9` receipts stale. PR 64 (`7e823906`) raised the CI gates timeout to 120 minutes. Main was merged non-destructively at `61cab0f25b85e21f627d20d3676275e280196988`. That merge changes only `ci.yml`, `qa.test.mjs` and `harness.mjs`; every module learner, catalog and evidence blob is identical to `d4a60a2a`, and the earlier receipt and recheck commits stay in ancestry.
+
+Each topic was then proved once at the current tip, and its receipt was added in the immediate child commit, which changes only that receipt and the module lock:
+
+| Topic | Proof commit | Run | Receipt commit |
+| --- | --- | --- | --- |
+| aggregate-functions | `61cab0f25b85e21f627d20d3676275e280196988` | `crud-aggregate-functions-10` | `9ab9b686` |
+| anti-joins-and-self-joins | `9ab9b686` | `crud-anti-joins-and-self-joins-10` | `7f146914` |
+| filtering-and-sorting | `7f146914` | `crud-filtering-and-sorting-10` | `f7ab2924` |
+| group-by-and-having | `f7ab2924` | `crud-group-by-and-having-10` | `576a27f0` |
+| handling-nulls-coalesce-and-case | `576a27f0` | `crud-handling-nulls-coalesce-and-case-10` | `32725a03` |
+| inner-and-left-joins | `32725a03` | `crud-inner-and-left-joins-10` | `77a3d976` |
+| insert-update-and-delete | `77a3d976` | `crud-insert-update-and-delete-10` | `041a1c19` |
+| seeding-sample-data | `041a1c19` | `crud-seeding-sample-data-10` | `0db8430eecdb1cac99e00cfe9f510b1c616cfeca` |
+
+- **Bindings.** The five bound files are unchanged except the harness, now sha256 `35651c1b756540af…`. T08 (`6fcb012d…`) and the Python scanner (`51f8a1e5…`) are unchanged. All five are byte-identical from each P to the head.
+- **Results.** Every run passed all four private routes, with both declared tasks reading `completed=true`, `credit=1` and `grade=1`, and the page complete. At each topic's own P, a mixed run (activity 3 settled wrong) and an all-fail run were refused 16/16 by the runner's declared-task gate, with `[route=success phase=declared-task-state ...]` naming the failing task. For those control runs the author page-completion postcondition was removed and overlay completion was weakened to `data-pep-route-settled=true`, so only the runner's gate could refuse them.
+- **Staging.** Inputs and overlays were held 0600 in a 0700 directory outside the repository, and each topic's files were deleted before its receipt. The directory was removed after the chain. A scan of the new commits' patches, the module tree and the run logs found no exact, whitespace-collapsed, base64, sha256, percent-encoded or JSON-escaped form of any private input.
+- **Learner bytes.** No learner byte changed, so the independent education and SQL approvals and rechecks transfer unchanged by exact identity. Focused T06 and T25 pass at the chain head.
