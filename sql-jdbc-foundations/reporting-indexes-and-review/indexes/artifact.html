@@ -783,7 +783,10 @@ function run(){var src=ed.value,sig=signature(src),ix,n=A.stepOf('x1');clearTime
   msg.push({s:'One more run that misses settles this activity. Use the analysis and the hints, then run again.'});A.say(msg);}
 function resetCode(){ed.value=STARTER;gutter();$('#ed-prob').textContent='';$('#ed-prob').appendChild(A.el('p','pep-editor__empty','Not run yet. Edit the statement, then press Run.'));$('#ed-print').textContent='(no output yet)';tab('prob');$('#ed-status').textContent='Not run yet';}
 P.init=function(api){A=api;ed=$('#ed');
-  ed.addEventListener('input',function(){gutter();clearTimeout(editTimer);editTimer=setTimeout(function(){revokeForEdit(signature(ed.value));},200);});$('#run').addEventListener('click',run);$('#ed-reset').addEventListener('click',resetCode);
+  ed.addEventListener('input',function(){gutter();clearTimeout(editTimer);var sig=signature(ed.value);
+    if(sig===passedSignature)return;
+    if(/(?:^|[^-])-$|\/$|\/\*(?![\s\S]*\*\/)[\s\S]*$/.test(ed.value))editTimer=setTimeout(function(){revokeForEdit(signature(ed.value));},200);
+    else revokeForEdit(sig);});$('#run').addEventListener('click',run);$('#ed-reset').addEventListener('click',resetCode);
   $('#tab-prob').addEventListener('click',function(){tab('prob');});$('#tab-out').addEventListener('click',function(){tab('out');});
   A.$$('[role="tab"]').forEach(function(t){t.addEventListener('keydown',function(ev){if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){var o=t.id==='tab-prob'?'out':'prob';tab(o);$('#tab-'+o).focus();ev.preventDefault();}});});
   resetCode();};
