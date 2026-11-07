@@ -74,6 +74,8 @@ const CASES = {
       ["unsupported in-scope parameter used in an unmodelled comparison", "static boolean hasRepeat(List<Integer> nums) {\n    if (nums == null) return true;\n    return false;\n}"],
       ["unsupported declared collection used in an unmodelled comparison", "static boolean hasRepeat(List<Integer> nums) {\n    Set<Integer> seen = new HashSet<Integer>();\n    if (seen == null) return true;\n    return false;\n}"],
       ["unsupported in-scope parameter passed to contains", "static boolean hasRepeat(List<Integer> nums) {\n    Set<Integer> seen = new HashSet<Integer>();\n    return seen.contains(nums);\n}"],
+      ["legal nums.add receiver mistake stays outside the bounded parser", "static boolean hasRepeat(List<Integer> nums) {\n    return nums.add(1);\n}"],
+      ["legal nums.contains receiver mistake stays outside the bounded parser", "static boolean hasRepeat(List<Integer> nums) {\n    return nums.contains(1);\n}"],
       ["compiler-proven unknown plain identifier", "static boolean hasRepeat(List<Integer> nums) {\n    for (Integer n : nums) {\n        if (n == mystery) return true;\n    }\n    return false;\n}"]
     ],
     "refused": [
@@ -161,6 +163,8 @@ const CASES = {
       ["unsupported generic List local declaration", "static void add(Visit v) {\n    List<Integer> l = times.get(v.name());\n}"],
       ["unsupported in-scope parameter returned from a numeric combiner", "static void add(Visit v) {\n    total.merge(v.name(), v.minutes(), (a, b) -> v);\n}"],
       ["unsupported Object local declaration", "static void add(Visit v) {\n    Object w = v;\n}"],
+      ["legal visits assignment fallback stays outside the bounded parser", "static void add(Visit v) {\n    visits = null;\n}"],
+      ["legal visits lambda fallback stays outside the bounded parser", "static void add(Visit v) {\n    total.merge(v.name(), v.minutes(), (a, b) -> visits);\n}"],
       ["compiler-proven unknown plain map identifier", "static void add(Visit v) {\n    mystery = 1;\n}"],
       ["compiler-proven unknown plain combiner identifier", "static void add(Visit v) {\n    total.merge(v.name(), v.minutes(), (a, b) -> mystery);\n}"]
     ],
@@ -241,7 +245,8 @@ try {
       const attemptsBefore = await section.getAttribute("data-pep-attempts");
       await page.locator("#ed-run").click();
       const state = { credit: await section.getAttribute("data-pep-credit"), completed: await section.getAttribute("data-pep-completed"),
-        settled: await section.getAttribute("data-pep-settled"), status: await page.locator("#ed-status").innerText(),
+        settled: await section.getAttribute("data-pep-settled"), grade: await section.getAttribute("data-pep-grade"),
+        cont: await section.getAttribute("data-pep-continue"), status: await page.locator("#ed-status").innerText(),
         attemptsBefore, attemptsAfter: await section.getAttribute("data-pep-attempts"), problems: await page.locator("#ed-prob").innerText() };
       await page.locator("#reset").click();
       if (await page.locator('input[name="ed-conf"]').count()) await page.locator('input[name="ed-conf"][value="medium"]').check();
@@ -253,6 +258,10 @@ try {
       if (/valid|legal|unsupported/.test(name) && !/Not supported/.test(state.problems)) failures.push(`${topic}: legal-unmodeled case "${name}" did not use truthful Not supported Problems text (${state.problems})`);
       if (/compiler-proven unknown plain/.test(name) && (!/Error/.test(state.problems) || !/cannot find symbol/.test(state.problems))) failures.push(`${topic}: known-undeclared case "${name}" did not use the bounded compiler diagnostic (${state.problems})`);
       if (state.attemptsAfter !== state.attemptsBefore) failures.push(`${topic}: unassessed case "${name}" consumed an assessed attempt`);
+      if (/(?:receiver mistake|visits .* fallback)/.test(name) && JSON.stringify({ attempts: state.attemptsAfter, settled: state.settled, completed: state.completed, credit: state.credit, grade: state.grade, cont: state.cont }) !==
+          JSON.stringify({ attempts: "0", settled: "false", completed: "false", credit: "0", grade: "0", cont: "false" })) {
+        failures.push(`${topic}: legal neutral control "${name}" mutated activity state or credit`);
+      }
     }
     for (const [name, code] of spec.assessed || []) {
       const state = await run(code, spec.stated);

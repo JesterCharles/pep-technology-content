@@ -801,13 +801,13 @@ function mapCheck(src){
   var JAVA_WORD={true:1,false:1,null:1,class:1,interface:1,record:1,enum:1,extends:1,super:1,new:1,this:1,return:1,if:1,else:1,for:1,while:1,do:1,switch:1,case:1,default:1,break:1,continue:1,try:1,catch:1,finally:1,throw:1,throws:1,public:1,private:1,protected:1,static:1,final:1,abstract:1,void:1,boolean:1,byte:1,short:1,int:1,long:1,float:1,double:1,char:1,var:1,instanceof:1,package:1,import:1,assert:1,goto:1,const:1,synchronized:1,native:1,transient:1,volatile:1,strictfp:1,_:1};
   var MAPS=['count','total','times'];
   function unknownVar(v,next,known){if(!known&&/^[A-Za-z_$][\w$]*$/.test(v)&&!JAVA_WORD[v]&&next!=='.'&&next!=='(')throw Err('cannot find symbol: variable '+v);throw Lim('this Java form is not supported in this practice editor');}
-  function mapName(){var m=pk(),next=pk(1);if(MAPS.indexOf(m)<0){if(next==='.'&&['put','merge','getOrDefault','computeIfAbsent','get'].indexOf(pk(2))<0)throw Lim('this practice editor runs put, getOrDefault, merge, computeIfAbsent and get(...).add on the three maps');unknownVar(m,next,m==='v'||next!=='=');}i++;return m;}
+  function mapName(){var m=pk(),next=pk(1);if(MAPS.indexOf(m)<0){if(next==='.'&&['put','merge','getOrDefault','computeIfAbsent','get'].indexOf(pk(2))<0)throw Lim('this practice editor runs put, getOrDefault, merge, computeIfAbsent and get(...).add on the three maps');unknownVar(m,next,m==='v'||m==='visits'||next!=='=');}i++;return m;}
   function key(){eatAll(['v','.','name','(',')']);}
   function val(){if(/^\d+$/.test(pk())){var n=Number(pk());i++;return {k:'int',v:n};}eatAll(['v','.','minutes','(',')']);return {k:'min'};}
   function comb(){if(pk()==='Integer'){eatAll(['Integer','::']);var f=ident();if(f!=='sum'&&f!=='max'&&f!=='min')throw Lim('use Integer::sum or a lambda (a, b) -> a + b');return f;}
     eat('(');var a=ident();eat(',');var b=ident();eat(')');eat('->');var x=ident();
     if(pk()==='+'){i++;var y=ident();if(x!==a&&x!==b)unknownVar(x,'+',x==='v'||MAPS.indexOf(x)>=0);if(y!==a&&y!==b)unknownVar(y,pk(),y==='v'||MAPS.indexOf(y)>=0);if([x,y].sort().join()!==[a,b].sort().join())throw Lim('use the two lambda parameters in the combiner');return 'sum';}
-    if(x===b)return 'second';if(x===a)return 'first';unknownVar(x,pk(),x==='v'||MAPS.indexOf(x)>=0);}
+    if(x===b)return 'second';if(x===a)return 'first';unknownVar(x,pk(),x==='v'||x==='visits'||MAPS.indexOf(x)>=0);}
   function stmt(){var line=ln(),m=mapName();eat('.');var op=ident(),s={m:m,line:line};
     if(op==='put'){eat('(');key();eat(',');
       if(pk()===m&&pk(1)==='.'&&pk(2)==='getOrDefault'){i+=3;eat('(');key();eat(',');var d=val();eat(')');var plus=null;if(pk()==='+'){i++;plus=val();}eat(')');eat(';');s.k='gd';s.def=d;s.plus=plus;return s;}
