@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-/* Behavioural regression for the completion correction on all four pages. Two runs of edited code, including
-   identical edits, unlock unlimited ungraded navigation but never completion or credit. Finishing the final
-   activity while code remains open names and links that activity and keeps the recap hidden. A synthetic engine
-   result (no learner answer) then proves completion, and Restart makes completion stale until another pass.
-   Every typed value is public and non-answer-bearing; no completed solution is typed.
+/* Behavioural regression for the completion correction on all four pages. The attempts field is only an
+   ungraded navigation counter: comment/format-only, missing-input, compile-error and unsupported runs may open
+   navigation but never completion, grade or credit and never consume an assessment allowance. Finishing the
+   final activity while code remains open names and links that activity and keeps the recap hidden. A synthetic
+   engine result (no learner answer) then proves completion, and Restart makes completion stale until another
+   pass. Every typed value is public and non-answer-bearing; no completed solution is typed.
    Usage: node authoring/evidence/java-foundations/arrays-lists-and-maps/page-build/progression-regression.mjs */
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -76,19 +77,22 @@ try {
     let s = await state(p, n);
     if (s.attempts !== "0" || !/Not run yet/.test(s.feedback)) local.push(`${label("unchanged starter")}: counted as an attempt`);
     never(label("unchanged starter"), s, local);
-    await run(p, "this is not java");
+    await run(p, `${starter}// navigation-only comment`);
     s = await state(p, n);
-    never(label("non-runnable run 1"), s, local);
-    if (s.cont !== "false") local.push(`${label("non-runnable run 1")}: Continue available after one try`);
-    await run(p, "this is not java");
+    never(label("comment-only starter run"), s, local);
+    if (s.attempts !== "1" || s.cont !== "false") local.push(`${label("comment-only starter run")}: navigation counter/frontier is wrong`);
+    await run(p, starter.replace("\n", "\n\n"));
     s = await state(p, n);
-    never(label("identical edited run 2"), s, local);
-    if (s.cont !== "true" || +s.unlocked <= n) local.push(`${label("identical edited run 2")}: no ungraded navigation after two edited runs`);
-    if (!/not marked done/.test(s.feedback)) local.push(`${label("incorrect run 2")}: feedback does not say the activity stays open`);
-    if (!/still open/.test(s.progress)) local.push(`${label("incorrect run 2")}: progress does not count it as still open`);
-    await run(p, "still ; not java");
-    s = await state(p, n);
-    never(label("non-runnable run 3"), s, local);
+    never(label("format-only starter run"), s, local);
+    if (s.attempts !== "2" || s.cont !== "true" || +s.unlocked <= n) local.push(`${label("format-only starter run")}: no ungraded navigation after two navigation-only runs`);
+    if (!/not marked done/.test(s.feedback)) local.push(`${label("format-only starter run")}: feedback does not separate navigation from completion`);
+    if (!/still open/.test(s.progress)) local.push(`${label("format-only starter run")}: progress does not count it as still open`);
+    for (const [kind, code] of [["missing-input", ""], ["compile-error", "this is not java"], ["unsupported", "double value = 1;"]]) {
+      await run(p, code);
+      s = await state(p, n);
+      never(label(`${kind} run`), s, local);
+      if (s.cont !== "true" || +s.unlocked <= n) local.push(`${label(`${kind} run`)}: ungraded navigation access was lost`);
+    }
     await act(p, next);
     if (entry.between) await act(p, entry.between);
     await act(p, [{ check: `input[name=apply-a][value=${entry.apply}]` }, { check: "input[name=conf][value=low]" }, { click: "#apply-check" }]);

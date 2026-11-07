@@ -79,7 +79,7 @@ P.type=function(){var t=this.peek(),ty;
         if(this.is('>')){throw limit(t,'The diamond <> belongs after new, as in new '+(/Map/.test(t.value)?'HashMap':'ArrayList')+'<>(); the declared type names its element type.');}
         do{var at=this.peek();
           if(at.type==='kw'&&(at.value==='int'||at.value==='boolean')&&!(this.peek(1).value==='['&&this.peek(2).value===']')){throw cerr(at,'unexpected type: required reference, found '+at.value+'. Type arguments may be reference types or wildcards; here use '+(at.value==='int'?'Integer':'Boolean')+', a reference type, instead of primitive '+at.value+'.');}
-          if(at.type==='id'&&/^(double|long|char|float|short|byte)$/.test(at.value)){throw cerr(at,'unexpected type: required reference, found '+at.value+'. Type arguments may be reference types or wildcards, not primitives.');}
+          if(at.type==='id'&&/^(double|long|char|float|short|byte)$/.test(at.value)){if(this.peek(1).value==='['&&this.peek(2).value===']'){throw limit(at,'Not supported in this practice editor: array reference types as generic type arguments. This is legal Java.');}throw cerr(at,'unexpected type: required reference, found '+at.value+'. Type arguments may be reference types or wildcards, not primitives.');}
           var a=this.type();if(a.arr){throw limit(at,'Not supported in this practice editor: array reference types as generic type arguments. This is legal Java.');}args.push(a);}while(this.eat(','));
         if(this.is('>>')){this.t[this.i]={type:'op',value:'>',text:'>',line:this.peek().line,col:this.peek().col+1};}else{this.want('>','to close the type arguments');}
         var need=/Map/.test(t.value)?2:1;if(args.length!==need){throw cerr(t,t.value+' takes '+need+' type argument'+(need>1?'s':'')+'.');}
@@ -195,6 +195,7 @@ P.newExpr=function(){var t=this.next(),ty=this.peek();
   if(ty.type==='id'&&/^(ArrayList|HashMap)$/.test(ty.value)){this.next();
     if(this.is('<')){this.next();if(!this.is('>')){var a=this.peek();
         if(a.type==='kw'&&/^(int|boolean)$/.test(a.value)){if(this.peek(1).value==='['&&this.peek(2).value===']'){throw limit(a,'Not supported in this practice editor: array reference types as generic type arguments. This is legal Java.');}throw cerr(a,'unexpected type: required reference, found '+a.value+'. Type arguments may be reference types or wildcards; here use '+(a.value==='int'?'Integer':'Boolean')+', a reference type, instead of primitive '+a.value+'.');}
+        if(a.type==='id'&&/^(double|long|char|float|short|byte)$/.test(a.value)&&this.peek(1).value==='['&&this.peek(2).value===']'){throw limit(a,'Not supported in this practice editor: array reference types as generic type arguments. This is legal Java.');}
         var depth=1;while(depth>0&&this.peek().type!=='eof'){var x=this.next();if(x.value==='<'){depth++;}else if(x.value==='>'){depth--;}else if(x.value==='>>'){depth-=2;}}}
       else{this.next();}}
     else{throw limit(ty,'Write new '+ty.value+'<>() with the diamond <> in this practice editor.');}
@@ -342,13 +343,13 @@ I.staticType=function(e,sc){
       if(e.name==='remove'&&/List/.test(o.ty.base)){return e.args.length&&this.staticType(e.args[0],sc)==='int'?tyName(o.ty.args[0]):'boolean';}
       if(/^(size|indexOf)$/.test(e.name)&&/List/.test(o.ty.base)){return 'int';}
       if(/^(get|set)$/.test(e.name)&&/List/.test(o.ty.base)){return tyName(o.ty.args[0]);}
-      if(e.name==='getOrDefault'&&/Map/.test(o.ty.base)){return tyName(o.ty.args[1]);}}}
+      if(/^(get|getOrDefault)$/.test(e.name)&&/Map/.test(o.ty.base)){return tyName(o.ty.args[1]);}}}
   if(e.k==='index'){var arr=e.a.k==='name'?sc.find(e.a.name):null;if(arr&&arr.ty.arr){return tyName(arr.ty.el);}}
   return null;};
 I.equality=function(e,a,b,sc){var ta=this.staticType(e.l,sc),tb=this.staticType(e.r,sc);
   if(typeof a==='string'&&typeof b==='string'||ta==='String'&&tb==='String'){throw new Stop('Comparing two Strings with '+e.op+' compares object references, not text. Use equals, as in a.equals(b); this practice editor does not model references.',e.line);}
   if(ta==='Integer'&&tb==='Integer'){throw new Stop('Comparing two Integer objects with '+e.op+' compares references, which can be false for equal values above 127. Use equals, or compare int values; this practice editor does not model references.',e.line);}
-  if(a===null||b===null){if((ta==='int'&&b===null)||(tb==='int'&&a===null)){throw new JavaThrow('NullPointerException','Comparing a null Integer with an int unboxes the null.',e.line);}return a===b;}
+  if(a===null||b===null){if((ta==='int'&&b===null)||(tb==='int'&&a===null)){throw new Stop('Java would reject this at compile time: operator '+e.op+' cannot compare an int with null.',e.line);}return a===b;}
   if(typeof a==='number'&&typeof b==='number'||typeof a==='boolean'&&typeof b==='boolean'){return a===b;}
   if(typeof a==='object'&&typeof b==='object'){return a===b;}
   throw new Stop('Java would reject this at compile time: these two values cannot be compared with '+e.op+'.',e.line);};

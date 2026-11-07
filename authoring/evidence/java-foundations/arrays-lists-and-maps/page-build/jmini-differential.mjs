@@ -27,6 +27,10 @@ int[] s = new int[3]; s[1] = 7; System.out.println(s[0] + " " + s[1]);`},
 stock.put("apple", 3); stock.put("apple", 5);
 System.out.println(stock.get("apple") + " " + stock.get("pear"));
 System.out.println(stock.containsKey("pear") + " " + stock.getOrDefault("pear", 0));`},
+{name:'map-get-value-static-type',code:`Map<Integer, Integer> stock = new HashMap<>(); stock.put(1, 200);
+System.out.println(stock.get(1).equals(200) + " " + (stock.get(1) == 200));
+List<Integer> values = new ArrayList<>(); values.add(100); values.add(200);
+boolean removed = values.remove(stock.get(1)); System.out.println(removed + " " + values);`},
 {name:'array-bounds',code:`int[] t = {12, 15, 9};
 System.out.println(t[3]);`},
 {name:'null-unboxing',code:`Map<String, Integer> c = new HashMap<>();
@@ -75,8 +79,21 @@ Integer removed = values.remove(values.size() - 1); System.out.println(removed +
 Integer removed = values.remove(i + 1); System.out.println(removed + " " + values);`},
 {name:'non-goal-list-remove-computed-indexof-element',code:`List<Integer> values = new ArrayList<>(); values.add(4); values.add(7);
 Integer removed = values.remove(values.indexOf(7)); System.out.println(removed + " " + values);`},
-{name:'non-goal-legal-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<int[]> values = new ArrayList<>();
-System.out.println(values.size());`},
+{name:'non-goal-int-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<int[]> values = new ArrayList<>();`},
+{name:'non-goal-boolean-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<boolean[]> values = new ArrayList<>();`},
+{name:'non-goal-double-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<double[]> values = new ArrayList<>();`},
+{name:'non-goal-long-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<long[]> values = new ArrayList<>();`},
+{name:'non-goal-char-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<char[]> values = new ArrayList<>();`},
+{name:'non-goal-float-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<float[]> values = new ArrayList<>();`},
+{name:'non-goal-short-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<short[]> values = new ArrayList<>();`},
+{name:'non-goal-byte-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<byte[]> values = new ArrayList<>();`},
+{name:'non-goal-explicit-primitive-array-constructor-unsupported',expect:'unsupported',code:`List<double[]> values = new ArrayList<double[]>();`},
+{name:'non-goal-primitive-null-equality',expect:'model-limit',code:`int value = 1;
+System.out.println(value == null);`},
+{name:'non-goal-computed-int-null-equality',expect:'model-limit',code:`List<Integer> values = new ArrayList<>();
+System.out.println(values.size() != null);`},
+{name:'non-goal-boxed-null-equality-control',code:`Integer value = 1;
+System.out.println(value == null);`},
 ];
 const pre='import java.util.*;\npublic class T { public static void main(String[] args) {\n';
 let fails=0;
@@ -91,6 +108,7 @@ cases.forEach((entry,i)=>{
   else { const r=J.run(p.prog,null); mine=J.printed(r.out)+(r.status==='exception'?'EXC java.'+(/Concurrent/.test(r.err.type)?'util.':'lang.')+r.err.type:r.status==='stopped'?'STOP '+r.err.msg:''); }
   const ok=entry.expect==='compile-error' ? realCompileError&&mineCompileError
     : entry.expect==='unsupported' ? !realCompileError&&p.problems.length===1&&p.problems[0].kind!=='error'&&/Not supported in this practice editor/.test(p.problems[0].msg)
+    : entry.expect==='model-limit' ? realCompileError&&!p.problems.length&&/^STOP Java would reject this at compile time:/.test(mine)
     : !realCompileError&&!p.problems.length&&real.trim()===mine.trim();
   if(!ok)fails++;
   console.log(`#${i} ${entry.name} ${ok?'OK':'DIFF'}\n real: ${JSON.stringify(real)}\n mine: ${JSON.stringify(mine)}`);
