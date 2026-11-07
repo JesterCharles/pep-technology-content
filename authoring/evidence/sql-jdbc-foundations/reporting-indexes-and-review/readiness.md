@@ -8,7 +8,7 @@ All six topics have one standalone HTML page in the canonical learner tree, with
 
 ## 2. Shared template and behavior
 
-The common page engine is byte-identical across all six HTML files: sha256 `7e86c0c17347e70fe546b508d132195bedf70ba1a9bb069d50f07788904bdc24`. It preserves activity state across navigation, restarts only the current activity, distinguishes settled access from successful completion, shows an incomplete recap after a settled miss, and restores completion only after a genuine pass. The indexes checker additionally invalidates a credited pass immediately after a token-meaningful edit, preserves byte-identical and token-equivalent no-op edits, and locks a settled failed run until Restart without changing its attempts, zero credit or zero grade. Page-specific code is limited to page data plus the indexes checker and JDBC injection explorer.
+The common page engine is byte-identical across all six HTML files: sha256 `01da5cfdf19db5f599122d2c7164af24cfa0679a18fa70b4768ca2be89f25b9c`. It preserves activity state across navigation, restarts only the current activity, distinguishes settled access from successful completion, shows an incomplete recap after a settled miss, and restores completion only after a genuine pass. The indexes checker additionally invalidates a credited pass immediately after a token-meaningful edit, preserves byte-identical and token-equivalent no-op edits, and locks a settled failed run until Restart without changing its attempts, zero credit or zero grade. Page-specific code is limited to page data plus the indexes checker and JDBC injection explorer.
 
 ## 3. Sources and technical proof
 
