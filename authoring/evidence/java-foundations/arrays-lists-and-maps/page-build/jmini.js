@@ -355,7 +355,9 @@ I.equality=function(e,a,b,sc){var ta=this.staticType(e.l,sc),tb=this.staticType(
   if(tb==='int'&&ta==='Integer'){a=this.toInt(a,e.line,'The Integer value');}
   if(ta==='boolean'&&tb==='Boolean'){b=this.toBool(b,e.line);}
   if(tb==='boolean'&&ta==='Boolean'){a=this.toBool(a,e.line);}
-  if(a===null||b===null){return a===b;}
+  if(a===null||b===null){
+    if((ta==='int'&&b===null&&tb===null)||(tb==='int'&&a===null&&ta===null)||(ta==='boolean'&&b===null&&tb===null)||(tb==='boolean'&&a===null&&ta===null)){throw limit(e.tok,'This practice editor cannot determine the boxed static type of the null value, so it cannot determine whether Java unboxes it in this comparison.');}
+    return a===b;}
   if(typeof a==='number'&&typeof b==='number'||typeof a==='boolean'&&typeof b==='boolean'){return a===b;}
   if(typeof a==='object'&&typeof b==='object'){return a===b;}
   throw new Stop('Java would reject this at compile time: these two values cannot be compared with '+e.op+'.',e.line);};

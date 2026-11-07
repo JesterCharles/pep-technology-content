@@ -102,6 +102,10 @@ System.out.println(values.get("missing") == 1);`},
 System.out.println(value == null);`},
 {name:'non-goal-null-boolean-versus-primitive-unboxing',code:`Boolean value = null;
 System.out.println(value == true);`},
+{name:'non-goal-nested-generic-call-null-versus-int-unknown-static-type',expect:'unknown-static-type',code:`List<Map<String, Integer>> values = new ArrayList<>(); Map<String, Integer> value = new HashMap<>(); values.add(value);
+System.out.println(values.get(0).get("missing") == 1);`},
+{name:'non-goal-ternary-null-integer-versus-int-unknown-static-type',expect:'unknown-static-type',code:`Integer missing = null; int expected = 1;
+System.out.println((true ? missing : missing) == expected);`},
 ];
 const pre='import java.util.*;\npublic class T { public static void main(String[] args) {\n';
 let fails=0;
@@ -113,10 +117,11 @@ cases.forEach((entry,i)=>{
   }catch(e){realCompileError=true;real='COMPILE';}
   const p=J.parse(entry.code,'statements'); let mine,mineCompileError=false;
   if(p.problems.length){mineCompileError=p.problems.some((problem)=>problem.kind==='error');mine='PROBLEM';}
-  else { const r=J.run(p.prog,null); mine=J.printed(r.out)+(r.status==='exception'?'EXC java.'+(/Concurrent/.test(r.err.type)?'util.':'lang.')+r.err.type:r.status==='stopped'?'STOP '+r.err.msg:''); }
+  else { const r=J.run(p.prog,null); mine=J.printed(r.out)+(r.status==='exception'?'EXC java.'+(/Concurrent/.test(r.err.type)?'util.':'lang.')+r.err.type:r.status==='stopped'?'STOP '+r.err.msg:r.status==='problem'?'LIMIT '+r.problems[0].msg:''); }
   const ok=entry.expect==='compile-error' ? realCompileError&&mineCompileError
     : entry.expect==='unsupported' ? !realCompileError&&p.problems.length===1&&p.problems[0].kind!=='error'&&/Not supported in this practice editor/.test(p.problems[0].msg)
     : entry.expect==='model-limit' ? realCompileError&&!p.problems.length&&/^STOP Java would reject this at compile time:/.test(mine)
+    : entry.expect==='unknown-static-type' ? !realCompileError&&/EXC java\.lang\.NullPointerException/.test(real)&&!p.problems.length&&/^LIMIT This practice editor cannot determine the boxed static type of the null value/.test(mine)
     : !realCompileError&&!p.problems.length&&real.trim()===mine.trim();
   if(!ok)fails++;
   console.log(`#${i} ${entry.name} ${ok?'OK':'DIFF'}\n real: ${JSON.stringify(real)}\n mine: ${JSON.stringify(mine)}`);
