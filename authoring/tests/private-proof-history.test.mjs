@@ -168,3 +168,100 @@ test("existing SQL/JDBC private-success receipts stay green under the history ru
   assert.ok(proofs.length > 0, "R1 needs existing SQL/JDBC private-success receipts");
   assert.deepEqual(await validatePrivateProofs(repoRoot, evidence), [], "R1 SQL/JDBC receipts");
 });
+
+// Reporting shape: the original R is followed by a later truthful metadata-only receipt correction
+// that does not change the runId count, so it is not an introduction and is not compared to R.
+test("private-proof history accepts a later metadata-only correction and still verifies its bindings", async () => {
+  const h = await buildHistory();
+  try {
+    const writeCorrection = async (mutate) => {
+      git(h.root, "checkout", "-q", "--detach", h.H);
+      const corrected = structuredClone(h.proof);
+      corrected.environment = { node: "24", provenance: "proof-time environment historically unavailable" };
+      mutate(corrected);
+      await put(h.root, RECEIPT, `${JSON.stringify({ privateSuccessProof: corrected }, null, 2)}\n`);
+      git(h.root, "add", ".");
+      git(h.root, "commit", "-qm", "clarify proof provenance");
+      return git(h.root, "rev-parse", "HEAD");
+    };
+    const C = await writeCorrection(() => {});
+    assert.deepEqual(await evaluate(h.root, C, [C]), [], "metadata-only correction after the original introduction");
+
+    const tampered = await writeCorrection((proof) => { proof.publicBindings[0].reviewedSha256 = "0".repeat(64); });
+    assert.deepEqual(
+      await evaluate(h.root, tampered, [tampered]),
+      [`private-success commit blob differs from receipt: ${OWNER}/artifact.html`],
+      "a later correction cannot change protected bindings",
+    );
+
+    // Reporting-style replay of the corrected chain: the copied introduction equals R, but the edge is gone.
+    git(h.root, "checkout", "-q", "--detach", h.B);
+    git(h.root, "commit", "-q", "--allow-empty", "-m", "newer main");
+    git(h.root, "cherry-pick", `${h.B}..${C}`);
+    const F = git(h.root, "rev-parse", "HEAD");
+    assert.deepEqual(await evaluate(h.root, F, [F, C]), [MSG.ancestor, MSG.original], "replayed corrected chain");
+    assert.deepEqual(await evaluate(h.root, C, [C, F]), [], "the accepted source is unaffected by an identical replay ref");
+
+    // A second introduction with a genuinely changed proof object still fails after a correction.
+    git(h.root, "checkout", "-q", "--detach", h.B);
+    git(h.root, "read-tree", "-u", "--reset", C);
+    const changed = JSON.parse(await readFile(path.join(h.root, RECEIPT), "utf8"));
+    changed.privateSuccessProof.result = "different";
+    await put(h.root, RECEIPT, `${JSON.stringify(changed, null, 2)}\n`);
+    git(h.root, "add", ".");
+    git(h.root, "commit", "-qm", "changed copy");
+    const X = git(h.root, "rev-parse", "HEAD");
+    spawnSync("git", ["merge", "--no-ff", "--no-commit", C], { cwd: h.root, encoding: "utf8" });
+    git(h.root, "checkout", C, "--", RECEIPT);
+    git(h.root, "commit", "-qm", "resolve to corrected receipt");
+    const head = git(h.root, "rev-parse", "HEAD");
+    assert.deepEqual(await evaluate(h.root, head, [head]), [`${MSG.reused}: ${X}`], "changed second introduction");
+  } finally {
+    await rm(h.root, { recursive: true, force: true });
+  }
+});
+
+// Control on the actual preserved Reporting graph. Its commits are local preserved refs, not on the
+// forge, so this runs only where those objects exist (read through alternates, never cloned or moved).
+const REPORTING = {
+  receipt: "authoring/evidence/sql-jdbc-foundations/reporting-indexes-and-review/indexes/qa-receipt.json",
+  proof: "4f9906d191f5c75f5c6dd137094de006782267cc",
+  original: "7520b962f4cf80c1240fec418dc9f010ec9590c1",
+  source: "de968705cdd80bb67c108ede0e3d170247a0c3b9",
+  replay: "b64f2961877fdf543dca1c3537a1fd156f150cba",
+};
+test("actual Reporting source passes and its copied-receipt replay fails", async (t) => {
+  const repoRoot = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
+  const present = Object.entries(REPORTING).filter(([key]) => key !== "receipt")
+    .every(([, commit]) => spawnSync("git", ["cat-file", "-e", `${commit}^{commit}`], { cwd: repoRoot }).status === 0);
+  if (!present) return t.skip("preserved Reporting control objects are not in this repository");
+  const common = spawnSync("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], { cwd: repoRoot, encoding: "utf8" }).stdout.trim();
+  const root = await mkdtemp(path.join(os.tmpdir(), "pep-reporting-control-"));
+  try {
+    git(root, "init", "-q");
+    await writeFile(path.join(root, ".git/objects/info/alternates"), `${path.join(common, "objects")}\n`);
+    const proofAt = (commit) => JSON.parse(git(root, "show", `${commit}:${REPORTING.receipt}`)).privateSuccessProof;
+    const original = proofAt(REPORTING.original);
+    const current = proofAt(REPORTING.source);
+    assert.equal(git(root, "rev-parse", `${REPORTING.original}^`), REPORTING.proof);
+    assert.equal(original.runId, current.runId);
+    assert.notDeepEqual(current, original, "the source carries a later metadata-only correction");
+    assert.deepEqual(current.publicBindings, original.publicBindings, "protected bindings are unchanged");
+    assert.deepEqual([current.commit, current.record, current.result], [original.commit, original.record, original.result]);
+    const run = async (head, refs) => {
+      git(root, "checkout", "-q", "-f", "--detach", head);
+      for (const ref of git(root, "for-each-ref", "--format=%(refname)").split("\n").filter(Boolean)) git(root, "update-ref", "-d", ref);
+      refs.forEach((commit, index) => git(root, "update-ref", `refs/heads/ref-${index}`, commit));
+      return (await validatePrivateProofs(root, path.join(root, "authoring/evidence/sql-jdbc-foundations"))).map((item) => item.message);
+    };
+    assert.deepEqual(await run(REPORTING.source, [REPORTING.source]), [], "accepted source");
+    assert.deepEqual(await run(REPORTING.source, [REPORTING.source, REPORTING.replay]), [], "accepted source with replay ref");
+    const replayCopy = git(root, "log", "--full-history", "--format=%H", "-S", original.runId, REPORTING.replay, "--", REPORTING.receipt);
+    assert.notEqual(replayCopy, REPORTING.original);
+    assert.deepEqual(proofAt(replayCopy), original, "the replay copies the original object; only its edge is gone");
+    assert.deepEqual(await run(REPORTING.replay, [REPORTING.replay, REPORTING.source]), [MSG.ancestor, MSG.original], "replay");
+    assert.deepEqual(await run(REPORTING.replay, [REPORTING.replay]), [MSG.ancestor, MSG.child], "replay alone");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
