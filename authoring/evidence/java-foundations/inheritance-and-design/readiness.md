@@ -142,3 +142,21 @@ Author-side corrections only; not critic or reconciliation evidence and claims n
 - Source receipts re-fetched on 2026-11-07 (36 sources, all HTTP 200) and bound to the final HTML; the lock was regenerated.
 - Unchanged: teaching, activities, recaps, cheat sheets, objectives, inheritance/interfaces/records data, attempt and settlement rules, all nine GIFT banks and every other Markdown byte.
 
+
+### 12a. Nine frozen-byte author proofs (decision `inheritance-proof-form`: option a)
+
+This module has no `answerSafety.privateSuccessProof` opt-in, so no `qa-receipt.json` or opt-in attributes were added; this record is the proof evidence. Each proof ran on clean checkpoint `89982f6d507339702ca49bd47aa13f16c52973f5` (tree `52d31653`), one page at a time, with that page's original-author input copied alone into a fresh mode-700 staging directory outside the repository and that directory removed straight after the run. Inputs were never printed, hashed, screenshotted, traced or committed; after the ninth proof the mode-700 source file was removed too. Playwright 1.55.0 Chromium, `file://`, 0 non-file requests on every route.
+
+Each proof checks: the working tree is clean, HEAD is the checkpoint and the page's bytes equal its checkpoint blob, both before and after; **success** (the public success route with the private editor input) completes every activity with credit 1, the editor and graded checks with grade 1, and the page completes; **mixed** (the private editor input plus the public wrong-twice route for every other check) leaves each graded non-editor activity incomplete with credit 0 and grade 0; **all-fail** (the public wrong-twice route, including its non-passing editor runs) leaves the editor and every graded check incomplete with credit 0. A harness dry run on records, not counted, came before these nine. Learner, catalog, QA and tooling bytes were not changed after the first proof.
+
+| Topic | Run id | Ran at (UTC) | artifact.html SHA-256 | Result | Staging retired |
+| --- | --- | --- | --- | --- | --- |
+| abstract-classes | `id-abstract-classes-89982f6d-1` | 2026-11-07T15:25:31.632Z | `af9dadc1485f58b1ae25a266456bbe0dfeb8b3254b51c1a87ada9f234bffbaab` | pass | true |
+| composition-over-inheritance | `id-composition-over-inheritance-89982f6d-1` | 2026-11-07T15:25:34.493Z | `a6d16cd6b2db2a7c654c2ab353c69f9dfca1a7ae2998ee968a09c747a93d7c09` | pass | true |
+| functional-interfaces-and-anonymous-classes | `id-functional-interfaces-and-anonymous-classes-89982f6d-1` | 2026-11-07T15:25:37.441Z | `d339b34cf85b355c475374ba5578037ff4d77f6adfa5e8bb0f5409fa90f52792` | pass | true |
+| inheritance | `id-inheritance-89982f6d-1` | 2026-11-07T15:25:40.367Z | `4eb4cb63949a5c0b448cfadd5a67564e3e6de1fc1bfa321f22fcc5f2a63bb4d8` | pass | true |
+| interfaces-and-default-methods | `id-interfaces-and-default-methods-89982f6d-1` | 2026-11-07T15:25:43.247Z | `387f2a232669cdce153bd6279c2d0ff9ad325fd2d29e3063ab5653fce4a464c6` | pass | true |
+| polymorphism-overriding-vs-overloading | `id-polymorphism-overriding-vs-overloading-89982f6d-1` | 2026-11-07T15:25:46.128Z | `9c53b080b91d8e53666d4fd022880dedca57a328b219b89fcc2136adb305b3dd` | pass | true |
+| records | `id-records-89982f6d-1` | 2026-11-07T15:25:49.154Z | `4ee5de87139b96c87c9129ac8046d2ea242c33f6d185378981c18824b77ef861` | pass | true |
+| singleton-and-factory-patterns | `id-singleton-and-factory-patterns-89982f6d-1` | 2026-11-07T15:25:52.298Z | `7be268cab7ac3eb5a2faf895d898a4eb689494526f1086c0cdcac87de096b217` | pass | true |
+| solid-basics | `id-solid-basics-89982f6d-1` | 2026-11-07T15:25:55.149Z | `3da56d622fe10e43ead8d560ce668cc42cbd1bde313528179e3f89f4c86857e7` | pass | true |
