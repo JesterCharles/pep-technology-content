@@ -755,7 +755,7 @@ function analyse(ix){var lines=[],narrowed={},open=true,blockedBy=null;
   QUERY.eq.concat(QUERY.range).forEach(function(c){if(ix.cols.indexOf(c)<0)lines.push(c+' is not in the index, so that condition is checked on table rows.');});
   var ok=QUERY.eq.concat(QUERY.range).every(function(c){return narrowed[c];});
   return {ok:ok,lines:lines};}
-var A,ed,miss=0,settled=false,matched=false,passedSource=null,passedSignature=null;
+var A,ed,miss=0,settled=false,matched=false,passedSource=null,passedSignature=null,editTimer=null;
 function $(s){return A.$(s);}
 function gutter(){var n=ed.value.split('\n').length,g=[];for(var k=1;k<=n;k++)g.push(k);$('#ed-gutter').textContent=g.join('\n');ed.rows=Math.max(5,Math.min(20,n));}
 function tab(which){[['prob','#tab-prob','#ed-prob'],['out','#tab-out','#ed-out']].forEach(function(t){var on=t[0]===which;$(t[1]).setAttribute('aria-selected',on?'true':'false');$(t[1]).tabIndex=on?0:-1;$(t[2]).hidden=!on;});}
@@ -765,10 +765,10 @@ function showProblem(src,pr){var box=$('#ed-prob'),ln=lineOf(src,pr.pos),b=A.el(
   b.appendChild(A.el('span',pr.kind==='error'?'kind-error':'kind-limit',pr.kind==='error'?'Error':'Not supported'));b.appendChild(A.T(' line '+ln+': '+pr.msg));
   b.addEventListener('click',function(){goLine(ln);});box.textContent='';box.appendChild(b);tab('prob');
   $('#ed-status').textContent=(pr.kind==='error'?'1 error: PostgreSQL would reject this statement':'1 problem: outside what this practice editor checks')+'. Select the problem to jump to line '+ln+'.';}
-function revokeForEdit(src,sig){if(!A.S.done.x1||passedSource===null||sig===passedSignature)return false;
+function revokeForEdit(sig){if(!A.S.done.x1||passedSource===null||sig===passedSignature)return false;
   passedSource=null;passedSignature=null;matched=false;A.revoke('x1');
   A.say([{c:'verdict info',s:'The SQL changed after the successful run, so completion was cleared. Run the current statement to check it again.'}]);return true;}
-function run(){var src=ed.value,sig=signature(src),ix,n=A.stepOf('x1');revokeForEdit(src,sig);
+function run(){var src=ed.value,sig=signature(src),ix,n=A.stepOf('x1');clearTimeout(editTimer);revokeForEdit(sig);
   try{ix=parse(src);}catch(pr){if(!(pr instanceof Problem))throw pr;if(pr.kind==='error')A.attempt(n);showProblem(src,pr);
     A.say([{c:'verdict info',s:pr.kind==='error'?'Not created: PostgreSQL would reject this statement. Read the problem under the editor, fix it and run again.':'Not checked: this practice editor cannot check that form. Read the problem under the editor.'}]);return;}
   $('#ed-prob').textContent='';$('#ed-prob').appendChild(A.el('p','pep-editor__empty','No problems.'));
@@ -783,11 +783,11 @@ function run(){var src=ed.value,sig=signature(src),ix,n=A.stepOf('x1');revokeFor
   msg.push({s:'One more run that misses settles this activity. Use the analysis and the hints, then run again.'});A.say(msg);}
 function resetCode(){ed.value=STARTER;gutter();$('#ed-prob').textContent='';$('#ed-prob').appendChild(A.el('p','pep-editor__empty','Not run yet. Edit the statement, then press Run.'));$('#ed-print').textContent='(no output yet)';tab('prob');$('#ed-status').textContent='Not run yet';}
 P.init=function(api){A=api;ed=$('#ed');
-  ed.addEventListener('input',function(){gutter();revokeForEdit(ed.value,signature(ed.value));});$('#run').addEventListener('click',run);$('#ed-reset').addEventListener('click',resetCode);
+  ed.addEventListener('input',function(){gutter();clearTimeout(editTimer);editTimer=setTimeout(function(){revokeForEdit(signature(ed.value));},200);});$('#run').addEventListener('click',run);$('#ed-reset').addEventListener('click',resetCode);
   $('#tab-prob').addEventListener('click',function(){tab('prob');});$('#tab-out').addEventListener('click',function(){tab('out');});
   A.$$('[role="tab"]').forEach(function(t){t.addEventListener('keydown',function(ev){if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){var o=t.id==='tab-prob'?'out':'prob';tab(o);$('#tab-'+o).focus();ev.preventDefault();}});});
   resetCode();};
-P.reset={x1:function(){miss=0;settled=false;matched=false;passedSource=null;passedSignature=null;resetCode();}};
+P.reset={x1:function(){clearTimeout(editTimer);miss=0;settled=false;matched=false;passedSource=null;passedSignature=null;resetCode();}};
 })();
 </script>
 <script>
