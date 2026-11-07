@@ -92,7 +92,7 @@ Success criteria: each feature lives in its own small class, a car's engine can 
 
 ## Sources
 
-Java language and API facts on this page were checked against the live official pages below on 16 October 2026 (UTC), for Java SE 25. Program output and compiler messages were confirmed on OpenJDK 25.0.4.1 (Eclipse Temurin). Preferring composition is widely taught design practice rather than a rule stated in these references; the double count it avoids is real Java behavior, shown by the programs on this page. Links open outside this lesson.
+Java language and API facts on this page were checked against the live official pages below on 16 October 2026 (UTC), for Java SE 25. Program output and compiler messages were confirmed on OpenJDK 25.0.4.1 (Eclipse Temurin); the practice editor, last revised on 7 November 2026, models only the Java this task uses, and its responses were checked on sample inputs against OpenJDK 25.0.5 (Eclipse Temurin). Preferring composition is widely taught design practice rather than a rule stated in these references; the double count it avoids is real Java behavior, shown by the programs on this page. Links open outside this lesson.
 
 - Dev.java: Inheritance: what a subclass inherits and can do; a class has exactly one direct superclass.
 - Dev.java: Overriding and Hiding Methods: an overriding method replaces the inherited one for objects of the subclass.

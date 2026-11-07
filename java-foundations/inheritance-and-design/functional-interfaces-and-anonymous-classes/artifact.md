@@ -82,7 +82,7 @@ Success criteria: it prints `false`, then `true`, and you can name the one abstr
 
 ## Sources
 
-Java language and API facts on this page were checked against the live official pages below on 16 October 2026 (UTC), for Java SE 25. Program output and compiler messages were confirmed on OpenJDK 25.0.4.1 (Eclipse Temurin). Links open outside this lesson.
+Java language and API facts on this page were checked against the live official pages below on 16 October 2026 (UTC), for Java SE 25. Program output and compiler messages were confirmed on OpenJDK 25.0.4.1 (Eclipse Temurin); the practice editor, last revised on 7 November 2026, models only the Java this task uses, and its responses were checked on sample inputs against OpenJDK 25.0.5 (Eclipse Temurin). Links open outside this lesson.
 
 - Dev.java: Using Functional Interfaces: functional interfaces and the java.util.function package.
 - Dev.java: Nested Classes: anonymous classes.

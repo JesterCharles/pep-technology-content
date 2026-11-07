@@ -91,7 +91,7 @@ Next step: Say the sentence "every first-class object is a second-class object".
 
 ## Sources
 
-Java language and API facts on this page were checked against the live official pages below on 16 October 2026 (UTC), for Java SE 25. Program output and compiler messages were confirmed on OpenJDK 25.0.4.1 (Eclipse Temurin). Links open outside this lesson.
+Java language and API facts on this page were checked against the live official pages below on 16 October 2026 (UTC), for Java SE 25. Program output and compiler messages were confirmed on OpenJDK 25.0.4.1 (Eclipse Temurin); the practice editor, last revised on 7 November 2026, models only the Java this task uses, and its responses were checked on sample inputs against OpenJDK 25.0.5 (Eclipse Temurin). Links open outside this lesson.
 
 - Dev.java: Inheritance: subclasses, superclasses, what a subclass inherits, constructors are not inherited, `super(...)`.
 - JLS 25, chapter 8: Classes: 8.1.4 Superclasses and Subclasses; 8.8.7 Constructor Body, including the implicit `super()` and statements before an explicit constructor invocation.

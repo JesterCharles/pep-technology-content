@@ -1378,7 +1378,7 @@ function Model(units,main,mode,opq){var T={},M=this,errs=[],anonN={},blame=0;M.T
     return 'Object';}
   function blameOf(t){var c=T[base(t)];return c&&c.u?c.d.np:undefined;}
   function lv(x,env,e){if(x.k!=='name'&&x.k!=='field'){E('unexpected type',x,'lvalue');return 'int';}var was=env.lhs;env.lhs=true;var t=ty(x,env);env.lhs=was;
-    if(x.k==='name'&&x.r==='l'){if(x.loc.ni&&e.op!=='=')throw NI(x);if(x.loc.fin)E('cannot assign a value to final variable '+x.n,e,'final:'+x.n);if(x.loc.kind==='param'&&env.asgP)env.asgP[x.n]=1;return t;}
+    if(x.k==='name'&&x.r==='l'){if(x.loc.ni&&e.op!=='=')throw NI(x);if(x.loc.fin&&x.loc.ni)throw NS('assigning a final local variable declared without a value. Give '+x.n+' its value where it is declared',x.p);if(x.loc.fin)E('cannot assign a value to final variable '+x.n,e,'final:'+x.n);if(x.loc.kind==='param'&&env.asgP)env.asgP[x.n]=1;return t;}
     var f=x.f;if(!f)return t;var viaThis=x.k==='name'||x.o.k==='this';
     if(f.fin){var inCtor=env.ctor&&!f.st&&f.owner===env.c&&viaThis&&!f.init&&!(f.comp&&env.ctor.compact);
       if(!inCtor)E('cannot assign a value to final variable '+f.n,e,'final:'+f.n);
@@ -1648,7 +1648,8 @@ function revokeCode(){var a=G.acts[numOf('code')-1];delete S.done.code;delete S.
   a.completed=false;a.settled=false;a.credit=0;a.grade=0;
   if(G.complete){G.complete=false;var c=$('#complete');c.className='complete';c.textContent='';}
   progress();render(G.current);}
-function edited(){if(passedCode()&&$('#ed').value!==passSrc){revokeCode();$('#ed-status').textContent='Edited: the mark is withdrawn until this code passes. Run it to check.';}}
+function edited(){if(passedCode()&&$('#ed').value!==passSrc){revokeCode();$('#ed-status').textContent='Edited: the mark is withdrawn until this code passes. Run it to check.';
+  var fb=fbOf(numOf('code'));fb.textContent='';fb.appendChild(el('p','verdict info','The code changed after it passed, so the mark is withdrawn. Run the code again to check it.'));cmpModel(null);}}
 function sameAsStarter(src){starter();return code(lex(src))===code(C.st);}
 function settleCode(msg){S.results.code=codeRuns===1?'correct':'correct-retry';passSrc=$('#ed').value;msg.push({c:'verdict ok',s:codeRuns===1?'Correct on your first run.':'Correct.'});if(C.success)msg.push({s:C.success});say(msg,true);complete('code');}
 function missCode(msg){if(passedCode())revokeCode();if(S.done.code){say(msg);return;}codeMiss++;
