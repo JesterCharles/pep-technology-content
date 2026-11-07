@@ -76,6 +76,8 @@ const CASES = {
       ["unsupported in-scope parameter passed to contains", "static boolean hasRepeat(List<Integer> nums) {\n    Set<Integer> seen = new HashSet<Integer>();\n    return seen.contains(nums);\n}"],
       ["legal nums.add receiver mistake stays outside the bounded parser", "static boolean hasRepeat(List<Integer> nums) {\n    return nums.add(1);\n}"],
       ["legal nums.contains receiver mistake stays outside the bounded parser", "static boolean hasRepeat(List<Integer> nums) {\n    return nums.contains(1);\n}"],
+      ["unsupported loop element size receiver stays outside the bounded parser", "static boolean hasRepeat(List<Integer> nums) {\n    for (Integer n : nums) {\n        if (n.size() == nums.size()) return true;\n    }\n    return false;\n}"],
+      ["compiler-proven out-of-scope prior loop element", "static boolean hasRepeat(List<Integer> nums) {\n    for (Integer first : nums) {\n    }\n    for (Integer second : nums) {\n        if (first == second) return true;\n    }\n    return false;\n}"],
       ["compiler-proven unknown plain identifier", "static boolean hasRepeat(List<Integer> nums) {\n    for (Integer n : nums) {\n        if (n == mystery) return true;\n    }\n    return false;\n}"]
     ],
     "refused": [
@@ -256,9 +258,9 @@ try {
       const state = await run(code, spec.stated);
       if (!/not assessed|outside what this practice editor/i.test(state.status)) failures.push(`${topic}: unassessed case "${name}" was not reported as unassessed (${state.status})`);
       if (/valid|legal|unsupported/.test(name) && !/Not supported/.test(state.problems)) failures.push(`${topic}: legal-unmodeled case "${name}" did not use truthful Not supported Problems text (${state.problems})`);
-      if (/compiler-proven unknown plain/.test(name) && (!/Error/.test(state.problems) || !/cannot find symbol/.test(state.problems))) failures.push(`${topic}: known-undeclared case "${name}" did not use the bounded compiler diagnostic (${state.problems})`);
+      if (/compiler-proven (?:unknown plain|out-of-scope)/.test(name) && (!/Error/.test(state.problems) || !/cannot find symbol/.test(state.problems))) failures.push(`${topic}: known-undeclared case "${name}" did not use the bounded compiler diagnostic (${state.problems})`);
       if (state.attemptsAfter !== state.attemptsBefore) failures.push(`${topic}: unassessed case "${name}" consumed an assessed attempt`);
-      if (/(?:receiver mistake|visits .* fallback)/.test(name) && JSON.stringify({ attempts: state.attemptsAfter, settled: state.settled, completed: state.completed, credit: state.credit, grade: state.grade, cont: state.cont }) !==
+      if (/(?:receiver mistake|loop element size receiver|out-of-scope prior loop element|visits .* fallback)/.test(name) && JSON.stringify({ attempts: state.attemptsAfter, settled: state.settled, completed: state.completed, credit: state.credit, grade: state.grade, cont: state.cont }) !==
           JSON.stringify({ attempts: "0", settled: "false", completed: "false", credit: "0", grade: "0", cont: "false" })) {
         failures.push(`${topic}: legal neutral control "${name}" mutated activity state or credit`);
       }
