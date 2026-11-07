@@ -81,6 +81,12 @@ async function buildHistory() {
   return { root, B, P, R, H, S, M, proof };
 }
 
+// Starts a conflicting merge with the fixture identity and proves it is actually in progress.
+function startConflictingMerge(root, rev) {
+  spawnSync("git", ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "merge", "--no-ff", "--no-commit", rev], { cwd: root, encoding: "utf8" });
+  assert.equal(git(root, "rev-parse", "MERGE_HEAD"), git(root, "rev-parse", rev), "fixture merge must be in progress");
+}
+
 function squashOnto(root, base, source, message) {
   git(root, "checkout", "-q", "--detach", base);
   git(root, "read-tree", "-u", "--reset", source);
@@ -130,7 +136,7 @@ test("private-proof history rejects a runId reintroduced with a changed proof ob
       git(h.root, "add", ".");
       git(h.root, "commit", "-qm", "altered copy");
       const X = git(h.root, "rev-parse", "HEAD");
-      spawnSync("git", ["merge", "--no-ff", "--no-commit", h.H], { cwd: h.root, encoding: "utf8" });
+      startConflictingMerge(h.root, h.H);
       git(h.root, "checkout", h.H, "--", RECEIPT);
       git(h.root, "commit", "-qm", "resolve to original receipt");
       const head = git(h.root, "rev-parse", "HEAD");
@@ -211,7 +217,7 @@ test("private-proof history accepts a later metadata-only correction and still v
     git(h.root, "add", ".");
     git(h.root, "commit", "-qm", "changed copy");
     const X = git(h.root, "rev-parse", "HEAD");
-    spawnSync("git", ["merge", "--no-ff", "--no-commit", C], { cwd: h.root, encoding: "utf8" });
+    startConflictingMerge(h.root, C);
     git(h.root, "checkout", C, "--", RECEIPT);
     git(h.root, "commit", "-qm", "resolve to corrected receipt");
     const head = git(h.root, "rev-parse", "HEAD");
