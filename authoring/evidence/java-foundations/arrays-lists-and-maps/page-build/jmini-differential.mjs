@@ -82,9 +82,9 @@ Integer removed = values.remove(values.indexOf(7)); System.out.println(removed +
 {name:'non-goal-int-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<int[]> values = new ArrayList<>();`},
 {name:'non-goal-boolean-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<boolean[]> values = new ArrayList<>();`},
 {name:'non-goal-double-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<double[]> values = new ArrayList<>();`},
-{name:'non-goal-long-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<long[]> values = new ArrayList<>();`},
-{name:'non-goal-char-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<char[]> values = new ArrayList<>();`},
-{name:'non-goal-float-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<float[]> values = new ArrayList<>();`},
+{name:'non-goal-arraylist-double-constructor-type-argument-rejected',expect:'compile-error',code:`new ArrayList<double>();`},
+{name:'non-goal-hashmap-int-value-constructor-type-argument-rejected',expect:'compile-error',code:`new HashMap<String, int>();`},
+{name:'non-goal-hashmap-double-value-constructor-type-argument-rejected',expect:'compile-error',code:`new HashMap<String, double>();`},
 {name:'non-goal-short-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<short[]> values = new ArrayList<>();`},
 {name:'non-goal-byte-array-reference-type-argument-unsupported',expect:'unsupported',code:`List<byte[]> values = new ArrayList<>();`},
 {name:'non-goal-explicit-primitive-array-constructor-unsupported',expect:'unsupported',code:`List<double[]> values = new ArrayList<double[]>();`},
@@ -94,6 +94,14 @@ System.out.println(value == null);`},
 System.out.println(values.size() != null);`},
 {name:'non-goal-boxed-null-equality-control',code:`Integer value = 1;
 System.out.println(value == null);`},
+{name:'non-goal-null-integer-versus-int-unboxing',code:`Integer value = null; int expected = 1;
+System.out.println(value == expected);`},
+{name:'non-goal-missing-map-get-versus-int-unboxing',code:`Map<String, Integer> values = new HashMap<>();
+System.out.println(values.get("missing") == 1);`},
+{name:'non-goal-primitive-boolean-null-equality',expect:'model-limit',code:`boolean value = true;
+System.out.println(value == null);`},
+{name:'non-goal-null-boolean-versus-primitive-unboxing',code:`Boolean value = null;
+System.out.println(value == true);`},
 ];
 const pre='import java.util.*;\npublic class T { public static void main(String[] args) {\n';
 let fails=0;
