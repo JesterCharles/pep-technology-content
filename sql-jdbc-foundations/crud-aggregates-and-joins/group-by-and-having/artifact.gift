@@ -1,0 +1,47 @@
+// Practice quiz: GROUP BY and HAVING
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+// GIFT forbids the angle-bracket characters and treats colon, equals, hash, tilde and braces as syntax, so those are escaped.
+
+$CATEGORY: sql-jdbc-foundations/crud-aggregates-and-joins/group-by-and-having
+
+::o1 rows per group::A staff table has 7 rows spread over 3 departments. How many rows does SELECT department, COUNT(*) FROM staff GROUP BY department; return? {
+=3#Correct. GROUP BY returns one result row per distinct grouping value.
+~7#Not quite. That is the number of input rows, before grouping.
+~1#Not quite. One row is what an aggregate returns without GROUP BY.
+~10#Not quite. Groups are not added to the input rows.
+}
+
+::o1 NULL group::Two staff rows have department NULL. How does GROUP BY department treat them? {
+=They form one group of their own#Correct. For grouping, NULL values are placed together in a single group.
+~Each NULL row becomes its own group#Not quite. All NULL values share one group.
+~They are dropped from the result#Not quite. Grouping keeps them; only a WHERE filter would remove them.
+~They join the first department#Not quite. NULL is never merged into another group.
+}
+
+::o2 where the count test goes::A report keeps only departments with at least 3 staff. Where does the condition on COUNT(*) belong? {
+=In HAVING, after GROUP BY#Correct. HAVING filters groups after the aggregates are computed.
+~In WHERE, before GROUP BY#Not quite. WHERE runs before groups exist, so it cannot test COUNT(*).
+~In ORDER BY#Not quite. ORDER BY sorts results; it does not remove groups.
+~Inside the SELECT list#Not quite. Selecting a count displays it but filters nothing.
+}
+
+::o2 why not WHERE::Why does WHERE COUNT(*) BETWEEN 3 AND 10 fail? {
+=WHERE filters single input rows before any groups or counts exist#Correct. Aggregates are computed after WHERE, so WHERE cannot refer to them.
+~BETWEEN cannot be used with numbers#Not quite. BETWEEN works with numbers; the problem is the aggregate.
+~COUNT(*) needs a column name#Not quite. COUNT(*) is valid, just not inside WHERE.
+~WHERE must come after GROUP BY#Not quite. WHERE comes before GROUP BY, which is exactly why it cannot see the groups.
+}
+
+::o3 fix the ungrouped column::SELECT department, name, COUNT(*) FROM staff GROUP BY department; fails because name is neither grouped nor aggregated. Which change fixes it and keeps one row per department? {
+=Remove name, or summarize it with an aggregate such as MIN(name)#Correct. Each department row needs one value per column, so an ungrouped column must be removed or aggregated.
+~Add DISTINCT after SELECT#Not quite. DISTINCT does not decide which name represents a group.
+~Add name to ORDER BY#Not quite. Sorting by name does not group or aggregate it.
+~Add WHERE name IS NOT NULL#Not quite. Filtering rows still leaves several names per department.
+}
+
+::o3 which query errors::orders(order_id, customer_id, total) has primary key order_id. Which query raises an ERROR? {
+=SELECT customer_id, total FROM orders GROUP BY customer_id;#Correct. total is neither grouped nor aggregated, and one customer can have several totals, so there is no single value to show.
+~SELECT customer_id, SUM(total) FROM orders GROUP BY customer_id;#Not quite. SUM summarizes the totals for each customer, so the query runs.
+~SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id;#Not quite. The grouping key plus an aggregate is always valid.
+~SELECT order_id, total FROM orders GROUP BY order_id;#Not quite. order_id is the primary key, so it determines total; PostgreSQL accepts this.
+}
