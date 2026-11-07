@@ -1,0 +1,47 @@
+// Practice quiz: seeding sample data
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+// GIFT forbids the angle-bracket characters and treats colon, equals, hash, tilde and braces as syntax, so those are escaped.
+
+$CATEGORY: sql-jdbc-foundations/crud-aggregates-and-joins/seeding-sample-data
+
+::o1 seed order::books points at authors, and reviews points at books. In which order should a seed script insert them? {
+=authors, then books, then reviews#Correct. Each table must come after every table it points at.
+~reviews, then books, then authors#Not quite. That is the order for removing rows, not adding them.
+~books, then authors, then reviews#Not quite. A book needs its author to exist first.
+~Any order, because PostgreSQL checks keys at the end of the script#Not quite. These ordinary foreign keys are checked as each statement finishes.
+}
+
+::o1 child first::With an ordinary foreign key, what happens when a seed script inserts a review for book 7 before book 7 exists? {
+=That INSERT fails with a foreign key ERROR and adds nothing#Correct. The reference is checked when the statement finishes, and a missing parent is not accepted for later.
+~The review waits until book 7 is inserted#Not quite. Only a constraint declared DEFERRABLE can wait, until COMMIT.
+~PostgreSQL creates an empty book 7#Not quite. PostgreSQL never invents a parent row.
+~The review is added with book_id set to NULL#Not quite. PostgreSQL does not change the value you supplied.
+}
+
+::o2 series values::Which values does SELECT n FROM generate_series(1, 5) AS n; return? {
+=1, 2, 3, 4 and 5#Correct. generate_series includes both its start and its stop value.
+~1, 2, 3 and 4#Not quite. The stop value, 5, is included.
+~0, 1, 2, 3 and 4#Not quite. The series starts at the first argument, 1.
+~Just 5#Not quite. It returns one row per value in the range.
+}
+
+::o2 one statement, many rows::INSERT INTO tickets (ticket_id) SELECT n FROM generate_series(1, 100) AS n; runs once. What does it do? {
+=Adds 100 rows in a single statement#Correct. INSERT ... SELECT adds one row for every row the SELECT returns.
+~Adds one row with ticket_id 100#Not quite. The SELECT returns 100 rows, and each becomes a new row.
+~Adds one row holding a list of 100 numbers#Not quite. Each generated value becomes its own row.
+~Fails, because INSERT needs VALUES#Not quite. INSERT accepts a query instead of VALUES.
+}
+
+::o3 server-side path::A teammate runs COPY products FROM '/srv/data/products.csv' WITH (FORMAT csv) as a superuser. On which machine must /srv/data/products.csv exist? {
+=The machine running the PostgreSQL server#Correct. Server-side COPY is executed by the server, which opens the path on its own file system.
+~The teammate's laptop#Not quite. That is where \\copy would read from, because psql opens the file.
+~Either machine; PostgreSQL searches both#Not quite. COPY looks only on the server; it never searches the client.
+~The folder psql was started in#Not quite. psql is not involved in reading the file for server-side COPY.
+}
+
+::o3 which program reads it::What is the difference between \\copy in psql and COPY ... FROM 'file' in SQL? {
+=psql opens the file for \\copy on your computer; the server opens it for COPY on its own disk#Correct. The difference is which program can see the file.
+~They are the same command spelled two ways#Not quite. They read files from different machines.
+~COPY is psql-only and \\copy runs on the server#Not quite. It is the other way round\: \\copy is a psql meta-command.
+~Only \\copy understands CSV#Not quite. Both accept FORMAT csv.
+}

@@ -1,0 +1,47 @@
+// Practice quiz: filtering and sorting
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+// GIFT forbids the angle-bracket characters and treats colon, equals, hash, tilde and braces as syntax, so those are escaped.
+
+$CATEGORY: sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting
+
+::o1 BETWEEN ends::A products table has prices 10, 15, 20 and 25. Which prices does WHERE price BETWEEN 10 AND 20 keep? {
+=10, 15 and 20#Correct. BETWEEN includes both end values, so it means price is at least 10 and at most 20.
+~Only 15#Not quite. That would exclude both ends, but BETWEEN keeps them.
+~10 and 15#Not quite. The upper end, 20, is kept too.
+~15, 20 and 25#Not quite. 25 is above the upper end, and 10 is kept as the lower end.
+}
+
+::o1 AND before OR::Which rows does WHERE city \= 'Leeds' OR city \= 'York' AND active \= true keep? {
+=Every Leeds row, plus only the active York rows#Correct. AND is evaluated before OR, so the condition reads Leeds, or (York and active). Add parentheses to say what you mean.
+~Only active rows from Leeds or York#Not quite. That needs parentheses around the two city tests.
+~Every Leeds and York row, active or not#Not quite. The active test still applies to the York side.
+~Only active Leeds rows#Not quite. The Leeds side has no active test, and York rows can still match.
+}
+
+::o2 direction per key::In ORDER BY last_name DESC, first_name, how is first_name sorted within each last name? {
+=Ascending, because DESC applies only to last_name#Correct. Each sort key has its own direction, and a key with none written is ascending.
+~Descending, because DESC applies to the whole list#Not quite. DESC is attached to the key just before it.
+~It is not sorted at all#Not quite. first_name orders the rows that share a last name.
+~In insertion order#Not quite. An explicit sort key replaces any reliance on insertion order.
+}
+
+::o2 default direction::A query ends with ORDER BY hire_date and no direction. Which rows come first? {
+=The earliest hire dates#Correct. Without ASC or DESC, a sort key is ascending, so smaller values come first.
+~The latest hire dates#Not quite. That needs DESC.
+~The rows inserted first#Not quite. ORDER BY sorts by the named value, not by when rows were added.
+~No particular order#Not quite. Rows with different hire dates are ordered; only ties are left open.
+}
+
+::o3 no ORDER BY::You run SELECT * FROM members; twice and get the same order both times. What does PostgreSQL promise about the next run? {
+=Nothing\: without ORDER BY the row order is unspecified#Correct. A repeated order is a side effect of how the rows happen to be read, not a guarantee.
+~The same order, because it matched twice#Not quite. Two matching runs do not create a promise.
+~Primary key order#Not quite. PostgreSQL does not sort by the key unless you ask.
+~Insertion order#Not quite. Insertion order is not promised either.
+}
+
+::o3 stable ties::A leaderboard sorts by score DESC, and two players can share a score. Which ending makes the order fully repeatable? {
+=ORDER BY score DESC, player_id#Correct. A unique tie-breaker such as the primary key fixes the order of rows that share a score.
+~ORDER BY score DESC#Not quite. Rows with the same score can still come back in either order.
+~ORDER BY score DESC, score#Not quite. Repeating the same key breaks no ties.
+~ORDER BY score#Not quite. That reverses the board and still leaves ties open.
+}
