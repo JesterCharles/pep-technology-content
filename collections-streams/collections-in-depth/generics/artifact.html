@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="collections-streams">
+<meta name="pep:module" content="collections-in-depth">
+<meta name="pep:topic" content="Generics">
+<meta name="pep:topic-id" content="generics">
+<meta name="pep:budget-minutes" content="13">
+<meta name="pep:source" content="authoring/evidence/collections-streams/collections-in-depth/generics/sources.json">
+<meta name="pep:position" content="3 of 9">
+<title>Generics · Collections in Depth</title>
+<style>
+/* pep:component predict@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+/* /pep:component predict css */
+/* pep:component mcq-with-confidence@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start}
+.feedback{width:100%;min-width:0;font-size:15px;line-height:1.35}
+.feedback:empty{display:none}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin:0}
+.feedback .verdict{font-weight:700}
+.feedback .ok{color:var(--teal)}
+.feedback .no{color:var(--red)}
+.feedback .set{color:var(--amber)}
+.feedback .info{color:var(--ink)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+/* /pep:component mcq-with-confidence css */
+/* DESIGN.md token reference */
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* Components bridge: embedded components/*@1 fragments read these older names */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+/* Base, focus and motion */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+pre { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; max-width: 100%; }
+pre code { font-size: 1em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+/* Buttons */
+button { cursor: pointer; min-height: 44px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); padding: 10px 20px; }
+.pep-btn, .ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.ghost:hover, .pep-btn:hover { border-color: var(--pep-accent); }
+.ghost[aria-pressed="true"] { background: var(--pep-accent-soft); border: 2px solid var(--pep-accent); }
+.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+button:disabled, .primary:disabled, .pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); color: var(--pep-text-muted); border: 1px solid var(--pep-line-strong); }
+/* Topic bar: the clearest accent surface */
+.pep-topicbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding: 12px 16px; margin: 0;
+  border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 4px; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress p { max-width: none; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; max-width: 220px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); outline: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); outline-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning); outline-color: var(--pep-warning); }
+.pep-progress > span.is-current { outline: 2px solid var(--pep-accent); }
+.pep-objectives { position: relative; break-inside: avoid; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; border-radius: var(--pep-radius-sm); }
+.pep-objectives > summary::marker { color: var(--pep-accent-text); }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; padding-left: 20px; }
+.pep-objectives li + li { margin-top: 8px; }
+@media (min-width: 640px) { .pep-objectives[open] > div { position: absolute; right: 0; z-index: 2; width: 360px; } }
+/* Activity timeline */
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px 6px 6px; border: 1px solid transparent; border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; }
+.pep-steps { counter-reset: pep-step; }
+.pep-step__n::before { counter-increment: pep-step; content: counter(pep-step); }
+.pep-step__n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--pep-control); color: var(--pep-text); font-size: 13px; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-current="step"] .pep-step__n { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-step.is-done .pep-step__n { background: var(--pep-accent-soft); color: var(--pep-accent-text); outline: 1px solid var(--pep-accent); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-step__state { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+/* Activities and regions */
+.pep-activity { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-activity > h2 { padding-bottom: 8px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region--workspace, [data-pep-workspace] {
+  padding: 24px; border: 1px solid var(--pep-line-strong);
+  border-radius: var(--pep-radius-lg); background: var(--pep-card);
+}
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
+.teach { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.teach ul, .teach ol { margin: 0; padding-left: 24px; }
+.task { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task .pep-task-q { font-weight: 600; color: var(--pep-text-strong); }
+/* Required activity checks: accent tint and rail, never success green */
+.pep-activity-checks, [data-pep-activity-checks] {
+  padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px;
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-activity-checks h3 { margin-bottom: 4px; }
+.pep-activity-checks ul { margin: 0; padding-left: 20px; }
+/* Where this fits */
+[data-pep-where-fits] {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-card);
+}
+[data-pep-where-fits] strong { color: var(--pep-text-strong); }
+/* Progressive optional hints */
+.pep-hint, details[data-pep-hint] {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md);
+  background: var(--pep-accent-soft); break-inside: avoid;
+}
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
+.pep-hint .pep-hint {
+  margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong);
+  border-radius: 0; background: transparent;
+}
+/* Optional Anecdote and Challenge disclosures */
+.pep-optional {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-card); break-inside: avoid;
+}
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer;
+  color: var(--pep-text-strong); font-weight: 600;
+}
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 16px; }
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+  .pep-step[aria-current="step"] { border-color: Highlight; }
+}
+/* Model, cells and lanes */
+.model { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-lists { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 600px) { .pep-lists { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pep-list { padding: 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.pep-list h3 { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 4px; }
+.pep-list__state { font-weight: 600; }
+.lk { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.sub { margin: 0 0 8px; font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.cells { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; padding: 0; list-style: none; min-height: 32px; }
+.cells li { font: 400 14px/20px var(--pep-font-mono); padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.lanebtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.lanebtns button { min-width: 120px; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.lane { padding: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); min-height: 80px; background: var(--pep-page); min-width: 0; }
+.lane .lk { overflow-wrap: anywhere; color: var(--pep-text-strong); }
+.cards { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.cards li { font-size: 14px; line-height: 20px; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); overflow-wrap: anywhere; }
+.cards li.revealed { border-style: dashed; border-color: var(--pep-warning); }
+.tag { display: inline-block; margin-left: 4px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--pep-warning); }
+/* Component overrides: DESIGN.md look for the embedded @1 fragments (their bytes stay unchanged) */
+legend { font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 8px; }
+.opts { gap: 8px; }
+.opt { position: relative; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); font-size: 16px; line-height: 24px; box-shadow: none; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; box-shadow: none; }
+.opt:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; box-shadow: none; }
+.opt.mine { border-color: var(--pep-accent); }
+.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.opt input:disabled { cursor: default; }
+.opt::before { content: ""; flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); }
+.opt:has(input:checked)::before { border: 6px solid var(--pep-accent); }
+.opt:has(input:disabled)::before { opacity: 0.6; }
+.opts.explained .opt { padding: 8px 16px; align-items: flex-start; }
+.opts.explained .opt::before { margin-top: 2px; }
+.oexp { font-size: 14px; line-height: 20px; color: var(--pep-text); border-top-color: var(--pep-line-strong); }
+.badge { font-size: 13px; line-height: 20px; font-weight: 600; border-radius: var(--pep-radius-pill); padding: 0 8px; }
+.badge.ok-b { color: var(--pep-success); border-color: var(--pep-success); }
+.badge.no-b { color: var(--pep-danger); border-color: var(--pep-danger); }
+.badge.mine-b { color: var(--pep-text-strong); border-color: var(--pep-line-strong); }
+.conf legend { line-height: 44px; }
+.conf .opt { min-width: 96px; }
+.row, .fbrow { gap: 12px; }
+.feedback { font-size: 14px; line-height: 20px; color: var(--pep-text); }
+.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.feedback .verdict { font-size: 16px; line-height: 24px; font-weight: 700; }
+.feedback .ok { color: var(--pep-success); }
+.feedback .no { color: var(--pep-danger); }
+.feedback .set { color: var(--pep-warning); }
+.feedback .info { color: var(--pep-text-strong); }
+.feedback .conf-report { color: var(--pep-text-muted); }
+.feedback ul { padding-left: 24px; }
+@media (max-width: 480px) { .opts, .lanes { grid-template-columns: minmax(0, 1fr); } }
+/* Editor workspace */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__scope { padding: 8px 12px; font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); background: var(--pep-sunken); }
+.pep-editor__panel pre { border: 0; padding: 0; background: transparent; }
+.pep-editor__empty { font-family: var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 700; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 700; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); max-width: none; }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn, .pep-editor__bar button { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__code { font-size: 16px; line-height: 24px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* Navigation */
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 0 1 auto; } }
+.pep-back a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+/* Recap */
+.recap { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--pep-line-strong); }
+.recap ul { margin: 0; padding-left: 24px; }
+.recap li + li { margin-top: 4px; }
+.recap details { padding: 0 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.recap details > summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: flex; align-items: center; }
+.recap details > :last-child { margin-bottom: 12px; }
+.recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+.sources ul { margin: 8px 0; padding-left: 24px; font-size: 14px; line-height: 20px; }
+.sources li { margin-bottom: 4px; overflow-wrap: anywhere; }
+.sources p { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.next-topic { font-weight: 600; color: var(--pep-text-strong); }
+.complete { padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete.settled { border-color: var(--pep-warning); background: var(--pep-warning-soft); }
+.complete:empty { display: none; }
+/* Static expected results: no-JavaScript reading only */
+.pep-expected { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.pep-expected ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-nojs-note { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text-strong); }
+.pep-nojs-code { display: flex; flex-direction: column; gap: 12px; }
+@media print {
+  [data-pep-activity][hidden], [data-pep-recap][hidden] { display: flex !important; }
+  .pep-nav, .pep-activity-actions, .pep-back, #reset, .pep-progress { display: none !important; }
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .pep-objectives[open] > div { position: static; width: auto; }
+  .pep-activity { break-before: auto; }
+  [data-pep-print-items]::after { content: "Practice items (answers omitted):\A" attr(data-pep-print-items); display: block; margin-top: 12px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); white-space: pre-wrap; }
+}
+/* page-local practice styles carried from the previous layout */
+.pep-steps-list { margin: 0; padding-left: 24px; }
+.pep-steps-list > li + li { margin-top: 8px; }
+.out { margin: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; min-height: 44px; }
+.out .err { color: var(--pep-danger); font-weight: 700; }
+.out .okl { color: var(--pep-success); font-weight: 700; }
+.pep-editor__panel .out { border: 0; padding: 0; background: transparent; }
+/* several problems may be listed: Problems scrolls inside, nothing clips it */ .pep-editor { overflow: visible; }
+</style>
+<noscript><style>.pep-js-only{display:none!important}</style></noscript>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-path-settled="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="13">
+<header class="pep-topicbar">
+  <h1 id="page-title">Generics</h1>
+  <div class="pep-topicbar__progress progress">
+    <p><span class="pep-js-only"><span id="pos-text">Activity 1 of 4</span> · <span id="path-text">Answered 0 of 4</span> · <span id="prog-text">Completed 0 of 4</span> · </span>about 13 min</p>
+    <div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  </div>
+  <details class="pep-objectives" data-pep-objectives>
+    <summary aria-controls="objectives-body">Objectives</summary>
+    <div id="objectives-body"><ul>
+      <li>Declare and use a generic class and a generic method with a type parameter</li>
+      <li>Explain how List&lt;String&gt; lets the compiler reject adding a non-String in type-safe generic code and removes the cast when reading, while raw or unchecked code can still fail with a ClassCastException at run time</li>
+      <li>Choose between List&lt;T&gt;, List&lt;? extends T&gt; and List&lt;? super T&gt; for a method parameter that only reads from or only writes to a list</li>
+    </ul></div>
+  </details>
+  <button type="button" class="pep-btn pep-js-only" id="reset" data-pep-reset>Restart activity</button>
+  <p class="vh" id="restart-status" role="status" aria-live="polite"></p>
+</header>
+<nav class="pep-nav" aria-label="Activities"><ol class="pep-steps">
+  <li><a class="pep-step" id="tl-1" href="#activity-1" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Guess</a></li>
+  <li><a class="pep-step" id="tl-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Declare</a></li>
+  <li><a class="pep-step" id="tl-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Wildcards</a></li>
+  <li><a class="pep-step" id="tl-4" href="#activity-4" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Raw types</a></li>
+</ol></nav>
+<noscript data-section-skip><p class="pep-nojs-note"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. All four activities follow in order, each with its expected results and why.</p></noscript>
+
+<section id="activity-1" class="pep-activity" data-pep-activity aria-labelledby="a1-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a1-h" tabindex="-1">Activity 1: Start with a guess</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+
+          <p>The angle brackets in <code>List&lt;String&gt;</code> name the element type.</p>
+<pre><code>List&lt;String&gt; names = new ArrayList&lt;&gt;();
+names.add("ana");
+names.add(42);</code></pre>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-1-box" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li>Choose an answer, then how sure you are.</li><li>Press <strong>Check prediction</strong> to see why each option is right or wrong.</li></ol>
+<p id="task-1">What happens with this code?</p>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to a guess.</p></section>
+      <div class="pep-js-only">
+<fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict data-static-alt="Prediction (practice, not scored): a List&lt;String&gt; gets add(&quot;ana&quot;) and then add(42). Options: it does not compile, because 42 is not a String (correct: javac reports incompatible types: int cannot be converted to String); it runs and stores 42 (wrong: the type argument forbids it); it compiles but throws ClassCastException when run (wrong: type-safe generic code is checked at compile time); 42 becomes the String &quot;42&quot; (wrong: Java never converts an int to a String argument automatically).">
+            <legend>Your prediction</legend>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="predict" id="p-compile" value="compile" aria-describedby="task-1"><span class="ot">It does not compile: <code>42</code> is not a <code>String</code></span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-runs" value="runs" aria-describedby="task-1"><span class="ot">It runs and the list holds <code>ana</code> and <code>42</code></span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-cce" value="cce" aria-describedby="task-1"><span class="ot">It compiles, then throws <code>ClassCastException</code> at run time</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-convert" value="convert" aria-describedby="task-1"><span class="ot"><code>42</code> is stored as the text <code>"42"</code></span></label>
+            </div>
+            <div class="row"><fieldset class="conf" id="conf0" data-pep-confidence aria-describedby="conf0-instr"><legend id="conf0-instr">How sure are you?</legend><label class="opt"><input type="radio" name="conf0" id="conf0-low" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-medium" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-high" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check aria-describedby="conf0-instr" disabled>Check prediction</button></div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-1" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><h3>Activity 1 of 4: Prediction (practice, not scored)</h3><p>What happens with this code?</p><p class="pep-expected"><strong>Expected results and why:</strong> Prediction (practice, not scored): a List&lt;String&gt; gets add("ana") and then add(42). Options: it does not compile, because 42 is not a String (correct: javac reports incompatible types: int cannot be converted to String); it runs and stores 42 (wrong: the type argument forbids it); it compiles but throws ClassCastException when run (wrong: type-safe generic code is checked at compile time); 42 becomes the String "42" (wrong: Java never converts an int to a String argument automatically).</p></div></noscript>
+    </div>
+  </div>
+</section>
+
+<section id="activity-2" class="pep-activity" data-pep-activity aria-labelledby="a2-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a2-h" tabindex="-1">Activity 2: A type parameter is a placeholder for a type</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+
+<pre><code>class Box&lt;T&gt; {
+    private T item;
+}
+static &lt;T&gt; boolean sameType(T left, T right) {
+    return left.equals(right);
+}</code></pre>
+          <p><code>T</code> is a type parameter. Each use fills it with a real type, the type argument: in <code>Box&lt;String&gt;</code>, <code>T</code> means <code>String</code>. The compiler can then keep a box's stored value tied to the type argument instead of treating it as an unknown <code>Object</code>.</p>
+          <p>A generic method declares its own type parameter before the return type. The <code>sameType</code> example uses one inferred type for both arguments; your task applies that declaration rule to a different relationship involving a list element and a return value.</p>
+      </div>
+      <details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+        <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+        <div class="pep-optional__body">
+    <p data-pep-anecdote-story>Picture a kitchen with labelled jars. When a jar says sugar, every cook knows what will come out of it, and nobody has to taste it first. An unlabelled jar can hold anything, so each cook has to check it before every use, and a mix-up is noticed only when a dish tastes wrong.</p>
+    <p data-pep-anecdote-map>A type argument works like that label: it tells everyone what kind of value a container holds.</p>
+        </div>
+      </details>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="code">
+      <div id="task-2-box" class="task" data-pep-task data-pep-may-stall>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li id="task-2">In <strong>Crate.java</strong>, make <code>Crate</code> and <code>middle</code> generic: declare a type parameter for each and use it where <code>Object</code> stands.</li><li>Press <strong>Run</strong> to type-check the declarations with the fixed <strong>Main.java</strong> excerpt below.</li><li>A run that compiles but keeps the starter’s <code>Object</code> field and <code>fill</code> parameter, cast in <code>take</code>, raw <code>List</code> parameter and cast in <code>middle</code> uses one of three assessed attempts; three such runs settle this activity without credit. Other compiling unsafe forms are reported as Not supported and do not use an assessed attempt. Starter and compiler/type-diagnostic runs are also unassessed and do not settle.</li></ol>
+        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-2-box" data-pep-hint-order="1" data-section-skip>
+          <summary><span>Need a hint?</span><span>Hint 1 of 1 for Activity 2</span></summary>
+          <div class="pep-hint__body"><p><strong>Hint 1 (Activity 2)</strong></p><p data-pep-hint-target><strong>Where to act:</strong> The declarations immediately after <code>Crate</code> and <code>static</code>, and every matching <code>Object</code> type.</p><p data-pep-hint-step><strong>Next step:</strong> Give each declaration one type-parameter name, then make every value flowing into and out of that declaration use the same name.</p></div>
+        </details>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>Main compiles with no raw storage or casts, the declared type relationships cover every value-carrying position, and the program prints the target.</p></section>
+<figure class="model" aria-label="Main.java, fixed: it uses your Crate and middle">
+        <p class="lk">Main.java (fixed)</p>
+<pre><code>Crate&lt;String&gt; a = new Crate&lt;&gt;(); a.fill("ana"); String s = a.take();
+Crate&lt;Integer&gt; b = new Crate&lt;&gt;(); b.fill(7); Integer k = b.take();
+Integer m = middle(List.of(3, 5, 8)); String w = middle(List.of("x", "y", "z"));
+System.out.println(s + " " + k + " " + m + " " + w);</code></pre>
+        <p class="lk">Target output: <code>ana 7 5 y</code></p>
+      </figure>
+      <div class="pep-js-only">
+<fieldset id="x1" data-pep-answer-sensitive="java" data-pep-answer-targets="middle take" data-interaction="explore" data-pep-explore aria-describedby="task-2" data-pep-print-items="Starter excerpt: Crate stores Object through fill/take; middle accepts List&lt;Object&gt; and returns Object. Fixed Main excerpt uses Crate&lt;String&gt;, Crate&lt;Integer&gt;, middle(List.of(3, 5, 8)) and middle(List.of(&quot;x&quot;, &quot;y&quot;, &quot;z&quot;)). Target output: ana 7 5 y. Learner changes only declaration types and type parameters." data-static-alt="Java editor for Crate.java. Starter excerpt: class Crate stores an Object field, fill accepts Object, take returns Object, and static Object middle(List&lt;Object&gt; list) returns the middle element. Fixed Main excerpt: Crate&lt;String&gt; is filled with ana; Crate&lt;Integer&gt; is filled with 7; middle runs on List.of(3, 5, 8) and List.of(&quot;x&quot;, &quot;y&quot;, &quot;z&quot;), with no casts. Target output: ana 7 5 y. Make Crate and middle generic by changing only declaration types and type parameters; their bodies stay as given. Hint 1 (Activity 2): act in the type-parameter declarations and matching Object positions, using one consistent type name for values flowing into and out of each declaration.">
+            <legend>Make Crate and middle generic</legend>
+            <div class="pep-editor">
+              <div class="pep-editor__bar"><span class="pep-editor__file">Crate.java</span><button type="button" class="primary" id="ed-run">Run</button><button type="button" class="ghost" id="ed-reset">Reset code</button></div>
+              <div class="pep-editor__code"><div class="pep-editor__gutter" id="ed-gutter" aria-hidden="true"></div><textarea id="ed" class="pep-editor__input" rows="10" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Java editor, Crate.java" aria-describedby="task-2 ed-scope"></textarea></div>
+              <p class="pep-editor__scope" id="ed-scope">Checks the class <code>Crate</code> and the method <code>middle</code> offline; their bodies stay as given.</p>
+              <div class="pep-editor__tabs" role="tablist" aria-label="Results"><button type="button" role="tab" id="tab-prob" aria-controls="ed-prob" aria-selected="true">Problems</button><button type="button" role="tab" id="tab-out" aria-controls="ed-out" aria-selected="false" tabindex="-1">Output</button></div>
+              <div class="pep-editor__panel" id="ed-prob" role="tabpanel" aria-labelledby="tab-prob" tabindex="0"></div>
+              <div class="pep-editor__panel" id="ed-out" role="tabpanel" aria-labelledby="tab-out" tabindex="0" hidden><pre class="out" id="ed-print">(no output yet)</pre></div>
+              <p class="pep-editor__status" id="ed-status"></p>
+            </div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-2" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-pep-no-js data-section-skip><div class="pep-nojs-code pep-expected"><p><strong>Practice editor, reading version.</strong> JavaScript is off, so the editor cannot run here. Work on paper, or place these excerpts inside a small Java 25 class in a setup you already use. The starter excerpt in <strong>Crate.java</strong> is:</p>
+<pre><code>class Crate {
+    private Object item;
+    void fill(Object item) { this.item = item; }
+    Object take() { return item; }
+}
+
+static Object middle(List&lt;Object&gt; list) {
+    return list.get(list.size() / 2);
+}</code></pre><p><strong>Attempt rule:</strong> a run that compiles but keeps the starter’s <code>Object</code> field and <code>fill</code> parameter, cast in <code>take</code>, raw <code>List</code> parameter and cast in <code>middle</code> uses one of three assessed attempts; three such runs settle without credit. Other compiling unsafe forms are reported as Not supported and do not use an assessed attempt. Starter and compiler/type-diagnostic runs are also unassessed and do not settle.</p><p><strong>What success looks like:</strong> the fixed <strong>Main.java</strong> above compiles with no raw storage or casts, every value-carrying position uses the declared type relationship, and the program prints <code>ana 7 5 y</code>. Only the types and type parameters of <code>Crate</code> and <code>middle</code> change; their bodies stay as given.</p></div></noscript>
+      <p class="pep-back"><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-3" class="pep-activity" data-pep-activity aria-labelledby="a3-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a3-h" tabindex="-1">Activity 3: Wildcards: in or out</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+
+          <p>A <code>List&lt;Number&gt;</code> parameter accepts only a <code>List&lt;Number&gt;</code>, not a <code>List&lt;Integer&gt;</code>. Wildcards widen what a parameter accepts:</p>
+          <ul>
+            <li>Only <strong>reads</strong> elements ("in"): <code>List&lt;? extends Number&gt;</code> accepts a list of <code>Number</code> or any subtype, such as <code>List&lt;Integer&gt;</code>.</li>
+            <li>Only <strong>writes</strong> elements ("out"): <code>List&lt;? super Integer&gt;</code> accepts <code>List&lt;Integer&gt;</code>, <code>List&lt;Number&gt;</code> or <code>List&lt;Object&gt;</code>.</li>
+            <li>Reads <strong>and</strong> writes: no wildcard; use <code>List&lt;T&gt;</code>.</li>
+          </ul>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-3-box" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li id="task-3">For each method parameter, choose the declaration that accepts the widest range of lists while staying type safe.</li><li>A wrong choice gets one retry, then the answer shows.</li></ol>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>Every parameter sits in its lane.</p></section>
+      <div class="pep-js-only">
+<fieldset id="x2" data-interaction="drag" data-pep-explore aria-describedby="task-3" data-pep-print-items="Classify all six parameters: sum(nums); addOneToTen(out); copy source; copy destination; swapFirstTwo(list); trimAll(words). Choose among reads-only, writes-only, or reads-and-writes." data-static-alt="Sorting activity: sum every number in a list of Integer, Double or any Number: List&lt;? extends Number&gt; (only reads). Add the Integers 1 to 10 to a list of Integer, Number or Object: List&lt;? super Integer&gt; (only writes). The source list of copy(src, dest): List&lt;? extends T&gt;. The destination list of copy(src, dest): List&lt;? super T&gt;. Swap the first two elements of a list in place: List&lt;T&gt; (reads and writes). Replace each String with its trimmed version: List&lt;String&gt; with no wildcard (reads and writes).">
+            <legend id="ln-legend">Parameter: <span id="ln-name"></span></legend>
+            <div class="lanebtns" id="ln-btns"></div>
+            <p class="sub" id="ln-count">0 of 6 sorted</p>
+          </fieldset>
+          <figure class="model" aria-label="What the compiler checks">
+
+          <div class="lanes" id="m-lanes"></div>
+          </figure>
+      </div>
+      <div class="feedback" id="fb-3" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><h3>Activity 3 of 4: Sorting practice</h3><p>For each method parameter, choose the declaration that accepts the widest range of lists while staying type safe.</p><p class="pep-expected"><strong>Expected results and why:</strong> Sorting activity: sum every number in a list of Integer, Double or any Number: List&lt;? extends Number&gt; (only reads). Add the Integers 1 to 10 to a list of Integer, Number or Object: List&lt;? super Integer&gt; (only writes). The source list of copy(src, dest): List&lt;? extends T&gt;. The destination list of copy(src, dest): List&lt;? super T&gt;. Swap the first two elements of a list in place: List&lt;T&gt; (reads and writes). Replace each String with its trimmed version: List&lt;String&gt; with no wildcard (reads and writes).</p></div></noscript>
+      <p class="pep-back"><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-4" class="pep-activity" data-pep-activity aria-labelledby="a4-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a4-h" tabindex="-1">Activity 4: Raw types switch the check off</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+
+          <p>The compiler's guarantee holds only for type-safe code. A raw type, such as <code>List</code> with no type argument, still compiles, with an "unchecked" warning, and lets any object in. The wrong element is caught only later, at run time, when code reads it as a <code>String</code>: that read throws <code>ClassCastException</code>.</p>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-apply" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li>Choose an answer and how sure you are, then press <strong>Check answer</strong>.</li><li>A wrong first answer gets one retry.</li></ol>
+<div id="task-4"><p>This compiles with an unchecked warning. What happens when it runs?</p>
+<pre><code>List&lt;String&gt; names = new ArrayList&lt;&gt;();
+List raw = names;           // raw type
+raw.add(42);
+String s = names.get(0);</code></pre></div>
+          <div id="task-4b" tabindex="-1" hidden><p>Same idea, hidden in a method. Where does this fail?</p>
+<pre><code>static void fill(List list) { list.add(3.5); }   // raw parameter
+
+List&lt;String&gt; words = new ArrayList&lt;&gt;();
+fill(words);
+String w = words.get(0);</code></pre></div>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>You pick the right outcome.</p></section>
+      <div class="pep-js-only">
+<fieldset id="apply" data-interaction="mcq" data-confidence data-pep-apply data-static-alt="Apply question: a List&lt;String&gt; is aliased by a raw List, raw.add(42) runs, then String s = names.get(0). Correct: it compiles with an unchecked warning and throws ClassCastException at run time when the Integer is read as a String. Wrong: a compile error at raw.add(42) (raw types compile with a warning); s becomes &quot;42&quot;; NullPointerException. Retry form: a raw parameter in fill(List list) adds 3.5 to a List&lt;String&gt;; the failure is a ClassCastException at String w = words.get(0), not at the call or inside fill.">
+            <legend>What happens</legend>
+            <div class="opts one" id="a1">
+              <label class="opt"><input type="radio" name="a1" id="a1-compile" value="compile" aria-describedby="task-4"><span class="ot">Compile error at <code>raw.add(42)</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-cce" value="cce" aria-describedby="task-4"><span class="ot"><code>ClassCastException</code> at <code>String s = names.get(0)</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-text" value="text" aria-describedby="task-4"><span class="ot">It runs and <code>s</code> is <code>"42"</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-npe" value="npe" aria-describedby="task-4"><span class="ot"><code>NullPointerException</code> at <code>raw.add(42)</code></span></label>
+            </div>
+            <div class="opts one" id="a2" hidden>
+              <label class="opt"><input type="radio" name="a2" id="a2-call" value="call" aria-describedby="task-4b"><span class="ot">The compiler rejects <code>fill(words)</code></span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-inside" value="inside" aria-describedby="task-4b"><span class="ot"><code>list.add(3.5)</code> throws inside <code>fill</code></span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-read" value="read" aria-describedby="task-4b"><span class="ot"><code>ClassCastException</code> at <code>String w = words.get(0)</code></span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-never" value="never" aria-describedby="task-4b"><span class="ot">It never fails: <code>3.5</code> is stored as <code>"3.5"</code></span></label>
+            </div>
+          </fieldset>
+          <div class="row">
+            <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-instr">
+              <legend id="conf-instr">How sure are you?</legend>
+              <label class="opt"><input type="radio" name="conf" id="conf-low" value="low"><span class="ot">Low</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-medium" value="medium"><span class="ot">Medium</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-high" value="high"><span class="ot">High</span></label>
+            </fieldset>
+            <button type="button" class="primary" id="apply-check" data-pep-apply-check aria-describedby="conf-instr" disabled>Check answer</button>
+          </div>
+      </div>
+      <div class="feedback" id="fb-4" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><h3>Activity 4 of 4: Final check</h3><div><p>This compiles with an unchecked warning. What happens when it runs?</p>
+<pre><code>List&lt;String&gt; names = new ArrayList&lt;&gt;();
+List raw = names;           // raw type
+raw.add(42);
+String s = names.get(0);</code></pre></div><p><strong>Retry form, if the first answer is wrong:</strong></p><div><p>Same idea, hidden in a method. Where does this fail?</p>
+<pre><code>static void fill(List list) { list.add(3.5); }   // raw parameter
+
+List&lt;String&gt; words = new ArrayList&lt;&gt;();
+fill(words);
+String w = words.get(0);</code></pre></div><p class="pep-expected"><strong>Expected results and why:</strong> Apply question: a List&lt;String&gt; is aliased by a raw List, raw.add(42) runs, then String s = names.get(0). Correct: it compiles with an unchecked warning and throws ClassCastException at run time when the Integer is read as a String. Wrong: a compile error at raw.add(42) (raw types compile with a warning); s becomes "42"; NullPointerException. Retry form: a raw parameter in fill(List list) adds 3.5 to a List&lt;String&gt;; the failure is a ClassCastException at String w = words.get(0), not at the call or inside fill.</p></div></noscript>
+      <p class="pep-back"><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+    </div>
+  </div>
+</section>
+
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+  <button type="button" class="pep-btn" id="prev" data-pep-previous>Previous activity</button>
+  <button type="button" class="primary" id="next" data-pep-next>Next activity</button>
+</div>
+
+<section id="recap" class="recap" data-pep-recap aria-labelledby="recap-h">
+  <h2 id="recap-h" tabindex="-1">Recap</h2>
+<ul>
+            <li>A generic class declares a type parameter after its name, <code>class Box&lt;T&gt;</code>; a generic method declares its own before its return type, as in <code>&lt;T&gt; boolean sameType(T left, T right)</code>.</li>
+            <li>Raw types and unchecked operations bypass that check, so the mistake surfaces later as a <code>ClassCastException</code>.</li>
+            <li>Parameter that only reads: <code>? extends T</code>. Only writes: <code>? super T</code>. Both: <code>List&lt;T&gt;</code>.</li>
+          </ul>
+          <details data-section-skip data-pep-cheat-sheet>
+            <summary>Cheat sheet</summary>
+            <table>
+              <tr><td>Generic class</td><td><code>class Box&lt;T&gt; { T item; }</code></td></tr>
+              <tr><td>Generic method</td><td><code>static &lt;T&gt; boolean sameType(T left, T right)</code></td></tr>
+              <tr><td>Diamond</td><td><code>Box&lt;String&gt; b = new Box&lt;&gt;();</code></td></tr>
+              <tr><td>Reads only</td><td><code>List&lt;? extends Number&gt;</code></td></tr>
+              <tr><td>Writes only</td><td><code>List&lt;? super Integer&gt;</code></td></tr>
+              <tr><td>Reads and writes</td><td><code>List&lt;T&gt;</code></td></tr>
+            </table>
+          </details>
+          <details data-section-skip data-pep-sources class="sources">
+            <summary>Sources and review date</summary>
+            <p>Claims on this page were checked against the live official pages below on 13 October 2026 (UTC), for Java SE 25. Compiler messages and program output were confirmed with OpenJDK 25.0.4 <code>javac</code> and <code>java</code>. Links open outside this lesson.</p>
+            <ul>
+              <li><a href="https://dev.java/learn/language/fp/generics/intro/" rel="noopener">Dev.java: Introducing Generics</a>: stronger type checks, elimination of casts, generic types and methods, raw types.</li>
+              <li><a href="https://dev.java/learn/language/fp/generics/wildcards/" rel="noopener">Dev.java: Wildcards</a>: upper and lower bounded wildcards; Guidelines for Wildcard Use ("in" and "out" variables).</li>
+              <li><a href="https://dev.java/learn/language/fp/generics/type-inference/" rel="noopener">Dev.java: Type Inference</a>: inferring a generic method's type argument.</li>
+              <li><a href="https://dev.java/learn/language/fp/generics/type-erasure/" rel="noopener">Dev.java: Type Erasure</a>.</li>
+              <li><a href="https://docs.oracle.com/javase/specs/jls/se25/html/jls-4.html" rel="noopener">Java Language Specification SE 25, chapter 4</a>: 4.8 Raw Types; 4.12.2 heap pollution and unchecked warnings.</li>
+            </ul>
+          </details>
+          <p id="complete" class="complete" data-pep-completion></p>
+          <p class="next-topic">Next topic: Wrapper types and autoboxing</p>
+</section>
+</main>
+<script>var PAGE={};
+(function(){
+var E,$,$$;
+/* Practice editor shell: gutter, Problems/Output tabs, status, bounded runs; the page supplies check(src) */
+var ED={runs:0,limit:3,lock:false};
+function edGutter(){var n=$('#ed').value.split('\n').length,g=[];for(var k=1;k<=n;k++)g.push(k);$('#ed-gutter').textContent=g.join('\n');$('#ed').rows=Math.max(5,Math.min(20,n));}
+function edTab(which){[['prob','#tab-prob','#ed-prob'],['out','#tab-out','#ed-out']].forEach(function(t){var on=t[0]===which;$(t[1]).setAttribute('aria-selected',on?'true':'false');$(t[1]).tabIndex=on?0:-1;$(t[2]).hidden=!on;});}
+function edGo(file,ln){var ta=$('#ed'),ls=ta.value.split('\n'),pos=0;if(file!==ED.file){ta.focus();return;}for(var k=0;k<ln-1&&k<ls.length;k++)pos+=ls[k].length+1;ta.focus();ta.setSelectionRange(pos,pos);}
+function edProblems(list){var box=$('#ed-prob');box.textContent='';
+  if(!list.length){box.appendChild(E.el('p','pep-editor__empty','No problems.'));return;}
+  list.forEach(function(pr){var b=E.el('button','pep-editor__problem');b.type='button';
+    b.appendChild(E.el('span',pr.kind==='error'?'kind-error':'kind-limit',pr.kind==='error'?'Error':'Not supported'));
+    b.appendChild(document.createTextNode(' '+pr.file+' line '+pr.line+': '+pr.msg));
+    b.addEventListener('click',function(){edGo(pr.file,pr.line);});box.appendChild(b);});
+  edTab('prob');}
+function edLock(on){ED.lock=on;$('#ed').readOnly=on;$('#ed-run').disabled=on;$('#ed-reset').disabled=on;}
+function edReset(){$('#ed').value=ED.starter;edGutter();var box=$('#ed-prob');box.textContent='';box.appendChild(E.el('p','pep-editor__empty','Not run yet. Edit the code, then press Run.'));
+  $('#ed-print').textContent='(no output yet)';edTab('prob');$('#ed-status').textContent='Not run yet';if(ED.onReset)ED.onReset();}
+function edRestart(){ED.runs=0;edLock(false);edReset();}
+function edCount(msg){
+  /* a run that compiles or fails a type check counts; a form outside the practice subset does not */
+  if(++ED.runs>=ED.limit){E.state().results[ED.key]='settled';edLock(true);
+    msg.push({c:'verdict set',s:'Settled after '+ED.limit+' runs that did not meet the task: this activity is not passed and earns no credit. Continue to the next activity, or press Restart activity to try again.'});
+    E.say(msg,true);E.complete(ED.key);return true;}
+  if(ED.runs===ED.limit-1)msg.push({s:'One more run that does not meet the task settles this activity without credit.'});
+  return false;}
+function practiceShape(src){return String(src).replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g,'').replace(/\s+/g,'');}
+function edRun(){if(ED.lock||E.state().done[ED.key])return;var src=$('#ed').value;
+  if(practiceShape(src)===practiceShape(ED.starter)){edProblems([]);$('#ed-print').textContent='(no output: starter unchanged)';$('#ed-status').textContent='Not assessed: edit the starter first';E.say([{c:'verdict info',s:'Not assessed: the starter is unchanged. Make a declaration change, then run again.'}]);return;}
+  var r=ED.check(src);
+  edProblems(r.problems||[]);
+  if(r.output!=null){$('#ed-print').textContent=r.output;if(!(r.problems||[]).length)edTab('out');}else $('#ed-print').textContent='(no output: the program did not compile)';
+  $('#ed-status').textContent=r.status;
+  if(r.unsupported||r.unassessed){E.say(r.msg);return;}
+  E.attempt(ED.activity);
+  if(r.ok){r.msg.push({c:'verdict ok',s:r.done});E.say(r.msg,true);E.complete(ED.key);return;}
+  if(edCount(r.msg))return;E.say(r.msg);}
+function edInit(o){ED.key=o.key;ED.activity=o.activity;ED.starter=o.starter;ED.check=o.check;ED.file=o.file;ED.onReset=o.onReset;
+  $('#ed').addEventListener('input',edGutter);$('#ed-run').addEventListener('click',edRun);$('#ed-reset').addEventListener('click',edReset);
+  $('#tab-prob').addEventListener('click',function(){edTab('prob');});$('#tab-out').addEventListener('click',function(){edTab('out');});
+  $$('[role="tab"]').forEach(function(t){t.addEventListener('keydown',function(ev){if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){var w=t.id==='tab-prob'?'out':'prob';edTab(w);$('#tab-'+w).focus();ev.preventDefault();}});});
+  edReset();}
+/* tokenizer shared by the bounded checkers: identifiers, numbers, strings, two-char operators, single symbols; line numbers kept */
+function edLex(src){var t=[],re=/[ \t\r]+|\n|\/\/[^\n]*|\/\*[\s\S]*?\*\/|(::|->|==|!=|<=|>=|&&|\|\||\+\+|\+=|[A-Za-z_$][\w$]*|\d+|"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|.)/g,m,line=1;
+  while((m=re.exec(src))){if(m[1]!==undefined)t.push({v:m[1],line:line});line+=(m[0].match(/\n/g)||[]).length;}return t;}
+
+/* Generics practice editor: a bounded checker for one class Crate and one method middle, then the fixed Main below it.
+   It accepts only these two declarations with the given bodies; only the types and type parameters may change. */
+var GEN_STARTER='// Make Crate and middle generic, so Main compiles with no casts.\nclass Crate {\n    private Object item;\n    void fill(Object item) { this.item = item; }\n    Object take() { return item; }\n}\n\nstatic Object middle(List<Object> list) {\n    return list.get(list.size() / 2);\n}';
+var GEN_TARGET='ana 7 5 y';
+function genUnsafeCastMiss(src){
+  var s=String(src).replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g,'').replace(/\s+/g,' ').trim(),c=s.match(/^class Crate\s*<\s*([A-Za-z_$][\w$]*)\s*>\s*\{\s*private Object item\s*;\s*void fill\s*\(\s*Object item\s*\)\s*\{\s*this\s*\.\s*item\s*=\s*item\s*;\s*\}\s*([A-Za-z_$][\w$]*) take\s*\(\s*\)\s*\{\s*return\s*\(\s*([A-Za-z_$][\w$]*)\s*\)\s*item\s*;\s*\}\s*\}\s*static\s*<\s*([A-Za-z_$][\w$]*)\s*>\s*([A-Za-z_$][\w$]*) middle\s*\(\s*List list\s*\)\s*\{\s*return\s*\(\s*([A-Za-z_$][\w$]*)\s*\)\s*list\s*\.\s*get\s*\(\s*list\s*\.\s*size\s*\(\s*\)\s*\/\s*2\s*\)\s*;\s*\}$/);
+  return !!(c&&c[1]===c[2]&&c[2]===c[3]&&c[4]===c[5]&&c[5]===c[6]);}
+function genCheck(src){
+  if(genUnsafeCastMiss(src))return {problems:[],status:'Ran with unchecked warnings, but the generic relationships do not meet the task',output:GEN_TARGET,ok:false,
+    msg:[{c:'verdict no',s:'Not yet: this source compiles with unchecked warnings, but Object storage, a raw List and casts bypass the type relationships the task asks you to declare.'},{s:'Keep the given bodies. Use each declaration’s type parameter consistently in its field, parameter, return type and List element type.'}]};
+  var Tk=edLex(src),i=0,probs=[],decl={cls:null,mid:null};
+  function pk(o){var x=Tk[i+(o||0)];return x?x.v:'';}
+  function ln(){return Tk[i]?Tk[i].line:(Tk.length?Tk[Tk.length-1].line:1);}
+  function Lim(msg){var e=new Error(msg);e.limit=true;e.line=ln();return e;}
+  function Err(msg){var e=new Error(msg);e.line=ln();return e;}
+  function eat(v){if(pk()===v){i++;return;}throw Lim("expected '"+v+"'");}
+  function ident(){var v=pk();if(!/^[A-Za-z_$][\w$]*$/.test(v))throw Lim('expected an identifier');i++;return v;}
+  function tparams(){if(pk()!=='<')return [];i++;var ps=[ident()];while(pk()===','){i++;ps.push(ident());}eat('>');return ps;}
+  function type(){var line=ln(),n=ident();if(pk()==='<')throw Lim('a parameterized type here is outside this practice: use a type parameter, Object, String or Integer');return {n:n,line:line};}
+  function mods(allowed){while(allowed.indexOf(pk())>=0)i++;}
+  function body(words){var line=ln();for(var k=0;k<words.length;k++){if(pk()!==words[k])throw Lim('keep this method body exactly as given; change only the types');i++;}return line;}
+  try{
+    if(/\?\s*(?:extends|super)\b/.test(src))throw Lim('wildcard bounds are legal Java but are not supported in this practice editor');
+    while(i<Tk.length){
+      mods(['public','final','abstract']);
+      if(pk()==='class'){i++;if(ident()!=='Crate')throw Lim('declare the class Crate');if(decl.cls)throw Lim('declare Crate once');
+        var c={line:Tk[i-1].line,ps:tparams()};eat('{');
+        while(pk()!=='}'&&i<Tk.length){mods(['private','public','final']);
+          if(pk()==='void'){i++;if(ident()!=='fill')throw Lim('the class has fill and take only');eat('(');c.fillT=type();if(ident()!=='item')throw Lim("keep the parameter name item");eat(')');body(['{','this','.','item','=','item',';','}']);}
+          else{var t=type();var name=ident();
+            if(name==='item'){c.fieldT=t;eat(';');}
+            else if(name==='take'){c.takeT=t;eat('(');eat(')');body(['{','return','item',';','}']);}
+            else throw Lim('the class has one field item and the methods fill and take');}}
+        eat('}');
+        if(!c.fieldT||!c.fillT||!c.takeT)throw Lim('keep the field item and both methods fill and take');
+        decl.cls=c;continue;}
+      if(pk()==='static'){i++;mods(['public','final']);if(decl.mid)throw Lim('declare middle once');
+        var m={line:ln(),ps:tparams()};m.retT=type();if(ident()!=='middle')throw Lim('declare the method middle');eat('(');
+        if(pk()!=='List')throw Lim('keep the parameter type List<...>');i++;eat('<');m.elT=type();eat('>');if(ident()!=='list')throw Lim('keep the parameter name list');eat(')');
+        body(['{','return','list','.','get','(','list','.','size','(',')','/','2',')',';','}']);decl.mid=m;continue;}
+      throw Lim('only the class Crate and the static method middle belong here');}
+    if(!decl.cls)throw Lim('declare the class Crate');if(!decl.mid)throw Lim('declare the static method middle');
+  }catch(e){if(!(e instanceof Error))throw e;
+    if(!e.limit)return {problems:[{kind:'error',file:'Crate.java',line:e.line,msg:'error: '+e.message}],status:'1 compiler diagnostic: not assessed',output:null,unassessed:true,
+      msg:[{c:'verdict info',s:'Not assessed: the Java source has a compiler diagnostic. Read the Error problem under the editor.'}]};
+    return {problems:[{kind:'limit',file:'Crate.java',line:e.line,msg:'not supported in this practice editor: '+e.message}],status:'1 problem: outside what this practice editor checks',output:null,unsupported:true,
+      msg:[{c:'verdict info',s:'Not assessed: this shape is outside the editor’s bounded subset. Read the Not supported problem under the editor.'}]};}
+  var c=decl.cls,m=decl.mid,KNOWN=['Object','String','Integer'];
+  function resolve(t,ps,file){if(ps.indexOf(t.n)>=0)return {v:t.n};if(KNOWN.indexOf(t.n)>=0)return {c:t.n};
+    probs.push({kind:'error',file:file,line:t.line,msg:'error: cannot find symbol: class '+t.n});return null;}
+  function tn(x){return x.v||x.c;}
+  function assignable(from,to){if(!from||!to)return true;if(to.c==='Object')return true;return tn(from)===tn(to)&&!!from.v===!!to.v;}
+  if(c.ps.length>1)probs.push({kind:'error',file:'Main.java',line:1,msg:'error: wrong number of type arguments; required '+c.ps.length});
+  var fT=resolve(c.fieldT,c.ps,'Crate.java'),pT=resolve(c.fillT,c.ps,'Crate.java'),tT=resolve(c.takeT,c.ps,'Crate.java');
+  if(pT&&fT&&!assignable(pT,fT))probs.push({kind:'error',file:'Crate.java',line:c.fillT.line,msg:'error: incompatible types: '+tn(pT)+' cannot be converted to '+tn(fT)});
+  if(fT&&tT&&!assignable(fT,tT))probs.push({kind:'error',file:'Crate.java',line:c.takeT.line,msg:'error: incompatible types: '+tn(fT)+' cannot be converted to '+tn(tT)});
+  var rT=resolve(m.retT,m.ps,'Crate.java'),eT=resolve(m.elT,m.ps,'Crate.java');
+  if(m.ps.length>1)probs.push({kind:'error',file:'Crate.java',line:m.line,msg:'error: middle needs one type parameter here'});
+  if(eT&&rT&&!assignable(eT,rT))probs.push({kind:'error',file:'Crate.java',line:m.retT.line,msg:'error: incompatible types: '+tn(eT)+' cannot be converted to '+tn(rT)});
+  var crateDeclErrs=probs.length;
+  /* Main.java: two Crates, two calls of middle, no casts */
+  function sub(t,arg){return t&&t.v?{c:arg}:t;}
+  if(c.ps.length===0)probs.push({kind:'error',file:'Main.java',line:1,msg:'error: type Crate does not take parameters'});
+  else if(c.ps.length===1)[['String','"ana"',1],['Integer','7',2]].forEach(function(u){var a=u[0],pt=sub(pT,a),rt=sub(tT,a);
+      if(pt&&pt.c!=='Object'&&pt.c!==a)probs.push({kind:'error',file:'Main.java',line:u[2],msg:'error: incompatible types: '+(a==='Integer'?'int':'String')+' cannot be converted to '+pt.c});
+      if(rt&&rt.c!==a)probs.push({kind:'error',file:'Main.java',line:u[2],msg:'error: incompatible types: '+rt.c+' cannot be converted to '+a});});
+  [['Integer',3],['String',3]].forEach(function(u){var a=u[0];
+    /* the list argument: a type variable is inferred, List<Object> is target-typed, any other element type must match */
+    if(eT&&!eT.v&&eT.c!=='Object'&&eT.c!==a)probs.push({kind:'error',file:'Main.java',line:u[1],msg:'error: incompatible types: List<'+a+'> cannot be converted to List<'+eT.c+'>'});
+    /* the result: a type variable is inferred from the argument or, if absent there, from the assignment target */
+    else if(rT&&!rT.v&&rT.c!==a)probs.push({kind:'error',file:'Main.java',line:u[1],msg:'error: incompatible types: '+rT.c+' cannot be converted to '+a});});
+  var seen={},list=probs.filter(function(p){var k=p.file+p.line+p.msg;if(seen[k])return false;seen[k]=true;return true;});
+  if(list.length){
+    var genericClass=c.ps.length===1,genericMethod=m.ps.length===1&&eT&&eT.v&&rT&&rT.v===eT.v;
+    var why=!genericClass?'Main writes `Crate<String>` and `Crate<Integer>`, so Crate must declare one type parameter after its name.':
+      crateDeclErrs?'Inside Crate and middle, every type that holds the item must be the type parameter, or the compiler cannot match them.':
+      !genericMethod?'`middle` is called with a list of `Integer` and a list of `String`; only a method that declares its own type parameter before the return type fits both.':
+      'Every `T` in Crate must stand for the type argument Main supplies.';
+    return {problems:list,status:list.length+(list.length>1?' compiler diagnostics':' compiler diagnostic')+': not assessed',output:null,unassessed:true,
+      msg:[{c:'verdict info',s:'Not assessed: the fixed Main would not compile with these type declarations.'},{s:why}]};}
+  return {problems:[],status:'Compiled and ran: output matches the target',output:GEN_TARGET,ok:true,
+    msg:[{c:'verdict info',s:'Compiled with no casts and printed `'+GEN_TARGET+'`.'}],done:'One generic class served two type arguments, and one generic method served two element types.'};}
+
+PAGE.predict={ok:'compile',lead:'The type argument String tells the compiler what the list may hold. It rejects add(42) before the program can run.',expl:{
+  compile:'Right: javac reports "incompatible types: int cannot be converted to String".',
+  runs:'Not quite: List<String> may hold only String elements, and the compiler enforces it.',
+  cce:'Not quite: type-safe generic code is checked when it compiles, so the mistake never reaches run time.',
+  convert:'Not quite: Java does not turn an int argument into a String automatically.'}};
+PAGE.lanes={key:'x2',model:'#m-lanes',btns:'#ln-btns',name:'#ln-name',count:'#ln-count',legend:'ln-legend',label:'Continue',
+ lanes:[{id:'extends',label:'? extends (only reads)'},{id:'super',label:'? super (only writes)'},{id:'exact',label:'No wildcard (reads and writes)'}],
+ done:'In: extends. Out: super. In and out: no wildcard.',
+ items:[
+  {n:'`sum(nums)`: adds up every number in a list of `Integer`, `Double` or any `Number`',lane:'extends',ok:'`List<? extends Number>`: the method only reads numbers out, so any list of a `Number` subtype works.',w:{super:'`? super` is for a list you put elements into; this method only reads.',exact:'`List<Number>` would reject a `List<Integer>`; a wildcard is needed to accept both.'}},
+  {n:'`addOneToTen(out)`: puts the `Integer` values 1 to 10 into a list of `Integer`, `Number` or `Object`',lane:'super',ok:'`List<? super Integer>`: the method only writes `Integer` values, and any list that can hold them works.',w:{extends:'With `? extends Integer` you cannot add, because the list might be of a narrower type.',exact:'`List<Integer>` would reject a `List<Number>` or `List<Object>`.'}},
+  {n:'`copy(src, dest)`: the `src` list, which elements are read from',lane:'extends',ok:'`src` is an "in" parameter: `List<? extends T>`.',w:{super:'Nothing is written into `src`.',exact:'Only reading happens, so a wildcard accepts more lists.'}},
+  {n:'`copy(src, dest)`: the `dest` list, which elements are written into',lane:'super',ok:'`dest` is an "out" parameter: `List<? super T>`.',w:{extends:'You cannot add to a `List<? extends T>`.',exact:'Only writing happens, so a wildcard accepts more lists.'}},
+  {n:'`swapFirstTwo(list)`: reads the first two elements and writes them back swapped',lane:'exact',ok:'Reading and writing the same elements needs the exact type: `<T> void swapFirstTwo(List<T> list)`.',w:{extends:'With `? extends`, the method could read but not write the elements back.',super:'With `? super`, the elements read come back only as `Object`, not as the type to write.'}},
+  {n:'`trimAll(words)`: replaces each `String` with its trimmed version',lane:'exact',ok:'It reads each `String` and writes one back, so it needs `List<String>`.',w:{extends:'With `? extends String` you could read but not set elements.',super:'With `? super String` reads come back as `Object`, so you cannot call `trim()` without a cast.'}}
+ ]};
+PAGE.apply={
+ r1:{ok:'cce',expl:{
+   compile:'A raw List accepts any object; javac only warns ("unchecked call").',
+   cce:'The Integer is stored without complaint, and reading it as a String fails at run time.',
+   text:'Nothing converts 42 to text; the Integer object itself is in the list.',
+   npe:'Nothing is null here; add on a raw list succeeds.'},
+   mis:{compile:'Raw types compile, with an unchecked warning.',text:'The list holds an Integer, not the text "42".',npe:'No null is involved.'}},
+ r2:{ok:'read',answer:'The raw parameter lets 3.5 in with only a warning, so the failure appears later: `ClassCastException` at `String w = words.get(0)`.',expl:{
+   call:'A raw List parameter accepts a List<String> without error.',
+   inside:'Adding to a raw list succeeds; the list does not check element types at run time.',
+   read:'The Double is caught only when it is read as a String.',
+   never:'3.5 is stored as a Double object, not as text.'},
+   mis:{call:'Raw parameters accept any list.',inside:'The add itself succeeds.',never:'The wrong element fails when it is read as a String.'}}
+};
+PAGE.checkLabels={x2:'Wildcard choice',apply:'Final check'};
+
+PAGE.init=function(eng){E=eng;$=eng.$;$$=eng.$$;edInit({key:'x1',activity:2,starter:GEN_STARTER,check:genCheck,file:'Crate.java'});E.lanes(PAGE.lanes);};
+PAGE.resetStep=function(st){if(st===2)edRestart();};
+})();</script>
+<script>
+(function(){
+'use strict';
+var D=document;
+function $(s,r){return (r||D).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||D).querySelectorAll(s));}
+function md(s){var f=D.createDocumentFragment(),re=/(`[^`]+`|\*\*[^*]+\*\*)/g,last=0,m;s=String(s);
+  while((m=re.exec(s))){if(m.index>last)f.appendChild(D.createTextNode(s.slice(last,m.index)));
+    var t=m[0],e=D.createElement(t.charAt(0)==='`'?'code':'strong');e.textContent=t.charAt(0)==='`'?t.slice(1,-1):t.slice(2,-2);f.appendChild(e);last=re.lastIndex;}
+  if(last<s.length)f.appendChild(D.createTextNode(s.slice(last)));return f;}
+function el(tag,cls,txt){var e=D.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.appendChild(typeof txt==='string'?md(txt):txt);return e;}
+function T(t){return D.createTextNode(t);}
+/* Guidance state: current activity, a monotonic unlocked frontier and per-activity results kept apart */
+var P=window.PAGE||{};
+var main=$('#lesson'),ACTS=$$('[data-pep-activity]'),LINKS=$$('[data-pep-activity-link]'),prevBtn=$('#prev'),next=$('#next'),resetBtn=$('#reset'),recap=$('#recap');
+var KEYS=['predict','x1','x2','apply'],N=KEYS.length;
+var S={step:1,done:{},results:{}};
+function freshAct(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,cont:false};}
+var G={current:1,unlocked:1,complete:false,settled:false,acts:KEYS.map(freshAct)};
+function fbOf(n){return $('[data-pep-feedback]',ACTS[n-1]);}
+function say(parts,focus){var fb=fbOf(G.current);fb.textContent='';(parts||[]).forEach(function(p){
+  if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li',it[2]||'');li.appendChild(el('strong',null,it[0]));li.appendChild(T(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
+  else if(p.pre){var pr=el('pre','out');pr.textContent=p.pre;fb.appendChild(pr);}
+  else{var q=el('p',p.c||'',p.s);if(p.attr)q.setAttribute(p.attr,'');fb.appendChild(q);}});
+  if(focus)fb.focus();}
+function optText(i){var l=i.closest('label');return l?l.textContent.replace(/\s+/g,' ').trim():i.value;}
+var WORD={'correct':'correct on the first try','correct-retry':'correct on the second try','settled':'answered and settled, not passed'};
+function reflect(){ACTS.forEach(function(sec,i){var a=G.acts[i];sec.setAttribute('data-pep-attempts',String(a.attempts));sec.setAttribute('data-pep-settled',String(a.settled));
+    sec.setAttribute('data-pep-completed',String(a.completed));sec.setAttribute('data-pep-credit',String(a.credit));sec.setAttribute('data-pep-grade',String(a.grade));sec.setAttribute('data-pep-continue',String(a.cont));});
+  main.setAttribute('data-pep-current-activity',String(G.current));main.setAttribute('data-pep-unlocked-through',String(G.unlocked));main.setAttribute('data-pep-complete',String(G.complete));main.setAttribute('data-pep-path-settled',String(G.settled));}
+function progress(){var c=0,set=0,segs=$$('.pep-progress > span');KEYS.forEach(function(k,i){var s=segs[i];s.className='';
+    if(S.done[k]){if(G.acts[i].completed){c++;s.className='is-done';}else{set++;s.className='is-settled';}}
+    if(i+1===G.current)s.className+=(s.className?' ':'')+'is-current';});
+  $('#path-text').textContent='Answered '+(c+set)+' of '+N;
+  $('#prog-text').textContent='Completed '+c+' of '+N+(set?'; '+set+' settled, not passed':'');}
+function attempt(n){G.acts[n-1].attempts++;reflect();}
+function finishPage(){var c=$('#complete'),labels=P.checkLabels||{apply:'Final check'},parts=[],miss=[];
+  KEYS.forEach(function(k,i){if(S.results[k]&&labels[k])parts.push(labels[k]+': '+WORD[S.results[k]]+'.');if(!G.acts[i].completed){var h=$('#a'+(i+1)+'-h');miss.push('Activity '+(i+1)+(h?' ('+h.textContent.trim()+')':''));}});
+  c.className='complete'+(G.complete?'':' settled');
+  c.textContent=G.complete?'Topic complete. '+parts.join(' '):'Required path settled; '+miss.length+(miss.length>1?' activities remain':' activity remains')+' incomplete: '+miss.join(', ')+'. '+parts.join(' ')+' Their objectives are not met yet: restart those activities, or review their explanations before the practice quiz.';}
+function complete(k){var n=KEYS.indexOf(k)+1,a=G.acts[n-1],failed=S.results[k]==='settled';S.done[k]=true;
+  a.settled=true;a.cont=true;a.completed=!failed;
+  if(!failed&&a.credit===0){a.credit=1;a.grade=k==='predict'?0:1;}
+  G.unlocked=Math.max(G.unlocked,Math.min(n+1,N));
+  if(KEYS.every(function(x){return !!S.done[x];})){G.settled=true;G.complete=G.acts.every(function(x){return x.completed;});finishPage();}
+  progress();render(G.current);}
+function render(number,mode,moveFocus){
+  if(!(number>=1&&number<=N&&number<=G.unlocked))return false;
+  G.current=number;S.step=number;
+  ACTS.forEach(function(sec,i){sec.hidden=i+1!==number;});
+  LINKS.forEach(function(link,i){var n=i+1;
+    if(n===number)link.setAttribute('aria-current','step');else link.removeAttribute('aria-current');
+    if(n>G.unlocked)link.setAttribute('aria-disabled','true');else link.removeAttribute('aria-disabled');
+    link.classList.toggle('is-done',!!S.done[KEYS[i]]);});
+  prevBtn.disabled=number===1;
+  next.disabled=number===N||number>=G.unlocked||!G.acts[number-1].cont;
+  recap.hidden=!G.settled;
+  $('#pos-text').textContent='Activity '+number+' of '+N;
+  reflect();progress();
+  try{if(mode==='push')history.pushState({activity:number},'','#activity-'+number);
+    else if(mode==='replace')history.replaceState({activity:number},'','#activity-'+number);}
+  catch(e){if(mode&&location.hash!=='#activity-'+number)location.hash='activity-'+number;}
+  if(moveFocus){var h=$('#a'+number+'-h');if(h)h.focus();}
+  return true;}
+/* pep:component predict@1 js */
+/* predict */
+var pf=$('#predict'),pc=$('#predict-check');
+function pReady(){pc.disabled=!!S.done.predict||!($('input[name="predict"]:checked')&&$('input[name="conf0"]:checked'));}
+pf.addEventListener('change',pReady);
+function badges(l,arr){var b=l.querySelector('.badges');if(!b){b=el('span','badges');l.appendChild(b);}arr.forEach(function(x){b.appendChild(el('span','badge '+x[1],x[0]));});}
+pc.addEventListener('click',function(){var c=$('input[name="predict"]:checked'),cv=$('input[name="conf0"]:checked');if(!c||!cv)return;var okv=P.predict.ok,match=c.value===okv;
+  $$('input',pf).forEach(function(i){i.disabled=true;});pc.disabled=true;
+  $$('input[name="predict"]',pf).forEach(function(i){var l=i.closest('label');if(i===c){l.classList.add('mine');badges(l,[['Your prediction','mine-b'],[match?'Correct':'Not correct',match?'ok-b':'no-b']]);}else if(i.value===okv){badges(l,[[P.predict.okLabel||'Correct answer','ok-b']]);}if(i.value===okv)l.classList.add('right');l.appendChild(el('span','oexp',P.predict.expl[i.value]));});
+  pf.querySelector('.opts').classList.add('explained');pc.hidden=true;$('#conf0').closest('.row').hidden=true;
+  if(P.onPredict)P.onPredict();
+  say([{c:'verdict info',s:'Practice prediction, not scored. '+(match?'Your prediction matches the answer.':'Your prediction differs from the answer; nothing is lost.')},{c:'conf-report',s:'Your confidence: '+cv.value+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:P.predict.lead},{s:'Each option now shows its label and why, directly under it.'}],true);
+  complete('predict');});
+/* /pep:component predict js */
+/* pep:component mcq-with-confidence@1 js */
+/* graded checks: confidence first, retry in a second representation, settle after two misses */
+var checks={};
+function check(o){var st={att:0,conf:[],result:null,step:{x1:2,x2:3,apply:4}[o.key]},btn=$(o.btn),cf=$(o.conf),fs=$(o.fs),cn=o.confName||'conf';checks[o.key]=st;
+  function grp(){return st.att===0?o.g1:o.g2;}
+  function ready(){btn.disabled=!!st.result||!($('input[name="'+grp()+'"]:checked')&&$('input[name="'+cn+'"]:checked'));}
+  function lockConf(){$$('input[name="'+cn+'"]').forEach(function(i){i.disabled=true;});btn.disabled=true;}
+  function done(){S.results[o.key]=st.result;if(P.onCheck)P.onCheck(o.key,st.result);complete(o.key,o.label);}
+  fs.addEventListener('change',ready);cf.addEventListener('change',ready);
+  btn.addEventListener('click',function(){var g=grp(),r=st.att===0?o.data.r1:o.data.r2,c=$('input[name="'+g+'"]:checked'),cv=$('input[name="'+cn+'"]:checked');
+    if(!c||!cv||st.result)return;var ok=c.value===r.ok;st.conf.push(cv.value);
+    var confLine='Your confidence: '+cv.value+'. Confidence is your own read on how sure you were; it is reported, never scored.';
+    var expl=$$('input[name="'+g+'"]').map(function(i){return [optText(i)+(i===c?' (your answer):':':'),r.expl[i.value]];});
+    $$('input[name="'+g+'"]').forEach(function(i){i.disabled=true;});c.closest('label').classList.add(ok?'right':'wrong');badges(c.closest('label'),[['Your answer','mine-b'],[ok?'Correct':'Not correct',ok?'ok-b':'no-b']]);
+    if(ok){st.result=st.att===0?'correct':'correct-retry';lockConf();
+      say([{c:'verdict ok',s:st.att===0?'Correct.':'Correct on your second try.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}],true);done();}
+    else if(st.att===0){st.att=1;$('#'+o.g1).hidden=true;$('#'+o.g2).hidden=false;$(o.t1).hidden=true;$(o.t2).hidden=false;$$('input[name="'+cn+'"]').forEach(function(i){i.checked=false;});
+      say([{c:'verdict no',s:'Not yet. '+r.mis[c.value]+' Try again below: same idea, different form, with your confidence again.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}]);
+      ready();$(o.t2).focus();}
+    else{st.result='settled';lockConf();$$('input[name="'+o.g2+'"]').forEach(function(i){if(i.value===r.ok){i.closest('label').classList.add('right');badges(i.closest('label'),[['Correct answer','ok-b']]);}});
+      say([{c:'verdict set',s:'Answered and settled: this check is not marked correct. '+r.mis[c.value]},{c:'conf-report',s:'Confidence on each try: '+st.conf.join(', then ')+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:'The answer: '+r.answer},{list:expl}],true);done();}});
+  st.reset=function(){st.att=0;st.conf=[];st.result=null;$('#'+o.g1).hidden=false;$('#'+o.g2).hidden=true;$(o.t1).hidden=false;$(o.t2).hidden=true;btn.disabled=true;};
+  return st;}
+/* /pep:component mcq-with-confidence js */
+/* lane sort: each item gets one retry, then its lane is revealed; any reveal settles the activity */
+var lanesets={};
+function lanes(o){var st={idx:0,tries:{},placed:{},revealed:{}},box=$(o.model),btns=$(o.btns);lanesets[o.key]=st;
+  function laneName(id){for(var i=0;i<o.lanes.length;i++)if(o.lanes[i].id===id)return o.lanes[i].label;return id;}
+  function draw(){box.textContent='';var cnt=0;
+    o.lanes.forEach(function(ln){var d=el('div','lane'),h=el('p','lk',ln.label),u=el('ul','cards');h.id=o.key+'-lk-'+ln.id;u.setAttribute('aria-labelledby',h.id);d.appendChild(h);d.appendChild(u);box.appendChild(d);
+      o.items.forEach(function(it,i){if(st.placed[i]!==ln.id)return;cnt++;var li=el('li',st.revealed[i]?'revealed':'',it.n);if(st.revealed[i])li.appendChild(el('span','tag','shown after two tries'));u.appendChild(li);});});
+    var it=o.items[st.idx];$(o.name).textContent=it?'':'all sorted';$(o.name).appendChild(it?md(it.n):T(''));
+    $(o.count).textContent=cnt+' of '+o.items.length+' sorted';}
+  function finish(msg){var anyRev=Object.keys(st.revealed).length,anyRetry=Object.keys(st.tries).some(function(k){return st.tries[k]>0;});
+    var res=anyRev?'settled':(anyRetry?'correct-retry':'correct');S.results[o.key]=res;
+    $$('button',btns).forEach(function(b){b.disabled=true;});
+    msg.push({c:anyRev?'verdict set':'verdict ok',s:anyRev?'All sorted. Answered and settled: '+anyRev+(anyRev>1?' items were':' item was')+' shown after two tries, so this activity is not marked correct.':(anyRetry?'All sorted, some on a second try.':'All sorted on the first try.')});
+    if(o.done)msg.push({s:o.done});say(msg,true);complete(o.key);}
+  o.lanes.forEach(function(ln){var b=el('button','ghost',ln.label);b.type='button';b.id=o.key+'-to-'+ln.id;b.setAttribute('data-lane',ln.id);b.setAttribute('aria-describedby',o.legend);
+    b.addEventListener('click',function(){var i=st.idx,it=o.items[i];if(!it||S.done[o.key])return;attempt(KEYS.indexOf(o.key)+1);
+      if(ln.id===it.lane){st.placed[i]=ln.id;st.idx++;var msg=[{c:'verdict ok',s:'Yes: '+laneName(ln.id)+'.'},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(msg);else say(msg);}
+      else{st.tries[i]=(st.tries[i]||0)+1;
+        if(st.tries[i]<2){say([{c:'verdict no',s:'Not '+laneName(ln.id)+'. '+it.w[ln.id]},{s:'Try another button for the same item.'}]);}
+        else{st.placed[i]=it.lane;st.revealed[i]=true;st.idx++;var m2=[{c:'verdict set',s:'Shown after two tries: '+laneName(it.lane)+'. '+it.w[ln.id]},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(m2);else say(m2);}}});
+    btns.appendChild(b);});
+  st.reset=function(){st.idx=0;st.tries={};st.placed={};st.revealed={};$$('button',btns).forEach(function(b){b.disabled=false;});draw();};
+  draw();return st;}
+
+/* Wire the activities: the page's own practice code keeps its engine interface */
+P.onPredict=function(){attempt(1);};
+if($('#apply')){check({key:'apply',fs:'#apply',g1:'a1',g2:'a2',t1:'#task-4',t2:'#task-4b',conf:'#conf',confName:'conf',btn:'#apply-check',data:P.apply,label:P.applyLabel});
+$('#apply-check').addEventListener('click',function(){var n=checks.apply.conf.length;if(n!==G.acts[3].attempts){G.acts[3].attempts=n;reflect();}});}
+/* exploration attempts: any control press inside an activity's explore workspace counts once per press */
+ACTS.forEach(function(sec,i){$$('fieldset[data-interaction="explore"]',sec).forEach(function(fs){if(fs.querySelector('.pep-editor'))return;fs.addEventListener('click',function(ev){if(ev.target.closest('button')&&!S.done[KEYS[i]])attempt(i+1);});});});
+window.ENG={say:say,complete:complete,check:check,lanes:lanes,md:md,el:el,$:$,$$:$$,attempt:attempt,state:function(){return S;}};
+if(P.init)P.init(window.ENG);
+
+/* Restart: only the current activity returns to its authored start; other work and the unlocked frontier stay */
+function clearChoices(scope){$$('input',scope).forEach(function(i){i.checked=false;i.disabled=false;});$$('.opt',scope).forEach(function(o){o.classList.remove('right','wrong','mine');});
+  $$('.oexp,.badges',scope).forEach(function(e){e.remove();});$$('.opts.explained',scope).forEach(function(o){o.classList.remove('explained');});}
+function restart(){var n=G.current,k=KEYS[n-1],sec=ACTS[n-1];
+  if(k==='predict'){clearChoices(sec);pc.hidden=false;pc.disabled=true;$('#conf0').closest('.row').hidden=false;}
+  if(lanesets[k])lanesets[k].reset();
+  if(checks[k]){clearChoices(sec);checks[k].reset();}
+  delete S.done[k];delete S.results[k];G.acts[n-1]=freshAct();
+  G.settled=KEYS.every(function(x){return !!S.done[x];});
+  G.complete=G.settled&&G.acts.every(function(x){return x.completed;});
+  if(G.settled)finishPage();else{$('#complete').textContent='';recap.hidden=true;}
+  if(P.resetStep)P.resetStep(n);
+  $$('[data-pep-feedback]',sec).forEach(function(f){f.textContent='';});
+  render(n);
+  $('#restart-status').textContent='Activity '+n+' restarted. Other activities keep their work.';}
+resetBtn.addEventListener('click',restart);
+
+/* Reversible navigation: buttons, timeline, back links and browser history change only the current activity */
+function numberOf(hash){var m=/^#activity-(\d+)$/.exec(hash||'');return m?Number(m[1]):0;}
+prevBtn.addEventListener('click',function(){render(G.current-1,'push',true);});
+next.addEventListener('click',function(){render(G.current+1,'push',true);});
+LINKS.forEach(function(link,i){link.addEventListener('click',function(ev){ev.preventDefault();render(i+1,'push',true);});});
+$$('[data-pep-back-link]').forEach(function(link){link.addEventListener('click',function(ev){ev.preventDefault();render(numberOf(link.getAttribute('href')),'push',true);});});
+var lastFocused=null;D.addEventListener('focusin',function(ev){lastFocused=ev.target;});
+function fromHistory(){var keep=lastFocused,n=numberOf(location.hash);
+  if(!render(n,null,false))render(G.current,'replace',false);
+  if(keep&&keep.isConnected&&!keep.closest('[hidden]'))keep.focus({preventScroll:true});}
+addEventListener('popstate',fromHistory);addEventListener('hashchange',fromHistory);
+
+/* Objectives: native disclosure; Escape and an outside click close it */
+var obj=$('[data-pep-objectives]');
+D.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&obj.open){obj.open=false;obj.querySelector('summary').focus();}});
+D.addEventListener('click',function(ev){if(obj.open&&!obj.contains(ev.target))obj.open=false;});
+
+/* Print: expand closed disclosures, then restore only those */
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=$$('details:not([open])');printOpened.forEach(function(d){d.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(d){d.open=false;});printOpened=[];});
+
+var first=numberOf(location.hash);
+render(first>=1&&first<=G.unlocked?first:1,'replace',false);
+})();
+</script>
+</body>
+</html>
