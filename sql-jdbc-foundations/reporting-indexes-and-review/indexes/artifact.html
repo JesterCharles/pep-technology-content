@@ -506,7 +506,7 @@ WHERE customer_id = 42
           </div>
         </details>
       </div>
-      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>Run reports <code>CREATE INDEX</code>, and the analysis shows that both conditions narrow the part of the index that is read. Two runs that create a different index settle the activity.</p></section>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>Run reports <code>CREATE INDEX</code>, and the analysis shows that both conditions narrow the part of the index that is read. Two runs that create a different index settle the activity; use <strong>Restart activity</strong> to try again for completion.</p></section>
       <noscript data-pep-no-js data-section-skip><div class="pep-nojs-code pep-expected"><p><strong>Practice editor, reading version.</strong> JavaScript is off, so the editor cannot run here. Work on paper or on your own PostgreSQL database.</p><p><strong>Task:</strong> write one <code>CREATE INDEX</code> statement on <code>orders</code> for <code>WHERE customer_id = 42 AND created_at &gt;= '2026-01-01'</code>.</p><p><strong>Starter, indexes.sql:</strong></p><pre><code>-- orders(id PRIMARY KEY, customer_id, created_at, status, total)
 -- Write one CREATE INDEX statement for:
 --   WHERE customer_id = 42 AND created_at &gt;= '2026-01-01'
@@ -705,6 +705,7 @@ var STARTER='-- orders(id PRIMARY KEY, customer_id, created_at, status, total)\n
 function Problem(kind,msg,pos){this.kind=kind;this.msg=msg;this.pos=pos;}
 function lex(src){var t=[],re=/\s+|--[^\n]*|\/\*[\s\S]*?\*\/|("(?:[^"]|"")*"|[A-Za-z_][\w$]*|\d+|'(?:[^']|'')*'|.)/g,m;
   while((m=re.exec(src))){if(m[1]!==undefined)t.push({v:m[1],p:m.index});}return t;}
+function signature(src){return JSON.stringify(lex(src).map(function(t){return t.v;}));}
 function parse(src){var Tk=lex(src),i=0;
   function pk(o){var x=Tk[i+(o||0)];return x?x.v:'';}
   function lw(o){return pk(o).toLowerCase();}
@@ -731,6 +732,7 @@ function parse(src){var Tk=lex(src),i=0;
   for(;;){cps.push(at());
     if(pk()==='(')throw new Problem('limit','not supported in this practice editor: index expressions',at());
     var c=ident();cols.push(c);
+    if(pk()==='(')throw new Problem('limit','not supported in this practice editor: index expressions',at());
     if(lw()==='collate')throw new Problem('limit','not supported in this practice editor: COLLATE in an index column',at());
     if(lw()==='asc'||lw()==='desc')i++;
     if(lw()==='nulls')throw new Problem('limit','not supported in this practice editor: NULLS FIRST or LAST',at());
@@ -753,7 +755,7 @@ function analyse(ix){var lines=[],narrowed={},open=true,blockedBy=null;
   QUERY.eq.concat(QUERY.range).forEach(function(c){if(ix.cols.indexOf(c)<0)lines.push(c+' is not in the index, so that condition is checked on table rows.');});
   var ok=QUERY.eq.concat(QUERY.range).every(function(c){return narrowed[c];});
   return {ok:ok,lines:lines};}
-var A,ed,miss=0,settled=false,matched=false;
+var A,ed,miss=0,settled=false,matched=false,passedSource=null,passedSignature=null;
 function $(s){return A.$(s);}
 function gutter(){var n=ed.value.split('\n').length,g=[];for(var k=1;k<=n;k++)g.push(k);$('#ed-gutter').textContent=g.join('\n');ed.rows=Math.max(5,Math.min(20,n));}
 function tab(which){[['prob','#tab-prob','#ed-prob'],['out','#tab-out','#ed-out']].forEach(function(t){var on=t[0]===which;$(t[1]).setAttribute('aria-selected',on?'true':'false');$(t[1]).tabIndex=on?0:-1;$(t[2]).hidden=!on;});}
@@ -763,25 +765,29 @@ function showProblem(src,pr){var box=$('#ed-prob'),ln=lineOf(src,pr.pos),b=A.el(
   b.appendChild(A.el('span',pr.kind==='error'?'kind-error':'kind-limit',pr.kind==='error'?'Error':'Not supported'));b.appendChild(A.T(' line '+ln+': '+pr.msg));
   b.addEventListener('click',function(){goLine(ln);});box.textContent='';box.appendChild(b);tab('prob');
   $('#ed-status').textContent=(pr.kind==='error'?'1 error: PostgreSQL would reject this statement':'1 problem: outside what this practice editor checks')+'. Select the problem to jump to line '+ln+'.';}
-function run(){var src=ed.value,ix,n=A.stepOf('x1');A.attempt(n);
-  try{ix=parse(src);}catch(pr){if(!(pr instanceof Problem))throw pr;showProblem(src,pr);
+function revokeForEdit(src,sig){if(!A.S.done.x1||passedSource===null||sig===passedSignature)return false;
+  passedSource=null;passedSignature=null;matched=false;A.revoke('x1');
+  A.say([{c:'verdict info',s:'The SQL changed after the successful run, so completion was cleared. Run the current statement to check it again.'}]);return true;}
+function run(){var src=ed.value,sig=signature(src),ix,n=A.stepOf('x1');revokeForEdit(src,sig);
+  try{ix=parse(src);}catch(pr){if(!(pr instanceof Problem))throw pr;if(pr.kind==='error')A.attempt(n);showProblem(src,pr);
     A.say([{c:'verdict info',s:pr.kind==='error'?'Not created: PostgreSQL would reject this statement. Read the problem under the editor, fix it and run again.':'Not checked: this practice editor cannot check that form. Read the problem under the editor.'}]);return;}
   $('#ed-prob').textContent='';$('#ed-prob').appendChild(A.el('p','pep-editor__empty','No problems.'));
   var r=analyse(ix);$('#ed-print').textContent='CREATE INDEX\n\nIndex: '+ix.name+' on '+ix.table+' ('+ix.cols.join(', ')+')\n'+r.lines.join('\n');tab('out');
   $('#ed-status').textContent=r.ok?'Created: both conditions narrow the index read':'Created: the index does not fit both conditions';
   var msg=[{c:r.ok?'verdict ok':'verdict info',s:r.ok?'This index suits the query: the equality test and then the range test both narrow the part of the index that is read.':'PostgreSQL would create this index, but it does not let both conditions narrow the read. Read the analysis in Output.'}];
-  if(A.S.done.x1){if(r.ok&&!matched){matched=true;msg.push({s:'This run matches; the activity was already settled, so its result stays as recorded.'});}A.say(msg);return;}
-  if(r.ok){A.S.results.x1=miss?'correct-retry':'correct';A.say(msg,true);A.complete('x1');return;}
+  if(A.S.done.x1&&r.ok&&passedSource!==null&&sig===passedSignature){if(!matched){matched=true;msg.push({s:'This run matches the successful statement, so its recorded result stays complete.'});}A.say(msg);return;}
+  A.attempt(n);
+  if(r.ok){passedSource=src;passedSignature=sig;A.S.results.x1=miss?'correct-retry':'correct';A.say(msg,true);A.complete('x1');return;}
   miss++;
-  if(miss>=2){settled=true;A.S.results.x1='settled';msg.push({c:'verdict set',s:'Answered and settled: two runs created an index that does not fit both conditions, so this activity is not marked correct. The editor stays open: compare the analysis with the leading-column rule and try again for practice.'});A.say(msg,true);A.complete('x1');return;}
+  if(miss>=2){settled=true;A.S.results.x1='settled';msg.push({c:'verdict set',s:'Answered and settled: two runs created an index that does not fit both conditions, so this activity is not marked correct. Use Restart activity to try again for completion.'});A.say(msg,true);A.complete('x1');return;}
   msg.push({s:'One more run that misses settles this activity. Use the analysis and the hints, then run again.'});A.say(msg);}
 function resetCode(){ed.value=STARTER;gutter();$('#ed-prob').textContent='';$('#ed-prob').appendChild(A.el('p','pep-editor__empty','Not run yet. Edit the statement, then press Run.'));$('#ed-print').textContent='(no output yet)';tab('prob');$('#ed-status').textContent='Not run yet';}
 P.init=function(api){A=api;ed=$('#ed');
-  ed.addEventListener('input',gutter);$('#run').addEventListener('click',run);$('#ed-reset').addEventListener('click',resetCode);
+  ed.addEventListener('input',function(){gutter();revokeForEdit(ed.value,signature(ed.value));});$('#run').addEventListener('click',run);$('#ed-reset').addEventListener('click',resetCode);
   $('#tab-prob').addEventListener('click',function(){tab('prob');});$('#tab-out').addEventListener('click',function(){tab('out');});
   A.$$('[role="tab"]').forEach(function(t){t.addEventListener('keydown',function(ev){if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){var o=t.id==='tab-prob'?'out':'prob';tab(o);$('#tab-'+o).focus();ev.preventDefault();}});});
   resetCode();};
-P.reset={x1:function(){miss=0;settled=false;matched=false;resetCode();}};
+P.reset={x1:function(){miss=0;settled=false;matched=false;passedSource=null;passedSignature=null;resetCode();}};
 })();
 </script>
 <script>
@@ -834,6 +840,10 @@ function complete(k){var n=stepOf(k),a=G.acts[n-1];S.done[k]=true;
   G.complete=G.acts.every(function(x){return x.completed;});
   if(allSettled())finishPage();
   progress();render(G.current);}
+function revoke(k){var n=stepOf(k),a=G.acts[n-1],attempts=a.attempts;
+  delete S.done[k];delete S.results[k];G.acts[n-1]=freshAct();G.acts[n-1].attempts=attempts;
+  G.complete=false;recap.hidden=true;$('#complete').textContent='';
+  reflect();progress();render(G.current);}
 function render(number,mode,moveFocus){
   if(!(number>=1&&number<=N&&number<=G.unlocked))return false;
   G.current=number;S.step=number;
@@ -915,7 +925,7 @@ function lanes(o){var st={idx:0,tries:{},placed:{},revealed:{}},box=$(o.model),b
   draw();return st;}
 
 /* Wire the activities declared by the page data */
-var API={$:$,$$:$$,el:el,md:md,T:T,say:say,attempt:attempt,complete:complete,stepOf:stepOf,S:S,G:G};
+var API={$:$,$$:$$,el:el,md:md,T:T,say:say,attempt:attempt,complete:complete,revoke:revoke,stepOf:stepOf,S:S,G:G};
 if(KIND.predict)P.onPredict=function(){attempt(stepOf('predict'));};
 (P.lanesets||[]).forEach(function(o){lanes(o);});
 (P.checks||[]).forEach(function(o){check(o);$(o.btn).addEventListener('click',function(){var n=stepOf(o.key),c=checks[o.key].conf.length;if(c!==G.acts[n-1].attempts){G.acts[n-1].attempts=c;reflect();}});});

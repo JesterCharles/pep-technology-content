@@ -783,6 +783,10 @@ function complete(k){var n=stepOf(k),a=G.acts[n-1];S.done[k]=true;
   G.complete=G.acts.every(function(x){return x.completed;});
   if(allSettled())finishPage();
   progress();render(G.current);}
+function revoke(k){var n=stepOf(k),a=G.acts[n-1],attempts=a.attempts;
+  delete S.done[k];delete S.results[k];G.acts[n-1]=freshAct();G.acts[n-1].attempts=attempts;
+  G.complete=false;recap.hidden=true;$('#complete').textContent='';
+  reflect();progress();render(G.current);}
 function render(number,mode,moveFocus){
   if(!(number>=1&&number<=N&&number<=G.unlocked))return false;
   G.current=number;S.step=number;
@@ -864,7 +868,7 @@ function lanes(o){var st={idx:0,tries:{},placed:{},revealed:{}},box=$(o.model),b
   draw();return st;}
 
 /* Wire the activities declared by the page data */
-var API={$:$,$$:$$,el:el,md:md,T:T,say:say,attempt:attempt,complete:complete,stepOf:stepOf,S:S,G:G};
+var API={$:$,$$:$$,el:el,md:md,T:T,say:say,attempt:attempt,complete:complete,revoke:revoke,stepOf:stepOf,S:S,G:G};
 if(KIND.predict)P.onPredict=function(){attempt(stepOf('predict'));};
 (P.lanesets||[]).forEach(function(o){lanes(o);});
 (P.checks||[]).forEach(function(o){check(o);$(o.btn).addEventListener('click',function(){var n=stepOf(o.key),c=checks[o.key].conf.length;if(c!==G.acts[n-1].attempts){G.acts[n-1].attempts=c;reflect();}});});
