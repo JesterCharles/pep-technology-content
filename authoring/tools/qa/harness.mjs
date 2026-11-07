@@ -1710,6 +1710,15 @@ function parsedJsonStrings(value) {
   return [];
 }
 
+class PrivateRouteFailure extends Error {}
+
+function privateRouteFailure(route, phase, details = []) {
+  const diagnostic = [`route=${route}`, `phase=${phase}`, ...details].join(" ");
+  return new PrivateRouteFailure(
+    `private success route failed; no private values were recorded [${diagnostic}]`,
+  );
+}
+
 export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
   const git = (args) => spawnSync("git", args, { cwd: ctx.root, encoding: "utf8" });
   const top = git(["rev-parse", "--show-toplevel"]);
@@ -1810,33 +1819,60 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
     if (!validateQaPath(candidate)) throw new Error(`private overlay ${name} route or postconditions do not match the public QA schema`);
   }
   const browser = await launchChromium();
+  let activeRoute = "success";
+  let activePhase = "actions";
   // Gate-owned success postconditions: the runner itself requires every
   // declared answer-sensitive task to genuinely pass. Overlay- or page-level
   // completion claims are never trusted as proof, so all-fail and mixed runs
   // fail even on an engine that settles failed attempts as complete.
   const assertDeclaredTasksPassed = async (target) => {
-    for (const declaration of declaredTasks) {
-      const state = await target.locator(declaration.task).evaluate((element) => {
-        const activity = element.closest("[data-pep-activity]");
-        if (!activity) return null;
-        return {
-          completed: activity.dataset.pepCompleted ?? null,
-          credit: activity.dataset.pepCredit ?? null,
-          grade: activity.dataset.pepGrade ?? null,
-        };
-      });
-      if (!state) throw new Error("declared task has no gate-readable activity state");
-      if (state.completed !== "true" || state.credit !== "1" || state.grade !== "1") {
-        throw new Error("declared task did not genuinely pass");
+    for (let index = 0; index < declaredTasks.length; index++) {
+      const declaration = declaredTasks[index];
+      let state = null;
+      try {
+        state = await target.locator(declaration.task).evaluate((element) => {
+          const activity = element.closest("[data-pep-activity]");
+          if (!activity) return null;
+          return {
+            completed: activity.dataset.pepCompleted ?? null,
+            credit: activity.dataset.pepCredit ?? null,
+            grade: activity.dataset.pepGrade ?? null,
+          };
+        });
+      } catch {
+        // The fixed false checks below safely represent unavailable state.
+      }
+      const checks = {
+        completed: state?.completed === "true",
+        credit: state?.credit === "1",
+        grade: state?.grade === "1",
+      };
+      if (!checks.completed || !checks.credit || !checks.grade) {
+        throw privateRouteFailure(activeRoute, "declared-task-state", [
+          `task=${index + 1}`,
+          `id=${declaration.task.slice(1)}`,
+          `completed=${checks.completed}`,
+          `credit=${checks.credit}`,
+          `grade=${checks.grade}`,
+        ]);
       }
     }
     const guidanceRoot = target.locator("[data-pep-guidance-contract]");
-    if (await guidanceRoot.count()) {
-      const complete = await guidanceRoot.first().getAttribute("data-pep-complete");
-      if (complete !== "true") throw new Error("guided page did not genuinely complete");
+    let pageComplete = true;
+    try {
+      if (await guidanceRoot.count()) {
+        pageComplete = await guidanceRoot.first().getAttribute("data-pep-complete") === "true";
+      }
+    } catch {
+      pageComplete = false;
+    }
+    if (!pageComplete) {
+      throw privateRouteFailure(activeRoute, "page-completion", ["complete=false"]);
     }
   };
-  const runTopLevel = async (actions, keyboard = false) => {
+  const runTopLevel = async (routeName, actions, keyboard = false) => {
+    activeRoute = routeName;
+    activePhase = "actions";
     const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
     const page = await context.newPage();
     let attemptedExternalLoad = false;
@@ -1849,18 +1885,24 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
     try {
       await page.goto(pathToFileURL(topic.html).href, { waitUntil: "load" });
       await execute(page, actions, { keyboard });
+      activePhase = "completion";
       await assertState(page, overlay.completion);
+      activePhase = "progress";
       await assertState(page, overlay.progress);
+      activePhase = "declared-task-state";
       await assertDeclaredTasksPassed(page);
+      activePhase = "external-load";
       if (attemptedExternalLoad) throw new Error("external load");
     } finally {
       await context.close();
     }
   };
   try {
-    await runTopLevel(resolvedRoutes.success);
-    await runTopLevel(resolvedRoutes.wrongFirst);
-    await runTopLevel(resolvedRoutes.keyboard, true);
+    await runTopLevel("success", resolvedRoutes.success);
+    await runTopLevel("wrongFirst", resolvedRoutes.wrongFirst);
+    await runTopLevel("keyboard", resolvedRoutes.keyboard, true);
+    activeRoute = "sandbox";
+    activePhase = "actions";
     const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
     const page = await context.newPage();
     let sandboxExternalLoad = false;
@@ -1868,15 +1910,20 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
     try {
       const frame = await sandboxFrame(page, topic);
       await execute(frame, resolvedRoutes.sandbox);
+      activePhase = "completion";
       await assertState(frame, overlay.completion);
+      activePhase = "progress";
       await assertState(frame, overlay.progress);
+      activePhase = "declared-task-state";
       await assertDeclaredTasksPassed(frame);
+      activePhase = "external-load";
       if (sandboxExternalLoad) throw new Error("external load");
     } finally {
       await context.close();
     }
-  } catch {
-    throw new Error("private success route failed; no private values were recorded");
+  } catch (error) {
+    if (error instanceof PrivateRouteFailure) throw error;
+    throw privateRouteFailure(activeRoute, activePhase);
   } finally {
     await browser.close();
   }
