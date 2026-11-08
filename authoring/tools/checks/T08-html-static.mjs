@@ -1,4 +1,5 @@
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,6 +11,37 @@ export const gate = 8;
 export const description = "static HTML contract";
 
 const ANSWER_SCANNER = fileURLToPath(new URL("../qa/python-answer-scan.py", import.meta.url));
+
+// Closed registry of supported answer-sensitive declarations. A language with
+// scan "none" relies on matched editor shape plus the private overlay's exact
+// in-memory leak comparison, so it must name a matched editor; renamed,
+// reshaped, assembled or encoded leaks stay with independent review.
+export const ANSWER_LANGUAGES = {
+  "python-comprehension": { scan: "python", extensions: ["py"], requiresEditor: false },
+  "python-scaffold": {
+    scan: "none",
+    extensions: ["py"],
+    requiresEditor: true,
+    adapter: "python-scaffold@3",
+  },
+  "java": { scan: "java", extensions: ["java"], requiresEditor: true },
+  "sql": {
+    scan: "none",
+    extensions: ["sql"],
+    requiresEditor: true,
+    containedAdapter: "sql-practice@1",
+  },
+  "javascript-editor": { scan: "none", extensions: ["js", "mjs", "cjs"], requiresEditor: true },
+  "jsx-editor": { scan: "none", extensions: ["jsx"], requiresEditor: true },
+};
+const EXTENSION_LANGUAGES = new Map();
+for (const [language, entry] of Object.entries(ANSWER_LANGUAGES)) {
+  for (const extension of entry.extensions) {
+    const languages = EXTENSION_LANGUAGES.get(extension) ?? new Set();
+    languages.add(language);
+    EXTENSION_LANGUAGES.set(extension, languages);
+  }
+}
 
 function metas(html) {
   const out = {};
@@ -182,13 +214,140 @@ function scanPythonAnswers(sources, targets) {
   return JSON.parse(result.stdout).findings ?? [];
 }
 
+function stripJavaNoise(source) {
+  let out = "";
+  for (let index = 0; index < source.length;) {
+    const char = source[index];
+    if (char === "/" && source[index + 1] === "/") {
+      const end = source.indexOf("\n", index + 2);
+      index = end < 0 ? source.length : end;
+      continue;
+    }
+    if (char === "/" && source[index + 1] === "*") {
+      const end = source.indexOf("*/", index + 2);
+      index = end < 0 ? source.length : end + 2;
+      out += " ";
+      continue;
+    }
+    if (char === '"' || char === "'") {
+      if (char === '"' && source[index + 1] === '"' && source[index + 2] === '"') {
+        const end = source.indexOf('"""', index + 3);
+        index = end < 0 ? source.length : end + 3;
+      } else {
+        index++;
+        while (index < source.length && source[index] !== char && source[index] !== "\n") {
+          if (source[index] === "\\") index++;
+          index++;
+        }
+        index++;
+      }
+      out += `${char}${char}`;
+      continue;
+    }
+    out += char;
+    index++;
+  }
+  return out;
+}
+
+function balancedSpanEnd(source, open, close, start) {
+  let depth = 0;
+  for (let index = start; index < source.length; index++) {
+    if (source[index] === open) depth++;
+    else if (source[index] === close) {
+      depth--;
+      if (depth === 0) return index + 1;
+    }
+  }
+  return -1;
+}
+
+function javaBodyLooksComplete(body) {
+  if ((body.match(/;/gu) ?? []).length >= 2) return true;
+  if (/\b(?:for|while|if|switch|try|do)\b/u.test(body)) return true;
+  return /(?:\+\+|--|[+\-*/%&|^]=|(?<![=!<>+\-*/%&|^])=(?![=>]))/u.test(body);
+}
+
+// Every declared target method declaration with a balanced body, and whether
+// that body looks like a complete implementation.
+function javaTargetMethods(value, targets) {
+  const source = stripJavaNoise(value);
+  const methods = [];
+  for (const target of targets) {
+    for (const match of source.matchAll(new RegExp(`(?<![.\\w$])${target}\\s*\\(`, "gu"))) {
+      const parenStart = source.indexOf("(", match.index + target.length);
+      const parenEnd = balancedSpanEnd(source, "(", ")", parenStart);
+      if (parenEnd < 0) continue;
+      let cursor = parenEnd;
+      const throwsClause = source.slice(cursor).match(/^\s*throws\s+[\w$][\w$.,\s]*?(?=\{)/u);
+      if (throwsClause) cursor += throwsClause[0].length;
+      const opening = source.slice(cursor).match(/^\s*\{/u);
+      if (!opening) continue;
+      const braceStart = cursor + opening[0].length - 1;
+      const braceEnd = balancedSpanEnd(source, "{", "}", braceStart);
+      if (braceEnd < 0) continue;
+      methods.push({ target, complete: javaBodyLooksComplete(source.slice(braceStart + 1, braceEnd - 1)) });
+    }
+  }
+  return methods;
+}
+
+function containsJavaTargetAnswer(value, targets) {
+  return javaTargetMethods(value, targets).some((method) => method.complete);
+}
+
+// Statement-body mode: targets name the variables a body-of-main task builds.
+// A target statement is a member call, index, assignment, compound assignment
+// or increment/decrement on a target (a declaration with an initializer is an
+// assignment). One target statement is ordinary teaching or a starter line;
+// two or more in one public value form a complete-looking statement body.
+const JAVA_STATEMENT_BODY_USES = 2;
+
+function javaStatementUses(value, targets) {
+  const source = stripJavaNoise(value);
+  let uses = 0;
+  for (const target of targets) {
+    const prefix = `(?:\\+\\+|--)\\s*${target}(?![\\w$])`;
+    const suffix = `(?<![.\\w$])${target}\\s*(?:\\.\\s*[A-Za-z_$][\\w$]*\\s*\\(|\\[|\\+\\+|--|(?:[+\\-*/%&|^]|<<|>>>?)?=(?![=>]))`;
+    uses += [...source.matchAll(new RegExp(`${prefix}|${suffix}`, "gu"))].length;
+  }
+  return uses;
+}
+
+const sha256Hex = (value) => createHash("sha256").update(value, "utf8").digest("hex");
+
+// The exact bound starter: its authorized bytes, or exactly those bytes less
+// one final LF (how a <pre> or static reading renders the same starter).
+function isBoundStarter(value, sha256) {
+  return typeof value === "string" && (sha256Hex(value) === sha256 || sha256Hex(`${value}\n`) === sha256);
+}
+
+// Java target scanning for one declaration. Only a raw public value that is
+// exactly the reviewed bound starter is exempt, and only for its bound target;
+// every other target, decoded form and value is still scanned.
+function scanJavaAnswers(sources, declaration, starter) {
+  const statements = declaration.targetMode === "statements";
+  const found = { method: false, statements: false };
+  for (const source of sources) {
+    decodedSources(source.value).forEach((value, index) => {
+      if (typeof value !== "string") return;
+      const exempt = Boolean(starter) && index === 0 && isBoundStarter(value, starter.sha256);
+      const targets = exempt ? declaration.targets.filter((target) => target !== starter.target) : declaration.targets;
+      if (!targets.length) return;
+      if (containsJavaTargetAnswer(value, targets)) found.method = true;
+      if (statements && javaStatementUses(value, targets) >= JAVA_STATEMENT_BODY_USES) found.statements = true;
+    });
+  }
+  return found;
+}
+
 async function inspectHtml(html, browser, spec) {
   const ownBrowser = browser ?? await launchParserBrowser();
   const context = await ownBrowser.newContext({ javaScriptEnabled: false });
   const page = await context.newPage();
   try {
     await page.setContent(html, { waitUntil: "load" });
-    const snapshot = await page.evaluate(() => {
+    const snapshot = await page.evaluate((supportedLanguages) => {
       const normalize = (value) => (value ?? "").replace(/\s+/gu, " ").trim();
       const direct = (element, selector) => [...element.querySelectorAll(selector)]
         .filter((node) => node.closest("details") === element);
@@ -280,9 +439,121 @@ async function inspectHtml(html, browser, spec) {
         problems.optional.push("a code workspace requires a noscript[data-pep-no-js] reading");
       }
 
+      const collectAnswerContract = (sensitive, guidanceRoot = null) => {
+        if (!sensitive.length) return { answerDeclarations: null, answerSelectors: [] };
+        const answerDeclarations = [];
+        const seenTasks = new Set();
+        for (const declared of sensitive) {
+          const language = declared.dataset.pepAnswerSensitive ?? "";
+          if (!supportedLanguages.includes(language) || !declared.id || seenTasks.has(declared.id) ||
+              document.querySelectorAll(`#${CSS.escape(declared.id)}`).length !== 1) {
+            problems.guidance.push("answer-sensitive task declarations require supported, uniquely identified task declarations");
+            continue;
+          }
+          seenTasks.add(declared.id);
+          const targets = (declared.dataset.pepAnswerTargets ?? "").split(/\s+/u).filter(Boolean);
+          if (!targets.length) problems.guidance.push("answer-sensitive declarations require declared target names");
+          const ancestorAdapters = [];
+          for (let current = declared; current; current = current.parentElement) {
+            if (current.hasAttribute("data-lesson-editor-adapter")) ancestorAdapters.push(current);
+          }
+          const descendantAdapters = [...declared.querySelectorAll("[data-lesson-editor-adapter]")];
+          const adapterRoots = [...new Set([
+            ...ancestorAdapters,
+            ...descendantAdapters,
+          ])];
+          const adapterScope = ancestorAdapters[0] ?? null;
+          const adapter = adapterScope?.getAttribute("data-lesson-editor-adapter") ?? "";
+          const adapterIds = adapterRoots.map((node) => node.getAttribute("data-lesson-editor-adapter") ?? "");
+          const scaffoldRoots = adapterRoots.filter((node) => node.getAttribute("data-lesson-editor-adapter") === "python-scaffold@3");
+          if (!guidanceRoot?.contains(declared) &&
+              (language !== "python-scaffold" || adapter !== "python-scaffold@3" || adapterRoots.length !== 1)) {
+            problems.guidance.push("answer-sensitive declarations outside guidance require one task target inside the exact python-scaffold@3 adapter scope");
+          }
+          const editorNames = [
+            ...[...declared.querySelectorAll(".pep-editor__file, .le-file, [data-pep-file-tab]")].map((node) => node.textContent ?? ""),
+            ...[...declared.querySelectorAll("[data-file]")].map((node) => node.getAttribute("data-file") ?? ""),
+          ];
+          const scaffoldEditorNames = scaffoldRoots.flatMap((root) => [
+            ...(root.matches(".le-file") ? [root] : []),
+            ...root.querySelectorAll(".le-file"),
+          ]).map((node) => node.textContent ?? "");
+          // A file label is "<name>.<ext>" or, for a statement-body surface,
+          // "<name>.<ext> (<qualifier>)" such as "Scores.java (body of main)".
+          const files = (names) => names
+            .map((name) => normalize(name).toLowerCase().match(/\.([a-z0-9]+)(?:\s+\(([^()]+)\))?$/u))
+            .filter(Boolean)
+            .map((match) => ({ extension: match[1], qualifier: match[2] ?? "" }));
+          const extensions = (items) => [...new Set(items.map((item) => item.extension))];
+          const editorFiles = files(editorNames);
+          const scaffoldFiles = files(scaffoldEditorNames);
+          answerDeclarations.push({
+            task: `#${declared.id}`,
+            language,
+            targets,
+            targetMode: declared.getAttribute("data-pep-answer-target-mode"),
+            starterTarget: declared.getAttribute("data-pep-answer-starter"),
+            adapter,
+            adapterIds,
+            containedAdapterIds: descendantAdapters.map((node) => node.getAttribute("data-lesson-editor-adapter") ?? ""),
+            editorExtensions: extensions(editorFiles.filter((item) => !item.qualifier)),
+            statementEditorExtensions: extensions(editorFiles.filter((item) => item.qualifier === "body of main")),
+            scaffoldEditorExtensions: extensions(scaffoldFiles.filter((item) => !item.qualifier)),
+            labelledExtensions: extensions([...editorFiles, ...scaffoldFiles]),
+          });
+        }
+        const scopes = sensitive.map((declared) => declared.closest("[data-pep-activity]") ?? declared);
+        const bearing = (node) => scopes.some((scope, index) => scope.contains(node) || sensitive[index].contains(node)) ||
+          Boolean(node.closest?.("noscript, [data-static-alt]") || node.matches?.("noscript, [data-static-alt]"));
+        // Declared task elements that structurally contain a node; a bound
+        // starter must occur verbatim inside its own declared task.
+        const owners = (node) => sensitive.filter((declared) => declared.id && declared.contains(node))
+          .map((declared) => `#${declared.id}`);
+        const documentRoot = document.documentElement;
+        for (const node of [documentRoot, ...documentRoot.querySelectorAll("*")]) {
+          for (const child of node.childNodes) {
+            if (child.nodeType === Node.TEXT_NODE && normalize(child.textContent)) {
+              answerSources.push({
+                value: child.textContent,
+                answerBearing: bearing(node),
+                source: node.tagName === "STYLE" ? "style-text" : "html-text",
+                tasks: owners(node),
+              });
+            }
+          }
+          for (const attribute of node.attributes ?? []) {
+            answerSources.push({ value: attribute.value, answerBearing: bearing(node), source: `attribute:${attribute.name}`, tasks: owners(node) });
+          }
+          if (node.tagName === "TEMPLATE" && normalize(node.content.textContent)) {
+            answerSources.push({ value: node.content.textContent, answerBearing: bearing(node), source: "template", tasks: owners(node) });
+          }
+        }
+        const comments = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT);
+        while (comments.nextNode()) {
+          const parent = comments.currentNode.parentElement;
+          answerSources.push({
+            value: comments.currentNode.textContent,
+            answerBearing: parent ? bearing(parent) : false,
+            source: "html-comment",
+            tasks: parent ? owners(parent) : [],
+          });
+        }
+        const answerSelectors = scopes.flatMap((scope) => [...scope.querySelectorAll("[id]")].map((node) => `#${CSS.escape(node.id)}`));
+        return { answerDeclarations, answerSelectors };
+      };
+
       const enrolled = [...document.querySelectorAll("main[data-pep-guidance-contract]")];
       if (!enrolled.length) {
-        return { ...problems, anecdoteProse, answerSources, hasGuidanceMarker: false, hintCount: 0, answerDeclaration: null, scripts: [] };
+        const answer = collectAnswerContract([...document.querySelectorAll("[data-pep-answer-sensitive]")]);
+        return {
+          ...problems,
+          anecdoteProse,
+          answerSources,
+          ...answer,
+          hasGuidanceMarker: false,
+          hintCount: 0,
+          scripts: [...document.scripts].map((script) => script.textContent ?? ""),
+        };
       }
       if (enrolled.length !== 1) problems.guidance.push("guidance-contract pages require exactly one enrolled root main");
       const root = enrolled[0];
@@ -446,57 +717,19 @@ async function inspectHtml(html, browser, spec) {
         return matches.length !== 1;
       })) problems.guidance.push("hint ownership must resolve to exactly one task in the same activity");
 
-      const sensitive = [...root?.querySelectorAll("[data-pep-answer-sensitive]") ?? []];
-      let answerDeclaration = null;
-      let answerSelectors = [];
-      if (sensitive.length) {
-        if (sensitive.length !== 1 || sensitive[0].dataset.pepAnswerSensitive !== "python-comprehension") {
-          problems.guidance.push("answer-sensitive guidance requires one supported task declaration");
-        } else {
-          const targets = (sensitive[0].dataset.pepAnswerTargets ?? "").split(/\s+/u).filter(Boolean);
-          if (!targets.length) problems.guidance.push("answer-sensitive guidance requires declared target names");
-          answerDeclaration = { task: `#${sensitive[0].id}`, language: "python-comprehension", targets };
-          const activityScope = sensitive[0].closest("[data-pep-activity]") ?? sensitive[0];
-          const bearing = (node) => activityScope.contains(node) || sensitive[0].contains(node) ||
-            Boolean(node.closest?.("noscript, [data-static-alt]") || node.matches?.("noscript, [data-static-alt]"));
-          const documentRoot = document.documentElement;
-          for (const node of [documentRoot, ...documentRoot.querySelectorAll("*")]) {
-            for (const child of node.childNodes) {
-              if (child.nodeType === Node.TEXT_NODE && normalize(child.textContent)) {
-                answerSources.push({
-                  value: child.textContent,
-                  answerBearing: bearing(node),
-                  source: node.tagName === "STYLE" ? "style-text" : "html-text",
-                });
-              }
-            }
-            for (const attribute of node.attributes ?? []) {
-              answerSources.push({ value: attribute.value, answerBearing: bearing(node), source: `attribute:${attribute.name}` });
-            }
-            if (node.tagName === "TEMPLATE" && normalize(node.content.textContent)) {
-              answerSources.push({ value: node.content.textContent, answerBearing: bearing(node), source: "template" });
-            }
-          }
-          const comments = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT);
-          while (comments.nextNode()) {
-            const parent = comments.currentNode.parentElement;
-            answerSources.push({ value: comments.currentNode.textContent, answerBearing: parent ? bearing(parent) : false, source: "html-comment" });
-          }
-          answerSelectors = [...activityScope.querySelectorAll("[id]")].map((node) => `#${CSS.escape(node.id)}`);
-        }
-      }
+      const answer = collectAnswerContract([...document.querySelectorAll("[data-pep-answer-sensitive]")], root);
       const scripts = [...document.scripts].map((script) => script.textContent ?? "");
-      return { ...problems, anecdoteProse, answerSources, answerSelectors, hasGuidanceMarker: true, hintCount: hints.length, answerDeclaration, scripts };
-    });
+      return { ...problems, anecdoteProse, answerSources, ...answer, hasGuidanceMarker: true, hintCount: hints.length, scripts };
+    }, Object.keys(ANSWER_LANGUAGES));
     if (snapshot.anecdoteProse.some((prose) => decodedSources(prose).some(containsAnecdoteTechnical))) {
       snapshot.optional.push("optional anecdote must not contain code, API calls, commands or exact exception/output text");
     }
-    if (snapshot.answerDeclaration && spec) {
+    if (snapshot.answerDeclarations && spec) {
       for (const selector of recursiveSelectors(spec)) {
         const resolvesInsideAnswerSurface = await page.locator(selector).evaluateAll((nodes) => {
-          const sensitive = document.querySelector("[data-pep-answer-sensitive]");
-          const scope = sensitive?.closest("[data-pep-activity]") ?? sensitive;
-          return Boolean(scope && nodes.some((node) => scope.contains(node) || node.closest("noscript, [data-static-alt]")));
+          const scopes = [...document.querySelectorAll("[data-pep-answer-sensitive]")]
+            .map((declared) => declared.closest("[data-pep-activity]") ?? declared);
+          return nodes.some((node) => scopes.some((scope) => scope.contains(node)) || node.closest("noscript, [data-static-alt]"));
         }).catch(() => false);
         if (resolvesInsideAnswerSurface) snapshot.answerSelectors.push(selector);
       }
@@ -541,20 +774,95 @@ async function inspectHtml(html, browser, spec) {
 export async function validateHtmlContracts(html, options = {}) {
   const snapshot = await inspectHtml(html, options.browser, options.spec);
   const answerProblems = [];
-  const specDeclaration = options.spec?.answerSafety ?? null;
-  if (Boolean(snapshot.answerDeclaration) !== Boolean(specDeclaration)) {
+  const specTasks = options.spec?.answerSafety?.tasks ?? null;
+  // Reviewed starter bindings that passed every check; only these exempt.
+  const starterBindings = new Map();
+  if (Boolean(snapshot.answerDeclarations) !== Boolean(specTasks)) {
     answerProblems.push("HTML and QA must declare answer-sensitive scanning together");
-  } else if (snapshot.answerDeclaration) {
-    const scanDeclaration = {
-      task: specDeclaration.task,
-      language: specDeclaration.language,
-      targets: specDeclaration.targets,
-    };
-    if (JSON.stringify(snapshot.answerDeclaration) !== JSON.stringify(scanDeclaration)) {
-      answerProblems.push("HTML and QA answer-sensitive declarations must match exactly");
+  } else if (snapshot.answerDeclarations) {
+    const pageTasks = snapshot.answerDeclarations.map((declaration) => ({
+      task: declaration.task,
+      language: declaration.language,
+      targets: declaration.targets,
+      targetMode: declaration.targetMode ?? undefined,
+      starter: declaration.starterTarget ?? undefined,
+    }));
+    const qaTasks = specTasks.map((declaration) => ({
+      task: declaration.task,
+      language: declaration.language,
+      targets: declaration.targets,
+      targetMode: declaration.targetMode,
+      starter: declaration.starter?.target,
+    }));
+    const matched = JSON.stringify(pageTasks) === JSON.stringify(qaTasks);
+    if (!matched) {
+      answerProblems.push("HTML and QA answer-sensitive declarations must match one-to-one and exactly");
+    }
+    for (const declaration of specTasks) {
+      const registered = ANSWER_LANGUAGES[declaration.language];
+      const expectedScan = registered?.scan === "none" ? "none" : undefined;
+      if (!registered || declaration.scan !== expectedScan) {
+        answerProblems.push("answer-sensitive declarations must use a supported language and its registered scan mode");
+      }
+      const java = registered?.scan === "java";
+      const targets = Array.isArray(declaration.targets) ? declaration.targets : [];
+      if ((declaration.targetMode !== undefined && (!java || declaration.targetMode !== "statements")) ||
+          (declaration.starter !== undefined && (!java || !targets.includes(declaration.starter?.target) ||
+            !/^[a-f0-9]{64}$/u.test(declaration.starter?.sha256 ?? "")))) {
+        answerProblems.push(`answer-sensitive task ${declaration.task} declares an unsupported target mode or starter binding`);
+        continue;
+      }
+      if (!declaration.starter || !matched) continue;
+      // The binding holds only while the exact reviewed starter bytes occur in
+      // the declared task and still declare the bound target; any starter,
+      // task, target or hash drift refuses and needs a reviewed re-pin.
+      const statements = declaration.targetMode === "statements";
+      const occurrences = snapshot.answerSources.filter((source) => source.tasks?.includes(declaration.task) &&
+        isBoundStarter(source.value, declaration.starter.sha256));
+      const declaresTarget = occurrences.length && occurrences.every((source) => statements ?
+        javaStatementUses(source.value, [declaration.starter.target]) > 0 :
+        javaTargetMethods(source.value, [declaration.starter.target]).length > 0);
+      if (!declaresTarget) {
+        answerProblems.push(`answer-sensitive task ${declaration.task} starter binding does not match its exact authorized starter; review and re-pin it`);
+        continue;
+      }
+      starterBindings.set(declaration.task, declaration.starter);
+    }
+    for (const declaration of snapshot.answerDeclarations) {
+      const registered = ANSWER_LANGUAGES[declaration.language];
+      if (!registered) continue;
+      if (registered.adapter) {
+        if (declaration.adapter !== registered.adapter || declaration.adapterIds.length !== 1) {
+          answerProblems.push(`answer-sensitive task ${declaration.task} requires the ${registered.adapter} adapter root`);
+          continue;
+        }
+      } else if (registered.containedAdapter) {
+        if (declaration.containedAdapterIds.length !== 1 || declaration.containedAdapterIds[0] !== registered.containedAdapter) {
+          answerProblems.push(`answer-sensitive task ${declaration.task} requires one contained ${registered.containedAdapter} adapter root`);
+          continue;
+        }
+      } else if (declaration.adapterIds.includes("python-scaffold@3") || declaration.adapterIds.includes("sql-practice@1")) {
+        answerProblems.push(`answer-sensitive task ${declaration.task} declares a false language label for its adapter`);
+        continue;
+      }
+      const foreign = declaration.labelledExtensions.filter((extension) =>
+        EXTENSION_LANGUAGES.has(extension) && !EXTENSION_LANGUAGES.get(extension).has(declaration.language));
+      if (foreign.length) {
+        answerProblems.push(`answer-sensitive task ${declaration.task} declares a false language label for its editor`);
+        continue;
+      }
+      // A statement-body task matches only a "<name>.java (body of main)"
+      // surface; a method task matches only a plain "<name>.java" file.
+      const statements = declaration.targetMode === "statements";
+      const matchedExtensions = registered.adapter ? declaration.scaffoldEditorExtensions :
+        statements ? declaration.statementEditorExtensions : declaration.editorExtensions;
+      if (registered.requiresEditor &&
+          !matchedExtensions.some((extension) => registered.extensions.includes(extension))) {
+        answerProblems.push(`answer-sensitive task ${declaration.task} requires a matched ${declaration.language}${statements ? " statement-body" : ""} editor`);
+      }
     }
   }
-  if (snapshot.answerDeclaration) {
+  if (snapshot.answerDeclarations) {
     const scriptSources = snapshot.scripts.flatMap((script) => {
       const parsed = staticJsSources(script);
       return [
@@ -577,17 +885,33 @@ export async function validateHtmlContracts(html, options = {}) {
       ...scriptSources,
       ...recursiveSources(options.spec ?? {}, snapshot.answerSelectors),
     ];
-    if (scanPythonAnswers(sources, snapshot.answerDeclaration.targets).length) {
-      answerProblems.push("answer-sensitive public bytes contain a complete target comprehension expression");
+    const allTargets = [];
+    for (const declaration of snapshot.answerDeclarations) {
+      allTargets.push(...declaration.targets);
+      const registered = ANSWER_LANGUAGES[declaration.language];
+      if (!registered || !declaration.targets.length) continue;
+      if (registered.scan === "python" && scanPythonAnswers(sources, declaration.targets).length) {
+        answerProblems.push("answer-sensitive public bytes contain a complete target comprehension expression");
+      }
+      if (registered.scan === "java") {
+        const found = scanJavaAnswers(sources, declaration, starterBindings.get(declaration.task) ?? null);
+        if (found.method) answerProblems.push("answer-sensitive public bytes contain a complete target method implementation");
+        if (found.statements) answerProblems.push("answer-sensitive public bytes contain a complete target statement body");
+      }
     }
-    const targetPattern = new RegExp(`\\b(?:${snapshot.answerDeclaration.targets.join("|")})\\b`, "u");
-    const obfuscation = sources.some(({ value, answerBearing }) => {
-      const associated = answerBearing || targetPattern.test(value);
-      if (!associated) return false;
-      return /\b(?:atob|b64decode|decodeURIComponent|unquote|fromhex|bytes\.fromhex|String\.fromCharCode|\bchr)\s*\(/u.test(value) ||
-        /\b[a-f0-9]{40}(?:[a-f0-9]{24})?\b/iu.test(value);
-    });
-    if (obfuscation) answerProblems.push("answer-sensitive public bytes must not encode, assemble or hash a completed input");
+    if (allTargets.length) {
+      const targetPattern = new RegExp(`\\b(?:${allTargets.join("|")})\\b`, "u");
+      // Raw values and their bounded decodings are both checked, so a decoder
+      // or digest hidden inside an encoded target-associated value still fails.
+      const obfuscation = sources.some(({ value, answerBearing }) => decodedSources(value).some((candidate) => {
+        if (typeof candidate !== "string") return false;
+        const associated = answerBearing || targetPattern.test(candidate);
+        if (!associated) return false;
+        return /\b(?:atob|b64decode|decodeURIComponent|unquote|fromhex|bytes\.fromhex|String\.fromCharCode|\bchr)\s*\(/u.test(candidate) ||
+          /\b[a-f0-9]{40}(?:[a-f0-9]{24})?\b/iu.test(candidate);
+      }));
+      if (obfuscation) answerProblems.push("answer-sensitive public bytes must not encode, assemble or hash a completed input");
+    }
   }
   return {
     optional: snapshot.optional,
