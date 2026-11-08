@@ -23,36 +23,34 @@ Owner work on the current bytes:
 2. **One bounded essential pass** (`315f9317`) covered correctness, answer safety and GIFT validity. One owner-dispatched read-only helper per module reported findings; the owner verified and applied them. No content-review wave, critic or reconciliation record was run or written.
 3. **Main merged** (`39bbf50b`, main `e9a8aa28`). That merge changed `harness.mjs` and `T08-html-static.mjs`, which every private-success receipt binds.
 
-## Checks on the current bytes (macOS, no browser)
+## Checks on the current bytes (macOS)
 
 | Check | Result |
 | --- | --- |
 | Inline script and JSON parse, all pages | Pass |
-| T01-T05, T07, T14-T17, T19, T20, T24 | Pass |
-| T06 | Fails until each answer-sensitive topic has a current private success receipt (table below) |
-| T25 | Fails on this branch: minimum-profile support arrives with the T25 change on the inheritance-and-design branch. With that T25 and T01 applied to a scratch copy, T25 passes |
-| T08-T13, T18, `npm test` browser suites | Not run: Chromium is held by another lane |
+| T01-T05, T07, T14-T17, T19, T20, T24, T25 | Pass |
+| T09-T13, T18 (public browser gates, every topic) | Pass, recorded in each `qa-receipt.json` or run log |
+| T06 private success proofs | Pass for every answer-sensitive topic (table below) |
+| T08, full `npm run check`, `npm test` | Run once on the final branch head; results are reported with the pull request |
 
 ## Proof inventory
 
-The "Page" and "QA paths" columns compare with `4d4fc1b5`, the last receipt checkpoint. No receipt is current, because every receipt binds the shared tool files changed by the main merge.
+Proofs ran serially. Each receipt commit is the immediate child of its proof commit. Success, wrongFirst, keyboard and sandbox routes passed with every declared task completed, credited and graded. The all-fail and mixed controls were refused. Inputs were authored by the implementation owner in mode-restricted files outside the repository, and that staging is retired. Any later byte change to a page or its QA paths makes its proof and its `owner-essential-qa.json` stale.
 
-| Topic | Answer-sensitive | Receipt | Page | QA paths | Needed before release |
-| --- | --- | --- | --- | --- | --- |
-| `project-setup-with-npm-and-vite` | no | none | changed | changed | No private proof (no answer-sensitive editor); public browser gates only |
-| `selecting-and-changing-the-dom` | yes | none | changed | changed | New private success proof (never proven) |
-| `events-and-event-bubbling` | yes | none | changed | unchanged | New private success proof (never proven) |
-| `preventing-cross-site-scripting` | yes | none | changed | changed | New private success proof (never proven) |
-| `promises` | yes | none | changed | changed | New private success proof (never proven) |
-| `async-and-await` | yes | none | unchanged | unchanged | New private success proof (never proven) |
-| `the-event-loop` | yes | none | changed | unchanged | New private success proof (never proven) |
-| `debugging-with-devtools-breakpoints` | yes | none | changed | changed | New private success proof (never proven) |
-
-Run the proofs serially from one checkpoint, after the browser lane clears, and then run T08-T13 and T18 on the same bytes. Any later byte change to a page or its QA paths makes its proof and its `owner-essential-qa.json` stale again.
+| Topic | Answer-sensitive | Private success proof |
+| --- | --- | --- |
+| `project-setup-with-npm-and-vite` | no | not applicable |
+| `selecting-and-changing-the-dom` | yes | `73ed6861` by `js-selecting-and-changing-the-dom-proof-1794145223933` |
+| `events-and-event-bubbling` | yes | `9c441562` by `js-events-and-event-bubbling-proof-1794145247976` |
+| `preventing-cross-site-scripting` | yes | `e5063ad1` by `js-preventing-cross-site-scripting-proof-1794145274570` |
+| `promises` | yes | `88ea2b7f` by `js-promises-proof-1794145304489` |
+| `async-and-await` | yes | `a8145193` by `js-async-and-await-proof-1794145335861` |
+| `the-event-loop` | yes | `5120ffa5` by `js-the-event-loop-proof-1794145377382` |
+| `debugging-with-devtools-breakpoints` | yes | `e953c097` by `js-debugging-with-devtools-breakpoints-proof-1794145419830` |
 
 ## Open gaps
 
-- **Browser evidence is pending** for every topic. No claim is made about Linux keyboard behaviour.
+- **Browser evidence is macOS only.** No claim is made about Linux keyboard behaviour.
 - **Answer safety is owner-checked.** T08 has no JavaScript answer scanner.
 - **Sources are bound per topic.** Every URL returned HTTP 200, but no claim-by-claim SME check exists.
 - **Companion generator quirk.** The derived `artifact.md` repeats skipped sections under its Cheat sheet heading. This comes from shared tooling, not from the content.
