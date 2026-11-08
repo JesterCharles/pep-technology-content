@@ -19,7 +19,7 @@ import { total } from "./cart.js";
 console.log(total([1, 2]));
 ```
 
-Each file with `import` or `export` is a module with its own top-level scope: its names are private unless exported.
+A file loaded as a module has its own top-level scope: its names are private unless exported.
 
 ```
 export const LIMIT = 5;           // named
@@ -56,7 +56,7 @@ export default function clamp(n) { return Math.min(n, MAX); }
 
 ## Recap
 
-Modules keep names private unless exported. Named exports are imported in braces with their exact name, or renamed with `as`; a default is imported without braces under any name. Browsers need `type="module"` and a real origin, and Node.js needs `.mjs` or `"type": "module"`.
+Modules keep names private unless exported. Named exports are imported in braces with their exact name, or renamed with `as`; a default is imported without braces under any name. Browsers need `type="module"` and a real origin, and In Node.js, mark modules with `.mjs` or `"type": "module"`; recent versions can also detect module syntax in a plain `.js` file, but an explicit marker is clearer.
 
 ## Cheat sheet
 
@@ -93,9 +93,9 @@ export const MAX_LENGTH = 40; export default function makeSlug(text) { return te
 
 A default import has no braces and takes any local name. A renamed import names the real export, then as, then the local name. The output is hello-world then 40.
 
-Where to act: The two lists at the top of the model.
+Where to act: The Script tag and How the page is opened groups at the top of the model.
 
-Next step: Change one list at a time, so you can tell which setting caused the change.
+Next step: Change one group at a time, so you can tell which setting caused the change.
 
 A classic script fails on import with a syntax error whether from file or a server. A module script from file is blocked by CORS. A module script from a local server loads and runs.
 

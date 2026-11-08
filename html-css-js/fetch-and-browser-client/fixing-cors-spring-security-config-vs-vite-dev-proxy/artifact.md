@@ -60,7 +60,7 @@ Where to act: The Network panel box.
 
 Next step: Compare the rows for a GET and for the POST, and find the one that says it never reached the server.
 
-Without CORS configuration, a simple GET reaches the server but the browser blocks reading it. A JSON POST or Authorization header sends an OPTIONS preflight first; if that fails, the POST is never sent. Allowing the page origin on the server, or using the Vite proxy so everything is same-origin, makes it work.
+Without CORS configuration, a simple GET reaches the server but the browser blocks reading it. A JSON POST or Authorization header sends an OPTIONS preflight first; if that fails, the POST is never sent. Allowing the page origin on the server, together with the methods and request headers it uses, or using the Vite proxy so everything is same-origin, makes it work.
 
 Where to act: Each row's description.
 
@@ -68,7 +68,7 @@ Next step: Ask first whether this runs in production or only on a developer mach
 
 - Production page at `app.example.com` calls `api.example.com`: Spring Security CORS config. These are two real origins in production, so the API must allow the page origin.
 - Local dev only: you want browser code to use relative `/api` paths: Vite dev proxy. The proxy makes dev look same-origin, and it adds nothing to the server.
-- A preflight gets 401 from Spring Security: Spring Security CORS config. Security rejected the unauthenticated `OPTIONS`. Enabling `http.cors` handles it first.
+- A production preflight gets 401 from Spring Security: Spring Security CORS config. Security rejected the unauthenticated `OPTIONS`. Enabling `http.cors` handles it first.
 - Production: one domain, where a reverse proxy routes `/` and `/api`: No CORS needed. The browser sees one origin, so no cross-origin rules apply.
 
 Where to act: Inside the `proxy` object.
@@ -120,7 +120,7 @@ What actually happened?
 
 ### Static alternative
 
-Without CORS configuration, a simple GET reaches the server but the browser blocks reading it. A JSON POST or Authorization header sends an OPTIONS preflight first; if that fails, the POST is never sent. Allowing the page origin on the server, or using the Vite proxy so everything is same-origin, makes it work.
+Without CORS configuration, a simple GET reaches the server but the browser blocks reading it. A JSON POST or Authorization header sends an OPTIONS preflight first; if that fails, the POST is never sent. Allowing the page origin on the server, together with the methods and request headers it uses, or using the Vite proxy so everything is same-origin, makes it work.
 
 ### explore
 
@@ -128,7 +128,7 @@ Without CORS configuration, a simple GET reaches the server but the browser bloc
 
 - Production page at `app.example.com` calls `api.example.com`: Spring Security CORS config. These are two real origins in production, so the API must allow the page origin.
 - Local dev only: you want browser code to use relative `/api` paths: Vite dev proxy. The proxy makes dev look same-origin, and it adds nothing to the server.
-- A preflight gets 401 from Spring Security: Spring Security CORS config. Security rejected the unauthenticated `OPTIONS`. Enabling `http.cors` handles it first.
+- A production preflight gets 401 from Spring Security: Spring Security CORS config. Security rejected the unauthenticated `OPTIONS`. Enabling `http.cors` handles it first.
 - Production: one domain, where a reverse proxy routes `/` and `/api`: No CORS needed. The browser sees one origin, so no cross-origin rules apply.
 
 ### terminal

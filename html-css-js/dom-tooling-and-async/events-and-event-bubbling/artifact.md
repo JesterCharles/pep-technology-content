@@ -65,9 +65,9 @@ list.addEventListener("click", (event) => {
 What does one click on the button log?
 
 - `button` then `box`: correct. The event runs on the element that was clicked, then bubbles up through its ancestors. Registration order between different elements does not matter.
-- `box` then `button`: not correct. That follows registration order, but each element runs its own listeners as the event reaches it, and it reaches the button first.
+- `box` then `button`: not correct. That follows registration order, but with ordinary bubble-phase listeners, the button's listeners run before the event bubbles up to box.
 - Only `button`: not correct. Click events bubble, so the parent is told too.
-- Only `box`: not correct. The clicked element always gets the event first.
+- Only `box`: not correct. With ordinary bubble-phase listeners, the clicked element's listeners run before its ancestors' listeners.
 
 Where to act: The checkbox under the boxes.
 
@@ -129,9 +129,9 @@ First draft, retrieved 2026-11-04. These claims have not had independent review 
 What does one click on the button log?
 
 - `button` then `box`: correct. The event runs on the element that was clicked, then bubbles up through its ancestors. Registration order between different elements does not matter.
-- `box` then `button`: not correct. That follows registration order, but each element runs its own listeners as the event reaches it, and it reaches the button first.
+- `box` then `button`: not correct. That follows registration order, but with ordinary bubble-phase listeners, the button's listeners run before the event bubbles up to box.
 - Only `button`: not correct. Click events bubble, so the parent is told too.
-- Only `box`: not correct. The clicked element always gets the event first.
+- Only `box`: not correct. With ordinary bubble-phase listeners, the clicked element's listeners run before its ancestors' listeners.
 
 ### explore
 

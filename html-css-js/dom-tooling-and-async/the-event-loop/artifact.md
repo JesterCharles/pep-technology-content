@@ -69,7 +69,7 @@ Where to act: The readout after each run.
 
 Next step: Compare the longest gap in each case with the 50 ms the timer asked for.
 
-A 1.2 second synchronous loop stops the timer for about 1200 ms, and the page ignores input during that time. The same work split into chunks of about 20 ms with setTimeout keeps the gap small, near the chunk length.
+A 1.2 second synchronous loop stops the timer for about 1200 ms, and the page ignores input during that time. The same work split into chunks of about 20 ms with setTimeout keeps the longest gap near the 50 ms tick interval, at most about one chunk (20 ms) longer.
 
 Does this stop the freeze?
 
@@ -121,7 +121,7 @@ Use setTimeout for one callback and Promise.resolve().then for the other. Plain 
 
 ### Static alternative
 
-A 1.2 second synchronous loop stops the timer for about 1200 ms, and the page ignores input during that time. The same work split into chunks of about 20 ms with setTimeout keeps the gap small, near the chunk length.
+A 1.2 second synchronous loop stops the timer for about 1200 ms, and the page ignores input during that time. The same work split into chunks of about 20 ms with setTimeout keeps the longest gap near the 50 ms tick interval, at most about one chunk (20 ms) longer.
 
 ### mcq
 

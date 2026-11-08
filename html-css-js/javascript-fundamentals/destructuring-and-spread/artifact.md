@@ -94,9 +94,9 @@ What does line 5 print?
 
 ```
 const { a, b = 1 } = obj;
-const [x, y] = list;
-const copy = [...list];
-const merged = { ...defaults, ...overrides };
+const [lat, lng] = coords;
+const clone = [...items];
+const settings = { ...base, ...custom };
 const deep = structuredClone(obj);
 ```
 

@@ -60,14 +60,14 @@ async function loadUser() {
 
 ## Recap
 
-`fetch` gives you a promise for a Response, and `res.json()` gives you a promise for the parsed body, so there are two awaits. `fetch` rejects only when no response arrives, so check `res.ok` and throw for HTTP failures. Render data with `textContent`, because response data is untrusted.
+`fetch` gives you a promise for a Response, and `res.json()` gives you a promise for the parsed body, so there are two awaits. `fetch` rejects only on a network error, such as no connection or a CORS block, so check `res.ok` and throw for HTTP failures. Render data with `textContent`, because response data is untrusted.
 
 ## Cheat sheet
 
 What is logged?
 
 - `got 404`: correct. The `fetch` promise fulfills whenever the server answers. A 404 is a successful HTTP exchange, so you must check the status yourself.
-- `caught`: not correct. `fetch` rejects only when no response arrives at all, such as on a network failure.
+- `caught`: not correct. `fetch` rejects only on a network error, such as no connection or a blocked CORS response; any HTTP status fulfills it.
 - Nothing, because the promise stays pending: not correct. The server answered, so the promise settles.
 - `got undefined`: not correct. A response object always has a numeric `status`.
 
@@ -105,7 +105,7 @@ Why is it undefined?
 ```
 async function getJson(url) {
   const res = await fetch(url);
-  if (!res.ok) throw new Error("HTTP " + res.status);
+  // check res.ok here before you read the body
   return res.json();
 }
 ```
@@ -127,7 +127,7 @@ First draft, retrieved 2026-11-04. These claims have not had independent review 
 What is logged?
 
 - `got 404`: correct. The `fetch` promise fulfills whenever the server answers. A 404 is a successful HTTP exchange, so you must check the status yourself.
-- `caught`: not correct. `fetch` rejects only when no response arrives at all, such as on a network failure.
+- `caught`: not correct. `fetch` rejects only on a network error, such as no connection or a blocked CORS response; any HTTP status fulfills it.
 - Nothing, because the promise stays pending: not correct. The server answered, so the promise settles.
 - `got undefined`: not correct. A response object always has a numeric `status`.
 

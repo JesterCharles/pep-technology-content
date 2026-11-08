@@ -48,7 +48,7 @@ What happens when another visitor views the comment?
 - Nothing runs, because `innerHTML` never runs scripts: not correct. A `script` tag inserted this way does not run, but event handler attributes do.
 - The browser blocks it, because the text came from a form: not correct. The browser cannot tell where your string came from.
 
-Where to act: The readout under the two lists.
+Where to act: The readout under the Untrusted input and Sink choices.
 
 Next step: Look for the lines naming elements and event handlers, because those are what turn data into code.
 

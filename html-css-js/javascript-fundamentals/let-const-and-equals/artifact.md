@@ -62,7 +62,7 @@ ___ taxRate = 0.2; ___ itemCount = 0; itemCount = itemCount + 3; ___ order = { i
 
 Decide each keyword by looking for a later assignment to that name. A property change is not reassignment. The program prints 3 true 0.2.
 
-Where to act: The two value lists in the model.
+Where to act: The Left value and Right value groups in the model.
 
 Next step: Try a number on one side and a string that looks like that number on the other.
 

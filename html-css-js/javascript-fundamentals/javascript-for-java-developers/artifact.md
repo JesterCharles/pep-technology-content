@@ -73,7 +73,7 @@ Next step: Both sides of `**` must be BigInt values, so each literal needs the s
 
 // Step 1: give value a number. let value = ___; console.log(typeof value); // Step 2: reassign value to a string, then log typeof value. // Step 3: make big hold 2 to the power 64, exactly. const big = ___; console.log(big);
 
-Assign a number to value and log typeof value, reassign a string and log again, then store 2 to the power 64 using BigInt literals. The expected output is number, string, then 18446744073709551616.
+Assign a number to value and log typeof value, reassign a string and log again, then store 2 to the power 64 using BigInt literals. The expected output is number, string, then 18446744073709551616n.
 
 Where to act: The rows with brackets or the word `null`.
 
@@ -90,7 +90,7 @@ Where to act: The terminal input below the log.
 
 Next step: The command is the runtime name, a space, then the file name. Use `ls` to see the two file names available.
 
-node hello.js prints one line per console.log call. node broken.js prints the file and line /home/you/broken.js:2, then TypeError: Cannot read properties of undefined (reading toFixed), then a stack, and stops.
+node hello.js prints one line per console.log call. node broken.js prints the file and line /home/you/broken.js:2, then TypeError: Cannot read properties of undefined (reading 'toFixed'), then a stack, and stops.
 
 Why did the printed value change by one?
 
@@ -133,7 +133,7 @@ What happens when this code runs?
 
 ### Static alternative
 
-Assign a number to value and log typeof value, reassign a string and log again, then store 2 to the power 64 using BigInt literals. The expected output is number, string, then 18446744073709551616.
+Assign a number to value and log typeof value, reassign a string and log again, then store 2 to the power 64 using BigInt literals. The expected output is number, string, then 18446744073709551616n.
 
 ### explore
 
@@ -150,7 +150,7 @@ Assign a number to value and log typeof value, reassign a string and log again, 
 
 ### Static alternative
 
-node hello.js prints one line per console.log call. node broken.js prints the file and line /home/you/broken.js:2, then TypeError: Cannot read properties of undefined (reading toFixed), then a stack, and stops.
+node hello.js prints one line per console.log call. node broken.js prints the file and line /home/you/broken.js:2, then TypeError: Cannot read properties of undefined (reading 'toFixed'), then a stack, and stops.
 
 ### mcq
 

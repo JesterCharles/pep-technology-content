@@ -55,7 +55,7 @@ Where to act: The Scope box as you step over the loop.
 
 Next step: Note `total` before and after the second pass. Ask whether it grew or was replaced.
 
-From line 7, Step into enters lineTotal at line 2, and Step out returns to the loop with total 6. Step over repeats for the second item, and total becomes 10, not 16, so line 7 replaces the total rather than adding to it.
+From line 7, Step into enters lineTotal at line 2, and Step out returns to line 7 with lineTotal's return value 6, before the assignment runs. Step over assigns total = 6 and repeats for the second item, and total becomes 10, not 16, so line 7 replaces the total rather than adding to it.
 
 Where to act: The line you identified in the last activity.
 
@@ -112,7 +112,7 @@ In DevTools Sources or Debugger, open buggy-cart.js. Click the line number of th
 
 ### Static alternative
 
-From line 7, Step into enters lineTotal at line 2, and Step out returns to the loop with total 6. Step over repeats for the second item, and total becomes 10, not 16, so line 7 replaces the total rather than adding to it.
+From line 7, Step into enters lineTotal at line 2, and Step out returns to line 7 with lineTotal's return value 6, before the assignment runs. Step over assigns total = 6 and repeats for the second item, and total becomes 10, not 16, so line 7 replaces the total rather than adding to it.
 
 ### terminal
 

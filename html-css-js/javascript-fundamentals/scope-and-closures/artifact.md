@@ -98,7 +98,7 @@ function makeTally(start) { ___ } const t = makeTally(10); console.log(t(5)); co
 
 Inside makeTally, keep a local running total and return a function that updates and returns it. Each makeTally call has its own total, so the output is 15, 16, 2.
 
-Where to act: The Your prediction list.
+Where to act: The Your prediction for the output group.
 
 Next step: Ask how many separate copies of the loop variable exist with the selected keyword, then what value each copy holds when the callbacks run.
 

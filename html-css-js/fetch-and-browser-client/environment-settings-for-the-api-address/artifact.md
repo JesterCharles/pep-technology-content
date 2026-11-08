@@ -64,7 +64,7 @@ const API_BASE = ___; export function url(path) { return API_BASE + path; }
 
 import { url } from "./api.js"; console.log(url("/api/books"));
 
-Rename the variable with the VITE_ prefix in .env, and read import.meta.env.VITE_API_URL in api.js. The output is http://localhost:8080/api/books.
+Rename the variable with the VITE_ prefix in .env, and read the renamed variable from import.meta.env in api.js. The output is http://localhost:8080/api/books.
 
 Where to act: The box showing `dist/assets/index.js`.
 
@@ -120,7 +120,7 @@ What is logged?
 
 ### Static alternative
 
-Rename the variable with the VITE_ prefix in .env, and read import.meta.env.VITE_API_URL in api.js. The output is http://localhost:8080/api/books.
+Rename the variable with the VITE_ prefix in .env, and read the renamed variable from import.meta.env in api.js. The output is http://localhost:8080/api/books.
 
 ### explore
 

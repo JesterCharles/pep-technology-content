@@ -93,7 +93,7 @@ import { test, expect } from "vitest"; import { add, makeLine, tags } from "./ca
 
 export const add = (a, b) => a + b; export const makeLine = (name, qty) => ({ name, qty }); export const tags = () => ["new", "sale"];
 
-The number comparison uses toBe. The object and the array comparisons use toEqual, because each expected value is a new container with the same contents.
+Pick each matcher by whether the expected value is a primitive or a new container with the same contents.
 
 What is going on?
 
@@ -147,7 +147,7 @@ The failures report Expected 7.00 kg, Received 7 kg. The code must format the nu
 
 ### Static alternative
 
-The number comparison uses toBe. The object and the array comparisons use toEqual, because each expected value is a new container with the same contents.
+Pick each matcher by whether the expected value is a primitive or a new container with the same contents.
 
 ### mcq
 

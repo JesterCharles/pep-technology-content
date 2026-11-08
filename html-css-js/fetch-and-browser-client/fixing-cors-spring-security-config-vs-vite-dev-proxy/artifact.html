@@ -576,7 +576,7 @@ select, .pep-input { min-height: 44px; width: 100%; max-width: 100%; padding: 8p
 <div class="pep-box"><div class="pep-box__label">Network panel</div><div class="pep-readout" id="a2-net" aria-live="polite"></div></div>
 <div class="pep-box"><div class="pep-box__label">Console, and what your code gets</div><div class="pep-readout" id="a2-con"></div></div>
 <p class="pep-note" id="a2-tally"></p>
-<div class="pep-static" data-static-alt data-section-skip><h3>Static alternative</h3><p>Without CORS configuration, a simple GET reaches the server but the browser blocks reading it. A JSON POST or Authorization header sends an OPTIONS preflight first; if that fails, the POST is never sent. Allowing the page origin on the server, or using the Vite proxy so everything is same-origin, makes it work.</p></div>
+<div class="pep-static" data-static-alt data-section-skip><h3>Static alternative</h3><p>Without CORS configuration, a simple GET reaches the server but the browser blocks reading it. A JSON POST or Authorization header sends an OPTIONS preflight first; if that fails, the POST is never sent. Allowing the page origin on the server, together with the methods and request headers it uses, or using the Vite proxy so everything is same-origin, makes it work.</p></div>
 </div>
 <div class="pep-actions pep-needs-js"><button class="pep-btn pep-btn--primary" type="button" id="a2-finish" data-pep-finish data-pep-submit>Check what I covered</button></div>
 <div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
@@ -626,14 +626,14 @@ select, .pep-input { min-height: 44px; width: 100%; max-width: 100%; padding: 8p
 <p class="pep-match__mark" hidden></p>
 </div>
 <div class="pep-match__row">
-<fieldset class="pep-choice" id="a3-row-3"><legend class="pep-match__label">A preflight gets 401 from Spring Security</legend><div class="pep-confidence__row"><label class="pep-chip-option"><input type="radio" name="a3-row-3" id="a3-row-3-opt-1" value="spring"> Spring Security CORS config</label><label class="pep-chip-option"><input type="radio" name="a3-row-3" id="a3-row-3-opt-2" value="proxy"> Vite dev proxy</label><label class="pep-chip-option"><input type="radio" name="a3-row-3" id="a3-row-3-opt-3" value="none"> No CORS needed</label></div></fieldset>
+<fieldset class="pep-choice" id="a3-row-3"><legend class="pep-match__label">A production preflight gets 401 from Spring Security</legend><div class="pep-confidence__row"><label class="pep-chip-option"><input type="radio" name="a3-row-3" id="a3-row-3-opt-1" value="spring"> Spring Security CORS config</label><label class="pep-chip-option"><input type="radio" name="a3-row-3" id="a3-row-3-opt-2" value="proxy"> Vite dev proxy</label><label class="pep-chip-option"><input type="radio" name="a3-row-3" id="a3-row-3-opt-3" value="none"> No CORS needed</label></div></fieldset>
 <p class="pep-match__mark" hidden></p>
 </div>
 <div class="pep-match__row">
 <fieldset class="pep-choice" id="a3-row-4"><legend class="pep-match__label">Production: one domain, where a reverse proxy routes <code>/</code> and <code>/api</code></legend><div class="pep-confidence__row"><label class="pep-chip-option"><input type="radio" name="a3-row-4" id="a3-row-4-opt-1" value="spring"> Spring Security CORS config</label><label class="pep-chip-option"><input type="radio" name="a3-row-4" id="a3-row-4-opt-2" value="proxy"> Vite dev proxy</label><label class="pep-chip-option"><input type="radio" name="a3-row-4" id="a3-row-4-opt-3" value="none"> No CORS needed</label></div></fieldset>
 <p class="pep-match__mark" hidden></p>
 </div>
-<div class="pep-static" data-static-alt data-section-skip><h3>Static alternative</h3><ul><li>Production page at <code>app.example.com</code> calls <code>api.example.com</code>: <strong>Spring Security CORS config</strong>. These are two real origins in production, so the API must allow the page origin.</li><li>Local dev only: you want browser code to use relative <code>/api</code> paths: <strong>Vite dev proxy</strong>. The proxy makes dev look same-origin, and it adds nothing to the server.</li><li>A preflight gets 401 from Spring Security: <strong>Spring Security CORS config</strong>. Security rejected the unauthenticated <code>OPTIONS</code>. Enabling <code>http.cors</code> handles it first.</li><li>Production: one domain, where a reverse proxy routes <code>/</code> and <code>/api</code>: <strong>No CORS needed</strong>. The browser sees one origin, so no cross-origin rules apply.</li></ul></div>
+<div class="pep-static" data-static-alt data-section-skip><h3>Static alternative</h3><ul><li>Production page at <code>app.example.com</code> calls <code>api.example.com</code>: <strong>Spring Security CORS config</strong>. These are two real origins in production, so the API must allow the page origin.</li><li>Local dev only: you want browser code to use relative <code>/api</code> paths: <strong>Vite dev proxy</strong>. The proxy makes dev look same-origin, and it adds nothing to the server.</li><li>A production preflight gets 401 from Spring Security: <strong>Spring Security CORS config</strong>. Security rejected the unauthenticated <code>OPTIONS</code>. Enabling <code>http.cors</code> handles it first.</li><li>Production: one domain, where a reverse proxy routes <code>/</code> and <code>/api</code>: <strong>No CORS needed</strong>. The browser sees one origin, so no cross-origin rules apply.</li></ul></div>
 </div>
 <div class="pep-needs-js pep-actions"><button class="pep-btn pep-btn--primary" type="button" id="a3-check" data-pep-submit>Check all rows</button></div>
 <div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
@@ -811,17 +811,19 @@ window.PEP_FN = {
             con.textContent = 'No CORS error. res.ok is true, and your code can read the body.\nThe proxy runs only with the dev server, so production needs its own answer.';
             sawProxy = true;
           } else if (allow.value === 'dev') {
-            net.textContent = `${preflight ? `OPTIONS ${api8080}  200 (preflight)\n` : ''}${method} ${api8080}  200\nAccess-Control-Allow-Origin: ${page}`;
-            con.textContent = 'No CORS error. res.ok is true, and your code can read the body.';
+            const asked = kind === 'post' ? 'content-type' : 'authorization';
+            net.textContent = `${preflight ? `OPTIONS ${api8080}  200 (preflight)\nAccess-Control-Allow-Origin: ${page}\nAccess-Control-Allow-Methods: GET,POST\nAccess-Control-Allow-Headers: ${asked}\n` : ''}${method} ${api8080}  200\nAccess-Control-Allow-Origin: ${page}`;
+            con.textContent = preflight ? 'No CORS error. res.ok is true, and your code can read the body.\nThe config allows this origin, and also the method and request header the preflight asked about.' : 'No CORS error. res.ok is true, and your code can read the body.';
             sawAllowed = true;
           } else {
-            const header = allow.value === 'other' ? `The 'Access-Control-Allow-Origin' header has a value 'https://app.example.com' that is not equal to the supplied origin.` : `No 'Access-Control-Allow-Origin' header is present on the requested resource.`;
+            const other = allow.value === 'other';
+            const header = other && preflight ? 'It does not have HTTP ok status.' : `No 'Access-Control-Allow-Origin' header is present on the requested resource.`;
             if (preflight) {
-              net.textContent = `OPTIONS ${api8080}  CORS error (preflight)\n${method} ${api8080}  CORS error: never reached the server`;
+              net.textContent = `OPTIONS ${api8080}  ${other ? '403 (Spring rejected this origin)' : 'CORS error (preflight)'}\n${method} ${api8080}  CORS error: never reached the server`;
               con.textContent = `Access to fetch at '${api8080}' from origin '${page}' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: ${header}\n\nYour code: fetch rejects with TypeError: Failed to fetch.`;
               sawPreflight = true;
             } else {
-              net.textContent = `GET ${api8080}  CORS error\nThe server handled it and answered, but the response has no matching Access-Control-Allow-Origin`;
+              net.textContent = other ? `GET ${api8080}  403 CORS error\nSpring rejected the origin before your controller ran, and sent no Access-Control-Allow-Origin` : `GET ${api8080}  CORS error\nThe server handled it and answered, but the response has no Access-Control-Allow-Origin`;
               con.textContent = `Access to fetch at '${api8080}' from origin '${page}' has been blocked by CORS policy: ${header}\n\nYour code: fetch rejects with TypeError: Failed to fetch.`;
               sawBlocked = true;
             }

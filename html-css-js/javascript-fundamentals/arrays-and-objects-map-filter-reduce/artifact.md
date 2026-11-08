@@ -107,9 +107,9 @@ What is wrong with this code?
 - It should use `reduce` with an initial value: not correct. `map` fits a one-to-one transform. The problem is the mutation, not the method.
 
 ```
-const inStock = list.filter((x) => x.inStock);
-const names = list.map((x) => x.name);
-const total = list.reduce((sum, x) => sum + x.price, 0);
+const active = users.filter((u) => u.active);
+const emails = users.map((u) => u.email);
+const sum = nums.reduce((acc, n) => acc + n, 0);
 ```
 
 ## Sources
