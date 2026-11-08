@@ -77,21 +77,64 @@
     "answerSafety": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["task", "language", "targets"],
+      "required": ["tasks"],
       "properties": {
-        "task": { "type": "string", "pattern": "^#[A-Za-z][A-Za-z0-9_-]*$" },
-        "language": { "const": "python-comprehension" },
         "privateSuccessProof": { "const": true },
-        "targets": {
+        "tasks": {
           "type": "array",
           "minItems": 1,
-          "uniqueItems": true,
-          "items": { "type": "string", "pattern": "^[A-Za-z_]\\w*$" }
+          "items": { "$ref": "#/$defs/answerTask" }
         }
       }
     }
   },
   "$defs": {
+    "answerTask": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task", "language", "targets"],
+      "properties": {
+        "task": { "type": "string", "pattern": "^#[A-Za-z][A-Za-z0-9_-]*$" },
+        "language": {
+          "enum": ["python-comprehension", "python-scaffold", "java", "sql", "javascript-editor", "jsx-editor"]
+        },
+        "scan": { "const": "none" },
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^[A-Za-z_]\\w*$" }
+        },
+        "targetMode": { "const": "statements" },
+        "starter": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "sha256"],
+          "properties": {
+            "target": { "type": "string", "pattern": "^[A-Za-z_]\\w*$" },
+            "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "language": { "enum": ["python-scaffold", "sql", "javascript-editor", "jsx-editor"] } } },
+          "then": { "required": ["scan"] },
+          "else": { "not": { "required": ["scan"] } }
+        },
+        {
+          "if": { "not": { "properties": { "language": { "const": "java" } } } },
+          "then": {
+            "not": {
+              "anyOf": [
+                { "required": ["targetMode"] },
+                { "required": ["starter"] }
+              ]
+            }
+          }
+        }
+      ]
+    },
     "actions": {
       "type": "array",
       "minItems": 1,

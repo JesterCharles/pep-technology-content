@@ -34,11 +34,11 @@ Normally, the three required routes must independently finish the topic:
 - `wrongFirst`: wrong first and then correct on retry;
 - `wrongTwice`: wrong twice and reach the honest settled state.
 
-An answer-sensitive topic may instead set `answerSafety.privateSuccessProof: true`. For that explicit opt-in, all
-committed routes are public-safe negative paths, so the shared `completion` and `progress` assertions prove the page
-remains incomplete and at zero credit. `wrongTwice` may reach an accepted retry limit, but it must not settle the
-answer-sensitive task as complete or award credit. T06 rejects the opt-in until the topic has its current existing
-private-success receipt.
+An answer-sensitive topic may instead set `answerSafety.privateSuccessProof: true` beside its declared
+`answerSafety.tasks`. For that explicit opt-in, all committed routes are public-safe negative paths, so the shared
+`completion` and `progress` assertions prove the page remains incomplete and at zero credit. `wrongTwice` may reach an
+accepted retry limit, but it must not settle the answer-sensitive task as complete or award credit. T06 rejects the
+opt-in until the topic has its current existing private-success receipt.
 
 `simulatorEdges` records realistic unsupported, partial, or look-alike states and their assertions.
 For ordinary topics, `progress` separately asserts that each route reached 100%; for the private-proof opt-in, it
@@ -50,8 +50,12 @@ keyboard activation. `data-pep-guidance-contract` and `spec.guidance` are mandat
 enrollment are both accepted, while owner-aware traversal and assertions remain harness-controlled rather than limited
 by author selectors. Empty, partial or author-selected omission fails before browser execution. The contract fixture demonstrates
 the exact shape. Navigation arrays are setup/smoke paths, not self-selected evidence: they must leave meaningful live
-inputs in at least two activities, a prior honestly settled/completed **grade-0 wrong settlement** with one credit, and
-a later unlocked, attempted but incomplete current activity. Harness-owned postconditions then activate Previous/Next,
+inputs in at least two activities, a prior honestly settled grade-0 activity in one of the two accepted coherent
+state pairs — a non-credit prediction settled as completed with one credit, or a failed required activity settled as
+incomplete with zero credit — and a later unlocked, attempted but incomplete current activity. Any incoherent
+completion/credit pair (completed without its credit, or credit without completion) fails setup directly. Setup-state
+coherence is fixture evidence only: it never grants completion or credit to failed required work, and a prior
+non-credit completion is never proof that required work passed. Harness-owned postconditions then activate Previous/Next,
 current/completed timeline and back links, every future link and fragment, browser history and Restart; they compare
 the complete root/control/per-activity snapshot and reject vacuous setup. The same procedure runs pointer and keyboard
 desktop plus 320/390 touch, both top-level and in `sandbox="allow-scripts"`.
@@ -157,19 +161,64 @@ Git `tNN.json` files, and the reusable route roles of AI `spec.js`. No course-1 
 
 ### Answer-sensitive routes and private proof
 
-An answer-sensitive task and `qa-paths.json` declare the same task selector, supported language scanner and target
-names. Committed paths contain only public-safe starter, incomplete, malformed, unsupported-shape, reset and
+Each answer-sensitive task carries one HTML declaration (`data-pep-answer-sensitive="<language>"
+data-pep-answer-targets="..."`), and `qa-paths.json` lists the same declarations one-to-one in `answerSafety.tasks`
+with exactly matching task selector, language and target names. A page may declare several answer-sensitive tasks;
+each declaration owns its activity scope and targets. The supported declarations are closed:
+
+- `python-comprehension`: CPython structural comprehension scanning of declared targets.
+- `python-scaffold`: explicit no-structural-scanner mode (`"scan": "none"`) only on the identified
+  `data-lesson-editor-adapter="python-scaffold@3"` root, with a matched `.py` file named by that shell's `.le-file`
+  label. Its protection is the private runner's exact in-memory value comparison plus mandatory independent review;
+  it does not claim a structural Python scanner guarantee. The adapter identity keeps this declaration distinct from
+  `python-comprehension`. A task inside this exact adapter scope is the only answer-sensitive declaration accepted
+  outside a `main[data-pep-guidance-contract]`; all declaration/spec binding and public-surface guards still apply.
+- `java`: structural Java scanning that rejects a complete implementation body of any declared target method
+  (loops, branches, assignments or multi-statement bodies); a trivial placeholder starter stays legal. The declared
+  task must contain a matched plain `.java` editor. Two Java-only extensions are declared on both sides:
+  - Statement-body mode (`data-pep-answer-target-mode="statements"`, `"targetMode": "statements"`): the targets name
+    the variables a body-of-main exercise builds, and the task must contain a matched `<name>.java (body of main)`
+    editor label (a method task never matches that label, and a statement task never matches a plain one). A target
+    statement is a member call, index, assignment, compound assignment or increment/decrement on a target; one is
+    ordinary teaching or a starter line, while two or more in one public value (raw or bounded-decoded, multiline
+    included) are refused as a complete statement body. Target method scanning still runs. No method is invented.
+  - Exact unchanged-starter binding (`data-pep-answer-starter="<target>"`,
+    `"starter": { "target": "<target>", "sha256": "<64 lowercase hex>" }`): the SHA-256 of the authorized starter's
+    UTF-8 bytes. It is accepted only when the target is one of the task's declared targets, at least one public value
+    inside the declared task is exactly those bytes (or those bytes less one final LF, the `<pre>`/static reading
+    form), and every such occurrence still declares the bound target. Only raw values that are exactly the bound
+    starter are exempt, and only for that one target: other targets, decoded forms, supersets, and every other value
+    and ancestor are still scanned, and encoded, assembled and digest checks never exempt it. Any starter, containing
+    task, declaration, target or hash drift refuses, and the binding must be re-pinned after review; review also owns
+    whether the bound starter itself is answer-safe.
+- `sql`: an explicit no-structural-scanner mode (`"scan": "none"`) for a matched `.sql` editor inside exactly one
+  `data-lesson-editor-adapter="sql-practice@1"` root contained by the declared task. Its protection is the private
+  runner's exact in-memory value comparison plus mandatory independent review; it does not add or claim a general SQL
+  evaluator.
+- `javascript-editor` and `jsx-editor`: an explicit no-structural-scanner mode (`"scan": "none"`), allowed only for
+  a matched `.js`/`.mjs`/`.cjs` or `.jsx` editor in the declared task. Its protection is the private runner's exact
+  in-memory value comparison plus mandatory independent review.
+
+A declaration whose task names an editor file owned by a different supported language is a false language label and
+fails; a `python-scaffold` declaration without its exact adapter root and `.le-file`-named `.py` editor fails; a
+`python-comprehension` declaration on that adapter root also fails; a `sql` declaration without exactly one contained
+`sql-practice@1` adapter and matched `.sql` editor fails; a `java`, `javascript-editor` or `jsx-editor` declaration
+without its matched editor fails; an unsupported language fails. A declaration whose required protection is not effective is refused rather than accepted vacuously.
+
+Committed paths contain only public-safe starter, incomplete, malformed, unsupported-shape, reset and
 no-premature-credit routes. An incorrect observed or expected result may use starter, incomplete, malformed or
-unsupported-shape input; it never includes a completed declared-target assignment. Complete bare comprehension
-syntax in an inline script literal is conservatively answer-bearing because static QA cannot prove where it will render. The target-aware scanner inventories decoded text and attributes from the
+unsupported-shape input; it never includes a completed declared-target assignment, method body or statement body. Complete bare
+comprehension syntax in an inline script literal is conservatively answer-bearing because static QA cannot prove where
+it will render. The target-aware scanner inventories decoded text and attributes from the
 document element and every descendant—including head, styles and body content outside the enrolled main—plus
 document-wide comments, no-JavaScript/templates/static alternatives and all QA strings. Its bounded JS
 parser cooks escapes/templates and folds all-literal `+` chains without execution. CPython `tokenize` extracts
 balanced candidates from prose; `ast` recursively checks declared targets through wrappers and positional destructuring.
-Target assignments fail anywhere, while standalone comprehensions fail only on answer-bearing task/activity/workspace
-or selector-associated QA surfaces, preserving unrelated teaching. Canonical UTF-8 base64, percent and hex-byte
-forms are decoded; target-associated decoder/character assembly and 40/64-hex digests fail. Arbitrary semantic
-leakage and opaque provenance remain explicit education/SME review boundaries.
+Target assignments, target method implementations and target statement bodies fail anywhere, while standalone comprehensions fail only on
+answer-bearing task/activity/workspace or selector-associated QA surfaces, preserving unrelated teaching. Canonical
+UTF-8 base64, percent and hex-byte forms are decoded; target-associated decoder/character assembly and 40/64-hex
+digests fail in raw values and in those decodings. Exact and structural scanning never covers renamed, reshaped, assembled or encoded leaks beyond those
+bounded decodings: arbitrary semantic leakage and opaque provenance remain explicit education/SME review boundaries.
 
 Completed inputs run only from an absolute authorized uncommitted overlay outside the repository, and the committed
 QA path must explicitly set `answerSafety.privateSuccessProof: true`. The overlay carries its own non-secret
@@ -177,8 +226,22 @@ QA path must explicitly set `answerSafety.privateSuccessProof: true`. The overla
 `fill`, `select` and `expectValue` steps use `valueFrom: "private:<key>"`; at execution, the runner reads that key from
 the JSON object selected by `PEP_QA_PRIVATE_INPUTS_FILE`. The source path must be absolute and resolve outside the
 repository. Missing, unreadable or malformed sources and missing or non-string keys are refused. After resolving the
-values, every route and the overlay-owned postconditions must still match the public QA schema. Keep the overlay and
+values, every route and the overlay-owned postconditions must still match the public QA schema. Before any browser
+run, the runner compares every resolved private value, exactly and whitespace-collapsed, against every committed
+learner and companion surface of the topic (every file under the topic directory plus its `qa-paths.json`); any exact
+occurrence refuses the run with a generic error. Raw bytes are always scanned. The topic's `artifact.html` is also
+compared after HTML parsing, so character references in its text, attributes, templates and `<noscript>` do not hide a
+value, and `qa-paths.json` is also compared after `JSON.parse`, so JSON string escapes do not hide one. Those are the
+only two representations recognized. Independent review stays mandatory for renamed, reshaped, assembled, digest,
+alternate-encoding and other transformed leakage. Keep the overlay and
 input file uncommitted; neither file nor any resolved value is copied into evidence or generated output.
+
+Overlay postconditions are author-supplied but never sufficient: the runner owns per-task and page success
+postconditions. After each of the four routes, every declared answer-sensitive task's activity must report
+`completed=true`, `credit=1` and `grade=1` through its state hooks, and an enrolled page's guidance root must report
+`data-pep-complete="true"`. A declared task without gate-readable activity state is refused. An all-editor-fail or
+mixed pass/fail run therefore fails even when page-level or overlay completion claims success, including on an engine
+that settles failed attempts as complete.
 
 The private runner captures clean commit **P** before loading the topic, verifies the exact five approved public working files equal P's
 blobs before and after `success`, `wrongFirst`, `keyboard` and `sandbox`, and rejects dirty tracked/untracked bytes,
@@ -207,7 +270,10 @@ private value, private postcondition output or answer-derived hash is recorded.
   invariants include direct setup-state validation, authored-control Restart restoration and current task/check rendering
   against structural hiding, ordinary zero opacity and computed zero-valued `filter: opacity()` components;
   the latter is bounded full-element-transparency coverage, not arbitrary paint proof.
-- **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion. Enrolled
+- **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion. Every
+  optional disclosure is opened and must leave required state unchanged; on an unenrolled stepped page an optional hidden
+  in a non-current `[data-step]` activity is first reached by replaying the `success` route only until its summary shows,
+  and an owner the route never reaches fails. Enrolled
   pages additionally run navigation and objectives by pointer, keyboard and 320/390 px touch; owner/activity-aware
   nested hints by pointer, keyboard and phone touch after a public-safe wrong-twice route unlocks their activities;
   a direct locked-future activation and guarded future fragment; explicit destination focus; monotonic frontier/no-navigation-credit;

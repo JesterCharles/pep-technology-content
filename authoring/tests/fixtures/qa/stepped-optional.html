@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stepped optional fixture</title>
+<style>
+body { margin: 0; padding: 16px; background: #FFFFFF; color: #171A20; font: 16px/24px system-ui, sans-serif; }
+button, summary { min-height: 44px; min-width: 44px; font: inherit; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid #5B3FD6; outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main id="lesson" data-pep-complete="false">
+  <h1>Stepped optional fixture</h1>
+  <p id="progress">0 of 2</p>
+  <div id="stage">
+    <section data-step="1" aria-labelledby="step-1-h">
+      <h2 id="step-1-h">First step</h2>
+      <p>Teaching for the first step.</p>
+      <details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+        <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+        <div class="pep-optional__body"><p data-pep-anecdote-story>A gardener waters only the dry pots on one walk along the shelf.</p></div>
+      </details>
+      <button type="button" id="wrong-one">Try a wrong answer</button>
+      <button type="button" id="check-one">Check first step</button>
+    </section>
+    <section data-step="2" aria-labelledby="step-2-h">
+      <h2 id="step-2-h">Second step</h2>
+      <button type="button" id="check-two">Check second step</button>
+      <details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+        <summary>Challenge (optional)</summary>
+        <div class="pep-optional__body" id="challenge-body">
+          <p data-pep-optional-time>Optional time: about 2 minutes, in addition to the time above</p>
+          <p data-pep-success-criteria>Success criteria: you can explain the second step in one sentence.</p>
+        </div>
+      </details>
+    </section>
+    <p id="feedback" aria-live="polite"></p>
+    <button type="button" id="next" hidden>Continue</button>
+    <button type="button" id="restart">Restart step</button>
+  </div>
+</main>
+<script>
+(function () {
+  var step = 1, done = {};
+  var $ = function (id) { return document.getElementById(id); };
+  function render() {
+    document.querySelectorAll("#stage > [data-step]").forEach(function (n) { n.hidden = +n.getAttribute("data-step") !== step; });
+    var n = Object.keys(done).length;
+    $("progress").textContent = n + " of 2";
+    $("lesson").setAttribute("data-pep-complete", n === 2 ? "true" : "false");
+    $("next").hidden = !(step === 1 && done[1]);
+  }
+  document.addEventListener("click", function (event) {
+    var id = event.target.closest("button") && event.target.closest("button").id;
+    if (id === "wrong-one") $("feedback").textContent = "Not yet.";
+    if (id === "check-one") { done[1] = true; $("feedback").textContent = "First step done."; }
+    if (id === "check-two") { done[2] = true; $("feedback").textContent = "Second step done."; }
+    if (id === "next") step = 2;
+    if (id === "restart") { delete done[step]; $("feedback").textContent = ""; }
+    render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>
