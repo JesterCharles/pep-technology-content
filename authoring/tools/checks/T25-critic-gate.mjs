@@ -1,4 +1,4 @@
-import { readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import {
   error,
@@ -8,6 +8,7 @@ import {
   readJson,
   relative,
   resolveRepositoryPath,
+  sha256,
   walk,
 } from "../lib/common.mjs";
 import { bindingsForEvidenceFile } from "../lib/locks.mjs";
@@ -68,6 +69,69 @@ async function ownerEvidence(ctx, scope) {
   return { errors, covered: errors.length ? new Set() : covered };
 }
 
+// Module-scope deferral (minimum profile only): pre-existing coding-lab
+// lab.json/README.md files explicitly outside a minimum-profile release may be
+// named in the module's deferred-reviewable.json with their exact current
+// hash. A current entry is excluded and not counted; it carries no critic or
+// owner release approval. Any other path, or a stale/missing hash, fails.
+const deferralName = "deferred-reviewable.json";
+const deferralConstants = {
+  schemaVersion: 1,
+  acceptanceProfile: "minimum",
+  status: "deferred-excluded-not-counted",
+  independentCriticApproval: "not-performed",
+  ownerReleaseApproval: "not-granted",
+};
+const labReviewable = /\/coding-lab\/(?:lab\.json|README\.md)$/;
+
+async function moduleDeferral(ctx, repoRoot, evidenceRoot, moduleRoot) {
+  const file = path.join(evidenceRoot, deferralName);
+  if (!(await exists(file))) return { errors: [], deferred: new Set() };
+  const errors = [];
+  const fail = (message) => errors.push(error(id, ctx.display(file), message));
+  let data;
+  try {
+    data = await readJson(file);
+  } catch (cause) {
+    fail(`invalid JSON: ${cause.message}`);
+    return { errors, deferred: new Set() };
+  }
+  for (const [field, value] of Object.entries(deferralConstants)) {
+    if (data?.[field] !== value) fail(`deferred reviewable record requires ${field} ${value}`);
+  }
+  for (const field of ["owner", "statement", "recordedAt"]) {
+    if (typeof data?.[field] !== "string" || !data[field].trim())
+      fail(`deferred reviewable record requires ${field}`);
+  }
+  if (!Array.isArray(data?.files) || !data.files.length)
+    fail("deferred reviewable record requires files");
+  const deferred = new Set();
+  const moduleLocal = `${relative(repoRoot, moduleRoot)}/`;
+  for (const [index, entry] of (Array.isArray(data?.files) ? data.files : []).entries()) {
+    const deferredPath = entry?.deferredPath;
+    if (typeof deferredPath !== "string" || !deferredPath.startsWith(moduleLocal) ||
+        !labReviewable.test(deferredPath) || deferredPath.includes("..")) {
+      fail(`files[${index}].deferredPath must name a coding-lab lab.json or README.md in this module`);
+      continue;
+    }
+    if (typeof entry?.reason !== "string" || !entry.reason.trim())
+      fail(`files[${index}] requires a reason`);
+    let bytes;
+    try {
+      bytes = await readFile(path.join(repoRoot, deferredPath));
+    } catch {
+      fail(`files[${index}] deferred file ${deferredPath} is missing`);
+      continue;
+    }
+    if (sha256(bytes) !== entry?.deferredSha256) {
+      fail(`files[${index}] deferred hash is stale for ${deferredPath}`);
+      continue;
+    }
+    deferred.add(deferredPath);
+  }
+  return { errors, deferred: errors.length ? new Set() : deferred };
+}
+
 async function directJsonFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true }).catch(() => []);
   return entries
@@ -94,7 +158,7 @@ async function labFiles(root) {
   return files;
 }
 
-async function scopesForCourse(course) {
+async function scopesForCourse(ctx, course, deferralErrors) {
   const repoRoot = course.repoRoot;
   const courseRoot = course.contentRoot;
   const manifest = course.manifest;
@@ -119,14 +183,19 @@ async function scopesForCourse(course) {
   for (const moduleId of manifest.moduleOrder ?? []) {
     const moduleRoot = path.join(courseRoot, moduleId);
     const module = await readJson(path.join(course.catalogRoot, moduleId, "module.json")).catch(() => null);
+    const moduleEvidenceRoot = evidencePath(repoRoot, course.id, moduleId);
+    const deferral = await moduleDeferral(ctx, repoRoot, moduleEvidenceRoot, moduleRoot);
+    deferralErrors.push(...deferral.errors);
+    const notDeferred = (files) =>
+      files.filter((file) => !deferral.deferred.has(relative(repoRoot, file)));
     scopes.push({
       kind: "module",
       repoRoot,
       contentRoot: moduleRoot,
-      evidenceRoot: evidencePath(repoRoot, course.id, moduleId),
+      evidenceRoot: moduleEvidenceRoot,
       reviewable: [
         ...(await assessmentFiles(moduleRoot)),
-        ...(await labFiles(moduleRoot)),
+        ...notDeferred(await labFiles(moduleRoot)),
       ],
     });
     for (const topicId of module?.topicOrder ?? []) {
@@ -136,7 +205,7 @@ async function scopesForCourse(course) {
         const file = path.join(topicRoot, name);
         if (await exists(file)) reviewable.push(file);
       }
-      reviewable.push(...(await labFiles(topicRoot)));
+      reviewable.push(...notDeferred(await labFiles(topicRoot)));
       scopes.push({
         kind: "topic",
         repoRoot,
@@ -361,7 +430,7 @@ export async function run(ctx) {
   const errors = [];
   let reviewableCount = 0;
   for (const course of await findCourses(ctx)) {
-    for (const scope of await scopesForCourse(course)) {
+    for (const scope of await scopesForCourse(ctx, course, errors)) {
       reviewableCount += scope.reviewable.length;
       errors.push(...(await checkScope(ctx, scope)));
     }

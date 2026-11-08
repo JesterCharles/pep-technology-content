@@ -749,3 +749,108 @@ test("T25 still enforces open critic findings beside owner essential QA", async 
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /findings require a reconciliation/);
 });
+
+const topicLab = "demo-course/demo-module/demo-topic/coding-lab/README.md";
+const moduleLab = "demo-course/demo-module/coding-lab/README.md";
+const deferralFile = "authoring/evidence/demo-course/demo-module/deferred-reviewable.json";
+
+function deferralRecord(files, overrides = {}) {
+  return {
+    schemaVersion: 1,
+    acceptanceProfile: "minimum",
+    status: "deferred-excluded-not-counted",
+    independentCriticApproval: "not-performed",
+    ownerReleaseApproval: "not-granted",
+    owner: "artifact-author",
+    statement: "These pre-existing lab files are outside this minimum-profile release; they are deferred, excluded and not counted, with no critic or owner release approval.",
+    recordedAt: "2026-11-08T00:00:00Z",
+    files,
+    ...overrides,
+  };
+}
+
+async function labFixture() {
+  const fx = await fixture();
+  await writeOwner(fx.root, ownerRecord(fx.digest));
+  const labs = {};
+  for (const file of [topicLab, moduleLab]) {
+    const bytes = Buffer.from(`# pre-existing lab ${file}\n`);
+    await mkdir(path.dirname(path.join(fx.root, file)), { recursive: true });
+    await writeFile(path.join(fx.root, file), bytes);
+    labs[file] = hash(bytes);
+  }
+  const entries = Object.entries(labs).map(([deferredPath, deferredSha256]) => ({
+    deferredPath,
+    deferredSha256,
+    reason: "Pre-existing lab outside tonight's release.",
+  }));
+  return { ...fx, labs, entries };
+}
+
+test("T25 without a deferral record still requires coverage for lab files", async () => {
+  const { root } = await labFixture();
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /demo-topic\/coding-lab\/README\.md: missing current owner essential QA coverage/);
+  assert.match(result.stderr, /demo-module\/coding-lab\/README\.md: missing current education critic coverage/);
+  assert.match(result.stderr, /demo-module\/coding-lab\/README\.md: missing current sme critic coverage/);
+});
+
+test("T25 excludes exact-hash deferred lab files under a minimum module", async () => {
+  const { root, entries } = await labFixture();
+  await writeJson(path.join(root, deferralFile), deferralRecord(entries));
+  const result = check(root);
+  assert.equal(result.status, 0, result.stderr);
+  await cp(path.join(repo, "authoring/schemas"), path.join(root, "authoring/schemas"), { recursive: true });
+  const schema = check(root, "T01");
+  assert.equal(schema.status, 0, schema.stderr);
+});
+
+test("T25 rejects a stale deferral and keeps the lab file counted", async () => {
+  const { root, entries } = await labFixture();
+  await writeJson(path.join(root, deferralFile), deferralRecord(entries));
+  await writeFile(path.join(root, topicLab), "changed after deferral\n");
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /deferred hash is stale for .*demo-topic\/coding-lab\/README\.md/);
+  assert.match(result.stderr, /demo-topic\/coding-lab\/README\.md: missing current owner essential QA coverage/);
+});
+
+test("T25 rejects a deferral that omits a lab file", async () => {
+  const { root, entries } = await labFixture();
+  await writeJson(path.join(root, deferralFile), deferralRecord(entries.slice(0, 1)));
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /demo-module\/coding-lab\/README\.md: missing current education critic coverage/);
+});
+
+test("T25 rejects deferral of non-lab files, full profiles or approval claims", async () => {
+  const cases = [
+    [(e) => [{ deferredPath: target, deferredSha256: e.digest, reason: "x" }], {}, /must name a coding-lab/],
+    [(e) => e.entries, { acceptanceProfile: "full" }, /requires acceptanceProfile minimum/],
+    [(e) => e.entries, { independentCriticApproval: "approved" }, /requires independentCriticApproval not-performed/],
+    [(e) => e.entries, { ownerReleaseApproval: "approved" }, /requires ownerReleaseApproval not-granted/],
+    [(e) => e.entries, { status: "approved" }, /requires status deferred-excluded-not-counted/],
+  ];
+  for (const [files, overrides, message] of cases) {
+    const fx = await labFixture();
+    await writeJson(path.join(fx.root, deferralFile), deferralRecord(files(fx), overrides));
+    const result = check(fx.root);
+    assert.notEqual(result.status, 0, JSON.stringify(overrides));
+    assert.match(result.stderr, message);
+    assert.match(result.stderr, /coding-lab\/README\.md: missing current/);
+  }
+});
+
+test("T25 rejects a deferral naming a missing lab file", async () => {
+  const { root, entries } = await labFixture();
+  const missing = "demo-course/demo-module/other-topic/coding-lab/lab.json";
+  await writeJson(path.join(root, deferralFile), deferralRecord([
+    ...entries,
+    { deferredPath: missing, deferredSha256: "0".repeat(64), reason: "x" },
+  ]));
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /deferred file .*other-topic\/coding-lab\/lab\.json is missing/);
+  assert.match(result.stderr, /coding-lab\/README\.md: missing current/);
+});
