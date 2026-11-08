@@ -1,0 +1,47 @@
+// Practice quiz: SOLID basics
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+// GIFT forbids the angle-bracket characters, and code is described in words where GIFT syntax would clash.
+
+$CATEGORY: java-foundations/inheritance-and-design/solid-basics
+
+::o1 reasons to change::A ReportService formats the report, emails it and saves it to a database. Which change would follow the single responsibility principle? {
+=Split it into a formatter, a mailer and a store, each with one job#Correct. Then a change to email does not touch formatting or storage.
+~Make every method static#Not quite. That changes how it is called, not how many jobs it has.
+~Rename it ReportManager#Not quite. A new name does not reduce its reasons to change.
+~Add a fourth job so it covers printing too#Not quite. That adds another reason to change.
+}
+
+::o1 spot it::Which sign most strongly suggests a class has more than one reason to change? {
+=Different people, such as finance and marketing, ask for changes to different parts of it#Correct. Each group that can demand changes is a separate reason to change.
+~It has more than three methods#Not quite. Size alone does not decide.
+~It has a constructor#Not quite. Every class has one.
+~It implements an interface#Not quite. Implementing one contract is not a second responsibility.
+}
+
+::o2 constructor injection::OrderService needs to send messages. Which design depends on an abstraction? {
+=Its constructor takes a MessageSender interface and stores it in a field#Correct. The caller chooses the real implementation.
+~It creates an SmtpSender inside its constructor#Not quite. Then it is tied to that concrete class.
+~It calls a static SmtpSender.send method#Not quite. Static calls also fix the concrete class.
+~It extends SmtpSender#Not quite. That ties it to the concrete class even more tightly.
+}
+
+::o2 who chooses::With dependency inversion, who decides which MessageSender implementation OrderService uses? {
+=The code that constructs OrderService#Correct. OrderService only knows the interface it receives.
+~OrderService itself, with a switch#Not quite. Choosing inside defeats the point.
+~The MessageSender interface#Not quite. An interface does not choose its implementations.
+~The JVM, at random#Not quite. Nothing is random; the creator passes it in.
+}
+
+::o3 test double::How does depending on an injected interface help a unit test of OrderService? {
+=The test can pass in a fake sender that records messages instead of sending email#Correct. No mail server is needed, and the test can check what was sent.
+~It makes the test run the real email server faster#Not quite. The point is not to need the real server.
+~It lets the test skip constructing OrderService#Not quite. The test still constructs it, with the fake.
+~It removes the need for assertions#Not quite. The test still checks the outcome.
+}
+
+::o3 hard-wired::OrderService creates new SmtpSender() itself. What happens in a unit test? {
+=The test cannot replace the sender without changing OrderService#Correct. The real dependency comes along with every test.
+~The test automatically uses a fake#Not quite. Nothing replaces a dependency created inside the class.
+~The test fails to compile#Not quite. It compiles; it is just hard to isolate.
+~SmtpSender becomes an interface#Not quite. Creating it does not change its kind.
+}
