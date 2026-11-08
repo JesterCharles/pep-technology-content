@@ -1,0 +1,46 @@
+// Practice quiz: Reading stack traces
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: java-foundations/exceptions-and-logging/reading-stack-traces
+
+::o1 the message::A trace begins with java.lang.IllegalStateException\: cart is empty. What is the exception's message? {
+=cart is empty#Correct. The message is the text after the type and the colon.
+~IllegalStateException#Not quite. That is the exception type.
+~java.lang#Not quite. That is the package of the exception type.
+~main#Not quite. main is the name of the thread, shown in the Exception in thread line.
+}
+
+::o1 first own frame::Your code is in the package shop. The frames are, from the top, java.base/java.util.ArrayList.get, then shop.Cart.first(Cart.java\:12), then shop.Main.main(Main.java\:5). Where do you start looking? {
+=shop.Cart.first at Cart.java line 12#Correct. It is the first frame in your own code, the closest point to the failure that you can change.
+~java.util.ArrayList.get#Not quite. That is JDK code; it failed because of what your code passed to it.
+~shop.Main.main at Main.java line 5#Not quite. main called the method that failed, so it is one step further away.
+~The last line of the trace#Not quite. The bottom of the trace is where the program started, not where it failed.
+}
+
+::o2 root cause::A trace has a first Caused by\: section for exception A and, below it, a second Caused by\: section for exception B. Which is the root cause? {
+=B, in the last Caused by\: section#Correct. Each Caused by\: goes one level deeper, so the last one is the original failure.
+~The exception on the first line of the trace#Not quite. That is the outermost wrapper.
+~A, in the first Caused by\: section#Not quite. A was itself caused by B.
+~Whichever section has the most frames#Not quite. The number of frames says nothing about which came first.
+}
+
+::o2 more frames::What does a line such as ... 3 more under a Caused by\: section mean? {
+=The remaining 3 frames are the same as frames already printed for the enclosing exception#Correct. Java leaves out the repeated frames to keep the trace short.
+~3 more exceptions were hidden#Not quite. It counts frames, not exceptions.
+~The trace was cut because it was too long to print#Not quite. Nothing new is lost; those frames already appear above.
+~The code was retried 3 more times#Not quite. A stack trace does not record retries.
+}
+
+::o3 null field::A NullPointerException says Cannot invoke "String.trim()" because "this.name" is null. What was null? {
+=The name field of the current object#Correct. The message names the value that was null, here the field this.name.
+~The String returned by trim()#Not quite. trim() never ran, because there was no String to call it on.
+~The trim method itself#Not quite. A method cannot be null; the value it was called on was.
+~The current object, this#Not quite. this is never null; its name field was.
+}
+
+::o3 null return::A NullPointerException says Cannot invoke "Customer.email()" because the return value of "Order.customer()" is null. What was null? {
+=The value returned by the call to customer()#Correct. The message says the return value of Order.customer() was null, so email() had nothing to run on.
+~The value returned by email()#Not quite. email() never ran.
+~The Order object#Not quite. customer() was called on the Order, so the Order was not null.
+~The Customer class#Not quite. A class is not null; the Customer value returned by customer() was.
+}
