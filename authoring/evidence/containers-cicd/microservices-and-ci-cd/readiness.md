@@ -6,7 +6,7 @@ Recorded 2026-11-08 by the module's implementation owner. This is author evidenc
 
 - Profile: minimum acceptance profile (tonight's release scope). Each of the 8 topics opts in through its own `owner-essential-qa.json`, bound to the current `artifact.html` and `artifact.gift` hashes.
 - Independent education and SME critic approval was not required and was not performed. No critic or reconciliation records exist for these bytes.
-- Not final, not green, not upload-safe, not published and not merged. Browser gates and companions are still pending (see below).
+- Release-ready for assembly, but not final, not published, not uploaded and not merged. Pages and GIFT banks are unchanged since checkpoint `3f80c09f`.
 
 ## Coverage
 
@@ -27,7 +27,7 @@ HTML: 8 of 8. GIFT: 8 of 8 (48 questions, unchanged since first-draft checkpoint
 
 ## What changed from the first-draft checkpoint
 
-- Catalog: `html` and `gift` are now declared present. `md`, Reading-topic `pdf` and `video` stay absent, each with its reason. Module-lab reasons now say the lab is deferred. Minutes were re-measured with the frozen estimator, and worst paths were modeled per `authoring/docs/tools/validators.md`. Every budget rose to its honest minimum. `freshness.sourcesRef` now points at each topic's `sources.json`.
+- Catalog: `html` and `gift` are now declared present. `md` (all topics) and the Reading-topic `pdf` handouts are now present too (see Checks), and `video` stays absent with its reason. Module-lab reasons now say the lab is deferred. Minutes were re-measured with the frozen estimator, and worst paths were modeled per `authoring/docs/tools/validators.md`. Every budget rose to its honest minimum. `freshness.sourcesRef` now points at each topic's `sources.json`.
 - Pages: `pep:source`, `pep:budget-minutes`, `data-pep-required-minutes` and the visible minute label match the catalog. The draft comment, the `pep:draft-status` meta and the visible sources status now state the minimum profile honestly. This resolves the first draft's T08/T15 `sourcesRef` conflict.
 - `service-to-service-calls` and `github-actions-pipeline`: prose was trimmed (about 120 and 140 words) so the modeled worst path fits the 15-minute topic ceiling. In `github-actions-pipeline`, the activity 4 Where this fits section was removed; its point remains in the activity 4 teaching. No objective, claim or activity was removed.
 - `sources.json`: `reviewedSha256` now binds the new page bytes. The sources were not re-fetched; their 2026-11-04 retrievals stand. The GitHub Actions pins were re-verified with `git ls-remote` on 2026-11-08.
@@ -40,7 +40,10 @@ HTML: 8 of 8. GIFT: 8 of 8 (48 questions, unchanged since first-draft checkpoint
 
 ## Checks
 
-- Pass on these bytes (non-browser): T01, T02, T03, T04, T05, T07, T14, T15, T16, T17, T19, T20 and T24. The module lock is regenerated, and T06 is run after it.
-- T25: needs the minimum-profile support (schema, T01 mapping, T25 owner coverage) that is currently only on the `fm/pep-m-java-foundations-inheritance-and-design-safe` branch. Main's T25 still reports missing critic coverage until that lands. In an uncommitted scratch copy of these exact bytes with that branch's T25, T01 and schema (commit `de5a1695`), T25 and T01 pass. A one-byte change to `sql-vs-nosql/artifact.html` made T25 fail with missing current owner coverage, as expected.
-- Not run: browser gates T08, T09, T10, T11, T12, T13 and T18 (Chromium belongs to another lane until clearance). `artifact.md` derivation and Reading PDFs wait for the same clearance. Until then, T18 fails because `md` is absent. Any browser-driven change to page bytes requires new owner records and a lock regeneration.
+Results are on the branch after merging main `174d4c86`, which includes PR 69's minimum-profile support. The page and GIFT bytes are those of `3f80c09f`.
+
+- Markdown and PDF: `artifact.md` was derived for all 8 topics with `authoring/tools/qa/md-from-html.mjs`. `artifact.pdf` was rendered with `pdf-from-md.mjs` for the two Reading topics that require a handout, `sql-vs-nosql` and `api-gateways-and-service-discovery`. The catalog declares them present. Video stays absent, with its reason.
+- Full repository check (`npm run check`): every gate passed except T13. T13 crashed with `ENOSPC`, because the shared disk filled up during the 78-minute run. A repo-wide rerun of T13 passed.
+- Actual T01 and T25 pass repo-wide with the owner records. T08 and T18 also pass on repo-wide runs.
+- `npm test`: 316 of 316 pass.
 - Never run: real Compose, Docker, GitHub Actions, Jenkins, Kubernetes, FastAPI or Spring execution. Labs are deferred.
