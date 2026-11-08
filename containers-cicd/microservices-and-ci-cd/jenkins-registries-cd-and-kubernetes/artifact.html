@@ -1,0 +1,791 @@
+<!doctype html>
+<!-- MINIMUM RELEASE PROFILE (2026-11-08). Implementation-owner essential QA only; independent education and SME critic review was not required and was not performed. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reading (optional): Jenkins, registries, CD and Kubernetes</title>
+<meta name="pep:course" content="containers-cicd">
+<meta name="pep:module" content="microservices-and-ci-cd">
+<meta name="pep:topic" content="Reading (optional): Jenkins, registries, CD and Kubernetes">
+<meta name="pep:topic-id" content="jenkins-registries-cd-and-kubernetes">
+<meta name="pep:budget-minutes" content="12">
+<meta name="pep:source" content="authoring/evidence/containers-cicd/microservices-and-ci-cd/jenkins-registries-cd-and-kubernetes/sources.json">
+<meta name="pep:draft-status" content="minimum-release-owner-checked">
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-dur-1: 120ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 0 0 12px; padding-inline-start: 24px; }
+svg { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible, button:focus, a:focus, summary:focus, select:focus, textarea:focus { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; margin: 0 0 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__meta { flex: 1 1 220px; min-width: 0; display: grid; gap: 4px; }
+.pep-topicbar__progress { color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); border: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done, .pep-progress > span.is-current { background: var(--pep-accent); }
+.pep-objectives { break-inside: avoid; min-width: 0; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; }
+.pep-objectives > div { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease); }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent); }
+.pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; min-width: 44px; padding: 6px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); color: var(--pep-accent-text); font-weight: 600; text-decoration: none; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-toc-note { margin: 0 0 16px; }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; margin-top: 16px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region > :last-child, [data-pep-teaching] > :last-child { margin-bottom: 0; }
+[data-pep-workspace] { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+[data-pep-activity] { margin-bottom: 32px; min-width: 0; }
+[data-pep-activity][hidden] { display: none; }
+[data-pep-activity] > h2 { outline-offset: 4px; }
+[data-pep-activity-checks] { padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] ul { margin: 8px 0 0; }
+[data-pep-activity-checks] li { font: 400 14px/20px var(--pep-font-sans); }
+[data-pep-where-fits] { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+[data-pep-where-fits] p:last-child { margin-bottom: 0; }
+.pep-hint, details[data-pep-hint] { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); break-inside: avoid; margin-top: 8px; }
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { padding: 4px 0 12px; }
+.pep-hint__body p { margin: 0 0 8px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-hint .pep-hint { margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong); border-radius: 0; background: transparent; }
+.pep-optional { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); margin-top: 16px; }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+.pep-code { margin: 0 0 12px; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-options > legend { padding: 0 0 8px; color: var(--pep-text-strong); font-weight: 600; }
+.pep-option { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; transition: border-color var(--pep-dur-1) var(--pep-ease); }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option__state { display: block; font: 600 13px/20px var(--pep-font-sans); }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option:has(input:checked) .pep-option__key { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pep-option input:disabled { cursor: not-allowed; }
+.pep-option:focus-within { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-confidence { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-confidence > legend { padding: 0 0 8px; color: var(--pep-text-strong); font-weight: 600; }
+.pep-confidence .pep-option { grid-template-columns: minmax(0, 1fr); text-align: center; min-height: 44px; }
+.pep-rows { display: grid; gap: 12px; }
+.pep-row { display: grid; gap: 4px; min-width: 0; }
+.pep-row label { color: var(--pep-text-strong); font-weight: 600; overflow-wrap: anywhere; }
+.pep-row select, .pep-field { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 400 16px/24px var(--pep-font-sans); scroll-margin-block: 16px; }
+.pep-group { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 8px; }
+.pep-group > legend { padding: 0 0 8px; color: var(--pep-text-strong); font-weight: 600; overflow-wrap: anywhere; }
+.pep-chips { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.pep-chip { grid-template-columns: minmax(0, 1fr); flex: 1 1 120px; min-height: 44px; padding: 8px 12px; text-align: center; min-width: 0; }
+.pep-chip:has(input:checked) { padding: 7px 11px; }
+.pep-toggle { grid-template-columns: 28px minmax(0, 1fr); text-align: left; flex-basis: 100%; }
+.pep-toggle .pep-option__key::before { content: "Off"; font-size: 12px; }
+.pep-toggle:has(input:checked) .pep-option__key::before { content: "On"; }
+.pep-log { display: grid; gap: 4px; }
+.pep-logline { font: 400 14px/20px var(--pep-font-mono); }
+.pep-model { min-width: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.pep-model pre { margin: 0 0 8px; white-space: pre-wrap; overflow-wrap: anywhere; font: 400 14px/20px var(--pep-font-mono); }
+.pep-model p { margin: 0 0 8px; }
+.pep-model > :last-child { margin-bottom: 0; }
+.pep-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-feedback:empty { display: none; }
+.pep-callout { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text); overflow-wrap: anywhere; }
+.pep-callout strong { color: var(--pep-text-strong); }
+.pep-callout--success { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-callout--warning { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-callout--danger { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-why { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.pep-why[hidden] { display: none; }
+.pep-why h3 { margin-bottom: 8px; }
+.pep-why ul { margin: 0; }
+.pep-why li { margin-bottom: 8px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-why li:last-child { margin-bottom: 0; }
+.is-enhanced .pep-static { display: none; }
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+.pep-activity-actions .pep-btn { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn { flex: 0 1 auto; } }
+html:not(.is-enhanced) .pep-js-only { display: none; }
+.pep-back { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; }
+.pep-recap { padding: 24px 0 0; border-block-start: 1px solid var(--pep-line-strong); margin-top: 48px; }
+.pep-recap[hidden] { display: none; }
+.pep-recap h2 { margin-bottom: 8px; }
+.pep-cheat { margin-top: 16px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-cheat h3 { margin-bottom: 8px; }
+.pep-cheat ul { margin: 0; }
+.pep-sources { margin-top: 16px; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-sources > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-sources ul { padding-inline-start: 20px; }
+.pep-sources li { margin-bottom: 4px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-sources a { display: inline-flex; min-height: 44px; align-items: center; overflow-wrap: anywhere; }
+.pep-figure { margin: 0 0 12px; }
+.pep-figure svg { display: block; width: 100%; height: auto; }
+.pep-figure .node { fill: var(--pep-card); stroke: var(--pep-line-strong); stroke-width: 1.5; }
+.pep-figure .node.is-focus { fill: var(--pep-accent-soft); stroke: var(--pep-accent); stroke-width: 2; }
+.pep-figure .edge { fill: none; stroke: var(--pep-line-strong); stroke-width: 2; }
+.pep-figure .label { fill: var(--pep-text-strong); font: 600 16px var(--pep-font-sans); }
+.pep-figure figcaption { margin-top: 8px; font: 400 12px/16px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-table-wrap { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); overflow: hidden; margin-bottom: 12px; }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); table-layout: fixed; }
+.pep-table th { text-align: left; font-weight: 600; color: var(--pep-text-strong); background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); padding: 8px 12px; overflow-wrap: anywhere; }
+.pep-table td { padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.pep-table td:first-child { font-weight: 600; color: var(--pep-text-strong); }
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { margin: 0; padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font: inherit; font-variant-numeric: tabular-nums; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; width: 100%; min-width: 0; min-height: 200px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-editor__panel[hidden] { display: none; }
+.pep-editor__panel p { margin: 0 0 4px; }
+.pep-editor__panel .pep-code { margin: 8px 0 0; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; }
+.pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__problem .kind-hint { color: var(--pep-text-muted); font-weight: 600; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-note { color: var(--pep-text-muted); font: 400 14px/20px var(--pep-font-sans); margin: 0; }
+.pep-terminal { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); min-width: 0; }
+.pep-terminal__head { margin: 0; padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-terminal__log { min-height: 96px; max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 8px 12px; }
+.pep-terminal__log p, .pep-terminal__log pre { margin: 0 0 4px; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+.pep-terminal__c .prompt { color: var(--pep-accent-text); font-weight: 600; }
+.pep-terminal__w { color: var(--pep-warning); }
+.pep-terminal__line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--pep-line-strong); }
+.pep-terminal__line label { color: var(--pep-accent-text); font-weight: 600; }
+.pep-terminal__line input { flex: 1 1 160px; min-width: 0; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: inherit; scroll-margin-block: 16px; }
+.vh { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+  [data-pep-workspace] { padding: 16px; }
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+  .pep-terminal__line input { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; } }
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-activity-actions, nav[aria-label="Activities"], .pep-back, [data-pep-reset], .pep-noprint { display: none !important; }
+  [data-pep-activity], [data-pep-activity][hidden] { display: block !important; }
+  .pep-why[hidden], .pep-recap[hidden] { display: block !important; }
+  .is-enhanced .pep-static { display: block !important; }
+  .pep-objectives > div { display: block !important; }
+  .pep-topicbar, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional, .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; break-inside: avoid; }
+  .pep-code, .pep-figure, .pep-table-wrap { break-inside: avoid; }
+  .pep-optional > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker { display: none; }
+}
+.is-enhanced .pep-think { display: none; }
+.pep-text-field { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 400 16px/24px var(--pep-font-mono); scroll-margin-block: 16px; }
+[data-pep-task] ol { margin: 8px 0 0; }
+[data-pep-task] ol li { margin-bottom: 4px; }
+[data-pep-task] h3 + ol { margin-top: 4px; }
+@media (max-width: 480px) { .pep-editor__gutter { font-size: 16px; line-height: 24px; } }
+html:not(.is-enhanced) .pep-editor__gutter { display: none; }
+
+</style>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="12">
+<header class="pep-topicbar">
+<h1 id="page-title">Reading (optional): Jenkins, registries, CD and Kubernetes</h1>
+<div class="pep-topicbar__meta"><span class="pep-topicbar__progress" id="pep-position">5 activities · about 12 min</span><div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div><span class="pep-topicbar__progress pep-js-only" id="pep-progress">0 of 5 activities finished, 0 correct</span></div>
+<details class="pep-objectives" data-pep-objectives><summary aria-controls="pep-objectives-body">Objectives</summary><div id="pep-objectives-body"><ul><li>Compare a declarative Jenkinsfile pipeline with a GitHub Actions workflow: stages and steps versus jobs and steps</li><li>Explain what a container registry stores and read an image reference as registry, repository and tag</li><li>Describe what a Kubernetes Deployment and Service do with a pushed image, and how continuous delivery differs from continuous deployment</li></ul></div></details>
+<button class="pep-btn pep-js-only" type="button" data-pep-reset>Restart activity</button>
+</header>
+<nav aria-label="Activities"><ol class="pep-steps"><li><a class="pep-step" href="#activity-1" data-pep-activity-link>Activity 1</a></li><li><a class="pep-step" href="#activity-2" data-pep-activity-link>Activity 2</a></li><li><a class="pep-step" href="#activity-3" data-pep-activity-link>Activity 3</a></li><li><a class="pep-step" href="#activity-4" data-pep-activity-link>Activity 4</a></li><li><a class="pep-step" href="#activity-5" data-pep-activity-link>Activity 5</a></li></ol></nav>
+<section id="activity-1" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<h2 id="activity-1-title" tabindex="-1">Activity 1: Predict first</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions><p>A team pushes an image as <code>ghcr.io/acme/shop-api:1.4.2</code>. A week later someone builds a different image and pushes it with the same tag.</p></div>
+
+
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-1" data-pep-task><h3>Your task</h3><ol><li>Before any teaching, select what you expect a new pull of that tag to get.</li><li>Press <strong>Check answer</strong>. You get one retry.</li></ol></div>
+<section data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><ul><li>You commit to one prediction.</li></ul></section>
+<fieldset class="pep-options" data-interaction="predict" data-static-alt="What does a new pull of 1.4.2 get? Each option is explained after the question in this reading."><legend>What does a new pull of 1.4.2 get?</legend><label class="pep-option" id="a1-opt-a"><input type="radio" name="a1-choice" id="a1-a" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">The original image, because tags are permanent.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a1-opt-b"><input type="radio" name="a1-choice" id="a1-b" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">The new image, because the tag now points at it.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a1-opt-c"><input type="radio" name="a1-choice" id="a1-c" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">An error, because the tag exists twice.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a1-opt-d"><input type="radio" name="a1-choice" id="a1-d" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Both images merged into one.<span class="pep-option__state"></span></span></label></fieldset><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="a1-check" data-pep-submit data-pep-lockable>Check answer</button></div><div class="pep-feedback" id="a1-feedback" data-pep-feedback aria-live="polite"></div><p class="pep-think" data-section-skip><strong>Reading without JavaScript:</strong> decide first, then read on.</p><div class="pep-why" id="a1-why" data-static-alt><h3>Why each option is right or wrong</h3><ul><li><strong>A. Not this one:</strong> A tag is a name pointing at an image, and a push can move it.</li><li><strong>B. Correct answer:</strong> Right. To pull an exact image every time, use its digest.</li><li><strong>C. Not this one:</strong> A tag points at one image at a time, so it cannot exist twice.</li><li><strong>D. Not this one:</strong> Images are not merged by a tag.</li></ul></div>
+
+</div>
+</div>
+
+</section>
+<section id="activity-2" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<h2 id="activity-2-title" tabindex="-1">Activity 2: Jenkinsfile and workflow side by side</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions><p>A declarative <strong>Jenkinsfile</strong> describes a pipeline, much as a workflow does:</p><pre class="pep-code"><code>pipeline {
+  agent any
+  stages {
+    stage('Test') {
+      steps { sh './mvnw test' }
+    }
+    stage('Build') {
+      steps { sh 'docker build -t shop-api .' }
+    }
+  }
+}</code></pre><p>One difference matters: these stages run in the listed order, while GitHub jobs run in parallel unless you add <code>needs</code>.</p></div>
+<section data-pep-where-fits aria-labelledby="where-fits-2"><h2 id="where-fits-2">Where this fits</h2><p data-pep-fit-decision><strong>Decision:</strong> Should a new project use Jenkins or GitHub Actions?</p><p data-pep-fit-good><strong>Good fit:</strong> GitHub Actions suits code hosted on GitHub with no CI servers to run.</p><p data-pep-fit-boundary><strong>Choose something else when:</strong> Jenkins suits teams that already run it, or that need to keep builds on their own infrastructure.</p></section>
+
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-2" data-pep-task><h3>Your task</h3><ol><li>In every row, select the closest GitHub Actions counterpart.</li><li>Press <strong>Check rows</strong>. You get one retry.</li></ol></div>
+<section data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><ul><li>Every Jenkinsfile line has its closest workflow counterpart.</li></ul></section>
+<div class="pep-rows" data-interaction="drag" data-static-alt="Closest GitHub Actions counterpart Each row and its explanation follow in this reading."><p class="pep-note">Closest GitHub Actions counterpart</p><fieldset class="pep-group"><legend><code>agent any</code></legend><div class="pep-chips"><label class="pep-option pep-chip"><input type="radio" name="a2-r1" id="a2-r1-runs" value="runs"><span class="pep-option__text">runs-on</span></label><label class="pep-option pep-chip"><input type="radio" name="a2-r1" id="a2-r1-job" value="job"><span class="pep-option__text">A job</span></label><label class="pep-option pep-chip"><input type="radio" name="a2-r1" id="a2-r1-run" value="run"><span class="pep-option__text">A run step</span></label></div></fieldset><fieldset class="pep-group"><legend><code>stage('Test')</code></legend><div class="pep-chips"><label class="pep-option pep-chip"><input type="radio" name="a2-r2" id="a2-r2-runs" value="runs"><span class="pep-option__text">runs-on</span></label><label class="pep-option pep-chip"><input type="radio" name="a2-r2" id="a2-r2-job" value="job"><span class="pep-option__text">A job</span></label><label class="pep-option pep-chip"><input type="radio" name="a2-r2" id="a2-r2-run" value="run"><span class="pep-option__text">A run step</span></label></div></fieldset><fieldset class="pep-group"><legend><code>sh './mvnw test'</code></legend><div class="pep-chips"><label class="pep-option pep-chip"><input type="radio" name="a2-r3" id="a2-r3-runs" value="runs"><span class="pep-option__text">runs-on</span></label><label class="pep-option pep-chip"><input type="radio" name="a2-r3" id="a2-r3-job" value="job"><span class="pep-option__text">A job</span></label><label class="pep-option pep-chip"><input type="radio" name="a2-r3" id="a2-r3-run" value="run"><span class="pep-option__text">A run step</span></label></div></fieldset></div><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="a2-check" data-pep-submit data-pep-lockable>Check rows</button></div><div class="pep-feedback" id="a2-feedback" data-pep-feedback aria-live="polite"></div><p class="pep-think" data-section-skip><strong>Reading without JavaScript:</strong> decide first, then read on.</p><div class="pep-why" id="a2-why" data-static-alt><h3>Why each counterpart fits</h3><ul><li><strong><code>agent any</code>: runs-on.</strong> Both say where the work runs.</li><li><strong><code>stage('Test')</code>: A job.</strong> A named group of steps. The ordering default still differs.</li><li><strong><code>sh './mvnw test'</code>: A run step.</strong> Both execute one shell command.</li></ul></div>
+
+</div>
+</div>
+<p><a class="pep-back" href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</section>
+<section id="activity-3" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<h2 id="activity-3-title" tabindex="-1">Activity 3: Read an image reference</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions><p>A <strong>container registry</strong> stores images in repositories. A reference reads as registry, repository and tag:</p><pre class="pep-code"><code>ghcr.io/acme/shop-api:1.4.2
+registry/repository  :tag</code></pre><p>Leave out the registry and Docker assumes Docker Hub (<code>docker.io</code>). Leave out the tag and it assumes <code>latest</code>, which is just a name and not a promise of newest.</p></div>
+
+
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-3" data-pep-task data-pep-may-stall><h3>Your task</h3><ol><li>Type an image reference into the field, and read how the parser splits it.</li><li>Change the field until it names tag <code>2.0.0</code> of repository <code>acme/orders</code> on <code>ghcr.io</code>.</li><li>Press <strong>Check this reference</strong>. You get one retry.</li></ol><details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 3</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> Start from the example reference in the field.</p><p data-pep-hint-step><strong>Next step:</strong> Change one part at a time, and watch which line of the parser output changes.</p></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><ul><li>The parser shows the registry, the repository and the tag from the task.</li></ul></section>
+<div class="pep-rows" data-interaction="explore" data-static-alt="nginx reads as registry docker.io, repository library/nginx and tag latest, all assumed. ghcr.io/acme/shop-api:1.4.2 reads as registry ghcr.io, repository acme/shop-api and tag 1.4.2."><div class="pep-row"><label for="a3-ref">Image reference</label><input class="pep-text-field" type="text" id="a3-ref" value="nginx" spellcheck="false" autocapitalize="off" autocomplete="off"></div></div><div class="pep-model pep-js-only" id="a3-model" aria-live="polite" tabindex="0" role="status" aria-label="Live model output"></div><div class="pep-static" data-static-alt data-section-skip><p><strong>Printed alternative:</strong> nginx reads as registry docker.io, repository library/nginx and tag latest, all assumed. ghcr.io/acme/shop-api:1.4.2 reads as registry ghcr.io, repository acme/shop-api and tag 1.4.2.</p></div><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="a3-check" data-pep-submit data-pep-lockable>Check this reference</button></div><div class="pep-feedback" id="a3-feedback" data-pep-feedback aria-live="polite"></div><div class="pep-why" id="a3-why"><h3>Worked explanation</h3><p>Short names work only because of defaults. In pipelines, write the full reference so nobody has to guess.</p></div>
+
+</div>
+</div>
+<p><a class="pep-back" href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</section>
+<section id="activity-4" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-4-title">
+<h2 id="activity-4-title" tabindex="-1">Activity 4: From a pushed image to running</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions><p>Kubernetes runs containers across a cluster. A <strong>Deployment</strong> declares a desired state, such as three replicas of an image, and Kubernetes changes the actual state to match at a controlled rate. A <strong>Service</strong> gives those changing Pods one stable way to be reached, using a label selector.</p><p><strong>Continuous delivery</strong> means every change is built, tested and ready to release, with a manual approval for production. <strong>Continuous deployment</strong> removes that approval.</p></div>
+
+
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-4" data-pep-task data-pep-may-stall><h3>Your task</h3><ol><li>In the workspace, set <strong>Action</strong> and <strong>Process</strong>, and read what the cluster does.</li><li>Try pushing an image without changing the Deployment.</li><li>Stop on the state where a new image reaches production after a person approves it, then press <strong>Check this state</strong>.</li></ol><details class="pep-hint" data-pep-hint data-pep-hint-for="task-4" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 4</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> Try the push-only action first.</p><p data-pep-hint-step><strong>Next step:</strong> Then ask what must change in the cluster, and which process includes a human decision.</p></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><ul><li>The result box shows the Deployment rolling out the new image.</li><li>A person approved that release.</li></ul></section>
+<div class="pep-rows" data-interaction="explore" data-static-alt="Pushing an image stores it and changes nothing in the cluster. Updating the Deployment rolls out new Pods at a controlled rate while the Service stays the same. A crashed Pod is replaced to restore the desired state. Continuous delivery has a manual approval before production; continuous deployment does not."><fieldset class="pep-group"><legend>Action</legend><div class="pep-chips"><label class="pep-option pep-chip"><input type="radio" name="a4-act" id="a4-act-push" value="push" checked><span class="pep-option__text">Push a new image tag</span></label><label class="pep-option pep-chip"><input type="radio" name="a4-act" id="a4-act-update" value="update"><span class="pep-option__text">Update the Deployment to the new tag</span></label><label class="pep-option pep-chip"><input type="radio" name="a4-act" id="a4-act-crash" value="crash"><span class="pep-option__text">A Pod crashes</span></label></div></fieldset><fieldset class="pep-group"><legend>Process</legend><div class="pep-chips"><label class="pep-option pep-chip"><input type="radio" name="a4-proc" id="a4-proc-cdel" value="cdel" checked><span class="pep-option__text">Continuous delivery</span></label><label class="pep-option pep-chip"><input type="radio" name="a4-proc" id="a4-proc-cdep" value="cdep"><span class="pep-option__text">Continuous deployment</span></label></div></fieldset></div><div class="pep-model pep-js-only" id="a4-model" aria-live="polite" tabindex="0" role="status" aria-label="Live model output"></div><div class="pep-static" data-static-alt data-section-skip><p><strong>Printed alternative:</strong> Pushing an image stores it and changes nothing in the cluster. Updating the Deployment rolls out new Pods at a controlled rate while the Service stays the same. A crashed Pod is replaced to restore the desired state. Continuous delivery has a manual approval before production; continuous deployment does not.</p></div><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="a4-check" data-pep-submit data-pep-lockable>Check this state</button></div><div class="pep-feedback" id="a4-feedback" data-pep-feedback aria-live="polite"></div><div class="pep-why" id="a4-why"><h3>Worked explanation</h3><p>A registry stores, a Deployment rolls out, and a Service gives stable access.</p></div>
+
+</div>
+</div>
+<p><a class="pep-back" href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+</section>
+<section id="activity-5" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-5-title">
+<h2 id="activity-5-title" tabindex="-1">Activity 5: Apply it</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions><p>A team’s pipeline: tests pass, the image is pushed, staging updates automatically, and production updates when a lead presses Approve.</p></div>
+
+
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-5" data-pep-task><h3>Your task</h3><ol><li>Select the description you would defend, and rate how sure you are.</li><li>Press <strong>Check answer</strong>. You get one retry.</li></ol></div>
+<section data-pep-activity-checks aria-labelledby="checks-5"><h3 id="checks-5">What success looks like</h3><ul><li>You rate your confidence and choose the term that matches the approval step.</li></ul></section>
+<fieldset class="pep-options" data-interaction="mcq" data-confidence data-static-alt="What is this pipeline? Each option is explained after the question in this reading."><legend>What is this pipeline?</legend><label class="pep-option" id="a5-opt-a"><input type="radio" name="a5-choice" id="a5-a" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Continuous deployment, because staging updates automatically.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a5-opt-b"><input type="radio" name="a5-choice" id="a5-b" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Not CI/CD at all, because a person is involved.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a5-opt-c"><input type="radio" name="a5-choice" id="a5-c" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Continuous delivery, because production needs a manual approval.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a5-opt-d"><input type="radio" name="a5-choice" id="a5-d" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">A Kubernetes Service, because it updates production.<span class="pep-option__state"></span></span></label></fieldset><fieldset class="pep-confidence"><legend>How sure are you?</legend><label class="pep-option"><input type="radio" name="a5-conf" id="a5-conf-0" value="guessing"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="a5-conf" id="a5-conf-1" value="fairly sure"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="a5-conf" id="a5-conf-2" value="certain"><span class="pep-option__text">Certain</span></label></fieldset><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="a5-check" data-pep-submit data-pep-lockable>Check answer</button></div><div class="pep-feedback" id="a5-feedback" data-pep-feedback aria-live="polite"></div><p class="pep-think" data-section-skip><strong>Reading without JavaScript:</strong> decide first, then read on.</p><div class="pep-why" id="a5-why" data-static-alt><h3>Why each option is right or wrong</h3><ul><li><strong>A. Not this one:</strong> The term is about production. Production here waits for a person.</li><li><strong>B. Not this one:</strong> A manual production approval is exactly how continuous delivery works.</li><li><strong>C. Correct answer:</strong> Right. Every change is ready to release, and a person decides when.</li><li><strong>D. Not this one:</strong> A Service gives Pods a stable way to be reached. It does not release anything.</li></ul></div>
+
+</div>
+</div>
+<p><a class="pep-back" href="#activity-4" data-pep-back-link>Back to activity 4</a></p>
+</section>
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation"><button class="pep-btn" type="button" data-pep-previous>Previous activity</button><button class="pep-btn pep-btn--primary" type="button" data-pep-next>Next activity</button></div>
+<section class="pep-recap" id="pep-recap" data-pep-recap aria-labelledby="recap-title"><h2 id="recap-title">Recap</h2><p id="pep-recap-score" class="pep-js-only"></p><ul><li>A Jenkinsfile has stages and steps; a workflow has jobs and steps. Listed stages run in order, while jobs run in parallel by default.</li><li>A registry stores images; a reference reads as registry, repository and tag.</li><li>A Deployment rolls out a pushed image, a Service gives stable access, and an approval separates continuous delivery from continuous deployment.</li></ul>
+<section class="pep-cheat" data-section-skip aria-labelledby="cheat-title"><h3 id="cheat-title">Cheat sheet (optional)</h3><ul><li><code>latest</code> is only a default name.</li><li>Pull by digest when you need the exact same image.</li><li>This reading is optional and has no lab.</li></ul></section>
+</section>
+<details class="pep-sources" data-pep-sources data-section-skip><summary>Sources and review date</summary><div><p><strong>Status:</strong> minimum release, checked by the page author on 2026-11-08. Sources were fetched live on 2026-11-04 and the author checked the page against them; no independent education or technology review was performed.</p><ul><li><a href="https://www.jenkins.io/doc/book/pipeline/" rel="noopener">Jenkins Pipeline: declarative pipeline, stages and steps</a></li><li><a href="https://www.jenkins.io/doc/book/pipeline/jenkinsfile/" rel="noopener">Using a Jenkinsfile</a></li><li><a href="https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax" rel="noopener">Workflow syntax: jobs run in parallel by default</a></li><li><a href="https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry" rel="noopener">Working with the Container registry: ghcr.io, pull by digest</a></li><li><a href="https://docs.docker.com/reference/cli/docker/image/tag/" rel="noopener">docker image tag: reference format, default registry and tag</a></li><li><a href="https://github.com/opencontainers/distribution-spec/blob/main/spec.md" rel="noopener">OCI Distribution Specification: repositories, tags, manifests</a></li><li><a href="https://kubernetes.io/docs/concepts/overview/" rel="noopener">Kubernetes overview</a></li><li><a href="https://kubernetes.io/docs/concepts/workloads/controllers/deployment/" rel="noopener">Kubernetes Deployments: desired state, rollout</a></li><li><a href="https://kubernetes.io/docs/concepts/services-networking/service/" rel="noopener">Kubernetes Service: selector, stable access</a></li><li><a href="https://aws.amazon.com/devops/continuous-delivery/" rel="noopener">Continuous delivery vs continuous deployment: manual approval is the difference</a></li></ul></div></details>
+</main>
+<script>
+var PEP_TOOLS = (function () {
+  function stripComment(line) {
+    var q = '', i, c;
+    for (i = 0; i < line.length; i += 1) {
+      c = line.charAt(i);
+      if (q) { if (c === q) q = ''; }
+      else if (c === '"' || c === "'") { q = c; }
+      else if (c === '#' && (i === 0 || /\s/.test(line.charAt(i - 1)))) { return line.slice(0, i); }
+    }
+    return line;
+  }
+  function clean(text) {
+    return text.split('\n').map(stripComment).join(' ').replace(/\s+/g, ' ').trim();
+  }
+  function fail(line, msg, kind) { return { ok: false, kind: kind || 'error', msg: 'Line ' + line + ': ' + msg }; }
+  function parse(src) {
+    var raw = src.split('\n'), lines = [], i, text, pos = 0, problem = null;
+    for (i = 0; i < raw.length; i += 1) {
+      if (/^ *\t/.test(raw[i])) return fail(i + 1, 'YAML does not allow a tab for indentation; use spaces.');
+      text = stripComment(raw[i]).replace(/\s+$/, '');
+      if (!text.trim()) continue;
+      if (/^\s*(---|\.\.\.|%)/.test(text) || /(^|[\s:-])[&*][A-Za-z]/.test(text) || /<<\s*:/.test(text)) return fail(i + 1, 'not supported in this practice editor: anchors, merge keys and multiple documents.', 'limit');
+      lines.push({ n: i + 1, indent: text.length - text.replace(/^ +/, '').length, text: text.trim() });
+    }
+    function scalar(v, n) {
+      var inner;
+      if (/^"[^"]*"$/.test(v) || /^'[^']*'$/.test(v)) return v.slice(1, -1);
+      if (/^["']/.test(v)) { problem = problem || fail(n, 'this quoted value has no matching closing quote.'); return ''; }
+      if (/^\[.*\]$/.test(v)) { inner = v.slice(1, -1).trim(); return inner ? inner.split(',').map(function (x) { return scalar(x.trim(), n); }) : []; }
+      if (/^\{\s*\}$/.test(v)) return {};
+      if (/^\{/.test(v) && !/^\{\{/.test(v)) { problem = problem || fail(n, 'not supported in this practice editor: inline { } mappings. Write one key per line.', 'limit'); return ''; }
+      if (/:\s/.test(v.replace(/\$\{\{.*?\}\}/g, ''))) { problem = problem || fail(n, 'a plain value cannot contain a colon followed by a space; put the value in quotes.'); return ''; }
+      return v;
+    }
+    function block(indent) {
+      return /^-(\s|$)/.test(lines[pos].text) ? seq(indent) : map(indent);
+    }
+    function valueAfter(indent, v, n) {
+      var next, deep, out;
+      if (/^[|>][-+]?$/.test(v)) {
+        pos += 1; out = [];
+        while (pos < lines.length && lines[pos].indent > indent) { out.push(lines[pos].text); pos += 1; }
+        return out.join('\n');
+      }
+      if (v) { pos += 1; return scalar(v, n); }
+      pos += 1;
+      next = lines[pos];
+      if (next && next.indent > indent) { deep = next.indent; return block(deep); }
+      if (next && next.indent === indent && /^-(\s|$)/.test(next.text)) return seq(indent);
+      return null;
+    }
+    function map(indent) {
+      var out = {}, m, key, line;
+      while (pos < lines.length && !problem) {
+        line = lines[pos];
+        if (line.indent < indent) break;
+        if (line.indent > indent) { problem = fail(line.n, 'this line is indented further than the block it belongs to.'); break; }
+        if (/^-(\s|$)/.test(line.text)) break;
+        m = /^("[^"]*"|'[^']*'|[^:'"]+?)\s*:(?:\s+(.*))?$/.exec(line.text);
+        if (!m) { problem = fail(line.n, 'expected "key: value" here.'); break; }
+        key = m[1].replace(/^["']|["']$/g, '');
+        if (Object.prototype.hasOwnProperty.call(out, key)) { problem = fail(line.n, 'the key ' + key + ' appears twice in this block.'); break; }
+        out[key] = valueAfter(indent, (m[2] || '').trim(), line.n);
+      }
+      return out;
+    }
+    function seq(indent) {
+      var out = [], line, rest, offset;
+      while (pos < lines.length && !problem) {
+        line = lines[pos];
+        if (line.indent !== indent || !/^-(\s|$)/.test(line.text)) {
+          if (line.indent > indent) problem = fail(line.n, 'this line is indented further than the list it belongs to.');
+          break;
+        }
+        rest = line.text.replace(/^-\s*/, '');
+        if (!rest) { pos += 1; out.push(lines[pos] && lines[pos].indent > indent ? block(lines[pos].indent) : null); continue; }
+        if (/^("[^"]*"|'[^']*'|[^:'"\s][^:'"]*)\s*:(\s|$)/.test(rest)) {
+          offset = line.text.length - rest.length;
+          lines[pos] = { n: line.n, indent: indent + offset, text: rest };
+          out.push(map(indent + offset));
+        } else { pos += 1; out.push(scalar(rest, line.n)); }
+      }
+      return out;
+    }
+    if (!lines.length) return fail(1, 'the file is empty.');
+    var value = block(lines[0].indent);
+    if (!problem && pos < lines.length) problem = fail(lines[pos].n, 'this line does not fit the indentation of the file so far.');
+    if (problem) return problem;
+    return { ok: true, value: value };
+  }
+  function obj(v) { return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; }
+  function env(service) {
+    var e = obj(service).environment, out = {};
+    if (Array.isArray(e)) { e.forEach(function (x) { var k = String(x).split('='); out[k[0]] = k.slice(1).join('='); }); return out; }
+    return obj(e);
+  }
+  function list(v) { return Array.isArray(v) ? v : (v === null || v === undefined || v === '' ? [] : [v]); }
+  function rule(ok, pass, bad) { return { ok: !!ok, pass: pass, bad: bad }; }
+  return { clean: clean, parse: parse, obj: obj, env: env, list: list, rule: rule, stripComment: stripComment };
+})();
+var PEP_CONFIG = {"activities":[{"type":"choice","correct":"b","confidence":false,"why":{"a":"A tag is a name pointing at an image, and a push can move it.","b":"Right. To pull an exact image every time, use its digest.","c":"A tag points at one image at a time, so it cannot exist twice.","d":"Images are not merged by a tag."}},{"type":"classify","success":"Stages and steps map closely onto jobs and steps, apart from the ordering default.","items":[{"id":"r1","answer":"runs"},{"id":"r2","answer":"job"},{"id":"r3","answer":"run"}]},{"type":"explore","nudge":"The parser output does not match the task yet. Compare it line by line.","settled":"Read the parser output against the task: the registry goes first, then the repository, then a colon and the tag.","success":"Registry, repository and tag each say something different about where the image lives.","controls":[{"id":"ref","kind":"text"}],"model":function (s) {
+        var ref = (s.ref || '').trim();
+        if (!ref) return '<p>Type a reference to see how it splits.<\/p>';
+        if (/[\s<>"']/.test(ref)) return '<p><strong>Not a valid reference:<\/strong> it cannot contain spaces or quotes.<\/p>';
+        var parts = ref.split('/'), reg = 'docker.io (assumed)';
+        if (parts.length > 1 && /[.:]|^localhost$/.test(parts[0])) reg = parts.shift();
+        var rest = parts.join('/'), tag = 'latest (assumed)', at = rest.lastIndexOf(':');
+        if (at !== -1) { tag = rest.slice(at + 1); rest = rest.slice(0, at); }
+        if (reg.indexOf('assumed') !== -1 && rest.indexOf('/') === -1) rest = 'library/' + rest + ' (assumed namespace)';
+        return '<p><strong>Registry:<\/strong> ' + reg + '<\/p><p><strong>Repository:<\/strong> ' + rest + '<\/p><p><strong>Tag:<\/strong> ' + tag + '<\/p>';
+      },"goal":function (s) { return /^ghcr\.io\/acme\/orders:2\.0\.0$/.test((s.ref || '').trim()); }},{"type":"explore","nudge":"This state does not show an approved rollout. Check both controls.","settled":"The state to find is updating the Deployment under continuous delivery.","success":"A push stores the image, the Deployment change rolls it out, and the approval makes this continuous delivery.","controls":[{"id":"act","kind":"select"},{"id":"proc","kind":"select"}],"model":function (s) {
+        var g = s.proc === 'cdel' ? 'A person approves before production.' : 'Production updates automatically once checks pass.';
+        if (s.act === 'push') return '<p><strong>The registry has the new tag. The cluster still runs the old image.<\/strong><\/p><p>A push stores an image; it deploys nothing. Something must change the Deployment. ' + g + '<\/p>';
+        if (s.act === 'crash') return '<p><strong>Actual state falls below desired, so Kubernetes replaces the Pod.<\/strong><\/p><p>The Service keeps sending traffic to the Pods that are ready. No release is involved.<\/p>';
+        return '<p><strong>The Deployment rolls out new Pods and retires old ones at a controlled rate.<\/strong><\/p><p>The Service name does not change, so callers need no update. ' + g + '<\/p>';
+      },"goal":function (s) { return s.act === 'update' && s.proc === 'cdel'; }},{"type":"choice","correct":"c","confidence":true,"why":{"a":"The term is about production. Production here waits for a person.","b":"A manual production approval is exactly how continuous delivery works.","c":"Right. Every change is ready to release, and a person decides when.","d":"A Service gives Pods a stable way to be reached. It does not release anything."}}]};
+(() => {
+  'use strict';
+  var root = document.documentElement;
+  root.classList.add('is-enhanced');
+  var cfg = PEP_CONFIG;
+  var lesson = document.getElementById('lesson');
+  var sections = Array.prototype.slice.call(document.querySelectorAll('[data-pep-activity]'));
+  var links = Array.prototype.slice.call(document.querySelectorAll('[data-pep-activity-link]'));
+  var previous = document.querySelector('[data-pep-previous]');
+  var next = document.querySelector('[data-pep-next]');
+  var position = document.getElementById('pep-position');
+  var progress = document.getElementById('pep-progress');
+  var segments = Array.prototype.slice.call(document.querySelectorAll('.pep-progress > span'));
+  var recap = document.getElementById('pep-recap');
+  var total = sections.length;
+  var minutes = lesson.getAttribute('data-pep-required-minutes');
+  var current = 1;
+  var unlocked = 1;
+  var everComplete = false;
+  var lastFocused = null;
+  var state = cfg.activities.map(function () { return fresh(); });
+  function fresh() { return { attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false }; }
+  function el(id) { return document.getElementById(id); }
+  function esc(text) { return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function controlsOf(n) { return Array.prototype.slice.call(sections[n - 1].querySelectorAll('[data-pep-workspace] input, [data-pep-workspace] select, [data-pep-workspace] textarea')); }
+  var initial = sections.map(function (_, i) {
+    return controlsOf(i + 1).map(function (c) { return { c: c, value: c.value, checked: c.checked, index: c.selectedIndex }; });
+  });
+  document.addEventListener('focusin', function (e) { lastFocused = e.target; });
+
+  function reflect(n) {
+    var s = state[n - 1], sec = sections[n - 1];
+    sec.setAttribute('data-pep-attempts', String(s.attempts));
+    sec.setAttribute('data-pep-settled', String(s.settled));
+    sec.setAttribute('data-pep-completed', String(s.completed));
+    sec.setAttribute('data-pep-credit', String(s.credit));
+    sec.setAttribute('data-pep-grade', String(s.grade));
+    sec.setAttribute('data-pep-continue', String(s.canContinue));
+  }
+  function summarize() {
+    var done = state.filter(function (s) { return s.credit > 0; }).length;
+    var right = state.filter(function (s) { return s.grade > 0; }).length;
+    progress.textContent = done + ' of ' + total + ' activities finished, ' + right + ' correct';
+    segments.forEach(function (seg, i) {
+      seg.classList.toggle('is-done', state[i].completed);
+      seg.classList.toggle('is-current', i + 1 === current);
+    });
+    if (done === total) everComplete = true;
+    lesson.setAttribute('data-pep-complete', String(everComplete));
+    if (recap) recap.hidden = !everComplete;
+    var score = el('pep-recap-score');
+    if (score) score.textContent = 'You finished ' + done + ' of ' + total + ' activities and got ' + right + ' right. Any settled activity shows what to review; Restart activity lets you try it again.';
+  }
+  function render(number, mode, focus) {
+    if (typeof number !== 'number' || number !== number || number < 1 || number > total || number > unlocked) return false;
+    current = number;
+    lesson.setAttribute('data-pep-current-activity', String(current));
+    lesson.setAttribute('data-pep-unlocked-through', String(unlocked));
+    sections.forEach(function (sec, i) { sec.hidden = i + 1 !== current; });
+    links.forEach(function (link, i) {
+      var n = i + 1;
+      if (n === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+      if (n > unlocked) link.setAttribute('aria-disabled', 'true'); else link.removeAttribute('aria-disabled');
+    });
+    previous.disabled = current === 1;
+    next.disabled = current === total || (current >= unlocked && !state[current - 1].canContinue);
+    position.textContent = 'Activity ' + current + ' of ' + total + ' · about ' + minutes + ' min';
+    summarize();
+    try {
+      if (mode === 'push') history.pushState({ activity: current }, '', '#activity-' + current);
+      if (mode === 'replace') history.replaceState({ activity: current }, '', '#activity-' + current);
+    } catch (err) {
+      if (mode && location.hash !== '#activity-' + current) location.hash = 'activity-' + current;
+    }
+    if (focus) { var h = el('activity-' + current + '-title'); if (h) h.focus(); }
+    return true;
+  }
+  function hashNumber(hash) { var m = /^#activity-(\d+)$/.exec(hash || ''); return m ? Number(m[1]) : 1; }
+  function setFeedback(n, kind, html) {
+    var fb = el('a' + n + '-feedback');
+    fb.className = 'pep-feedback' + (kind ? ' pep-callout pep-callout--' + kind : '');
+    fb.innerHTML = html;
+  }
+  function lockables(n) { return sections[n - 1].querySelectorAll('[data-pep-workspace] button[data-pep-lockable]'); }
+  function lock(n) {
+    controlsOf(n).forEach(function (c) { c.disabled = true; });
+    Array.prototype.forEach.call(lockables(n), function (b) { b.disabled = true; });
+  }
+  function unlockControls(n) {
+    controlsOf(n).forEach(function (c) { c.disabled = false; });
+    Array.prototype.forEach.call(lockables(n), function (b) { b.disabled = false; });
+  }
+  function settle(n, grade, kind, html, a) {
+    var s = state[n - 1];
+    s.settled = true; s.completed = true; s.canContinue = true; s.grade = grade;
+    if (s.credit === 0) s.credit = 1;
+    lock(n);
+    reflect(n);
+    setFeedback(n, kind, html);
+    reveal(n, a);
+    unlocked = Math.max(unlocked, Math.min(n + 1, total));
+    render(current);
+  }
+  function reveal(n, a) {
+    var why = el('a' + n + '-why');
+    if (why) why.hidden = false;
+    if (a.type === 'choice') {
+      Array.prototype.forEach.call(document.querySelectorAll('input[name="a' + n + '-choice"]'), function (input) {
+        var label = input.closest('.pep-option');
+        var tag = label.querySelector('.pep-option__state');
+        if (input.value === a.correct) { label.classList.add('is-correct'); tag.textContent = 'Correct answer'; }
+        else if (input.checked) { label.classList.add('is-wrong'); tag.textContent = 'Your answer'; }
+      });
+    }
+  }
+  function attempt(n, a, result) {
+    var s = state[n - 1];
+    if (result.status === 'incomplete') { setFeedback(n, 'warning', '<strong>Not checked yet.</strong> ' + result.msg); return; }
+    s.attempts += 1;
+    if (result.status === 'right') { settle(n, 1, 'success', '<strong>Correct.</strong> ' + result.msg, a); return; }
+    if (s.attempts >= 2) { settle(n, 0, 'danger', '<strong>Answered and settled, not correct.</strong> ' + result.settled, a); return; }
+    reflect(n);
+    setFeedback(n, 'danger', '<strong>Try again.</strong> ' + result.msg + ' You have one more attempt.');
+  }
+  var check = {
+    choice: function (n, a) {
+      var chosen = document.querySelector('input[name="a' + n + '-choice"]:checked');
+      if (!chosen) return { status: 'incomplete', msg: 'Choose one option first.' };
+      if (a.confidence && !document.querySelector('input[name="a' + n + '-conf"]:checked')) return { status: 'incomplete', msg: 'Rate how sure you are first, so the feedback can tell you whether your confidence matched.' };
+      var conf = document.querySelector('input[name="a' + n + '-conf"]:checked');
+      var note = conf ? ' You said: ' + conf.value + '.' : '';
+      var msg = a.why[chosen.value] + note;
+      if (chosen.value === a.correct) return { status: 'right', msg: msg };
+      return { status: 'wrong', msg: msg, settled: msg + ' The correct answer and every explanation are below.' };
+    },
+    classify: function (n, a) {
+      var picks = a.items.map(function (it) { var c = document.querySelector('input[name="a' + n + '-' + it.id + '"]:checked'); return c ? c.value : ''; });
+      if (picks.some(function (p) { return !p; })) return { status: 'incomplete', msg: 'Choose a value in every row first.' };
+      var wrong = a.items.filter(function (it, i) { return picks[i] !== it.answer; });
+      if (!wrong.length) return { status: 'right', msg: a.success };
+      return { status: 'wrong', msg: wrong.length + ' of ' + a.items.length + ' rows need another look.', settled: wrong.length + ' of ' + a.items.length + ' rows were not right. The answer for each row is below.' };
+    },
+    explore: function (n, a) {
+      var s = readExplore(n, a);
+      if (a.goal(s)) return { status: 'right', msg: a.success };
+      return { status: 'wrong', msg: a.nudge, settled: a.settled };
+    },
+    code: function (n, a) {
+      var text = el('a' + n + '-code').value;
+      if (PEP_TOOLS.clean(text) === PEP_TOOLS.clean(a.starter)) { problems(n, a, [{ kind: 'hint', msg: 'No change yet: edit the file before you press Run. Comments do not count.' }], [], ''); return { status: 'incomplete', msg: 'Edit the file first; comments do not count.' }; }
+      var res = a.check(text);
+      if (res.syntax) { problems(n, a, [{ kind: res.syntax.kind, msg: res.syntax.msg }], [], ''); return { status: 'incomplete', msg: 'Fix what the Problems tab names, then Run again. This did not use an attempt.' }; }
+      var bad = res.results.filter(function (r) { return !r.ok; });
+      problems(n, a, bad.map(function (r) { return { kind: 'error', msg: r.bad }; }), res.results, res.output || '');
+      if (!bad.length) return { status: 'right', msg: a.success };
+      return { status: 'wrong', msg: 'The Problems tab lists ' + bad.length + ' requirement' + (bad.length > 1 ? 's' : '') + ' still to meet.', settled: 'These requirements were not met: ' + bad.map(function (r) { return r.bad; }).join(' ') + ' Compare your file with the task and the teaching on this activity.' };
+    }
+  };
+  function problems(n, a, list, results, output) {
+    var p = el('a' + n + '-problems'), o = el('a' + n + '-output'), st = el('a' + n + '-status');
+    if (!list.length) { p.innerHTML = '<p>No problems found.</p>'; }
+    else {
+      p.innerHTML = list.map(function (x) {
+        var word = x.kind === 'error' ? 'Requirement' : x.kind === 'limit' ? 'Limit' : 'Note';
+        return '<p class="pep-editor__problem"><span class="kind-' + x.kind + '">' + word + ':</span> ' + x.msg + '</p>';
+      }).join('');
+    }
+    if (results.length) {
+      o.innerHTML = results.map(function (r) { return '<p>' + (r.ok ? 'Pass: ' : 'Not yet: ') + r.pass + '</p>'; }).join('') +
+        (list.length || !output ? '' : '<pre class="pep-code">' + esc(output) + '</pre>');
+    }
+    st.textContent = list.length ? 'Run finished: ' + list.length + ' item' + (list.length > 1 ? 's' : '') + ' to fix. See Problems.' : 'Run finished: every requirement met. See Output.';
+    selectTab(n, list.length ? 'problems' : 'output');
+  }
+  function selectTab(n, which) {
+    ['problems', 'output'].forEach(function (name) {
+      var tab = el('a' + n + '-tab-' + name), panel = el('a' + n + '-' + name), on = name === which;
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+      panel.hidden = !on;
+    });
+  }
+  function readExplore(n, a) {
+    var s = {};
+    a.controls.forEach(function (c) {
+      if (c.kind === 'text') { s[c.id] = el('a' + n + '-' + c.id).value; return; }
+      var picked = document.querySelector('input[name="a' + n + '-' + c.id + '"]:checked');
+      s[c.id] = picked ? picked.value : '';
+    });
+    return s;
+  }
+  function paintExplore(n, a) { el('a' + n + '-model').innerHTML = a.model(readExplore(n, a)); }
+  cfg.activities.forEach(function (a, i) {
+    var n = i + 1;
+    el('a' + n + '-check').addEventListener('click', function () {
+      if (state[n - 1].settled) return;
+      attempt(n, a, check[a.type](n, a));
+    });
+    if (a.type === 'explore') {
+      a.controls.forEach(function (c) {
+        if (c.kind === 'text') el('a' + n + '-' + c.id).addEventListener('input', function () { paintExplore(n, a); });
+        else Array.prototype.forEach.call(document.querySelectorAll('input[name="a' + n + '-' + c.id + '"]'), function (r) { r.addEventListener('change', function () { paintExplore(n, a); }); });
+      });
+      paintExplore(n, a);
+    }
+    if (a.type === 'code') {
+      el('a' + n + '-resetcode').addEventListener('click', function () { el('a' + n + '-code').value = a.starter; gutter(n); });
+      el('a' + n + '-code').addEventListener('input', function () { gutter(n); });
+      ['problems', 'output'].forEach(function (name, idx, names) {
+        var tab = el('a' + n + '-tab-' + name);
+        tab.addEventListener('click', function () { selectTab(n, name); });
+        tab.addEventListener('keydown', function (e) {
+          if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); var other = names[1 - idx]; selectTab(n, other); el('a' + n + '-tab-' + other).focus(); }
+        });
+      });
+      selectTab(n, 'problems');
+      gutter(n);
+    }
+    var why = el('a' + n + '-why');
+    if (why) why.hidden = true;
+    reflect(n);
+  });
+  function gutter(n) {
+    var g = el('a' + n + '-gutter'), lines = el('a' + n + '-code').value.split('\n').length, out = [];
+    for (var i = 1; i <= lines; i += 1) out.push(i);
+    g.textContent = out.join('\n');
+  }
+  links.forEach(function (link, i) {
+    link.addEventListener('click', function (e) { e.preventDefault(); render(i + 1, 'push', true); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-pep-back-link]'), function (link) {
+    link.addEventListener('click', function (e) { e.preventDefault(); render(hashNumber(link.hash), 'push', true); });
+  });
+  previous.addEventListener('click', function () { render(current - 1, 'push', true); });
+  next.addEventListener('click', function () { render(current + 1, 'push', true); });
+  function restoreFromHistory() {
+    var keep = lastFocused;
+    if (!render(hashNumber(location.hash), null, false)) render(Math.min(current, unlocked), 'replace', false);
+    if (keep && keep.isConnected && !keep.closest('[hidden]')) keep.focus({ preventScroll: true });
+  }
+  addEventListener('popstate', restoreFromHistory);
+  addEventListener('hashchange', restoreFromHistory);
+  document.querySelector('[data-pep-reset]').addEventListener('click', function () {
+    var n = current, a = cfg.activities[n - 1];
+    initial[n - 1].forEach(function (x) {
+      x.c.disabled = false;
+      if (x.c.type === 'checkbox' || x.c.type === 'radio') x.c.checked = x.checked;
+      else if (x.c.tagName === 'SELECT') x.c.selectedIndex = x.index;
+      else x.c.value = x.value;
+    });
+    unlockControls(n);
+    state[n - 1] = fresh();
+    setFeedback(n, '', '');
+    var why = el('a' + n + '-why');
+    if (why) why.hidden = true;
+    Array.prototype.forEach.call(sections[n - 1].querySelectorAll('.pep-option'), function (o) {
+      o.classList.remove('is-correct', 'is-wrong');
+      var tag = o.querySelector('.pep-option__state');
+      if (tag) tag.textContent = '';
+    });
+    if (a.type === 'explore') paintExplore(n, a);
+    if (a.type === 'code') {
+      el('a' + n + '-problems').innerHTML = '<p>Press Run to see problems here.</p>';
+      el('a' + n + '-output').innerHTML = '<p>Press Run to see results here.</p>';
+      el('a' + n + '-status').textContent = 'Not run yet.';
+      selectTab(n, 'problems');
+      gutter(n);
+    }
+    reflect(n);
+    render(n);
+  });
+  var objectives = document.querySelector('[data-pep-objectives]');
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); }
+  });
+  document.addEventListener('click', function (e) {
+    if (objectives.open && !objectives.contains(e.target)) objectives.open = false;
+  });
+  var printStates = [];
+  addEventListener('beforeprint', function () {
+    printStates = Array.prototype.map.call(document.querySelectorAll('details'), function (d) { return { d: d, open: d.open }; });
+    printStates.forEach(function (x) { x.d.open = true; });
+  });
+  addEventListener('afterprint', function () {
+    printStates.forEach(function (x) { x.d.open = x.open; });
+    printStates = [];
+  });
+  var requested = hashNumber(location.hash);
+  render(requested <= unlocked ? requested : 1, 'replace', false);
+})();
+</script>
+</body>
+</html>
