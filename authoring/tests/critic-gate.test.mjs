@@ -666,3 +666,191 @@ test("T06 still rejects a stale module lock without staling the course lock", as
   assert.match(result.stderr, /module\.lock\.json: module lock is stale/);
   assert.doesNotMatch(result.stderr, /course\.lock\.json: course lock is stale/);
 });
+
+function ownerRecord(digest, overrides = {}) {
+  return {
+    schemaVersion: 1,
+    acceptanceProfile: "minimum",
+    owner: "artifact-author",
+    provenance: "Implementation owner's essential pass on the final bytes.",
+    independentCriticApproval: "not-required-not-performed",
+    statement: "Independent education and SME critic approval was not required or performed under the minimum profile.",
+    checkedAt: "2026-11-08T00:00:00Z",
+    checks: ["correctness", "privacy and answer safety", "working-file validity"],
+    artifacts: [{ reviewedPath: target, reviewedSha256: digest }],
+    ...overrides,
+  };
+}
+
+async function writeOwner(root, value) {
+  await writeJson(
+    path.join(root, "authoring/evidence/demo-course/demo-module/demo-topic/owner-essential-qa.json"),
+    value,
+  );
+}
+
+test("T25 without an owner record still requires both critic roles", async () => {
+  const { root } = await fixture();
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /artifact\.html: missing current education critic coverage/);
+  assert.match(result.stderr, /artifact\.html: missing current sme critic coverage/);
+  assert.doesNotMatch(result.stderr, /owner essential QA/);
+});
+
+test("T25 accepts current minimum-profile owner essential QA in place of critic coverage", async () => {
+  const { root, digest } = await fixture();
+  await writeOwner(root, ownerRecord(digest));
+  const result = check(root);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("T25 rejects stale minimum-profile owner essential QA", async () => {
+  const { root, digest } = await fixture();
+  await writeOwner(root, ownerRecord(digest));
+  await writeFile(path.join(root, target), "changed after the owner pass\n");
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /owner essential QA binding .* is stale/);
+  assert.match(result.stderr, /artifact\.html: missing current owner essential QA coverage/);
+});
+
+test("T25 rejects owner essential QA that does not bind the reviewable file", async () => {
+  const { root } = await fixture();
+  const other = "demo-course/demo-module/demo-topic/other.html";
+  await writeFile(path.join(root, other), "other\n");
+  await writeOwner(root, ownerRecord(hash(Buffer.from("other\n")), {
+    artifacts: [{ reviewedPath: other, reviewedSha256: hash(Buffer.from("other\n")) }],
+  }));
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /artifact\.html: missing current owner essential QA coverage/);
+});
+
+test("T25 rejects owner essential QA that claims critic approval or a full profile", async () => {
+  for (const overrides of [
+    { independentCriticApproval: "approved" },
+    { acceptanceProfile: "full" },
+    { checks: [] },
+  ]) {
+    const { root, digest } = await fixture();
+    await writeOwner(root, ownerRecord(digest, overrides));
+    const result = check(root);
+    assert.notEqual(result.status, 0, JSON.stringify(overrides));
+    assert.match(result.stderr, /owner essential QA requires|owner essential QA must state/);
+  }
+});
+
+test("T25 still enforces open critic findings beside owner essential QA", async () => {
+  const { root, digest } = await fixture();
+  await writeOwner(root, ownerRecord(digest));
+  await writeTopicEvidence(root, report("education", digest, { findings: [highFinding(digest)] }), null);
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /findings require a reconciliation/);
+});
+
+const topicLab = "demo-course/demo-module/demo-topic/coding-lab/README.md";
+const moduleLab = "demo-course/demo-module/coding-lab/README.md";
+const deferralFile = "authoring/evidence/demo-course/demo-module/deferred-reviewable.json";
+
+function deferralRecord(files, overrides = {}) {
+  return {
+    schemaVersion: 1,
+    acceptanceProfile: "minimum",
+    status: "deferred-excluded-not-counted",
+    independentCriticApproval: "not-performed",
+    ownerReleaseApproval: "not-granted",
+    owner: "artifact-author",
+    statement: "These pre-existing lab files are outside this minimum-profile release; they are deferred, excluded and not counted, with no critic or owner release approval.",
+    recordedAt: "2026-11-08T00:00:00Z",
+    files,
+    ...overrides,
+  };
+}
+
+async function labFixture() {
+  const fx = await fixture();
+  await writeOwner(fx.root, ownerRecord(fx.digest));
+  const labs = {};
+  for (const file of [topicLab, moduleLab]) {
+    const bytes = Buffer.from(`# pre-existing lab ${file}\n`);
+    await mkdir(path.dirname(path.join(fx.root, file)), { recursive: true });
+    await writeFile(path.join(fx.root, file), bytes);
+    labs[file] = hash(bytes);
+  }
+  const entries = Object.entries(labs).map(([deferredPath, deferredSha256]) => ({
+    deferredPath,
+    deferredSha256,
+    reason: "Pre-existing lab outside tonight's release.",
+  }));
+  return { ...fx, labs, entries };
+}
+
+test("T25 without a deferral record still requires coverage for lab files", async () => {
+  const { root } = await labFixture();
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /demo-topic\/coding-lab\/README\.md: missing current owner essential QA coverage/);
+  assert.match(result.stderr, /demo-module\/coding-lab\/README\.md: missing current education critic coverage/);
+  assert.match(result.stderr, /demo-module\/coding-lab\/README\.md: missing current sme critic coverage/);
+});
+
+test("T25 excludes exact-hash deferred lab files under a minimum module", async () => {
+  const { root, entries } = await labFixture();
+  await writeJson(path.join(root, deferralFile), deferralRecord(entries));
+  const result = check(root);
+  assert.equal(result.status, 0, result.stderr);
+  await cp(path.join(repo, "authoring/schemas"), path.join(root, "authoring/schemas"), { recursive: true });
+  const schema = check(root, "T01");
+  assert.equal(schema.status, 0, schema.stderr);
+});
+
+test("T25 rejects a stale deferral and keeps the lab file counted", async () => {
+  const { root, entries } = await labFixture();
+  await writeJson(path.join(root, deferralFile), deferralRecord(entries));
+  await writeFile(path.join(root, topicLab), "changed after deferral\n");
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /deferred hash is stale for .*demo-topic\/coding-lab\/README\.md/);
+  assert.match(result.stderr, /demo-topic\/coding-lab\/README\.md: missing current owner essential QA coverage/);
+});
+
+test("T25 rejects a deferral that omits a lab file", async () => {
+  const { root, entries } = await labFixture();
+  await writeJson(path.join(root, deferralFile), deferralRecord(entries.slice(0, 1)));
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /demo-module\/coding-lab\/README\.md: missing current education critic coverage/);
+});
+
+test("T25 rejects deferral of non-lab files, full profiles or approval claims", async () => {
+  const cases = [
+    [(e) => [{ deferredPath: target, deferredSha256: e.digest, reason: "x" }], {}, /must name a coding-lab/],
+    [(e) => e.entries, { acceptanceProfile: "full" }, /requires acceptanceProfile minimum/],
+    [(e) => e.entries, { independentCriticApproval: "approved" }, /requires independentCriticApproval not-performed/],
+    [(e) => e.entries, { ownerReleaseApproval: "approved" }, /requires ownerReleaseApproval not-granted/],
+    [(e) => e.entries, { status: "approved" }, /requires status deferred-excluded-not-counted/],
+  ];
+  for (const [files, overrides, message] of cases) {
+    const fx = await labFixture();
+    await writeJson(path.join(fx.root, deferralFile), deferralRecord(files(fx), overrides));
+    const result = check(fx.root);
+    assert.notEqual(result.status, 0, JSON.stringify(overrides));
+    assert.match(result.stderr, message);
+    assert.match(result.stderr, /coding-lab\/README\.md: missing current/);
+  }
+});
+
+test("T25 rejects a deferral naming a missing lab file", async () => {
+  const { root, entries } = await labFixture();
+  const missing = "demo-course/demo-module/other-topic/coding-lab/lab.json";
+  await writeJson(path.join(root, deferralFile), deferralRecord([
+    ...entries,
+    { deferredPath: missing, deferredSha256: "0".repeat(64), reason: "x" },
+  ]));
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /deferred file .*other-topic\/coding-lab\/lab\.json is missing/);
+  assert.match(result.stderr, /coding-lab\/README\.md: missing current/);
+});
