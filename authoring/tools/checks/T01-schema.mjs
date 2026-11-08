@@ -31,6 +31,8 @@ const mapping = [
   ],
   [/\/(?:[a-z0-9]+(?:-[a-z0-9]+)*-)?reconciliation\.json$/, "reconciliation"],
   [/\/qa-receipt\.json$/, "qa-receipt"],
+  [/\/owner-essential-qa\.json$/, "owner-essential-qa"],
+  [/\/deferred-reviewable\.json$/, "deferred-reviewable"],
   [/\/qa-paths\.json$/, "qa-paths"],
   [/\/curriculum\.lock\.json$/, "curriculum-lock"],
   [/\/evidence\/legacy\/course-1-packages\.json$/, "legacy-course-packages"],
