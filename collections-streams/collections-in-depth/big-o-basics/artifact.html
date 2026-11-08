@@ -795,10 +795,12 @@ function bigCheck(src,stated){
   function eat(v){if(pk()===v){i++;return;}throw Lim("expected '"+v+"'");}
   function ident(){var v=pk();if(!/^[A-Za-z_$][\w$]*$/.test(v))throw Lim('expected an identifier');i++;return v;}
   var JAVA_WORD={true:1,false:1,null:1,class:1,interface:1,record:1,enum:1,extends:1,super:1,new:1,this:1,return:1,if:1,else:1,for:1,while:1,do:1,switch:1,case:1,default:1,break:1,continue:1,try:1,catch:1,finally:1,throw:1,throws:1,public:1,private:1,protected:1,static:1,final:1,abstract:1,void:1,boolean:1,byte:1,short:1,int:1,long:1,float:1,double:1,char:1,var:1,instanceof:1,package:1,import:1,assert:1,goto:1,const:1,synchronized:1,native:1,transient:1,volatile:1,strictfp:1,_:1};
-  var usedHashCopy=false,vars={},KINDS={HashSet:'hash',LinkedHashSet:'hash',TreeSet:'tree',ArrayList:'list'};
+  var usedHashCopy=false,vars={},blockDepth=0,KINDS={HashSet:'hash',LinkedHashSet:'hash',TreeSet:'tree',ArrayList:'list'};
   function unknownVar(v){if(!JAVA_WORD[v]&&v!=='nums'&&!(v in vars)&&pk()!=='.'&&pk()!=='(')throw Err('cannot find symbol: variable '+v);throw Lim('this Java form is not supported in this practice editor');}
+  function requireScalar(v,m){if(!(v in vars))unknownVar(v);if(vars[v].coll)throw Lim(m);}
+  function bindLoop(v,k){if(v==='nums'||v in vars)throw Lim('redeclared loop variables are not supported in this practice editor');vars[v]={k:k};}
   function expr(){ /* an element: a loop variable, or nums.get(index) */
-    if(pk()==='nums'&&pk(1)==='.'&&pk(2)==='get'){i+=3;eat('(');var ix=ident();eat(')');return {k:'get',ix:ix};}
+    if(pk()==='nums'&&pk(1)==='.'&&pk(2)==='get'){i+=3;eat('(');var ix=ident();requireScalar(ix,'nums.get requires an in-scope integer expression');eat(')');return {k:'get',ix:ix};}
     var v=ident();if(!(v in vars)||vars[v].k!=='elem'&&vars[v].k!=='index')unknownVar(v);
     return {k:'var',n:v};}
   function sizeOf(){ /* nums.size(), name.size() or new HashSet<>(nums).size() */
@@ -810,16 +812,16 @@ function bigCheck(src,stated){
     if(pk()==='nums'&&pk(1)==='.'&&pk(2)==='get'||(/^[A-Za-z_$]/.test(pk())&&(pk(1)==='.'&&pk(2)==='equals'||pk(1)==='=='))){
       var a=expr();if(pk()==='=='){i++;return {k:'eq',a:a,b:expr()};}eat('.');eat('equals');eat('(');var b=expr();eat(')');return {k:'eq',a:a,b:b};}
     var s1=sizeOf(),op2=pk();if(op2!=='!='&&op2!=='<'&&op2!=='==')throw Lim('compare the sizes with != or <');i++;var s2=sizeOf();return {k:'sizes',a:s1,op:op2,b:s2};}
-  function block(){if(pk()==='{'){i++;var out=[];while(pk()!=='}'){if(i>=Tk.length)throw Lim("expected '}'");var s=stmt();out.push(s);if(s.k==='ret'&&pk()!=='}')throw Err('unreachable statement');}i++;return out;}return [stmt()];}
+  function block(){blockDepth++;try{if(pk()==='{'){i++;var out=[];while(pk()!=='}'){if(i>=Tk.length)throw Lim("expected '}'");var s=stmt();out.push(s);if(s.k==='ret'&&pk()!=='}')throw Err('unreachable statement');}i++;return out;}return [stmt()];}finally{blockDepth--;}}
   function stmt(){var line=ln(),w=pk();
     if(w==='for'){i++;eat('(');
-      if(pk()==='int'&&pk(2)==='='){i++;var iv=ident();eat('=');var start;if(pk()==='0'){i++;start={k:'zero'};}else{var from=ident();eat('+');eat('1');start={k:'after',v:from};}
+      if(pk()==='int'&&pk(2)==='='){i++;var iv=ident();if(iv==='nums'||iv in vars)throw Lim('redeclared loop variables are not supported in this practice editor');eat('=');var start;if(pk()==='0'){i++;start={k:'zero'};}else{var from=ident();if(from===iv)throw Lim('a loop index that starts from itself is not supported in this practice editor');requireScalar(from,'a nested loop must start from an in-scope integer expression');eat('+');eat('1');start={k:'after',v:from};}
         eat(';');if(ident()!==iv)throw Lim('loop over nums with one index');eat('<');eat('nums');eat('.');eat('size');eat('(');eat(')');eat(';');if(ident()!==iv)throw Lim('loop over nums with one index');eat('++');eat(')');
-        vars[iv]={k:'index'};var ib=block();delete vars[iv];return {k:'fori',v:iv,start:start,body:ib,line:line};}
-      if(pk()==='int'||pk()==='Integer'||pk()==='var')i++;else throw Lim('loop over the elements of nums');var ev=ident();eat(':');eat('nums');eat(')');vars[ev]={k:'elem'};var eb=block();delete vars[ev];return {k:'each',v:ev,body:eb,line:line};}
+        bindLoop(iv,'index');var ib=block();delete vars[iv];return {k:'fori',v:iv,start:start,body:ib,line:line};}
+      if(pk()==='int'||pk()==='Integer'||pk()==='var')i++;else throw Lim('loop over the elements of nums');var ev=ident();eat(':');eat('nums');eat(')');bindLoop(ev,'elem');var eb=block();delete vars[ev];return {k:'each',v:ev,body:eb,line:line};}
     if(w==='if'){i++;eat('(');var c=cond();eat(')');return {k:'if',c:c,body:block(),line:line};}
     if(w==='return'){i++;var r;if(pk()==='true'||pk()==='false'){r={k:'lit',v:pk()==='true'};i++;}else r={k:'cond',c:cond()};eat(';');return {k:'ret',r:r,line:line};}
-    if(['Set','HashSet','LinkedHashSet','TreeSet','List','ArrayList','var'].indexOf(w)>=0){i++;if(pk()==='<'){i++;eat('Integer');eat('>');}var n=ident();eat('=');eat('new');var t=ident();if(!KINDS[t])throw Lim('create a HashSet, LinkedHashSet, TreeSet or ArrayList');
+    if(['Set','HashSet','LinkedHashSet','TreeSet','List','ArrayList','var'].indexOf(w)>=0){i++;if(pk()==='<'){i++;eat('Integer');eat('>');}var n=ident();if(blockDepth>1)throw Lim('collection declarations inside a loop or if are not supported in this practice editor');if(n==='nums'||n in vars)throw Lim('redeclared variables are not supported in this practice editor');eat('=');eat('new');var t=ident();if(!KINDS[t])throw Lim('create a HashSet, LinkedHashSet, TreeSet or ArrayList');
       eat('<');if(pk()==='Integer')i++;eat('>');eat('(');var copy=false;if(pk()==='nums'){i++;copy=true;}eat(')');eat(';');vars[n]={k:'coll',coll:true,kind:KINDS[t]};return {k:'decl',n:n,kind:KINDS[t],copy:copy,line:line};}
     if(/^[A-Za-z_$]/.test(w)&&pk(1)==='.'&&pk(2)==='add'){var cn=ident();if(!vars[cn]||!vars[cn].coll)throw Lim('this Java form is not supported in this practice editor');i+=2;eat('(');var e=expr();eat(')');eat(';');return {k:'add',n:cn,e:e,line:line};}
     throw Lim('this practice editor runs loops over nums, if, return, one set or list, and add or contains calls');}

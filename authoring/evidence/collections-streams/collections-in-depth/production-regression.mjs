@@ -78,7 +78,22 @@ const CASES = {
       ["legal nums.contains receiver mistake stays outside the bounded parser", "static boolean hasRepeat(List<Integer> nums) {\n    return nums.contains(1);\n}"],
       ["unsupported loop element size receiver stays outside the bounded parser", "static boolean hasRepeat(List<Integer> nums) {\n    for (Integer n : nums) {\n        if (n.size() == nums.size()) return true;\n    }\n    return false;\n}"],
       ["compiler-proven out-of-scope prior loop element", "static boolean hasRepeat(List<Integer> nums) {\n    for (Integer first : nums) {\n    }\n    for (Integer second : nums) {\n        if (first == second) return true;\n    }\n    return false;\n}"],
+      ["unsupported redeclared loop name", "static boolean hasRepeat(List<Integer> nums) {\n    for (Integer n : nums) {\n        for (Integer n : nums) return true;\n    }\n    return false;\n}"],
+      ["compiler-proven unknown index in nums.get", "static boolean hasRepeat(List<Integer> nums) {\n    return nums.get(mystery).equals(nums.get(mystery));\n}"],
+      ["compiler-proven out-of-scope prior-loop index in nums.get", "static boolean hasRepeat(List<Integer> nums) {\n    for (int i = 0; i < nums.size(); i++) {\n    }\n    return nums.get(i).equals(nums.get(i));\n}"],
+      ["compiler-proven out-of-scope prior index as a later loop start", "static boolean hasRepeat(List<Integer> nums) {\n    for (int i = 0; i < nums.size(); i++) {\n    }\n    for (int j = i + 1; j < nums.size(); j++) return true;\n    return false;\n}"],
+      ["compiler-proven unknown name as a loop start", "static boolean hasRepeat(List<Integer> nums) {\n    for (int j = mystery + 1; j < nums.size(); j++) return true;\n    return false;\n}"],
+      ["unsupported nested collection declaration far control", "static boolean hasRepeat(List<Integer> nums) {\n    for (Integer n : nums) {\n        List<Integer> unused = new ArrayList<Integer>();\n    }\n    return false;\n}"],
+      ["legal compound nums.get index stays unsupported", "static boolean hasRepeat(List<Integer> nums) {\n    return nums.get(nums.size() - 1).equals(nums.get(0));\n}"],
+      ["unsupported self-referencing loop start", "static boolean hasRepeat(List<Integer> nums) {\n    for (int j = j + 1; j < nums.size(); j++) {\n    }\n    return false;\n}"],
+      ["unsupported duplicate collection declaration", "static boolean hasRepeat(List<Integer> nums) {\n    List<Integer> extra = new ArrayList<Integer>();\n    List<Integer> extra = new ArrayList<Integer>();\n    return false;\n}"],
+      ["unsupported collection declaration named nums", "static boolean hasRepeat(List<Integer> nums) {\n    List<Integer> nums = new ArrayList<Integer>();\n    return false;\n}"],
       ["compiler-proven unknown plain identifier", "static boolean hasRepeat(List<Integer> nums) {\n    for (Integer n : nums) {\n        if (n == mystery) return true;\n    }\n    return false;\n}"]
+    ],
+    "lawful": [
+      ["lawful same-loop index use", "static boolean hasRepeat(List<Integer> nums) {\n    for (int i = 0; i < nums.size(); i++) {\n        if (nums.get(i).equals(nums.get(i))) return true;\n    }\n    return false;\n}"],
+      ["lawful sequential loop-name reuse", "static boolean hasRepeat(List<Integer> nums) {\n    for (int i = 0; i < nums.size(); i++) {\n        if (nums.get(i).equals(nums.get(i))) return true;\n    }\n    for (int i = 0; i < nums.size(); i++) {\n        if (nums.get(i).equals(nums.get(i))) return true;\n    }\n    return false;\n}"],
+      ["lawful nested j starts at i plus one", "static boolean hasRepeat(List<Integer> nums) {\n    for (int i = 0; i < nums.size(); i++)\n        for (int j = i + 1; j < nums.size(); j++)\n            if (nums.get(i).equals(nums.get(j))) return true;\n    return false;\n}"]
     ],
     "refused": [
       {
@@ -167,6 +182,8 @@ const CASES = {
       ["unsupported Object local declaration", "static void add(Visit v) {\n    Object w = v;\n}"],
       ["legal visits assignment fallback stays outside the bounded parser", "static void add(Visit v) {\n    visits = null;\n}"],
       ["legal visits lambda fallback stays outside the bounded parser", "static void add(Visit v) {\n    total.merge(v.name(), v.minutes(), (a, b) -> visits);\n}"],
+      ["legal visits left sum fallback stays outside the bounded parser", "static void add(Visit v) {\n    total.merge(v.name(), v.minutes(), (a, b) -> visits + a);\n}"],
+      ["legal visits right sum fallback stays outside the bounded parser", "static void add(Visit v) {\n    total.merge(v.name(), v.minutes(), (a, b) -> a + visits);\n}"],
       ["compiler-proven unknown plain map identifier", "static void add(Visit v) {\n    mystery = 1;\n}"],
       ["compiler-proven unknown plain combiner identifier", "static void add(Visit v) {\n    total.merge(v.name(), v.minutes(), (a, b) -> mystery);\n}"]
     ],
@@ -258,12 +275,24 @@ try {
       const state = await run(code, spec.stated);
       if (!/not assessed|outside what this practice editor/i.test(state.status)) failures.push(`${topic}: unassessed case "${name}" was not reported as unassessed (${state.status})`);
       if (/valid|legal|unsupported/.test(name) && !/Not supported/.test(state.problems)) failures.push(`${topic}: legal-unmodeled case "${name}" did not use truthful Not supported Problems text (${state.problems})`);
-      if (/compiler-proven (?:unknown plain|out-of-scope)/.test(name) && (!/Error/.test(state.problems) || !/cannot find symbol/.test(state.problems))) failures.push(`${topic}: known-undeclared case "${name}" did not use the bounded compiler diagnostic (${state.problems})`);
+      if (/valid|legal|unsupported/.test(name) && /cannot find symbol/.test(state.problems)) failures.push(`${topic}: legal-unmodeled case "${name}" falsely claimed an absent symbol (${state.problems})`);
+      if (/compiler-proven (?:unknown plain|unknown index|unknown name as a loop start|out-of-scope)/.test(name) && (!/Error/.test(state.problems) || !/cannot find symbol/.test(state.problems))) failures.push(`${topic}: known-undeclared case "${name}" did not use the bounded compiler diagnostic (${state.problems})`);
       if (state.attemptsAfter !== state.attemptsBefore) failures.push(`${topic}: unassessed case "${name}" consumed an assessed attempt`);
+      if (topic === "big-o-basics" && JSON.stringify({ attempts: state.attemptsAfter, settled: state.settled, completed: state.completed, credit: state.credit, grade: state.grade, cont: state.cont }) !==
+          JSON.stringify({ attempts: "0", settled: "false", completed: "false", credit: "0", grade: "0", cont: "false" })) {
+        failures.push(`${topic}: invalid or unsupported neutral control "${name}" mutated activity state or credit`);
+      }
       if (/(?:receiver mistake|loop element size receiver|out-of-scope prior loop element|visits .* fallback)/.test(name) && JSON.stringify({ attempts: state.attemptsAfter, settled: state.settled, completed: state.completed, credit: state.credit, grade: state.grade, cont: state.cont }) !==
           JSON.stringify({ attempts: "0", settled: "false", completed: "false", credit: "0", grade: "0", cont: "false" })) {
         failures.push(`${topic}: legal neutral control "${name}" mutated activity state or credit`);
       }
+    }
+    for (const [name, code] of spec.lawful || []) {
+      const state = await run(code, spec.stated);
+      refused++;
+      if (/not assessed|outside what this practice editor/i.test(state.status)) failures.push(`${topic}: ${name} was rejected instead of executed (${state.status}; ${state.problems})`);
+      if (state.attemptsAfter !== String(Number(state.attemptsBefore) + 1)) failures.push(`${topic}: ${name} did not consume exactly one assessed attempt`);
+      if (state.credit !== "0" || state.completed !== "false" || state.settled !== "false" || state.grade !== "0") failures.push(`${topic}: ${name} changed completion, settlement, credit or grade`);
     }
     for (const [name, code] of spec.assessed || []) {
       const state = await run(code, spec.stated);
