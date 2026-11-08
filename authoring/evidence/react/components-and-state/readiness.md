@@ -2,6 +2,28 @@
 
 Status: **unreviewed first drafts, not delivery-ready.** This author-side record routes later review. It approves nothing, waives no gate, replaces no education or React-SME review, and marks nothing final, green, upload-safe, published or merged. No critic or reconciliation record exists for this module.
 
+## Minimum-release completion (2026-11-08)
+
+Main `174d4c86` (minimum-profile T25 support) was merged at `19ef8ab8` without rewriting checkpoint `ccf35668` or `2221d3dc`; their receipts remain in history. Learner bytes are final at `ecf4e760ed6d79d246fc158c5be2f784adc47af7`.
+
+**Replacement private proofs.** Each receipt below was replaced from a clean proof commit by an evidence-only child, with staging retired after the passing run. Every editor task reached completed, credit 1 and grade 1 with the page complete across the success, wrong-first, keyboard and sandbox routes, and the gate's exact public-byte leak comparison passed. A dry run at `19ef8ab8` refused every mixed or all-fail run with no private value recorded.
+
+| Topic | Private success proof |
+| --- | --- |
+| components-and-jsx | validated at 4f65773a2a7aadd412f463991bef048fdb02fa22 by run react-components-and-jsx-1794118274157; pass |
+| props | validated at 426a52b8f0845b27c7ccda5e06dd0539ffb0aa38 by run react-props-1794118274234; pass |
+| project-structure | validated at ce63993ef86308b8598e06f954c2b4baa66bf09b by run react-project-structure-1794118274419; pass |
+| conditional-display | validated at 5ededdfa36598d2754dbeef2497662cf8d218df9 by run react-conditional-display-1794118274537; pass |
+| usestate | validated at 93892a6d0c8de0e1ed4cfb0786334f196024a6f3 by run react-usestate-1794118274634; pass |
+| updating-state-immutably | validated at dc715ee4db6268f469505f88fca1f288ea8cb9a0 by run react-updating-state-immutably-1794118274727; pass |
+| rendering-lists-with-keys | validated at 41b0ce82c649239e0e7ddabd774ca52711d5cd1d by run react-rendering-lists-with-keys-1794118274837; pass |
+
+**Browser gates.** T08, T09, T12, T13 and T18 passed at `19ef8ab8`. T10 first failed on `props`: disabling the radio fieldset left each radio's own `disabled` property false, so a restart check tried an inert radio. The page now disables each radio (commit `4f65773a`); T10 and T11 then passed. The first T11 run crashed on a full shared disk (`ENOSPC`), not on page content, and passed on rerun. Runs used Darwin arm64 Playwright Chromium 140.0.7339.16. Radio groups use Space through the harness keyboard route; Linux keyboard operation was not run and is unassessed.
+
+**Owner essential pass.** Each topic's `owner-essential-qa.json` (`acceptanceProfile` minimum, `independentCriticApproval` not-required-not-performed) binds the current `artifact.html` and `artifact.gift` and lists the checks performed. Every private input was compared exactly and whitespace-normalized against all tracked files at `ecf4e760` with no match, then retired. The full repository check and npm test passed at `ecf4e760`. This is implementation-owner evidence only; no independent critic reviewed these drafts and nothing here is published.
+
+The preparation section below is superseded where it conflicts with this section.
+
 ## Minimum-release preparation (2026-11-08)
 
 This module is explicitly marked for the tonight minimum release. Each topic carries `owner-essential-qa.json`: `acceptanceProfile` minimum, `independentCriticApproval` not-required-not-performed, bound to the current `artifact.html` and `artifact.gift`. Independent critic approval was not required or performed. Each record lists its browser gates, replacement private proof and owner essential pass as **pending, not performed**. Main `e9a8aa28` was merged; no history was rewritten and `2221d3dc` and its receipts remain in history.
@@ -101,7 +123,7 @@ Worst path is a model from the estimator cost table, not a measurement with lear
 | Topic | artifact.html sha256 | artifact.md sha256 |
 | --- | --- | --- |
 | components-and-jsx | `a05ec3050a64d1fdbbb6c416302fb01d82a4b17f58267208deb82359b56d18a6` | `130cc77b5143d3d930e464184806ee0ce139626762a937d253c40e2691628d70` |
-| props | `327450722f73e1784809ffbc23d8fc7c4b7c4454ca4b430a105f624f9545e30e` | `bcd5ecd416a14774a21abbdbc0f779da12c5482c493c06de4ea07e06ea6cf0f4` |
+| props | `736128723914068d1d09bbfc3a9027c5a0dfa35294ee31dc8fb3490fcb78e211` | `bcd5ecd416a14774a21abbdbc0f779da12c5482c493c06de4ea07e06ea6cf0f4` |
 | project-structure | `8be23a8697e0ee11596d32db8cb7a526284b92681ed11b1a078fa79cc115257a` | `45857767819f97c0ca504e4d86989f00f21c1b8bd5bcb9e16d0bec1147b16f84` |
 | conditional-display | `719708e50ff455dfdf7e7f273966405db7d459aa37287340c7fa50801033c794` | `f0d6f72ac8acf3dc43c176162ac12414e283daf75e2443cd32ab17c6a0921cbd` |
 | usestate | `d6fd4635a04e72a2788cb4188e3f4d9249fbad17c7b22477230bd336c6bbb2a4` | `325b54e544c4c2ee21c5ee0754fb94708f79a72a765dbc155da5c80d0ea7ea91` |
