@@ -666,3 +666,86 @@ test("T06 still rejects a stale module lock without staling the course lock", as
   assert.match(result.stderr, /module\.lock\.json: module lock is stale/);
   assert.doesNotMatch(result.stderr, /course\.lock\.json: course lock is stale/);
 });
+
+function ownerRecord(digest, overrides = {}) {
+  return {
+    schemaVersion: 1,
+    acceptanceProfile: "minimum",
+    owner: "artifact-author",
+    provenance: "Implementation owner's essential pass on the final bytes.",
+    independentCriticApproval: "not-required-not-performed",
+    statement: "Independent education and SME critic approval was not required or performed under the minimum profile.",
+    checkedAt: "2026-11-08T00:00:00Z",
+    checks: ["correctness", "privacy and answer safety", "working-file validity"],
+    artifacts: [{ reviewedPath: target, reviewedSha256: digest }],
+    ...overrides,
+  };
+}
+
+async function writeOwner(root, value) {
+  await writeJson(
+    path.join(root, "authoring/evidence/demo-course/demo-module/demo-topic/owner-essential-qa.json"),
+    value,
+  );
+}
+
+test("T25 without an owner record still requires both critic roles", async () => {
+  const { root } = await fixture();
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /artifact\.html: missing current education critic coverage/);
+  assert.match(result.stderr, /artifact\.html: missing current sme critic coverage/);
+  assert.doesNotMatch(result.stderr, /owner essential QA/);
+});
+
+test("T25 accepts current minimum-profile owner essential QA in place of critic coverage", async () => {
+  const { root, digest } = await fixture();
+  await writeOwner(root, ownerRecord(digest));
+  const result = check(root);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("T25 rejects stale minimum-profile owner essential QA", async () => {
+  const { root, digest } = await fixture();
+  await writeOwner(root, ownerRecord(digest));
+  await writeFile(path.join(root, target), "changed after the owner pass\n");
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /owner essential QA binding .* is stale/);
+  assert.match(result.stderr, /artifact\.html: missing current owner essential QA coverage/);
+});
+
+test("T25 rejects owner essential QA that does not bind the reviewable file", async () => {
+  const { root } = await fixture();
+  const other = "demo-course/demo-module/demo-topic/other.html";
+  await writeFile(path.join(root, other), "other\n");
+  await writeOwner(root, ownerRecord(hash(Buffer.from("other\n")), {
+    artifacts: [{ reviewedPath: other, reviewedSha256: hash(Buffer.from("other\n")) }],
+  }));
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /artifact\.html: missing current owner essential QA coverage/);
+});
+
+test("T25 rejects owner essential QA that claims critic approval or a full profile", async () => {
+  for (const overrides of [
+    { independentCriticApproval: "approved" },
+    { acceptanceProfile: "full" },
+    { checks: [] },
+  ]) {
+    const { root, digest } = await fixture();
+    await writeOwner(root, ownerRecord(digest, overrides));
+    const result = check(root);
+    assert.notEqual(result.status, 0, JSON.stringify(overrides));
+    assert.match(result.stderr, /owner essential QA requires|owner essential QA must state/);
+  }
+});
+
+test("T25 still enforces open critic findings beside owner essential QA", async () => {
+  const { root, digest } = await fixture();
+  await writeOwner(root, ownerRecord(digest));
+  await writeTopicEvidence(root, report("education", digest, { findings: [highFinding(digest)] }), null);
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /findings require a reconciliation/);
+});

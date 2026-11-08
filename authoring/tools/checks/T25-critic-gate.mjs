@@ -21,6 +21,52 @@ const criticName =
 const reconciliationName =
   /^(?:[a-z0-9]+(?:-[a-z0-9]+)*-)?reconciliation\.json$/;
 const roles = ["education", "sme"];
+// Minimum acceptance profile: a topic may opt in only through its own
+// owner-essential-qa.json. That record never stands in for a critic verdict;
+// it states that independent critic approval was not required or performed,
+// and it counts only while it binds every reviewable file's current bytes.
+const ownerName = "owner-essential-qa.json";
+const ownerApproval = "not-required-not-performed";
+
+async function ownerEvidence(ctx, scope) {
+  if (scope.kind !== "topic") return { errors: [], covered: null };
+  const file = path.join(scope.evidenceRoot, ownerName);
+  if (!(await exists(file))) return { errors: [], covered: null };
+  const errors = [];
+  const fail = (message) => errors.push(error(id, ctx.display(file), message));
+  let data;
+  try {
+    data = await readJson(file);
+  } catch (cause) {
+    fail(`invalid JSON: ${cause.message}`);
+    return { errors, covered: new Set() };
+  }
+  if (data?.acceptanceProfile !== "minimum") fail("owner essential QA requires acceptanceProfile minimum");
+  if (data?.independentCriticApproval !== ownerApproval)
+    fail(`owner essential QA must state independentCriticApproval ${ownerApproval}`);
+  for (const field of ["owner", "provenance", "statement", "checkedAt"]) {
+    if (typeof data?.[field] !== "string" || !data[field].trim()) fail(`owner essential QA requires ${field}`);
+  }
+  if (!Array.isArray(data?.checks) || !data.checks.length ||
+      data.checks.some((item) => typeof item !== "string" || !item.trim())) {
+    fail("owner essential QA requires a non-empty checks list");
+  }
+  if (!Array.isArray(data?.artifacts) || !data.artifacts.length) fail("owner essential QA requires artifacts");
+  let bindings = [];
+  try {
+    bindings = await bindingsForEvidenceFile(scope.repoRoot, file, bindingOptions(scope.repoRoot, scope));
+  } catch (cause) {
+    fail(cause.message);
+  }
+  const covered = new Set();
+  if (!errors.length) {
+    for (const binding of bindings) {
+      if (binding.current) covered.add(binding.artifactPath);
+      else fail(`owner essential QA binding ${binding.field} is stale for ${binding.artifactPath}`);
+    }
+  }
+  return { errors, covered: errors.length ? new Set() : covered };
+}
 
 async function directJsonFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true }).catch(() => []);
@@ -212,8 +258,16 @@ async function checkScope(ctx, scope) {
     }
   }
 
+  const owner = await ownerEvidence(ctx, scope);
+  errors.push(...owner.errors);
   for (const reviewable of scope.reviewable) {
     const reviewablePath = relative(scope.repoRoot, reviewable);
+    if (owner.covered) {
+      if (!owner.covered.has(reviewablePath)) {
+        errors.push(error(id, reviewablePath, "missing current owner essential QA coverage"));
+      }
+      continue;
+    }
     for (const role of roles) {
       const covered = reports.some(
         (report) =>
