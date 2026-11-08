@@ -1,0 +1,914 @@
+<!doctype html>
+<!-- Minimum release (November 2026): author-checked only; not education-reviewed or SME-reviewed. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dependency injection replacing manual wiring</title>
+<meta name="pep:course" content="spring-boot">
+<meta name="pep:module" content="spring-boot-basics">
+<meta name="pep:topic" content="Dependency injection replacing manual wiring">
+<meta name="pep:topic-id" content="dependency-injection-replacing-manual-wiring">
+<meta name="pep:budget-minutes" content="15">
+<meta name="pep:source" content="authoring/evidence/spring-boot/spring-boot-basics/dependency-injection-replacing-manual-wiring/sources.json">
+<meta name="pep:draft-status" content="minimum-release-author-checked">
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-dur-1: 120ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 0 0 12px; padding-inline-start: 24px; }
+svg { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible, button:focus, a:focus, summary:focus, select:focus, textarea:focus { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; margin: 0 0 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__meta { flex: 1 1 220px; min-width: 0; display: grid; gap: 4px; }
+.pep-topicbar__progress { color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); border: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done, .pep-progress > span.is-current { background: var(--pep-accent); }
+.pep-progress > span.is-settled:not(.is-current) { background: var(--pep-line-strong); }
+.pep-objectives { break-inside: avoid; min-width: 0; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; }
+.pep-objectives > div { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease); }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent); }
+.pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; min-width: 44px; padding: 6px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); color: var(--pep-accent-text); font-weight: 600; text-decoration: none; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-toc-note { margin: 0 0 16px; }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; margin-top: 16px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region > :last-child, [data-pep-teaching] > :last-child { margin-bottom: 0; }
+[data-pep-workspace] { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+[data-pep-activity] { margin-bottom: 32px; min-width: 0; }
+[data-pep-activity][hidden] { display: none; }
+[data-pep-activity] > h2 { outline-offset: 4px; }
+[data-pep-activity-checks] { padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] ul { margin: 8px 0 0; }
+[data-pep-activity-checks] li { font: 400 14px/20px var(--pep-font-sans); }
+[data-pep-where-fits] { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+[data-pep-where-fits] p:last-child { margin-bottom: 0; }
+.pep-hint, details[data-pep-hint] { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); break-inside: avoid; margin-top: 8px; }
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { padding: 4px 0 12px; }
+.pep-hint__body p { margin: 0 0 8px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-hint .pep-hint { margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong); border-radius: 0; background: transparent; }
+.pep-optional { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); margin-top: 16px; }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+.pep-code { margin: 0 0 12px; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-options > legend { padding: 0 0 8px; color: var(--pep-text-strong); font-weight: 600; }
+.pep-option { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; transition: border-color var(--pep-dur-1) var(--pep-ease); }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option__state { display: block; font: 600 13px/20px var(--pep-font-sans); }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option:has(input:checked) .pep-option__key { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pep-option input:disabled { cursor: not-allowed; }
+.pep-option:focus-within { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-confidence { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-confidence > legend { padding: 0 0 8px; color: var(--pep-text-strong); font-weight: 600; }
+.pep-confidence .pep-option { grid-template-columns: minmax(0, 1fr); text-align: center; min-height: 44px; }
+.pep-rows { display: grid; gap: 12px; }
+.pep-row { display: grid; gap: 4px; min-width: 0; }
+.pep-row label { color: var(--pep-text-strong); font-weight: 600; overflow-wrap: anywhere; }
+.pep-row select, .pep-field { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 400 16px/24px var(--pep-font-sans); scroll-margin-block: 16px; }
+.pep-group { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 8px; }
+.pep-group > legend { padding: 0 0 8px; color: var(--pep-text-strong); font-weight: 600; overflow-wrap: anywhere; }
+.pep-chips { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.pep-chip { grid-template-columns: minmax(0, 1fr); flex: 1 1 120px; min-height: 44px; padding: 8px 12px; text-align: center; min-width: 0; }
+.pep-chip:has(input:checked) { padding: 7px 11px; }
+.pep-toggle { grid-template-columns: 28px minmax(0, 1fr); text-align: left; flex-basis: 100%; }
+.pep-toggle .pep-option__key::before { content: "Off"; font-size: 12px; }
+.pep-toggle:has(input:checked) .pep-option__key::before { content: "On"; }
+.pep-log { display: grid; gap: 4px; }
+.pep-logline { font: 400 14px/20px var(--pep-font-mono); }
+.pep-model { min-width: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.pep-model pre { margin: 0 0 8px; white-space: pre-wrap; overflow-wrap: anywhere; font: 400 14px/20px var(--pep-font-mono); }
+.pep-model p { margin: 0 0 8px; }
+.pep-model > :last-child { margin-bottom: 0; }
+.pep-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-feedback:empty { display: none; }
+.pep-callout { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text); overflow-wrap: anywhere; }
+.pep-callout strong { color: var(--pep-text-strong); }
+.pep-callout--success { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-callout--warning { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-callout--danger { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-why { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.pep-why[hidden] { display: none; }
+.pep-why h3 { margin-bottom: 8px; }
+.pep-why ul { margin: 0; }
+.pep-why li { margin-bottom: 8px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-why li:last-child { margin-bottom: 0; }
+.is-enhanced .pep-static { display: none; }
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+.pep-activity-actions .pep-btn { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn { flex: 0 1 auto; } }
+html:not(.is-enhanced) .pep-js-only { display: none; }
+.pep-back { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; }
+.pep-recap { padding: 24px 0 0; border-block-start: 1px solid var(--pep-line-strong); margin-top: 48px; }
+.pep-recap[hidden] { display: none; }
+.pep-recap h2 { margin-bottom: 8px; }
+.pep-cheat { margin-top: 16px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-cheat h3 { margin-bottom: 8px; }
+.pep-cheat ul { margin: 0; }
+.pep-sources { margin-top: 16px; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-sources > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-sources ul { padding-inline-start: 20px; }
+.pep-sources li { margin-bottom: 4px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-sources a { display: inline-flex; min-height: 44px; align-items: center; overflow-wrap: anywhere; }
+.pep-figure { margin: 0 0 12px; }
+.pep-figure svg { display: block; width: 100%; height: auto; }
+.pep-figure .node { fill: var(--pep-card); stroke: var(--pep-line-strong); stroke-width: 1.5; }
+.pep-figure .node.is-focus { fill: var(--pep-accent-soft); stroke: var(--pep-accent); stroke-width: 2; }
+.pep-figure .edge { fill: none; stroke: var(--pep-line-strong); stroke-width: 2; }
+.pep-figure .label { fill: var(--pep-text-strong); font: 600 16px var(--pep-font-sans); }
+.pep-figure figcaption { margin-top: 8px; font: 400 12px/16px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-table-wrap { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); overflow: hidden; margin-bottom: 12px; }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); table-layout: fixed; }
+.pep-table th { text-align: left; font-weight: 600; color: var(--pep-text-strong); background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); padding: 8px 12px; overflow-wrap: anywhere; }
+.pep-table td { padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.pep-table td:first-child { font-weight: 600; color: var(--pep-text-strong); }
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { margin: 0; padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font: inherit; font-variant-numeric: tabular-nums; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; width: 100%; min-width: 0; min-height: 200px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-editor__panel[hidden] { display: none; }
+.pep-editor__panel p { margin: 0 0 4px; }
+.pep-editor__panel .pep-code { margin: 8px 0 0; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; }
+.pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__problem .kind-hint { color: var(--pep-text-muted); font-weight: 600; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-note { color: var(--pep-text-muted); font: 400 14px/20px var(--pep-font-sans); margin: 0; }
+.pep-terminal { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); min-width: 0; }
+.pep-terminal__head { margin: 0; padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-terminal__log { min-height: 96px; max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 8px 12px; }
+.pep-terminal__log p, .pep-terminal__log pre { margin: 0 0 4px; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+.pep-terminal__c .prompt { color: var(--pep-accent-text); font-weight: 600; }
+.pep-terminal__w { color: var(--pep-warning); }
+.pep-terminal__line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--pep-line-strong); }
+.pep-sim { display: grid; gap: 12px; padding: 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); min-width: 0; }
+.pep-sim__head { margin: 0; color: var(--pep-text-strong); font-weight: 600; }
+.pep-sim__field { display: grid; gap: 4px; min-width: 0; }
+.pep-sim__field label { color: var(--pep-text-strong); font-weight: 600; }
+.pep-sim__field input { min-width: 0; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: inherit; font-size: 16px; }
+.pep-sim__out { min-width: 0; overflow-wrap: anywhere; }
+.pep-sim__out .pep-code { white-space: pre-wrap; }
+.pep-sim__out[hidden] { display: none; }
+.pep-terminal__line label { color: var(--pep-accent-text); font-weight: 600; }
+.pep-terminal__line input { flex: 1 1 160px; min-width: 0; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: inherit; scroll-margin-block: 16px; }
+.vh { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+  [data-pep-workspace] { padding: 16px; }
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+  .pep-terminal__line input { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; } }
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-activity-actions, nav[aria-label="Activities"], .pep-back, [data-pep-reset], .pep-noprint { display: none !important; }
+  [data-pep-activity], [data-pep-activity][hidden] { display: block !important; }
+  .pep-why[hidden], .pep-recap[hidden] { display: block !important; }
+  .is-enhanced .pep-static { display: block !important; }
+  .pep-objectives > div { display: block !important; }
+  .pep-topicbar, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional, .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; break-inside: avoid; }
+  .pep-code, .pep-figure, .pep-table-wrap { break-inside: avoid; }
+  .pep-optional > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker { display: none; }
+}
+</style>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-route-settled="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="15">
+<header class="pep-topicbar">
+<h1 id="page-title">Dependency injection replacing manual wiring</h1>
+<div class="pep-topicbar__meta"><span class="pep-topicbar__progress" id="pep-position">4 activities · about 15 min</span><div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span><span></span></div><span class="pep-topicbar__progress pep-js-only" id="pep-progress">0 of 4 activities answered, 0 earned credit, 0 correct</span></div>
+<details class="pep-objectives" data-pep-objectives><summary aria-controls="pep-objectives-body">Objectives</summary><div id="pep-objectives-body"><ul><li>Replace the manual new-based wiring of a controller, service and repository with Spring-managed components that receive their dependencies through constructors</li><li>Predict the startup outcome when a required bean is missing or when two beans match one injection point, and resolve the ambiguity with @Primary or @Qualifier</li><li>Explain why constructor injection keeps a class testable with plain new in a unit test</li></ul></div></details>
+<button class="pep-btn pep-js-only" type="button" data-pep-reset>Restart activity</button>
+</header>
+<nav aria-label="Activities"><ol class="pep-steps"><li><a class="pep-step" href="#activity-1" data-pep-activity-link>Activity 1</a></li><li><a class="pep-step" href="#activity-2" data-pep-activity-link>Activity 2</a></li><li><a class="pep-step" href="#activity-3" data-pep-activity-link>Activity 3</a></li><li><a class="pep-step" href="#activity-4" data-pep-activity-link>Activity 4</a></li></ol></nav>
+<section id="activity-1" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<h2 id="activity-1-title" tabindex="-1">Activity 1: Predict first</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions><p>Your handler builds its own collaborators:</p><pre class="pep-code"><code>var repo = new InMemoryWorkshopRepository();
+var service = new WorkshopService(repo);
+var controller = new WorkshopController(service);</code></pre><p>You mark the three classes as Spring components and delete those lines. Each class now asks for what it needs through its constructor.</p></div>
+
+
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-1" data-pep-task><h3>Your task</h3><p>Before any teaching, choose in the option list what you expect to create the objects now.</p></div>
+<section data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><ul><li>You commit to one prediction before any teaching. Every option is explained afterwards.</li></ul></section>
+<fieldset class="pep-options" data-interaction="predict" data-static-alt="**Why each option is right or wrong**&#10;&#10;- **A. Not this one:** Constructor parameters are filled by the container, so the service is not null.&#10;- **B. Correct answer:** Right. The container builds the graph in dependency order and injects through constructors.&#10;- **C. Not this one:** The point of the change is that your code no longer calls `new` for these beans.&#10;- **D. Not this one:** The JVM creates nothing by itself. The Spring container does this."><legend>Who creates the three objects after the change?</legend><label class="pep-option" id="a1-opt-a"><input type="radio" name="a1-choice" id="a1-a" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Nobody; the controller fails with a null service.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a1-opt-b"><input type="radio" name="a1-choice" id="a1-b" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">The Spring container creates them and passes each dependency to the constructors.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a1-opt-c"><input type="radio" name="a1-choice" id="a1-c" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Each class still needs its own <code>new</code> call somewhere in your code.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a1-opt-d"><input type="radio" name="a1-choice" id="a1-d" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">The JVM creates one object per class automatically.<span class="pep-option__state"></span></span></label></fieldset><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="a1-check" data-pep-submit data-pep-lockable>Check answer</button></div><div class="pep-feedback" id="a1-feedback" data-pep-feedback aria-live="polite"></div><div class="pep-why" id="a1-why" data-static-alt><h3>Why each option is right or wrong</h3><ul><li><strong>A. Not this one:</strong> Constructor parameters are filled by the container, so the service is not null.</li><li><strong>B. Correct answer:</strong> Right. The container builds the graph in dependency order and injects through constructors.</li><li><strong>C. Not this one:</strong> The point of the change is that your code no longer calls <code>new</code> for these beans.</li><li><strong>D. Not this one:</strong> The JVM creates nothing by itself. The Spring container does this.</li></ul></div>
+</div>
+</div>
+
+
+</section>
+<section id="activity-2" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<h2 id="activity-2-title" tabindex="-1">Activity 2: Declare needs in the constructor</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions><p>Spring finds classes marked with stereotypes such as <code>@RestController</code>, <code>@Service</code> and <code>@Repository</code>. Each one becomes a <strong>bean</strong> in the container.</p><p>A class states its dependencies as constructor parameters and keeps them in <code>final</code> fields. With a single constructor, no <code>@Autowired</code> is required.</p><pre class="pep-code"><code>@Service
+class WorkshopService {
+  private final WorkshopRepository repo;
+  WorkshopService(WorkshopRepository repo) { this.repo = repo; }
+}</code></pre><p>Because the dependency is a plain parameter, a unit test can pass a fake with <code>new</code>, with no Spring at all.</p></div>
+
+
+</div>
+<div class="pep-region--workspace" data-pep-workspace="code">
+<div id="task-2" data-pep-task data-pep-may-stall><h3>Your task</h3><p>In <code>WorkshopController.java</code>, replace the manual <code>new</code> wiring: mark the class as a REST controller, add a <code>final</code> field for <code>WorkshopService</code>, and accept it as a constructor parameter. Then press Run.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 2</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> Start at the line with <code>new WorkshopService</code>.</p><p data-pep-hint-step><strong>Next step:</strong> That line must go; think about what replaces it so the field still gets a value.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="2" data-section-skip><summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 2</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> Look at the constructor signature in the teaching panel.</p><p data-pep-hint-step><strong>Next step:</strong> The parameter type is what the container uses to find the bean.</p></div></details></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><ul><li>The class is a <code>@RestController</code>.</li><li>A <code>private final WorkshopService</code> field exists.</li><li>A constructor receives the service.</li><li>No <code>new WorkshopService</code> remains.</li></ul></section>
+<div class="pep-editor" id="a2-editor" data-pep-answer-sensitive="java" data-pep-answer-targets="WorkshopController" data-interaction="terminal" data-static-alt="**Printed alternative:** Change the class so the container supplies `WorkshopService` through a constructor, with a final field and no `new` call. Starter file: `WorkshopController.java`." data-steps="3"><div class="pep-editor__bar"><span class="pep-editor__file">WorkshopController.java</span><button type="button" class="pep-btn pep-btn--primary pep-js-only" id="a2-check" data-pep-submit data-pep-lockable>Run</button><button type="button" class="pep-btn pep-js-only" id="a2-resetcode" data-pep-lockable>Reset code</button></div><div class="pep-editor__code"><pre class="pep-editor__gutter" id="a2-gutter" aria-hidden="true">1
+2
+3
+4
+5
+6
+7</pre><textarea class="pep-editor__input" id="a2-code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="WorkshopController.java code">// TODO: make this a Spring-managed REST controller
+class WorkshopController {
+  // TODO: receive this from Spring instead of building it
+  private WorkshopService service = new WorkshopService(new InMemoryWorkshopRepository());
+
+  // TODO: constructor
+}</textarea></div><div class="pep-editor__tabs pep-js-only" role="tablist" aria-label="Results"><button type="button" role="tab" id="a2-tab-problems" aria-controls="a2-problems" aria-selected="true">Problems</button><button type="button" role="tab" id="a2-tab-output" aria-controls="a2-output" aria-selected="false" tabindex="-1">Output</button></div><div class="pep-editor__panel pep-js-only" role="tabpanel" id="a2-problems" aria-labelledby="a2-tab-problems"><p>Press Run to see problems here.</p></div><div class="pep-editor__panel pep-js-only" role="tabpanel" id="a2-output" aria-labelledby="a2-tab-output"><p>Press Run to see results here.</p></div><div class="pep-editor__status pep-js-only" id="a2-status" aria-live="polite">Not run yet.</div></div><p class="pep-note">This practice editor checks the structure of your code against the requirements above. It does not compile or run Java, and it says so when something is outside what it can check. Supported here: annotations, fields and constructors; method bodies are not executed.</p><div class="pep-feedback" id="a2-feedback" data-pep-feedback aria-live="polite"></div><noscript data-pep-no-js><p><strong>Without JavaScript:</strong> Change the class so the container supplies <code>WorkshopService</code> through a constructor, with a final field and no <code>new</code> call. The starter is shown in the editor box above. Compare your own edit with the requirements listed under What success looks like; this reading does not include a finished answer.</p></noscript><div class="pep-static" data-static-alt data-section-skip><p><strong>Printed alternative:</strong> Change the class so the container supplies <code>WorkshopService</code> through a constructor, with a final field and no <code>new</code> call. Starter file: <code>WorkshopController.java</code>.</p></div><div class="pep-why" id="a2-why"><h3>What the requirements protect</h3><p>Constructor injection keeps a required dependency visible and final, so the object can never exist half-built, and a test can pass a fake directly.</p></div>
+</div>
+</div>
+
+<p><a class="pep-back" href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</section>
+<section id="activity-3" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<h2 id="activity-3-title" tabindex="-1">Activity 3: When wiring fails at startup</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions><p>The container resolves each constructor parameter by type at startup, so wiring problems stop the app before it serves a request.</p><ul><li><strong>No matching bean:</strong> startup fails naming the missing type.</li><li><strong>Two matching beans:</strong> startup fails because the injection point is ambiguous.</li><li><strong>Fix for ambiguity:</strong> mark one bean <code>@Primary</code>, or name the wanted bean with <code>@Qualifier</code> at the injection point.</li></ul><p>A startup failure is good news: the mistake is found before any learner or customer sends a request.</p></div>
+<section data-pep-where-fits aria-labelledby="where-fits-3"><h2 id="where-fits-3">Where this fits</h2><p data-pep-fit-decision><strong>Decision:</strong> Should the choice between two implementations be global or per injection point?</p><p data-pep-fit-good><strong>Good fit:</strong> <code>@Primary</code> suits a clear default; <code>@Qualifier</code> suits one consumer that needs a specific implementation.</p><p data-pep-fit-boundary><strong>Choose something else when:</strong> The choice depends on the environment; use a profile or a property condition so only one bean exists.</p></section>
+
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-3" data-pep-task data-pep-may-stall><h3>Your task</h3><p>Use the two controls below to set up the wiring so the app starts and <code>WorkshopService</code> gets the JPA repository. Watch the simulated startup output, then press Check this setting.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 3</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> Change the Beans present control first.</p><p data-pep-hint-step><strong>Next step:</strong> Decide how many repository beans exist; with two, you must also pick a resolution.</p></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><ul><li>The simulated startup succeeds.</li><li>The service receives the JPA repository.</li></ul></section>
+<div class="pep-rows" data-interaction="explore" data-static-alt="**Printed alternative:** None present fails: no qualifying bean. Both present with no resolution fails: expected single matching bean but found 2. Both present with @Primary on the JPA bean or a @Qualifier naming it succeeds. Only the JPA bean present succeeds."><fieldset class="pep-group"><legend>Beans present</legend><div class="pep-chips"><label class="pep-option pep-chip"><input type="radio" name="a3-beans" id="a3-beans-0" value="none"><span class="pep-option__text">No repository beans</span></label><label class="pep-option pep-chip"><input type="radio" name="a3-beans" id="a3-beans-1" value="mem"><span class="pep-option__text">Only InMemoryWorkshopRepository</span></label><label class="pep-option pep-chip"><input type="radio" name="a3-beans" id="a3-beans-2" value="jpa"><span class="pep-option__text">Only JpaWorkshopRepository</span></label><label class="pep-option pep-chip"><input type="radio" name="a3-beans" id="a3-beans-3" value="both" checked><span class="pep-option__text">Both repositories</span></label></div></fieldset><fieldset class="pep-group"><legend>Resolution</legend><div class="pep-chips"><label class="pep-option pep-chip"><input type="radio" name="a3-fix" id="a3-fix-0" value="nothing" checked><span class="pep-option__text">Nothing added</span></label><label class="pep-option pep-chip"><input type="radio" name="a3-fix" id="a3-fix-1" value="primary"><span class="pep-option__text">@Primary on JpaWorkshopRepository</span></label><label class="pep-option pep-chip"><input type="radio" name="a3-fix" id="a3-fix-2" value="qualifier"><span class="pep-option__text">@Qualifier naming the JPA bean</span></label><label class="pep-option pep-chip"><input type="radio" name="a3-fix" id="a3-fix-3" value="primarymem"><span class="pep-option__text">@Primary on InMemoryWorkshopRepository</span></label></div></fieldset></div><div class="pep-model" id="a3-model" aria-live="polite" tabindex="0" role="status" aria-label="Simulated model output"></div><div class="pep-static" data-static-alt data-section-skip><p><strong>Printed alternative:</strong> None present fails: no qualifying bean. Both present with no resolution fails: expected single matching bean but found 2. Both present with @Primary on the JPA bean or a @Qualifier naming it succeeds. Only the JPA bean present succeeds.</p></div><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="a3-check" data-pep-submit data-pep-lockable>Check this setting</button></div><div class="pep-feedback" id="a3-feedback" data-pep-feedback aria-live="polite"></div><div class="pep-why" id="a3-why"><h3>Worked explanation</h3><p>With both beans present, Spring needs a resolution: <code>@Primary</code> on the JPA bean or a <code>@Qualifier</code> naming it. With only the JPA bean present, no resolution is needed.</p></div>
+</div>
+</div>
+
+<p><a class="pep-back" href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</section>
+<section id="activity-4" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-4-title">
+<h2 id="activity-4-title" tabindex="-1">Activity 4: Apply it</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions><p>A class uses field injection with <code>@Autowired</code>. A colleague wants to unit-test it without starting Spring, using a fake repository.</p></div>
+
+
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-4" data-pep-task><h3>Your task</h3><p>Rate your confidence, then choose the change that makes this test simple. Then, in the editor, build <code>WorkshopController</code> for a plain test with <code>FakeWorkshopService</code>, a fake that extends <code>WorkshopService</code>; record the exception Output shows for the field-injected version, and press Check answer.</p></div>
+<section data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><ul><li>You rate your confidence, then choose the option that fits the situation.</li><li>The test builds the controller with <code>new</code> and the fake, without Spring or reflection.</li><li>The exception is copied from the simulated test output for your test.</li></ul></section>
+<fieldset class="pep-options" data-interaction="mcq" data-static-alt="**Why each option is right or wrong**&#10;&#10;- **A. Correct answer:** Right. A constructor parameter lets the test pass the fake directly, with no container.&#10;- **B. Not this one:** `@Primary` belongs on a bean and does not change how a test can supply a value.&#10;- **C. Not this one:** A shared static dependency makes tests order-dependent and hides the requirement.&#10;- **D. Not this one:** That works but is slow, and it is the opposite of a plain unit test." data-confidence><legend>What makes the plain unit test simple?</legend><label class="pep-option" id="a4-opt-a"><input type="radio" name="a4-choice" id="a4-a" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Move the dependency to a constructor, then call <code>new</code> in the test with the fake.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a4-opt-b"><input type="radio" name="a4-choice" id="a4-b" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Add <code>@Primary</code> to the field.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a4-opt-c"><input type="radio" name="a4-choice" id="a4-c" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Mark the field <code>public static</code>.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a4-opt-d"><input type="radio" name="a4-choice" id="a4-d" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Start the full application context in every test.<span class="pep-option__state"></span></span></label></fieldset><fieldset class="pep-confidence"><legend>How sure are you?</legend><label class="pep-option"><input type="radio" name="a4-conf" id="a4-conf-0" value="guessing"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="a4-conf" id="a4-conf-1" value="fairly sure"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="a4-conf" id="a4-conf-2" value="certain"><span class="pep-option__text">Certain</span></label></fieldset><div class="pep-editor" id="a4-editor" data-pep-answer-sensitive="java" data-pep-answer-targets="WorkshopControllerTest" data-interaction="terminal" data-static-alt="**Printed alternative:** Replace the placeholder so the test builds the controller with `new`, passing a `FakeWorkshopService` through its constructor, without starting Spring. The starter is the test shown in the editor; this reading does not include a finished answer." data-steps="1"><div class="pep-editor__bar"><span class="pep-editor__file">WorkshopControllerTest.java</span><button type="button" class="pep-btn pep-js-only" id="a4-resetcode" data-pep-lockable>Reset code</button></div><div class="pep-editor__code"><pre class="pep-editor__gutter" id="a4-gutter" aria-hidden="true">1
+2
+3
+4
+5
+6
+7</pre><textarea class="pep-editor__input" id="a4-code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="WorkshopControllerTest.java code">class WorkshopControllerTest {
+  @Test
+  void listsWorkshopsWithoutSpring() {
+    WorkshopController controller = ___;
+    assertEquals(1, controller.list().size());
+  }
+}</textarea></div><div class="pep-editor__tabs pep-js-only" role="tablist" aria-label="Results"><button type="button" role="tab" id="a4-tab-problems" aria-controls="a4-problems" aria-selected="true">Problems</button><button type="button" role="tab" id="a4-tab-output" aria-controls="a4-output" aria-selected="false" tabindex="-1">Output</button></div><div class="pep-editor__panel pep-js-only" role="tabpanel" id="a4-problems" aria-labelledby="a4-tab-problems"><p>Press the activity check to see problems here.</p></div><div class="pep-editor__panel pep-js-only" role="tabpanel" id="a4-output" aria-labelledby="a4-tab-output"><p>Press the activity check to see results here.</p></div><div class="pep-editor__status pep-js-only" id="a4-status" aria-live="polite">Not checked yet.</div></div><p class="pep-note">The editor checks structure and does not run Java; the simulated run appears once every requirement is met.</p><noscript data-pep-no-js><p><strong>Without JavaScript:</strong> Build the controller with new and the fake, without Spring. This reading does not include a finished answer.</p></noscript><div class="pep-sim" data-interaction="explore" data-static-alt="**Printed alternative:** Record the exception name that the simulated run reports for the field-injected version."><div class="pep-sim__field"><label for="a4-exception">Consequence: the exception the field-injected version throws</label><input type="text" id="a4-exception" spellcheck="false" autocapitalize="off" autocomplete="off"></div></div><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="a4-check" data-pep-submit data-pep-lockable>Check answer</button></div><div class="pep-feedback" id="a4-feedback" data-pep-feedback aria-live="polite"></div><div class="pep-why" id="a4-why" data-static-alt><h3>Why each option is right or wrong</h3><ul><li><strong>A. Correct answer:</strong> Right. A constructor parameter lets the test pass the fake directly, with no container.</li><li><strong>B. Not this one:</strong> <code>@Primary</code> belongs on a bean and does not change how a test can supply a value.</li><li><strong>C. Not this one:</strong> A shared static dependency makes tests order-dependent and hides the requirement.</li><li><strong>D. Not this one:</strong> That works but is slow, and it is the opposite of a plain unit test.</li></ul><h3>The chain</h3><p>The dependency enters through the constructor, so a test can pass a fake with <code>new</code>. With field injection nothing sets the private field outside a container, so the test meets a null dependency.</p></div>
+</div>
+</div>
+
+<p><a class="pep-back" href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+</section>
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation"><button class="pep-btn" type="button" data-pep-previous>Previous activity</button><button class="pep-btn pep-btn--primary" type="button" data-pep-next>Next activity</button></div>
+<section class="pep-recap" id="pep-recap" data-pep-recap aria-labelledby="recap-title"><h2 id="recap-title">Recap</h2><p id="pep-recap-score" class="pep-js-only"></p><ul><li>Stereotype annotations register beans; constructors declare what each bean needs.</li><li>Missing or ambiguous beans stop startup with a message naming the problem.</li><li>Constructor injection lets a unit test call <code>new</code> with a fake.</li></ul>
+<section class="pep-cheat" data-section-skip aria-labelledby="cheat-title"><h3 id="cheat-title">Cheat sheet (optional)</h3><ul><li>One constructor needs no <code>@Autowired</code>.</li><li>Ambiguity: <code>@Primary</code> for a default, <code>@Qualifier</code> at the injection point.</li></ul></section>
+</section>
+<details class="pep-sources" data-pep-sources data-section-skip><summary>Sources and review date</summary><div><p><strong>Status:</strong> minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.</p><ul><li><a href="https://docs.spring.io/spring-boot/reference/using/spring-beans-and-dependency-injection.html" rel="noopener">https://docs.spring.io/spring-boot/reference/using/spring-beans-and-dependency-injection.html</a></li><li><a href="https://docs.spring.io/spring-framework/reference/core/beans/dependencies/factory-collaborators.html" rel="noopener">https://docs.spring.io/spring-framework/reference/core/beans/dependencies/factory-collaborators.html</a></li><li><a href="https://docs.spring.io/spring-framework/reference/core/beans/classpath-scanning.html" rel="noopener">https://docs.spring.io/spring-framework/reference/core/beans/classpath-scanning.html</a></li><li><a href="https://docs.spring.io/spring-framework/reference/core/beans/basics.html" rel="noopener">https://docs.spring.io/spring-framework/reference/core/beans/basics.html</a></li><li><a href="https://jakarta.ee/specifications/dependency-injection/2.0/" rel="noopener">https://jakarta.ee/specifications/dependency-injection/2.0/</a></li></ul></div></details>
+</main>
+<script>
+var PEP_CONFIG = {"activities":[{"type":"choice","predict":true,"correct":"b","confidence":false,"why":{"a":"Constructor parameters are filled by the container, so the service is not null.","b":"Right. The container builds the graph in dependency order and injects through constructors.","c":"The point of the change is that your code no longer calls <code>new<\/code> for these beans.","d":"The JVM creates nothing by itself. The Spring container does this."}},{"type":"code","java":true,"flags":"","starter":"// TODO: make this a Spring-managed REST controller\nclass WorkshopController {\n  // TODO: receive this from Spring instead of building it\n  private WorkshopService service = new WorkshopService(new InMemoryWorkshopRepository());\n\n  // TODO: constructor\n}","success":"The dependency now arrives through the constructor.","output":"Simulated startup: WorkshopController bean created with WorkshopService injected.","limits":[],"rules":[{"re":"@RestController\\s+(public\\s+)?class WorkshopController","no":false,"str":false,"ok":"@RestController on the class","bad":"The class is not marked as a REST controller."},{"re":"private\\s+final\\s+WorkshopService\\s+\\w+\\s*;","no":false,"str":false,"ok":"private final WorkshopService field","bad":"There is no private final field of type WorkshopService."},{"re":"WorkshopController\\s*\\(\\s*(final\\s+)?WorkshopService\\s+\\w+\\s*\\)\\s*\\{[^}]*this\\.\\w+\\s*=\\s*\\w+\\s*;","no":false,"str":false,"ok":"constructor assigns the injected service","bad":"No constructor receives the service and assigns the field."},{"re":"new\\s+WorkshopService","no":true,"str":false,"ok":"no manual new WorkshopService","bad":"Manual new wiring is still present."}]},{"type":"explore","nudge":"Read the startup output: it names what is missing or ambiguous.","settled":"A working setup has a JPA bean present and, if the in-memory bean also exists, a resolution that picks JPA.","success":"Startup succeeds and the intended bean is injected.","controls":[{"id":"beans","kind":"select"},{"id":"fix","kind":"select"}],"model":(s) => {
+            if (s.beans === 'none') return '<pre>APPLICATION FAILED TO START\nrequired a bean of type WorkshopRepository that could not be found<\/pre>';
+            if (s.beans === 'both' && s.fix === 'nothing') return '<pre>APPLICATION FAILED TO START\nrequired a single bean, but 2 were found<\/pre>';
+            const inj = s.beans === 'mem' ? 'InMemoryWorkshopRepository' : s.beans === 'jpa' ? 'JpaWorkshopRepository' : s.fix === 'primarymem' ? 'InMemoryWorkshopRepository' : 'JpaWorkshopRepository';
+            return '<pre>Started WorkshopsApplication\nWorkshopService received: ' + inj + '<\/pre>';
+          },"goal":(s) => (s.beans === 'jpa') || (s.beans === 'both' && (s.fix === 'primary' || s.fix === 'qualifier'))},{"type":"choice","predict":false,"correct":"a","confidence":true,"why":{"a":"Right. A constructor parameter lets the test pass the fake directly, with no container.","b":"<code>@Primary<\/code> belongs on a bean and does not change how a test can supply a value.","c":"A shared static dependency makes tests order-dependent and hides the requirement.","d":"That works but is slow, and it is the opposite of a plain unit test."},"parts":[{"type":"code","java":true,"flags":"","starter":"class WorkshopControllerTest {\n  @Test\n  void listsWorkshopsWithoutSpring() {\n    WorkshopController controller = ___;\n    assertEquals(1, controller.list().size());\n  }\n}","after":true,"success":"The test builds the controller without Spring.","output":"Simulated test run:\nlistsWorkshopsWithoutSpring: passed, no application context started\nSame test against the field-injected WorkshopController:\nFAILED java.lang.NullPointerException: Cannot invoke \"WorkshopService.all()\" because \"this.service\" is null","limits":[],"rules":[{"re":"___","no":true,"str":false,"ok":"placeholder replaced","bad":"A ___ placeholder is still in the test."},{"re":"class\\s+WorkshopControllerTest\\s*\\{\\s*@Test\\s+void\\s+listsWorkshopsWithoutSpring\\s*\\(\\s*\\)\\s*\\{","no":false,"str":false,"ok":"the test method is kept","bad":"Keep the @Test method listsWorkshopsWithoutSpring from the starter."},{"re":"assertEquals\\s*\\(\\s*1\\s*,\\s*controller\\s*\\.\\s*list\\s*\\(\\s*\\)\\s*\\.\\s*size\\s*\\(\\s*\\)\\s*\\)\\s*;","no":false,"str":false,"ok":"the assertion is kept","bad":"Keep the starter assertion."},{"re":"\\bcontroller\\s*=\\s*new\\s+WorkshopController\\s*\\(","no":false,"str":false,"ok":"the controller is built with new","bad":"Build the controller with new."},{"re":"\\bWorkshopController\\s*\\(\\s*new\\s+\\w+\\s*\\(","no":false,"str":false,"ok":"the fake arrives through the constructor","bad":"Pass the fake service to the controller constructor."},{"re":"@SpringBootTest|@Autowired|ApplicationContext|ReflectionTestUtils|setAccessible|@MockitoBean|@InjectMocks","no":true,"str":false,"ok":"no Spring context or reflection","bad":"Use no Spring context, injection annotation or reflection; the point is a plain test."}]},{"type":"record","after":true,"label":"Consequence","success":"You read the field-injected failure from the simulated run of your test.","settled":"The exception appears in Output once your test meets every requirement.","fields":[{"id":"exception","statusOf":"a4-status","outputOf":"a4-output","passText":"every requirement met","re":"FAILED ((?:\\w+\\.)*(\\w+Exception))","bad":"Copy the exception name from the simulated run of your own passing test."}]}]}]};
+(() => {
+  'use strict';
+  var root = document.documentElement;
+  root.classList.add('is-enhanced');
+  var cfg = PEP_CONFIG;
+  var lesson = document.getElementById('lesson');
+  var sections = Array.prototype.slice.call(document.querySelectorAll('[data-pep-activity]'));
+  var links = Array.prototype.slice.call(document.querySelectorAll('[data-pep-activity-link]'));
+  var previous = document.querySelector('[data-pep-previous]');
+  var next = document.querySelector('[data-pep-next]');
+  var position = document.getElementById('pep-position');
+  var progress = document.getElementById('pep-progress');
+  var segments = Array.prototype.slice.call(document.querySelectorAll('.pep-progress > span'));
+  var recap = document.getElementById('pep-recap');
+  var total = sections.length;
+  var minutes = lesson.getAttribute('data-pep-required-minutes');
+  var current = 1;
+  var unlocked = 1;
+  var everComplete = false;
+  var everSettled = false;
+  var lastFocused = null;
+  var state = cfg.activities.map(function () { return fresh(); });
+  function fresh() { return { attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false }; }
+  function el(id) { return document.getElementById(id); }
+  function esc(text) { return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function controlsOf(n) { return Array.prototype.slice.call(sections[n - 1].querySelectorAll('[data-pep-workspace] input, [data-pep-workspace] select, [data-pep-workspace] textarea')); }
+  var initial = sections.map(function (_, i) {
+    return controlsOf(i + 1).map(function (c) { return { c: c, value: c.value, checked: c.checked, index: c.selectedIndex }; });
+  });
+  document.addEventListener('focusin', function (e) { lastFocused = e.target; });
+
+  function reflect(n) {
+    var s = state[n - 1], sec = sections[n - 1];
+    sec.setAttribute('data-pep-attempts', String(s.attempts));
+    sec.setAttribute('data-pep-settled', String(s.settled));
+    sec.setAttribute('data-pep-completed', String(s.completed));
+    sec.setAttribute('data-pep-credit', String(s.credit));
+    sec.setAttribute('data-pep-grade', String(s.grade));
+    sec.setAttribute('data-pep-continue', String(s.canContinue));
+  }
+  function summarize() {
+    var answered = state.filter(function (s) { return s.settled; }).length;
+    var credited = state.filter(function (s) { return s.credit > 0; }).length;
+    var right = state.filter(function (s) { return s.grade > 0; }).length;
+    progress.textContent = answered + ' of ' + total + ' activities answered, ' + credited + ' earned credit, ' + right + ' correct';
+    segments.forEach(function (seg, i) {
+      seg.classList.toggle('is-done', state[i].completed);
+      seg.classList.toggle('is-settled', state[i].settled && !state[i].completed);
+      seg.classList.toggle('is-current', i + 1 === current);
+    });
+    if (answered === total) everSettled = true;
+    if (credited === total) everComplete = true;
+    lesson.setAttribute('data-pep-complete', String(everComplete));
+    lesson.setAttribute('data-pep-route-settled', String(everSettled));
+    if (recap) recap.hidden = !everSettled;
+    var score = el('pep-recap-score');
+    if (score) score.textContent = credited === total
+      ? 'Topic complete: all ' + total + ' activities earned credit, and ' + right + ' were correct.'
+      : 'Every activity is answered, but this topic is not complete: ' + credited + ' of ' + total + ' activities earned credit. An activity that settles without passing earns no credit. Use Restart activity on it to try again.';
+  }
+  function render(number, mode, focus) {
+    if (typeof number !== 'number' || number !== number || number < 1 || number > total || number > unlocked) return false;
+    current = number;
+    lesson.setAttribute('data-pep-current-activity', String(current));
+    lesson.setAttribute('data-pep-unlocked-through', String(unlocked));
+    sections.forEach(function (sec, i) { sec.hidden = i + 1 !== current; });
+    links.forEach(function (link, i) {
+      var n = i + 1;
+      if (n === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+      if (n > unlocked) link.setAttribute('aria-disabled', 'true'); else link.removeAttribute('aria-disabled');
+    });
+    previous.disabled = current === 1;
+    next.disabled = current === total || (current >= unlocked && !state[current - 1].canContinue);
+    position.textContent = 'Activity ' + current + ' of ' + total + ' · about ' + minutes + ' min';
+    summarize();
+    try {
+      if (mode === 'push') history.pushState({ activity: current }, '', '#activity-' + current);
+      if (mode === 'replace') history.replaceState({ activity: current }, '', '#activity-' + current);
+    } catch (err) {
+      if (mode && location.hash !== '#activity-' + current) location.hash = 'activity-' + current;
+    }
+    if (focus) { var h = el('activity-' + current + '-title'); if (h) h.focus(); }
+    return true;
+  }
+  function hashNumber(hash) { var m = /^#activity-(\d+)$/.exec(hash || ''); return m ? Number(m[1]) : 1; }
+  function setFeedback(n, kind, html) {
+    var fb = el('a' + n + '-feedback');
+    fb.className = 'pep-feedback' + (kind ? ' pep-callout pep-callout--' + kind : '');
+    fb.innerHTML = html;
+  }
+  function lock(n) {
+    controlsOf(n).forEach(function (c) { c.disabled = true; });
+    Array.prototype.forEach.call(sections[n - 1].querySelectorAll('[data-pep-workspace] button[data-pep-lockable]'), function (b) { b.disabled = true; });
+  }
+  function unlockControls(n) {
+    controlsOf(n).forEach(function (c) { c.disabled = false; });
+    Array.prototype.forEach.call(sections[n - 1].querySelectorAll('[data-pep-workspace] button[data-pep-lockable]'), function (b) { b.disabled = false; });
+  }
+  function settle(n, grade, kind, html, a) {
+    var s = state[n - 1];
+    // Only passing evidence completes an activity and earns credit. A missed prediction is still a made prediction.
+    var earned = grade > 0 || !!a.predict;
+    s.settled = true; s.canContinue = true; s.grade = grade; s.completed = earned; s.credit = earned ? 1 : 0;
+    lock(n);
+    reflect(n);
+    setFeedback(n, kind, html);
+    reveal(n, a);
+    unlocked = Math.max(unlocked, Math.min(n + 1, total));
+    render(current);
+  }
+  function reveal(n, a) {
+    var why = el('a' + n + '-why');
+    if (why) why.hidden = false;
+    if (a.type === 'choice') {
+      Array.prototype.forEach.call(document.querySelectorAll('input[name="a' + n + '-choice"]'), function (input) {
+        var label = input.closest('.pep-option');
+        var tag = label.querySelector('.pep-option__state');
+        if (input.value === a.correct) { label.classList.add('is-correct'); tag.textContent = 'Correct answer'; }
+        else if (input.checked) { label.classList.add('is-wrong'); tag.textContent = 'Your answer'; }
+      });
+    }
+  }
+  function attempt(n, a, result) {
+    var s = state[n - 1];
+    if (result.status === 'incomplete') { setFeedback(n, 'warning', '<strong>Not checked yet.</strong> ' + result.msg); return; }
+    s.attempts += 1;
+    if (result.status === 'right') { settle(n, 1, 'success', '<strong>Correct.</strong> ' + result.msg, a); return; }
+    if (s.attempts >= 2) { settle(n, 0, 'danger', '<strong>Answered and settled, not correct.</strong> ' + result.settled + (a.predict ? ' Your prediction is recorded.' : ' No credit earned. You can continue, or use Restart activity to try again.'), a); return; }
+    reflect(n);
+    setFeedback(n, 'danger', '<strong>Try again.</strong> ' + result.msg + ' You have one more attempt.');
+  }
+  var check = {
+    record: function (n, a) {
+      var vals = a.fields.map(function (f) { return el('a' + n + '-' + f.id).value.trim(); });
+      if (vals.some(function (v) { return !v; })) return { status: 'incomplete', msg: a.label + ': fill in every finding first.' };
+      var bad = a.fields.filter(function (f, i) { return !recordMatches(n, f, vals[i]); });
+      if (!bad.length) return { status: 'right', msg: a.success };
+      var said = a.label + ': ' + bad.map(function (f) { return f.bad; }).join(' ');
+      return { status: 'wrong', msg: said, settled: said + ' ' + a.settled };
+    },
+    setup: function (n, a) {
+      var v = readSetup(n, a);
+      if (a.fields.some(function (f) { return f.kind !== 'checks' && !v[f.id]; })) return { status: 'incomplete', msg: a.label + ': fill in every setting first.' };
+      if (setupMade[n] !== JSON.stringify(v)) return { status: 'incomplete', msg: a.label + ': press ' + a.button + ' to see the project these settings produce.' };
+      var wrong = a.fields.filter(function (f) { return v[f.id] !== f.expect; });
+      if (!wrong.length) return { status: 'right', msg: a.success };
+      var said = a.label + ': ' + wrong.map(function (f) { return f.bad; }).join(' ');
+      return { status: 'wrong', msg: said, settled: said + ' ' + a.settled };
+    },
+    swagger: function (n, a) {
+      var dep = swaggerDep(n), s = swag[n] || freshSwagger();
+      if (!dep) return { status: 'incomplete', msg: a.chooseFirst };
+      if (dep !== a.correct) return { status: 'wrong', msg: a.wrongDep, settled: a.wrongDep + ' ' + a.settled };
+      if (!s.opened) return { status: 'incomplete', msg: a.openFirst };
+      if (!s.missing) return { status: 'incomplete', msg: a.executeFirst };
+      return { status: 'right', msg: a.success };
+    },
+    choice: function (n, a) {
+      var chosen = document.querySelector('input[name="a' + n + '-choice"]:checked');
+      if (!chosen) return { status: 'incomplete', msg: 'Choose one option first.' };
+      if (a.confidence && !document.querySelector('input[name="a' + n + '-conf"]:checked')) return { status: 'incomplete', msg: 'Rate how sure you are first, so the feedback can tell you whether your confidence matched.' };
+      var conf = document.querySelector('input[name="a' + n + '-conf"]:checked');
+      var note = conf ? ' You said: ' + conf.value + '.' : '';
+      var msg = a.why[chosen.value] + note;
+      if (chosen.value === a.correct) return { status: 'right', msg: msg };
+      return { status: 'wrong', msg: msg, settled: msg + ' The correct answer and every explanation are below.' };
+    },
+    classify: function (n, a) {
+      var picks = a.items.map(function (it) { var c = document.querySelector('input[name="a' + n + '-' + it.id + '"]:checked'); return c ? c.value : ''; });
+      if (picks.some(function (p) { return !p; })) return { status: 'incomplete', msg: (a.label ? a.label + ': c' : 'C') + 'hoose a value in every row first.' };
+      var wrong = a.items.filter(function (it, i) { return picks[i] !== it.answer; });
+      var pre = a.label ? a.label + ': ' : '';
+      if (!wrong.length) return { status: 'right', msg: a.success };
+      return { status: 'wrong', msg: pre + wrong.length + ' of ' + a.items.length + ' rows need another look.', settled: pre + wrong.length + ' of ' + a.items.length + ' rows were not right. The answer for each row is below.' };
+    },
+    mark: function (n, a) {
+      var picked = a.lines.filter(function (l) { return el('a' + n + '-' + l.id).checked; });
+      if (!picked.length) return { status: 'incomplete', msg: 'Tick at least one line first.' };
+      var wrong = a.lines.filter(function (l) { return el('a' + n + '-' + l.id).checked !== !!l.mark; });
+      if (!wrong.length) return { status: 'right', msg: a.success };
+      return { status: 'wrong', msg: wrong.length + ' line' + (wrong.length > 1 ? 's are' : ' is') + ' marked differently from what the task asks.', settled: 'The marked lines were not the set the task asks for. Each line is explained below.' };
+    },
+    explore: function (n, a) {
+      var s = readExplore(n, a);
+      if (a.goal(s)) return { status: 'right', msg: a.success };
+      return { status: 'wrong', msg: a.nudge, settled: a.settled };
+    },
+    terminal: function (n, a) {
+      var flags = termFlags[n] || {};
+      if (!Object.keys(termRan[n] || {}).length) return { status: 'incomplete', msg: 'Run at least one command first.' };
+      var missing = a.need.filter(function (f) { return !flags[f.flag]; });
+      if (!missing.length) return { status: 'right', msg: a.success };
+      return { status: 'wrong', msg: missing[0].nudge, settled: a.settled };
+    },
+    code: function (n, a) {
+      var text = el('a' + n + '-code').value;
+      var clean = normalize(text);
+      if (clean === normalize(a.starter)) { problems(n, a, [{ kind: 'hint', msg: 'No change yet: edit the code before you press Run. Comments do not count.' }], []); return { status: 'incomplete', msg: 'Edit the code first; comments do not count.' }; }
+      var limit = (a.limits || []).filter(function (r) { return new RegExp(r.re, a.flags).test(clean); });
+      // Java text inside a string is not code, so requirements without a quote are read with string contents removed.
+      var codeOnly = a.java ? clean.replace(/"(?:[^"\\\n]|\\.)*"/g, '""') : clean;
+      if (a.java && /"""/.test(clean)) limit = limit.concat([{ msg: 'text blocks.' }]);
+      if (a.java && !balanced(codeOnly)) limit = limit.concat([{ msg: 'code whose braces or parentheses do not balance.' }]);
+      if (limit.length) { problems(n, a, limit.map(function (r) { return { kind: 'limit', msg: 'Not supported in this practice editor: ' + r.msg }; }), []); return { status: 'incomplete', msg: 'Remove what the practice editor does not support, then Run again.' }; }
+      var results = a.rules.map(function (r) {
+        var hit = new RegExp(r.re, a.flags).test(r.no || r.str || r.re.indexOf('"') >= 0 ? clean : codeOnly);
+        return { ok: r.no ? !hit : hit, rule: r };
+      });
+      var bad = results.filter(function (r) { return !r.ok; });
+      problems(n, a, bad.map(function (r) { return { kind: 'error', msg: r.rule.bad }; }), results);
+      if (!bad.length) return { status: 'right', msg: a.success };
+      return { status: 'wrong', msg: 'The Problems tab lists ' + bad.length + ' requirement' + (bad.length > 1 ? 's' : '') + ' still to meet.', settled: 'These requirements were not met: ' + bad.map(function (r) { return r.rule.bad; }).join(' ') + ' Compare your code with the task and the teaching on this activity.' };
+    }
+  };
+  function balanced(code) {
+    var stack = [], pairs = { ')': '(', '}': '{' };
+    for (var i = 0; i < code.length; i += 1) {
+      var c = code[i];
+      if (c === '(' || c === '{') stack.push(c);
+      else if (c === ')' || c === '}') { if (stack.pop() !== pairs[c]) return false; }
+    }
+    return stack.length === 0;
+  }
+  function normalize(code) {
+    return code.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:"])\/\/[^\n]*/g, '$1 ').replace(/^\s*#[^\n]*$/gm, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function problems(n, a, list, results) {
+    var p = el('a' + n + '-problems'), o = el('a' + n + '-output'), st = el('a' + n + '-status');
+    if (!list.length) { p.innerHTML = '<p>No problems found.</p>'; }
+    else {
+      p.innerHTML = list.map(function (x) {
+        var word = x.kind === 'error' ? 'Requirement' : x.kind === 'limit' ? 'Limit' : 'Note';
+        return '<p class="pep-editor__problem"><span class="kind-' + x.kind + '">' + word + ':</span> ' + x.msg + '</p>';
+      }).join('');
+    }
+    if (results.length) {
+      o.innerHTML = results.map(function (r) { return '<p>' + (r.ok ? 'Pass: ' : 'Not yet: ') + esc(r.rule.ok) + '</p>'; }).join('') +
+        (list.length ? '' : '<pre class="pep-code">' + esc(a.output || '') + '</pre>');
+    }
+    st.textContent = list.length ? 'Run finished: ' + list.length + ' item' + (list.length > 1 ? 's' : '') + ' to fix. See Problems.' : 'Run finished: every requirement met. See Output.';
+    selectTab(n, list.length ? 'problems' : 'output');
+  }
+  function selectTab(n, which) {
+    ['problems', 'output'].forEach(function (name) {
+      var tab = el('a' + n + '-tab-' + name), panel = el('a' + n + '-' + name), on = name === which;
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+      panel.hidden = !on;
+    });
+  }
+  function readExplore(n, a) {
+    var s = {};
+    a.controls.forEach(function (c) {
+      if (c.kind === 'toggle') { s[c.id] = el('a' + n + '-' + c.id).checked; return; }
+      var picked = document.querySelector('input[name="a' + n + '-' + c.id + '"]:checked');
+      s[c.id] = picked ? picked.value : '';
+    });
+    return s;
+  }
+  function paintExplore(n, a) { el('a' + n + '-model').innerHTML = a.model(readExplore(n, a)); }
+  // An activity may carry required parts. Every part is checked with the main control and all must pass.
+  function withParts(n, a) {
+    var main = check[a.type](n, a);
+    if (!a.parts) return main;
+    var all = [];
+    a.parts.forEach(function (p) { if (!p.after) all.push(check[p.type](n, p)); });
+    all.push(main);
+    a.parts.forEach(function (p) { if (p.after) all.push(check[p.type](n, p)); });
+    var waiting = all.filter(function (r) { return r.status === 'incomplete'; })[0];
+    if (waiting) return waiting;
+    var wrong = all.filter(function (r) { return r.status !== 'right'; });
+    if (!wrong.length) return { status: 'right', msg: all.map(function (r) { return r.msg; }).join(' ') };
+    return { status: 'wrong', msg: wrong.map(function (r) { return r.msg; }).join(' '), settled: wrong.map(function (r) { return r.settled; }).join(' ') };
+  }
+  function partsOf(a) { return [a].concat(a.parts || []); }
+  function readSetup(n, a) {
+    var v = {};
+    a.fields.forEach(function (f) {
+      if (f.kind === 'text') { v[f.id] = el('a' + n + '-' + f.id).value.trim(); return; }
+      var boxes = Array.prototype.slice.call(document.querySelectorAll('input[name="a' + n + '-' + f.id + '"]'));
+      if (f.kind === 'checks') { v[f.id] = boxes.filter(function (c) { return c.checked; }).map(function (c) { return c.value; }).sort().join(','); return; }
+      var picked = boxes.filter(function (c) { return c.checked; })[0];
+      v[f.id] = picked ? picked.value : '';
+    });
+    return v;
+  }
+  var setupMade = {};
+  function fillTemplate(line, v, a) {
+    return line.replace(/\{(\w+)\}/g, function (_, key) {
+      if (key === 'groupPath') return (v.group || '...').replace(/\./g, '/');
+      var map = a.preview.values[key];
+      var raw = v[key] || '';
+      return map ? (map[raw] || '...') : (raw || '...');
+    });
+  }
+  function paintSetup(n, a) {
+    var v = readSetup(n, a);
+    setupMade[n] = JSON.stringify(v);
+    var lines = a.preview.lines.map(function (line) { return fillTemplate(line, v, a); });
+    var deps = v.deps ? v.deps.split(',') : [];
+    if (!deps.length) lines.push(a.preview.noDeps);
+    deps.forEach(function (d) { lines.push(fillTemplate(a.preview.depLine, { dep: a.preview.deps[d] || d }, { preview: { values: {} } })); });
+    el('a' + n + '-preview').innerHTML = '<pre class="pep-code">' + esc(lines.join('\n')) + '</pre>';
+  }
+  function staleSetup(n, a) {
+    setupMade[n] = null;
+    el('a' + n + '-preview').innerHTML = '<p>' + a.preview.stale + '</p>';
+  }
+  var swag = {};
+  function freshSwagger() { return { opened: false, tried: false, found: false, missing: false }; }
+  function swaggerDep(n) { var d = document.querySelector('input[name="a' + n + '-dep"]:checked'); return d ? d.value : ''; }
+  function closeSwagger(n, a, html) {
+    swag[n] = freshSwagger();
+    el('a' + n + '-ui').hidden = true;
+    el('a' + n + '-id').disabled = true;
+    el('a' + n + '-exec').disabled = true;
+    el('a' + n + '-result').innerHTML = '';
+    el('a' + n + '-open-out').innerHTML = html;
+  }
+  function openSwagger(n, a) {
+    var dep = swaggerDep(n);
+    if (!dep) { closeSwagger(n, a, '<p>' + a.chooseFirst + '</p>'); return; }
+    if (dep !== a.correct) { closeSwagger(n, a, '<pre class="pep-code">' + esc(a.outcomes[dep]) + '</pre>'); return; }
+    swag[n] = freshSwagger();
+    swag[n].opened = true;
+    el('a' + n + '-open-out').innerHTML = '<pre class="pep-code">' + esc(a.started) + '</pre>';
+    el('a' + n + '-ui').hidden = false;
+  }
+  function tryOut(n) {
+    if (!swag[n] || !swag[n].opened) return;
+    swag[n].tried = true;
+    el('a' + n + '-id').disabled = false;
+    el('a' + n + '-exec').disabled = false;
+    el('a' + n + '-id').focus();
+  }
+  function execute(n, a) {
+    var s = swag[n];
+    if (!s || !s.tried) return;
+    var id = el('a' + n + '-id').value.trim();
+    if (!/^\d+$/.test(id)) { el('a' + n + '-result').innerHTML = '<p>' + a.badId + '</p>'; return; }
+    var known = a.ids.indexOf(id) >= 0;
+    if (known) s.found = true; else s.missing = true;
+    var r = known ? a.found : a.missing;
+    el('a' + n + '-result').innerHTML = '<p><strong>Request URL:</strong> <code>' + esc(a.url.split('{id}').join(id)) + '</code></p><p><strong>Server response, code ' + r.code + '</strong></p><pre class="pep-code">' + esc(r.body.split('{id}').join(id)) + '</pre>';
+  }
+  var termRun = {};
+  function recordSource(n, f) {
+    if (f.flag) { var run = (termRun[n] || {})[f.flag]; return run ? (f.from === 'line' ? run.line : run.out) : ''; }
+    var st = el(f.statusOf), out = el(f.outputOf);
+    return st && out && st.textContent.indexOf(f.passText) >= 0 ? out.textContent : '';
+  }
+  function recordMatches(n, f, value) {
+    var m = new RegExp(f.re, 'm').exec(recordSource(n, f));
+    if (!m) return false;
+    for (var k = 1; k < m.length; k += 1) { if (m[k] && m[k] === value) return true; }
+    return false;
+  }
+  var termFlags = {}, termRan = {};
+  function runCommand(n, a) {
+    var input = el('a' + n + '-cmd'), log = el('a' + n + '-log'), line = input.value.trim();
+    if (!line || input.disabled) return;
+    var entry = '<p class="pep-terminal__c"><span class="prompt">$</span> ' + esc(line) + '</p>';
+    var hit = null;
+    for (var i = 0; i < a.commands.length; i += 1) { if (new RegExp(a.commands[i].re).test(line)) { hit = a.commands[i]; break; } }
+    if (hit) {
+      (termRan[n] = termRan[n] || {})[line] = true;
+      if (hit.flag) { (termFlags[n] = termFlags[n] || {})[hit.flag] = true; (termRun[n] = termRun[n] || {})[hit.flag] = { line: line, out: hit.out }; }
+      entry += '<pre class="pep-terminal__o">' + esc(hit.out) + '</pre>';
+    } else {
+      (termRan[n] = termRan[n] || {})[line] = true;
+      entry += '<p class="pep-terminal__w">Not available in this practice terminal. Supported here: ' + esc(a.supported) + '</p>';
+    }
+    log.insertAdjacentHTML('beforeend', entry);
+    log.scrollTop = log.scrollHeight;
+    input.value = '';
+  }
+  cfg.activities.forEach(function (a, i) {
+    var n = i + 1;
+    var button = el('a' + n + '-check');
+    button.addEventListener('click', function () {
+      if (state[n - 1].settled) return;
+      attempt(n, a, withParts(n, a));
+    });
+    if (a.type === 'explore') {
+      a.controls.forEach(function (c) {
+        if (c.kind === 'toggle') el('a' + n + '-' + c.id).addEventListener('change', function () { paintExplore(n, a); });
+        else Array.prototype.forEach.call(document.querySelectorAll('input[name="a' + n + '-' + c.id + '"]'), function (r) { r.addEventListener('change', function () { paintExplore(n, a); }); });
+      });
+      paintExplore(n, a);
+    }
+    if (a.type === 'terminal') {
+      el('a' + n + '-cmd-run').addEventListener('click', function () { runCommand(n, a); el('a' + n + '-cmd').focus(); });
+      el('a' + n + '-cmd').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); runCommand(n, a); } });
+    }
+    if (a.type === 'code') {
+      el('a' + n + '-resetcode').addEventListener('click', function () { el('a' + n + '-code').value = a.starter; gutter(n); });
+      el('a' + n + '-code').addEventListener('input', function () { gutter(n); });
+      ['problems', 'output'].forEach(function (name, idx, names) {
+        var tab = el('a' + n + '-tab-' + name);
+        tab.addEventListener('click', function () { selectTab(n, name); });
+        tab.addEventListener('keydown', function (e) {
+          if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); var other = names[1 - idx]; selectTab(n, other); el('a' + n + '-tab-' + other).focus(); }
+        });
+      });
+      selectTab(n, 'problems');
+    }
+    partsOf(a).forEach(function (p) {
+      if (p.type === 'code' && p !== a) {
+        el('a' + n + '-resetcode').addEventListener('click', function () { el('a' + n + '-code').value = p.starter; gutter(n); });
+        el('a' + n + '-code').addEventListener('input', function () { gutter(n); });
+        ['problems', 'output'].forEach(function (name, idx, names) {
+          var tab = el('a' + n + '-tab-' + name);
+          tab.addEventListener('click', function () { selectTab(n, name); });
+          tab.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); var other = names[1 - idx]; selectTab(n, other); el('a' + n + '-tab-' + other).focus(); }
+          });
+        });
+        selectTab(n, 'problems');
+      }
+      if (p.type === 'setup') {
+        el('a' + n + '-generate').addEventListener('click', function () { paintSetup(n, p); });
+        p.fields.forEach(function (f) {
+          var inputs = f.kind === 'text' ? [el('a' + n + '-' + f.id)] : Array.prototype.slice.call(document.querySelectorAll('input[name="a' + n + '-' + f.id + '"]'));
+          inputs.forEach(function (c) { c.addEventListener(f.kind === 'text' ? 'input' : 'change', function () { staleSetup(n, p); }); });
+        });
+        staleSetup(n, p);
+      }
+      if (p.type === 'swagger') {
+        el('a' + n + '-open').addEventListener('click', function () { openSwagger(n, p); });
+        el('a' + n + '-try').addEventListener('click', function () { tryOut(n); });
+        el('a' + n + '-exec').addEventListener('click', function () { execute(n, p); });
+        el('a' + n + '-id').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); execute(n, p); } });
+        Array.prototype.forEach.call(document.querySelectorAll('input[name="a' + n + '-dep"]'), function (r) { r.addEventListener('change', function () { closeSwagger(n, p, '<p>' + p.changed + '</p>'); }); });
+        closeSwagger(n, p, '<p>' + p.notOpen + '</p>');
+      }
+    });
+    var why = el('a' + n + '-why');
+    if (why) why.hidden = true;
+    reflect(n);
+  });
+  function gutter(n) {
+    var g = el('a' + n + '-gutter'), lines = el('a' + n + '-code').value.split('\n').length, out = [];
+    for (var i = 1; i <= lines; i += 1) out.push(i);
+    g.textContent = out.join('\n');
+  }
+  links.forEach(function (link, i) {
+    link.addEventListener('click', function (e) { e.preventDefault(); render(i + 1, 'push', true); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-pep-back-link]'), function (link) {
+    link.addEventListener('click', function (e) { e.preventDefault(); render(hashNumber(link.hash), 'push', true); });
+  });
+  previous.addEventListener('click', function () { render(current - 1, 'push', true); });
+  next.addEventListener('click', function () { render(current + 1, 'push', true); });
+  function restoreFromHistory() {
+    var keep = lastFocused;
+    if (!render(hashNumber(location.hash), null, false)) render(Math.min(current, unlocked), 'replace', false);
+    if (keep && keep.isConnected && !keep.closest('[hidden]')) keep.focus({ preventScroll: true });
+  }
+  addEventListener('popstate', restoreFromHistory);
+  addEventListener('hashchange', restoreFromHistory);
+  document.querySelector('[data-pep-reset]').addEventListener('click', function () {
+    var n = current, a = cfg.activities[n - 1];
+    initial[n - 1].forEach(function (x) {
+      x.c.disabled = false;
+      if (x.c.type === 'checkbox' || x.c.type === 'radio') x.c.checked = x.checked;
+      else if (x.c.tagName === 'SELECT') x.c.selectedIndex = x.index;
+      else x.c.value = x.value;
+    });
+    unlockControls(n);
+    state[n - 1] = fresh();
+    setFeedback(n, '', '');
+    var why = el('a' + n + '-why');
+    if (why) why.hidden = true;
+    Array.prototype.forEach.call(sections[n - 1].querySelectorAll('.pep-option'), function (o) {
+      o.classList.remove('is-correct', 'is-wrong');
+      var tag = o.querySelector('.pep-option__state');
+      if (tag) tag.textContent = '';
+    });
+    if (a.type === 'explore') paintExplore(n, a);
+    if (a.type === 'terminal') { el('a' + n + '-log').innerHTML = ''; termFlags[n] = {}; termRan[n] = {}; termRun[n] = {}; }
+    partsOf(a).forEach(function (p) {
+      if (p.type === 'code' && p !== a) {
+        el('a' + n + '-problems').innerHTML = '<p>Press the activity check to see problems here.</p>';
+        el('a' + n + '-output').innerHTML = '<p>Press the activity check to see results here.</p>';
+        el('a' + n + '-status').textContent = 'Not checked yet.';
+        selectTab(n, 'problems');
+        gutter(n);
+      }
+      if (p.type === 'setup') staleSetup(n, p);
+      if (p.type === 'swagger') closeSwagger(n, p, '<p>' + p.notOpen + '</p>');
+    });
+    if (a.type === 'code') {
+      el('a' + n + '-problems').innerHTML = '<p>Press Run to see problems here.</p>';
+      el('a' + n + '-output').innerHTML = '<p>Press Run to see results here.</p>';
+      el('a' + n + '-status').textContent = 'Not run yet.';
+      selectTab(n, 'problems');
+      gutter(n);
+    }
+    reflect(n);
+    render(n);
+  });
+  var objectives = document.querySelector('[data-pep-objectives]');
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); }
+  });
+  document.addEventListener('click', function (e) {
+    if (objectives.open && !objectives.contains(e.target)) objectives.open = false;
+  });
+  var printStates = [];
+  addEventListener('beforeprint', function () {
+    printStates = Array.prototype.map.call(document.querySelectorAll('details'), function (d) { return { d: d, open: d.open }; });
+    printStates.forEach(function (x) { x.d.open = true; });
+  });
+  addEventListener('afterprint', function () {
+    printStates.forEach(function (x) { x.d.open = x.open; });
+    printStates = [];
+  });
+  var requested = hashNumber(location.hash);
+  render(requested <= unlocked ? requested : 1, 'replace', false);
+})();
+</script>
+</body>
+</html>
