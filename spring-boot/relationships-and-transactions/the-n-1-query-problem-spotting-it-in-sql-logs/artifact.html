@@ -1,0 +1,856 @@
+<!doctype html>
+<!-- Minimum release (November 2026): author-checked only; not education-reviewed or SME-reviewed. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The N+1 query problem: spotting it in SQL logs</title>
+<meta name="pep:course" content="spring-boot">
+<meta name="pep:module" content="relationships-and-transactions">
+<meta name="pep:topic" content="The N+1 query problem: spotting it in SQL logs">
+<meta name="pep:topic-id" content="the-n-1-query-problem-spotting-it-in-sql-logs">
+<meta name="pep:budget-minutes" content="10">
+<meta name="pep:source" content="authoring/evidence/spring-boot/relationships-and-transactions/the-n-1-query-problem-spotting-it-in-sql-logs/sources.json">
+<meta name="pep:draft-status" content="minimum-release-author-checked">
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-dur-1: 120ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 0 0 12px; padding-inline-start: 24px; }
+svg { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible, button:focus, a:focus, summary:focus, select:focus, textarea:focus { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; margin: 0 0 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__meta { flex: 1 1 220px; min-width: 0; display: grid; gap: 4px; }
+.pep-topicbar__progress { color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); border: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done, .pep-progress > span.is-current { background: var(--pep-accent); }
+.pep-progress > span.is-settled:not(.is-current) { background: var(--pep-line-strong); }
+.pep-objectives { break-inside: avoid; min-width: 0; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; }
+.pep-objectives > div { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease); }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent); }
+.pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; min-width: 44px; padding: 6px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); color: var(--pep-accent-text); font-weight: 600; text-decoration: none; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-toc-note { margin: 0 0 16px; }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; margin-top: 16px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region > :last-child, [data-pep-teaching] > :last-child { margin-bottom: 0; }
+[data-pep-workspace] { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+[data-pep-activity] { margin-bottom: 32px; min-width: 0; }
+[data-pep-activity][hidden] { display: none; }
+[data-pep-activity] > h2 { outline-offset: 4px; }
+[data-pep-activity-checks] { padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] ul { margin: 8px 0 0; }
+[data-pep-activity-checks] li { font: 400 14px/20px var(--pep-font-sans); }
+[data-pep-where-fits] { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+[data-pep-where-fits] p:last-child { margin-bottom: 0; }
+.pep-hint, details[data-pep-hint] { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); break-inside: avoid; margin-top: 8px; }
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { padding: 4px 0 12px; }
+.pep-hint__body p { margin: 0 0 8px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-hint .pep-hint { margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong); border-radius: 0; background: transparent; }
+.pep-optional { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); margin-top: 16px; }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+.pep-code { margin: 0 0 12px; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-options > legend { padding: 0 0 8px; color: var(--pep-text-strong); font-weight: 600; }
+.pep-option { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; transition: border-color var(--pep-dur-1) var(--pep-ease); }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option__state { display: block; font: 600 13px/20px var(--pep-font-sans); }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option:has(input:checked) .pep-option__key { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pep-option input:disabled { cursor: not-allowed; }
+.pep-option:focus-within { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-confidence { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-confidence > legend { padding: 0 0 8px; color: var(--pep-text-strong); font-weight: 600; }
+.pep-confidence .pep-option { grid-template-columns: minmax(0, 1fr); text-align: center; min-height: 44px; }
+.pep-rows { display: grid; gap: 12px; }
+.pep-row { display: grid; gap: 4px; min-width: 0; }
+.pep-row label { color: var(--pep-text-strong); font-weight: 600; overflow-wrap: anywhere; }
+.pep-row select, .pep-field { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 400 16px/24px var(--pep-font-sans); scroll-margin-block: 16px; }
+.pep-group { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 8px; }
+.pep-group > legend { padding: 0 0 8px; color: var(--pep-text-strong); font-weight: 600; overflow-wrap: anywhere; }
+.pep-chips { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.pep-chip { grid-template-columns: minmax(0, 1fr); flex: 1 1 120px; min-height: 44px; padding: 8px 12px; text-align: center; min-width: 0; }
+.pep-chip:has(input:checked) { padding: 7px 11px; }
+.pep-toggle { grid-template-columns: 28px minmax(0, 1fr); text-align: left; flex-basis: 100%; }
+.pep-toggle .pep-option__key::before { content: "Off"; font-size: 12px; }
+.pep-toggle:has(input:checked) .pep-option__key::before { content: "On"; }
+.pep-log { display: grid; gap: 4px; }
+.pep-logline { font: 400 14px/20px var(--pep-font-mono); }
+.pep-model { min-width: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.pep-model pre { margin: 0 0 8px; white-space: pre-wrap; overflow-wrap: anywhere; font: 400 14px/20px var(--pep-font-mono); }
+.pep-model p { margin: 0 0 8px; }
+.pep-model > :last-child { margin-bottom: 0; }
+.pep-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-feedback:empty { display: none; }
+.pep-callout { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text); overflow-wrap: anywhere; }
+.pep-callout strong { color: var(--pep-text-strong); }
+.pep-callout--success { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-callout--warning { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-callout--danger { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-why { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.pep-why[hidden] { display: none; }
+.pep-why h3 { margin-bottom: 8px; }
+.pep-why ul { margin: 0; }
+.pep-why li { margin-bottom: 8px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-why li:last-child { margin-bottom: 0; }
+.is-enhanced .pep-static { display: none; }
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+.pep-activity-actions .pep-btn { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn { flex: 0 1 auto; } }
+html:not(.is-enhanced) .pep-js-only { display: none; }
+.pep-back { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; }
+.pep-recap { padding: 24px 0 0; border-block-start: 1px solid var(--pep-line-strong); margin-top: 48px; }
+.pep-recap[hidden] { display: none; }
+.pep-recap h2 { margin-bottom: 8px; }
+.pep-cheat { margin-top: 16px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-cheat h3 { margin-bottom: 8px; }
+.pep-cheat ul { margin: 0; }
+.pep-sources { margin-top: 16px; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-sources > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-sources ul { padding-inline-start: 20px; }
+.pep-sources li { margin-bottom: 4px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-sources a { display: inline-flex; min-height: 44px; align-items: center; overflow-wrap: anywhere; }
+.pep-figure { margin: 0 0 12px; }
+.pep-figure svg { display: block; width: 100%; height: auto; }
+.pep-figure .node { fill: var(--pep-card); stroke: var(--pep-line-strong); stroke-width: 1.5; }
+.pep-figure .node.is-focus { fill: var(--pep-accent-soft); stroke: var(--pep-accent); stroke-width: 2; }
+.pep-figure .edge { fill: none; stroke: var(--pep-line-strong); stroke-width: 2; }
+.pep-figure .label { fill: var(--pep-text-strong); font: 600 16px var(--pep-font-sans); }
+.pep-figure figcaption { margin-top: 8px; font: 400 12px/16px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-table-wrap { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); overflow: hidden; margin-bottom: 12px; }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); table-layout: fixed; }
+.pep-table th { text-align: left; font-weight: 600; color: var(--pep-text-strong); background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); padding: 8px 12px; overflow-wrap: anywhere; }
+.pep-table td { padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.pep-table td:first-child { font-weight: 600; color: var(--pep-text-strong); }
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { margin: 0; padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font: inherit; font-variant-numeric: tabular-nums; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; width: 100%; min-width: 0; min-height: 200px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-editor__panel[hidden] { display: none; }
+.pep-editor__panel p { margin: 0 0 4px; }
+.pep-editor__panel .pep-code { margin: 8px 0 0; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; }
+.pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__problem .kind-hint { color: var(--pep-text-muted); font-weight: 600; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-note { color: var(--pep-text-muted); font: 400 14px/20px var(--pep-font-sans); margin: 0; }
+.pep-terminal { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); min-width: 0; }
+.pep-terminal__head { margin: 0; padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-terminal__log { min-height: 96px; max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 8px 12px; }
+.pep-terminal__log p, .pep-terminal__log pre { margin: 0 0 4px; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+.pep-terminal__c .prompt { color: var(--pep-accent-text); font-weight: 600; }
+.pep-terminal__w { color: var(--pep-warning); }
+.pep-terminal__line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--pep-line-strong); }
+.pep-terminal__line label { color: var(--pep-accent-text); font-weight: 600; }
+.pep-terminal__line input { flex: 1 1 160px; min-width: 0; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: inherit; scroll-margin-block: 16px; }
+.vh { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+  [data-pep-workspace] { padding: 16px; }
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+  .pep-terminal__line input { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; } }
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-activity-actions, nav[aria-label="Activities"], .pep-back, [data-pep-reset], .pep-noprint { display: none !important; }
+  [data-pep-activity], [data-pep-activity][hidden] { display: block !important; }
+  .pep-why[hidden], .pep-recap[hidden] { display: block !important; }
+  .is-enhanced .pep-static { display: block !important; }
+  .pep-objectives > div { display: block !important; }
+  .pep-topicbar, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional, .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; break-inside: avoid; }
+  .pep-code, .pep-figure, .pep-table-wrap { break-inside: avoid; }
+  .pep-optional > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker { display: none; }
+}
+</style>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-route-settled="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="10">
+<header class="pep-topicbar">
+<h1 id="page-title">The N+1 query problem: spotting it in SQL logs</h1>
+<div class="pep-topicbar__meta"><span class="pep-topicbar__progress" id="pep-position">4 activities · about 10 min</span><div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span><span></span></div><span class="pep-topicbar__progress pep-js-only" id="pep-progress">0 of 4 activities answered, 0 earned credit, 0 correct</span></div>
+<details class="pep-objectives" data-pep-objectives><summary aria-controls="pep-objectives-body">Objectives</summary><div id="pep-objectives-body"><ul><li>Recognize the N+1 pattern in a SQL log: one query for the parents followed by one query per parent for its children</li><li>Count the queries a listing endpoint issues for a given number of rows from the log or Hibernate statistics</li><li>Explain why N+1 stays hidden with small test data and grows with real data</li></ul></div></details>
+<button class="pep-btn pep-js-only" type="button" data-pep-reset>Restart activity</button>
+</header>
+<nav aria-label="Activities"><ol class="pep-steps"><li><a class="pep-step" href="#activity-1" data-pep-activity-link>Activity 1</a></li><li><a class="pep-step" href="#activity-2" data-pep-activity-link>Activity 2</a></li><li><a class="pep-step" href="#activity-3" data-pep-activity-link>Activity 3</a></li><li><a class="pep-step" href="#activity-4" data-pep-activity-link>Activity 4</a></li></ol></nav>
+<section id="activity-1" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<h2 id="activity-1-title" tabindex="-1">Activity 1: Predict first</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions><p>A listing endpoint loads 3 workshops, then reads each one's lazy sessions while mapping to DTOs:</p><pre class="pep-code"><code>for (Workshop w : workshopRepository.findAll()) {
+  dtos.add(new WorkshopDto(w.getTitle(), w.getSessions().size()));
+}</code></pre></div>
+
+
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-1" data-pep-task><h3>Your task</h3><p>Before any teaching, choose how many <code>select</code> statements you expect.</p></div>
+<section data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><ul><li>You commit to one prediction before any teaching. Every option is explained afterwards.</li></ul></section>
+<fieldset class="pep-options" data-interaction="predict" data-static-alt="**Why each option is right or wrong**&#10;&#10;- **A. Correct answer:** Right. That is the N+1 pattern, with N equal to 3.&#10;- **B. Not this one:** That needs an explicit fetch. Each lazy collection loads on its own.&#10;- **C. Not this one:** A join happens only if you ask for one.&#10;- **D. Not this one:** You also need the first query that returned the three workshops."><legend>How many selects run?</legend><label class="pep-option" id="a1-opt-a"><input type="radio" name="a1-choice" id="a1-a" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">4: one for the workshops, plus one per workshop for its sessions.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a1-opt-b"><input type="radio" name="a1-choice" id="a1-b" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">2: one for workshops and one for all sessions.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a1-opt-c"><input type="radio" name="a1-choice" id="a1-c" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">1: one join that loads everything.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a1-opt-d"><input type="radio" name="a1-choice" id="a1-d" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">3: one per workshop.<span class="pep-option__state"></span></span></label></fieldset><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="a1-check" data-pep-submit data-pep-lockable>Check answer</button></div><div class="pep-feedback" id="a1-feedback" data-pep-feedback aria-live="polite"></div><div class="pep-why" id="a1-why" data-static-alt><h3>Why each option is right or wrong</h3><ul><li><strong>A. Correct answer:</strong> Right. That is the N+1 pattern, with N equal to 3.</li><li><strong>B. Not this one:</strong> That needs an explicit fetch. Each lazy collection loads on its own.</li><li><strong>C. Not this one:</strong> A join happens only if you ask for one.</li><li><strong>D. Not this one:</strong> You also need the first query that returned the three workshops.</li></ul></div>
+</div>
+</div>
+
+
+</section>
+<section id="activity-2" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<h2 id="activity-2-title" tabindex="-1">Activity 2: Spot the pattern</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions><p><strong>N+1</strong> means 1 query for the parents, followed by N queries for children, one per parent. The log shows a repeating statement with a different bound value each time.</p><pre class="pep-code"><code>select w1_0.id,w1_0.title from workshops w1_0
+select s1_0.workshop_id,s1_0.id from sessions s1_0 where s1_0.workshop_id=?
+select s1_0.workshop_id,s1_0.id from sessions s1_0 where s1_0.workshop_id=?
+select s1_0.workshop_id,s1_0.id from sessions s1_0 where s1_0.workshop_id=?</code></pre><p>The statement is identical each time. Only the bound value changes.</p></div>
+
+
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-2" data-pep-task data-pep-may-stall><h3>Your task</h3><p>Read the log below from one <code>GET /workshops</code> call. Tick every line that belongs to the repeating N part of the pattern, not the first query, then press Check marks.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> Compare the lines for one that repeats.</p><p data-pep-hint-step><strong>Next step:</strong> The first query returned the parents. Which statement repeats once per parent?</p></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><ul><li>Each per-parent select is marked.</li><li>The parent query and the unrelated update are not marked.</li></ul></section>
+<fieldset class="pep-options pep-log" data-interaction="mcq" data-static-alt="**What each line shows**&#10;&#10;- **Line 1 (leave):** This is the 1 in N+1: it returns the parents.&#10;- **Line 2 (mark):** This loads sessions for workshop 1.&#10;- **Line 3 (mark):** The same statement, for workshop 2.&#10;- **Line 4 (mark):** The same statement, for workshop 3.&#10;- **Line 5 (leave):** This is an unrelated write, not part of the listing pattern."><legend>Lines that are the repeated N part</legend><label class="pep-option pep-logline"><input type="checkbox" id="a2-l0"><span class="pep-option__key" aria-hidden="true">1</span><span class="pep-option__text">select w1_0.id,w1_0.title from workshops w1_0</span></label><label class="pep-option pep-logline"><input type="checkbox" id="a2-l1"><span class="pep-option__key" aria-hidden="true">2</span><span class="pep-option__text">select s1_0.workshop_id,s1_0.id from sessions s1_0 where s1_0.workshop_id=? [1]</span></label><label class="pep-option pep-logline"><input type="checkbox" id="a2-l2"><span class="pep-option__key" aria-hidden="true">3</span><span class="pep-option__text">select s1_0.workshop_id,s1_0.id from sessions s1_0 where s1_0.workshop_id=? [2]</span></label><label class="pep-option pep-logline"><input type="checkbox" id="a2-l3"><span class="pep-option__key" aria-hidden="true">4</span><span class="pep-option__text">select s1_0.workshop_id,s1_0.id from sessions s1_0 where s1_0.workshop_id=? [3]</span></label><label class="pep-option pep-logline"><input type="checkbox" id="a2-l4"><span class="pep-option__key" aria-hidden="true">5</span><span class="pep-option__text">update audit set last_read=? where id=?</span></label></fieldset><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="a2-check" data-pep-submit data-pep-lockable>Check marks</button></div><div class="pep-feedback" id="a2-feedback" data-pep-feedback aria-live="polite"></div><div class="pep-why" id="a2-why" data-static-alt><h3>What each line shows</h3><ul><li><strong>Line 1 (leave):</strong> This is the 1 in N+1: it returns the parents.</li><li><strong>Line 2 (mark):</strong> This loads sessions for workshop 1.</li><li><strong>Line 3 (mark):</strong> The same statement, for workshop 2.</li><li><strong>Line 4 (mark):</strong> The same statement, for workshop 3.</li><li><strong>Line 5 (leave):</strong> This is an unrelated write, not part of the listing pattern.</li></ul></div>
+</div>
+</div>
+
+<p><a class="pep-back" href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</section>
+<section id="activity-3" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<h2 id="activity-3-title" tabindex="-1">Activity 3: Why small data hides it</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions><p>With 3 rows, N+1 costs four quick queries, and tests pass. With 1,000 rows, it costs 1,001 round trips per request, so the time grows with the data.</p><p>Count queries rather than guess: read the SQL log, or turn on Hibernate statistics:</p><pre class="pep-code"><code>spring.jpa.properties.hibernate.generate_statistics=true</code></pre><p>Statistics report <code>JDBC statements</code> per session, which makes a clear before-and-after number.</p></div>
+<section data-pep-where-fits aria-labelledby="where-fits-3"><h2 id="where-fits-3">Where this fits</h2><p data-pep-fit-decision><strong>Decision:</strong> When is N+1 worth fixing?</p><p data-pep-fit-good><strong>Good fit:</strong> Listing endpoints whose row count grows with real data; each query adds latency to every request.</p><p data-pep-fit-boundary><strong>Choose something else when:</strong> A fixed, tiny list read rarely; a simple fix is still fine, but it is not urgent.</p></section>
+
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-3" data-pep-task data-pep-may-stall><h3>Your task</h3><p>Use the controls to change the number of parent rows. Find a row count where the endpoint issues more than 500 queries, then press Check this setting.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 3</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> Change the Rows control and read the total.</p><p data-pep-hint-step><strong>Next step:</strong> The total is always one more than the number of parents.</p></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><ul><li>The model reports more than 500 queries.</li><li>You read how the total relates to the number of rows.</li></ul></section>
+<div class="pep-rows" data-interaction="explore" data-static-alt="**Printed alternative:** 3 rows: 4 queries. 50 rows: 51 queries. 1,000 rows: 1,001 queries. 5,000 rows: 5,001 queries."><fieldset class="pep-group"><legend>Parent rows</legend><div class="pep-chips"><label class="pep-option pep-chip"><input type="radio" name="a3-rows" id="a3-rows-0" value="3" checked><span class="pep-option__text">3</span></label><label class="pep-option pep-chip"><input type="radio" name="a3-rows" id="a3-rows-1" value="50"><span class="pep-option__text">50</span></label><label class="pep-option pep-chip"><input type="radio" name="a3-rows" id="a3-rows-2" value="1000"><span class="pep-option__text">1000</span></label><label class="pep-option pep-chip"><input type="radio" name="a3-rows" id="a3-rows-3" value="5000"><span class="pep-option__text">5000</span></label></div></fieldset></div><div class="pep-model" id="a3-model" aria-live="polite" tabindex="0" role="status" aria-label="Simulated model output"></div><div class="pep-static" data-static-alt data-section-skip><p><strong>Printed alternative:</strong> 3 rows: 4 queries. 50 rows: 51 queries. 1,000 rows: 1,001 queries. 5,000 rows: 5,001 queries.</p></div><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="a3-check" data-pep-submit data-pep-lockable>Check this setting</button></div><div class="pep-feedback" id="a3-feedback" data-pep-feedback aria-live="polite"></div><div class="pep-why" id="a3-why"><h3>Worked explanation</h3><p>The formula is rows plus one. A 1,000-row listing makes 1,001 round trips, while the query shape in code has not changed at all.</p></div>
+</div>
+</div>
+
+<p><a class="pep-back" href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</section>
+<section id="activity-4" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-4-title">
+<h2 id="activity-4-title" tabindex="-1">Activity 4: Apply it</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions><p>An integration test with 2 rows shows 3 queries and passes in 40 ms. In staging, with 8,000 rows, the same endpoint times out.</p></div>
+
+
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-4" data-pep-task><h3>Your task</h3><p>Rate your confidence, then choose the most likely explanation.</p></div>
+<section data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><ul><li>You rate your confidence, then choose the option that fits the situation.</li></ul></section>
+<fieldset class="pep-options" data-interaction="mcq" data-static-alt="**Why each option is right or wrong**&#10;&#10;- **A. Correct answer:** Right. The count formula matches the symptom. Confirm by counting statements on the slow endpoint.&#10;- **B. Not this one:** A network issue would not explain the query growth with row count.&#10;- **C. Not this one:** Threads do not change how many queries a request runs.&#10;- **D. Not this one:** It grows too, but the repeated database round trips are the first thing to check." data-confidence><legend>What does this point to?</legend><label class="pep-option" id="a4-opt-a"><input type="radio" name="a4-choice" id="a4-a" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">An N+1 pattern that small data hid, since 2 rows gives 3 queries and 8,000 rows gives 8,001.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a4-opt-b"><input type="radio" name="a4-choice" id="a4-b" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">The staging network is always slow.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a4-opt-c"><input type="radio" name="a4-choice" id="a4-c" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Tests should have used more threads.<span class="pep-option__state"></span></span></label><label class="pep-option" id="a4-opt-d"><input type="radio" name="a4-choice" id="a4-d" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">JSON writing is the only cost that grows.<span class="pep-option__state"></span></span></label></fieldset><fieldset class="pep-confidence"><legend>How sure are you?</legend><label class="pep-option"><input type="radio" name="a4-conf" id="a4-conf-0" value="guessing"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="a4-conf" id="a4-conf-1" value="fairly sure"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="a4-conf" id="a4-conf-2" value="certain"><span class="pep-option__text">Certain</span></label></fieldset><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="a4-check" data-pep-submit data-pep-lockable>Check answer</button></div><div class="pep-feedback" id="a4-feedback" data-pep-feedback aria-live="polite"></div><div class="pep-why" id="a4-why" data-static-alt><h3>Why each option is right or wrong</h3><ul><li><strong>A. Correct answer:</strong> Right. The count formula matches the symptom. Confirm by counting statements on the slow endpoint.</li><li><strong>B. Not this one:</strong> A network issue would not explain the query growth with row count.</li><li><strong>C. Not this one:</strong> Threads do not change how many queries a request runs.</li><li><strong>D. Not this one:</strong> It grows too, but the repeated database round trips are the first thing to check.</li></ul></div>
+</div>
+</div>
+
+<p><a class="pep-back" href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+</section>
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation"><button class="pep-btn" type="button" data-pep-previous>Previous activity</button><button class="pep-btn pep-btn--primary" type="button" data-pep-next>Next activity</button></div>
+<section class="pep-recap" id="pep-recap" data-pep-recap aria-labelledby="recap-title"><h2 id="recap-title">Recap</h2><p id="pep-recap-score" class="pep-js-only"></p><ul><li>N+1 is one parent query followed by one child query per parent.</li><li>Identical statements with changing bound values are the signature in the log.</li><li>Small test data hides it, so count queries.</li></ul>
+<section class="pep-cheat" data-section-skip aria-labelledby="cheat-title"><h3 id="cheat-title">Cheat sheet (optional)</h3><ul><li>Statistics: <code>spring.jpa.properties.hibernate.generate_statistics=true</code>.</li><li>Total queries equal parents plus one.</li></ul></section>
+</section>
+<details class="pep-sources" data-pep-sources data-section-skip><summary>Sources and review date</summary><div><p><strong>Status:</strong> minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.</p><ul><li><a href="https://docs.spring.io/spring-boot/reference/features/logging.html" rel="noopener">https://docs.spring.io/spring-boot/reference/features/logging.html</a></li><li><a href="https://docs.hibernate.org/orm/7.4/introduction/html_single/" rel="noopener">https://docs.hibernate.org/orm/7.4/introduction/html_single/</a></li><li><a href="https://docs.hibernate.org/orm/7.4/userguide/html_single/" rel="noopener">https://docs.hibernate.org/orm/7.4/userguide/html_single/</a></li></ul></div></details>
+</main>
+<script>
+var PEP_CONFIG = {"activities":[{"type":"choice","predict":true,"correct":"a","confidence":false,"why":{"a":"Right. That is the N+1 pattern, with N equal to 3.","b":"That needs an explicit fetch. Each lazy collection loads on its own.","c":"A join happens only if you ask for one.","d":"You also need the first query that returned the three workshops."}},{"type":"mark","success":"You can see one parent query followed by repeated child queries.","lines":[{"id":"l0","mark":false},{"id":"l1","mark":true},{"id":"l2","mark":true},{"id":"l3","mark":true},{"id":"l4","mark":false}]},{"type":"explore","nudge":"Check the total against the target. It equals the rows plus one.","settled":"Any row count above 500 shows the problem: total queries equal rows plus one.","success":"The query count grows with the data, which is why small test data hides it.","controls":[{"id":"rows","kind":"select"}],"model":(s) => { const n = Number(s.rows); return '<pre>Rows: ' + n + '\nQueries: 1 parent + ' + n + ' child = ' + (n + 1) + '\nAt 2 ms each: ' + ((n + 1) * 2) + ' ms in the database alone<\/pre>'; },"goal":(s) => Number(s.rows) + 1 > 500},{"type":"choice","predict":false,"correct":"a","confidence":true,"why":{"a":"Right. The count formula matches the symptom. Confirm by counting statements on the slow endpoint.","b":"A network issue would not explain the query growth with row count.","c":"Threads do not change how many queries a request runs.","d":"It grows too, but the repeated database round trips are the first thing to check."}}]};
+(() => {
+  'use strict';
+  var root = document.documentElement;
+  root.classList.add('is-enhanced');
+  var cfg = PEP_CONFIG;
+  var lesson = document.getElementById('lesson');
+  var sections = Array.prototype.slice.call(document.querySelectorAll('[data-pep-activity]'));
+  var links = Array.prototype.slice.call(document.querySelectorAll('[data-pep-activity-link]'));
+  var previous = document.querySelector('[data-pep-previous]');
+  var next = document.querySelector('[data-pep-next]');
+  var position = document.getElementById('pep-position');
+  var progress = document.getElementById('pep-progress');
+  var segments = Array.prototype.slice.call(document.querySelectorAll('.pep-progress > span'));
+  var recap = document.getElementById('pep-recap');
+  var total = sections.length;
+  var minutes = lesson.getAttribute('data-pep-required-minutes');
+  var current = 1;
+  var unlocked = 1;
+  var everComplete = false;
+  var everSettled = false;
+  var lastFocused = null;
+  var state = cfg.activities.map(function () { return fresh(); });
+  function fresh() { return { attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false }; }
+  function el(id) { return document.getElementById(id); }
+  function esc(text) { return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function controlsOf(n) { return Array.prototype.slice.call(sections[n - 1].querySelectorAll('[data-pep-workspace] input, [data-pep-workspace] select, [data-pep-workspace] textarea')); }
+  var initial = sections.map(function (_, i) {
+    return controlsOf(i + 1).map(function (c) { return { c: c, value: c.value, checked: c.checked, index: c.selectedIndex }; });
+  });
+  document.addEventListener('focusin', function (e) { lastFocused = e.target; });
+
+  function reflect(n) {
+    var s = state[n - 1], sec = sections[n - 1];
+    sec.setAttribute('data-pep-attempts', String(s.attempts));
+    sec.setAttribute('data-pep-settled', String(s.settled));
+    sec.setAttribute('data-pep-completed', String(s.completed));
+    sec.setAttribute('data-pep-credit', String(s.credit));
+    sec.setAttribute('data-pep-grade', String(s.grade));
+    sec.setAttribute('data-pep-continue', String(s.canContinue));
+  }
+  function summarize() {
+    var answered = state.filter(function (s) { return s.settled; }).length;
+    var credited = state.filter(function (s) { return s.credit > 0; }).length;
+    var right = state.filter(function (s) { return s.grade > 0; }).length;
+    progress.textContent = answered + ' of ' + total + ' activities answered, ' + credited + ' earned credit, ' + right + ' correct';
+    segments.forEach(function (seg, i) {
+      seg.classList.toggle('is-done', state[i].completed);
+      seg.classList.toggle('is-settled', state[i].settled && !state[i].completed);
+      seg.classList.toggle('is-current', i + 1 === current);
+    });
+    if (answered === total) everSettled = true;
+    if (credited === total) everComplete = true;
+    lesson.setAttribute('data-pep-complete', String(everComplete));
+    lesson.setAttribute('data-pep-route-settled', String(everSettled));
+    if (recap) recap.hidden = !everSettled;
+    var score = el('pep-recap-score');
+    if (score) score.textContent = credited === total
+      ? 'Topic complete: all ' + total + ' activities earned credit, and ' + right + ' were correct.'
+      : 'Every activity is answered, but this topic is not complete: ' + credited + ' of ' + total + ' activities earned credit. An activity that settles without passing earns no credit. Use Restart activity on it to try again.';
+  }
+  function render(number, mode, focus) {
+    if (typeof number !== 'number' || number !== number || number < 1 || number > total || number > unlocked) return false;
+    current = number;
+    lesson.setAttribute('data-pep-current-activity', String(current));
+    lesson.setAttribute('data-pep-unlocked-through', String(unlocked));
+    sections.forEach(function (sec, i) { sec.hidden = i + 1 !== current; });
+    links.forEach(function (link, i) {
+      var n = i + 1;
+      if (n === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+      if (n > unlocked) link.setAttribute('aria-disabled', 'true'); else link.removeAttribute('aria-disabled');
+    });
+    previous.disabled = current === 1;
+    next.disabled = current === total || (current >= unlocked && !state[current - 1].canContinue);
+    position.textContent = 'Activity ' + current + ' of ' + total + ' · about ' + minutes + ' min';
+    summarize();
+    try {
+      if (mode === 'push') history.pushState({ activity: current }, '', '#activity-' + current);
+      if (mode === 'replace') history.replaceState({ activity: current }, '', '#activity-' + current);
+    } catch (err) {
+      if (mode && location.hash !== '#activity-' + current) location.hash = 'activity-' + current;
+    }
+    if (focus) { var h = el('activity-' + current + '-title'); if (h) h.focus(); }
+    return true;
+  }
+  function hashNumber(hash) { var m = /^#activity-(\d+)$/.exec(hash || ''); return m ? Number(m[1]) : 1; }
+  function setFeedback(n, kind, html) {
+    var fb = el('a' + n + '-feedback');
+    fb.className = 'pep-feedback' + (kind ? ' pep-callout pep-callout--' + kind : '');
+    fb.innerHTML = html;
+  }
+  function lock(n) {
+    controlsOf(n).forEach(function (c) { c.disabled = true; });
+    Array.prototype.forEach.call(sections[n - 1].querySelectorAll('[data-pep-workspace] button[data-pep-lockable]'), function (b) { b.disabled = true; });
+  }
+  function unlockControls(n) {
+    controlsOf(n).forEach(function (c) { c.disabled = false; });
+    Array.prototype.forEach.call(sections[n - 1].querySelectorAll('[data-pep-workspace] button[data-pep-lockable]'), function (b) { b.disabled = false; });
+  }
+  function settle(n, grade, kind, html, a) {
+    var s = state[n - 1];
+    // Only passing evidence completes an activity and earns credit. A missed prediction is still a made prediction.
+    var earned = grade > 0 || !!a.predict;
+    s.settled = true; s.canContinue = true; s.grade = grade; s.completed = earned; s.credit = earned ? 1 : 0;
+    lock(n);
+    reflect(n);
+    setFeedback(n, kind, html);
+    reveal(n, a);
+    unlocked = Math.max(unlocked, Math.min(n + 1, total));
+    render(current);
+  }
+  function reveal(n, a) {
+    var why = el('a' + n + '-why');
+    if (why) why.hidden = false;
+    if (a.type === 'choice') {
+      Array.prototype.forEach.call(document.querySelectorAll('input[name="a' + n + '-choice"]'), function (input) {
+        var label = input.closest('.pep-option');
+        var tag = label.querySelector('.pep-option__state');
+        if (input.value === a.correct) { label.classList.add('is-correct'); tag.textContent = 'Correct answer'; }
+        else if (input.checked) { label.classList.add('is-wrong'); tag.textContent = 'Your answer'; }
+      });
+    }
+  }
+  function attempt(n, a, result) {
+    var s = state[n - 1];
+    if (result.status === 'incomplete') { setFeedback(n, 'warning', '<strong>Not checked yet.</strong> ' + result.msg); return; }
+    s.attempts += 1;
+    if (result.status === 'right') { settle(n, 1, 'success', '<strong>Correct.</strong> ' + result.msg, a); return; }
+    if (s.attempts >= 2) { settle(n, 0, 'danger', '<strong>Answered and settled, not correct.</strong> ' + result.settled + (a.predict ? ' Your prediction is recorded.' : ' No credit earned. You can continue, or use Restart activity to try again.'), a); return; }
+    reflect(n);
+    setFeedback(n, 'danger', '<strong>Try again.</strong> ' + result.msg + ' You have one more attempt.');
+  }
+  var check = {
+    setup: function (n, a) {
+      var v = readSetup(n, a);
+      if (a.fields.some(function (f) { return f.kind !== 'checks' && !v[f.id]; })) return { status: 'incomplete', msg: a.label + ': fill in every setting first.' };
+      if (setupMade[n] !== JSON.stringify(v)) return { status: 'incomplete', msg: a.label + ': press ' + a.button + ' to see the project these settings produce.' };
+      var wrong = a.fields.filter(function (f) { return v[f.id] !== f.expect; });
+      if (!wrong.length) return { status: 'right', msg: a.success };
+      var said = a.label + ': ' + wrong.map(function (f) { return f.bad; }).join(' ');
+      return { status: 'wrong', msg: said, settled: said + ' ' + a.settled };
+    },
+    swagger: function (n, a) {
+      var dep = swaggerDep(n), s = swag[n] || freshSwagger();
+      if (!dep) return { status: 'incomplete', msg: a.chooseFirst };
+      if (dep !== a.correct) return { status: 'wrong', msg: a.wrongDep, settled: a.wrongDep + ' ' + a.settled };
+      if (!s.opened) return { status: 'incomplete', msg: a.openFirst };
+      if (!s.missing) return { status: 'incomplete', msg: a.executeFirst };
+      return { status: 'right', msg: a.success };
+    },
+    choice: function (n, a) {
+      var chosen = document.querySelector('input[name="a' + n + '-choice"]:checked');
+      if (!chosen) return { status: 'incomplete', msg: 'Choose one option first.' };
+      if (a.confidence && !document.querySelector('input[name="a' + n + '-conf"]:checked')) return { status: 'incomplete', msg: 'Rate how sure you are first, so the feedback can tell you whether your confidence matched.' };
+      var conf = document.querySelector('input[name="a' + n + '-conf"]:checked');
+      var note = conf ? ' You said: ' + conf.value + '.' : '';
+      var msg = a.why[chosen.value] + note;
+      if (chosen.value === a.correct) return { status: 'right', msg: msg };
+      return { status: 'wrong', msg: msg, settled: msg + ' The correct answer and every explanation are below.' };
+    },
+    classify: function (n, a) {
+      var picks = a.items.map(function (it) { var c = document.querySelector('input[name="a' + n + '-' + it.id + '"]:checked'); return c ? c.value : ''; });
+      if (picks.some(function (p) { return !p; })) return { status: 'incomplete', msg: (a.label ? a.label + ': c' : 'C') + 'hoose a value in every row first.' };
+      var wrong = a.items.filter(function (it, i) { return picks[i] !== it.answer; });
+      var pre = a.label ? a.label + ': ' : '';
+      if (!wrong.length) return { status: 'right', msg: a.success };
+      return { status: 'wrong', msg: pre + wrong.length + ' of ' + a.items.length + ' rows need another look.', settled: pre + wrong.length + ' of ' + a.items.length + ' rows were not right. The answer for each row is below.' };
+    },
+    mark: function (n, a) {
+      var picked = a.lines.filter(function (l) { return el('a' + n + '-' + l.id).checked; });
+      if (!picked.length) return { status: 'incomplete', msg: 'Tick at least one line first.' };
+      var wrong = a.lines.filter(function (l) { return el('a' + n + '-' + l.id).checked !== !!l.mark; });
+      if (!wrong.length) return { status: 'right', msg: a.success };
+      return { status: 'wrong', msg: wrong.length + ' line' + (wrong.length > 1 ? 's are' : ' is') + ' marked differently from what the task asks.', settled: 'The marked lines were not the set the task asks for. Each line is explained below.' };
+    },
+    explore: function (n, a) {
+      var s = readExplore(n, a);
+      if (a.goal(s)) return { status: 'right', msg: a.success };
+      return { status: 'wrong', msg: a.nudge, settled: a.settled };
+    },
+    terminal: function (n, a) {
+      var flags = termFlags[n] || {};
+      if (!Object.keys(termRan[n] || {}).length) return { status: 'incomplete', msg: 'Run at least one command first.' };
+      var missing = a.need.filter(function (f) { return !flags[f.flag]; });
+      if (!missing.length) return { status: 'right', msg: a.success };
+      return { status: 'wrong', msg: missing[0].nudge, settled: a.settled };
+    },
+    code: function (n, a) {
+      var text = el('a' + n + '-code').value;
+      var clean = normalize(text);
+      if (clean === normalize(a.starter)) { problems(n, a, [{ kind: 'hint', msg: 'No change yet: edit the code before you press Run. Comments do not count.' }], []); return { status: 'incomplete', msg: 'Edit the code first; comments do not count.' }; }
+      var limit = (a.limits || []).filter(function (r) { return new RegExp(r.re, a.flags).test(clean); });
+      // Java text inside a string is not code, so requirements without a quote are read with string contents removed.
+      var codeOnly = a.java ? clean.replace(/"(?:[^"\\\n]|\\.)*"/g, '""') : clean;
+      if (a.java && /"""/.test(clean)) limit = limit.concat([{ msg: 'text blocks.' }]);
+      if (a.java && !balanced(codeOnly)) limit = limit.concat([{ msg: 'code whose braces or parentheses do not balance.' }]);
+      if (limit.length) { problems(n, a, limit.map(function (r) { return { kind: 'limit', msg: 'Not supported in this practice editor: ' + r.msg }; }), []); return { status: 'incomplete', msg: 'Remove what the practice editor does not support, then Run again.' }; }
+      var results = a.rules.map(function (r) {
+        var hit = new RegExp(r.re, a.flags).test(r.no || r.str || r.re.indexOf('"') >= 0 ? clean : codeOnly);
+        return { ok: r.no ? !hit : hit, rule: r };
+      });
+      var bad = results.filter(function (r) { return !r.ok; });
+      problems(n, a, bad.map(function (r) { return { kind: 'error', msg: r.rule.bad }; }), results);
+      if (!bad.length) return { status: 'right', msg: a.success };
+      return { status: 'wrong', msg: 'The Problems tab lists ' + bad.length + ' requirement' + (bad.length > 1 ? 's' : '') + ' still to meet.', settled: 'These requirements were not met: ' + bad.map(function (r) { return r.rule.bad; }).join(' ') + ' Compare your code with the task and the teaching on this activity.' };
+    }
+  };
+  function balanced(code) {
+    var stack = [], pairs = { ')': '(', '}': '{' };
+    for (var i = 0; i < code.length; i += 1) {
+      var c = code[i];
+      if (c === '(' || c === '{') stack.push(c);
+      else if (c === ')' || c === '}') { if (stack.pop() !== pairs[c]) return false; }
+    }
+    return stack.length === 0;
+  }
+  function normalize(code) {
+    return code.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:"])\/\/[^\n]*/g, '$1 ').replace(/^\s*#[^\n]*$/gm, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function problems(n, a, list, results) {
+    var p = el('a' + n + '-problems'), o = el('a' + n + '-output'), st = el('a' + n + '-status');
+    if (!list.length) { p.innerHTML = '<p>No problems found.</p>'; }
+    else {
+      p.innerHTML = list.map(function (x) {
+        var word = x.kind === 'error' ? 'Requirement' : x.kind === 'limit' ? 'Limit' : 'Note';
+        return '<p class="pep-editor__problem"><span class="kind-' + x.kind + '">' + word + ':</span> ' + x.msg + '</p>';
+      }).join('');
+    }
+    if (results.length) {
+      o.innerHTML = results.map(function (r) { return '<p>' + (r.ok ? 'Pass: ' : 'Not yet: ') + esc(r.rule.ok) + '</p>'; }).join('') +
+        (list.length ? '' : '<pre class="pep-code">' + esc(a.output || '') + '</pre>');
+    }
+    st.textContent = list.length ? 'Run finished: ' + list.length + ' item' + (list.length > 1 ? 's' : '') + ' to fix. See Problems.' : 'Run finished: every requirement met. See Output.';
+    selectTab(n, list.length ? 'problems' : 'output');
+  }
+  function selectTab(n, which) {
+    ['problems', 'output'].forEach(function (name) {
+      var tab = el('a' + n + '-tab-' + name), panel = el('a' + n + '-' + name), on = name === which;
+      tab.setAttribute('aria-selected', String(on));
+      tab.tabIndex = on ? 0 : -1;
+      panel.hidden = !on;
+    });
+  }
+  function readExplore(n, a) {
+    var s = {};
+    a.controls.forEach(function (c) {
+      if (c.kind === 'toggle') { s[c.id] = el('a' + n + '-' + c.id).checked; return; }
+      var picked = document.querySelector('input[name="a' + n + '-' + c.id + '"]:checked');
+      s[c.id] = picked ? picked.value : '';
+    });
+    return s;
+  }
+  function paintExplore(n, a) { el('a' + n + '-model').innerHTML = a.model(readExplore(n, a)); }
+  // An activity may carry required parts. Every part is checked with the main control and all must pass.
+  function withParts(n, a) {
+    var main = check[a.type](n, a);
+    if (!a.parts) return main;
+    var all = [];
+    a.parts.forEach(function (p) { if (!p.after) all.push(check[p.type](n, p)); });
+    all.push(main);
+    a.parts.forEach(function (p) { if (p.after) all.push(check[p.type](n, p)); });
+    var waiting = all.filter(function (r) { return r.status === 'incomplete'; })[0];
+    if (waiting) return waiting;
+    var wrong = all.filter(function (r) { return r.status !== 'right'; });
+    if (!wrong.length) return { status: 'right', msg: all.map(function (r) { return r.msg; }).join(' ') };
+    return { status: 'wrong', msg: wrong.map(function (r) { return r.msg; }).join(' '), settled: wrong.map(function (r) { return r.settled; }).join(' ') };
+  }
+  function partsOf(a) { return [a].concat(a.parts || []); }
+  function readSetup(n, a) {
+    var v = {};
+    a.fields.forEach(function (f) {
+      if (f.kind === 'text') { v[f.id] = el('a' + n + '-' + f.id).value.trim(); return; }
+      var boxes = Array.prototype.slice.call(document.querySelectorAll('input[name="a' + n + '-' + f.id + '"]'));
+      if (f.kind === 'checks') { v[f.id] = boxes.filter(function (c) { return c.checked; }).map(function (c) { return c.value; }).sort().join(','); return; }
+      var picked = boxes.filter(function (c) { return c.checked; })[0];
+      v[f.id] = picked ? picked.value : '';
+    });
+    return v;
+  }
+  var setupMade = {};
+  function fillTemplate(line, v, a) {
+    return line.replace(/\{(\w+)\}/g, function (_, key) {
+      if (key === 'groupPath') return (v.group || '...').replace(/\./g, '/');
+      var map = a.preview.values[key];
+      var raw = v[key] || '';
+      return map ? (map[raw] || '...') : (raw || '...');
+    });
+  }
+  function paintSetup(n, a) {
+    var v = readSetup(n, a);
+    setupMade[n] = JSON.stringify(v);
+    var lines = a.preview.lines.map(function (line) { return fillTemplate(line, v, a); });
+    var deps = v.deps ? v.deps.split(',') : [];
+    if (!deps.length) lines.push(a.preview.noDeps);
+    deps.forEach(function (d) { lines.push(fillTemplate(a.preview.depLine, { dep: a.preview.deps[d] || d }, { preview: { values: {} } })); });
+    el('a' + n + '-preview').innerHTML = '<pre class="pep-code">' + esc(lines.join('\n')) + '</pre>';
+  }
+  function staleSetup(n, a) {
+    setupMade[n] = null;
+    el('a' + n + '-preview').innerHTML = '<p>' + a.preview.stale + '</p>';
+  }
+  var swag = {};
+  function freshSwagger() { return { opened: false, tried: false, found: false, missing: false }; }
+  function swaggerDep(n) { var d = document.querySelector('input[name="a' + n + '-dep"]:checked'); return d ? d.value : ''; }
+  function closeSwagger(n, a, html) {
+    swag[n] = freshSwagger();
+    el('a' + n + '-ui').hidden = true;
+    el('a' + n + '-id').disabled = true;
+    el('a' + n + '-exec').disabled = true;
+    el('a' + n + '-result').innerHTML = '';
+    el('a' + n + '-open-out').innerHTML = html;
+  }
+  function openSwagger(n, a) {
+    var dep = swaggerDep(n);
+    if (!dep) { closeSwagger(n, a, '<p>' + a.chooseFirst + '</p>'); return; }
+    if (dep !== a.correct) { closeSwagger(n, a, '<pre class="pep-code">' + esc(a.outcomes[dep]) + '</pre>'); return; }
+    swag[n] = freshSwagger();
+    swag[n].opened = true;
+    el('a' + n + '-open-out').innerHTML = '<pre class="pep-code">' + esc(a.started) + '</pre>';
+    el('a' + n + '-ui').hidden = false;
+  }
+  function tryOut(n) {
+    if (!swag[n] || !swag[n].opened) return;
+    swag[n].tried = true;
+    el('a' + n + '-id').disabled = false;
+    el('a' + n + '-exec').disabled = false;
+    el('a' + n + '-id').focus();
+  }
+  function execute(n, a) {
+    var s = swag[n];
+    if (!s || !s.tried) return;
+    var id = el('a' + n + '-id').value.trim();
+    if (!/^\d+$/.test(id)) { el('a' + n + '-result').innerHTML = '<p>' + a.badId + '</p>'; return; }
+    var known = a.ids.indexOf(id) >= 0;
+    if (known) s.found = true; else s.missing = true;
+    var r = known ? a.found : a.missing;
+    el('a' + n + '-result').innerHTML = '<p><strong>Request URL:</strong> <code>' + esc(a.url.split('{id}').join(id)) + '</code></p><p><strong>Server response, code ' + r.code + '</strong></p><pre class="pep-code">' + esc(r.body.split('{id}').join(id)) + '</pre>';
+  }
+  var termFlags = {}, termRan = {};
+  function runCommand(n, a) {
+    var input = el('a' + n + '-cmd'), log = el('a' + n + '-log'), line = input.value.trim();
+    if (!line || input.disabled) return;
+    var entry = '<p class="pep-terminal__c"><span class="prompt">$</span> ' + esc(line) + '</p>';
+    var hit = null;
+    for (var i = 0; i < a.commands.length; i += 1) { if (new RegExp(a.commands[i].re).test(line)) { hit = a.commands[i]; break; } }
+    if (hit) {
+      (termRan[n] = termRan[n] || {})[line] = true;
+      if (hit.flag) { (termFlags[n] = termFlags[n] || {})[hit.flag] = true; }
+      entry += '<pre class="pep-terminal__o">' + esc(hit.out) + '</pre>';
+    } else {
+      (termRan[n] = termRan[n] || {})[line] = true;
+      entry += '<p class="pep-terminal__w">Not available in this practice terminal. Supported here: ' + esc(a.supported) + '</p>';
+    }
+    log.insertAdjacentHTML('beforeend', entry);
+    log.scrollTop = log.scrollHeight;
+    input.value = '';
+  }
+  cfg.activities.forEach(function (a, i) {
+    var n = i + 1;
+    var button = el('a' + n + '-check');
+    button.addEventListener('click', function () {
+      if (state[n - 1].settled) return;
+      attempt(n, a, withParts(n, a));
+    });
+    if (a.type === 'explore') {
+      a.controls.forEach(function (c) {
+        if (c.kind === 'toggle') el('a' + n + '-' + c.id).addEventListener('change', function () { paintExplore(n, a); });
+        else Array.prototype.forEach.call(document.querySelectorAll('input[name="a' + n + '-' + c.id + '"]'), function (r) { r.addEventListener('change', function () { paintExplore(n, a); }); });
+      });
+      paintExplore(n, a);
+    }
+    if (a.type === 'terminal') {
+      el('a' + n + '-cmd-run').addEventListener('click', function () { runCommand(n, a); el('a' + n + '-cmd').focus(); });
+      el('a' + n + '-cmd').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); runCommand(n, a); } });
+    }
+    if (a.type === 'code') {
+      el('a' + n + '-resetcode').addEventListener('click', function () { el('a' + n + '-code').value = a.starter; gutter(n); });
+      el('a' + n + '-code').addEventListener('input', function () { gutter(n); });
+      ['problems', 'output'].forEach(function (name, idx, names) {
+        var tab = el('a' + n + '-tab-' + name);
+        tab.addEventListener('click', function () { selectTab(n, name); });
+        tab.addEventListener('keydown', function (e) {
+          if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); var other = names[1 - idx]; selectTab(n, other); el('a' + n + '-tab-' + other).focus(); }
+        });
+      });
+      selectTab(n, 'problems');
+    }
+    partsOf(a).forEach(function (p) {
+      if (p.type === 'code' && p !== a) {
+        el('a' + n + '-resetcode').addEventListener('click', function () { el('a' + n + '-code').value = p.starter; gutter(n); });
+        el('a' + n + '-code').addEventListener('input', function () { gutter(n); });
+        ['problems', 'output'].forEach(function (name, idx, names) {
+          var tab = el('a' + n + '-tab-' + name);
+          tab.addEventListener('click', function () { selectTab(n, name); });
+          tab.addEventListener('keydown', function (e) {
+            if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); var other = names[1 - idx]; selectTab(n, other); el('a' + n + '-tab-' + other).focus(); }
+          });
+        });
+        selectTab(n, 'problems');
+      }
+      if (p.type === 'setup') {
+        el('a' + n + '-generate').addEventListener('click', function () { paintSetup(n, p); });
+        p.fields.forEach(function (f) {
+          var inputs = f.kind === 'text' ? [el('a' + n + '-' + f.id)] : Array.prototype.slice.call(document.querySelectorAll('input[name="a' + n + '-' + f.id + '"]'));
+          inputs.forEach(function (c) { c.addEventListener(f.kind === 'text' ? 'input' : 'change', function () { staleSetup(n, p); }); });
+        });
+        staleSetup(n, p);
+      }
+      if (p.type === 'swagger') {
+        el('a' + n + '-open').addEventListener('click', function () { openSwagger(n, p); });
+        el('a' + n + '-try').addEventListener('click', function () { tryOut(n); });
+        el('a' + n + '-exec').addEventListener('click', function () { execute(n, p); });
+        el('a' + n + '-id').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); execute(n, p); } });
+        Array.prototype.forEach.call(document.querySelectorAll('input[name="a' + n + '-dep"]'), function (r) { r.addEventListener('change', function () { closeSwagger(n, p, '<p>' + p.changed + '</p>'); }); });
+        closeSwagger(n, p, '<p>' + p.notOpen + '</p>');
+      }
+    });
+    var why = el('a' + n + '-why');
+    if (why) why.hidden = true;
+    reflect(n);
+  });
+  function gutter(n) {
+    var g = el('a' + n + '-gutter'), lines = el('a' + n + '-code').value.split('\n').length, out = [];
+    for (var i = 1; i <= lines; i += 1) out.push(i);
+    g.textContent = out.join('\n');
+  }
+  links.forEach(function (link, i) {
+    link.addEventListener('click', function (e) { e.preventDefault(); render(i + 1, 'push', true); });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-pep-back-link]'), function (link) {
+    link.addEventListener('click', function (e) { e.preventDefault(); render(hashNumber(link.hash), 'push', true); });
+  });
+  previous.addEventListener('click', function () { render(current - 1, 'push', true); });
+  next.addEventListener('click', function () { render(current + 1, 'push', true); });
+  function restoreFromHistory() {
+    var keep = lastFocused;
+    if (!render(hashNumber(location.hash), null, false)) render(Math.min(current, unlocked), 'replace', false);
+    if (keep && keep.isConnected && !keep.closest('[hidden]')) keep.focus({ preventScroll: true });
+  }
+  addEventListener('popstate', restoreFromHistory);
+  addEventListener('hashchange', restoreFromHistory);
+  document.querySelector('[data-pep-reset]').addEventListener('click', function () {
+    var n = current, a = cfg.activities[n - 1];
+    initial[n - 1].forEach(function (x) {
+      x.c.disabled = false;
+      if (x.c.type === 'checkbox' || x.c.type === 'radio') x.c.checked = x.checked;
+      else if (x.c.tagName === 'SELECT') x.c.selectedIndex = x.index;
+      else x.c.value = x.value;
+    });
+    unlockControls(n);
+    state[n - 1] = fresh();
+    setFeedback(n, '', '');
+    var why = el('a' + n + '-why');
+    if (why) why.hidden = true;
+    Array.prototype.forEach.call(sections[n - 1].querySelectorAll('.pep-option'), function (o) {
+      o.classList.remove('is-correct', 'is-wrong');
+      var tag = o.querySelector('.pep-option__state');
+      if (tag) tag.textContent = '';
+    });
+    if (a.type === 'explore') paintExplore(n, a);
+    if (a.type === 'terminal') { el('a' + n + '-log').innerHTML = ''; termFlags[n] = {}; termRan[n] = {}; }
+    partsOf(a).forEach(function (p) {
+      if (p.type === 'code' && p !== a) {
+        el('a' + n + '-problems').innerHTML = '<p>Press the activity check to see problems here.</p>';
+        el('a' + n + '-output').innerHTML = '<p>Press the activity check to see results here.</p>';
+        el('a' + n + '-status').textContent = 'Not checked yet.';
+        selectTab(n, 'problems');
+        gutter(n);
+      }
+      if (p.type === 'setup') staleSetup(n, p);
+      if (p.type === 'swagger') closeSwagger(n, p, '<p>' + p.notOpen + '</p>');
+    });
+    if (a.type === 'code') {
+      el('a' + n + '-problems').innerHTML = '<p>Press Run to see problems here.</p>';
+      el('a' + n + '-output').innerHTML = '<p>Press Run to see results here.</p>';
+      el('a' + n + '-status').textContent = 'Not run yet.';
+      selectTab(n, 'problems');
+      gutter(n);
+    }
+    reflect(n);
+    render(n);
+  });
+  var objectives = document.querySelector('[data-pep-objectives]');
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); }
+  });
+  document.addEventListener('click', function (e) {
+    if (objectives.open && !objectives.contains(e.target)) objectives.open = false;
+  });
+  var printStates = [];
+  addEventListener('beforeprint', function () {
+    printStates = Array.prototype.map.call(document.querySelectorAll('details'), function (d) { return { d: d, open: d.open }; });
+    printStates.forEach(function (x) { x.d.open = true; });
+  });
+  addEventListener('afterprint', function () {
+    printStates.forEach(function (x) { x.d.open = x.open; });
+    printStates = [];
+  });
+  var requested = hashNumber(location.hash);
+  render(requested <= unlocked ? requested : 1, 'replace', false);
+})();
+</script>
+</body>
+</html>
