@@ -1,11 +1,13 @@
 // Maintainer regression evidence, not part of the learner bundle. Static and browser-free:
 // run `node authoring/evidence/containers-cicd/containers-and-compose/page-regressions/check-pages.mjs` from the repository root.
-// For every topic page in this module it checks two corrected defects:
+// For every topic page in this module it checks three corrected defects:
 //  1. One-story ownership: each optional anecdote owns exactly one non-empty data-pep-anecdote-story and at most one
 //     data-pep-anecdote-map (25 words or fewer), the story holds no code markup, and no story or map hook exists
 //     anywhere else on the page.
 //  2. Phone link targets: every link outside a closed-by-default disclosure is a "Next topic" link, and the page CSS
 //     gives those links a box that can take a 44 px minimum height while never exceeding the column width.
+//  3. Print shows every activity: the print stylesheet un-hides every teaching, task and control step,
+//     renders each data-static-alt text, and lets the terminal log grow instead of clipping it.
 import { readdirSync, readFileSync, existsSync } from 'node:fs';
 import path from 'node:path';
 
@@ -44,6 +46,13 @@ for (const topic of readdirSync(moduleDir).sort()) {
     report(/display:\s*(inline-flex|inline-block|flex|block)\b/.test(rule) && minHeight >= 44 && /max-width:\s*100%/.test(rule), topic,
       `Next topic link CSS gives a sized box with min-height ${minHeight}px >= 44 and max-width 100%`);
   }
+
+  const print = [...html.matchAll(/@media print \{([\s\S]*?)\n\}/g)].map((m) => m[1]).join('\n');
+  const unhide = (print.match(/^\s*([^{\n]*)\{[^}]*display: block !important/m) || [])[1] || '';
+  report(['teaching', 'task', 'control'].every((r) => unhide.includes(`#current-${r} > [data-step][hidden]`)), topic,
+    'print un-hides every teaching, task and control step');
+  report(/\[data-static-alt\]::after \{[^}]*content: attr\(data-static-alt\)/.test(print), topic, 'print renders each static alternative');
+  report(/\.log \{[^}]*height: auto/.test(print), topic, 'print lets the terminal log grow');
 }
 console.log(failed ? `# ${failed} check(s) failed` : '# every page check passed');
 process.exitCode = failed ? 1 : 0;
