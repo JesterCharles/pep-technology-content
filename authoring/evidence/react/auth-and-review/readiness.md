@@ -2,6 +2,27 @@
 
 Status: **unreviewed first drafts, not delivery-ready.** This author-side record routes later review. It approves nothing, waives no gate, replaces no education or React-SME review, and marks nothing final, green, upload-safe, published or merged. No critic or reconciliation record exists for this module.
 
+## Minimum-release preparation (2026-11-08)
+
+This module is explicitly marked for the tonight minimum release. Each topic carries `owner-essential-qa.json`: `acceptanceProfile` minimum, `independentCriticApproval` not-required-not-performed, bound to the current `artifact.html` and `artifact.gift`. Independent critic approval was not required or performed. Each record lists its browser gates, replacement private proof and owner essential pass as **pending, not performed**. Main `e9a8aa28` was merged; no history was rewritten and `2221d3dc` and its receipts remain in history.
+
+**Native select practice was replaced, not emulated.** Every native `<select>` practice control became a radio group (`fieldset[data-pep-choice]`) with the same option values, labels, default selection and grading. A small in-page shim gives the group the same `value` and `selectedIndex` behavior the simulators already read, so simulator logic is unchanged apart from two `querySelectorAll('select')` calls. QA `select` actions became `check` actions on the matching radio. The estimator P50 and interaction units and the generated `artifact.md` are unchanged on every converted page. The keyboard-`select` limitation recorded below therefore no longer applies to these pages. Radio keyboard operation has not yet been run in a browser here or on Linux.
+
+**Every receipt in this module is stale and queued for replacement.** Main changed the bound `harness.mjs`, `T08-html-static.mjs` and `python-answer-scan.py`, so all receipts are stale in addition to any page or QA change. Until source-owned replacement proofs land, T06 fails on them. No browser run, private proof or owner essential pass was performed for this preparation checkpoint, because another task held the browser lane.
+
+| Topic | Change | Receipt | Next |
+| --- | --- | --- | --- |
+| login-with-a-session-cookie-or-jwt | 2 select controls to radio groups; 18 QA actions | stale: html, qa-paths, harness, python-scan, T08 | replacement private proof required |
+| protected-pages-and-role-based-screens | none | stale: harness, python-scan, T08 | replacement private proof required |
+| handling-401-and-403-redirect-and-sign-out | 2 select controls to radio groups; 18 QA actions | stale: html, qa-paths, harness, python-scan, T08 | replacement private proof required |
+| turning-off-the-dev-profile | none | stale: harness, python-scan, T08 | replacement private proof required |
+| javascript-fundamentals-review | 2 select controls to radio groups; 6 QA actions | stale: html, qa-paths, harness, python-scan, T08 | replacement private proof required |
+| react-review | 1 select control to radio groups; 36 QA actions | stale: html, qa-paths, harness, python-scan, T08 | replacement private proof required |
+
+Non-browser gates on these bytes: T01, T02, T05, T07, T14, T15, T16, T19 and T24 pass. Source receipts were re-fetched live and every source returned HTTP 200. T06 fails only on this module's stale receipt bindings listed above (26 errors). T25 on `main` does not yet support the minimum profile, so it still requires critic coverage.
+
+Sections below describe checkpoint `2221d3dc` and are superseded where they conflict with this section.
+
 Base: readiness checkpoint `134d977` with main `817aeb6` merged. Gates ran on 2026-11-05 on Darwin arm64 with Playwright Chromium 140.0.7339.16 and the unmodified shared harness. `first-draft-manifest.json` remains the record of the original `a91aee3` bytes.
 
 ## What changed since 134d977
@@ -80,9 +101,9 @@ Worst path is a model from the estimator cost table, not a measurement with lear
 
 | Topic | artifact.html sha256 | artifact.md sha256 |
 | --- | --- | --- |
-| login-with-a-session-cookie-or-jwt | `12457ed108edbb685aebbe3dcf12261f1d00c84615688f3939574cf98f5e810c` | `398b71849e37aa6ae46c40cf6de49a5aa1c04befcec389ebbabc08d58c8917db` |
+| login-with-a-session-cookie-or-jwt | `93230b4d1ab2a9faed5205903a3c1096b08eb734289d0f6cab8e08c1d319df69` | `398b71849e37aa6ae46c40cf6de49a5aa1c04befcec389ebbabc08d58c8917db` |
 | protected-pages-and-role-based-screens | `cc126035c477c7a78bfa59a9c84ad493fa283dd598457a959ebcc73294af1317` | `62b7d56ec9b8788c90fe8a6e533be60aecc2aefdddee1d824257f28ad46c0332` |
-| handling-401-and-403-redirect-and-sign-out | `190a79500dd81f43a8998c3eda223ee7ccb1b8095111cc0675c7bfa23ffac6ee` | `41846d7ba2ae6a9ea14d47dc8e382d0f46c0a2308a9976e66ecff1d8bae803cc` |
+| handling-401-and-403-redirect-and-sign-out | `d42dd19c127afc10bf3c960b878cf426ffc20f10c83eba7294cef32d27b3edd0` | `41846d7ba2ae6a9ea14d47dc8e382d0f46c0a2308a9976e66ecff1d8bae803cc` |
 | turning-off-the-dev-profile | `ec3401ba59ec52357fefee5f73cbb54327dcadc6d6fa115ad43311b071617a57` | `882eb0727764a74fc5766b343e592e73d4c65d3971930ce008c0bfeca13249e2` |
-| javascript-fundamentals-review | `ade1411525e140a0c1bdbb636a15b80df798d29c100a4906951ac672d821d70c` | `6ac40359102ab7bd2df98522c99b9d0228a9f68ccf3631e183cb01f9498ffa8f` |
-| react-review | `8fd3e3f71a588480e741a4be86841940e6349050a8d80c5d93de20d4a4daf3d0` | `e2886a8657c164162c3e39c9e60126e4d4df2abc5066755c272a8d3ac53066c3` |
+| javascript-fundamentals-review | `7ea492e5698551310d376942b55a4ff9830ac2655bc85ae0d37db7de6de65975` | `6ac40359102ab7bd2df98522c99b9d0228a9f68ccf3631e183cb01f9498ffa8f` |
+| react-review | `dc237f8384d206d74a4caefbe59af9ad41d8693c94c2873dc1bfa3b0479b52f8` | `e2886a8657c164162c3e39c9e60126e4d4df2abc5066755c272a8d3ac53066c3` |
