@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="collections-streams">
+<meta name="pep:module" content="collections-in-depth">
+<meta name="pep:topic" content="How HashMap works">
+<meta name="pep:topic-id" content="how-hashmap-works">
+<meta name="pep:budget-minutes" content="12">
+<meta name="pep:source" content="authoring/evidence/collections-streams/collections-in-depth/how-hashmap-works/sources.json">
+<meta name="pep:position" content="7 of 9">
+<title>How HashMap works · Collections in Depth</title>
+<style>
+/* pep:component predict@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+/* /pep:component predict css */
+/* pep:component mcq-with-confidence@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start}
+.feedback{width:100%;min-width:0;font-size:15px;line-height:1.35}
+.feedback:empty{display:none}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin:0}
+.feedback .verdict{font-weight:700}
+.feedback .ok{color:var(--teal)}
+.feedback .no{color:var(--red)}
+.feedback .set{color:var(--amber)}
+.feedback .info{color:var(--ink)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+/* /pep:component mcq-with-confidence css */
+/* DESIGN.md token reference */
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* Components bridge: embedded components/*@1 fragments read these older names */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+/* Base, focus and motion */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+pre { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; max-width: 100%; }
+pre code { font-size: 1em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+/* Buttons */
+button { cursor: pointer; min-height: 44px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); padding: 10px 20px; }
+.pep-btn, .ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.ghost:hover, .pep-btn:hover { border-color: var(--pep-accent); }
+.ghost[aria-pressed="true"] { background: var(--pep-accent-soft); border: 2px solid var(--pep-accent); }
+.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+button:disabled, .primary:disabled, .pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); color: var(--pep-text-muted); border: 1px solid var(--pep-line-strong); }
+/* Topic bar: the clearest accent surface */
+.pep-topicbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding: 12px 16px; margin: 0;
+  border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 4px; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress p { max-width: none; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; max-width: 220px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); outline: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); outline-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning); outline-color: var(--pep-warning); }
+.pep-progress > span.is-current { outline: 2px solid var(--pep-accent); }
+.pep-objectives { position: relative; break-inside: avoid; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; border-radius: var(--pep-radius-sm); }
+.pep-objectives > summary::marker { color: var(--pep-accent-text); }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; padding-left: 20px; }
+.pep-objectives li + li { margin-top: 8px; }
+@media (min-width: 640px) { .pep-objectives[open] > div { position: absolute; right: 0; z-index: 2; width: 360px; } }
+/* Activity timeline */
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px 6px 6px; border: 1px solid transparent; border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; }
+.pep-steps { counter-reset: pep-step; }
+.pep-step__n::before { counter-increment: pep-step; content: counter(pep-step); }
+.pep-step__n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--pep-control); color: var(--pep-text); font-size: 13px; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-current="step"] .pep-step__n { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-step.is-done .pep-step__n { background: var(--pep-accent-soft); color: var(--pep-accent-text); outline: 1px solid var(--pep-accent); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-step__state { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+/* Activities and regions */
+.pep-activity { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-activity > h2 { padding-bottom: 8px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region--workspace, [data-pep-workspace] {
+  padding: 24px; border: 1px solid var(--pep-line-strong);
+  border-radius: var(--pep-radius-lg); background: var(--pep-card);
+}
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
+.teach { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.teach ul, .teach ol { margin: 0; padding-left: 24px; }
+.task { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task .pep-task-q { font-weight: 600; color: var(--pep-text-strong); }
+/* Required activity checks: accent tint and rail, never success green */
+.pep-activity-checks, [data-pep-activity-checks] {
+  padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px;
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-activity-checks h3 { margin-bottom: 4px; }
+.pep-activity-checks ul { margin: 0; padding-left: 20px; }
+/* Where this fits */
+[data-pep-where-fits] {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-card);
+}
+[data-pep-where-fits] strong { color: var(--pep-text-strong); }
+/* Progressive optional hints */
+.pep-hint, details[data-pep-hint] {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md);
+  background: var(--pep-accent-soft); break-inside: avoid;
+}
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
+.pep-hint .pep-hint {
+  margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong);
+  border-radius: 0; background: transparent;
+}
+/* Optional Anecdote and Challenge disclosures */
+.pep-optional {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-card); break-inside: avoid;
+}
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer;
+  color: var(--pep-text-strong); font-weight: 600;
+}
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 16px; }
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+  .pep-step[aria-current="step"] { border-color: Highlight; }
+}
+/* Model, cells and lanes */
+.model { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-lists { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 600px) { .pep-lists { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pep-list { padding: 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.pep-list h3 { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 4px; }
+.pep-list__state { font-weight: 600; }
+.lk { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.sub { margin: 0 0 8px; font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.cells { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; padding: 0; list-style: none; min-height: 32px; }
+.cells li { font: 400 14px/20px var(--pep-font-mono); padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.lanebtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.lanebtns button { min-width: 120px; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.lane { padding: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); min-height: 80px; background: var(--pep-page); min-width: 0; }
+.lane .lk { overflow-wrap: anywhere; color: var(--pep-text-strong); }
+.cards { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.cards li { font-size: 14px; line-height: 20px; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); overflow-wrap: anywhere; }
+.cards li.revealed { border-style: dashed; border-color: var(--pep-warning); }
+.tag { display: inline-block; margin-left: 4px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--pep-warning); }
+/* Component overrides: DESIGN.md look for the embedded @1 fragments (their bytes stay unchanged) */
+legend { font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 8px; }
+.opts { gap: 8px; }
+.opt { position: relative; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); font-size: 16px; line-height: 24px; box-shadow: none; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; box-shadow: none; }
+.opt:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; box-shadow: none; }
+.opt.mine { border-color: var(--pep-accent); }
+.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.opt input:disabled { cursor: default; }
+.opt::before { content: ""; flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); }
+.opt:has(input:checked)::before { border: 6px solid var(--pep-accent); }
+.opt:has(input:disabled)::before { opacity: 0.6; }
+.opts.explained .opt { padding: 8px 16px; align-items: flex-start; }
+.opts.explained .opt::before { margin-top: 2px; }
+.oexp { font-size: 14px; line-height: 20px; color: var(--pep-text); border-top-color: var(--pep-line-strong); }
+.badge { font-size: 13px; line-height: 20px; font-weight: 600; border-radius: var(--pep-radius-pill); padding: 0 8px; }
+.badge.ok-b { color: var(--pep-success); border-color: var(--pep-success); }
+.badge.no-b { color: var(--pep-danger); border-color: var(--pep-danger); }
+.badge.mine-b { color: var(--pep-text-strong); border-color: var(--pep-line-strong); }
+.conf legend { line-height: 44px; }
+.conf .opt { min-width: 96px; }
+.row, .fbrow { gap: 12px; }
+.feedback { font-size: 14px; line-height: 20px; color: var(--pep-text); }
+.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.feedback .verdict { font-size: 16px; line-height: 24px; font-weight: 700; }
+.feedback .ok { color: var(--pep-success); }
+.feedback .no { color: var(--pep-danger); }
+.feedback .set { color: var(--pep-warning); }
+.feedback .info { color: var(--pep-text-strong); }
+.feedback .conf-report { color: var(--pep-text-muted); }
+.feedback ul { padding-left: 24px; }
+@media (max-width: 480px) { .opts, .lanes { grid-template-columns: minmax(0, 1fr); } }
+/* Editor workspace */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__scope { padding: 8px 12px; font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); background: var(--pep-sunken); }
+.pep-editor__panel pre { border: 0; padding: 0; background: transparent; }
+.pep-editor__empty { font-family: var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 700; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 700; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); max-width: none; }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn, .pep-editor__bar button { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__code { font-size: 16px; line-height: 24px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* Navigation */
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 0 1 auto; } }
+.pep-back a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+/* Recap */
+.recap { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--pep-line-strong); }
+.recap ul { margin: 0; padding-left: 24px; }
+.recap li + li { margin-top: 4px; }
+.recap details { padding: 0 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.recap details > summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: flex; align-items: center; }
+.recap details > :last-child { margin-bottom: 12px; }
+.recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+.sources ul { margin: 8px 0; padding-left: 24px; font-size: 14px; line-height: 20px; }
+.sources li { margin-bottom: 4px; overflow-wrap: anywhere; }
+.sources p { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.next-topic { font-weight: 600; color: var(--pep-text-strong); }
+.complete { padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete.settled { border-color: var(--pep-warning); background: var(--pep-warning-soft); }
+.complete:empty { display: none; }
+/* Static expected results: no-JavaScript reading only */
+.pep-expected { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.pep-expected ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-nojs-note { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text-strong); }
+.pep-nojs-code { display: flex; flex-direction: column; gap: 12px; }
+@media print {
+  [data-pep-activity][hidden], [data-pep-recap][hidden] { display: flex !important; }
+  .pep-nav, .pep-activity-actions, .pep-back, #reset, .pep-progress { display: none !important; }
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .pep-objectives[open] > div { position: static; width: auto; }
+  .pep-activity { break-before: auto; }
+  [data-pep-print-items]::after { content: "Practice items (answers omitted):\A" attr(data-pep-print-items); display: block; margin-top: 12px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); white-space: pre-wrap; }
+}
+/* page-local practice styles carried from the previous layout */
+.pep-steps-list { margin: 0; padding-left: 24px; }
+.pep-steps-list > li + li { margin-top: 8px; }
+.model .note { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.out { margin: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; min-height: 44px; }
+.out .err { color: var(--pep-danger); font-weight: 700; }
+.out .okl { color: var(--pep-success); font-weight: 700; }
+.ops { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.ops button { font-family: var(--pep-font-mono); font-size: 14px; }
+.ops button[aria-pressed="true"] { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); color: var(--pep-text-strong); }
+table.grid, .recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+table.grid th, table.grid td { border: 1px solid var(--pep-line-strong); padding: 8px 12px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+table.grid th { background: var(--pep-card); font-weight: 600; color: var(--pep-text-strong); }
+.pep-editor__panel .out { border: 0; padding: 0; background: transparent; }
+/* several problems may be listed: Problems scrolls inside, nothing clips it */ .pep-editor { overflow: visible; }
+</style>
+<noscript><style>.pep-js-only{display:none!important}</style></noscript>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-path-settled="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="12">
+<header class="pep-topicbar">
+  <h1 id="page-title">How HashMap works</h1>
+  <div class="pep-topicbar__progress progress">
+    <p><span class="pep-js-only"><span id="pos-text">Activity 1 of 4</span> · <span id="path-text">Answered 0 of 4</span> · <span id="prog-text">Completed 0 of 4</span> · </span>about 12 min</p>
+    <div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  </div>
+  <details class="pep-objectives" data-pep-objectives>
+    <summary aria-controls="objectives-body">Objectives</summary>
+    <div id="objectives-body"><ul>
+      <li>Trace how a HashMap uses a key's hashCode to choose a bucket and equals to find the matching entry in that bucket</li>
+      <li>Explain how capacity, load factor and resizing keep get and put close to constant time, and why HashMap gives no iteration-order guarantee</li>
+      <li>Use getOrDefault, merge and computeIfAbsent to count and group values in a map</li>
+    </ul></div>
+  </details>
+  <button type="button" class="pep-btn pep-js-only" id="reset" data-pep-reset>Restart activity</button>
+  <p class="vh" id="restart-status" role="status" aria-live="polite"></p>
+</header>
+<nav class="pep-nav" aria-label="Activities"><ol class="pep-steps">
+  <li><a class="pep-step" id="tl-1" href="#activity-1" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Guess</a></li>
+  <li><a class="pep-step" id="tl-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Buckets</a></li>
+  <li><a class="pep-step" id="tl-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Resizing</a></li>
+  <li><a class="pep-step" id="tl-4" href="#activity-4" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Count</a></li>
+</ol></nav>
+<noscript data-section-skip><p class="pep-nojs-note"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. All four activities follow in order, each with its expected results and why.</p></noscript>
+
+<section id="activity-1" class="pep-activity" data-pep-activity aria-labelledby="a1-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a1-h" tabindex="-1">Activity 1: Start with a guess</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+
+          <p>The strings <code>"Aa"</code> and <code>"BB"</code> are different, yet both have the hash code 2112.</p>
+<pre><code>Map&lt;String, Integer&gt; m = new HashMap&lt;&gt;();
+m.put("Aa", 1);
+m.put("BB", 2);
+System.out.println(m.size() + " " + m.get("Aa"));</code></pre>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-1-box" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li>Choose an answer, then how sure you are.</li><li>Press <strong>Check prediction</strong> to see why each option is right or wrong.</li></ol>
+<p id="task-1">What does the last line print?</p>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to a guess.</p></section>
+      <div class="pep-js-only">
+<fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict data-static-alt="Prediction (practice, not scored): &quot;Aa&quot; and &quot;BB&quot; have the same hash code 2112; a HashMap gets put(&quot;Aa&quot;, 1) and put(&quot;BB&quot;, 2); what does size() and get(&quot;Aa&quot;) print? Options: 1 2 (wrong: equal hash codes do not make keys equal, so BB does not replace Aa); 2 1 (correct: both keys share a bucket and equals keeps them apart); 2 2 (wrong: get finds the key equal to Aa, whose value is 1); an exception (wrong: collisions are normal).">
+            <legend>Your prediction</legend>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="predict" id="p-12" value="12" aria-describedby="task-1"><span class="ot"><code>1 2</code></span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-21" value="21" aria-describedby="task-1"><span class="ot"><code>2 1</code></span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-22" value="22" aria-describedby="task-1"><span class="ot"><code>2 2</code></span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-ex" value="ex" aria-describedby="task-1"><span class="ot">An exception: hash collision</span></label>
+            </div>
+            <div class="row"><fieldset class="conf" id="conf0" data-pep-confidence aria-describedby="conf0-instr"><legend id="conf0-instr">How sure are you?</legend><label class="opt"><input type="radio" name="conf0" id="conf0-low" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-medium" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-high" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check aria-describedby="conf0-instr" disabled>Check prediction</button></div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-1" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><h3>Activity 1 of 4: Prediction (practice, not scored)</h3><p>What does the last line print?</p><p class="pep-expected"><strong>Expected results and why:</strong> Prediction (practice, not scored): "Aa" and "BB" have the same hash code 2112; a HashMap gets put("Aa", 1) and put("BB", 2); what does size() and get("Aa") print? Options: 1 2 (wrong: equal hash codes do not make keys equal, so BB does not replace Aa); 2 1 (correct: both keys share a bucket and equals keeps them apart); 2 2 (wrong: get finds the key equal to Aa, whose value is 1); an exception (wrong: collisions are normal).</p></div></noscript>
+    </div>
+  </div>
+</section>
+
+<section id="activity-2" class="pep-activity" data-pep-activity aria-labelledby="a2-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a2-h" tabindex="-1">Activity 2: Buckets: hashCode picks, equals confirms</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+
+          <p>A <code>HashMap</code> keeps an array of buckets. For <code>put(key, value)</code>:</p>
+          <ol>
+            <li>The key's <code>hashCode()</code> chooses a bucket.</li>
+            <li>Inside that bucket, <code>equals</code> compares the key with each stored key.</li>
+            <li>A match replaces that entry's value; no match adds a new entry to the bucket.</li>
+          </ol>
+          <p><code>get(key)</code> follows the same path and returns <code>null</code> if no key in the bucket is equal. Two different keys may share a bucket, a collision; <code>equals</code> keeps them apart.</p>
+          <p>The exact bucket formula is an OpenJDK implementation detail: it mixes the hash code's high bits into its low bits, then keeps the low bits.</p>
+      </div>
+<details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+        <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+        <div class="pep-optional__body">
+          <p data-pep-anecdote-story>At a coat check, the number on your ticket tells the attendant which rail to walk to. At that rail they read the tickets pinned there until one matches yours, and they never search the other rails.</p>
+          <p data-pep-anecdote-map>The hash code picks the bucket; equals confirms the match inside it.</p>
+        </div>
+      </details>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-2-box" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li id="task-2">Run calls on an empty <code>HashMap</code> and watch the trace. Store the colliding keys <code>"Aa"</code> and <code>"BB"</code>, replace a value with a repeated <code>put</code>, then <code>get("BB")</code>.</li><li><strong>Continue</strong> appears once the task is met.</li></ol>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>The trace shows all three calls the task names.</p></section>
+      <div class="pep-js-only">
+<fieldset id="x1" data-interaction="explore" data-pep-explore aria-describedby="task-2" data-pep-print-items="Starting empty, run put(&quot;ana&quot;, 1), put(&quot;Aa&quot;, 2), put(&quot;BB&quot;, 3), put(&quot;Aa&quot;, 9), get(&quot;BB&quot;) and get(&quot;zed&quot;). For each call record hash code, bucket, equals checks, replacement/addition and returned value." data-static-alt="Bucket trace on a HashMap with 16 buckets (OpenJDK 25 bucket formula): &quot;ana&quot; has hash code 96724 and goes to bucket 5. &quot;Aa&quot; and &quot;BB&quot; both have hash code 2112 and go to bucket 0; equals finds Aa not equal to BB, so BB is added to the same bucket. A second put(&quot;Aa&quot;, 9) reaches bucket 0, equals matches Aa, and its value is replaced with 9. get(&quot;BB&quot;) goes to bucket 0, skips Aa because equals is false, matches BB and returns 3. get(&quot;zed&quot;) goes to bucket 8, finds no equal key and returns null.">
+            <legend>Call on the map</legend>
+            <div class="ops" id="ops">
+              <button type="button" class="ghost" id="op-ana">put("ana", 1)</button>
+              <button type="button" class="ghost" id="op-Aa">put("Aa", 2)</button>
+              <button type="button" class="ghost" id="op-BB">put("BB", 3)</button>
+              <button type="button" class="ghost" id="op-Aa9">put("Aa", 9)</button>
+              <button type="button" class="ghost" id="op-getBB">get("BB")</button>
+              <button type="button" class="ghost" id="op-getzed">get("zed")</button>
+            </div>
+          </fieldset>
+          <figure class="model" aria-label="Inside a HashMap (OpenJDK 25)">
+
+          <p class="lk" id="m-b-k">Buckets in use (of 16)</p>
+          <ul class="cells" id="m-buckets" aria-labelledby="m-b-k"></ul>
+          <p class="lk" id="m-tr-k">Trace of the last call</p>
+          <pre class="out" id="m-trace" aria-labelledby="m-tr-k">No calls yet.</pre>
+          </figure>
+      </div>
+      <div class="feedback" id="fb-2" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><h3>Activity 2 of 4: Practice</h3><p>Run calls on an empty <code>HashMap</code> and watch the trace. Store the colliding keys <code>"Aa"</code> and <code>"BB"</code>, replace a value with a repeated <code>put</code>, then <code>get("BB")</code>.</p><p class="pep-expected"><strong>Expected results and why:</strong> Bucket trace on a HashMap with 16 buckets (OpenJDK 25 bucket formula): "ana" has hash code 96724 and goes to bucket 5. "Aa" and "BB" both have hash code 2112 and go to bucket 0; equals finds Aa not equal to BB, so BB is added to the same bucket. A second put("Aa", 9) reaches bucket 0, equals matches Aa, and its value is replaced with 9. get("BB") goes to bucket 0, skips Aa because equals is false, matches BB and returns 3. get("zed") goes to bucket 8, finds no equal key and returns null.</p></div></noscript>
+      <p class="pep-back"><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-3" class="pep-activity" data-pep-activity aria-labelledby="a3-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a3-h" tabindex="-1">Activity 3: Load factor and resizing keep buckets short</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+
+          <p>A new <code>HashMap()</code> starts with capacity 16 (buckets) and load factor 0.75. When the number of entries exceeds capacity × load factor, here 16 × 0.75 = 12, the map rehashes into about twice as many buckets.</p>
+          <p>Two OpenJDK 25 details refine that rule. The bucket table is created on the first <code>put</code>, not by the constructor. And when many keys collide in one bucket while the table has fewer than 64 buckets, OpenJDK resizes early instead of building a tree, so "rehash at the 13th entry" holds for well-spread keys like the ones below, not for every key.</p>
+          <p>Short buckets mean <code>get</code> and <code>put</code> check only a few keys, so they stay close to constant time, provided the hash codes spread well.</p>
+          <p>Rehashing moves entries to new buckets, so iteration order can change. That is why <code>HashMap</code> "makes no guarantees as to the order of the map".</p>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-3-box" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li id="task-3">Keep adding tree names to a new <code>HashMap()</code>. Watch the internal capacity and the printed order until the map rehashes.</li><li><strong>Continue</strong> appears once the task is met.</li></ol>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>The map rehashes and you see its order change.</p></section>
+      <div class="pep-js-only">
+<fieldset id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-pep-print-items="Starting with a new HashMap, put oak, elm, ash, fir, yew, bay, box, fig, gum, ivy, lime, pine and teak with values 1 through 13. After every put record entry count, internal capacity and printed order; identify the first allocation and the resize." data-static-alt="Resize run on OpenJDK 25 with well-spread keys: the empty map has no bucket table yet, and the first put creates 16 buckets. Putting oak, elm, ash, fir, yew, bay, box, fig, gum, ivy, lime and pine (values 1 to 12) keeps 16 buckets; the map prints {pine=12, fig=8, elm=2, ash=3, lime=11, oak=1, yew=5, box=7, bay=6, ivy=10, fir=4, gum=9}. The 13th put, teak, exceeds 12 = 16 × 0.75, so the map rehashes to 32 buckets and prints {pine=12, fig=8, elm=2, lime=11, yew=5, box=7, ivy=10, teak=13, fir=4, ash=3, oak=1, bay=6, gum=9}: ash, oak and bay moved to new buckets and now print later.">
+            <legend>Grow the map</legend>
+            <div class="row"><button type="button" class="primary" id="grow" aria-describedby="task-3">put next tree</button></div>
+            <p class="sub" id="grow-next">Next: <code>put("oak", 1)</code></p>
+          </fieldset>
+          <figure class="model" aria-label="Inside a HashMap (OpenJDK 25)">
+
+          <table class="grid">
+            <tr><th scope="row">Entries</th><td id="r-size">0</td></tr>
+            <tr><th scope="row">Capacity (buckets)</th><td id="r-cap">none yet (16 on first put)</td></tr>
+            <tr><th scope="row">Rehash when entries exceed</th><td id="r-thr">12 (once the table exists)</td></tr>
+          </table>
+          <p class="lk" id="r-out-k">System.out.println(map)</p>
+          <pre class="out" id="r-out" aria-labelledby="r-out-k">{}</pre>
+          <p class="note">Capacity and threshold are internal: they follow the HashMap documentation's rule with its defaults, and are not visible through the API. OpenJDK 25 creates the 16 buckets at the first put. These tree names spread well; heavily colliding keys can make OpenJDK resize earlier.</p>
+          </figure>
+      </div>
+      <div class="feedback" id="fb-3" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><h3>Activity 3 of 4: Practice</h3><p>Keep adding tree names to a new <code>HashMap()</code>. Watch the internal capacity and the printed order until the map rehashes.</p><p class="pep-expected"><strong>Expected results and why:</strong> Resize run on OpenJDK 25 with well-spread keys: the empty map has no bucket table yet, and the first put creates 16 buckets. Putting oak, elm, ash, fir, yew, bay, box, fig, gum, ivy, lime and pine (values 1 to 12) keeps 16 buckets; the map prints {pine=12, fig=8, elm=2, ash=3, lime=11, oak=1, yew=5, box=7, bay=6, ivy=10, fir=4, gum=9}. The 13th put, teak, exceeds 12 = 16 × 0.75, so the map rehashes to 32 buckets and prints {pine=12, fig=8, elm=2, lime=11, yew=5, box=7, ivy=10, teak=13, fir=4, ash=3, oak=1, bay=6, gum=9}: ash, oak and bay moved to new buckets and now print later.</p></div></noscript>
+      <p class="pep-back"><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-4" class="pep-activity" data-pep-activity aria-labelledby="a4-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a4-h" tabindex="-1">Activity 4: Count and group in one line</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+
+<pre><code>Map&lt;String, Integer&gt; counts = new HashMap&lt;&gt;();
+for (String w : words) {
+    counts.merge(w, 1, (a, b) -&gt; a + b);          // absent: put 1; present: add 1
+}
+// same count: counts.put(w, counts.getOrDefault(w, 0) + 1);
+
+Map&lt;Integer, List&lt;String&gt;&gt; byLength = new HashMap&lt;&gt;();
+for (String w : words) {
+    byLength.computeIfAbsent(w.length(), k -&gt; new ArrayList&lt;&gt;()).add(w);
+}</code></pre>
+          <p><code>merge</code> stores the given value for a new key, or combines it with the old one. <code>computeIfAbsent</code> creates the list only the first time a key appears, then returns the stored list.</p>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="code">
+      <div id="task-apply" class="task" data-pep-task data-pep-may-stall>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li id="task-4">In <strong>Visits.java</strong>, write the body of <code>add</code>: one line per map, in the order of the comments.</li><li>Use <code>getOrDefault</code> for <code>count</code>, <code>merge</code> for <code>total</code> and <code>computeIfAbsent</code> for <code>times</code>.</li><li>Rate your confidence, then press <strong>Run</strong> to replay the six visits and print the maps.</li><li>Only runs that execute but miss a target or named method use one of the three assessed attempts. Starter, compiler-diagnostic and unsupported-subset runs do not.</li></ol>
+        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-apply" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span>Hint 1 of 2 for Activity 4</span></summary><div class="pep-hint__body"><p><strong>Hint 1 (Activity 4)</strong></p><p data-pep-hint-target><strong>Where to act:</strong> The three comment lines inside <code>add</code>, from count to total to times.</p><p data-pep-hint-step><strong>Next step:</strong> For <code>count</code>, read the old number with a zero default, add one, then put the result back under the same name.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-apply" data-pep-hint-order="2" data-section-skip><summary><span>Another hint</span><span>Another hint, 2 of 2 for Activity 4</span></summary><div class="pep-hint__body"><p><strong>Hint 2 (Activity 4)</strong></p><p data-pep-hint-target><strong>Where to act:</strong> The update function for <code>total</code> and the missing-list supplier for <code>times</code>.</p><p data-pep-hint-step><strong>Next step:</strong> Combine old and new minutes for the total; for the list map, create a list only when absent, then append the current minutes.</p></div></details></div></details>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>All three maps match their targets, each built with its named method.</p></section>
+<figure class="model" aria-label="Visits.java, fixed: the maps and the six visits">
+        <p class="lk">Visits.java (fixed)</p>
+<pre><code>record Visit(String name, int minutes) { }
+static Map&lt;String, Integer&gt; count = new HashMap&lt;&gt;(), total = new HashMap&lt;&gt;();
+static Map&lt;String, List&lt;Integer&gt;&gt; times = new HashMap&lt;&gt;();
+// visits: ana 30, ben 15, ana 45, cy 20, ben 25, ana 10
+for (Visit v : visits) add(v);
+System.out.println(count + " " + total + " " + times);</code></pre>
+        <p class="lk">Targets: <code>count</code> ana 3, ben 2, cy 1; <code>total</code> ana 85, ben 40, cy 20; <code>times</code> ana [30, 45, 10], ben [15, 25], cy [20].</p>
+      </figure>
+      <div class="pep-js-only">
+<fieldset id="x3" data-pep-answer-sensitive="java" data-pep-answer-targets="add" data-interaction="explore" data-pep-explore aria-describedby="task-4" data-pep-print-items="Starter add(Visit v) contains three comments only. Fixed excerpt declares Visit(name, minutes), maps count / total / times, and visits ana 30, ben 15, ana 45, cy 20, ben 25, ana 10. Write one line per map using the named method; compare all three printed maps with the shown targets." data-static-alt="Java editor for Visits.java. Starter excerpt: static void add(Visit v) contains three comments asking for count with getOrDefault, total with merge and times with computeIfAbsent. Fixed excerpt declares record Visit(String name, int minutes), maps count and total from String to Integer, times from String to List&lt;Integer&gt;, then calls add for ana 30, ben 15, ana 45, cy 20, ben 25 and ana 10. Targets: count {ana=3, cy=1, ben=2}; total {ana=85, cy=20, ben=40}; times {ana=[30, 45, 10], cy=[20], ben=[15, 25]} in the OpenJDK 25 HashMap iteration order shown. Hint 1 (Activity 4): update count first by reading a zero default and adding one. Hint 2 (Activity 4): combine old and new minutes for total, and create a list only when absent before appending to times.">
+            <legend>Count, total and group</legend>
+            <div class="pep-editor">
+              <div class="pep-editor__bar"><span class="pep-editor__file">Visits.java</span><button type="button" class="primary" id="ed-run">Run</button><button type="button" class="ghost" id="ed-reset">Reset code</button></div>
+              <div class="pep-editor__code"><div class="pep-editor__gutter" id="ed-gutter" aria-hidden="true"></div><textarea id="ed" class="pep-editor__input" rows="6" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Java editor, Visits.java" aria-describedby="task-4 ed-scope"></textarea></div>
+              <p class="pep-editor__scope" id="ed-scope">Runs the <code>add</code> method body excerpt offline: <code>put</code>, <code>getOrDefault</code>, <code>merge</code>, <code>computeIfAbsent</code> and <code>get(...).add</code>.</p>
+              <fieldset class="conf" id="ed-conf" data-pep-confidence aria-describedby="ed-conf-instr ed-conf-note"><legend id="ed-conf-instr">Before the first result, how sure are you?</legend><label class="opt"><input type="radio" name="ed-conf" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="ed-conf" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="ed-conf" value="high"><span class="ot">High</span></label></fieldset><p id="ed-conf-note" class="sub">Choose this unscored rating before your first Run.</p>
+              <div class="pep-editor__tabs" role="tablist" aria-label="Results"><button type="button" role="tab" id="tab-prob" aria-controls="ed-prob" aria-selected="true">Problems</button><button type="button" role="tab" id="tab-out" aria-controls="ed-out" aria-selected="false" tabindex="-1">Output</button></div>
+              <div class="pep-editor__panel" id="ed-prob" role="tabpanel" aria-labelledby="tab-prob" tabindex="0"></div>
+              <div class="pep-editor__panel" id="ed-out" role="tabpanel" aria-labelledby="tab-out" tabindex="0" hidden><pre class="out" id="ed-print">(no output yet)</pre></div>
+              <p class="pep-editor__status" id="ed-status"></p>
+            </div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-4" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-pep-no-js data-section-skip><div class="pep-nojs-code pep-expected"><p><strong>Practice editor, reading version.</strong> JavaScript is off, so the editor cannot run here. Work on paper, or place these excerpts inside a small Java 25 class in a setup you already use. The starter method excerpt in <strong>Visits.java</strong> is:</p>
+<pre><code>static void add(Visit v) {
+    // 1. count: one more visit for v.name(), using getOrDefault
+    // 2. total: add v.minutes() for v.name(), using merge
+    // 3. times: append v.minutes() to v.name()'s list, using computeIfAbsent
+}</code></pre><p><strong>What success looks like:</strong> after the six visits above, <code>count</code>, <code>total</code> and <code>times</code> hold the targets shown, and each line uses the method its comment names.</p></div></noscript>
+      <p class="pep-back"><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+    </div>
+  </div>
+</section>
+
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+  <button type="button" class="pep-btn" id="prev" data-pep-previous>Previous activity</button>
+  <button type="button" class="primary" id="next" data-pep-next>Next activity</button>
+</div>
+
+<section id="recap" class="recap" data-pep-recap aria-labelledby="recap-h">
+  <h2 id="recap-h" tabindex="-1">Recap</h2>
+<ul>
+            <li><code>hashCode</code> picks the bucket; <code>equals</code> finds the matching key inside it. Colliding keys share a bucket and stay separate.</li>
+            <li>Default capacity 16 and load factor 0.75: past 12 well-spread entries the map rehashes into about twice the buckets (heavy collisions can make OpenJDK resize earlier), keeping buckets short and <code>get</code> and <code>put</code> near constant time.</li>
+            <li>Rehashing can reorder entries, so <code>HashMap</code> gives no iteration-order guarantee.</li>
+            <li>Count with <code>merge(k, 1, (a, b) -&gt; a + b)</code> or <code>getOrDefault</code>; group with <code>computeIfAbsent(k, x -&gt; new ArrayList&lt;&gt;()).add(v)</code>.</li>
+          </ul>
+          <details data-section-skip data-pep-cheat-sheet>
+            <summary>Cheat sheet</summary>
+            <table>
+              <tr><td>Count</td><td><code>m.merge(k, 1, (a, b) -&gt; a + b);</code></td></tr>
+              <tr><td>Count, longhand</td><td><code>m.put(k, m.getOrDefault(k, 0) + 1);</code></td></tr>
+              <tr><td>Group</td><td><code>g.computeIfAbsent(key, x -&gt; new ArrayList&lt;&gt;()).add(item);</code></td></tr>
+              <tr><td>Defaults</td><td>capacity 16 (table created on first put in OpenJDK), load factor 0.75, rehash past 12 well-spread entries</td></tr>
+              <tr><td>Order</td><td>none promised; use <code>LinkedHashMap</code> or <code>TreeMap</code> when order matters</td></tr>
+            </table>
+          </details>
+          <details data-section-skip data-pep-sources class="sources">
+            <summary>Sources and review date</summary>
+            <p>Claims on this page were checked against the live official pages below on 14 October 2026 (UTC), for Java SE 25. Program output was confirmed on OpenJDK 25.0.4. Links open outside this lesson.</p>
+            <ul>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/HashMap.html" rel="noopener">HashMap (Java SE 25 API)</a>: buckets, constant-time get and put, capacity, load factor and rehashing, default capacity 16 and load factor 0.75, no order guarantee.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html" rel="noopener">Map (Java SE 25 API)</a>: getOrDefault, merge, computeIfAbsent.</li>
+              <li><a href="https://dev.java/learn/api/collections-and-streams/collections-framework/choosing-keys/" rel="noopener">Dev.java: Choosing Immutable Types for Your Key</a>: buckets and hash codes.</li>
+              <li><a href="https://dev.java/learn/api/collections-and-streams/collections-framework/working-with-keys-and-values/" rel="noopener">Dev.java: Working with Keys and Values</a>; <a href="https://dev.java/learn/api/collections-and-streams/collections-framework/maps-and-lambdas/" rel="noopener">Dev.java: Using Lambda Expressions to Process the Values of a Map</a>.</li>
+            </ul>
+            <p>Implementation details, not Java SE specification: the bucket numbers in the practice model use OpenJDK 25's formula (hash code XOR its upper 16 bits, then the low bits), and printed orders are what OpenJDK 25 produced. OpenJDK 25 also creates the bucket table on the first put, turns a bucket holding more than 8 colliding keys into a tree once the table has at least 64 buckets, and resizes instead while it is smaller; the practice model omits tree bins. Source: <a href="https://github.com/openjdk/jdk25u/blob/49411542a96435cd403500592fbb586395fbaed5/src/java.base/share/classes/java/util/HashMap.java" rel="noopener">OpenJDK 25u HashMap.java</a>.</p>
+          </details>
+          <p id="complete" class="complete" data-pep-completion></p>
+          <p class="next-topic">Next topic: Choosing the right collection</p>
+</section>
+</main>
+<script>var PAGE={};
+(function(){
+var E,$,$$,B={},did={};
+function h32(s){var h=0;for(var i=0;i<s.length;i++)h=(Math.imul(31,h)+s.charCodeAt(i))|0;return h;}
+function bucket(s){var h=h32(s);return ((h^(h>>>16))&15);}
+function renderB(){var u=$('#m-buckets');u.textContent='';var ks=Object.keys(B).map(Number).sort(function(a,b){return a-b;});
+  if(!ks.length)u.appendChild(E.el('li','gone','all empty'));
+  ks.forEach(function(b){var li=E.el('li','', 'bucket '+b+': '+B[b].map(function(e){return e[0]+'='+e[1];}).join(', '));u.appendChild(li);});}
+function put(k,v){var b=bucket(k),lines=['put("'+k+'", '+v+')','hashCode = '+h32(k)+'  ->  bucket '+b],list=B[b]||(B[b]=[]),hit=null;
+  list.forEach(function(e){var eq=e[0]===k;lines.push('  "'+k+'".equals("'+e[0]+'")  ->  '+eq);if(eq)hit=e;});
+  var say;
+  if(hit){lines.push('  match: replace '+hit[1]+' with '+v);say='Same bucket, `equals` matched, so the value was replaced: no new entry.';hit[1]=v;if(k==='Aa')did.replace=true;}
+  else{list.push([k,v]);lines.push('  no match: add a new entry');say=list.length>1?'Collision: bucket '+b+' already held a different key. `equals` said no, so both keys now share the bucket.':'Bucket '+b+' was empty, so the entry was added.';if(list.length>1)did.collide=true;}
+  $('#m-trace').textContent=lines.join('\n');renderB();return say;}
+function get(k){var b=bucket(k),lines=['get("'+k+'")','hashCode = '+h32(k)+'  ->  bucket '+b],res='null';
+  (B[b]||[]).some(function(e){var eq=e[0]===k;lines.push('  "'+k+'".equals("'+e[0]+'")  ->  '+eq);if(eq){res=String(e[1]);return true;}return false;});
+  lines.push('  returns '+res);$('#m-trace').textContent=lines.join('\n');
+  if(k==='BB'&&res!=='null'&&did.collide)did.getBB=true;
+  return res==='null'?'No key in bucket '+b+' is equal to "'+k+'", so `get` returns `null`.':'`get` went to bucket '+b+', used `equals` to pick "'+k+'" and returned '+res+'.';}
+function step(say){var msg=[{c:'verdict info',s:say}];
+  if(did.collide&&did.replace&&did.getBB&&!E.state().done.x1){msg.push({c:'verdict ok',s:'Traced all three: a collision kept apart by equals, a replacement, and a lookup through a shared bucket.'});E.say(msg,true);E.complete('x1');}
+  else{var todo=[];if(!did.collide)todo.push('store both colliding keys');if(!did.replace)todo.push('replace the value of "Aa"');if(!did.getBB)todo.push('get("BB") once both colliding keys are stored');msg.push({s:'Still to do: '+todo.join('; ')+'.'});E.say(msg);}}
+var TREES=['oak','elm','ash','fir','yew','bay','box','fig','gum','ivy','lime','pine','teak','palm'];
+var PRINTS=['{oak=1}','{elm=2, oak=1}','{elm=2, ash=3, oak=1}','{elm=2, ash=3, oak=1, fir=4}','{elm=2, ash=3, oak=1, yew=5, fir=4}','{elm=2, ash=3, oak=1, yew=5, bay=6, fir=4}','{elm=2, ash=3, oak=1, yew=5, box=7, bay=6, fir=4}','{fig=8, elm=2, ash=3, oak=1, yew=5, box=7, bay=6, fir=4}','{fig=8, elm=2, ash=3, oak=1, yew=5, box=7, bay=6, fir=4, gum=9}','{fig=8, elm=2, ash=3, oak=1, yew=5, box=7, bay=6, ivy=10, fir=4, gum=9}','{fig=8, elm=2, ash=3, lime=11, oak=1, yew=5, box=7, bay=6, ivy=10, fir=4, gum=9}','{pine=12, fig=8, elm=2, ash=3, lime=11, oak=1, yew=5, box=7, bay=6, ivy=10, fir=4, gum=9}','{pine=12, fig=8, elm=2, lime=11, yew=5, box=7, ivy=10, teak=13, fir=4, ash=3, oak=1, bay=6, gum=9}','{pine=12, fig=8, palm=14, elm=2, lime=11, yew=5, box=7, ivy=10, teak=13, fir=4, ash=3, oak=1, bay=6, gum=9}'];
+var n=0;
+function renderG(){var cap=n>12?32:16;$('#r-size').textContent=String(n);$('#r-cap').textContent=n?String(cap):'none yet (16 on first put)';$('#r-thr').textContent=n?String(cap*3/4):'12 (once the table exists)';$('#r-out').textContent=n?PRINTS[n-1]:'{}';
+  $('#grow-next').textContent='';$('#grow-next').appendChild(E.md(n<TREES.length?'Next: `put("'+TREES[n]+'", '+(n+1)+')`':'All trees added.'));$('#grow').disabled=n>=TREES.length;}
+function grow(){if(n>=TREES.length)return;n++;renderG();var msg;
+  if(n<12)msg=[{c:'verdict info',s:n+' entries; still 16 buckets. Not past the threshold of 12 yet.'}];
+  else if(n===12)msg=[{c:'verdict info',s:'12 entries: exactly at 16 × 0.75. The rule rehashes only when entries exceed the threshold.'}];
+  else if(n===13)msg=[{c:'verdict ok',s:'13 entries exceed 12, so the map rehashed to 32 buckets (these keys spread well; heavy collisions can trigger an earlier resize). Compare the printed order: ash, oak and bay moved to new buckets and now print near the end.'},{s:'This is why HashMap promises no order: adding one key reordered others.'}];
+  else msg=[{c:'verdict info',s:n+' entries; 32 buckets, next rehash past 24.'}];
+  if(n>=13&&!E.state().done.x2){E.say(msg,true);E.complete('x2');}else E.say(msg);}
+PAGE.predict={ok:'21',lead:'Equal hash codes only put two keys in the same bucket. equals then tells them apart, so both entries stay.',expl:{
+  '12':'Not quite: equal hash codes do not make keys equal. "BB" is not equal to "Aa", so it does not replace it.',
+  '21':'Right: two entries, and get("Aa") finds the key equal to "Aa", whose value is 1.',
+  '22':'Not quite: get uses equals inside the bucket, so it returns Aa\'s own value, 1.',
+  ex:'Not quite: collisions are normal; HashMap expects and handles them.'}};
+PAGE.goals=[['x1'],['x2'],['apply']];
+PAGE.checkLabels={apply:'Final check'};
+PAGE.initLegacy=function(eng){E=eng;$=eng.$;$$=eng.$$;
+  $('#op-ana').addEventListener('click',function(){step(put('ana',1));});
+  $('#op-Aa').addEventListener('click',function(){step(put('Aa',2));});
+  $('#op-BB').addEventListener('click',function(){step(put('BB',3));});
+  $('#op-Aa9').addEventListener('click',function(){step(put('Aa',9));});
+  $('#op-getBB').addEventListener('click',function(){step(get('BB'));});
+  $('#op-getzed').addEventListener('click',function(){step(get('zed'));});
+  $('#grow').addEventListener('click',grow);renderB();renderG();};
+PAGE.resetLegacy=function(st){if(st===2){B={};did={};renderB();$('#m-trace').textContent='No calls yet.';}if(st===3){n=0;renderG();}};
+
+/* Practice editor shell: gutter, Problems/Output tabs, status, bounded runs; the page supplies check(src) */
+var ED={runs:0,limit:3,lock:false};
+function edGutter(){var n=$('#ed').value.split('\n').length,g=[];for(var k=1;k<=n;k++)g.push(k);$('#ed-gutter').textContent=g.join('\n');$('#ed').rows=Math.max(5,Math.min(20,n));}
+function edTab(which){[['prob','#tab-prob','#ed-prob'],['out','#tab-out','#ed-out']].forEach(function(t){var on=t[0]===which;$(t[1]).setAttribute('aria-selected',on?'true':'false');$(t[1]).tabIndex=on?0:-1;$(t[2]).hidden=!on;});}
+function edGo(file,ln){var ta=$('#ed'),ls=ta.value.split('\n'),pos=0;if(file!==ED.file){ta.focus();return;}for(var k=0;k<ln-1&&k<ls.length;k++)pos+=ls[k].length+1;ta.focus();ta.setSelectionRange(pos,pos);}
+function edProblems(list){var box=$('#ed-prob');box.textContent='';
+  if(!list.length){box.appendChild(E.el('p','pep-editor__empty','No problems.'));return;}
+  list.forEach(function(pr){var b=E.el('button','pep-editor__problem');b.type='button';
+    b.appendChild(E.el('span',pr.kind==='error'?'kind-error':'kind-limit',pr.kind==='error'?'Error':'Not supported'));
+    b.appendChild(document.createTextNode(' '+pr.file+' line '+pr.line+': '+pr.msg));
+    b.addEventListener('click',function(){edGo(pr.file,pr.line);});box.appendChild(b);});
+  edTab('prob');}
+function edLock(on){ED.lock=on;$('#ed').readOnly=on;$('#ed-run').disabled=on;$('#ed-reset').disabled=on;}
+function edReset(){$('#ed').value=ED.starter;edGutter();var box=$('#ed-prob');box.textContent='';box.appendChild(E.el('p','pep-editor__empty','Not run yet. Edit the code, then press Run.'));
+  $('#ed-print').textContent='(no output yet)';edTab('prob');$('#ed-status').textContent='Not run yet';if(ED.onReset)ED.onReset();}
+function edRestart(){ED.runs=0;edLock(false);edReset();}
+function edCount(msg){
+  /* a run that compiles or fails a type check counts; a form outside the practice subset does not */
+  if(++ED.runs>=ED.limit){E.state().results[ED.key]='settled';edLock(true);
+    msg.push({c:'verdict set',s:'Settled after '+ED.limit+' runs that did not meet the task: this activity is not passed and earns no credit. Continue to the next activity, or press Restart activity to try again.'});
+    E.say(msg,true);E.complete(ED.key);return true;}
+  if(ED.runs===ED.limit-1)msg.push({s:'One more run that does not meet the task settles this activity without credit.'});
+  return false;}
+function practiceShape(src){return String(src).replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g,'').replace(/\s+/g,'');}
+function editorConfidence(){var c=$('input[name="ed-conf"]:checked');return c&&c.value;}
+function edRun(){if(ED.lock||E.state().done[ED.key])return;var confidence=editorConfidence();if(!confidence){$('#ed-status').textContent='Not assessed: rate your confidence first';E.say([{c:'verdict info',s:'Choose Low, Medium or High before the first editor result. Confidence is reported, never scored.'}]);return;}var src=$('#ed').value;
+  if(practiceShape(src)===practiceShape(ED.starter)){edProblems([]);$('#ed-print').textContent='(no output: starter unchanged)';$('#ed-status').textContent='Not assessed: edit the starter first';E.say([{c:'verdict info',s:'Not assessed: the starter is unchanged.'},{c:'conf-report',s:'Your confidence: '+confidence+'. Reported, never scored.',attr:'data-pep-confidence-report'}]);return;}
+  var r=ED.check(src);
+  edProblems(r.problems||[]);
+  if(r.output!=null){$('#ed-print').textContent=r.output;if(!(r.problems||[]).length)edTab('out');}else $('#ed-print').textContent='(no output: the program did not compile)';
+  $('#ed-status').textContent=r.status;
+  r.msg=r.msg||[];r.msg.push({c:'conf-report',s:'Your confidence: '+confidence+'. Reported, never scored.',attr:'data-pep-confidence-report'});
+  if(r.unsupported||r.unassessed){E.say(r.msg);return;}
+  E.attempt(ED.activity);
+  if(r.ok){r.msg.push({c:'verdict ok',s:r.done});E.say(r.msg,true);E.complete(ED.key);return;}
+  if(edCount(r.msg))return;E.say(r.msg);}
+function edInit(o){ED.key=o.key;ED.activity=o.activity;ED.starter=o.starter;ED.check=o.check;ED.file=o.file;ED.onReset=o.onReset;
+  $('#ed').addEventListener('input',edGutter);$('#ed-run').addEventListener('click',edRun);$('#ed-reset').addEventListener('click',edReset);
+  $('#tab-prob').addEventListener('click',function(){edTab('prob');});$('#tab-out').addEventListener('click',function(){edTab('out');});
+  $$('[role="tab"]').forEach(function(t){t.addEventListener('keydown',function(ev){if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){var w=t.id==='tab-prob'?'out':'prob';edTab(w);$('#tab-'+w).focus();ev.preventDefault();}});});
+  edReset();}
+/* tokenizer shared by the bounded checkers: identifiers, numbers, strings, two-char operators, single symbols; line numbers kept */
+function edLex(src){var t=[],re=/[ \t\r]+|\n|\/\/[^\n]*|\/\*[\s\S]*?\*\/|(::|->|==|!=|<=|>=|&&|\|\||\+\+|\+=|[A-Za-z_$][\w$]*|\d+|"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|.)/g,m,line=1;
+  while((m=re.exec(src))){if(m[1]!==undefined)t.push({v:m[1],line:line});line+=(m[0].match(/\n/g)||[]).length;}return t;}
+
+/* HashMap practice editor: a bounded checker for the method add(Visit v), run on six visible visits. It accepts put,
+   getOrDefault, merge (Integer::sum or a two-argument lambda), computeIfAbsent with new ArrayList<>(), and get(...).add,
+   then prints the three maps in the order a real HashMap of String keys iterates them. */
+var MAP_STARTER='static void add(Visit v) {\n    // 1. count: one more visit for v.name(), using getOrDefault\n    // 2. total: add v.minutes() for v.name(), using merge\n    // 3. times: append v.minutes() to v.name()\'s list, using computeIfAbsent\n}';
+var MAP_VISITS=[['ana',30],['ben',15],['ana',45],['cy',20],['ben',25],['ana',10]];
+var MAP_NEED={count:'getOrDefault',total:'merge',times:'computeIfAbsent'};
+function mapCheck(src){
+  var Tk=edLex(src),i=0;
+  function pk(o){var x=Tk[i+(o||0)];return x?x.v:'';}
+  function ln(){return Tk[i]?Tk[i].line:(Tk.length?Tk[Tk.length-1].line:1);}
+  function Lim(m){var e=new Error(m);e.limit=true;e.line=ln();return e;}
+  function Err(m){var e=new Error(m);e.line=ln();return e;}
+  function eat(v){if(pk()===v){i++;return;}throw Lim("expected '"+v+"'");}
+  function eatAll(ws){ws.forEach(function(w){eat(w);});}
+  function ident(){var v=pk();if(!/^[A-Za-z_$][\w$]*$/.test(v))throw Lim('expected an identifier');i++;return v;}
+  var JAVA_WORD={true:1,false:1,null:1,class:1,interface:1,record:1,enum:1,extends:1,super:1,new:1,this:1,return:1,if:1,else:1,for:1,while:1,do:1,switch:1,case:1,default:1,break:1,continue:1,try:1,catch:1,finally:1,throw:1,throws:1,public:1,private:1,protected:1,static:1,final:1,abstract:1,void:1,boolean:1,byte:1,short:1,int:1,long:1,float:1,double:1,char:1,var:1,instanceof:1,package:1,import:1,assert:1,goto:1,const:1,synchronized:1,native:1,transient:1,volatile:1,strictfp:1,_:1};
+  var MAPS=['count','total','times'];
+  function unknownVar(v,next,known){if(!known&&/^[A-Za-z_$][\w$]*$/.test(v)&&!JAVA_WORD[v]&&next!=='.'&&next!=='(')throw Err('cannot find symbol: variable '+v);throw Lim('this Java form is not supported in this practice editor');}
+  function mapName(){var m=pk(),next=pk(1);if(MAPS.indexOf(m)<0){if(next==='.'&&['put','merge','getOrDefault','computeIfAbsent','get'].indexOf(pk(2))<0)throw Lim('this practice editor runs put, getOrDefault, merge, computeIfAbsent and get(...).add on the three maps');unknownVar(m,next,m==='v'||m==='visits'||next!=='=');}i++;return m;}
+  function key(){eatAll(['v','.','name','(',')']);}
+  function val(){if(/^\d+$/.test(pk())){var n=Number(pk());i++;return {k:'int',v:n};}eatAll(['v','.','minutes','(',')']);return {k:'min'};}
+  function comb(){if(pk()==='Integer'){eatAll(['Integer','::']);var f=ident();if(f!=='sum'&&f!=='max'&&f!=='min')throw Lim('use Integer::sum or a lambda (a, b) -> a + b');return f;}
+    eat('(');var a=ident();eat(',');var b=ident();eat(')');eat('->');var x=ident();
+    if(pk()==='+'){i++;var y=ident();if(x!==a&&x!==b)unknownVar(x,'+',x==='v'||x==='visits'||MAPS.indexOf(x)>=0);if(y!==a&&y!==b)unknownVar(y,pk(),y==='v'||y==='visits'||MAPS.indexOf(y)>=0);if([x,y].sort().join()!==[a,b].sort().join())throw Lim('use the two lambda parameters in the combiner');return 'sum';}
+    if(x===b)return 'second';if(x===a)return 'first';unknownVar(x,pk(),x==='v'||x==='visits'||MAPS.indexOf(x)>=0);}
+  function stmt(){var line=ln(),m=mapName();eat('.');var op=ident(),s={m:m,line:line};
+    if(op==='put'){eat('(');key();eat(',');
+      if(pk()===m&&pk(1)==='.'&&pk(2)==='getOrDefault'){i+=3;eat('(');key();eat(',');var d=val();eat(')');var plus=null;if(pk()==='+'){i++;plus=val();}eat(')');eat(';');s.k='gd';s.def=d;s.plus=plus;return s;}
+      if(pk()===m&&pk(1)==='.'&&pk(2)==='get'){i+=3;eat('(');key();eat(')');var p2=null;if(pk()==='+'){i++;p2=val();}eat(')');eat(';');s.k='getput';s.plus=p2;return s;}
+      s.k='put';s.v=val();eat(')');eat(';');return s;}
+    if(op==='merge'){eat('(');key();eat(',');s.v=val();eat(',');s.f=comb();eat(')');eat(';');s.k='merge';return s;}
+    if(op==='computeIfAbsent'){eat('(');key();eat(',');ident();eat('->');eatAll(['new','ArrayList','<','>','(',')',')','.','add','(']);s.v=val();eat(')');eat(';');s.k='cia';return s;}
+    if(op==='get'){eat('(');key();eat(')');eat('.');if(pk()!=='add')throw Lim('this practice editor runs put, getOrDefault, merge, computeIfAbsent and get(...).add');eatAll(['add','(']);s.v=val();eat(')');eat(';');s.k='getadd';return s;}
+    throw Lim('this practice editor runs put, getOrDefault, merge, computeIfAbsent and get(...).add');}
+  var body=[];
+  try{
+    if(/\b(?:String|Integer|Visit|Object|List(?:\s*<[^>]+>)?|Map(?:\s*<[^>]+>)?|var)\s+[A-Za-z_$][\w$]*\s*=/.test(src))throw Lim('local declarations are legal Java but are not supported in this practice editor');
+    while(pk()==='public'||pk()==='private')i++;
+    eatAll(['static','void']);if(ident()!=='add')throw Lim('write the method add');eatAll(['(','Visit','v',')','{']);
+    while(pk()!=='}'){if(i>=Tk.length)throw Err("'}' expected");body.push(stmt());}
+    eat('}');if(i<Tk.length)throw Lim('only the method add belongs here');
+  }catch(e){if(!(e instanceof Error))throw e;
+    if(!e.limit)return {problems:[{kind:'error',file:'Visits.java',line:e.line,msg:'error: '+e.message}],status:'1 compiler diagnostic: not assessed',output:null,unassessed:true,
+      msg:[{c:'verdict info',s:'Not assessed: the Java source has a compiler diagnostic. Read the Error problem under the editor.'}]};
+    return {problems:[{kind:'limit',file:'Visits.java',line:e.line,msg:'not supported in this practice editor: '+e.message}],status:'1 problem: outside what this practice editor runs',output:null,unsupported:true,
+      msg:[{c:'verdict info',s:'Not assessed: this shape is outside the editor’s bounded Java subset. Read the Not supported problem under the editor.'}]};}
+  /* type checks the compiler would make: times holds lists, count and total hold integers */
+  var probs=[];
+  body.forEach(function(s){
+    if(s.m==='times'&&(s.k==='gd'||s.k==='put'||s.k==='merge'||s.k==='getput'))probs.push({kind:'error',file:'Visits.java',line:s.line,msg:'error: incompatible types: int cannot be converted to List<Integer>'});
+    if(s.m!=='times'&&(s.k==='cia'||s.k==='getadd'))probs.push({kind:'error',file:'Visits.java',line:s.line,msg:'error: cannot find symbol: method add(int) in Integer'});});
+  if(probs.length)return {problems:probs,status:'Compiler diagnostic: not assessed',output:null,unassessed:true,msg:[{c:'verdict info',s:'Not assessed: fix the compiler diagnostic shown under the editor, then run again.'},{s:'`count` and `total` map a name to an `Integer`; `times` maps a name to a `List<Integer>`.'}]};
+  /* run */
+  function shash(x){var h=0;for(var k=0;k<x.length;k++)h=(Math.imul(31,h)+x.charCodeAt(k))|0;return h;}
+  function order(keys){return keys.map(function(k,ix){var h=shash(k);h=h^(h>>>16);return {k:k,b:h&15,ix:ix};}).sort(function(a,b){return a.b-b.b||a.ix-b.ix;}).map(function(x){return x.k;});}
+  var M={count:{keys:[],v:{}},total:{keys:[],v:{}},times:{keys:[],v:{}}},err=null;
+  function has(m,k){return Object.prototype.hasOwnProperty.call(M[m].v,k);}
+  function set(m,k,x){if(!has(m,k))M[m].keys.push(k);M[m].v[k]=x;}
+  function num(v,mins){return v.k==='int'?v.v:mins;}
+  try{MAP_VISITS.forEach(function(vis){var name=vis[0],mins=vis[1];
+    body.forEach(function(s){var m=s.m;
+      if(s.k==='put')set(m,name,num(s.v,mins));
+      else if(s.k==='gd'){var base=has(m,name)?M[m].v[name]:num(s.def,mins);set(m,name,base+(s.plus?num(s.plus,mins):0));}
+      else if(s.k==='getput'){if(!has(m,name)){var e=new Error('NullPointerException');e.npe=true;throw e;}set(m,name,M[m].v[name]+(s.plus?num(s.plus,mins):0));}
+      else if(s.k==='merge'){var x=num(s.v,mins);if(!has(m,name))set(m,name,x);else{var o=M[m].v[name];set(m,name,s.f==='sum'?o+x:s.f==='max'?Math.max(o,x):s.f==='min'?Math.min(o,x):s.f==='second'?x:o);}}
+      else if(s.k==='cia'){if(!has(m,name))set(m,name,[]);M[m].v[name].push(num(s.v,mins));}
+      else if(s.k==='getadd'){if(!has(m,name)){var e2=new Error('NullPointerException');e2.npe=true;throw e2;}M[m].v[name].push(num(s.v,mins));}});});
+  }catch(e){if(!e.npe)throw e;err=e;}
+  function show(m){return '{'+order(M[m].keys).map(function(k){var x=M[m].v[k];return k+'='+(Array.isArray(x)?'['+x.join(', ')+']':x);}).join(', ')+'}';}
+  function target(vals){return '{'+order(['ana','ben','cy']).map(function(k){return k+'='+vals[k];}).join(', ')+'}';}
+  var want={count:target({ana:3,ben:2,cy:1}),total:target({ana:85,ben:40,cy:20}),times:target({ana:'[30, 45, 10]',ben:'[15, 25]',cy:'[20]'})};
+  if(err)return {problems:[],status:'Ran: stopped with NullPointerException',output:'Exception in thread "main" java.lang.NullPointerException',
+    msg:[{c:'verdict no',s:'It throws `NullPointerException` on the first visit.'},{s:'`get` returns `null` for a name that is not in the map yet; `getOrDefault`, `merge` and `computeIfAbsent` each handle that first time.'}]};
+  var got={count:show('count'),total:show('total'),times:show('times')},lines=[],bad=[];
+  MAPS.forEach(function(m){var ok=got[m]===want[m];lines.push(m+' = '+got[m]+(ok?'':'   target '+want[m]));if(!ok)bad.push(m);});
+  var used={};body.forEach(function(s){var op={gd:'getOrDefault',merge:'merge',cia:'computeIfAbsent'}[s.k];if(op)(used[s.m]=used[s.m]||{})[op]=true;});
+  var wrongTool=MAPS.filter(function(m){return bad.indexOf(m)<0&&!(used[m]&&used[m][MAP_NEED[m]]);});
+  var out=lines.join('\n');
+  if(bad.length)return {problems:[],status:'Ran: '+bad.length+' of 3 maps differ from the target',output:out,
+    msg:[{c:'verdict no',s:'Not yet: '+bad.join(', ')+(bad.length>1?' differ':' differs')+' from the target.'},{s:bad.indexOf('count')>=0?'`count` needs one more for each visit: start from 0 the first time.':bad.indexOf('total')>=0?'`total` must add each visit\'s minutes to what is already stored.':'Each name\'s list must collect every visit\'s minutes, in order.'}]};
+  if(wrongTool.length)return {problems:[],status:'Ran: every map matches, but not with the named methods',output:out,
+    msg:[{c:'verdict no',s:'Every map matches, but '+wrongTool.map(function(m){return '`'+m+'` must use `'+MAP_NEED[m]+'`';}).join(' and ')+'.'},{s:'This activity practises each of the three methods once.'}]};
+  return {problems:[],status:'Ran: all three maps match their targets',output:out,ok:true,msg:[{c:'verdict info',s:'All three maps match their targets.'}],done:'getOrDefault counted, merge totalled and computeIfAbsent grouped, each in one line.'};}
+
+PAGE.init=function(eng){PAGE.initLegacy(eng);edInit({key:'apply',activity:4,starter:MAP_STARTER,check:mapCheck,file:'Visits.java'});};
+PAGE.resetStep=function(st){if(st===4){edRestart();$$('#ed-conf input').forEach(function(i){i.checked=false;i.disabled=false;});}else PAGE.resetLegacy(st);};
+})();</script>
+<script>
+(function(){
+'use strict';
+var D=document;
+function $(s,r){return (r||D).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||D).querySelectorAll(s));}
+function md(s){var f=D.createDocumentFragment(),re=/(`[^`]+`|\*\*[^*]+\*\*)/g,last=0,m;s=String(s);
+  while((m=re.exec(s))){if(m.index>last)f.appendChild(D.createTextNode(s.slice(last,m.index)));
+    var t=m[0],e=D.createElement(t.charAt(0)==='`'?'code':'strong');e.textContent=t.charAt(0)==='`'?t.slice(1,-1):t.slice(2,-2);f.appendChild(e);last=re.lastIndex;}
+  if(last<s.length)f.appendChild(D.createTextNode(s.slice(last)));return f;}
+function el(tag,cls,txt){var e=D.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.appendChild(typeof txt==='string'?md(txt):txt);return e;}
+function T(t){return D.createTextNode(t);}
+/* Guidance state: current activity, a monotonic unlocked frontier and per-activity results kept apart */
+var P=window.PAGE||{};
+var main=$('#lesson'),ACTS=$$('[data-pep-activity]'),LINKS=$$('[data-pep-activity-link]'),prevBtn=$('#prev'),next=$('#next'),resetBtn=$('#reset'),recap=$('#recap');
+var KEYS=['predict','x1','x2','apply'],N=KEYS.length;
+var S={step:1,done:{},results:{}};
+function freshAct(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,cont:false};}
+var G={current:1,unlocked:1,complete:false,settled:false,acts:KEYS.map(freshAct)};
+function fbOf(n){return $('[data-pep-feedback]',ACTS[n-1]);}
+function say(parts,focus){var fb=fbOf(G.current);fb.textContent='';(parts||[]).forEach(function(p){
+  if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li',it[2]||'');li.appendChild(el('strong',null,it[0]));li.appendChild(T(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
+  else if(p.pre){var pr=el('pre','out');pr.textContent=p.pre;fb.appendChild(pr);}
+  else{var q=el('p',p.c||'',p.s);if(p.attr)q.setAttribute(p.attr,'');fb.appendChild(q);}});
+  if(focus)fb.focus();}
+function optText(i){var l=i.closest('label');return l?l.textContent.replace(/\s+/g,' ').trim():i.value;}
+var WORD={'correct':'correct on the first try','correct-retry':'correct on the second try','settled':'answered and settled, not passed'};
+function reflect(){ACTS.forEach(function(sec,i){var a=G.acts[i];sec.setAttribute('data-pep-attempts',String(a.attempts));sec.setAttribute('data-pep-settled',String(a.settled));
+    sec.setAttribute('data-pep-completed',String(a.completed));sec.setAttribute('data-pep-credit',String(a.credit));sec.setAttribute('data-pep-grade',String(a.grade));sec.setAttribute('data-pep-continue',String(a.cont));});
+  main.setAttribute('data-pep-current-activity',String(G.current));main.setAttribute('data-pep-unlocked-through',String(G.unlocked));main.setAttribute('data-pep-complete',String(G.complete));main.setAttribute('data-pep-path-settled',String(G.settled));}
+function progress(){var c=0,set=0,segs=$$('.pep-progress > span');KEYS.forEach(function(k,i){var s=segs[i];s.className='';
+    if(S.done[k]){if(G.acts[i].completed){c++;s.className='is-done';}else{set++;s.className='is-settled';}}
+    if(i+1===G.current)s.className+=(s.className?' ':'')+'is-current';});
+  $('#path-text').textContent='Answered '+(c+set)+' of '+N;
+  $('#prog-text').textContent='Completed '+c+' of '+N+(set?'; '+set+' settled, not passed':'');}
+function attempt(n){G.acts[n-1].attempts++;reflect();}
+function finishPage(){var c=$('#complete'),labels=P.checkLabels||{apply:'Final check'},parts=[],miss=[];
+  KEYS.forEach(function(k,i){if(S.results[k]&&labels[k])parts.push(labels[k]+': '+WORD[S.results[k]]+'.');if(!G.acts[i].completed){var h=$('#a'+(i+1)+'-h');miss.push('Activity '+(i+1)+(h?' ('+h.textContent.trim()+')':''));}});
+  c.className='complete'+(G.complete?'':' settled');
+  c.textContent=G.complete?'Topic complete. '+parts.join(' '):'Required path settled; '+miss.length+(miss.length>1?' activities remain':' activity remains')+' incomplete: '+miss.join(', ')+'. '+parts.join(' ')+' Their objectives are not met yet: restart those activities, or review their explanations before the practice quiz.';}
+function complete(k){var n=KEYS.indexOf(k)+1,a=G.acts[n-1],failed=S.results[k]==='settled';S.done[k]=true;
+  a.settled=true;a.cont=true;a.completed=!failed;
+  if(!failed&&a.credit===0){a.credit=1;a.grade=k==='predict'?0:1;}
+  G.unlocked=Math.max(G.unlocked,Math.min(n+1,N));
+  if(KEYS.every(function(x){return !!S.done[x];})){G.settled=true;G.complete=G.acts.every(function(x){return x.completed;});finishPage();}
+  progress();render(G.current);}
+function render(number,mode,moveFocus){
+  if(!(number>=1&&number<=N&&number<=G.unlocked))return false;
+  G.current=number;S.step=number;
+  ACTS.forEach(function(sec,i){sec.hidden=i+1!==number;});
+  LINKS.forEach(function(link,i){var n=i+1;
+    if(n===number)link.setAttribute('aria-current','step');else link.removeAttribute('aria-current');
+    if(n>G.unlocked)link.setAttribute('aria-disabled','true');else link.removeAttribute('aria-disabled');
+    link.classList.toggle('is-done',!!S.done[KEYS[i]]);});
+  prevBtn.disabled=number===1;
+  next.disabled=number===N||number>=G.unlocked||!G.acts[number-1].cont;
+  recap.hidden=!G.settled;
+  $('#pos-text').textContent='Activity '+number+' of '+N;
+  reflect();progress();
+  try{if(mode==='push')history.pushState({activity:number},'','#activity-'+number);
+    else if(mode==='replace')history.replaceState({activity:number},'','#activity-'+number);}
+  catch(e){if(mode&&location.hash!=='#activity-'+number)location.hash='activity-'+number;}
+  if(moveFocus){var h=$('#a'+number+'-h');if(h)h.focus();}
+  return true;}
+/* pep:component predict@1 js */
+/* predict */
+var pf=$('#predict'),pc=$('#predict-check');
+function pReady(){pc.disabled=!!S.done.predict||!($('input[name="predict"]:checked')&&$('input[name="conf0"]:checked'));}
+pf.addEventListener('change',pReady);
+function badges(l,arr){var b=l.querySelector('.badges');if(!b){b=el('span','badges');l.appendChild(b);}arr.forEach(function(x){b.appendChild(el('span','badge '+x[1],x[0]));});}
+pc.addEventListener('click',function(){var c=$('input[name="predict"]:checked'),cv=$('input[name="conf0"]:checked');if(!c||!cv)return;var okv=P.predict.ok,match=c.value===okv;
+  $$('input',pf).forEach(function(i){i.disabled=true;});pc.disabled=true;
+  $$('input[name="predict"]',pf).forEach(function(i){var l=i.closest('label');if(i===c){l.classList.add('mine');badges(l,[['Your prediction','mine-b'],[match?'Correct':'Not correct',match?'ok-b':'no-b']]);}else if(i.value===okv){badges(l,[[P.predict.okLabel||'Correct answer','ok-b']]);}if(i.value===okv)l.classList.add('right');l.appendChild(el('span','oexp',P.predict.expl[i.value]));});
+  pf.querySelector('.opts').classList.add('explained');pc.hidden=true;$('#conf0').closest('.row').hidden=true;
+  if(P.onPredict)P.onPredict();
+  say([{c:'verdict info',s:'Practice prediction, not scored. '+(match?'Your prediction matches the answer.':'Your prediction differs from the answer; nothing is lost.')},{c:'conf-report',s:'Your confidence: '+cv.value+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:P.predict.lead},{s:'Each option now shows its label and why, directly under it.'}],true);
+  complete('predict');});
+/* /pep:component predict js */
+/* pep:component mcq-with-confidence@1 js */
+/* graded checks: confidence first, retry in a second representation, settle after two misses */
+var checks={};
+function check(o){var st={att:0,conf:[],result:null,step:{x1:2,x2:3,apply:4}[o.key]},btn=$(o.btn),cf=$(o.conf),fs=$(o.fs),cn=o.confName||'conf';checks[o.key]=st;
+  function grp(){return st.att===0?o.g1:o.g2;}
+  function ready(){btn.disabled=!!st.result||!($('input[name="'+grp()+'"]:checked')&&$('input[name="'+cn+'"]:checked'));}
+  function lockConf(){$$('input[name="'+cn+'"]').forEach(function(i){i.disabled=true;});btn.disabled=true;}
+  function done(){S.results[o.key]=st.result;if(P.onCheck)P.onCheck(o.key,st.result);complete(o.key,o.label);}
+  fs.addEventListener('change',ready);cf.addEventListener('change',ready);
+  btn.addEventListener('click',function(){var g=grp(),r=st.att===0?o.data.r1:o.data.r2,c=$('input[name="'+g+'"]:checked'),cv=$('input[name="'+cn+'"]:checked');
+    if(!c||!cv||st.result)return;var ok=c.value===r.ok;st.conf.push(cv.value);
+    var confLine='Your confidence: '+cv.value+'. Confidence is your own read on how sure you were; it is reported, never scored.';
+    var expl=$$('input[name="'+g+'"]').map(function(i){return [optText(i)+(i===c?' (your answer):':':'),r.expl[i.value]];});
+    $$('input[name="'+g+'"]').forEach(function(i){i.disabled=true;});c.closest('label').classList.add(ok?'right':'wrong');badges(c.closest('label'),[['Your answer','mine-b'],[ok?'Correct':'Not correct',ok?'ok-b':'no-b']]);
+    if(ok){st.result=st.att===0?'correct':'correct-retry';lockConf();
+      say([{c:'verdict ok',s:st.att===0?'Correct.':'Correct on your second try.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}],true);done();}
+    else if(st.att===0){st.att=1;$('#'+o.g1).hidden=true;$('#'+o.g2).hidden=false;$(o.t1).hidden=true;$(o.t2).hidden=false;$$('input[name="'+cn+'"]').forEach(function(i){i.checked=false;});
+      say([{c:'verdict no',s:'Not yet. '+r.mis[c.value]+' Try again below: same idea, different form, with your confidence again.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}]);
+      ready();$(o.t2).focus();}
+    else{st.result='settled';lockConf();$$('input[name="'+o.g2+'"]').forEach(function(i){if(i.value===r.ok){i.closest('label').classList.add('right');badges(i.closest('label'),[['Correct answer','ok-b']]);}});
+      say([{c:'verdict set',s:'Answered and settled: this check is not marked correct. '+r.mis[c.value]},{c:'conf-report',s:'Confidence on each try: '+st.conf.join(', then ')+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:'The answer: '+r.answer},{list:expl}],true);done();}});
+  st.reset=function(){st.att=0;st.conf=[];st.result=null;$('#'+o.g1).hidden=false;$('#'+o.g2).hidden=true;$(o.t1).hidden=false;$(o.t2).hidden=true;btn.disabled=true;};
+  return st;}
+/* /pep:component mcq-with-confidence js */
+/* lane sort: each item gets one retry, then its lane is revealed; any reveal settles the activity */
+var lanesets={};
+function lanes(o){var st={idx:0,tries:{},placed:{},revealed:{}},box=$(o.model),btns=$(o.btns);lanesets[o.key]=st;
+  function laneName(id){for(var i=0;i<o.lanes.length;i++)if(o.lanes[i].id===id)return o.lanes[i].label;return id;}
+  function draw(){box.textContent='';var cnt=0;
+    o.lanes.forEach(function(ln){var d=el('div','lane'),h=el('p','lk',ln.label),u=el('ul','cards');h.id=o.key+'-lk-'+ln.id;u.setAttribute('aria-labelledby',h.id);d.appendChild(h);d.appendChild(u);box.appendChild(d);
+      o.items.forEach(function(it,i){if(st.placed[i]!==ln.id)return;cnt++;var li=el('li',st.revealed[i]?'revealed':'',it.n);if(st.revealed[i])li.appendChild(el('span','tag','shown after two tries'));u.appendChild(li);});});
+    var it=o.items[st.idx];$(o.name).textContent=it?'':'all sorted';$(o.name).appendChild(it?md(it.n):T(''));
+    $(o.count).textContent=cnt+' of '+o.items.length+' sorted';}
+  function finish(msg){var anyRev=Object.keys(st.revealed).length,anyRetry=Object.keys(st.tries).some(function(k){return st.tries[k]>0;});
+    var res=anyRev?'settled':(anyRetry?'correct-retry':'correct');S.results[o.key]=res;
+    $$('button',btns).forEach(function(b){b.disabled=true;});
+    msg.push({c:anyRev?'verdict set':'verdict ok',s:anyRev?'All sorted. Answered and settled: '+anyRev+(anyRev>1?' items were':' item was')+' shown after two tries, so this activity is not marked correct.':(anyRetry?'All sorted, some on a second try.':'All sorted on the first try.')});
+    if(o.done)msg.push({s:o.done});say(msg,true);complete(o.key);}
+  o.lanes.forEach(function(ln){var b=el('button','ghost',ln.label);b.type='button';b.id=o.key+'-to-'+ln.id;b.setAttribute('data-lane',ln.id);b.setAttribute('aria-describedby',o.legend);
+    b.addEventListener('click',function(){var i=st.idx,it=o.items[i];if(!it||S.done[o.key])return;attempt(KEYS.indexOf(o.key)+1);
+      if(ln.id===it.lane){st.placed[i]=ln.id;st.idx++;var msg=[{c:'verdict ok',s:'Yes: '+laneName(ln.id)+'.'},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(msg);else say(msg);}
+      else{st.tries[i]=(st.tries[i]||0)+1;
+        if(st.tries[i]<2){say([{c:'verdict no',s:'Not '+laneName(ln.id)+'. '+it.w[ln.id]},{s:'Try another button for the same item.'}]);}
+        else{st.placed[i]=it.lane;st.revealed[i]=true;st.idx++;var m2=[{c:'verdict set',s:'Shown after two tries: '+laneName(it.lane)+'. '+it.w[ln.id]},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(m2);else say(m2);}}});
+    btns.appendChild(b);});
+  st.reset=function(){st.idx=0;st.tries={};st.placed={};st.revealed={};$$('button',btns).forEach(function(b){b.disabled=false;});draw();};
+  draw();return st;}
+
+/* Wire the activities: the page's own practice code keeps its engine interface */
+P.onPredict=function(){attempt(1);};
+if($('#apply')){check({key:'apply',fs:'#apply',g1:'a1',g2:'a2',t1:'#task-4',t2:'#task-4b',conf:'#conf',confName:'conf',btn:'#apply-check',data:P.apply,label:P.applyLabel});
+$('#apply-check').addEventListener('click',function(){var n=checks.apply.conf.length;if(n!==G.acts[3].attempts){G.acts[3].attempts=n;reflect();}});}
+/* exploration attempts: any control press inside an activity's explore workspace counts once per press */
+ACTS.forEach(function(sec,i){$$('fieldset[data-interaction="explore"]',sec).forEach(function(fs){if(fs.querySelector('.pep-editor'))return;fs.addEventListener('click',function(ev){if(ev.target.closest('button')&&!S.done[KEYS[i]])attempt(i+1);});});});
+window.ENG={say:say,complete:complete,check:check,lanes:lanes,md:md,el:el,$:$,$$:$$,attempt:attempt,state:function(){return S;}};
+if(P.init)P.init(window.ENG);
+
+/* Restart: only the current activity returns to its authored start; other work and the unlocked frontier stay */
+function clearChoices(scope){$$('input',scope).forEach(function(i){i.checked=false;i.disabled=false;});$$('.opt',scope).forEach(function(o){o.classList.remove('right','wrong','mine');});
+  $$('.oexp,.badges',scope).forEach(function(e){e.remove();});$$('.opts.explained',scope).forEach(function(o){o.classList.remove('explained');});}
+function restart(){var n=G.current,k=KEYS[n-1],sec=ACTS[n-1];
+  if(k==='predict'){clearChoices(sec);pc.hidden=false;pc.disabled=true;$('#conf0').closest('.row').hidden=false;}
+  if(lanesets[k])lanesets[k].reset();
+  if(checks[k]){clearChoices(sec);checks[k].reset();}
+  delete S.done[k];delete S.results[k];G.acts[n-1]=freshAct();
+  G.settled=KEYS.every(function(x){return !!S.done[x];});
+  G.complete=G.settled&&G.acts.every(function(x){return x.completed;});
+  if(G.settled)finishPage();else{$('#complete').textContent='';recap.hidden=true;}
+  if(P.resetStep)P.resetStep(n);
+  $$('[data-pep-feedback]',sec).forEach(function(f){f.textContent='';});
+  render(n);
+  $('#restart-status').textContent='Activity '+n+' restarted. Other activities keep their work.';}
+resetBtn.addEventListener('click',restart);
+
+/* Reversible navigation: buttons, timeline, back links and browser history change only the current activity */
+function numberOf(hash){var m=/^#activity-(\d+)$/.exec(hash||'');return m?Number(m[1]):0;}
+prevBtn.addEventListener('click',function(){render(G.current-1,'push',true);});
+next.addEventListener('click',function(){render(G.current+1,'push',true);});
+LINKS.forEach(function(link,i){link.addEventListener('click',function(ev){ev.preventDefault();render(i+1,'push',true);});});
+$$('[data-pep-back-link]').forEach(function(link){link.addEventListener('click',function(ev){ev.preventDefault();render(numberOf(link.getAttribute('href')),'push',true);});});
+var lastFocused=null;D.addEventListener('focusin',function(ev){lastFocused=ev.target;});
+function fromHistory(){var keep=lastFocused,n=numberOf(location.hash);
+  if(!render(n,null,false))render(G.current,'replace',false);
+  if(keep&&keep.isConnected&&!keep.closest('[hidden]'))keep.focus({preventScroll:true});}
+addEventListener('popstate',fromHistory);addEventListener('hashchange',fromHistory);
+
+/* Objectives: native disclosure; Escape and an outside click close it */
+var obj=$('[data-pep-objectives]');
+D.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&obj.open){obj.open=false;obj.querySelector('summary').focus();}});
+D.addEventListener('click',function(ev){if(obj.open&&!obj.contains(ev.target))obj.open=false;});
+
+/* Print: expand closed disclosures, then restore only those */
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=$$('details:not([open])');printOpened.forEach(function(d){d.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(d){d.open=false;});printOpened=[];});
+
+var first=numberOf(location.hash);
+render(first>=1&&first<=G.unlocked?first:1,'replace',false);
+})();
+</script>
+</body>
+</html>

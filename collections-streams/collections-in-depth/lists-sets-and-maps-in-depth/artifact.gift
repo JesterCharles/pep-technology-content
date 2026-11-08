@@ -1,0 +1,58 @@
+// Formative practice quiz for lists-sets-and-maps-in-depth. Low-stakes; answers are visible by design.
+$CATEGORY: collections-streams/collections-in-depth/lists-sets-and-maps-in-depth
+
+::lists-sets-and-maps-in-depth o1 - TreeSet with a repeated element::A TreeSet of strings receives add("cy"), add("ana") and add("cy"), in that order. What does printing the set show?{
+=[ana, cy]#Correct. A set keeps each element once, and a TreeSet sorts its elements by natural ordering.
+~[cy, ana]#Not quite. That is first-added order, which a LinkedHashSet would show. A TreeSet sorts.
+~[ana, cy, cy]#Not quite. A set never stores the same element twice; the second add returns false.
+~[cy, ana, cy]#Not quite. This keeps the duplicate in call order, which only a list would do.
+}
+
+::lists-sets-and-maps-in-depth o1 - what put returns for an existing key::A HashMap from String to Integer runs m.put("x", 5) and then System.out.println(m.put("x", 7)). What is printed?{
+=5#Correct. put replaces the value for an existing key and returns the value it replaced.
+~7#Not quite. put returns the old value, not the new one.
+~null#Not quite. put returns null only when the key had no mapping before. Here x already mapped to 5.
+~Nothing\: the program throws an exception for the duplicate key#Not quite. Putting an existing key is allowed; it replaces the value.
+}
+
+::lists-sets-and-maps-in-depth o1 - equal values under different keys::A HashMap from String to Integer runs put("a", 1) and then put("b", 1). What is its size?{
+=2#Correct. Only keys must be unique. Two different keys may map to equal values.
+~1#Not quite. Equal values do not merge entries; the keys a and b are different.
+~0, because the map rejects the repeated value#Not quite. A map places no rule on repeated values.
+~The second put throws IllegalArgumentException#Not quite. Nothing here is illegal; the keys differ.
+}
+
+::lists-sets-and-maps-in-depth o2 - getOrDefault for a missing key::A map called counts has no key "z". What does counts.getOrDefault("z", 0) do?{
+=It returns 0 and leaves the map unchanged#Correct. getOrDefault only reads. It returns the default when the key is absent.
+~It returns 0 and adds the entry z\=0 to the map#Not quite. getOrDefault never changes the map; use put if you want to store a value.
+~It returns null#Not quite. That is what get would return. getOrDefault returns the default you passed.
+~It throws NoSuchElementException#Not quite. Map lookups do not throw for a missing key.
+}
+
+::lists-sets-and-maps-in-depth o2 - removing while scanning::An ArrayList called names holds some empty strings. Which line removes them safely?{
+=Call names.removeIf with a lambda that tests s.isEmpty()#Correct. removeIf scans and removes matching elements itself, so no other iterator is disturbed.
+~for (String s \: names) if (s.isEmpty()) names.remove(s);#Not quite. Removing through the list inside for-each can throw ConcurrentModificationException.
+~Wrap the for-each removal in try and catch ConcurrentModificationException#Not quite. The exception is thrown only on a best-effort basis, so catching it hides a bug instead of fixing it.
+~Call names.remove("") once before the loop#Not quite. List.remove(Object) removes only the first matching element.
+}
+
+::lists-sets-and-maps-in-depth o2 - relying on ConcurrentModificationException::A teammate says\: our tests would catch any for-each removal bug, because it always throws ConcurrentModificationException. What is wrong with this?{
+=The exception is thrown on a best-effort basis only, so the bug can pass silently#Correct. The API documentation says fail-fast behavior cannot be guaranteed. Use Iterator.remove or removeIf.
+~Nothing; the exception is guaranteed for every for-each removal#Not quite. It is not guaranteed. Some removals finish without an exception and give a wrong result.
+~The exception is only thrown for sets, never for lists#Not quite. ArrayList iterators are fail-fast too.
+~The exception only happens with more than one thread#Not quite. A single thread can trigger it by removing through the collection during for-each.
+}
+
+::lists-sets-and-maps-in-depth o3 - changing a List.of list::Code runs var fixed \= List.of("a", "b"); and then fixed.set(0, "z");. What happens?{
+=UnsupportedOperationException is thrown#Correct. Lists from List.of are unmodifiable; every mutator method, set included, throws.
+~The list becomes [z, b]#Not quite. That would need a modifiable list such as new ArrayList with the same elements.
+~set returns "a" but the list stays [a, b]#Not quite. Mutator methods on an unmodifiable list throw; they do not silently ignore the change.
+~NullPointerException is thrown#Not quite. There is no null here. NullPointerException comes from putting null into a factory collection.
+}
+
+::lists-sets-and-maps-in-depth o3 - null in Map.of::What happens when code calls Map.of("k", null)?{
+=NullPointerException is thrown#Correct. Map.of disallows null keys and null values.
+~A map with key k and value null is created#Not quite. HashMap would allow that, but Map.of rejects null.
+~UnsupportedOperationException is thrown#Not quite. That exception comes from changing a factory map later, not from creating one with null.
+~IllegalArgumentException is thrown#Not quite. Map.of throws IllegalArgumentException for duplicate keys, not for null values.
+}

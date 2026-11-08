@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="collections-streams">
+<meta name="pep:module" content="collections-in-depth">
+<meta name="pep:topic" content="The equals and hashCode contract">
+<meta name="pep:topic-id" content="the-equals-and-hashcode-contract">
+<meta name="pep:budget-minutes" content="12">
+<meta name="pep:source" content="authoring/evidence/collections-streams/collections-in-depth/the-equals-and-hashcode-contract/sources.json">
+<meta name="pep:position" content="6 of 9">
+<title>The equals and hashCode contract · Collections in Depth</title>
+<style>
+/* pep:component predict@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+/* /pep:component predict css */
+/* pep:component mcq-with-confidence@1 css */
+fieldset{margin:0;padding:0;border:0;min-width:0}
+legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.opts.one{grid-template-columns:minmax(0,1fr)}
+.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
+.opt:hover{border-color:var(--ink)}
+.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
+.opt:has(input:disabled){cursor:default}
+.opt.right,.opt.right:has(input:checked){border-color:var(--teal);border-style:solid}
+.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
+.badges{display:flex;flex-wrap:wrap;gap:var(--s1);flex:1 0 100%;margin:2px 0 0 28px}
+.badge{padding:0 6px;font-size:14px;line-height:20px;font-weight:700;border:1px solid;border-radius:3px;white-space:nowrap}
+.badge.ok-b{color:var(--teal);border-color:var(--teal)}
+.badge.no-b{color:var(--red);border-color:var(--red)}
+.badge.mine-b{color:var(--ink);border-color:var(--rule)}
+.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
+.opt{flex-wrap:wrap}
+.ot{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.opts.explained .opt{align-items:flex-start}
+.oexp{flex:1 0 100%;margin:2px 0 0;padding-top:var(--s1);border-top:1px solid var(--line);font-size:15px;line-height:1.35;color:var(--ink)}
+.opts.explained .opt{padding:var(--s1) var(--s3)}
+#predict:has(.explained) legend{display:none}
+.opt.mine{border-color:var(--teal)}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
+.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
+.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
+.conf .opt{min-width:96px}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.fbrow{display:flex;flex-direction:column;gap:var(--s3);align-items:flex-start}
+.feedback{width:100%;min-width:0;font-size:15px;line-height:1.35}
+.feedback:empty{display:none}
+.feedback p{margin:0 0 var(--s1)}
+.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
+.feedback li{margin:0}
+.feedback .verdict{font-weight:700}
+.feedback .ok{color:var(--teal)}
+.feedback .no{color:var(--red)}
+.feedback .set{color:var(--amber)}
+.feedback .info{color:var(--ink)}
+.feedback .conf-report{color:var(--muted)}
+.fbrow .primary{flex:0 0 auto}
+/* /pep:component mcq-with-confidence css */
+/* DESIGN.md token reference */
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* Components bridge: embedded components/*@1 fragments read these older names */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+/* Base, focus and motion */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+pre { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; max-width: 100%; }
+pre code { font-size: 1em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+/* Buttons */
+button { cursor: pointer; min-height: 44px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); padding: 10px 20px; }
+.pep-btn, .ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.ghost:hover, .pep-btn:hover { border-color: var(--pep-accent); }
+.ghost[aria-pressed="true"] { background: var(--pep-accent-soft); border: 2px solid var(--pep-accent); }
+.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+button:disabled, .primary:disabled, .pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); color: var(--pep-text-muted); border: 1px solid var(--pep-line-strong); }
+/* Topic bar: the clearest accent surface */
+.pep-topicbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding: 12px 16px; margin: 0;
+  border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 4px; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress p { max-width: none; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; max-width: 220px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); outline: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); outline-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning); outline-color: var(--pep-warning); }
+.pep-progress > span.is-current { outline: 2px solid var(--pep-accent); }
+.pep-objectives { position: relative; break-inside: avoid; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; border-radius: var(--pep-radius-sm); }
+.pep-objectives > summary::marker { color: var(--pep-accent-text); }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; padding-left: 20px; }
+.pep-objectives li + li { margin-top: 8px; }
+@media (min-width: 640px) { .pep-objectives[open] > div { position: absolute; right: 0; z-index: 2; width: 360px; } }
+/* Activity timeline */
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px 6px 6px; border: 1px solid transparent; border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; }
+.pep-steps { counter-reset: pep-step; }
+.pep-step__n::before { counter-increment: pep-step; content: counter(pep-step); }
+.pep-step__n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--pep-control); color: var(--pep-text); font-size: 13px; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-current="step"] .pep-step__n { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-step.is-done .pep-step__n { background: var(--pep-accent-soft); color: var(--pep-accent-text); outline: 1px solid var(--pep-accent); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-step__state { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+/* Activities and regions */
+.pep-activity { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-activity > h2 { padding-bottom: 8px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region--workspace, [data-pep-workspace] {
+  padding: 24px; border: 1px solid var(--pep-line-strong);
+  border-radius: var(--pep-radius-lg); background: var(--pep-card);
+}
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
+.teach { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.teach ul, .teach ol { margin: 0; padding-left: 24px; }
+.task { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task .pep-task-q { font-weight: 600; color: var(--pep-text-strong); }
+/* Required activity checks: accent tint and rail, never success green */
+.pep-activity-checks, [data-pep-activity-checks] {
+  padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px;
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-activity-checks h3 { margin-bottom: 4px; }
+.pep-activity-checks ul { margin: 0; padding-left: 20px; }
+/* Where this fits */
+[data-pep-where-fits] {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-card);
+}
+[data-pep-where-fits] strong { color: var(--pep-text-strong); }
+/* Progressive optional hints */
+.pep-hint, details[data-pep-hint] {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md);
+  background: var(--pep-accent-soft); break-inside: avoid;
+}
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
+.pep-hint .pep-hint {
+  margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong);
+  border-radius: 0; background: transparent;
+}
+/* Optional Anecdote and Challenge disclosures */
+.pep-optional {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-card); break-inside: avoid;
+}
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer;
+  color: var(--pep-text-strong); font-weight: 600;
+}
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 16px; }
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+  .pep-step[aria-current="step"] { border-color: Highlight; }
+}
+/* Model, cells and lanes */
+.model { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-lists { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 600px) { .pep-lists { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pep-list { padding: 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.pep-list h3 { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 4px; }
+.pep-list__state { font-weight: 600; }
+.lk { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.sub { margin: 0 0 8px; font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.cells { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; padding: 0; list-style: none; min-height: 32px; }
+.cells li { font: 400 14px/20px var(--pep-font-mono); padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.lanebtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.lanebtns button { min-width: 120px; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+.lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.lane { padding: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); min-height: 80px; background: var(--pep-page); min-width: 0; }
+.lane .lk { overflow-wrap: anywhere; color: var(--pep-text-strong); }
+.cards { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.cards li { font-size: 14px; line-height: 20px; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); overflow-wrap: anywhere; }
+.cards li.revealed { border-style: dashed; border-color: var(--pep-warning); }
+.tag { display: inline-block; margin-left: 4px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--pep-warning); }
+/* Component overrides: DESIGN.md look for the embedded @1 fragments (their bytes stay unchanged) */
+legend { font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 8px; }
+.opts { gap: 8px; }
+.opt { position: relative; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); font-size: 16px; line-height: 24px; box-shadow: none; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; box-shadow: none; }
+.opt:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; box-shadow: none; }
+.opt.mine { border-color: var(--pep-accent); }
+.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.opt input:disabled { cursor: default; }
+.opt::before { content: ""; flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); }
+.opt:has(input:checked)::before { border: 6px solid var(--pep-accent); }
+.opt:has(input:disabled)::before { opacity: 0.6; }
+.opts.explained .opt { padding: 8px 16px; align-items: flex-start; }
+.opts.explained .opt::before { margin-top: 2px; }
+.oexp { font-size: 14px; line-height: 20px; color: var(--pep-text); border-top-color: var(--pep-line-strong); }
+.badge { font-size: 13px; line-height: 20px; font-weight: 600; border-radius: var(--pep-radius-pill); padding: 0 8px; }
+.badge.ok-b { color: var(--pep-success); border-color: var(--pep-success); }
+.badge.no-b { color: var(--pep-danger); border-color: var(--pep-danger); }
+.badge.mine-b { color: var(--pep-text-strong); border-color: var(--pep-line-strong); }
+.conf legend { line-height: 44px; }
+.conf .opt { min-width: 96px; }
+.row, .fbrow { gap: 12px; }
+.feedback { font-size: 14px; line-height: 20px; color: var(--pep-text); }
+.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.feedback .verdict { font-size: 16px; line-height: 24px; font-weight: 700; }
+.feedback .ok { color: var(--pep-success); }
+.feedback .no { color: var(--pep-danger); }
+.feedback .set { color: var(--pep-warning); }
+.feedback .info { color: var(--pep-text-strong); }
+.feedback .conf-report { color: var(--pep-text-muted); }
+.feedback ul { padding-left: 24px; }
+@media (max-width: 480px) { .opts, .lanes { grid-template-columns: minmax(0, 1fr); } }
+/* Editor workspace */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__scope { padding: 8px 12px; font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); background: var(--pep-sunken); }
+.pep-editor__panel pre { border: 0; padding: 0; background: transparent; }
+.pep-editor__empty { font-family: var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 700; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 700; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); max-width: none; }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn, .pep-editor__bar button { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__code { font-size: 16px; line-height: 24px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* Navigation */
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 0 1 auto; } }
+.pep-back a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+/* Recap */
+.recap { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--pep-line-strong); }
+.recap ul { margin: 0; padding-left: 24px; }
+.recap li + li { margin-top: 4px; }
+.recap details { padding: 0 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.recap details > summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: flex; align-items: center; }
+.recap details > :last-child { margin-bottom: 12px; }
+.recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+.sources ul { margin: 8px 0; padding-left: 24px; font-size: 14px; line-height: 20px; }
+.sources li { margin-bottom: 4px; overflow-wrap: anywhere; }
+.sources p { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.next-topic { font-weight: 600; color: var(--pep-text-strong); }
+.complete { padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete.settled { border-color: var(--pep-warning); background: var(--pep-warning-soft); }
+.complete:empty { display: none; }
+/* Static expected results: no-JavaScript reading only */
+.pep-expected { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.pep-expected ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-nojs-note { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text-strong); }
+.pep-nojs-code { display: flex; flex-direction: column; gap: 12px; }
+@media print {
+  [data-pep-activity][hidden], [data-pep-recap][hidden] { display: flex !important; }
+  .pep-nav, .pep-activity-actions, .pep-back, #reset, .pep-progress { display: none !important; }
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .pep-objectives[open] > div { position: static; width: auto; }
+  .pep-activity { break-before: auto; }
+  [data-pep-print-items]::after { content: "Practice items (answers omitted):\A" attr(data-pep-print-items); display: block; margin-top: 12px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); white-space: pre-wrap; }
+}
+/* page-local practice styles carried from the previous layout */
+.pep-steps-list { margin: 0; padding-left: 24px; }
+.pep-steps-list > li + li { margin-top: 8px; }
+.out { margin: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; min-height: 44px; }
+.out .err { color: var(--pep-danger); font-weight: 700; }
+.out .okl { color: var(--pep-success); font-weight: 700; }
+.ops { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.ops button { font-family: var(--pep-font-mono); font-size: 14px; }
+.ops button[aria-pressed="true"] { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); color: var(--pep-text-strong); }
+.pep-editor__panel .out { border: 0; padding: 0; background: transparent; }
+/* several problems may be listed: Problems scrolls inside, nothing clips it */ .pep-editor { overflow: visible; }
+</style>
+<noscript><style>.pep-js-only{display:none!important}</style></noscript>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-path-settled="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="12">
+<header class="pep-topicbar">
+  <h1 id="page-title">The equals and hashCode contract</h1>
+  <div class="pep-topicbar__progress progress">
+    <p><span class="pep-js-only"><span id="pos-text">Activity 1 of 4</span> · <span id="path-text">Answered 0 of 4</span> · <span id="prog-text">Completed 0 of 4</span> · </span>about 12 min</p>
+    <div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  </div>
+  <details class="pep-objectives" data-pep-objectives>
+    <summary aria-controls="objectives-body">Objectives</summary>
+    <div id="objectives-body"><ul>
+      <li>State the equals contract (reflexive, symmetric, transitive, consistent, and false for null) and the rule that equal objects must have equal hash codes</li>
+      <li>Implement equals and hashCode for a value class with Objects.equals and Objects.hash, or use a record that provides them</li>
+      <li>Diagnose a HashSet or HashMap bug caused by overriding equals without hashCode, or by changing fields that participate in equals and hashCode while the object is stored as a key, and contrast it with changing an unrelated field, which does not break lookup</li>
+    </ul></div>
+  </details>
+  <button type="button" class="pep-btn pep-js-only" id="reset" data-pep-reset>Restart activity</button>
+  <p class="vh" id="restart-status" role="status" aria-live="polite"></p>
+</header>
+<nav class="pep-nav" aria-label="Activities"><ol class="pep-steps">
+  <li><a class="pep-step" id="tl-1" href="#activity-1" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Guess</a></li>
+  <li><a class="pep-step" id="tl-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Contract</a></li>
+  <li><a class="pep-step" id="tl-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Bugs</a></li>
+  <li><a class="pep-step" id="tl-4" href="#activity-4" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Implement</a></li>
+</ol></nav>
+<noscript data-section-skip><p class="pep-nojs-note"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. All four activities follow in order, each with its expected results and why.</p></noscript>
+
+<section id="activity-1" class="pep-activity" data-pep-activity aria-labelledby="a1-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a1-h" tabindex="-1">Activity 1: Start with a guess</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+
+          <p>A <code>Seat</code> class overrides <code>equals</code>, so two seats with the same row and number are equal. It does not override <code>hashCode</code>.</p>
+<pre><code>Set&lt;Seat&gt; booked = new HashSet&lt;&gt;();
+booked.add(new Seat("A", 1));
+System.out.println(booked.contains(new Seat("A", 1)));</code></pre>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-1-box" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li>Choose an answer, then how sure you are.</li><li>Press <strong>Check prediction</strong> to see why each option is right or wrong.</li></ol>
+<p id="task-1">What does the last line print?</p>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to a guess.</p></section>
+      <div class="pep-js-only">
+<fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict data-static-alt="Prediction (practice, not scored): Seat overrides equals but not hashCode; a HashSet gets new Seat(&quot;A&quot;, 1), then contains(new Seat(&quot;A&quot;, 1)) is printed. Options: true (wrong in practice: the two seats can get different inherited hash codes, and in OpenJDK 25 they did, so the set looked in another place); false in practice (correct: OpenJDK 25 printed false in 10,000 of 10,000 runs; the set did not reach equals, though Java does not guarantee this); a compile error (wrong: overriding only equals compiles); an exception (wrong: nothing is thrown).">
+            <legend>Your prediction</legend>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="predict" id="p-true" value="true" aria-describedby="task-1"><span class="ot"><code>true</code>: the seats are equal</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-false" value="false" aria-describedby="task-1"><span class="ot"><code>false</code>, in practice</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-compile" value="compile" aria-describedby="task-1"><span class="ot">A compile error</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-throw" value="throw" aria-describedby="task-1"><span class="ot">An exception</span></label>
+            </div>
+            <div class="row"><fieldset class="conf" id="conf0" data-pep-confidence aria-describedby="conf0-instr"><legend id="conf0-instr">How sure are you?</legend><label class="opt"><input type="radio" name="conf0" id="conf0-low" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-medium" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-high" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check aria-describedby="conf0-instr" disabled>Check prediction</button></div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-1" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><h3>Activity 1 of 4: Prediction (practice, not scored)</h3><p>What does the last line print?</p><p class="pep-expected"><strong>Expected results and why:</strong> Prediction (practice, not scored): Seat overrides equals but not hashCode; a HashSet gets new Seat("A", 1), then contains(new Seat("A", 1)) is printed. Options: true (wrong in practice: the two seats can get different inherited hash codes, and in OpenJDK 25 they did, so the set looked in another place); false in practice (correct: OpenJDK 25 printed false in 10,000 of 10,000 runs; the set did not reach equals, though Java does not guarantee this); a compile error (wrong: overriding only equals compiles); an exception (wrong: nothing is thrown).</p></div></noscript>
+    </div>
+  </div>
+</section>
+
+<section id="activity-2" class="pep-activity" data-pep-activity aria-labelledby="a2-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a2-h" tabindex="-1">Activity 2: The contract: equals, then hashCode</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+
+          <p>For non-null references, <code>equals</code> must be:</p>
+          <ul>
+            <li><strong>reflexive</strong>: <code>x.equals(x)</code> is true;</li>
+            <li><strong>symmetric</strong>: <code>x.equals(y)</code> exactly when <code>y.equals(x)</code>;</li>
+            <li><strong>transitive</strong>: if x equals y and y equals z, then x equals z;</li>
+            <li><strong>consistent</strong>: the same answer every call while the compared fields do not change;</li>
+            <li><strong>false for null</strong>: <code>x.equals(null)</code> returns false.</li>
+          </ul>
+          <p>And the rule that links them: <strong>equal objects must have equal hash codes</strong>. Unequal objects may share a hash code; that is allowed, only slower.</p>
+      </div>
+<details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+        <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+        <div class="pep-optional__body">
+          <p data-pep-anecdote-story>A box office reprints a lost concert ticket. The reprint is a different piece of paper, yet it is the same booking: the event and the seat match. A door checker who compared the paper itself would turn the reprint away; one who reads the event and the seat lets it in.</p>
+          <p data-pep-anecdote-map>Equality should follow the fields that define sameness, not whether two objects are the very same one.</p>
+        </div>
+      </details>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-2-box" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li id="task-2">For each description of a class, decide whether it keeps the contract or which part it breaks.</li><li>A wrong choice gets one retry, then the answer shows.</li></ol>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>Every class description sits in its lane.</p></section>
+      <div class="pep-js-only">
+<fieldset id="x1" data-interaction="drag" data-pep-explore aria-describedby="task-2" data-pep-print-items="Classify six descriptions: matching equals/hashCode fields; constant hashCode; asymmetric equals; equals(null) throws; equals uses fewer fields than hashCode; random hashCode. Choose keeps contract, breaks equals, or breaks equal-objects/equal-hash rule." data-static-alt="Sorting activity: equals compares name and id, hashCode is Objects.hash(name, id): keeps the contract. hashCode always returns 0: keeps the contract (allowed, but every object shares one bucket, which is slow). a.equals(b) is true but b.equals(a) is false: breaks equals (symmetric). x.equals(null) throws NullPointerException: breaks equals (must return false). equals compares id only, hashCode is Objects.hash(name, id): breaks the hash rule, because two equal objects with different names get different hash codes. hashCode returns a new random number on every call: breaks the hash rule.">
+            <legend id="ln-legend">Class: <span id="ln-name"></span></legend>
+            <div class="lanebtns" id="ln-btns"></div>
+            <p class="sub" id="ln-count">0 of 6 sorted</p>
+          </fieldset>
+          <figure class="model" aria-label="How a hash set finds an object">
+
+          <div class="lanes" id="m-lanes"></div>
+          </figure>
+      </div>
+      <div class="feedback" id="fb-2" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><h3>Activity 2 of 4: Sorting practice</h3><p>For each description of a class, decide whether it keeps the contract or which part it breaks.</p><p class="pep-expected"><strong>Expected results and why:</strong> Sorting activity: equals compares name and id, hashCode is Objects.hash(name, id): keeps the contract. hashCode always returns 0: keeps the contract (allowed, but every object shares one bucket, which is slow). a.equals(b) is true but b.equals(a) is false: breaks equals (symmetric). x.equals(null) throws NullPointerException: breaks equals (must return false). equals compares id only, hashCode is Objects.hash(name, id): breaks the hash rule, because two equal objects with different names get different hash codes. hashCode returns a new random number on every call: breaks the hash rule.</p></div></noscript>
+      <p class="pep-back"><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-3" class="pep-activity" data-pep-activity aria-labelledby="a3-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a3-h" tabindex="-1">Activity 3: Two bugs that can break hash lookup</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+
+          <ul>
+            <li><strong><code>equals</code> without <code>hashCode</code></strong>: equal objects can receive different inherited hash codes, so the set can look in the wrong place and a lookup can fail.</li>
+            <li><strong>Changing a key's compared field while it is stored</strong>: the Map documentation makes the behavior unspecified from then on. The hash code can change, so a lookup can fail even with the same object.</li>
+          </ul>
+          <p>Changing a field that <code>equals</code> and <code>hashCode</code> ignore is harmless: lookup still works. A record provides field-based <code>equals</code> and <code>hashCode</code> over all its components and keeps those components final.</p>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-3-box" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li id="task-3">Run the seat program on each version of <code>Seat</code> and each change. Find the missing-hashCode failure, the mutated-key failure, and a change that is harmless.</li><li><strong>Continue</strong> appears once the task is met.</li></ol>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>All three outcomes are found.</p></section>
+      <div class="pep-js-only">
+<fieldset id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-pep-print-items="Run the Seat program with three versions: equals only; equals and hashCode; record. For the mutable class versions, also try no change, changing note, and changing row. Record contains(...) and size, and distinguish guaranteed rules from this OpenJDK 25 observation." data-static-alt="Seat lab, on OpenJDK 25. A HashSet gets a Seat for row A, number 1. Version equals only (no hashCode): contains(new Seat(&quot;A&quot;, 1)) printed false. Version equals and hashCode, or the record: it printed true. With the full version, changing the note field (not used by equals or hashCode) and then calling contains on the same object printed true. Changing the row field (used by equals and hashCode) from A to B and then calling contains on the same object printed false in this run, although the set still had size 1. Java leaves the behavior after such a change unspecified: that false is one observed outcome, not a guarantee.">
+            <legend>Run the seat program</legend>
+            <p class="lk" id="g-v">Version of Seat</p>
+            <div class="ops" role="group" aria-labelledby="g-v"><button type="button" class="ghost" id="v-eq" data-g="v" data-v="eq" aria-pressed="true">equals only</button><button type="button" class="ghost" id="v-both" data-g="v" data-v="both" aria-pressed="false">equals and hashCode</button><button type="button" class="ghost" id="v-rec" data-g="v" data-v="rec" aria-pressed="false">record</button></div>
+            <p class="lk" id="g-c">Before the lookup</p>
+            <div class="ops" role="group" aria-labelledby="g-c"><button type="button" class="ghost" id="c-none" data-g="c" data-v="none" aria-pressed="true">no change</button><button type="button" class="ghost" id="c-note" data-g="c" data-v="note" aria-pressed="false">seat.note = "window"</button><button type="button" class="ghost" id="c-row" data-g="c" data-v="row" aria-pressed="false">seat.row = "B"</button></div>
+            <div class="row"><button type="button" class="primary" id="run" aria-describedby="task-3">Run</button></div>
+          </fieldset>
+          <figure class="model" aria-label="How a hash set finds an object">
+
+<pre><code id="m-code"></code></pre>
+          <p class="lk" id="m-out-k">Printed (OpenJDK 25)</p>
+          <pre class="out" id="m-out" aria-labelledby="m-out-k">Choose a version and a change, then run.</pre>
+          <p class="lk" id="m-found-k">Found so far</p>
+          <ul class="cells" id="m-found" aria-labelledby="m-found-k"></ul>
+          </figure>
+      </div>
+      <div class="feedback" id="fb-3" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><h3>Activity 3 of 4: Practice</h3><p>Run the seat program on each version of <code>Seat</code> and each change. Find the missing-hashCode failure, the mutated-key failure, and a change that is harmless.</p><p class="pep-expected"><strong>Expected results and why:</strong> Seat lab, on OpenJDK 25. A HashSet gets a Seat for row A, number 1. Version equals only (no hashCode): contains(new Seat("A", 1)) printed false. Version equals and hashCode, or the record: it printed true. With the full version, changing the note field (not used by equals or hashCode) and then calling contains on the same object printed true. Changing the row field (used by equals and hashCode) from A to B and then calling contains on the same object printed false in this run, although the set still had size 1. Java leaves the behavior after such a change unspecified: that false is one observed outcome, not a guarantee.</p></div></noscript>
+      <p class="pep-back"><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-4" class="pep-activity" data-pep-activity aria-labelledby="a4-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a4-h" tabindex="-1">Activity 4: Write both from the same fields</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+
+<pre><code>// Begin an equals method with the guard cases.
+if (this == o) return true;                // same object
+if (!(o instanceof Seat s)) return false;  // null or another class
+// Next, decide how to compare each field that defines equality.
+// hashCode must use exactly that same field set.</code></pre>
+          <p><code>Objects.equals(left, right)</code> compares one nullable reference pair without throwing; a primitive pair uses <code>==</code>. <code>Objects.hash(...)</code> can combine the field set after you have decided which fields define equality. The task leaves the field conjunction, null-safe choices and hash construction for you to author. Records provide these methods automatically, but this task practises writing both in a class.</p>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="code">
+      <div id="task-apply" class="task" data-pep-task data-pep-may-stall>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li id="task-4">In <strong>Course.java</strong>, write <code>equals</code> so two courses are equal exactly when <code>code</code> and <code>term</code> match, with either one possibly <code>null</code>.</li><li>Write <code>hashCode</code> from the same two fields.</li><li>Rate your confidence, then press <strong>Run</strong> to check equality, both nullable fields and hash codes.</li><li>Only runs that execute but fail a check use one of the three assessed attempts. Starter, compiler-diagnostic and unsupported-subset runs do not.</li></ol>
+        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-apply" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span>Hint 1 of 2 for Activity 4</span></summary><div class="pep-hint__body"><p><strong>Hint 1 (Activity 4)</strong></p><p data-pep-hint-target><strong>Where to act:</strong> Start at the top of <code>equals</code>, before comparing either field.</p><p data-pep-hint-step><strong>Next step:</strong> Handle the same-object case, then reject values that are not a <code>Course</code> before reading their fields.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-apply" data-pep-hint-order="2" data-section-skip><summary><span>Another hint</span><span>Another hint, 2 of 2 for Activity 4</span></summary><div class="pep-hint__body"><p><strong>Hint 2 (Activity 4)</strong></p><p data-pep-hint-target><strong>Where to act:</strong> The final equality expression and the body of <code>hashCode</code>.</p><p data-pep-hint-step><strong>Next step:</strong> Compare each nullable field with the null-safe helper from the teaching, then combine exactly those same fields for the hash.</p></div></details></div></details>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>Every equality and hash-code check passes.</p></section>
+
+      <div class="pep-js-only">
+<fieldset id="x3" data-pep-answer-sensitive="java" data-pep-answer-targets="equals hashCode" data-interaction="explore" data-pep-explore aria-describedby="task-4" data-pep-print-items="Starter class Course has final String code and term, its constructor, equals returning false, and hashCode returning 0. Write both methods. Checks cover separate equal copies, different fields, reflexivity, null, another class, null code, null term, equal hashes, and useful spread." data-static-alt="Java editor for Course.java. Starter: final class Course has final String fields code and term, a constructor assigning both fields, equals(Object o) returning false, and hashCode() returning 0. Write equals so separate courses are equal exactly when code and term match, either field possibly null, and write hashCode from the same fields. Run checks separate equal copies built from runtime-created strings, different codes and terms, reflexivity, equals(null), another class, null code, null term, equal hash codes for equal courses and spread across four different courses. Hint 1 (Activity 4): handle same-object and non-Course cases before reading fields. Hint 2 (Activity 4): compare each nullable field null-safely, then combine exactly those fields for the hash.">
+            <legend>Write equals and hashCode</legend>
+            <div class="pep-editor">
+              <div class="pep-editor__bar"><span class="pep-editor__file">Course.java</span><button type="button" class="primary" id="ed-run">Run</button><button type="button" class="ghost" id="ed-reset">Reset code</button></div>
+              <div class="pep-editor__code"><div class="pep-editor__gutter" id="ed-gutter" aria-hidden="true"></div><textarea id="ed" class="pep-editor__input" rows="13" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Java editor, Course.java" aria-describedby="task-4 ed-scope"></textarea></div>
+              <p class="pep-editor__scope" id="ed-scope">Checks <code>equals</code> and <code>hashCode</code> offline; the fields and constructor stay as given. Test strings are created at run time rather than reused as interned literals.</p>
+              <fieldset class="conf" id="ed-conf" data-pep-confidence aria-describedby="ed-conf-instr ed-conf-note"><legend id="ed-conf-instr">Before the first result, how sure are you?</legend><label class="opt"><input type="radio" name="ed-conf" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="ed-conf" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="ed-conf" value="high"><span class="ot">High</span></label></fieldset><p id="ed-conf-note" class="sub">Choose this unscored rating before your first Run.</p>
+              <div class="pep-editor__tabs" role="tablist" aria-label="Results"><button type="button" role="tab" id="tab-prob" aria-controls="ed-prob" aria-selected="true">Problems</button><button type="button" role="tab" id="tab-out" aria-controls="ed-out" aria-selected="false" tabindex="-1">Output</button></div>
+              <div class="pep-editor__panel" id="ed-prob" role="tabpanel" aria-labelledby="tab-prob" tabindex="0"></div>
+              <div class="pep-editor__panel" id="ed-out" role="tabpanel" aria-labelledby="tab-out" tabindex="0" hidden><pre class="out" id="ed-print">(no output yet)</pre></div>
+              <p class="pep-editor__status" id="ed-status"></p>
+            </div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-4" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-pep-no-js data-section-skip><div class="pep-nojs-code pep-expected"><p><strong>Practice editor, reading version.</strong> JavaScript is off, so the editor cannot run here. Work on paper, or place this class in a small Java 25 program in a setup you already use. The starter in <strong>Course.java</strong> is:</p>
+<pre><code>final class Course {
+    private final String code;
+    private final String term;
+    Course(String code, String term) { this.code = code; this.term = term; }
+
+    @Override public boolean equals(Object o) {
+        return false; // compare code and term
+    }
+
+    @Override public int hashCode() {
+        return 0; // combine the same fields
+    }
+}</code></pre><p><strong>What success looks like:</strong> two courses with the same code and term are equal, even as separate objects; a different code or term makes them unequal; <code>equals(null)</code> and an object of another class give <code>false</code>; a <code>null</code> term causes no exception; equal courses have equal hash codes; and different courses mostly get different ones.</p></div></noscript>
+      <p class="pep-back"><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+    </div>
+  </div>
+</section>
+
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+  <button type="button" class="pep-btn" id="prev" data-pep-previous>Previous activity</button>
+  <button type="button" class="primary" id="next" data-pep-next>Next activity</button>
+</div>
+
+<section id="recap" class="recap" data-pep-recap aria-labelledby="recap-h">
+  <h2 id="recap-h" tabindex="-1">Recap</h2>
+<ul>
+            <li><code>equals</code> is reflexive, symmetric, transitive, consistent, and false for <code>null</code>; equal objects must have equal hash codes.</li>
+            <li>Build <code>equals</code> with <code>Objects.equals</code> and <code>hashCode</code> with <code>Objects.hash</code> over the same fields, or declare a record.</li>
+            <li>Overriding <code>equals</code> without <code>hashCode</code> can make <code>HashSet</code> and <code>HashMap</code> lookup fail. Changing a compared field of a stored key makes their behavior unspecified, and lookup can fail. Changing an unrelated field does not affect lookup.</li>
+          </ul>
+          <details data-section-skip data-pep-cheat-sheet>
+            <summary>Cheat sheet</summary>
+            <table>
+              <tr><td>equals start</td><td><code>if (this == o) return true; if (!(o instanceof T t)) return false;</code></td></tr>
+              <tr><td>Reference field</td><td><code>Objects.equals(name, t.name)</code></td></tr>
+              <tr><td>Primitive field</td><td><code>number == t.number</code></td></tr>
+              <tr><td>hashCode</td><td><code>Objects.hash(name, number)</code>: the same fields</td></tr>
+              <tr><td>Shortcut</td><td><code>record T(String name, int number) { }</code></td></tr>
+              <tr><td>Keys</td><td>do not change compared fields while stored</td></tr>
+            </table>
+          </details>
+          <details data-section-skip data-pep-sources class="sources">
+            <summary>Sources and review date</summary>
+            <p>Claims on this page were checked against the live official pages below on 14 October 2026 (UTC), for Java SE 25. Program output was confirmed on OpenJDK 25.0.4. Links open outside this lesson.</p>
+            <ul>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html" rel="noopener">Object (Java SE 25 API)</a>: equals is an equivalence relation; the general contract of hashCode.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Objects.html" rel="noopener">Objects (Java SE 25 API)</a>: equals(Object, Object), hash(Object...).</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Record.html" rel="noopener">Record (Java SE 25 API)</a>: the implicitly provided equals and hashCode.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/HashSet.html" rel="noopener">HashSet (Java SE 25 API)</a>: backed by a hash table.</li>
+              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html" rel="noopener">Map (Java SE 25 API)</a>: behavior is not specified when a key changes in a way that affects equals.</li>
+              <li><a href="https://dev.java/learn/api/collections-and-streams/collections-framework/choosing-keys/" rel="noopener">Dev.java: Choosing Immutable Types for Your Key</a>; <a href="https://dev.java/learn/language/oop/inheritance/objects/" rel="noopener">Dev.java: Object as a Superclass</a>; <a href="https://dev.java/learn/language/oop/records/" rel="noopener">Dev.java: Using Record to Model Immutable Data</a>.</li>
+            </ul>
+            <p>Not promised by Java: that a lookup fails after the bugs above. The failures shown are what OpenJDK 25 did; the specification leaves a mutated key's behavior unspecified and identity hash codes are not guaranteed to differ.</p>
+          </details>
+          <p id="complete" class="complete" data-pep-completion></p>
+          <p class="next-topic">Next topic: How HashMap works</p>
+</section>
+</main>
+<script>var PAGE={};
+(function(){
+var E,$,$$,C={v:'eq',c:'none'},found={};
+var VN={eq:'equals only',both:'equals and hashCode',rec:'record'};
+function pick(g,v){C[g]=v;$$('[data-g="'+g+'"]').forEach(function(b){b.setAttribute('aria-pressed',b.getAttribute('data-v')===v?'true':'false');});code();}
+function code(){var lines=['// Seat version: '+VN[C.v]+(C.v==='rec'?' (components row and number)':' (mutable fields row, number, note; equals uses row and number'+(C.v==='both'?', and so does hashCode)':')')),'Seat seat = new Seat("A", 1);','Set<Seat> booked = new HashSet<>();','booked.add(seat);'];
+  if(C.c==='note')lines.push('seat.note = "window";');
+  if(C.c==='row')lines.push('seat.row = "B";');
+  lines.push(C.c==='none'?'System.out.println(booked.contains(new Seat("A", 1)));':'System.out.println(booked.contains(seat) + " size=" + booked.size());');
+  $('#m-code').textContent=lines.join('\n');}
+function renderFound(){var u=$('#m-found');u.textContent='';[['hash','missing hashCode can fail'],['row','mutated key can fail'],['note','harmless change works']].forEach(function(p){u.appendChild(E.el('li',found[p[0]]?'hot':'',p[1]+': '+(found[p[0]]?'yes':'not yet')));});}
+function run(){code();var out,why,key=null;
+  if(C.v==='rec'&&C.c!=='none'){$('#m-out').textContent='(not run)';E.say([{c:'verdict info',s:'Not available in this practice model: a record has no note field, and its row component is final, so this change cannot be written. That is one reason records make safe keys.'}]);return;}
+  if(C.v==='eq'&&C.c!=='none'){$('#m-out').textContent='(not run)';E.say([{c:'verdict info',s:'Choose "equals and hashCode" to test changes to a stored key: this version can already fail without any change.'}]);return;}
+  if(C.c==='none'){if(C.v==='eq'){out='false';key='hash';why='`equals` says the seats are equal, but without `hashCode` they can keep different inherited hash codes. In this OpenJDK 25 run they did, so the set looked somewhere else and never called `equals`. Java does not guarantee that outcome; it only makes lookup unreliable.';}
+    else{out='true';why='Equal seats now have equal hash codes, so the set looks in the right place and `equals` confirms the match.';}}
+  else if(C.c==='note'){out='true size=1';key='note';why='`note` is not used by `equals` or `hashCode`, so the stored seat\'s hash code did not change and lookup still works.';}
+  else{out='false size=1';key='row';why='`row` is used by `equals` and `hashCode`. In this OpenJDK 25 run, changing it from "A" to "B" changed the stored seat\'s hash code, and `contains` printed false for the very same object while the set still held it (size 1). Java does not promise this exact result: after such a change the behavior is unspecified, and a changed field need not even change the hash code. Lookup can fail, as it did here.';}
+  $('#m-out').textContent=out;if(key)found[key]=true;renderFound();
+  var msg=[{c:'verdict info',s:'Printed `'+out+'`.'},{s:why}];
+  if(found.hash&&found.row&&found.note&&!E.state().done.x2){msg.push({c:'verdict ok',s:'All three found: a missing hashCode can fail, a mutated compared field can fail, an unrelated field is harmless.'});E.say(msg,true);E.complete('x2');}
+  else E.say(msg);}
+PAGE.predict={ok:'false',lead:'A hash set uses hashCode first to decide where to look. Without an override, the two seats can get different inherited hash codes; in OpenJDK 25 they did, so equals was never asked.',expl:{
+  true:'Not quite: equals would say true, but in practice the set never gets that far, because the inherited hash codes differ.',
+  false:'Right: OpenJDK 25 printed false every time in 10,000 runs. Java does not promise identity hash codes differ, so it is "in practice".',
+  compile:'Not quite: overriding only equals compiles; tools may warn, javac does not reject it.',
+  throw:'Not quite: nothing throws; the lookup can quietly fail.'}};
+PAGE.lanes={key:'x1',model:'#m-lanes',btns:'#ln-btns',name:'#ln-name',count:'#ln-count',legend:'ln-legend',label:'Continue',
+ lanes:[{id:'ok',label:'Keeps the contract'},{id:'eq',label:'Breaks equals'},{id:'hash',label:'Breaks equal objects, equal hash codes'}],
+ done:'equals has five rules; hashCode has one hard rule: equal objects, equal hash codes.',
+ items:[
+  {n:'`equals` compares `name` and `id`; `hashCode` is `Objects.hash(name, id)`',lane:'ok',ok:'Both use the same fields, so equal objects always get equal hash codes.',w:{eq:'Comparing two fields is fine for equals.',hash:'Equal objects have the same name and id, so `Objects.hash` gives them the same code.'}},
+  {n:'`hashCode` always returns `0`',lane:'ok',ok:'Allowed: equal objects get equal codes. Unequal objects may share a code, but every object in one bucket makes lookups slow.',w:{eq:'This says nothing about equals.',hash:'Equal objects do get equal codes (all are 0). It is slow, not broken.'}},
+  {n:'`a.equals(b)` is true but `b.equals(a)` is false',lane:'eq',ok:'equals must be symmetric.',w:{ok:'Symmetry is one of the five equals rules.',hash:'The hash rule is about hash codes; this is about equals itself.'}},
+  {n:'`x.equals(null)` throws `NullPointerException`',lane:'eq',ok:'equals must return false for null, not throw.',w:{ok:'The contract says `x.equals(null)` returns false.',hash:'This is an equals rule, not a hash code rule.'}},
+  {n:'`equals` compares `id` only; `hashCode` is `Objects.hash(name, id)`',lane:'hash',ok:'Two objects with the same id but different names are equal, yet get different hash codes.',w:{ok:'The fields do not match: hashCode uses a field that equals ignores.',eq:'equals on id alone is a valid equivalence relation; the hash code is the problem.'}},
+  {n:'`hashCode` returns a new random number on every call',lane:'hash',ok:'Equal objects, even the same object twice, would get different codes.',w:{ok:'The hash code must be consistent and equal for equal objects.',eq:'equals is not involved; hashCode is.'}}
+ ]};
+PAGE.goals=[['x1'],['apply'],['x2']];
+PAGE.checkLabels={x1:'Contract rules',apply:'Final check'};
+PAGE.initLegacy=function(eng){E=eng;$=eng.$;$$=eng.$$;
+  $$('[data-g]').forEach(function(b){b.addEventListener('click',function(){pick(b.getAttribute('data-g'),b.getAttribute('data-v'));});});
+  $('#run').addEventListener('click',run);code();renderFound();E.lanes(PAGE.lanes);};
+PAGE.resetLegacy=function(st){if(st===3){found={};pick('v','eq');pick('c','none');$('#m-out').textContent='Choose a version and a change, then run.';renderFound();}};
+
+/* Practice editor shell: gutter, Problems/Output tabs, status, bounded runs; the page supplies check(src) */
+var ED={runs:0,limit:3,lock:false};
+function edGutter(){var n=$('#ed').value.split('\n').length,g=[];for(var k=1;k<=n;k++)g.push(k);$('#ed-gutter').textContent=g.join('\n');$('#ed').rows=Math.max(5,Math.min(20,n));}
+function edTab(which){[['prob','#tab-prob','#ed-prob'],['out','#tab-out','#ed-out']].forEach(function(t){var on=t[0]===which;$(t[1]).setAttribute('aria-selected',on?'true':'false');$(t[1]).tabIndex=on?0:-1;$(t[2]).hidden=!on;});}
+function edGo(file,ln){var ta=$('#ed'),ls=ta.value.split('\n'),pos=0;if(file!==ED.file){ta.focus();return;}for(var k=0;k<ln-1&&k<ls.length;k++)pos+=ls[k].length+1;ta.focus();ta.setSelectionRange(pos,pos);}
+function edProblems(list){var box=$('#ed-prob');box.textContent='';
+  if(!list.length){box.appendChild(E.el('p','pep-editor__empty','No problems.'));return;}
+  list.forEach(function(pr){var b=E.el('button','pep-editor__problem');b.type='button';
+    b.appendChild(E.el('span',pr.kind==='error'?'kind-error':'kind-limit',pr.kind==='error'?'Error':'Not supported'));
+    b.appendChild(document.createTextNode(' '+pr.file+' line '+pr.line+': '+pr.msg));
+    b.addEventListener('click',function(){edGo(pr.file,pr.line);});box.appendChild(b);});
+  edTab('prob');}
+function edLock(on){ED.lock=on;$('#ed').readOnly=on;$('#ed-run').disabled=on;$('#ed-reset').disabled=on;}
+function edReset(){$('#ed').value=ED.starter;edGutter();var box=$('#ed-prob');box.textContent='';box.appendChild(E.el('p','pep-editor__empty','Not run yet. Edit the code, then press Run.'));
+  $('#ed-print').textContent='(no output yet)';edTab('prob');$('#ed-status').textContent='Not run yet';if(ED.onReset)ED.onReset();}
+function edRestart(){ED.runs=0;edLock(false);edReset();}
+function edCount(msg){
+  /* a run that compiles or fails a type check counts; a form outside the practice subset does not */
+  if(++ED.runs>=ED.limit){E.state().results[ED.key]='settled';edLock(true);
+    msg.push({c:'verdict set',s:'Settled after '+ED.limit+' runs that did not meet the task: this activity is not passed and earns no credit. Continue to the next activity, or press Restart activity to try again.'});
+    E.say(msg,true);E.complete(ED.key);return true;}
+  if(ED.runs===ED.limit-1)msg.push({s:'One more run that does not meet the task settles this activity without credit.'});
+  return false;}
+function practiceShape(src){return String(src).replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\//g,'').replace(/\s+/g,'');}
+function editorConfidence(){var c=$('input[name="ed-conf"]:checked');return c&&c.value;}
+function edRun(){if(ED.lock||E.state().done[ED.key])return;var confidence=editorConfidence();if(!confidence){$('#ed-status').textContent='Not assessed: rate your confidence first';E.say([{c:'verdict info',s:'Choose Low, Medium or High before the first editor result. Confidence is reported, never scored.'}]);return;}var src=$('#ed').value;
+  if(practiceShape(src)===practiceShape(ED.starter)){edProblems([]);$('#ed-print').textContent='(no output: starter unchanged)';$('#ed-status').textContent='Not assessed: edit the starter first';E.say([{c:'verdict info',s:'Not assessed: the starter is unchanged.'},{c:'conf-report',s:'Your confidence: '+confidence+'. Reported, never scored.',attr:'data-pep-confidence-report'}]);return;}
+  var r=ED.check(src);
+  edProblems(r.problems||[]);
+  if(r.output!=null){$('#ed-print').textContent=r.output;if(!(r.problems||[]).length)edTab('out');}else $('#ed-print').textContent='(no output: the program did not compile)';
+  $('#ed-status').textContent=r.status;
+  r.msg=r.msg||[];r.msg.push({c:'conf-report',s:'Your confidence: '+confidence+'. Reported, never scored.',attr:'data-pep-confidence-report'});
+  if(r.unsupported||r.unassessed){E.say(r.msg);return;}
+  E.attempt(ED.activity);
+  if(r.ok){r.msg.push({c:'verdict ok',s:r.done});E.say(r.msg,true);E.complete(ED.key);return;}
+  if(edCount(r.msg))return;E.say(r.msg);}
+function edInit(o){ED.key=o.key;ED.activity=o.activity;ED.starter=o.starter;ED.check=o.check;ED.file=o.file;ED.onReset=o.onReset;
+  $('#ed').addEventListener('input',edGutter);$('#ed-run').addEventListener('click',edRun);$('#ed-reset').addEventListener('click',edReset);
+  $('#tab-prob').addEventListener('click',function(){edTab('prob');});$('#tab-out').addEventListener('click',function(){edTab('out');});
+  $$('[role="tab"]').forEach(function(t){t.addEventListener('keydown',function(ev){if(ev.key==='ArrowRight'||ev.key==='ArrowLeft'){var w=t.id==='tab-prob'?'out':'prob';edTab(w);$('#tab-'+w).focus();ev.preventDefault();}});});
+  edReset();}
+/* tokenizer shared by the bounded checkers: identifiers, numbers, strings, two-char operators, single symbols; line numbers kept */
+function edLex(src){var t=[],re=/[ \t\r]+|\n|\/\/[^\n]*|\/\*[\s\S]*?\*\/|(::|->|==|!=|<=|>=|&&|\|\||\+\+|\+=|[A-Za-z_$][\w$]*|\d+|"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*'|.)/g,m,line=1;
+  while((m=re.exec(src))){if(m[1]!==undefined)t.push({v:m[1],line:line});line+=(m[0].match(/\n/g)||[]).length;}return t;}
+
+/* equals/hashCode practice editor: a bounded checker for the class Course(code, term). It accepts the usual guard
+   statements, field comparisons with Objects.equals, equals or ==, and hash codes from Objects.hash, Objects.hashCode,
+   hashCode calls, int literals, + * and ^. Strings are separate objects, so == compares identity as in Java. */
+var EQ_STARTER='final class Course {\n    private final String code;\n    private final String term;\n    Course(String code, String term) { this.code = code; this.term = term; }\n\n    @Override public boolean equals(Object o) {\n        return false; // compare code and term\n    }\n\n    @Override public int hashCode() {\n        return 0; // combine the same fields\n    }\n}';
+function eqCheck(src){
+  var Tk=edLex(src),i=0;
+  function pk(o){var x=Tk[i+(o||0)];return x?x.v:'';}
+  function ln(){return Tk[i]?Tk[i].line:(Tk.length?Tk[Tk.length-1].line:1);}
+  function Lim(m){var e=new Error(m);e.limit=true;e.line=ln();return e;}
+  function Err(m){var e=new Error(m);e.line=ln();return e;}
+  function eat(v){if(pk()===v){i++;return;}throw Lim("expected '"+v+"'");}
+  function eatAll(ws,lim){for(var k=0;k<ws.length;k++){if(pk()!==ws[k])throw Lim(lim||("expected '"+ws[k]+"'"));i++;}}
+  function ident(){var v=pk();if(!/^[A-Za-z_$][\w$]*$/.test(v))throw Lim('expected an identifier');i++;return v;}
+  var JAVA_WORD={true:1,false:1,null:1,class:1,interface:1,record:1,enum:1,extends:1,super:1,new:1,this:1,return:1,if:1,else:1,for:1,while:1,do:1,switch:1,case:1,default:1,break:1,continue:1,try:1,catch:1,finally:1,throw:1,throws:1,public:1,private:1,protected:1,static:1,final:1,abstract:1,void:1,boolean:1,byte:1,short:1,int:1,long:1,float:1,double:1,char:1,var:1,instanceof:1,package:1,import:1,assert:1,goto:1,const:1,synchronized:1,native:1,transient:1,volatile:1,strictfp:1,_:1};
+  function unknownVar(v,qualified,known){if(!known&&!qualified&&!JAVA_WORD[v]&&pk()!=='.'&&pk()!=='(')throw Err('cannot find symbol: variable '+v);throw Lim('this Java form is not supported in this practice editor');}
+  var FIELDS=['code','term'],bound={};
+  function field(){ /* code, this.code or c.code for a bound Course variable */
+    if(pk()==='this'&&pk(1)==='.'){i+=2;var f=ident();if(FIELDS.indexOf(f)<0)unknownVar(f,true);return {k:'f',on:'this',f:f};}
+    var v=ident();if(pk()==='.'&&bound[v]){i++;var g=ident();if(FIELDS.indexOf(g)<0)unknownVar(g,true);return {k:'f',on:v,f:g};}
+    if(FIELDS.indexOf(v)>=0)return {k:'f',on:'this',f:v};
+    if(v==='o'&&pk()==='.')unknownVar(v,true,true);
+    unknownVar(v,false,v==='o'||!!bound[v]);}
+  function cond(){ /* guard conditions */
+    if(pk()==='this'&&pk(1)==='=='&&pk(2)==='o'){i+=3;return {k:'same'};}
+    if(pk()==='o'&&pk(1)==='=='&&pk(2)==='null'){i+=3;if(pk()==='||'){i++;var g=cond();return {k:'or',a:{k:'null'},b:g};}return {k:'null'};}
+    if(pk()==='getClass'){eatAll(['getClass','(',')','!=','o','.','getClass','(',')']);return {k:'otherClass'};}
+    if(pk()==='!'&&pk(1)==='('&&pk(2)==='o'&&pk(3)==='instanceof'){i+=4;eat('Course');var v=null;if(pk()!==')'){v=ident();bound[v]=true;}eat(')');return {k:'notInst',v:v};}
+    throw Lim('guard with this == o, o == null, getClass() or !(o instanceof Course ...)');}
+  function term(){
+    if(pk()==='this'&&pk(1)==='=='&&pk(2)==='o'){i+=3;return {k:'same'};}
+    if(pk()==='true'||pk()==='false'){var b=pk()==='true';i++;return {k:'lit',v:b};}
+    if(pk()==='o'&&pk(1)==='instanceof'){i+=2;eat('Course');var v=ident();bound[v]=true;return {k:'inst',v:v};}
+    if(pk()==='Objects'&&pk(1)==='.'&&pk(2)==='equals'){i+=3;eat('(');var a=field();eat(',');var b=field();eat(')');return {k:'oeq',a:a,b:b};}
+    var a2=field();
+    if(pk()==='.'&&pk(1)==='equals'){i+=2;eat('(');var b2=field();eat(')');return {k:'meq',a:a2,b:b2};}
+    if(pk()==='=='){i++;return {k:'ideq',a:a2,b:field()};}
+    throw Lim('compare fields with Objects.equals, equals or ==');}
+  function conj(){var ts=[term()];while(pk()==='&&'){i++;ts.push(term());}return ts;}
+  function hexpr(){ /* Java precedence: * then + then ^ */
+    function prim(){if(/^\d+$/.test(pk())){var n=Number(pk());i++;return {k:'int',v:n};}
+      if(pk()==='('){i++;var e=hexpr();eat(')');return e;}
+      if(pk()==='Objects'&&pk(1)==='.'&&pk(2)==='hash'){i+=3;eat('(');var args=[field()];while(pk()===','){i++;args.push(field());}eat(')');return {k:'ohash',args:args};}
+      if(pk()==='Objects'&&pk(1)==='.'&&pk(2)==='hashCode'){i+=3;eat('(');var f=field();eat(')');return {k:'ohc',f:f};}
+      var g=field();eatAll(['.','hashCode','(',')'],'call hashCode() on a field, or use Objects.hash');return {k:'mhc',f:g};}
+    function mul(){var e=prim();while(pk()==='*'){i++;e={k:'*',a:e,b:prim()};}return e;}
+    function add(){var e=mul();while(pk()==='+'){i++;e={k:'+',a:e,b:mul()};}return e;}
+    var e=add();while(pk()==='^'){i++;e={k:'^',a:e,b:add()};}return e;}
+  function retBool(){if(pk()==='true'||pk()==='false'){var b=pk()==='true';i++;return b;}throw Lim('return true or false after a guard');}
+  var eqBody=null,hcBody=null,cast=null;
+  try{
+    if(/@(?:SuppressWarnings|Deprecated|SafeVarargs)\b/.test(src))throw Lim('class-level annotations are legal Java but are not supported in this practice editor');
+    if(pk()==='record'||pk()==='public'&&pk(1)==='record')throw Lim('a record would provide equals and hashCode for you, but this activity asks you to write both in the class');
+    if(pk()==='final')i++;eat('class');if(ident()!=='Course')throw Lim('keep the class Course');eat('{');
+    eatAll(['private','final','String','code',';','private','final','String','term',';','Course','(','String','code',',','String','term',')','{','this','.','code','=','code',';','this','.','term','=','term',';','}'],'keep the fields and the constructor as given');
+    while(pk()!=='}'){if(i>=Tk.length)throw Err("'}' expected");
+      if(pk()==='@'){i++;eat('Override');}
+      if(pk()==='public')i++;
+      if(pk()==='boolean'){i++;if(ident()!=='equals')throw Lim('write equals and hashCode only');eat('(');eat('Object');if(ident()!=='o')throw Lim('keep the parameter name o');eat(')');eat('{');eqBody=[];
+        while(pk()!=='}'){if(i>=Tk.length)throw Err("'}' expected");var line=ln();
+          if(pk()==='if'){i++;eat('(');var c=cond();eat(')');var br=pk()==='{';if(br)i++;eat('return');var rb=retBool();eat(';');if(br)eat('}');eqBody.push({k:'if',c:c,r:rb,line:line});}
+          else if(pk()==='Course'&&pk(2)==='='){i++;var cv=ident();eatAll(['=','(','Course',')','o',';']);bound[cv]=true;eqBody.push({k:'cast',v:cv,line:line});}
+          else if(pk()==='return'){i++;var ts=conj();eat(';');eqBody.push({k:'ret',ts:ts,line:line});if(pk()!=='}')throw Err('unreachable statement');}
+          else throw Lim('equals here may hold guards, one cast and one return');}
+        eat('}');}
+      else if(pk()==='int'){i++;if(ident()!=='hashCode')throw Lim('write equals and hashCode only');eat('(');eat(')');eat('{');eat('return');hcBody=hexpr();eat(';');eat('}');}
+      else throw Lim('the class holds its fields, the constructor, equals and hashCode');}
+    eat('}');if(i<Tk.length)throw Lim('only the class Course belongs here');
+    if(!eqBody)throw Lim('write the method equals');if(!hcBody)throw Lim('write the method hashCode');
+    if(!eqBody.length||eqBody[eqBody.length-1].k!=='ret')throw Err('missing return statement');
+  }catch(e){if(!(e instanceof Error))throw e;
+    if(!e.limit)return {problems:[{kind:'error',file:'Course.java',line:e.line,msg:'error: '+e.message}],status:'1 compiler diagnostic: not assessed',output:null,unassessed:true,
+      msg:[{c:'verdict info',s:'Not assessed: the Java source has a compiler diagnostic. Read the Error problem under the editor.'}]};
+    return {problems:[{kind:'limit',file:'Course.java',line:e.line,msg:'not supported in this practice editor: '+e.message}],status:'1 problem: outside what this practice editor checks',output:null,unsupported:true,
+      msg:[{c:'verdict info',s:'Not assessed: this shape is outside the editor’s bounded Java subset. Read the Not supported problem under the editor.'}]};}
+  /* run: strings are separate objects, null is null; hash arithmetic is Java int arithmetic */
+  var uid=0;function S(t){return t==null?null:{s:t,id:++uid};}
+  function C(a,b){return {cls:'Course',code:S(a),term:S(b)};}
+  function shash(x){var h=0;for(var k=0;k<x.s.length;k++)h=(Math.imul(31,h)+x.s.charCodeAt(k))|0;return h;}
+  function NPE(){var e=new Error('NullPointerException');e.npe=true;return e;}
+  function get(env,f){var obj=env[f.on];if(obj==null)throw NPE();return obj[f.f];}
+  function equalsRun(self,o){var env={'this':self};
+    for(var k=0;k<eqBody.length;k++){var s=eqBody[k];
+      if(s.k==='if'){var t=(function test(c){if(c.k==='same')return self===o;if(c.k==='null')return o==null;if(c.k==='or')return test(c.a)||test(c.b);
+          if(c.k==='otherClass'){if(o==null)throw NPE();return o.cls!=='Course';}
+          if(c.k==='notInst'){var is=o!=null&&o.cls==='Course';if(is&&c.v)env[c.v]=o;return !is;}})(s.c);if(t)return s.r;}
+      else if(s.k==='cast'){if(o!=null&&o.cls!=='Course'){var e=new Error('ClassCastException');e.cce=true;throw e;}env[s.v]=o;}
+      else{var all=true;for(var j=0;j<s.ts.length;j++){var T=s.ts[j],v;
+          if(T.k==='lit')v=T.v;else if(T.k==='same')v=self===o;else if(T.k==='inst'){v=o!=null&&o.cls==='Course';if(v)env[T.v]=o;}
+          else{var a=get(env,T.a),b=get(env,T.b);
+            if(T.k==='oeq')v=a===b||(a!=null&&b!=null&&a.s===b.s);else if(T.k==='ideq')v=a===b;else{if(a==null)throw NPE();v=b!=null&&a.s===b.s;}}
+          if(!v){all=false;break;}}return all;}}
+    return false;}
+  function hashRun(self){var env={'this':self};return (function ev(h){
+    if(h.k==='int')return h.v|0;
+    if(h.k==='ohash'){var r=1;h.args.forEach(function(f){var x=get(env,f);r=(Math.imul(31,r)+(x==null?0:shash(x)))|0;});return r;}
+    if(h.k==='ohc'){var y=get(env,h.f);return y==null?0:shash(y);}
+    if(h.k==='mhc'){var z=get(env,h.f);if(z==null)throw NPE();return shash(z);}
+    var a=ev(h.a),b=ev(h.b);return h.k==='*'?Math.imul(a,b):(h.k==='+'?(a+b)|0:(a^b));})(hcBody);}
+  function safe(fn){try{return {v:fn()};}catch(e){if(e.npe||e.cce)return {x:e.message};throw e;}}
+  var lines=[],fails=[];
+  function check(label,got,want,why){var shown=got.x?'throws '+got.x:String(got.v);lines.push(label+' = '+shown+(got.x||got.v!==want?'   expected '+want:''));if(got.x||got.v!==want)fails.push(why+(got.x?' ('+got.x+')':''));}
+  var a=C('CS101','fall'),b=C('CS101','fall'),n1=C('CS101',null),n2=C('CS101',null),z1=C(null,'fall'),z2=C(null,'fall');
+  check('a.equals(b), same code and term',safe(function(){return equalsRun(a,b);}),true,'two courses with the same code and term must be equal');
+  check('a.equals(Course("CS101", "spring"))',safe(function(){return equalsRun(a,C('CS101','spring'));}),false,'a different term must make courses unequal');
+  check('a.equals(Course("CS102", "fall"))',safe(function(){return equalsRun(a,C('CS102','fall'));}),false,'a different code must make courses unequal');
+  check('a.equals(a)',safe(function(){return equalsRun(a,a);}),true,'equals must be reflexive');
+  check('a.equals(null)',safe(function(){return equalsRun(a,null);}),false,'equals(null) must return false');
+  check('a.equals("CS101")',safe(function(){return equalsRun(a,{cls:'String',s:'CS101'});}),false,'an object of another class must not be equal');
+  check('Course("CS101", null).equals(a copy)',safe(function(){return equalsRun(n1,n2);}),true,'a null term must be compared without an exception');
+  check('Course(null, "fall").equals(a copy)',safe(function(){return equalsRun(z1,z2);}),true,'a null code must be compared without an exception');
+  var ha=safe(function(){return hashRun(a);}),hb=safe(function(){return hashRun(b);});
+  check('a.hashCode() == b.hashCode()',ha.x||hb.x?{x:ha.x||hb.x}:{v:ha.v===hb.v},true,'equal courses must have equal hash codes');
+  var hn1=safe(function(){return hashRun(n1);}),hn2=safe(function(){return hashRun(n2);});
+  check('hash codes of the two null-term copies match',hn1.x||hn2.x?{x:hn1.x||hn2.x}:{v:hn1.v===hn2.v},true,'hashCode must handle a null term and stay equal for equal courses');
+  var hz1=safe(function(){return hashRun(z1);}),hz2=safe(function(){return hashRun(z2);});
+  check('hash codes of the two null-code copies match',hz1.x||hz2.x?{x:hz1.x||hz2.x}:{v:hz1.v===hz2.v},true,'hashCode must handle a null code and stay equal for equal courses');
+  var four=[a,C('CS101','spring'),C('CS102','fall'),C('CS102','spring')].map(function(c){return safe(function(){return hashRun(c);});});
+  var distinct={};four.forEach(function(h){if(!h.x)distinct[h.v]=true;});var spread=Object.keys(distinct).length;
+  lines.push('distinct hash codes among four different courses: '+spread+' of 4');if(spread<3)fails.push('every course gets nearly the same hash code: combine code and term');
+  var set=fails.length?null:'true';if(set)lines.push('HashSet with a; contains(b) = true');
+  var out=lines.join('\n');
+  if(fails.length)return {problems:[],status:'Ran: '+fails.length+' check'+(fails.length>1?'s fail':' fails'),output:out,
+    msg:[{c:'verdict no',s:'Not yet: '+fails[0]+'.'},{s:/==/.test(src)&&fails[0].indexOf('must be equal')===0?'`==` asks whether two String references are the very same object; separate strings with the same text need `equals` or `Objects.equals`.':'Read the Output tab: each line shows a check and what it expected.'}]};
+  return {problems:[],status:'Ran: every check passes',output:out,ok:true,msg:[{c:'verdict info',s:'Every check passes, and a HashSet finds an equal copy.'}],done:'equals compares code and term null-safely, and hashCode combines the same two fields.'};}
+
+PAGE.init=function(eng){PAGE.initLegacy(eng);edInit({key:'apply',activity:4,starter:EQ_STARTER,check:eqCheck,file:'Course.java'});};
+PAGE.resetStep=function(st){if(st===4){edRestart();$$('#ed-conf input').forEach(function(i){i.checked=false;i.disabled=false;});}else PAGE.resetLegacy(st);};
+})();</script>
+<script>
+(function(){
+'use strict';
+var D=document;
+function $(s,r){return (r||D).querySelector(s);}
+function $$(s,r){return Array.prototype.slice.call((r||D).querySelectorAll(s));}
+function md(s){var f=D.createDocumentFragment(),re=/(`[^`]+`|\*\*[^*]+\*\*)/g,last=0,m;s=String(s);
+  while((m=re.exec(s))){if(m.index>last)f.appendChild(D.createTextNode(s.slice(last,m.index)));
+    var t=m[0],e=D.createElement(t.charAt(0)==='`'?'code':'strong');e.textContent=t.charAt(0)==='`'?t.slice(1,-1):t.slice(2,-2);f.appendChild(e);last=re.lastIndex;}
+  if(last<s.length)f.appendChild(D.createTextNode(s.slice(last)));return f;}
+function el(tag,cls,txt){var e=D.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.appendChild(typeof txt==='string'?md(txt):txt);return e;}
+function T(t){return D.createTextNode(t);}
+/* Guidance state: current activity, a monotonic unlocked frontier and per-activity results kept apart */
+var P=window.PAGE||{};
+var main=$('#lesson'),ACTS=$$('[data-pep-activity]'),LINKS=$$('[data-pep-activity-link]'),prevBtn=$('#prev'),next=$('#next'),resetBtn=$('#reset'),recap=$('#recap');
+var KEYS=['predict','x1','x2','apply'],N=KEYS.length;
+var S={step:1,done:{},results:{}};
+function freshAct(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,cont:false};}
+var G={current:1,unlocked:1,complete:false,settled:false,acts:KEYS.map(freshAct)};
+function fbOf(n){return $('[data-pep-feedback]',ACTS[n-1]);}
+function say(parts,focus){var fb=fbOf(G.current);fb.textContent='';(parts||[]).forEach(function(p){
+  if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li',it[2]||'');li.appendChild(el('strong',null,it[0]));li.appendChild(T(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
+  else if(p.pre){var pr=el('pre','out');pr.textContent=p.pre;fb.appendChild(pr);}
+  else{var q=el('p',p.c||'',p.s);if(p.attr)q.setAttribute(p.attr,'');fb.appendChild(q);}});
+  if(focus)fb.focus();}
+function optText(i){var l=i.closest('label');return l?l.textContent.replace(/\s+/g,' ').trim():i.value;}
+var WORD={'correct':'correct on the first try','correct-retry':'correct on the second try','settled':'answered and settled, not passed'};
+function reflect(){ACTS.forEach(function(sec,i){var a=G.acts[i];sec.setAttribute('data-pep-attempts',String(a.attempts));sec.setAttribute('data-pep-settled',String(a.settled));
+    sec.setAttribute('data-pep-completed',String(a.completed));sec.setAttribute('data-pep-credit',String(a.credit));sec.setAttribute('data-pep-grade',String(a.grade));sec.setAttribute('data-pep-continue',String(a.cont));});
+  main.setAttribute('data-pep-current-activity',String(G.current));main.setAttribute('data-pep-unlocked-through',String(G.unlocked));main.setAttribute('data-pep-complete',String(G.complete));main.setAttribute('data-pep-path-settled',String(G.settled));}
+function progress(){var c=0,set=0,segs=$$('.pep-progress > span');KEYS.forEach(function(k,i){var s=segs[i];s.className='';
+    if(S.done[k]){if(G.acts[i].completed){c++;s.className='is-done';}else{set++;s.className='is-settled';}}
+    if(i+1===G.current)s.className+=(s.className?' ':'')+'is-current';});
+  $('#path-text').textContent='Answered '+(c+set)+' of '+N;
+  $('#prog-text').textContent='Completed '+c+' of '+N+(set?'; '+set+' settled, not passed':'');}
+function attempt(n){G.acts[n-1].attempts++;reflect();}
+function finishPage(){var c=$('#complete'),labels=P.checkLabels||{apply:'Final check'},parts=[],miss=[];
+  KEYS.forEach(function(k,i){if(S.results[k]&&labels[k])parts.push(labels[k]+': '+WORD[S.results[k]]+'.');if(!G.acts[i].completed){var h=$('#a'+(i+1)+'-h');miss.push('Activity '+(i+1)+(h?' ('+h.textContent.trim()+')':''));}});
+  c.className='complete'+(G.complete?'':' settled');
+  c.textContent=G.complete?'Topic complete. '+parts.join(' '):'Required path settled; '+miss.length+(miss.length>1?' activities remain':' activity remains')+' incomplete: '+miss.join(', ')+'. '+parts.join(' ')+' Their objectives are not met yet: restart those activities, or review their explanations before the practice quiz.';}
+function complete(k){var n=KEYS.indexOf(k)+1,a=G.acts[n-1],failed=S.results[k]==='settled';S.done[k]=true;
+  a.settled=true;a.cont=true;a.completed=!failed;
+  if(!failed&&a.credit===0){a.credit=1;a.grade=k==='predict'?0:1;}
+  G.unlocked=Math.max(G.unlocked,Math.min(n+1,N));
+  if(KEYS.every(function(x){return !!S.done[x];})){G.settled=true;G.complete=G.acts.every(function(x){return x.completed;});finishPage();}
+  progress();render(G.current);}
+function render(number,mode,moveFocus){
+  if(!(number>=1&&number<=N&&number<=G.unlocked))return false;
+  G.current=number;S.step=number;
+  ACTS.forEach(function(sec,i){sec.hidden=i+1!==number;});
+  LINKS.forEach(function(link,i){var n=i+1;
+    if(n===number)link.setAttribute('aria-current','step');else link.removeAttribute('aria-current');
+    if(n>G.unlocked)link.setAttribute('aria-disabled','true');else link.removeAttribute('aria-disabled');
+    link.classList.toggle('is-done',!!S.done[KEYS[i]]);});
+  prevBtn.disabled=number===1;
+  next.disabled=number===N||number>=G.unlocked||!G.acts[number-1].cont;
+  recap.hidden=!G.settled;
+  $('#pos-text').textContent='Activity '+number+' of '+N;
+  reflect();progress();
+  try{if(mode==='push')history.pushState({activity:number},'','#activity-'+number);
+    else if(mode==='replace')history.replaceState({activity:number},'','#activity-'+number);}
+  catch(e){if(mode&&location.hash!=='#activity-'+number)location.hash='activity-'+number;}
+  if(moveFocus){var h=$('#a'+number+'-h');if(h)h.focus();}
+  return true;}
+/* pep:component predict@1 js */
+/* predict */
+var pf=$('#predict'),pc=$('#predict-check');
+function pReady(){pc.disabled=!!S.done.predict||!($('input[name="predict"]:checked')&&$('input[name="conf0"]:checked'));}
+pf.addEventListener('change',pReady);
+function badges(l,arr){var b=l.querySelector('.badges');if(!b){b=el('span','badges');l.appendChild(b);}arr.forEach(function(x){b.appendChild(el('span','badge '+x[1],x[0]));});}
+pc.addEventListener('click',function(){var c=$('input[name="predict"]:checked'),cv=$('input[name="conf0"]:checked');if(!c||!cv)return;var okv=P.predict.ok,match=c.value===okv;
+  $$('input',pf).forEach(function(i){i.disabled=true;});pc.disabled=true;
+  $$('input[name="predict"]',pf).forEach(function(i){var l=i.closest('label');if(i===c){l.classList.add('mine');badges(l,[['Your prediction','mine-b'],[match?'Correct':'Not correct',match?'ok-b':'no-b']]);}else if(i.value===okv){badges(l,[[P.predict.okLabel||'Correct answer','ok-b']]);}if(i.value===okv)l.classList.add('right');l.appendChild(el('span','oexp',P.predict.expl[i.value]));});
+  pf.querySelector('.opts').classList.add('explained');pc.hidden=true;$('#conf0').closest('.row').hidden=true;
+  if(P.onPredict)P.onPredict();
+  say([{c:'verdict info',s:'Practice prediction, not scored. '+(match?'Your prediction matches the answer.':'Your prediction differs from the answer; nothing is lost.')},{c:'conf-report',s:'Your confidence: '+cv.value+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:P.predict.lead},{s:'Each option now shows its label and why, directly under it.'}],true);
+  complete('predict');});
+/* /pep:component predict js */
+/* pep:component mcq-with-confidence@1 js */
+/* graded checks: confidence first, retry in a second representation, settle after two misses */
+var checks={};
+function check(o){var st={att:0,conf:[],result:null,step:{x1:2,x2:3,apply:4}[o.key]},btn=$(o.btn),cf=$(o.conf),fs=$(o.fs),cn=o.confName||'conf';checks[o.key]=st;
+  function grp(){return st.att===0?o.g1:o.g2;}
+  function ready(){btn.disabled=!!st.result||!($('input[name="'+grp()+'"]:checked')&&$('input[name="'+cn+'"]:checked'));}
+  function lockConf(){$$('input[name="'+cn+'"]').forEach(function(i){i.disabled=true;});btn.disabled=true;}
+  function done(){S.results[o.key]=st.result;if(P.onCheck)P.onCheck(o.key,st.result);complete(o.key,o.label);}
+  fs.addEventListener('change',ready);cf.addEventListener('change',ready);
+  btn.addEventListener('click',function(){var g=grp(),r=st.att===0?o.data.r1:o.data.r2,c=$('input[name="'+g+'"]:checked'),cv=$('input[name="'+cn+'"]:checked');
+    if(!c||!cv||st.result)return;var ok=c.value===r.ok;st.conf.push(cv.value);
+    var confLine='Your confidence: '+cv.value+'. Confidence is your own read on how sure you were; it is reported, never scored.';
+    var expl=$$('input[name="'+g+'"]').map(function(i){return [optText(i)+(i===c?' (your answer):':':'),r.expl[i.value]];});
+    $$('input[name="'+g+'"]').forEach(function(i){i.disabled=true;});c.closest('label').classList.add(ok?'right':'wrong');badges(c.closest('label'),[['Your answer','mine-b'],[ok?'Correct':'Not correct',ok?'ok-b':'no-b']]);
+    if(ok){st.result=st.att===0?'correct':'correct-retry';lockConf();
+      say([{c:'verdict ok',s:st.att===0?'Correct.':'Correct on your second try.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}],true);done();}
+    else if(st.att===0){st.att=1;$('#'+o.g1).hidden=true;$('#'+o.g2).hidden=false;$(o.t1).hidden=true;$(o.t2).hidden=false;$$('input[name="'+cn+'"]').forEach(function(i){i.checked=false;});
+      say([{c:'verdict no',s:'Not yet. '+r.mis[c.value]+' Try again below: same idea, different form, with your confidence again.'},{c:'conf-report',s:confLine,attr:'data-pep-confidence-report'},{list:expl}]);
+      ready();$(o.t2).focus();}
+    else{st.result='settled';lockConf();$$('input[name="'+o.g2+'"]').forEach(function(i){if(i.value===r.ok){i.closest('label').classList.add('right');badges(i.closest('label'),[['Correct answer','ok-b']]);}});
+      say([{c:'verdict set',s:'Answered and settled: this check is not marked correct. '+r.mis[c.value]},{c:'conf-report',s:'Confidence on each try: '+st.conf.join(', then ')+'. Reported, never scored.',attr:'data-pep-confidence-report'},{s:'The answer: '+r.answer},{list:expl}],true);done();}});
+  st.reset=function(){st.att=0;st.conf=[];st.result=null;$('#'+o.g1).hidden=false;$('#'+o.g2).hidden=true;$(o.t1).hidden=false;$(o.t2).hidden=true;btn.disabled=true;};
+  return st;}
+/* /pep:component mcq-with-confidence js */
+/* lane sort: each item gets one retry, then its lane is revealed; any reveal settles the activity */
+var lanesets={};
+function lanes(o){var st={idx:0,tries:{},placed:{},revealed:{}},box=$(o.model),btns=$(o.btns);lanesets[o.key]=st;
+  function laneName(id){for(var i=0;i<o.lanes.length;i++)if(o.lanes[i].id===id)return o.lanes[i].label;return id;}
+  function draw(){box.textContent='';var cnt=0;
+    o.lanes.forEach(function(ln){var d=el('div','lane'),h=el('p','lk',ln.label),u=el('ul','cards');h.id=o.key+'-lk-'+ln.id;u.setAttribute('aria-labelledby',h.id);d.appendChild(h);d.appendChild(u);box.appendChild(d);
+      o.items.forEach(function(it,i){if(st.placed[i]!==ln.id)return;cnt++;var li=el('li',st.revealed[i]?'revealed':'',it.n);if(st.revealed[i])li.appendChild(el('span','tag','shown after two tries'));u.appendChild(li);});});
+    var it=o.items[st.idx];$(o.name).textContent=it?'':'all sorted';$(o.name).appendChild(it?md(it.n):T(''));
+    $(o.count).textContent=cnt+' of '+o.items.length+' sorted';}
+  function finish(msg){var anyRev=Object.keys(st.revealed).length,anyRetry=Object.keys(st.tries).some(function(k){return st.tries[k]>0;});
+    var res=anyRev?'settled':(anyRetry?'correct-retry':'correct');S.results[o.key]=res;
+    $$('button',btns).forEach(function(b){b.disabled=true;});
+    msg.push({c:anyRev?'verdict set':'verdict ok',s:anyRev?'All sorted. Answered and settled: '+anyRev+(anyRev>1?' items were':' item was')+' shown after two tries, so this activity is not marked correct.':(anyRetry?'All sorted, some on a second try.':'All sorted on the first try.')});
+    if(o.done)msg.push({s:o.done});say(msg,true);complete(o.key);}
+  o.lanes.forEach(function(ln){var b=el('button','ghost',ln.label);b.type='button';b.id=o.key+'-to-'+ln.id;b.setAttribute('data-lane',ln.id);b.setAttribute('aria-describedby',o.legend);
+    b.addEventListener('click',function(){var i=st.idx,it=o.items[i];if(!it||S.done[o.key])return;attempt(KEYS.indexOf(o.key)+1);
+      if(ln.id===it.lane){st.placed[i]=ln.id;st.idx++;var msg=[{c:'verdict ok',s:'Yes: '+laneName(ln.id)+'.'},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(msg);else say(msg);}
+      else{st.tries[i]=(st.tries[i]||0)+1;
+        if(st.tries[i]<2){say([{c:'verdict no',s:'Not '+laneName(ln.id)+'. '+it.w[ln.id]},{s:'Try another button for the same item.'}]);}
+        else{st.placed[i]=it.lane;st.revealed[i]=true;st.idx++;var m2=[{c:'verdict set',s:'Shown after two tries: '+laneName(it.lane)+'. '+it.w[ln.id]},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(m2);else say(m2);}}});
+    btns.appendChild(b);});
+  st.reset=function(){st.idx=0;st.tries={};st.placed={};st.revealed={};$$('button',btns).forEach(function(b){b.disabled=false;});draw();};
+  draw();return st;}
+
+/* Wire the activities: the page's own practice code keeps its engine interface */
+P.onPredict=function(){attempt(1);};
+if($('#apply')){check({key:'apply',fs:'#apply',g1:'a1',g2:'a2',t1:'#task-4',t2:'#task-4b',conf:'#conf',confName:'conf',btn:'#apply-check',data:P.apply,label:P.applyLabel});
+$('#apply-check').addEventListener('click',function(){var n=checks.apply.conf.length;if(n!==G.acts[3].attempts){G.acts[3].attempts=n;reflect();}});}
+/* exploration attempts: any control press inside an activity's explore workspace counts once per press */
+ACTS.forEach(function(sec,i){$$('fieldset[data-interaction="explore"]',sec).forEach(function(fs){if(fs.querySelector('.pep-editor'))return;fs.addEventListener('click',function(ev){if(ev.target.closest('button')&&!S.done[KEYS[i]])attempt(i+1);});});});
+window.ENG={say:say,complete:complete,check:check,lanes:lanes,md:md,el:el,$:$,$$:$$,attempt:attempt,state:function(){return S;}};
+if(P.init)P.init(window.ENG);
+
+/* Restart: only the current activity returns to its authored start; other work and the unlocked frontier stay */
+function clearChoices(scope){$$('input',scope).forEach(function(i){i.checked=false;i.disabled=false;});$$('.opt',scope).forEach(function(o){o.classList.remove('right','wrong','mine');});
+  $$('.oexp,.badges',scope).forEach(function(e){e.remove();});$$('.opts.explained',scope).forEach(function(o){o.classList.remove('explained');});}
+function restart(){var n=G.current,k=KEYS[n-1],sec=ACTS[n-1];
+  if(k==='predict'){clearChoices(sec);pc.hidden=false;pc.disabled=true;$('#conf0').closest('.row').hidden=false;}
+  if(lanesets[k])lanesets[k].reset();
+  if(checks[k]){clearChoices(sec);checks[k].reset();}
+  delete S.done[k];delete S.results[k];G.acts[n-1]=freshAct();
+  G.settled=KEYS.every(function(x){return !!S.done[x];});
+  G.complete=G.settled&&G.acts.every(function(x){return x.completed;});
+  if(G.settled)finishPage();else{$('#complete').textContent='';recap.hidden=true;}
+  if(P.resetStep)P.resetStep(n);
+  $$('[data-pep-feedback]',sec).forEach(function(f){f.textContent='';});
+  render(n);
+  $('#restart-status').textContent='Activity '+n+' restarted. Other activities keep their work.';}
+resetBtn.addEventListener('click',restart);
+
+/* Reversible navigation: buttons, timeline, back links and browser history change only the current activity */
+function numberOf(hash){var m=/^#activity-(\d+)$/.exec(hash||'');return m?Number(m[1]):0;}
+prevBtn.addEventListener('click',function(){render(G.current-1,'push',true);});
+next.addEventListener('click',function(){render(G.current+1,'push',true);});
+LINKS.forEach(function(link,i){link.addEventListener('click',function(ev){ev.preventDefault();render(i+1,'push',true);});});
+$$('[data-pep-back-link]').forEach(function(link){link.addEventListener('click',function(ev){ev.preventDefault();render(numberOf(link.getAttribute('href')),'push',true);});});
+var lastFocused=null;D.addEventListener('focusin',function(ev){lastFocused=ev.target;});
+function fromHistory(){var keep=lastFocused,n=numberOf(location.hash);
+  if(!render(n,null,false))render(G.current,'replace',false);
+  if(keep&&keep.isConnected&&!keep.closest('[hidden]'))keep.focus({preventScroll:true});}
+addEventListener('popstate',fromHistory);addEventListener('hashchange',fromHistory);
+
+/* Objectives: native disclosure; Escape and an outside click close it */
+var obj=$('[data-pep-objectives]');
+D.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&obj.open){obj.open=false;obj.querySelector('summary').focus();}});
+D.addEventListener('click',function(ev){if(obj.open&&!obj.contains(ev.target))obj.open=false;});
+
+/* Print: expand closed disclosures, then restore only those */
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=$$('details:not([open])');printOpened.forEach(function(d){d.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(d){d.open=false;});printOpened=[];});
+
+var first=numberOf(location.hash);
+render(first>=1&&first<=G.unlocked?first:1,'replace',false);
+})();
+</script>
+</body>
+</html>
