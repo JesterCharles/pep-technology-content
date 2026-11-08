@@ -162,6 +162,8 @@ button,.pep-option,.pep-step{transition:background-color var(--pep-dur-1) var(--
 .pep-sim input[type=text],.pep-sim select,.pep-sim input[type=range]{min-height:44px;width:100%;padding:8px 12px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-page);color:var(--pep-text-strong)}
 .pep-sim input[type=range]{padding:0;accent-color:var(--pep-accent)}
 .pep-sim .pep-check{display:flex;grid-template-columns:none;align-items:center;gap:8px;min-height:44px;font-weight:400}
+.pep-choice{border:0;margin:0;padding:0;min-width:0;display:grid;gap:4px}
+.pep-choice>legend{padding:0;margin:0 0 4px;font-weight:600;color:var(--pep-text-strong)}
 .pep-sim .pep-check input{flex:0 0 44px;width:44px;height:44px;margin:0;accent-color:var(--pep-accent)}
 .pep-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
 .pep-row>.pep-btn{flex:0 1 auto}
@@ -295,7 +297,7 @@ function App() {
 <section data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><ul><li>The output reads <code>Grace (learner)</code>.</li><li>That output comes from the default value, so <code>level</code> is not passed.</li></ul></section>
 <div class="q"><div class="pep-sim pep-js-only" data-pep-sim><label for="p2-name">name prop</label><input type="text" id="p2-name" value="Ada" autocomplete="off">
 <label class="pep-check"><input type="checkbox" id="p2-pass" checked> Pass the level prop</label>
-<label for="p2-level">level prop value</label><select id="p2-level"><option>mentor</option><option>coach</option></select>
+<fieldset class="pep-choice" id="p2-level" data-pep-choice><legend>level prop value</legend><label class="pep-check"><input type="radio" name="p2-level" id="p2-level-0" value="mentor" checked> mentor</label><label class="pep-check"><input type="radio" name="p2-level" id="p2-level-1" value="coach"> coach</label></fieldset>
 <div class="pep-panel pep-panel--mono"><span class="pep-panel__label">JSX the parent writes</span><span id="p2-jsx"></span></div>
 <div class="pep-panel"><span class="pep-panel__label">Output</span><span id="p2-out"></span></div></div><p class="pep-js-only" data-pep-sim-live aria-live="polite" style="margin:8px 0 0;font:400 14px/20px var(--pep-font-sans)"></p><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-2" data-pep-submit data-pep-complete-activity>Check result</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Without JavaScript the playground cannot run. It lets you edit a Badge tag's name prop and turn its level prop on or off. On paper: write the Badge tag that would output Grace (learner), given level defaults to learner.</p></div></noscript></div>
 <div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
@@ -384,6 +386,17 @@ function App() {
 <details class="pep-optional pep-sources" data-pep-sources data-section-skip><summary><span>Sources and review date</span><span class="pep-optional__cue">Optional reference</span></summary><div class="pep-optional__body"><p>First draft, not yet independently reviewed. Official sources checked 2026-11-04:</p><ul><li><a href="https://react.dev/learn/passing-props-to-a-component" rel="noopener">react.dev/learn/passing-props-to-a-component</a>: Passing props to a component; Specifying a default value for a prop; Passing JSX as children; How props change over time</li></ul></div></details>
 </main>
 <script>
+// Radio groups stand in for native selects: each [data-pep-choice] fieldset reads and sets like a select.
+(() => {
+  const radios = el => [...el.querySelectorAll('input[type=radio]')];
+  const hasEmpty = el => el.hasAttribute('data-pep-choice-empty');
+  Object.defineProperty(HTMLFieldSetElement.prototype, 'value', { configurable: true,
+    get() { if (!this.hasAttribute('data-pep-choice')) return undefined; const r = radios(this).find(x => x.checked); return r ? r.value : (this.getAttribute('data-pep-choice-empty') ?? ''); },
+    set(v) { for (const r of radios(this)) r.checked = r.value === String(v); } });
+  Object.defineProperty(HTMLFieldSetElement.prototype, 'selectedIndex', { configurable: true,
+    get() { const i = radios(this).findIndex(x => x.checked); return hasEmpty(this) ? i + 1 : i; },
+    set(n) { const k = hasEmpty(this) ? n - 1 : n; radios(this).forEach((r, i) => { r.checked = i === k; }); } });
+})();
 window.PEP_KIT = (() => {
   // Practice runtime: compiles a JSX subset and runs function components with useState and context.
   // It is not React. It re-renders the whole preview and exists only for these bounded exercises.

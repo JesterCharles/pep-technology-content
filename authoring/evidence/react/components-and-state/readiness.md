@@ -2,6 +2,28 @@
 
 Status: **unreviewed first drafts, not delivery-ready.** This author-side record routes later review. It approves nothing, waives no gate, replaces no education or React-SME review, and marks nothing final, green, upload-safe, published or merged. No critic or reconciliation record exists for this module.
 
+## Minimum-release preparation (2026-11-08)
+
+This module is explicitly marked for the tonight minimum release. Each topic carries `owner-essential-qa.json`: `acceptanceProfile` minimum, `independentCriticApproval` not-required-not-performed, bound to the current `artifact.html` and `artifact.gift`. Independent critic approval was not required or performed. Each record lists its browser gates, replacement private proof and owner essential pass as **pending, not performed**. Main `e9a8aa28` was merged; no history was rewritten and `2221d3dc` and its receipts remain in history.
+
+**Native select practice was replaced, not emulated.** Every native `<select>` practice control became a radio group (`fieldset[data-pep-choice]`) with the same option values, labels, default selection and grading. A small in-page shim gives the group the same `value` and `selectedIndex` behavior the simulators already read, so simulator logic is unchanged apart from two `querySelectorAll('select')` calls. QA `select` actions became `check` actions on the matching radio. The estimator P50 and interaction units and the generated `artifact.md` are unchanged on every converted page. The keyboard-`select` limitation recorded below therefore no longer applies to these pages. Radio keyboard operation has not yet been run in a browser here or on Linux.
+
+**Every receipt in this module is stale and queued for replacement.** Main changed the bound `harness.mjs`, `T08-html-static.mjs` and `python-answer-scan.py`, so all receipts are stale in addition to any page or QA change. Until source-owned replacement proofs land, T06 fails on them. No browser run, private proof or owner essential pass was performed for this preparation checkpoint, because another task held the browser lane.
+
+| Topic | Change | Receipt | Next |
+| --- | --- | --- | --- |
+| components-and-jsx | none | stale: harness, python-scan, T08 | replacement private proof required |
+| props | 1 select control to radio groups; 0 QA actions | stale: html, harness, python-scan, T08 | replacement private proof required |
+| project-structure | 2 select controls to radio groups; 38 QA actions | stale: html, qa-paths, harness, python-scan, T08 | replacement private proof required |
+| conditional-display | 1 select control to radio groups; 9 QA actions | stale: html, qa-paths, harness, python-scan, T08 | replacement private proof required |
+| usestate | 1 select control to radio groups; 9 QA actions | stale: html, qa-paths, harness, python-scan, T08 | replacement private proof required |
+| updating-state-immutably | 1 select control to radio groups; 9 QA actions | stale: html, qa-paths, harness, python-scan, T08 | replacement private proof required |
+| rendering-lists-with-keys | 1 select control to radio groups; 0 QA actions | stale: html, harness, python-scan, T08 | replacement private proof required |
+
+Non-browser gates on these bytes: T01, T02, T05, T07, T14, T15, T16, T19 and T24 pass. Source receipts were re-fetched live and every source returned HTTP 200. T06 fails only on this module's stale receipt bindings listed above (31 errors). T25 on `main` does not yet support the minimum profile, so it still requires critic coverage.
+
+Sections below describe checkpoint `2221d3dc` and are superseded where they conflict with this section.
+
 Base: readiness checkpoint `134d977` with main `817aeb6` merged. Gates ran on 2026-11-05 on Darwin arm64 with Playwright Chromium 140.0.7339.16 and the unmodified shared harness. `first-draft-manifest.json` remains the record of the original `a91aee3` bytes.
 
 ## What changed since 134d977
@@ -79,9 +101,9 @@ Worst path is a model from the estimator cost table, not a measurement with lear
 | Topic | artifact.html sha256 | artifact.md sha256 |
 | --- | --- | --- |
 | components-and-jsx | `a05ec3050a64d1fdbbb6c416302fb01d82a4b17f58267208deb82359b56d18a6` | `130cc77b5143d3d930e464184806ee0ce139626762a937d253c40e2691628d70` |
-| props | `1ca90aaf3688562a4e832cd189224945b534c702a94e4dbb68c7dd02b6bfcb97` | `bcd5ecd416a14774a21abbdbc0f779da12c5482c493c06de4ea07e06ea6cf0f4` |
-| project-structure | `a64783d48dacf4779df5e22203ceeb2f4030f101db059698ea606b796d7971e9` | `45857767819f97c0ca504e4d86989f00f21c1b8bd5bcb9e16d0bec1147b16f84` |
-| conditional-display | `c2c9e92e7e32e855417ce59367dcfd1a488551994058fc210f73c970df0aff46` | `f0d6f72ac8acf3dc43c176162ac12414e283daf75e2443cd32ab17c6a0921cbd` |
-| usestate | `f1d9bce5171d3a485d6e0afabe23636cf4e33e12426cd24e524ca7a9aaac2dfc` | `325b54e544c4c2ee21c5ee0754fb94708f79a72a765dbc155da5c80d0ea7ea91` |
-| updating-state-immutably | `ca61faa2d9b2346c57ef835c8d4c76f70c7815a82c6e95404d02815c04d7cbc7` | `40a70927b29bb0af43000a806aed5a1a682dcec0539061dd9531940347aa6e4b` |
-| rendering-lists-with-keys | `6b9b38f20897ad72315046ff6c8e68a82a69e5e231011634d1bb5f31cc77163a` | `311d87e6da4537bab71ed07f46c6510b76db1ba880dd701976caa82157e4ba43` |
+| props | `327450722f73e1784809ffbc23d8fc7c4b7c4454ca4b430a105f624f9545e30e` | `bcd5ecd416a14774a21abbdbc0f779da12c5482c493c06de4ea07e06ea6cf0f4` |
+| project-structure | `8be23a8697e0ee11596d32db8cb7a526284b92681ed11b1a078fa79cc115257a` | `45857767819f97c0ca504e4d86989f00f21c1b8bd5bcb9e16d0bec1147b16f84` |
+| conditional-display | `719708e50ff455dfdf7e7f273966405db7d459aa37287340c7fa50801033c794` | `f0d6f72ac8acf3dc43c176162ac12414e283daf75e2443cd32ab17c6a0921cbd` |
+| usestate | `d6fd4635a04e72a2788cb4188e3f4d9249fbad17c7b22477230bd336c6bbb2a4` | `325b54e544c4c2ee21c5ee0754fb94708f79a72a765dbc155da5c80d0ea7ea91` |
+| updating-state-immutably | `295b7a7e3d1a8ccca65e291cd8f995381d93f228fa5124da3befb9bdd4bd6546` | `40a70927b29bb0af43000a806aed5a1a682dcec0539061dd9531940347aa6e4b` |
+| rendering-lists-with-keys | `11f74239675b2e842472d5903dcf4023142a1925d73bfedc576a6555f9dcac16` | `311d87e6da4537bab71ed07f46c6510b76db1ba880dd701976caa82157e4ba43` |

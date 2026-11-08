@@ -162,6 +162,8 @@ button,.pep-option,.pep-step{transition:background-color var(--pep-dur-1) var(--
 .pep-sim input[type=text],.pep-sim select,.pep-sim input[type=range]{min-height:44px;width:100%;padding:8px 12px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-page);color:var(--pep-text-strong)}
 .pep-sim input[type=range]{padding:0;accent-color:var(--pep-accent)}
 .pep-sim .pep-check{display:flex;grid-template-columns:none;align-items:center;gap:8px;min-height:44px;font-weight:400}
+.pep-choice{border:0;margin:0;padding:0;min-width:0;display:grid;gap:4px}
+.pep-choice>legend{padding:0;margin:0 0 4px;font-weight:600;color:var(--pep-text-strong)}
 .pep-sim .pep-check input{flex:0 0 44px;width:44px;height:44px;margin:0;accent-color:var(--pep-accent)}
 .pep-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
 .pep-row>.pep-btn{flex:0 1 auto}
@@ -291,7 +293,7 @@ body{background:#FFF}
 <div class="q"><div class="pep-sim pep-js-only" data-pep-sim><div class="pep-row"><button type="button" class="pep-btn" id="p6-var">Add to variable</button><button type="button" class="pep-btn" id="p6-state">Add to state</button></div>
 <div class="pep-panel"><span class="pep-panel__label">Screen</span>Variable counter shows: <strong id="p6-sv">0</strong><br>State counter shows: <strong id="p6-ss">0</strong></div>
 <div class="pep-panel pep-panel--mono" id="p6-log" aria-label="Lab log">Renders so far: 1</div>
-<label for="p6-pick">After the state update, the variable counter shows</label><select id="p6-pick"><option value="">Choose one</option><option value="zero">0</option><option value="three">3</option><option value="four">4</option></select></div><p class="pep-js-only" data-pep-sim-live aria-live="polite" style="margin:8px 0 0;font:400 14px/20px var(--pep-font-sans)"></p><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-2" data-pep-submit data-pep-complete-activity>Check result</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Without JavaScript the lab cannot run. Picture two counters: pressing Add to variable changes a local variable without rendering; pressing Add to state requests a render, which re-runs the function. On paper, trace three variable presses followed by one state press and say what each counter shows.</p></div></noscript></div>
+<fieldset class="pep-choice" id="p6-pick" data-pep-choice data-pep-choice-empty=""><legend>After the state update, the variable counter shows</legend><label class="pep-check"><input type="radio" name="p6-pick" id="p6-pick-1" value="zero"> 0</label><label class="pep-check"><input type="radio" name="p6-pick" id="p6-pick-2" value="three"> 3</label><label class="pep-check"><input type="radio" name="p6-pick" id="p6-pick-3" value="four"> 4</label></fieldset></div><p class="pep-js-only" data-pep-sim-live aria-live="polite" style="margin:8px 0 0;font:400 14px/20px var(--pep-font-sans)"></p><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-2" data-pep-submit data-pep-complete-activity>Check result</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Without JavaScript the lab cannot run. Picture two counters: pressing Add to variable changes a local variable without rendering; pressing Add to state requests a render, which re-runs the function. On paper, trace three variable presses followed by one state press and say what each counter shows.</p></div></noscript></div>
 <div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
 
 <div data-static-alt data-section-skip><p>Without JavaScript the lab cannot run. Picture two counters: pressing Add to variable changes a local variable without rendering; pressing Add to state requests a render, which re-runs the function. On paper, trace three variable presses followed by one state press and say what each counter shows.</p></div>
@@ -380,6 +382,17 @@ setN(x =&gt; x + 1);  // next depends on previous</code></pre></div></details>
 <details class="pep-optional pep-sources" data-pep-sources data-section-skip><summary><span>Sources and review date</span><span class="pep-optional__cue">Optional reference</span></summary><div class="pep-optional__body"><p>First draft, not yet independently reviewed. Official sources checked 2026-11-04:</p><ul><li><a href="https://react.dev/learn/state-a-components-memory" rel="noopener">react.dev/learn/state-a-components-memory</a>: When a regular variable isn't enough; Adding a state variable; State is isolated and private</li><li><a href="https://react.dev/learn/state-as-a-snapshot" rel="noopener">react.dev/learn/state-as-a-snapshot</a>: Setting state triggers renders; State over time</li><li><a href="https://react.dev/reference/react/useState" rel="noopener">react.dev/reference/react/useState</a>: Reference; Usage; Troubleshooting</li></ul></div></details>
 </main>
 <script>
+// Radio groups stand in for native selects: each [data-pep-choice] fieldset reads and sets like a select.
+(() => {
+  const radios = el => [...el.querySelectorAll('input[type=radio]')];
+  const hasEmpty = el => el.hasAttribute('data-pep-choice-empty');
+  Object.defineProperty(HTMLFieldSetElement.prototype, 'value', { configurable: true,
+    get() { if (!this.hasAttribute('data-pep-choice')) return undefined; const r = radios(this).find(x => x.checked); return r ? r.value : (this.getAttribute('data-pep-choice-empty') ?? ''); },
+    set(v) { for (const r of radios(this)) r.checked = r.value === String(v); } });
+  Object.defineProperty(HTMLFieldSetElement.prototype, 'selectedIndex', { configurable: true,
+    get() { const i = radios(this).findIndex(x => x.checked); return hasEmpty(this) ? i + 1 : i; },
+    set(n) { const k = hasEmpty(this) ? n - 1 : n; radios(this).forEach((r, i) => { r.checked = i === k; }); } });
+})();
 window.PEP_KIT = (() => {
   // Practice runtime: compiles a JSX subset and runs function components with useState and context.
   // It is not React. It re-renders the whole preview and exists only for these bounded exercises.

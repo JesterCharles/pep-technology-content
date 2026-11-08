@@ -162,6 +162,8 @@ button,.pep-option,.pep-step{transition:background-color var(--pep-dur-1) var(--
 .pep-sim input[type=text],.pep-sim select,.pep-sim input[type=range]{min-height:44px;width:100%;padding:8px 12px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-page);color:var(--pep-text-strong)}
 .pep-sim input[type=range]{padding:0;accent-color:var(--pep-accent)}
 .pep-sim .pep-check{display:flex;grid-template-columns:none;align-items:center;gap:8px;min-height:44px;font-weight:400}
+.pep-choice{border:0;margin:0;padding:0;min-width:0;display:grid;gap:4px}
+.pep-choice>legend{padding:0;margin:0 0 4px;font-weight:600;color:var(--pep-text-strong)}
 .pep-sim .pep-check input{flex:0 0 44px;width:44px;height:44px;margin:0;accent-color:var(--pep-accent)}
 .pep-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
 .pep-row>.pep-btn{flex:0 1 auto}
@@ -344,7 +346,7 @@ export default function App() {
 <div class="q"><div class="pep-sim pep-js-only" data-pep-sim><label for="p4-cmd">Command</label><input type="text" id="p4-cmd" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="type a command">
 <div class="pep-row"><button type="button" class="pep-btn" id="p4-run">Run command</button></div>
 <div class="pep-terminal" id="p4-term" tabindex="0" aria-label="Terminal output">Output appears here.</div>
-<label for="p4-pick">Which command produced files to deploy?</label><select id="p4-pick"><option value="">Choose one</option><option value="dev">npm run dev</option><option value="build">npm run build</option></select></div><p class="pep-js-only" data-pep-sim-live aria-live="polite" style="margin:8px 0 0;font:400 14px/20px var(--pep-font-sans)"></p><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-4" data-pep-submit data-pep-complete-activity>Check result</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Without JavaScript the terminal cannot run. npm run dev starts a local server at a localhost address and writes no output folder; npm run build writes index.html and assets into dist/. On paper, say which one you would hand to a deployment.</p></div></noscript></div>
+<fieldset class="pep-choice" id="p4-pick" data-pep-choice data-pep-choice-empty=""><legend>Which command produced files to deploy?</legend><label class="pep-check"><input type="radio" name="p4-pick" id="p4-pick-1" value="dev"> npm run dev</label><label class="pep-check"><input type="radio" name="p4-pick" id="p4-pick-2" value="build"> npm run build</label></fieldset></div><p class="pep-js-only" data-pep-sim-live aria-live="polite" style="margin:8px 0 0;font:400 14px/20px var(--pep-font-sans)"></p><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-4" data-pep-submit data-pep-complete-activity>Check result</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Without JavaScript the terminal cannot run. npm run dev starts a local server at a localhost address and writes no output folder; npm run build writes index.html and assets into dist/. On paper, say which one you would hand to a deployment.</p></div></noscript></div>
 <div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
 
 <div data-static-alt data-section-skip><p>Without JavaScript the terminal cannot run. npm run dev starts a local server at a localhost address and writes no output folder; npm run build writes index.html and assets into dist/. On paper, say which one you would hand to a deployment.</p></div>
@@ -390,6 +392,17 @@ import { Footer } from './Page.jsx';</code></pre></div></details>
 <details class="pep-optional pep-sources" data-pep-sources data-section-skip><summary><span>Sources and review date</span><span class="pep-optional__cue">Optional reference</span></summary><div class="pep-optional__body"><p>First draft, not yet independently reviewed. Official sources checked 2026-11-04:</p><ul><li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules" rel="noopener">developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules</a>: Default exports versus named exports</li><li><a href="https://react.dev/learn/build-a-react-app-from-scratch" rel="noopener">react.dev/learn/build-a-react-app-from-scratch</a>: Step 1: Install a build tool</li><li><a href="https://react.dev/learn/importing-and-exporting-components" rel="noopener">react.dev/learn/importing-and-exporting-components</a>: The root component file; Exporting and importing a component</li><li><a href="https://registry.npmjs.org/vite/latest" rel="noopener">registry.npmjs.org/vite/latest</a>: version 8.3.4 (npm registry metadata)</li><li><a href="https://vite.dev/guide/" rel="noopener">vite.dev/guide/</a>: Scaffolding Your First Vite Project; index.html and Project Root; Command Line Interface</li></ul></div></details>
 </main>
 <script>
+// Radio groups stand in for native selects: each [data-pep-choice] fieldset reads and sets like a select.
+(() => {
+  const radios = el => [...el.querySelectorAll('input[type=radio]')];
+  const hasEmpty = el => el.hasAttribute('data-pep-choice-empty');
+  Object.defineProperty(HTMLFieldSetElement.prototype, 'value', { configurable: true,
+    get() { if (!this.hasAttribute('data-pep-choice')) return undefined; const r = radios(this).find(x => x.checked); return r ? r.value : (this.getAttribute('data-pep-choice-empty') ?? ''); },
+    set(v) { for (const r of radios(this)) r.checked = r.value === String(v); } });
+  Object.defineProperty(HTMLFieldSetElement.prototype, 'selectedIndex', { configurable: true,
+    get() { const i = radios(this).findIndex(x => x.checked); return hasEmpty(this) ? i + 1 : i; },
+    set(n) { const k = hasEmpty(this) ? n - 1 : n; radios(this).forEach((r, i) => { r.checked = i === k; }); } });
+})();
 window.PEP_KIT = (() => {
   // Practice runtime: compiles a JSX subset and runs function components with useState and context.
   // It is not React. It re-renders the whole preview and exists only for these bounded exercises.
@@ -724,8 +737,8 @@ window.PEP_ACTIVITIES=[{kind:'choice',key:0,confidence:false,why:["Without brace
         const roles = ['Choose a role', 'Lists dependencies and npm scripts', 'The page the browser loads, with the empty root div', 'The root component, where your own UI starts', 'Entry script that renders the app into the root div'];
         const answer = [2, 4, 3, 1];
         const host = root.querySelector('#p3-rows');
-        host.innerHTML = files.map((f, i) => `<label for="p3-f${i}"><code>${f}</code><select id="p3-f${i}">${roles.map((r, j) => `<option value="${j}">${r}</option>`).join('')}</select></label>`).join('');
-        const sels = [...host.querySelectorAll('select')];
+        host.innerHTML = files.map((f, i) => `<fieldset class="pep-choice" id="p3-f${i}" data-pep-choice data-pep-choice-empty="0"><legend><code>${f}</code></legend>${roles.map((r, j) => j ? `<label class="pep-check"><input type="radio" name="p3-f${i}" id="p3-f${i}-${j}" value="${j}"> ${r}</label>` : '').join('')}</fieldset>`).join('');
+        const sels = [...host.querySelectorAll('[data-pep-choice]')];
         return {
           reset: () => sels.forEach(s => { s.selectedIndex = 0; }),
           check: () => {
