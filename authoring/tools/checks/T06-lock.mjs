@@ -1,6 +1,7 @@
 import path from "node:path";
 import { error, evidencePath, exists, findCourses, readJson, stableJson } from "../lib/common.mjs";
 import { createCourseLock, createModuleLock } from "../lib/locks.mjs";
+import { HISTORY_MESSAGES, validatePrivateProofHistory } from "../lib/private-proof-history.mjs";
 import { validateSolvedRuns } from "../lib/solved-runs.mjs";
 import { validateQaPrivateProofs } from "../qa/harness.mjs";
 export const id = "T06";
@@ -33,7 +34,17 @@ export async function run(ctx) {
     }
     const courseEvidence = evidencePath(course.repoRoot, cid);
     out.push(...(await validateSolvedRuns(course.repoRoot, courseEvidence)));
-    out.push(...(await validateQaPrivateProofs(course.repoRoot, courseEvidence)));
+    out.push(...(await validatePrivateProofs(course.repoRoot, courseEvidence)));
   }
   return out;
+}
+
+// The harness is a bound public file, so its history checks are superseded here by the
+// stronger full-history rule rather than edited in place; every other harness check is kept.
+const HISTORY = new Set(Object.values(HISTORY_MESSAGES));
+export async function validatePrivateProofs(repoRoot, evidenceRoot) {
+  return [
+    ...(await validateQaPrivateProofs(repoRoot, evidenceRoot)).filter((item) => !HISTORY.has(item.message)),
+    ...(await validatePrivateProofHistory(repoRoot, evidenceRoot)),
+  ];
 }
