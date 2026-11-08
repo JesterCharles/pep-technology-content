@@ -2,6 +2,28 @@
 
 Status: **unreviewed first drafts, not delivery-ready.** This author-side record routes later review. It approves nothing, waives no gate, replaces no education or React-SME review, and marks nothing final, green, upload-safe, published or merged. No critic or reconciliation record exists for this module.
 
+## Minimum-release completion (2026-11-08)
+
+Main `174d4c86` (minimum-profile T25 support) was merged at `19ef8ab8` without rewriting checkpoint `ccf35668` or `2221d3dc`; their receipts remain in history. Learner bytes are final at `ecf4e760ed6d79d246fc158c5be2f784adc47af7`.
+
+**Replacement private proofs.** Each receipt below was replaced from a clean proof commit by an evidence-only child, with staging retired after the passing run. Every editor task reached completed, credit 1 and grade 1 with the page complete across the success, wrong-first, keyboard and sandbox routes, and the gate's exact public-byte leak comparison passed. A dry run at `19ef8ab8` refused every mixed or all-fail run with no private value recorded.
+
+| Topic | Private success proof |
+| --- | --- |
+| loading-data-with-useeffect | validated at 8d66ee1642d6a9da2495df4f1bcd5f8538eaa797 by run react-loading-data-with-useeffect-1794118274941; pass |
+| loading-and-error-states | validated at cc62edf7c16f63df77056347ba4bf55d5390ed60 by run react-loading-and-error-states-1794118275058; pass |
+| custom-hooks | validated at 897783f5d545dcb4c0b8ac2da5bbe3bff39a6eaf by run react-custom-hooks-1794118275157; pass |
+| routing-and-route-parameters | validated at ee381693f9434a01f3fefe502c1373b39dfb16e4 by run react-routing-and-route-parameters-1794118275242; pass |
+| navigation | validated at 4a754a16a736be5043804b9647eebc46845de4c5 by run react-navigation-1794118275336; pass |
+| what-makes-a-component-re-render | not applicable (no editor task) |
+| lifting-state-up | validated at 54b9585b260ba61f0f122a007e76f76b3705441f by run react-lifting-state-up-1794118275427; pass |
+
+**Browser gates.** T08, T09, T12, T13 and T18 passed at `19ef8ab8`. T10 first failed on `props`: disabling the radio fieldset left each radio's own `disabled` property false, so a restart check tried an inert radio. The page now disables each radio (commit `4f65773a`); T10 and T11 then passed. The first T11 run crashed on a full shared disk (`ENOSPC`), not on page content, and passed on rerun. Runs used Darwin arm64 Playwright Chromium 140.0.7339.16. Radio groups use Space through the harness keyboard route; Linux keyboard operation was not run and is unassessed.
+
+**Owner essential pass.** Each topic's `owner-essential-qa.json` (`acceptanceProfile` minimum, `independentCriticApproval` not-required-not-performed) binds the current `artifact.html` and `artifact.gift` and lists the checks performed. Every private input was compared exactly and whitespace-normalized against all tracked files at `ecf4e760` with no match, then retired. The full repository check and npm test passed at `ecf4e760`. This is implementation-owner evidence only; no independent critic reviewed these drafts and nothing here is published.
+
+The preparation section below is superseded where it conflicts with this section.
+
 ## Minimum-release preparation (2026-11-08)
 
 This module is explicitly marked for the tonight minimum release. Each topic carries `owner-essential-qa.json`: `acceptanceProfile` minimum, `independentCriticApproval` not-required-not-performed, bound to the current `artifact.html` and `artifact.gift`. Independent critic approval was not required or performed. Each record lists its browser gates, replacement private proof and owner essential pass as **pending, not performed**. Main `e9a8aa28` was merged; no history was rewritten and `2221d3dc` and its receipts remain in history.
