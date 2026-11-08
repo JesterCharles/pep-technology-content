@@ -1,0 +1,1591 @@
+<!doctype html>
+<!-- First draft: unreviewed. Not final, not green, not upload-safe, not published. Education and JavaScript SME review are still pending. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>async and await</title>
+<meta name="pep:course" content="html-css-js">
+<meta name="pep:module" content="dom-tooling-and-async">
+<meta name="pep:topic" content="async and await">
+<meta name="pep:topic-id" content="async-and-await">
+<meta name="pep:budget-minutes" content="13">
+<meta name="pep:source" content="authoring/evidence/html-css-js/dom-tooling-and-async/async-and-await/sources.json">
+<meta name="pep:draft-status" content="first-draft-unreviewed">
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body {
+  background: var(--pep-page);
+  color: var(--pep-text);
+  font: 400 16px/24px var(--pep-font-sans);
+  -webkit-text-size-adjust: 100%;
+}
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-lead { font-size: 28px; line-height: 36px; font-weight: 700; letter-spacing: -0.01em; color: var(--pep-text-strong); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+
+/* Motion: state feedback only (color, border, opacity, small transforms). */
+button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+
+.pep-topicbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding: 12px 16px; margin: 0 0 24px;
+  border: 1px solid var(--pep-line); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-objectives { position: relative; break-inside: avoid; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region--workspace, [data-pep-workspace] {
+  padding: 24px; border: 1px solid var(--pep-line-strong);
+  border-radius: var(--pep-radius-lg); background: var(--pep-card);
+}
+.pep-activity-checks, [data-pep-activity-checks] {
+  padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px;
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
+@media print { .pep-objectives > div { display: block !important; width: auto; } }
+
+[data-pep-where-fits] {
+  padding: 12px 16px; border: 1px solid var(--pep-line); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-card);
+}
+
+.pep-hint, details[data-pep-hint] {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line);
+  border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md);
+  background: var(--pep-accent-soft); break-inside: avoid;
+}
+.pep-hint > summary { min-height: 44px; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint .pep-hint {
+  margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line);
+  border-radius: 0; background: transparent;
+}
+
+.pep-optional {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line);
+  border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-card); break-inside: avoid;
+}
+.pep-optional--challenge {
+  border-color: var(--pep-line-strong); background: var(--pep-control);
+}
+.pep-optional > summary {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer;
+  color: var(--pep-text-strong); font-weight: 600;
+}
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] {
+  color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans);
+}
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+@media forced-colors {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+}
+@media print {
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .pep-optional > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker { display: none; }
+}
+
+.pep-card { background: var(--pep-card); border: 1px solid var(--pep-line); border-radius: var(--pep-radius-lg); padding: 24px; min-width: 0; }
+@media (max-width: 480px) { .pep-card { padding: 16px; } }
+.pep-callout {
+  display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 12px; align-items: start;
+  padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-card); color: var(--pep-text);
+}
+.pep-callout > svg { width: 20px; height: 20px; margin-top: 2px; }
+.pep-callout strong { color: var(--pep-text-strong); }
+.pep-callout p { margin: 0; }
+.pep-callout--info    { background: var(--pep-accent-soft);  border-color: var(--pep-accent);  } .pep-callout--info    > svg { color: var(--pep-accent-text); }
+.pep-callout--success { background: var(--pep-success-soft); border-color: var(--pep-success); } .pep-callout--success > svg { color: var(--pep-success); }
+.pep-callout--warning { background: var(--pep-warning-soft); border-color: var(--pep-warning); } .pep-callout--warning > svg { color: var(--pep-warning); }
+.pep-callout--danger  { background: var(--pep-danger-soft);  border-color: var(--pep-danger);  } .pep-callout--danger  > svg { color: var(--pep-danger); }
+
+.pep-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm);
+  font: 600 16px/24px var(--pep-font-sans); cursor: pointer;
+  border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong);
+}
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+.pep-btn--ghost { background: transparent; border-color: transparent; color: var(--pep-accent-text); }
+.pep-btn:disabled, .pep-btn[aria-disabled="true"] { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line); color: var(--pep-text-muted); }
+
+.pep-options { display: grid; gap: 8px; margin: 16px 0 0; padding: 0; border: 0; min-width: 0; }
+.pep-option {
+  display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center;
+  min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer;
+}
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked), .pep-option[aria-pressed="true"] { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong   { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option.is-correct .pep-option__key { background: var(--pep-success); color: var(--pep-page); }
+.pep-option.is-wrong   .pep-option__key { background: var(--pep-danger);  color: var(--pep-page); }
+.pep-option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-explain { grid-column: 2; margin: 4px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-verdict { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.pep-verdict--correct { color: var(--pep-success); } .pep-verdict--wrong { color: var(--pep-danger); } .pep-verdict--revealed { color: var(--pep-warning); }
+
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); }
+.pep-progress > span.is-done, .pep-progress > span.is-current { background: var(--pep-accent); }
+
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px 6px 6px; border: 1px solid transparent; border-radius: var(--pep-radius-md); color: var(--pep-text-muted); font-weight: 600; }
+.pep-step__n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--pep-control); color: var(--pep-text); font-size: 13px; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-current="step"] .pep-step__n { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+
+.pep-timeline { list-style: none; margin: 0; padding: 0; }
+.pep-timeline > li { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; padding-bottom: 16px; }
+.pep-timeline > li::before { content: ""; position: absolute; left: 13px; top: 28px; bottom: 0; width: 2px; background: var(--pep-line-strong); }
+.pep-timeline > li:last-child::before { display: none; }
+
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions .pep-btn { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn { flex: 0 1 auto; } }
+@media print { .pep-activity-actions, nav[aria-label="Activities"] { display: none; } [data-pep-activity] { display: block !important; } }
+
+.pep-figure { margin: 16px 0; }
+.pep-figure svg { display: block; width: 100%; height: auto; }
+.pep-figure .node { fill: var(--pep-card); stroke: var(--pep-line-strong); stroke-width: 1.5; }
+.pep-figure .node.is-focus { fill: var(--pep-accent-soft); stroke: var(--pep-accent); stroke-width: 2; }
+.pep-figure .edge { fill: none; stroke: var(--pep-line-strong); stroke-width: 2; }
+.pep-figure .label { fill: var(--pep-text-strong); font: 600 16px var(--pep-font-sans); }
+.pep-figure figcaption { margin-top: 8px; font: 400 12px/16px var(--pep-font-sans); color: var(--pep-text-muted); }
+
+.pep-table-wrap { border: 1px solid var(--pep-line); border-radius: var(--pep-radius-md); overflow: hidden; }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); }
+.pep-table th { text-align: left; font-weight: 600; color: var(--pep-text-strong); background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); padding: 8px 12px; }
+.pep-table td { padding: 8px 12px; border-bottom: 1px solid var(--pep-line); vertical-align: top; overflow-wrap: anywhere; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.pep-table td:first-child { font-weight: 600; color: var(--pep-text-strong); }
+
+.pep-code {
+  margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong);
+  border: 1px solid var(--pep-line); border-radius: var(--pep-radius-sm);
+  font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2;
+}
+.pep-code .tok-key { color: var(--pep-accent-text); }
+.pep-code .tok-str { color: var(--pep-success); }
+.pep-code .tok-com { color: var(--pep-text-muted); }
+.pep-code mark { background: var(--pep-accent-soft); color: inherit; border-radius: var(--pep-radius-sm); }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); }
+.pep-terminal { padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); overflow-wrap: anywhere; }
+.pep-terminal:focus-within { border-color: var(--pep-focus); box-shadow: 0 0 0 1px var(--pep-focus); }
+.pep-terminal .prompt { color: var(--pep-accent-text); font-weight: 600; }
+.pep-terminal .err { color: var(--pep-danger); }
+
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); } .pep-editor__problem .kind-limit { color: var(--pep-warning); }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+
+:root, :root:not([data-theme="light"]), :root[data-theme="dark"] { --pep-line: var(--pep-line-strong); }
+/* Page additions built on the DESIGN.md roles above. */
+.pep-needs-js { display: none !important; }
+.is-enhanced .pep-needs-js { display: revert !important; }
+.is-enhanced .pep-actions.pep-needs-js, .is-enhanced .pep-activity-actions.pep-needs-js { display: flex !important; }
+.is-enhanced .pep-btn.pep-needs-js { display: inline-flex !important; }
+.is-enhanced .pep-terminal__line.pep-needs-js { display: flex !important; }
+.is-enhanced .pep-static { display: none; }
+[hidden] { display: none !important; }
+.pep-activity { margin-bottom: 24px; min-width: 0; }
+.pep-activity > h2 { margin-bottom: 16px; }
+.pep-activity > h2:focus { outline: none; }
+.pep-activity > h2:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+nav[aria-label="Activities"] { margin-bottom: 24px; }
+.pep-step { text-decoration: none; }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-topicbar .pep-progress { flex: 1 1 100%; }
+.pep-progress > span.is-current { background: var(--pep-accent-soft); outline: 1px solid var(--pep-accent); }
+.pep-objectives > div ul { margin: 0; padding-inline-start: 20px; }
+[data-pep-teaching] > :first-child { margin-top: 0; }
+[data-pep-teaching] p, [data-pep-task] p { margin: 0 0 12px; }
+[data-pep-teaching] pre { margin: 0 0 12px; }
+[data-pep-task] h3, [data-pep-activity-checks] h3 { margin-bottom: 8px; }
+.pep-task-steps { margin: 0 0 12px; padding-inline-start: 24px; display: grid; gap: 8px; }
+[data-pep-activity-checks] ul { margin: 0; padding-inline-start: 20px; }
+[data-pep-where-fits] p { margin: 8px 0; }
+[data-pep-where-fits] h2 { font-size: 16px; line-height: 24px; font-weight: 600; }
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body p { margin: 8px 0; }
+.pep-hint__body { padding-bottom: 12px; }
+.pep-legend { padding: 0; margin: 0 0 8px; font-weight: 600; color: var(--pep-text-strong); }
+.pep-option { position: relative; grid-template-columns: 28px minmax(0, 1fr); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option__tag { display: block; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-explain { display: block; }
+.pep-confidence { border: 0; margin: 16px 0 0; padding: 0; min-width: 0; }
+.pep-confidence legend { padding: 0; margin-bottom: 8px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-confidence__row { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-chip-option { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; min-width: 96px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; }
+.pep-chip-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 7px 11px; }
+.pep-chip-option input { width: 20px; height: 20px; margin: 0; accent-color: var(--pep-accent); }
+.pep-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.pep-feedback { margin-top: 16px; }
+.pep-feedback:empty { display: none; }
+.pep-feedback.pep-callout { display: block; }
+.pep-note { margin: 8px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-static { margin-top: 16px; padding: 12px 16px; border: 1px solid var(--pep-line); border-radius: var(--pep-radius-md); background: var(--pep-page); font: 400 14px/20px var(--pep-font-sans); }
+.pep-static h3 { margin-bottom: 8px; }
+.pep-static ul { margin: 0; padding-inline-start: 20px; }
+.pep-static p { margin: 0 0 8px; }
+noscript[data-pep-no-js] p { margin: 12px 0 8px; }
+.pep-match__row { display: grid; gap: 4px; padding: 12px 0; border-bottom: 1px solid var(--pep-line); min-width: 0; }
+.pep-match__row:last-child { border-bottom: 0; }
+.pep-match__label { font-weight: 600; color: var(--pep-text-strong); overflow-wrap: anywhere; }
+select, .pep-input { min-height: 44px; width: 100%; max-width: 100%; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); }
+.pep-match__mark { margin: 4px 0 0; font: 400 14px/20px var(--pep-font-sans); }
+.pep-match__mark.is-good::before, .pep-lab .is-good::before { content: "\2713\00a0"; color: var(--pep-success); font-weight: 700; }
+.pep-match__mark.is-bad::before, .pep-lab .is-bad::before { content: "\2717\00a0"; color: var(--pep-danger); font-weight: 700; }
+.pep-editor__files { display: flex; flex-wrap: wrap; gap: 4px; flex: 1 1 200px; min-width: 0; }
+.pep-editor__file { min-height: 44px; background: none; border: 0; border-bottom: 2px solid transparent; cursor: pointer; color: var(--pep-text-muted); margin: 0; }
+.pep-editor__file[aria-pressed="true"] { border-bottom-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-editor__code { align-items: stretch; }
+.pep-editor__gutter { white-space: pre; line-height: 20px; }
+.pep-editor__input { width: 100%; display: block; resize: none; overflow: hidden; line-height: 20px; }
+.pep-editor__panel:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__panel { min-height: 64px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__empty { margin: 0; color: var(--pep-text-muted); font-family: var(--pep-font-sans); }
+.pep-editor__line.is-error { color: var(--pep-danger); }
+.pep-editor__line.is-warn { color: var(--pep-warning); }
+.pep-editor__problem { cursor: pointer; }
+.pep-editor__problem .kind-error, .pep-editor__problem .kind-limit { font-weight: 600; }
+.pep-editor__problem:hover { background: var(--pep-control); }
+.pep-stage-wrap { margin-top: 16px; min-width: 0; }
+.pep-stage__label { margin: 0 0 8px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-stage { padding: 12px 16px; border: 1px dashed var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-height: 48px; overflow-wrap: anywhere; }
+.pep-stage button, .pep-lab button:not(.pep-btn) { min-height: 44px; }
+.pep-stage a { display: inline-flex; align-items: center; min-height: 44px; }
+.pep-stage li { margin-block: 4px; }
+.pep-terminal__log > div { white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-terminal__log > .cmd { color: var(--pep-text-strong); font-weight: 600; }
+.pep-terminal__log > .warn { color: var(--pep-warning); }
+.pep-terminal__log > .err { color: var(--pep-danger); }
+.pep-terminal__log { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; min-height: 44px; }
+.pep-terminal__line { align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.pep-terminal__prompt { color: var(--pep-accent-text); font-weight: 600; }
+.pep-terminal__input { flex: 1 1 160px; min-width: 0; min-height: 44px; padding: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); scroll-margin-block: 16px; }
+.pep-lab { display: grid; gap: 12px; min-width: 0; }
+.pep-lab p { margin: 0; }
+.pep-lab fieldset { border: 1px solid var(--pep-line); border-radius: var(--pep-radius-md); margin: 0; padding: 8px 12px 12px; min-width: 0; }
+.pep-lab legend { padding: 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-lab .pep-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; min-width: 0; }
+.pep-lab .pep-row > * { min-width: 0; }
+.pep-lab label.pep-check { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding-inline: 4px; cursor: pointer; }
+.pep-lab label.pep-check input { width: 20px; height: 20px; margin: 0; accent-color: var(--pep-accent); flex: none; }
+.pep-lab label.pep-field { display: grid; gap: 4px; flex: 1 1 200px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); min-width: 0; }
+.pep-lab input[type="range"] { width: 100%; min-height: 44px; accent-color: var(--pep-accent); }
+.pep-lab input[type="text"] { min-height: 44px; width: 100%; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); scroll-margin-block: 16px; }
+.pep-readout { padding: 12px 16px; border: 1px solid var(--pep-line); border-radius: var(--pep-radius-md); background: var(--pep-sunken); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; min-height: 44px; color: var(--pep-text-strong); }
+.pep-readout .is-good, .pep-readout .is-bad { display: block; }
+.pep-tray { display: grid; gap: 8px; }
+.pep-box { padding: 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.pep-box.is-active { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 11px; }
+.pep-box__label { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 4px; }
+.pep-queues { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.pep-chip { display: inline-block; margin: 2px 4px 2px 0; padding: 2px 8px; border-radius: var(--pep-radius-pill); background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-mono); overflow-wrap: anywhere; }
+.pep-codeline { display: block; padding-inline: 8px; border-radius: var(--pep-radius-sm); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-codeline.is-current { background: var(--pep-accent-soft); outline: 1px solid var(--pep-accent); }
+.pep-recap { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--pep-line); }
+.pep-recap p, .pep-recap ul { max-width: 68ch; }
+.pep-cheat, .pep-sources { margin-top: 24px; }
+.pep-back { margin: 16px 0 0; }
+.pep-back a { display: inline-flex; align-items: center; min-height: 44px; }
+.pep-sources a { display: inline-block; padding-block: 12px; }
+.pep-activity-actions { margin: 16px 0 0; }
+.pep-table-wrap { overflow-x: auto; }
+@media print {
+  .is-enhanced .pep-static { display: block; }
+  [data-pep-activity], [data-pep-recap] { display: block !important; }
+  [data-pep-activity][hidden], [data-pep-recap][hidden] { display: block !important; }
+  .pep-activity-actions, nav[aria-label="Activities"], .pep-back, [data-pep-run], [data-pep-reset-code], [data-pep-reset], .pep-editor__tabs { display: none !important; }
+  .pep-editor__input { overflow: visible; }
+}
+
+.pep-option.is-correct, .pep-option.is-correct:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong, .pep-option.is-wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+
+[data-pep-workspace] > [data-pep-task] h3 { margin-bottom: 8px; }
+[data-pep-workspace] > [data-pep-task] p { margin: 0 0 12px; }
+
+.pep-btn--primary { border-color: var(--pep-accent); }
+.pep-btn--primary:hover { border-color: var(--pep-accent); }
+.pep-btn { white-space: normal; max-width: 100%; overflow-wrap: anywhere; }
+.pep-box, .pep-readout { min-width: 0; max-width: 100%; }
+.pep-lab { grid-template-columns: minmax(0, 1fr); }
+.pep-stage a { min-width: 44px; justify-content: center; padding-inline: 4px; }
+/* Native inputs fill their whole label, so the real control is the 44 px target. */
+.pep-option input, .pep-chip-option input, .pep-lab label.pep-check input {
+  position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer;
+}
+.pep-option input:disabled, .pep-chip-option input:disabled { cursor: default; pointer-events: none; }
+.pep-chip-option, .pep-lab label.pep-check { position: relative; }
+.pep-lab label.pep-check { min-width: 44px; }
+.pep-chip-option::before, .pep-lab label.pep-check::before {
+  content: ""; flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; border: 2px solid var(--pep-line-strong); background: var(--pep-page); color: var(--pep-text-strong); font: 700 14px/1 var(--pep-font-sans);
+}
+.pep-chip-option::before { border-radius: 50%; }
+.pep-lab label.pep-check::before { border-radius: 4px; }
+.pep-chip-option:has(input:checked)::before { content: "\25CF"; border-color: var(--pep-accent); color: var(--pep-accent-text); }
+.pep-lab label.pep-check:has(input:checked)::before { content: "\2713"; border-color: var(--pep-accent); color: var(--pep-accent-text); }
+.pep-chip-option:has(input:focus-visible), .pep-lab label.pep-check:has(input:focus-visible), .pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-lab[aria-busy="true"] .pep-btn { opacity: 0.8; }
+@media print {
+  .is-enhanced .pep-activity-actions.pep-needs-js, .is-enhanced .pep-btn.pep-needs-js { display: none !important; }
+  nav[aria-label="Activities"] { display: none !important; }
+}
+
+.is-enhanced .pep-static { display: none !important; }
+@media print { .is-enhanced .pep-static { display: block !important; } }
+.pep-editor > .pep-static { margin: 0; border: 0; border-top: 1px solid var(--pep-line); border-radius: 0; }
+
+</style>
+</head>
+<body>
+<main class="pep-main" id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-route-settled="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="13">
+<header class="pep-topicbar">
+<h1 id="page-title">async and await</h1>
+<span class="pep-topicbar__progress"><span id="pep-position">5 activities</span> · about 13 min · <span id="progress">0 of 5 complete</span></span>
+<details class="pep-objectives" data-pep-objectives>
+<summary aria-controls="pep-objectives-body">Objectives</summary>
+<div id="pep-objectives-body"><ul><li>Rewrite a then chain with async and await</li><li>Handle a rejected await with try and catch</li><li>Predict that an async function always returns a promise</li></ul></div>
+</details>
+<button class="pep-btn pep-needs-js" type="button" id="restart" data-pep-reset>Restart activity</button>
+<div class="pep-progress" id="pep-segments" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+</header>
+<nav aria-label="Activities" class="pep-noprint"><ol class="pep-steps">
+<li><a class="pep-step" id="timeline-a1" href="#activity-1" data-pep-activity-link><span class="pep-step__n">1</span><span>Activity 1</span></a></li>
+<li><a class="pep-step" id="timeline-a2" href="#activity-2" data-pep-activity-link><span class="pep-step__n">2</span><span>Activity 2</span></a></li>
+<li><a class="pep-step" id="timeline-a3" href="#activity-3" data-pep-activity-link><span class="pep-step__n">3</span><span>Activity 3</span></a></li>
+<li><a class="pep-step" id="timeline-a4" href="#activity-4" data-pep-activity-link><span class="pep-step__n">4</span><span>Activity 4</span></a></li>
+<li><a class="pep-step" id="timeline-a5" href="#activity-5" data-pep-activity-link><span class="pep-step__n">5</span><span>Activity 5</span></a></li>
+</ol></nav>
+
+<section class="pep-activity" id="activity-1" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<h2 id="activity-1-title" tabindex="-1">Activity 1 of 5: Predict what an async function returns</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div data-pep-teaching>
+<p>This function returns a plain number. Predict what the caller receives.</p>
+<pre class="pep-code"><code>async function f() {
+  return 1;
+}
+console.log(f());</code></pre>
+
+</div>
+
+</div>
+<div class="pep-region pep-region--workspace" data-pep-workspace="choice">
+<div id="task-1" data-pep-task>
+<h3>Your task</h3>
+<ol class="pep-task-steps"><li>Read the code.</li><li>Select what you expect line 4 to print.</li><li>Press <strong>Lock in prediction</strong> and read each explanation.</li></ol>
+
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-1">
+<h3 id="checks-1">What success looks like</h3>
+<ul><li>You locked in a prediction and read every explanation.</li></ul>
+</section>
+<div data-interaction="predict">
+<fieldset class="pep-options"><legend class="pep-legend">What does line 4 log?</legend>
+<label class="pep-option">
+<input type="radio" name="a1-choice" id="a1-opt-1" value="0">
+<span class="pep-option__key" aria-hidden="true">A</span>
+<span class="pep-option__text">A promise, already fulfilled with 1<span class="pep-option__tag" hidden></span></span>
+<span class="pep-explain" hidden></span>
+</label>
+<label class="pep-option">
+<input type="radio" name="a1-choice" id="a1-opt-2" value="1">
+<span class="pep-option__key" aria-hidden="true">B</span>
+<span class="pep-option__text"><code>1</code><span class="pep-option__tag" hidden></span></span>
+<span class="pep-explain" hidden></span>
+</label>
+<label class="pep-option">
+<input type="radio" name="a1-choice" id="a1-opt-3" value="2">
+<span class="pep-option__key" aria-hidden="true">C</span>
+<span class="pep-option__text"><code>undefined</code><span class="pep-option__tag" hidden></span></span>
+<span class="pep-explain" hidden></span>
+</label>
+<label class="pep-option">
+<input type="radio" name="a1-choice" id="a1-opt-4" value="3">
+<span class="pep-option__key" aria-hidden="true">D</span>
+<span class="pep-option__text">A SyntaxError, because there is no <code>await</code><span class="pep-option__tag" hidden></span></span>
+<span class="pep-explain" hidden></span>
+</label>
+</fieldset>
+
+<div class="pep-static" data-static-alt data-section-skip><h3>Static alternative</h3><p>What does line 4 log?</p><ul><li>A promise, already fulfilled with 1: <strong>correct.</strong> An <code>async</code> function <strong>always</strong> returns a promise. A returned value becomes its fulfilment value, and a thrown error becomes its rejection.</li><li><code>1</code>: not correct. That would need <code>await f()</code>, or a <code>then</code> callback, to get the value out.</li><li><code>undefined</code>: not correct. The function does return something, wrapped in a promise.</li><li>A SyntaxError, because there is no <code>await</code>: not correct. <code>await</code> is optional in an <code>async</code> function.</li></ul></div>
+</div>
+<div class="pep-needs-js pep-actions"><button class="pep-btn pep-btn--primary" type="button" id="a1-check" data-pep-submit>Lock in prediction</button></div>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+<noscript data-pep-no-js data-section-skip><p>Checking needs JavaScript. Choose your answer on paper, then compare with the static alternative above.</p></noscript>
+</div>
+</div>
+
+
+</section>
+
+<section class="pep-activity" id="activity-2" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<h2 id="activity-2-title" tabindex="-1">Activity 2 of 5: Rewrite a chain with await</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div data-pep-teaching>
+<p><code>await</code> pauses the surrounding <code>async</code> function until a promise settles, then gives you the fulfilment value. Other code keeps running in the meantime; only this function waits.</p>
+<pre class="pep-code"><code>async function total() {
+  const order = await loadOrder();
+  return order.total;
+}</code></pre>
+<p><code>await</code> works only inside <code>async</code> functions, and at the top level of a module. The result is the same promise machinery as <code>then</code>, written in straight lines.</p>
+
+</div>
+
+</div>
+<div class="pep-region pep-region--workspace" id="a2-workspace" data-pep-workspace="code" data-pep-answer-sensitive="javascript-editor" data-pep-answer-targets="showName">
+<div id="task-2" data-pep-task data-pep-may-stall>
+<h3>Your task</h3>
+<ol class="pep-task-steps"><li><code>getUser(id)</code> is provided and returns a promise.</li><li>In <code>name.js</code>, rewrite <code>showName</code> as an <code>async</code> function using <code>await</code>, with no <code>.then</code> inside it.</li><li>Keep the last line as it is. Press <strong>Run</strong>; <strong>Output</strong> should show <code>ADA</code>.</li></ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span> <span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The first line of <code>showName</code>.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Add the keyword that makes it return a promise, then put the user in a variable with <code>await</code>.</p>
+
+</div>
+</details>
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-2">
+<h3 id="checks-2">What success looks like</h3>
+<ul><li><strong>Output</strong> shows <code>ADA</code>.</li><li><code>showName</code> is <code>async</code>, uses <code>await</code>, and has no <code>.then</code>.</li></ul>
+</section>
+<div class="pep-editor" data-interaction="terminal" data-steps="3">
+<div class="pep-editor__bar">
+<div class="pep-editor__files"><button class="pep-editor__file" type="button" data-pep-file-tab aria-pressed="true" id="a2-file-1">name.js</button></div>
+<button class="pep-btn pep-btn--primary pep-needs-js" type="button" id="a2-run" data-pep-run data-pep-submit>Run</button>
+<button class="pep-btn pep-needs-js" type="button" id="a2-reset-code" data-pep-reset-code>Reset code</button>
+</div>
+<div class="pep-editor__code"><div class="pep-editor__gutter" aria-hidden="true">1</div><textarea class="pep-editor__input" id="a2-editor" data-file="name.js" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Code editor for name.js" data-section-skip>function showName(id) {
+  return getUser(id)
+    .then((user) =&gt; user.name)
+    .then((name) =&gt; name.toUpperCase());
+}
+showName(1).then((v) =&gt; console.log(v));</textarea></div>
+<div class="pep-needs-js">
+<div class="pep-editor__tabs" role="tablist" aria-label="Run results">
+<button type="button" role="tab" id="a2-tab-problems" data-tab="problems" aria-controls="a2-panel-problems" aria-selected="false" tabindex="-1">Problems</button>
+<button type="button" role="tab" id="a2-tab-output" data-tab="output" aria-controls="a2-panel-output" aria-selected="true">Output</button>
+</div>
+<div class="pep-editor__panel" role="tabpanel" id="a2-panel-problems" data-panel="problems" aria-labelledby="a2-tab-problems" hidden></div>
+<div class="pep-editor__panel" role="tabpanel" id="a2-panel-output" data-panel="output" aria-labelledby="a2-tab-output" tabindex="0"></div>
+<div class="pep-editor__status" role="status" aria-live="polite">Ready. Nothing has run yet.</div>
+</div>
+<div class="pep-static" data-static-alt data-section-skip><h3>Static alternative</h3><p>Mark the function async, await getUser to get the user, then return the upper-cased name. The last line still uses then, because an async function returns a promise. The output is ADA.</p></div>
+</div>
+
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+<noscript data-pep-no-js data-section-skip><p><strong>Reading this without JavaScript.</strong> Rewrite showName as an async function with await and no then inside. Keep the last line. Expect ADA.</p><p><strong>name.js</strong></p><pre class="pep-code"><code>function showName(id) {
+  return getUser(id)
+    .then((user) =&gt; user.name)
+    .then((name) =&gt; name.toUpperCase());
+}
+showName(1).then((v) =&gt; console.log(v));</code></pre><p>Supported in the practice editor: ordinary JavaScript statements with console output, and a provided getUser function that returns a real promise. Compare your result with what the task says you should see.</p></noscript>
+</div>
+</div>
+
+<p class="pep-back"><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</section>
+
+<section class="pep-activity" id="activity-3" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<h2 id="activity-3-title" tabindex="-1">Activity 3 of 5: Handle a rejected await</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div data-pep-teaching>
+<p>When an awaited promise rejects, <code>await</code> throws at that line. Handle it with ordinary <code>try</code> and <code>catch</code>.</p>
+<pre class="pep-code"><code>try {
+  const order = await loadOrder();
+  show(order);
+} catch (err) {
+  showError(err.message);
+}</code></pre>
+<p>Keep <code>await</code> inside the <code>try</code>. If you return a promise without awaiting it, the <code>catch</code> will not see its rejection.</p>
+
+</div>
+<section data-pep-where-fits aria-labelledby="where-fits-3">
+<h2 id="where-fits-3">Where this fits</h2>
+<p data-pep-fit-decision><strong>Decision:</strong> Use <code>await</code> with <code>try</code>, or a <code>then</code> chain.</p>
+<p data-pep-fit-good><strong>Good fit:</strong> Use <code>await</code> for sequential steps with conditions or several variables, because the code reads like the logic.</p>
+<p data-pep-fit-boundary><strong>Choose something else when:</strong> A short one-step transform passed straight to another function. A <code>then</code> can be simpler, and <code>Promise.all</code> is still how you run things together.</p>
+</section>
+</div>
+<div class="pep-region pep-region--workspace" id="a3-workspace" data-pep-workspace="code" data-pep-answer-sensitive="javascript-editor" data-pep-answer-targets="loadName">
+<div id="task-3" data-pep-task data-pep-may-stall>
+<h3>Your task</h3>
+<ol class="pep-task-steps"><li><code>getUser(1)</code> fulfills, and <code>getUser(99)</code> rejects.</li><li>In <code>load.js</code>, replace the <code>___</code> so <code>loadName(id)</code> returns the user's <code>name</code>, or returns <code>&quot;Unknown&quot;</code> if the lookup rejects.</li><li>Press <strong>Run</strong>. <strong>Output</strong> should show <code>Ada</code> then <code>Unknown</code>.</li></ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span> <span class="pep-hint__ordinal">Hint 1 of 1 for Activity 3</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> Inside <code>loadName</code>.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Write a <code>try</code> block containing the <code>await</code> and a return of the name. The <code>catch</code> block returns the fallback.</p>
+
+</div>
+</details>
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-3">
+<h3 id="checks-3">What success looks like</h3>
+<ul><li><strong>Output</strong> shows <code>Ada</code> then <code>Unknown</code>.</li><li>No rejection escapes <code>loadName</code>.</li></ul>
+</section>
+<div class="pep-editor" data-interaction="terminal" data-steps="3">
+<div class="pep-editor__bar">
+<div class="pep-editor__files"><button class="pep-editor__file" type="button" data-pep-file-tab aria-pressed="true" id="a3-file-1">load.js</button></div>
+<button class="pep-btn pep-btn--primary pep-needs-js" type="button" id="a3-run" data-pep-run data-pep-submit>Run</button>
+<button class="pep-btn pep-needs-js" type="button" id="a3-reset-code" data-pep-reset-code>Reset code</button>
+</div>
+<div class="pep-editor__code"><div class="pep-editor__gutter" aria-hidden="true">1</div><textarea class="pep-editor__input" id="a3-editor" data-file="load.js" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Code editor for load.js" data-section-skip>async function loadName(id) {
+  ___
+}
+loadName(1).then((v) =&gt; {
+  console.log(v);
+  return loadName(99);
+}).then((v) =&gt; console.log(v));</textarea></div>
+<div class="pep-needs-js">
+<div class="pep-editor__tabs" role="tablist" aria-label="Run results">
+<button type="button" role="tab" id="a3-tab-problems" data-tab="problems" aria-controls="a3-panel-problems" aria-selected="false" tabindex="-1">Problems</button>
+<button type="button" role="tab" id="a3-tab-output" data-tab="output" aria-controls="a3-panel-output" aria-selected="true">Output</button>
+</div>
+<div class="pep-editor__panel" role="tabpanel" id="a3-panel-problems" data-panel="problems" aria-labelledby="a3-tab-problems" hidden></div>
+<div class="pep-editor__panel" role="tabpanel" id="a3-panel-output" data-panel="output" aria-labelledby="a3-tab-output" tabindex="0"></div>
+<div class="pep-editor__status" role="status" aria-live="polite">Ready. Nothing has run yet.</div>
+</div>
+<div class="pep-static" data-static-alt data-section-skip><h3>Static alternative</h3><p>Put the await and the return of the name in a try block, and return Unknown from the catch block. The output is Ada, then Unknown.</p></div>
+</div>
+
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+<noscript data-pep-no-js data-section-skip><p><strong>Reading this without JavaScript.</strong> Write loadName so it awaits getUser in a try block and returns the name, and returns Unknown in the catch block. Expect Ada then Unknown.</p><p><strong>load.js</strong></p><pre class="pep-code"><code>async function loadName(id) {
+  ___
+}
+loadName(1).then((v) =&gt; {
+  console.log(v);
+  return loadName(99);
+}).then((v) =&gt; console.log(v));</code></pre><p>Supported in the practice editor: ordinary JavaScript statements with console output, and a provided getUser function that returns a real promise. Compare your result with what the task says you should see.</p></noscript>
+</div>
+</div>
+
+<p class="pep-back"><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</section>
+
+<section class="pep-activity" id="activity-4" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-4-title">
+<h2 id="activity-4-title" tabindex="-1">Activity 4 of 5: Compare sequential and parallel awaits</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div data-pep-teaching>
+<p>Two <code>await</code> lines in a row run <strong>one after another</strong>: the second call does not even start until the first finishes.</p>
+<pre class="pep-code"><code>const a = await slow(300);  // starts after nothing
+const b = await slow(200);  // starts after a finishes
+const [c, d] = await Promise.all([slow(300), slow(200)]);</code></pre>
+<p>When the two do not depend on each other, start them together with <code>Promise.all</code> and await the combined promise.</p>
+
+</div>
+
+</div>
+<div class="pep-region pep-region--workspace" data-pep-workspace="model">
+<div id="task-4" data-pep-task data-pep-may-stall>
+<h3>Your task</h3>
+<ol class="pep-task-steps"><li>In the model, press <strong>Run two awaits in sequence</strong> and note the time.</li><li>Press <strong>Run with Promise.all</strong> and compare the time.</li><li>The activity completes when you have run both. These are real timers of 300 ms and 200 ms.</li></ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-4" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span> <span class="pep-hint__ordinal">Hint 1 of 1 for Activity 4</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The readout after each run.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Add up the two delays and compare that with the measured time for each button.</p>
+
+</div>
+</details>
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-4">
+<h3 id="checks-4">What success looks like</h3>
+<ul><li>You measured both approaches and can explain the difference.</li></ul>
+</section>
+<div class="pep-lab" data-interaction="explore">
+<div class="pep-row">
+<button type="button" class="pep-btn" id="a4-seq">Run two awaits in sequence</button>
+<button type="button" class="pep-btn" id="a4-par">Run with Promise.all</button>
+</div>
+<div class="pep-readout" id="a4-out" aria-live="polite">Nothing has run yet.</div>
+<div class="pep-static" data-static-alt data-section-skip><h3>Static alternative</h3><p>Two awaits in sequence take about 500 ms, the sum of the delays. Promise.all takes about 300 ms, the longest delay, because both started together.</p></div>
+</div>
+<div class="pep-actions pep-needs-js"><button class="pep-btn pep-btn--primary" type="button" id="a4-finish" data-pep-finish data-pep-submit>Check what I covered</button></div>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+<noscript data-pep-no-js data-section-skip><p>This model needs JavaScript. Use the static alternative above for the same reasoning.</p></noscript>
+</div>
+</div>
+
+<p class="pep-back"><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+</section>
+
+<section class="pep-activity" id="activity-5" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-5-title">
+<h2 id="activity-5-title" tabindex="-1">Activity 5 of 5: Apply it: why was nothing caught?</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div data-pep-teaching>
+<p><code>postData</code> returns a promise that rejects. A teammate says the <code>catch</code> block never runs and the console shows an unhandled rejection.</p>
+<pre class="pep-code"><code>async function save() {
+  try {
+    postData();
+  } catch (err) {
+    console.log(&quot;caught&quot;, err.message);
+  }
+}</code></pre>
+
+</div>
+
+</div>
+<div class="pep-region pep-region--workspace" data-pep-workspace="choice">
+<div id="task-5" data-pep-task>
+<h3>Your task</h3>
+<ol class="pep-task-steps"><li>Trace what <code>try</code> can see in this function.</li><li>Select the correct diagnosis.</li><li>Rate how sure you are, then press <strong>Check answer</strong>. You get one retry, then the answer is shown.</li></ol>
+
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-5">
+<h3 id="checks-5">What success looks like</h3>
+<ul><li>You rated your confidence before feedback.</li><li>You can state the one-word fix and why it works.</li></ul>
+</section>
+<div data-interaction="mcq" data-confidence>
+<fieldset class="pep-options"><legend class="pep-legend">Why does the catch block not run?</legend>
+<label class="pep-option">
+<input type="radio" name="a5-choice" id="a5-opt-1" value="0">
+<span class="pep-option__key" aria-hidden="true">A</span>
+<span class="pep-option__text"><code>postData()</code> is not awaited, so the <code>try</code> finishes before the rejection happens<span class="pep-option__tag" hidden></span></span>
+<span class="pep-explain" hidden></span>
+</label>
+<label class="pep-option">
+<input type="radio" name="a5-choice" id="a5-opt-2" value="1">
+<span class="pep-option__key" aria-hidden="true">B</span>
+<span class="pep-option__text"><code>try</code> and <code>catch</code> do not work in <code>async</code> functions<span class="pep-option__tag" hidden></span></span>
+<span class="pep-explain" hidden></span>
+</label>
+<label class="pep-option">
+<input type="radio" name="a5-choice" id="a5-opt-3" value="2">
+<span class="pep-option__key" aria-hidden="true">C</span>
+<span class="pep-option__text">The <code>catch</code> needs to be a <code>.catch</code> on <code>save()</code><span class="pep-option__tag" hidden></span></span>
+<span class="pep-explain" hidden></span>
+</label>
+<label class="pep-option">
+<input type="radio" name="a5-choice" id="a5-opt-4" value="3">
+<span class="pep-option__key" aria-hidden="true">D</span>
+<span class="pep-option__text"><code>err</code> needs a type, as in Java<span class="pep-option__tag" hidden></span></span>
+<span class="pep-explain" hidden></span>
+</label>
+</fieldset>
+<fieldset class="pep-confidence"><legend>How sure are you?</legend><div class="pep-confidence__row"><label class="pep-chip-option"><input type="radio" name="a5-choice-conf" id="a5-conf-1" value="Guessing"> Guessing</label><label class="pep-chip-option"><input type="radio" name="a5-choice-conf" id="a5-conf-2" value="Fairly sure"> Fairly sure</label><label class="pep-chip-option"><input type="radio" name="a5-choice-conf" id="a5-conf-3" value="Certain"> Certain</label></div></fieldset>
+<div class="pep-static" data-static-alt data-section-skip><h3>Static alternative</h3><p>Why does the catch block not run?</p><ul><li><code>postData()</code> is not awaited, so the <code>try</code> finishes before the rejection happens: <strong>correct.</strong> Without <code>await</code>, the call returns a promise at once and nothing throws. Add <code>await</code> and the rejection throws inside the <code>try</code>.</li><li><code>try</code> and <code>catch</code> do not work in <code>async</code> functions: not correct. They work well there, but only for promises you await.</li><li>The <code>catch</code> needs to be a <code>.catch</code> on <code>save()</code>: not correct. That handles rejections from <code>save</code> itself, and <code>save</code> does not reject here.</li><li><code>err</code> needs a type, as in Java: not correct. JavaScript <code>catch</code> parameters take no type.</li></ul></div>
+</div>
+<div class="pep-needs-js pep-actions"><button class="pep-btn pep-btn--primary" type="button" id="a5-check" data-pep-submit>Check answer</button></div>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+<noscript data-pep-no-js data-section-skip><p>Checking needs JavaScript. Choose your answer on paper, then compare with the static alternative above.</p></noscript>
+</div>
+</div>
+
+<p class="pep-back"><a href="#activity-4" data-pep-back-link>Back to activity 4</a></p>
+</section>
+
+<div class="pep-activity-actions pep-needs-js" role="group" aria-label="Activity navigation">
+<button class="pep-btn" type="button" id="previous-activity" data-pep-previous>Previous activity</button>
+<button class="pep-btn pep-btn--primary" type="button" id="next-activity" data-pep-next>Next activity</button>
+</div>
+
+<section class="pep-recap" data-pep-recap aria-labelledby="recap-title">
+<h2 id="recap-title">Recap</h2>
+<p>An <code>async</code> function always returns a promise. <code>await</code> pauses only that function and unwraps the value, and a rejection throws at the <code>await</code>, so use <code>try</code> and <code>catch</code> around it. Consecutive awaits run one after another, while <code>Promise.all</code> starts them together.</p>
+<details class="pep-optional pep-cheat" data-pep-cheat-sheet data-section-skip><summary><span>Cheat sheet</span><span class="pep-optional__cue">Optional</span></summary><div class="pep-optional__body"><pre class="pep-code"><code>async function load() {
+  try {
+    const [a, b] = await Promise.all([one(), two()]);
+    return a + b;
+  } catch (err) {
+    return 0;
+  }
+}</code></pre></div></details>
+</section>
+
+<details class="pep-optional pep-sources" data-pep-sources data-section-skip>
+<summary><span>Sources and review date</span><span class="pep-optional__cue">Optional</span></summary>
+<div class="pep-optional__body"><ul><li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await" rel="noopener">MDN: await</a>, retrieved 2026-11-04</li><li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function" rel="noopener">MDN: async function</a>, retrieved 2026-11-04</li></ul><p>First draft, retrieved 2026-11-04. These claims have not had independent review yet, so treat them as unverified until that review is recorded.</p></div>
+</details>
+</main>
+<script type="application/json" id="pep-data">{"activities":[{"type":"mcq","key":"a1","mode":"predict","after":"Async functions always return promises. Next, use `await` to write chains in straight lines.","options":[{"ok":true,"why":"An `async` function **always** returns a promise. A returned value becomes its fulfilment value, and a thrown error becomes its rejection."},{"ok":false,"why":"That would need `await f()`, or a `then` callback, to get the value out."},{"ok":false,"why":"The function does return something, wrapped in a promise."},{"ok":false,"why":"`await` is optional in an `async` function."}]},{"type":"code","key":"a2","stage":false,"docMode":null,"capture":["showName"],"modules":false,"settled":"Replace each `then` step with one statement, and put `await` in front of the call that returns a promise."},{"type":"code","key":"a3","stage":false,"docMode":null,"capture":["loadName"],"modules":false,"settled":"An awaited rejection throws at that line. So the `await` must be inside the `try` for the `catch` to see it."},{"type":"lab","key":"a4","explore":true},{"type":"mcq","key":"a5","mode":"apply","options":[{"ok":true,"why":"Without `await`, the call returns a promise at once and nothing throws. Add `await` and the rejection throws inside the `try`."},{"ok":false,"why":"They work well there, but only for promises you await."},{"ok":false,"why":"That handles rejections from `save` itself, and `save` does not reject here."},{"ok":false,"why":"JavaScript `catch` parameters take no type."}]}]}</script>
+<script>
+window.PEP_FN = {
+  a2: { check: async (r) => {
+        if (r.err) return { ok: false, msg: `The run stopped: ${r.fmt(r.err)}.` };
+        const f = r.vars.showName;
+        const s = f.toString();
+        if (!/^async\b/.test(s)) return { ok: false, msg: 'Mark `showName` as `async`.' };
+        if (!/\bawait\b/.test(s)) return { ok: false, msg: 'Use `await` inside `showName`.' };
+        if (/\.then\s*\(/.test(s)) return { ok: false, msg: 'Remove `.then` from inside `showName`.' };
+        if (await f(2) !== 'GRACE') return { ok: false, msg: 'The behavior changed: `showName(2)` should give `GRACE`.' };
+        if (!r.lines.includes('ADA')) return { ok: false, msg: 'Expected `ADA` in **Output**.' };
+        return { ok: true, msg: 'The same promise logic now reads in straight lines.' };
+      },
+setup: (ctx) => ({
+  getUser: (id) => new Promise((resolve, reject) => {
+    const done = ctx.pend();
+    ctx.wait(20).then(() => {
+      if (id === 1) resolve({ id: 1, name: 'Ada' });
+      else if (id === 2) resolve({ id: 2, name: 'Grace' });
+      else reject(new Error('User not found'));
+      done();
+    });
+  }),
+}) },
+  a3: { check: async (r) => {
+        if (r.err) return { ok: false, msg: `A rejection escaped: ${r.fmt(r.err)}. Keep the \`await\` inside the \`try\`.` };
+        const f = r.vars.loadName;
+        if (!/\bawait\b/.test(f.toString()) || !/\bcatch\b/.test(f.toString())) return { ok: false, msg: 'Use `await` with `try` and `catch` in this activity.' };
+        if (await f(2) !== 'Grace') return { ok: false, msg: '`loadName(2)` should give `Grace`.' };
+        if (await f(99) !== 'Unknown') return { ok: false, msg: '`loadName(99)` should give `Unknown`.' };
+        return { ok: true, msg: 'A rejected `await` became an ordinary caught exception.' };
+      },
+setup: (ctx) => ({
+  getUser: (id) => new Promise((resolve, reject) => {
+    const done = ctx.pend();
+    ctx.wait(20).then(() => {
+      if (id === 1) resolve({ id: 1, name: 'Ada' });
+      else if (id === 2) resolve({ id: 2, name: 'Grace' });
+      else reject(new Error('User not found'));
+      done();
+    });
+  }),
+}) },
+  a4: { lab: (api) => {
+        const out = api.$('[id$="-out"]'); const seq = api.$('[id$="-seq"]'); const par = api.$('[id$="-par"]');
+        const slow = (ms) => new Promise((res) => setTimeout(() => res(ms), ms));
+        let sawSeq = false; let sawPar = false;
+        const time = async (label, fn, btn) => {
+          if (api.isBusy) return;
+          api.busy(true); out.textContent = 'Running.';
+          const start = performance.now();
+          await fn();
+          out.textContent = `${label}: about ${Math.round((performance.now() - start) / 10) * 10} ms`;
+          api.busy(false);
+          if (btn === 's') sawSeq = true; else sawPar = true;
+          if (sawSeq && sawPar) api.complete('Sequential awaits add up, while `Promise.all` takes as long as the slowest task.');
+        };
+        seq.addEventListener('click', () => time('Two awaits in sequence', async () => { await slow(300); await slow(200); }, 's'));
+        par.addEventListener('click', () => time('Promise.all', () => Promise.all([slow(300), slow(200)]), 'p'));
+        return { reset: () => { sawSeq = false; sawPar = false; out.textContent = 'Nothing has run yet.'; } };
+      } }
+};
+</script>
+<script>
+(() => {
+  'use strict';
+  document.documentElement.classList.add('is-enhanced');
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const DATA = JSON.parse($('#pep-data').textContent);
+  const FN = window.PEP_FN || {};
+  const lesson = $('#lesson');
+  const activities = $$('[data-pep-activity]');
+  const timeline = $$('[data-pep-activity-link]');
+  const previous = $('#previous-activity');
+  const next = $('#next-activity');
+  const realSetTimeout = window.setTimeout.bind(window);
+  const realClearTimeout = window.clearTimeout.bind(window);
+  let current = 1;
+  let unlocked = 1;
+  let everComplete = false;
+  let routeSettled = false;
+  const fresh = () => ({ attempts: 0, soft: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false });
+  const state = activities.map(fresh);
+  const snapshots = activities.map((a) => $$('input, textarea, select', a).map((control) => ({ control, value: control.value, checked: control.checked, selectedIndex: control.selectedIndex })));
+  const impl = [];
+
+  function rich(target, text) {
+    target.replaceChildren();
+    String(text).split(/(`[^`]+`)/).forEach((part) => {
+      if (part.startsWith('`') && part.endsWith('`') && part.length > 1) {
+        const code = document.createElement('code');
+        code.textContent = part.slice(1, -1);
+        target.append(code);
+      } else target.append(document.createTextNode(part));
+    });
+  }
+  const KINDS = { success: 'Correct', danger: 'Not yet', warning: 'Settled, not correct', info: 'Note' };
+  function setFeedback(i, kind, text, word) {
+    const box = $('[data-pep-feedback]', activities[i]);
+    if (!kind) { box.replaceChildren(); box.className = 'pep-feedback'; return; }
+    box.className = `pep-feedback pep-callout pep-callout--${kind}`;
+    const inner = document.createElement('p');
+    const strong = document.createElement('strong');
+    strong.textContent = `${word || KINDS[kind]}: `;
+    const body = document.createElement('span');
+    rich(body, text);
+    inner.append(strong, body);
+    box.replaceChildren(inner);
+  }
+  function reflect(i) {
+    const a = activities[i];
+    const s = state[i];
+    a.dataset.pepAttempts = String(s.attempts);
+    a.dataset.pepSettled = String(s.settled);
+    a.dataset.pepCompleted = String(s.completed);
+    a.dataset.pepCredit = String(s.credit);
+    a.dataset.pepGrade = String(s.grade);
+    a.dataset.pepContinue = String(s.canContinue);
+  }
+  function renderProgress() {
+    const done = state.filter((s) => s.completed).length;
+    $('#pep-position').textContent = `Activity ${current} of ${activities.length}`;
+    $('#progress').textContent = `${done} of ${activities.length} complete`;
+    $$('#pep-segments > span').forEach((seg, index) => {
+      seg.className = state[index].completed ? 'is-done' : (index + 1 === current ? 'is-current' : '');
+    });
+    if (done === activities.length) everComplete = true;
+    if (state.every((s) => s.settled)) routeSettled = true;
+    lesson.dataset.pepComplete = String(everComplete);
+    lesson.dataset.pepRouteSettled = String(routeSettled);
+    $('[data-pep-recap]').hidden = !(everComplete || routeSettled);
+  }
+  function renderActivity(number, historyMode = 'none', moveFocus = false) {
+    if (!Number.isInteger(number) || number < 1 || number > activities.length || number > unlocked) return false;
+    current = number;
+    lesson.dataset.pepCurrentActivity = String(current);
+    lesson.dataset.pepUnlockedThrough = String(unlocked);
+    activities.forEach((a, index) => { a.hidden = index + 1 !== current; });
+    timeline.forEach((link, index) => {
+      const n = index + 1;
+      if (n === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+      if (n > unlocked) link.setAttribute('aria-disabled', 'true'); else link.removeAttribute('aria-disabled');
+    });
+    previous.disabled = current === 1;
+    next.disabled = current === activities.length || current >= unlocked || !state[current - 1].canContinue;
+    renderProgress();
+    try {
+      if (historyMode === 'push') history.pushState({ activity: current }, '', `#activity-${current}`);
+      if (historyMode === 'replace') history.replaceState({ activity: current }, '', `#activity-${current}`);
+    } catch {
+      if (historyMode !== 'none' && location.hash !== `#activity-${current}`) location.hash = `activity-${current}`;
+    }
+    if (moveFocus) $(`#activity-${current} h2`)?.focus();
+    return true;
+  }
+  function complete(i, grade, kind, text, word) {
+    const s = state[i];
+    s.completed = true; s.settled = true; s.canContinue = true; s.grade = grade;
+    if (s.credit === 0) s.credit = 1;
+    reflect(i);
+    setFeedback(i, kind, text, word);
+    unlocked = Math.max(unlocked, Math.min(i + 2, activities.length));
+    renderActivity(current);
+    if (i + 1 === current && document.activeElement && document.activeElement.disabled && !next.disabled) next.focus();
+  }
+  function settleMiss(i, text) {
+    const s = state[i];
+    s.settled = true; s.canContinue = true; s.completed = false; s.credit = 0; s.grade = 0;
+    reflect(i);
+    setFeedback(i, 'warning', `${text} This activity stays incomplete. You can continue, or use Restart activity to try it again.`);
+    unlocked = Math.max(unlocked, Math.min(i + 2, activities.length));
+    renderActivity(current);
+    if (i + 1 === current && document.activeElement && document.activeElement.disabled && !next.disabled) next.focus();
+  }
+  function attempt(i, ok, okText, retryText, settledText) {
+    const s = state[i];
+    s.attempts += 1;
+    if (ok) complete(i, 1, 'success', okText);
+    else if (s.attempts >= 2) settleMiss(i, settledText);
+    else { reflect(i); setFeedback(i, 'danger', retryText); }
+    return s.settled;
+  }
+
+  /* ---------- multiple choice ---------- */
+  function setupMcq(i, a, def) {
+    const options = $$('.pep-option', a);
+    const inputs = options.map((o) => $('input', o));
+    const check = $('[data-pep-submit]', a);
+    const chosen = () => inputs.findIndex((x) => x.checked);
+    const reveal = (pick) => {
+      options.forEach((option, n) => {
+        const opt = def.options[n];
+        option.classList.toggle('is-correct', Boolean(opt.ok));
+        option.classList.toggle('is-wrong', n === pick && !opt.ok);
+        const tag = $('.pep-option__tag', option);
+        tag.textContent = opt.ok ? (n === pick ? 'Correct answer, your answer' : 'Correct answer') : (n === pick ? 'Your answer' : '');
+        tag.hidden = !tag.textContent;
+        const why = $('.pep-explain', option);
+        rich(why, opt.why);
+        why.hidden = false;
+        inputs[n].disabled = true;
+      });
+      check.disabled = true;
+      $$('[data-confidence] input', a).forEach((x) => { x.disabled = true; });
+    };
+    check.addEventListener('click', () => {
+      const pick = chosen();
+      if (pick < 0) { setFeedback(i, 'info', def.needPick || 'Choose one option first.', 'Choose first'); return; }
+      const opt = def.options[pick];
+      if (def.mode === 'predict') {
+        state[i].attempts += 1;
+        reveal(pick);
+        if (opt.ok) complete(i, 1, 'success', def.after);
+        else complete(i, 0, 'info', def.after, 'Prediction recorded');
+        return;
+      }
+      const conf = $('[data-confidence] input:checked', a);
+      if (!conf) { setFeedback(i, 'info', 'Rate how sure you are before you check. It helps you notice overconfidence.', 'Rate first'); return; }
+      const settledNow = state[i].attempts + 1 >= 2 || opt.ok;
+      if (settledNow) reveal(pick);
+      attempt(i, Boolean(opt.ok),
+        `${opt.why} You rated this: ${conf.value}.`,
+        `${opt.why} One retry remains; choose again.`,
+        `${opt.why} The answer is now marked and every option is explained. You rated this: ${conf.value}.`);
+    });
+    return {
+      reset() {
+        options.forEach((option) => {
+          option.classList.remove('is-correct', 'is-wrong');
+          const tag = $('.pep-option__tag', option); tag.textContent = ''; tag.hidden = true;
+          const why = $('.pep-explain', option); why.replaceChildren(); why.hidden = true;
+        });
+        [...inputs, ...$$('[data-confidence] input', a)].forEach((x) => { x.disabled = false; });
+        check.disabled = false;
+      },
+    };
+  }
+
+  /* ---------- match each row to a choice ---------- */
+  function setupMatch(i, a, def) {
+    const rows = $$('.pep-match__row', a);
+    const selects = rows.map((r) => $('select', r));
+    const check = $('[data-pep-submit]', a);
+    const paint = (reveal) => {
+      rows.forEach((row, n) => {
+        const good = selects[n].value === def.rows[n].answer;
+        const mark = $('.pep-match__mark', row);
+        const verdict = good ? 'Correct' : 'Not this one';
+        mark.hidden = false;
+        mark.className = `pep-match__mark ${good ? 'is-good' : 'is-bad'}`;
+        if (reveal || good) rich(mark, `${verdict}: ${good ? '' : `it is ${def.rows[n].answerLabel}. `}${def.rows[n].why}`);
+        else rich(mark, `${verdict}. Look at this row again.`);
+      });
+    };
+    check.addEventListener('click', () => {
+      if (selects.some((s) => !s.value)) { setFeedback(i, 'info', 'Choose a value in every row first.', 'Choose first'); return; }
+      const ok = selects.every((s, n) => s.value === def.rows[n].answer);
+      const settling = ok || state[i].attempts + 1 >= 2;
+      paint(settling);
+      if (settling) { selects.forEach((s) => { s.disabled = true; }); check.disabled = true; }
+      attempt(i, ok, def.okText, 'Some rows do not match yet. Change those rows and check once more.', def.settledText);
+    });
+    return {
+      reset() {
+        rows.forEach((row) => { const mark = $('.pep-match__mark', row); mark.replaceChildren(); mark.hidden = true; mark.className = 'pep-match__mark'; });
+        selects.forEach((s) => { s.disabled = false; });
+        check.disabled = false;
+      },
+    };
+  }
+
+  /* ---------- JavaScript execution ---------- */
+  function fmt(value, depth = 0, seen = []) {
+    const t = typeof value;
+    if (t === 'string') return depth ? `'${value}'` : value;
+    if (t === 'bigint') return `${value}n`;
+    if (t === 'function') return `[Function: ${value.name || 'anonymous'}]`;
+    if (t === 'symbol') return String(value);
+    if (value === null || t !== 'object') return Object.is(value, -0) ? '-0' : String(value);
+    if (value instanceof Error) return `${value.name}: ${value.message}`;
+    if (value instanceof Promise) return 'Promise { ... }';
+    if (typeof Element !== 'undefined' && value instanceof Element) return `<${value.tagName.toLowerCase()}>`;
+    if (typeof Response !== 'undefined' && value instanceof Response) return `Response { status: ${value.status}, ok: ${value.ok} }`;
+    if (seen.includes(value)) return '[Circular]';
+    if (depth > 3) return Array.isArray(value) ? '[Array]' : '[Object]';
+    const nested = [...seen, value];
+    if (Array.isArray(value)) return value.length ? `[ ${value.map((v) => fmt(v, depth + 1, nested)).join(', ')} ]` : '[]';
+    const keys = Object.keys(value);
+    return keys.length ? `{ ${keys.map((k) => `${k}: ${fmt(value[k], depth + 1, nested)}`).join(', ')} }` : '{}';
+  }
+  function same(a, b) {
+    if (Object.is(a, b)) return true;
+    if (typeof a !== 'object' || typeof b !== 'object' || !a || !b) return false;
+    if (Array.isArray(a) !== Array.isArray(b)) return false;
+    const ka = Object.keys(a); const kb = Object.keys(b);
+    return ka.length === kb.length && ka.every((k) => same(a[k], b[k]));
+  }
+  const BLOCKED = /(?<![.\w$])(window|globalThis|self|parent|top|frames|eval|Function|XMLHttpRequest|WebSocket|Worker|localStorage|sessionStorage|indexedDB|alert|confirm|prompt|location|navigator|setInterval|requestAnimationFrame)\b(?!\s*:)|\bconstructor\b|\b__proto__\b|(?<![.\w$])import\s*\(/;
+  function strip(code) {
+    return code.replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*|'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"|`(?:\\[\s\S]|[^`\\])*`/g, (m) => m.replace(/[^\n]/g, ' '));
+  }
+  function guard(code) {
+    const clean = strip(code);
+    let out = ''; let last = 0;
+    const loop = /(?<![.\w$])(for|while)\s*\(/g;
+    let m;
+    while ((m = loop.exec(clean))) {
+      let depth = 1; let pos = m.index + m[0].length;
+      while (pos < clean.length && depth) { if (clean[pos] === '(') depth += 1; else if (clean[pos] === ')') depth -= 1; pos += 1; }
+      while (pos < clean.length && /\s/.test(clean[pos])) pos += 1;
+      if (clean[pos] !== '{') throw Object.assign(new Error('Write loop bodies with { } braces in this practice editor.'), { pepLimit: true, pepLine: clean.slice(0, m.index).split('\n').length });
+      out += code.slice(last, pos + 1) + ' __pepTick();';
+      last = pos + 1;
+      loop.lastIndex = pos + 1;
+    }
+    if (/(?<![.\w$])do\s*\{/.test(clean)) throw Object.assign(new Error('do...while loops are not supported in this practice editor. Use for or while with braces.'), { pepLimit: true });
+    return out + code.slice(last);
+  }
+  function errorLine(error) {
+    const m = /<anonymous>:(\d+):\d+/.exec(error?.stack || '');
+    return m ? Math.max(1, Number(m[1]) - 2) : null;
+  }
+  function moduleTransform(source, file, hasFile) {
+    const imports = [];
+    let body = source;
+    body = body.replace(/^[ \t]*import\s+([^'";]*?)\s*from\s*['"]([^'"]+)['"]\s*;?[ \t]*$/gm, (all, clause, spec) => {
+      const c = clause.trim();
+      const named = /\{([\s\S]*)\}/.exec(c);
+      const star = /\*\s+as\s+([\w$]+)/.exec(c);
+      const def = /^([\w$]+)/.exec(c);
+      imports.push({ spec, def: def ? def[1] : null, star: star ? star[1] : null, named: named ? named[1].split(',').map((x) => x.trim()).filter(Boolean).map((x) => { const p = x.split(/\s+as\s+/); return { from: p[0].trim(), to: (p[1] || p[0]).trim() }; }) : [] });
+      return '';
+    });
+    body = body.replace(/^[ \t]*import\s*['"]([^'"]+)['"]\s*;?[ \t]*$/gm, (all, spec) => { imports.push({ spec, def: null, star: null, named: [] }); return ''; });
+    const exported = [];
+    let hasDefault = false;
+    body = body.replace(/^([ \t]*)export\s+default\s+(async\s+function|function|class)\s+([\w$]+)/gm, (all, sp, kw, name) => { exported.push(['default', name]); hasDefault = true; return `${sp}${kw} ${name}`; });
+    body = body.replace(/^([ \t]*)export\s+default\s+/gm, (all, sp) => { hasDefault = true; return `${sp}__pepExports.default = `; });
+    body = body.replace(/^([ \t]*)export\s+(const|let|var)\s+([\w$]+)/gm, (all, sp, kw, name) => { exported.push([name, name]); return `${sp}${kw} ${name}`; });
+    body = body.replace(/^([ \t]*)export\s+(async\s+function|function|class)\s+([\w$]+)/gm, (all, sp, kw, name) => { exported.push([name, name]); return `${sp}${kw} ${name}`; });
+    body = body.replace(/^[ \t]*export\s*\{([^}]*)\}\s*;?[ \t]*$/gm, (all, list) => { list.split(',').map((x) => x.trim()).filter(Boolean).forEach((x) => { const p = x.split(/\s+as\s+/); exported.push([(p[1] || p[0]).trim(), p[0].trim()]); }); return ''; });
+    if (/(?<![.\w$])(?:import|export)\s/.test(strip(body))) throw Object.assign(new Error(`${file}: this import or export form is not supported in this practice editor. Use named, default, or namespace forms on one line.`), { pepLimit: true });
+    body = body.replace(/import\.meta\.env/g, '__pepEnv');
+    return { body, imports, exported, hasDefault };
+  }
+
+  async function execute(def, sources, extra = {}) {
+    const started = performance.now();
+    const logs = [];
+    const r = { logs, text: '', err: null, vars: {}, modules: {}, stage: null, inject: {}, sources, fmt, same, limit: null };
+    const stage = def.stage ? $('.pep-stage', activities[def.index]) : null;
+    if (stage) {
+      stage.replaceChildren($('template', stage.parentElement).content.cloneNode(true));
+      r.stage = stage;
+    }
+    let pending = 0;
+    const timers = new Set();
+    const live = { value: true };
+    const ctx = {
+      r, stage, extra,
+      pend() { pending += 1; let closed = false; return () => { if (!closed) { closed = true; pending -= 1; } }; },
+      wait: (ms) => new Promise((res) => realSetTimeout(res, ms)),
+    };
+    const write = (level, args) => { if (live.value) logs.push({ level, text: args.map((v) => fmt(v)).join(' ') }); };
+    const consoleFacade = { log: (...a) => write('log', a), info: (...a) => write('log', a), debug: (...a) => write('log', a), warn: (...a) => write('warn', a), error: (...a) => write('error', a) };
+    let ticks = 0;
+    const tick = () => { ticks += 1; if (ticks > 100000) throw Object.assign(new Error('Stopped after 100000 loop passes. Check that the loop can end.'), { pepLimit: true }); };
+    const fail = (error) => { if (!r.err) r.err = error; write('error', [`Uncaught ${fmt(error)}`]); };
+    const pageSetTimeout = (fn, ms = 0, ...args) => {
+      if (Number(ms) > 2500) { r.limit = 'Timers longer than 2500 ms are not supported in this practice editor.'; ms = 2500; }
+      pending += 1;
+      const id = realSetTimeout(() => { pending -= 1; timers.delete(id); try { fn(...args); } catch (error) { fail(error); } }, ms);
+      timers.add(id);
+      return id;
+    };
+    const pageClearTimeout = (id) => { if (timers.delete(id)) { realClearTimeout(id); pending -= 1; } };
+    const params = { console: consoleFacade, setTimeout: pageSetTimeout, clearTimeout: pageClearTimeout, __pepTick: tick };
+    if (def.docMode === 'stage' && stage) {
+      params.document = {
+        querySelector: (s) => stage.querySelector(s),
+        querySelectorAll: (s) => stage.querySelectorAll(s),
+        getElementById: (s) => stage.querySelector(`#${CSS.escape(s)}`),
+        createElement: (t) => document.createElement(t),
+        createTextNode: (t) => document.createTextNode(t),
+        addEventListener: (...a) => stage.addEventListener(...a),
+        body: stage,
+      };
+    }
+    const setup = FN[def.key]?.setup;
+    if (setup) Object.assign(r.inject, setup(ctx) || {});
+    Object.keys(r.inject).forEach((k) => { if (!k.startsWith('__')) params[k] = r.inject[k]; });
+    const onRejection = (event) => { event.preventDefault(); fail(event.reason instanceof Error ? event.reason : new Error(String(event.reason))); };
+    addEventListener('unhandledrejection', onRejection);
+    const problems = [];
+    const cleanCode = (code, file) => {
+      const clean = strip(code);
+      const blocked = BLOCKED.exec(clean);
+      if (blocked) {
+        const line = clean.slice(0, blocked.index).split('\n').length;
+        problems.push({ kind: 'limit', file, line, text: `${(blocked[1] || blocked[0]).trim()} is not supported in this practice editor.` });
+      }
+      for (const name of ['document', 'fetch']) {
+        const m = new RegExp(`(?<![.\\w$])${name}\\b`).exec(clean);
+        if (m && !(name in params)) problems.push({ kind: 'limit', file, line: clean.slice(0, m.index).split('\n').length, text: `${name} is not supported in this activity's practice editor.` });
+      }
+    };
+    const names = Object.keys(sources);
+    names.forEach((file) => { if (/\.(js|mjs)$/.test(file)) cleanCode(sources[file], file); });
+    if (problems.length) { r.problems = problems; removeEventListener('unhandledrejection', onRejection); live.value = false; return finish(); }
+    const syntaxOf = (error, file) => ({ kind: error.pepLimit ? 'limit' : 'error', file, line: error.pepLine || (error.name === 'SyntaxError' ? null : errorLine(error)), text: error.pepLimit ? error.message : `${error.name}: ${error.message}` });
+    try {
+      if (def.modules) {
+        const cache = new Map();
+        const virtual = r.inject.__virtual || {};
+        const env = r.inject.__env || {};
+        const load = (file, chain) => {
+          if (virtual[file]) return virtual[file];
+          const resolved = file.replace(/^\.\//, '');
+          if (cache.has(resolved)) return cache.get(resolved);
+          if (chain.includes(resolved)) throw Object.assign(new Error(`Circular imports are not supported in this practice editor (${resolved}).`), { pepLimit: true });
+          if (!(resolved in sources)) { const e = new TypeError(`Failed to resolve module specifier "${file}"`); e.pepFile = chain[chain.length - 1]; throw e; }
+          const mod = moduleTransform(sources[resolved], resolved);
+          const exportsObject = {};
+          cache.set(resolved, exportsObject);
+          const bindings = {};
+          for (const imp of mod.imports) {
+            const dep = load(imp.spec, [...chain, resolved]);
+            if (imp.def) { if (!('default' in dep)) { const e = new SyntaxError(`The requested module '${imp.spec}' does not provide an export named 'default'`); e.pepFile = resolved; throw e; } bindings[imp.def] = dep.default; }
+            if (imp.star) bindings[imp.star] = dep;
+            for (const n of imp.named) { if (!(n.from in dep)) { const e = new SyntaxError(`The requested module '${imp.spec}' does not provide an export named '${n.from}'`); e.pepFile = resolved; throw e; } bindings[n.to] = dep[n.from]; }
+          }
+          const tail = mod.exported.map(([as, local]) => `;__pepExports[${JSON.stringify(as)}] = ${local};`).join('');
+          const code = guard(mod.body);
+          const paramNames = [...Object.keys(params).filter((k) => !k.startsWith('__pepVirt')), ...Object.keys(bindings), '__pepExports', '__pepEnv'];
+          const values = paramNames.map((k) => (k === '__pepExports' ? exportsObject : k === '__pepEnv' ? env : (k in bindings ? bindings[k] : params[k])));
+          try { new Function(...paramNames, `"use strict";${code}\n${tail}`)(...values); } catch (error) { if (!error.pepFile) error.pepFile = resolved; throw error; }
+          r.modules[resolved] = exportsObject;
+          return exportsObject;
+        };
+        load(def.entry, []);
+      } else {
+        const file = names[0];
+        const code = guard(sources[file]);
+        const capture = (def.capture || []).map((n) => `\n;try { __pepCap.${n} = ${n}; } catch (e) {}`).join('');
+        const paramNames = [...Object.keys(params), '__pepCap'];
+        const fn = new Function(...paramNames, `"use strict";${code}${capture}`);
+        fn(...Object.keys(params).map((k) => params[k]), r.vars);
+      }
+    } catch (error) {
+      if (error.name === 'SyntaxError' || error.pepLimit) {
+        r.problems = [syntaxOf(error, error.pepFile || names[0])];
+        removeEventListener('unhandledrejection', onRejection);
+        live.value = false;
+        return finish();
+      }
+      fail(error);
+      r.errLine = errorLine(error);
+      r.errFile = error.pepFile || names[0];
+    }
+    /* Let promise callbacks and timers finish, with an upper bound. */
+    let idle = 0;
+    while (idle < 3 && performance.now() - started < 4000) {
+      await ctx.wait(15);
+      idle = pending === 0 ? idle + 1 : 0;
+    }
+    if (pending > 0) r.limit = 'Stopped waiting after 4 seconds; some callbacks had not finished.';
+    if (r.inject.__finish) r.inject.__finish();
+    timers.forEach((id) => realClearTimeout(id));
+    if (extra.after) await extra.after(r, ctx);
+    removeEventListener('unhandledrejection', onRejection);
+    return finish();
+    function finish() {
+      live.value = logs.length >= 0;
+      r.text = logs.map((l) => l.text).join('\n');
+      r.lines = logs.map((l) => l.text);
+      r.problems = r.problems || [];
+      if (r.limit) r.problems.push({ kind: 'limit', text: r.limit });
+      return r;
+    }
+  }
+
+  /* ---------- editor workspace ---------- */
+  function setupCode(i, a, def) {
+    const tabsFile = $$('[data-pep-file-tab]', a);
+    const areas = $$('textarea.pep-editor__input', a);
+    const gutters = $$('.pep-editor__gutter', a);
+    const codes = $$('.pep-editor__code', a);
+    const run = $('[data-pep-run]', a);
+    const resetCode = $('[data-pep-reset-code]', a);
+    const status = $('.pep-editor__status', a);
+    const panels = { problems: $('[data-panel="problems"]', a), output: $('[data-panel="output"]', a) };
+    const tabs = { problems: $('[data-tab="problems"]', a), output: $('[data-tab="output"]', a) };
+    const fileNames = areas.map((x) => x.dataset.file);
+    const starters = areas.map((x) => x.defaultValue);
+    let currentFile = 0;
+    let seq = 0;
+    const showTab = (name) => {
+      Object.keys(tabs).forEach((k) => {
+        tabs[k].setAttribute('aria-selected', String(k === name));
+        tabs[k].tabIndex = k === name ? 0 : -1;
+        panels[k].hidden = k !== name;
+      });
+    };
+    Object.keys(tabs).forEach((k) => {
+      tabs[k].addEventListener('click', () => showTab(k));
+      tabs[k].addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { const o = k === 'problems' ? 'output' : 'problems'; showTab(o); tabs[o].focus(); e.preventDefault(); }
+      });
+    });
+    const gutter = (n) => {
+      const count = areas[n].value.split('\n').length;
+      gutters[n].textContent = Array.from({ length: count }, (_, x) => x + 1).join('\n');
+      areas[n].rows = Math.max(count + 1, 6);
+    };
+    areas.forEach((area, n) => { area.addEventListener('input', () => gutter(n)); gutter(n); });
+    const showFile = (n) => {
+      currentFile = n;
+      tabsFile.forEach((t, x) => { t.setAttribute('aria-pressed', String(x === n)); });
+      codes.forEach((c, x) => { c.hidden = x !== n; });
+    };
+    tabsFile.forEach((t, n) => t.addEventListener('click', () => showFile(n)));
+    const clearPanel = (p, text) => { p.replaceChildren(); if (text) { const m = document.createElement('p'); m.className = 'pep-editor__empty'; m.textContent = text; p.append(m); } };
+    const idle = () => { clearPanel(panels.problems, 'No problems yet. Press Run to check your code.'); clearPanel(panels.output, 'Output appears here after you press Run.'); status.textContent = 'Ready. Nothing has run yet.'; showTab('output'); };
+    idle();
+    const caret = (file, line) => {
+      const n = Math.max(0, fileNames.indexOf(file));
+      showFile(n);
+      const area = areas[n];
+      const parts = area.value.split('\n');
+      const pos = parts.slice(0, Math.max(0, (line || 1) - 1)).join('\n').length + (line > 1 ? 1 : 0);
+      area.focus();
+      area.setSelectionRange(pos, pos);
+    };
+    const renderProblems = (list) => {
+      panels.problems.replaceChildren();
+      if (!list.length) { clearPanel(panels.problems, 'No problems found in the last run.'); return; }
+      list.forEach((p) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'pep-editor__problem';
+        const k = document.createElement('span');
+        k.className = p.kind === 'limit' ? 'kind-limit' : 'kind-error';
+        k.textContent = p.kind === 'limit' ? 'Not supported' : 'Error';
+        const where = p.line ? ` ${p.file || fileNames[0]} line ${p.line}` : (p.file && fileNames.length > 1 ? ` ${p.file}` : '');
+        b.append(k, document.createTextNode(`${where}: ${p.text}`));
+        b.addEventListener('click', () => caret(p.file || fileNames[0], p.line || 1));
+        panels.problems.append(b);
+      });
+    };
+    const renderOutput = (logs, note) => {
+      panels.output.replaceChildren();
+      if (!logs.length) { clearPanel(panels.output, note || 'The program ran and printed nothing.'); return; }
+      logs.forEach((l) => {
+        const row = document.createElement('div');
+        row.className = `pep-editor__line is-${l.level}`;
+        row.textContent = l.text;
+        panels.output.append(row);
+      });
+    };
+    run.addEventListener('click', async () => {
+      const my = ++seq;
+      const sources = {};
+      areas.forEach((x, n) => { sources[fileNames[n]] = x.value; });
+      const placeholder = areas.findIndex((x) => /_{3,}/.test(x.value));
+      if (placeholder >= 0) {
+        const line = areas[placeholder].value.slice(0, areas[placeholder].value.search(/_{3,}/)).split('\n').length;
+        renderProblems([{ kind: 'limit', file: fileNames[placeholder], line, text: 'Replace the ___ placeholder before you run. Select this row to jump to it.' }]);
+        renderOutput([], 'Not run yet: a placeholder is still in the code.');
+        showTab('problems');
+        status.textContent = 'Not run: replace the placeholder first.';
+        return;
+      }
+      status.textContent = 'Running.';
+      run.disabled = true;
+      let r;
+      try { r = await execute(def, sources, {}); } finally { run.disabled = false; }
+      if (my !== seq) return;
+      const unchanged = areas.every((x, n) => x.value === starters[n]);
+      if (r.problems.length && !r.logs.length && !r.err) {
+        renderProblems(r.problems);
+        renderOutput([], 'Not run: fix the item in Problems first.');
+        showTab('problems');
+        status.textContent = `Not run: ${r.problems.length} problem${r.problems.length > 1 ? 's' : ''} in Problems.`;
+        const s = state[i];
+        s.soft += 1;
+        if (!unchanged && s.soft >= 3 && !s.settled) {
+          s.soft = 0;
+          attempt(i, false, '', 'Three runs have stopped on a problem, so this counts as your first try. Read the Problems row, then open the hint.', def.settled);
+        } else setFeedback(i, 'info', 'The code did not run, so this did not use a try. Read the Problems tab.', 'Not run');
+        return;
+      }
+      const list = [...r.problems];
+      if (r.err) list.unshift({ kind: 'error', file: r.errFile, line: r.errLine, text: fmt(r.err) });
+      renderProblems(list);
+      let verdict;
+      try { verdict = await FN[def.key].check(r); } catch (error) { verdict = { ok: false, msg: `Your code ran, but the check stopped on ${fmt(error)}.` }; }
+      if (my !== seq) return;
+      renderOutput(r.logs);
+      showTab(list.length ? 'problems' : 'output');
+      if (unchanged && !verdict.ok) {
+        status.textContent = 'Ran the unchanged starter.';
+        setFeedback(i, 'info', 'That was the starter as written, so this did not use a try. Now make your edit and run again.', 'Starter');
+        return;
+      }
+      const s = state[i];
+      if (s.settled) {
+        if (verdict.ok) { complete(i, 1, 'success', `${verdict.msg} Your last edit counts.`); status.textContent = 'Checks passed.'; } else { setFeedback(i, 'warning', verdict.msg); status.textContent = 'Checks not met yet. This activity is already settled, so you can keep practising.'; }
+        return;
+      }
+      attempt(i, verdict.ok, verdict.msg, `${verdict.msg} One retry counts; edit and run again.`, `${verdict.msg} ${def.settled}`);
+      status.textContent = verdict.ok ? 'Run finished. Checks passed.' : 'Run finished. Checks not met yet.';
+    });
+    resetCode.addEventListener('click', () => {
+      seq += 1;
+      areas.forEach((x, n) => { x.value = starters[n]; gutter(n); });
+      idle();
+      if (def.stage) { const stage = $('.pep-stage', a); stage.replaceChildren($('template', stage.parentElement).content.cloneNode(true)); }
+    });
+    if (def.stage) { const stage = $('.pep-stage', a); stage.replaceChildren($('template', stage.parentElement).content.cloneNode(true)); }
+    return {
+      reset() {
+        seq += 1;
+        areas.forEach((x, n) => { x.value = starters[n]; gutter(n); });
+        showFile(0);
+        idle();
+        if (def.stage) { const stage = $('.pep-stage', a); stage.replaceChildren($('template', stage.parentElement).content.cloneNode(true)); }
+      },
+    };
+  }
+
+  /* ---------- practice terminal ---------- */
+  function setupTerminal(i, a, def) {
+    const log = $('.pep-terminal__log', a);
+    const input = $('.pep-terminal__input', a);
+    const runBtn = $('[data-pep-run]', a);
+    const prompt = $('.pep-terminal__prompt', a);
+    const spec = FN[def.key];
+    let term = spec.init();
+    const line = (text, cls) => { const d = document.createElement('div'); d.className = cls || ''; d.textContent = text; log.append(d); };
+    const submit = () => {
+      const cmd = input.value.trim();
+      if (!cmd) { setFeedback(i, 'info', 'Type a command first, then press Enter or Run.', 'Type first'); return; }
+      if (!state[i].completed && state[i].attempts === 0) { state[i].attempts = 1; reflect(i); }
+      line(`${spec.prompt(term)} ${cmd}`, 'cmd');
+      input.value = '';
+      const res = spec.run(cmd, term) || { unsupported: true };
+      if (res.unsupported) line(`${cmd.split(/\s+/)[0]}: not available in this practice terminal`, 'warn');
+      (res.out || []).forEach((t) => line(t));
+      (res.err || []).forEach((t) => line(t, 'err'));
+      prompt.textContent = spec.prompt(term);
+      const verdict = spec.goal(term);
+      if (res.note) setFeedback(i, res.kind || 'info', res.note, res.word || 'Note');
+      if (verdict && !state[i].completed) complete(i, 1, 'success', verdict);
+    };
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+    runBtn.addEventListener('click', submit);
+    prompt.textContent = spec.prompt(term);
+    return { reset() { term = spec.init(); log.replaceChildren(); prompt.textContent = spec.prompt(term); input.value = ''; } };
+  }
+
+  /* ---------- page-specific manipulations ---------- */
+  function setupLab(i, a, def) {
+    const finish = $('[data-pep-finish]', a);
+    let ready = null;
+    const api = {
+      root: a,
+      $: (s) => $(s, a),
+      $$: (s) => $$(s, a),
+      rich,
+      fmt,
+      same,
+      wait: (ms) => new Promise((res) => realSetTimeout(res, ms)),
+      feedback: (kind, text, word) => setFeedback(i, kind, text, word),
+      complete: (text) => {
+        if (state[i].completed) return;
+        if (!finish) { complete(i, 1, 'success', text); return; }
+        ready = text;
+        a.dataset.pepLabReady = 'true';
+        setFeedback(i, 'info', 'You have covered every step. Press the check button to finish this activity.', 'Ready');
+      },
+      completeNow: (text) => { if (!state[i].completed) { if (finish) finish.disabled = true; complete(i, 1, 'success', text); } },
+      busy: (on) => { const lab = $('.pep-lab', a); if (on) lab.setAttribute('aria-busy', 'true'); else lab.removeAttribute('aria-busy'); },
+      get isBusy() { return $('.pep-lab', a).hasAttribute('aria-busy'); },
+      attempt: (ok, okText, retryText, settledText) => attempt(i, ok, okText, retryText, settledText),
+      get settled() { return state[i].settled; },
+      get attempts() { return state[i].attempts; },
+      activity: i + 1,
+    };
+    if (def.explore) {
+      const mark = () => { if (!state[i].completed && state[i].attempts === 0) { state[i].attempts = 1; reflect(i); } };
+      $('.pep-lab', a).addEventListener('click', (e) => { if (e.target.closest('button')) mark(); });
+      $('.pep-lab', a).addEventListener('change', mark);
+    }
+    const inner = FN[def.key].lab(api) || {};
+    if (finish) {
+      finish.addEventListener('click', () => {
+        if (state[i].completed) return;
+        if (ready) { finish.disabled = true; complete(i, 1, 'success', ready); } else setFeedback(i, 'info', 'Some steps in Your task are still to do. Work through them, then check again.', 'Keep going');
+      });
+    }
+    return {
+      reset() {
+        ready = null;
+        delete a.dataset.pepLabReady;
+        if (finish) finish.disabled = false;
+        api.busy(false);
+        inner.reset?.();
+      },
+    };
+  }
+
+  DATA.activities.forEach((def, i) => {
+    const a = activities[i];
+    def.index = i;
+    if (def.type === 'mcq') impl[i] = setupMcq(i, a, def);
+    if (def.type === 'match') impl[i] = setupMatch(i, a, def);
+    if (def.type === 'code') impl[i] = setupCode(i, a, def);
+    if (def.type === 'terminal') impl[i] = setupTerminal(i, a, def);
+    if (def.type === 'lab') impl[i] = setupLab(i, a, def);
+  });
+
+  /* ---------- navigation, restart, disclosures, print ---------- */
+  const activityNumber = (hash) => Number(/^#activity-(\d+)$/.exec(hash)?.[1] || 1);
+  let lastFocused = null;
+  document.addEventListener('focusin', (e) => { lastFocused = e.target; });
+  timeline.forEach((link, index) => link.addEventListener('click', (e) => { e.preventDefault(); renderActivity(index + 1, 'push', true); }));
+  $$('[data-pep-back-link]').forEach((link) => link.addEventListener('click', (e) => { e.preventDefault(); renderActivity(activityNumber(link.hash), 'push', true); }));
+  previous.addEventListener('click', () => renderActivity(current - 1, 'push', true));
+  next.addEventListener('click', () => renderActivity(current + 1, 'push', true));
+  const restoreFromHistory = () => {
+    const keep = lastFocused;
+    if (location.hash && !/^#activity-\d+$/.test(location.hash)) { renderActivity(current, 'replace', false); return; }
+    if (!renderActivity(activityNumber(location.hash), 'none', false)) renderActivity(Math.min(current, unlocked), 'replace', false);
+    if (keep?.isConnected && !keep.closest('[hidden]')) keep.focus({ preventScroll: true });
+  };
+  addEventListener('popstate', restoreFromHistory);
+  addEventListener('hashchange', restoreFromHistory);
+  $('#restart').addEventListener('click', () => {
+    const index = current - 1;
+    for (const s of snapshots[index]) {
+      const c = s.control;
+      if (c.matches('input[type="checkbox"], input[type="radio"]')) c.checked = s.checked;
+      else if (c.tagName === 'SELECT') c.selectedIndex = s.selectedIndex;
+      else c.value = s.value;
+    }
+    state[index] = fresh();
+    reflect(index);
+    setFeedback(index, null);
+    impl[index]?.reset?.();
+    renderActivity(current);
+  });
+  const objectives = $('[data-pep-objectives]');
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && objectives.open) { objectives.open = false; $('summary', objectives).focus(); } });
+  document.addEventListener('click', (e) => { if (objectives.open && !objectives.contains(e.target)) objectives.open = false; });
+  let printStates = [];
+  addEventListener('beforeprint', () => { printStates = $$('details').map((d) => [d, d.open]); printStates.forEach(([d]) => { d.open = true; }); });
+  addEventListener('afterprint', () => { printStates.forEach(([d, open]) => { d.open = open; }); printStates = []; });
+  try { localStorage.getItem('pep'); } catch { /* opaque origin: nothing is stored */ }
+  activities.forEach((_, i) => reflect(i));
+  const requested = activityNumber(location.hash);
+  renderActivity(requested <= unlocked ? requested : 1, 'replace');
+})();
+
+</script>
+</body>
+</html>
