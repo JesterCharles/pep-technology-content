@@ -9,7 +9,7 @@ import test from "node:test";
 import Ajv2020 from "ajv/dist/2020.js";
 import MarkdownIt from "markdown-it";
 import { run as runT01 } from "../tools/checks/T01-schema.mjs";
-import { validateLearnerGuidance, validateOptionalDisclosures } from "../tools/checks/T08-html-static.mjs";
+import { run as runT08, validateLearnerGuidance, validateOptionalDisclosures } from "../tools/checks/T08-html-static.mjs";
 import { run as runT09 } from "../tools/checks/T09-offline.mjs";
 import { run as runT10 } from "../tools/checks/T10-sandbox.mjs";
 import { run as runT11 } from "../tools/checks/T11-behavior.mjs";
@@ -90,6 +90,72 @@ function context(root) {
     scanRoots: [root],
     display: (file) => path.relative(root, file).split(path.sep).join("/") || ".",
   };
+}
+
+async function makeT08Repository(html, spec) {
+  const repository = await makeRepository("answer-sensitive-private.html", { spec, preserveGuidance: true });
+  const artifact = path.join(repository.topicRoot, "artifact.html");
+  const metadata = [
+    '<meta name="pep:course" content="course">',
+    '<meta name="pep:module" content="module">',
+    '<meta name="pep:topic" content="QA fixture">',
+    '<meta name="pep:topic-id" content="topic">',
+    '<meta name="pep:budget-minutes" content="10">',
+    '<meta name="pep:source" content="authoring/evidence/course/module/topic/sources.json">',
+  ].join("\n  ");
+  await writeFile(artifact, html
+    .replace("<head>", `<head>\n  ${metadata}`)
+    .replace("<main ", "<main data-interaction "));
+  await writeFile(path.join(repository.root, "authoring/catalog/course/module/topic/topic.json"), `${JSON.stringify({
+    id: "topic",
+    title: "QA fixture",
+    artifacts: {
+      html: { status: "present" },
+      md: { status: "absent", reason: "Synthetic T08 fixture" },
+      pdf: { status: "absent", reason: "Synthetic T08 fixture" },
+    },
+    minutes: { budget: 10 },
+    freshness: { sourcesRef: "authoring/evidence/course/module/topic/sources.json" },
+  }, null, 2)}\n`);
+  return repository;
+}
+
+async function runT08Document(html, spec) {
+  const repository = await makeT08Repository(html, spec);
+  try {
+    return await runT08(context(repository.root));
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+  }
+}
+
+function nonGuidanceScaffoldHtml(options = {}) {
+  const adapter = options.adapter === undefined ? "python-scaffold@3" : options.adapter;
+  const adapterAttribute = adapter === null ? "" : ` data-lesson-editor-adapter="${adapter}"`;
+  const language = options.language ?? "python-scaffold";
+  const extension = options.extension ?? "py";
+  const target = options.target ?? "placeholder";
+  const declaration = options.declaration === false ? "" :
+    `<section id="task-sensitive" data-pep-answer-sensitive="${language}" data-pep-answer-targets="${target}"><p>Complete the private activity.</p></section>`;
+  const scoped = options.outsideTarget ?
+    `<section${adapterAttribute}><span class="le-file">practice.${extension}</span></section>${declaration}` :
+    `<section${adapterAttribute}><span class="le-file">practice.${extension}</span>${declaration}</section>`;
+  const duplicate = options.duplicateDeclaration ? declaration : "";
+  return `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>QA fixture</title></head>
+<body><main id="lesson">${scoped}${duplicate}</main></body>
+</html>`;
+}
+
+function nonGuidanceScaffoldSpec(overrides = {}) {
+  return { answerSafety: { privateSuccessProof: true, tasks: [{
+    task: "#task-sensitive",
+    language: "python-scaffold",
+    targets: ["placeholder"],
+    scan: "none",
+    ...overrides,
+  }] } };
 }
 
 function answerSensitiveSpec() {
@@ -204,10 +270,33 @@ test("qa-paths schema requires complete guidance and exact per-action operands",
   multiLanguage.answerSafety.tasks = [
     { task: "#task-2", language: "java", targets: ["reverse"] },
     { task: "#task-3", language: "java", targets: ["summarize"] },
+    { task: "#task-4", language: "python-scaffold", targets: ["placeholder"], scan: "none" },
     { task: "#task-5", language: "jsx-editor", targets: ["App"], scan: "none" },
     { task: "#task-6", language: "javascript-editor", targets: ["loadBooks"], scan: "none" },
+    { task: "#task-7", language: "sql", targets: ["query"], scan: "none" },
   ];
   assert.equal(validate(multiLanguage), true, JSON.stringify(validate.errors));
+  const javaStarterStatements = answerSensitiveSpec();
+  javaStarterStatements.answerSafety.tasks = [
+    { task: "#task-2", language: "java", targets: ["reverse"], starter: { target: "reverse", sha256: "a".repeat(64) } },
+    { task: "#task-3", language: "java", targetMode: "statements", targets: ["total"] },
+  ];
+  assert.equal(validate(javaStarterStatements), true, JSON.stringify(validate.errors));
+  for (const mutateJava of [
+    (value) => { value.answerSafety.tasks[1].targetMode = "methods"; },
+    (value) => { value.answerSafety.tasks[0].starter.sha256 = "A".repeat(64); },
+    (value) => { value.answerSafety.tasks[0].starter.sha256 = "a".repeat(63); },
+    (value) => { delete value.answerSafety.tasks[0].starter.sha256; },
+    (value) => { delete value.answerSafety.tasks[0].starter.target; },
+    (value) => { value.answerSafety.tasks[0].starter.bytes = "starter"; },
+    (value) => { value.answerSafety.tasks[0].starter = "a".repeat(64); },
+    (value) => { value.answerSafety.tasks[1] = { task: "#task-3", language: "python-comprehension", targetMode: "statements", targets: ["total"] }; },
+    (value) => { value.answerSafety.tasks[0] = { task: "#task-2", language: "jsx-editor", scan: "none", targets: ["App"], starter: { target: "App", sha256: "a".repeat(64) } }; },
+  ]) {
+    const invalid = structuredClone(javaStarterStatements);
+    mutateJava(invalid);
+    assert.equal(validate(invalid), false, "Java starter/statement mutation unexpectedly matched qa-paths schema");
+  }
   for (const mutateAnswer of [
     (value) => { value.answerSafety = { task: "#task-2", language: "python-comprehension", targets: ["result"], privateSuccessProof: true }; },
     (value) => { value.answerSafety.tasks = []; },
@@ -215,6 +304,10 @@ test("qa-paths schema requires complete guidance and exact per-action operands",
     (value) => { value.answerSafety.tasks[0].scan = "none"; },
     (value) => { delete value.answerSafety.tasks[2].scan; },
     (value) => { value.answerSafety.tasks[2].scan = "python"; },
+    (value) => { delete value.answerSafety.tasks[3].scan; },
+    (value) => { value.answerSafety.tasks[3].scan = "python"; },
+    (value) => { delete value.answerSafety.tasks[5].scan; },
+    (value) => { value.answerSafety.tasks[5].scan = "sql"; },
     (value) => { value.answerSafety.tasks[0].targets = []; },
   ]) {
     const invalid = structuredClone(multiLanguage);
@@ -312,6 +405,8 @@ test("private QA action values resolve only from an environment-selected externa
 
 test("QA private-success proof binds only current public bytes", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "pep-private-qa-"));
+  const shallowRoot = `${root}-shallow`;
+  const fullRoot = `${root}-full`;
   const owner = "course/module/topic";
   const publicFiles = {
     [`${owner}/artifact.html`]: "<!doctype html><title>Public artifact</title>\n",
@@ -336,16 +431,81 @@ test("QA private-success proof binds only current public bytes", async () => {
     };
     const receiptRoot = path.join(root, "authoring/evidence/course");
     const receiptFile = path.join(root, `authoring/evidence/${owner}/qa-receipt.json`);
+    const writeProof = () => writeFile(receiptFile, `${JSON.stringify({ privateSuccessProof: proof })}\n`);
     assert.match(
       (await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "),
       /opt-in requires a current private success receipt/,
     );
-    await writeFile(receiptFile, `${JSON.stringify({ privateSuccessProof: proof })}\n`);
+    await writeProof();
     for (const args of [["add", path.relative(root, receiptFile)], ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit", "-qm", "record private proof"]]) {
       const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
       assert.equal(result.status, 0, result.stderr);
     }
+    await writeFile(path.join(root, "candidate.txt"), "candidate metadata only\n");
+    for (const args of [["add", "candidate.txt"], ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit", "-qm", "candidate head"]]) {
+      const result = spawnSync("git", args, { cwd: root, encoding: "utf8" });
+      assert.equal(result.status, 0, result.stderr);
+    }
     assert.deepEqual(await validateQaPrivateProofs(root, receiptRoot), []);
+
+    const sourceUrl = pathToFileURL(root).href;
+    for (const [args, checkout] of [
+      [["clone", "-q", "--depth=1", sourceUrl, shallowRoot], shallowRoot],
+      [["clone", "-q", sourceUrl, fullRoot], fullRoot],
+    ]) {
+      const result = spawnSync("git", args, { encoding: "utf8" });
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(spawnSync("git", ["status", "--short"], { cwd: checkout, encoding: "utf8" }).stdout, "");
+    }
+    const shallowReceiptRoot = path.join(shallowRoot, "authoring/evidence/course");
+    assert.match(
+      (await validateQaPrivateProofs(shallowRoot, shallowReceiptRoot)).map((item) => item.message).join("; "),
+      /private success proof commit does not exist in this repository/,
+      "a depth-one checkout must expose the operator-visible missing-proof refusal",
+    );
+    assert.deepEqual(
+      await validateQaPrivateProofs(fullRoot, path.join(fullRoot, "authoring/evidence/course")),
+      [],
+      "the same receipt must pass when its history is present",
+    );
+
+    let result = spawnSync("git", ["fetch", "-q", "--depth=1", "origin", commit], { cwd: shallowRoot, encoding: "utf8" });
+    assert.equal(result.status, 0, result.stderr);
+    const targetedMessages = (await validateQaPrivateProofs(shallowRoot, shallowReceiptRoot)).map((item) => item.message).join("; ");
+    assert.doesNotMatch(targetedMessages, /does not exist/, "fetching the named object should make it readable");
+    assert.match(targetedMessages, /must be an ancestor of current HEAD/, "a detached proof object must not self-authorize");
+    assert.match(targetedMessages, /immediate child of its proof commit/, "the shallow boundary must not masquerade as receipt lineage");
+
+    const missingCommit = "f".repeat(40);
+    proof.commit = missingCommit;
+    proof.record = `validated at ${missingCommit} by run ${proof.runId}`;
+    await writeProof();
+    assert.match(
+      (await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "),
+      /private success proof commit does not exist in this repository/,
+    );
+
+    const tree = spawnSync("git", ["rev-parse", `${commit}^{tree}`], { cwd: root, encoding: "utf8" }).stdout.trim();
+    result = spawnSync(
+      "git",
+      ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit-tree", tree, "-m", "unreachable proof"],
+      { cwd: root, encoding: "utf8" },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    const unreachableCommit = result.stdout.trim();
+    assert.equal(spawnSync("git", ["cat-file", "-e", `${unreachableCommit}^{commit}`], { cwd: root }).status, 0);
+    assert.notEqual(spawnSync("git", ["merge-base", "--is-ancestor", unreachableCommit, "HEAD"], { cwd: root }).status, 0);
+    proof.commit = unreachableCommit;
+    proof.record = `validated at ${unreachableCommit} by run ${proof.runId}`;
+    await writeProof();
+    assert.match(
+      (await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "),
+      /private success proof commit must be an ancestor of current HEAD/,
+    );
+
+    proof.commit = commit;
+    proof.record = `validated at ${commit} by run ${proof.runId}`;
+    await writeProof();
     await writeFile(path.join(root, `${owner}/artifact.html`), "changed public artifact\n");
     assert.match((await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "), /stale private-success public binding/);
     proof.publicBindings.push({ file: `${owner}/correct-input.json`, reviewedSha256: "0".repeat(64) });
@@ -357,6 +517,8 @@ test("QA private-success proof binds only current public bytes", async () => {
     assert.match((await validateQaPrivateProofs(root, receiptRoot)).map((item) => item.message).join("; "), /exact five approved public paths/);
   } finally {
     await rm(root, { recursive: true, force: true });
+    await rm(shallowRoot, { recursive: true, force: true });
+    await rm(fullRoot, { recursive: true, force: true });
   }
 });
 
@@ -573,6 +735,58 @@ function declareAnswerTasks(html, declarations) {
   ), html);
 }
 
+function declarePythonScaffold(html, options = {}) {
+  const adapter = options.adapter === undefined ? "python-scaffold@3" : options.adapter;
+  const extension = options.extension ?? "py";
+  const labelClass = options.labelClass ?? "le-file";
+  const language = options.language ?? "python-scaffold";
+  const adapterAttribute = adapter === null ? "" : ` data-lesson-editor-adapter="${adapter}"`;
+  return html.replace(
+    'id="task-safe" data-pep-task',
+    `id="task-safe" data-pep-task data-pep-answer-sensitive="${language}" data-pep-answer-targets="placeholder"${adapterAttribute}`,
+  ).replace(
+    '<label for="activity-input">Observation</label>',
+    `<span class="${labelClass}">practice.${extension}</span><label for="activity-input">Observation</label>`,
+  );
+}
+
+function pythonScaffoldSpec() {
+  return { answerSafety: { privateSuccessProof: true, tasks: [
+    { task: "#task-safe", language: "python-scaffold", targets: ["placeholder"], scan: "none" },
+  ] } };
+}
+
+const SQL_GUIDED_TASKS = [
+  { task: "#task-2", language: "sql", targets: ["queryOne"], scan: "none" },
+  { task: "#task-3", language: "sql", targets: ["queryTwo"], scan: "none" },
+];
+
+function sqlGuidedHtml(html, options = {}) {
+  let out = options.declarations === false ? html : declareAnswerTasks(html, [
+    ["task-2", options.firstLanguage ?? "sql", "queryOne"],
+    ["task-3", options.secondLanguage ?? "sql", "queryTwo"],
+  ]);
+  const adapters = options.adapters ?? ["sql-practice@1", "sql-practice@1"];
+  for (const adapter of adapters) {
+    const attribute = adapter === null ? "" : ` data-lesson-editor-adapter="${adapter}"`;
+    out = out.replace('<div class="pep-editor__bar">', `<div class="pep-editor__bar"${attribute}>`);
+  }
+  const extensions = options.extensions ?? ["sql", "sql"];
+  return out.replaceAll("Reverse.java", `query-one.${extensions[0]}`)
+    .replaceAll("Report.java", `query-two.${extensions[1]}`);
+}
+
+function sqlGuidedSpec() {
+  const spec = guidedSpec("strict");
+  spec.answerSafety = { privateSuccessProof: true, tasks: structuredClone(SQL_GUIDED_TASKS) };
+  return spec;
+}
+
+function privateRouteDiagnostic(route, phase, details = "") {
+  const suffix = details ? ` ${details}` : "";
+  return `private success route failed; no private values were recorded [route=${route} phase=${phase}${suffix}]`;
+}
+
 const JAVA_GUIDED_TASKS = [
   { task: "#task-2", language: "java", targets: ["reverse"] },
   { task: "#task-3", language: "java", targets: ["summarize"] },
@@ -604,6 +818,46 @@ async function makeOverlayRepository(page, options) {
   }
   return repository;
 }
+
+test("private overlay accepts an adapter-scoped python-scaffold declaration", { timeout: 300000 }, async () => {
+  const spec = answerSensitiveSpec();
+  spec.answerSafety.tasks = [
+    { task: "#task-sensitive", language: "python-scaffold", targets: ["placeholder"], scan: "none" },
+  ];
+  const repository = await makeOverlayRepository("answer-sensitive-private.html", {
+    spec,
+    transformHtml: (html) => html.replace(
+      '<section id="task-sensitive" data-pep-answer-sensitive="python-comprehension" data-pep-answer-targets="result">',
+      '<section id="task-sensitive" data-pep-answer-sensitive="python-scaffold" data-pep-answer-targets="placeholder" data-lesson-editor-adapter="python-scaffold@3"><span class="le-file">practice.py</span>',
+    ),
+  });
+  const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-python-scaffold-"));
+  const overlayFile = path.join(staging, "overlay.json");
+  const inputsFile = path.join(staging, "inputs.json");
+  const route = [
+    { do: "fill", selector: "#private-input", valueFrom: "private:activityValue" },
+    { do: "click", selector: "#private-complete" },
+  ];
+  try {
+    await writeFile(overlayFile, `${JSON.stringify({
+      schemaVersion: 1,
+      runId: "local-safe-python-scaffold",
+      topic: "course/module/topic",
+      completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+      progress: { selector: "#progress", text: "^1 of 1$" },
+      routes: { success: route, wrongFirst: route, keyboard: route, sandbox: route },
+    })}\n`);
+    await writeFile(inputsFile, `${JSON.stringify({ activityValue: `runtime-placeholder-${process.pid}` })}\n`);
+    const result = await runPrivateOverlay(context(repository.root), overlayFile, {
+      environment: { PEP_QA_PRIVATE_INPUTS_FILE: inputsFile },
+    });
+    assert.equal(result.result, "pass");
+    assert.equal(result.publicBindings.length, 5);
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+    await rm(staging, { recursive: true, force: true });
+  }
+});
 
 test("T10 runs the guided answer-sensitive fixture with a settled incomplete prior in sandbox", { timeout: 300000 }, async () => {
   assert.deepEqual(await runFixture("T10", "guided-answer-sensitive.html", {
@@ -692,6 +946,679 @@ test("Java answer scanning and language-to-editor matching guard declared tasks"
     { task: "#task-3", language: "javascript-editor", targets: ["loadBooks"], scan: "none" },
   ] } };
   assert.deepEqual(await validateLearnerGuidance(matchedJs, matchedJsSpec), []);
+});
+
+test("SQL answer declarations require matched markers, adapters and editors", { timeout: 180000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "guided-answer-sensitive.html"), "utf8");
+  const html = sqlGuidedHtml(baseHtml);
+  const spec = sqlGuidedSpec();
+  assert.deepEqual(await validateLearnerGuidance(html, spec), []);
+  assert.deepEqual(await runT08Document(html, spec), []);
+
+  const missingMarker = html.replace(' data-pep-answer-sensitive="sql" data-pep-answer-targets="queryOne"', "");
+  assert.match((await validateLearnerGuidance(missingMarker, spec)).join("; "), /match one-to-one and exactly/);
+  const missingDeclaration = sqlGuidedSpec();
+  missingDeclaration.answerSafety.tasks.pop();
+  assert.match((await validateLearnerGuidance(html, missingDeclaration)).join("; "), /match one-to-one and exactly/);
+  assert.match(
+    (await validateLearnerGuidance(sqlGuidedHtml(baseHtml, { adapters: [null, "sql-practice@1"] }), spec)).join("; "),
+    /requires one contained sql-practice@1 adapter root/,
+  );
+  assert.match(
+    (await validateLearnerGuidance(sqlGuidedHtml(baseHtml, { adapters: ["sql-practice@2", "sql-practice@1"] }), spec)).join("; "),
+    /requires one contained sql-practice@1 adapter root/,
+  );
+  const ancestorAdapter = sqlGuidedHtml(baseHtml, { adapters: [null, "sql-practice@1"] }).replace(
+    'id="task-2" data-pep-task data-pep-answer-sensitive="sql"',
+    'id="task-2" data-pep-task data-lesson-editor-adapter="sql-practice@1" data-pep-answer-sensitive="sql"',
+  );
+  assert.match((await validateLearnerGuidance(ancestorAdapter, spec)).join("; "), /requires one contained sql-practice@1 adapter root/);
+  const duplicateAdapter = html.replace(
+    '<span class="pep-editor__file">query-one.sql</span>',
+    '<span data-lesson-editor-adapter="sql-practice@1"><span class="pep-editor__file">query-one.sql</span></span>',
+  );
+  assert.match((await validateLearnerGuidance(duplicateAdapter, spec)).join("; "), /requires one contained sql-practice@1 adapter root/);
+  assert.match(
+    (await validateLearnerGuidance(sqlGuidedHtml(baseHtml, { extensions: ["java", "sql"] }), spec)).join("; "),
+    /false language label/,
+  );
+  const wrongScan = sqlGuidedSpec();
+  delete wrongScan.answerSafety.tasks[0].scan;
+  assert.match((await validateLearnerGuidance(html, wrongScan)).join("; "), /registered scan mode/);
+
+  const reversible = Buffer.from("queryOne = atob(encoded)").toString("base64");
+  const encodedLeak = html.replace("Complete the reverse method", `${reversible}. Complete the reverse method`);
+  assert.match((await validateLearnerGuidance(encodedLeak, spec)).join("; "), /must not encode, assemble or hash/);
+});
+
+test("private SQL proof reports fixed value-free route and phase diagnostics", { timeout: 600000 }, async () => {
+  const spec = sqlGuidedSpec();
+  const baseHtml = await readFile(path.join(fixtures, "guided-answer-sensitive.html"), "utf8");
+  const publicHtml = sqlGuidedHtml(baseHtml.replace('data-pep-predict="settle"', 'data-pep-predict="strict"'));
+  const repository = await makeOverlayRepository("guided-answer-sensitive.html", {
+    spec,
+    transformHtml: () => publicHtml,
+  });
+  const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-sql-diagnostics-"));
+  const overlayFile = path.join(staging, "overlay.json");
+  const inputsFile = path.join(staging, "inputs.json");
+  const environment = { PEP_QA_PRIVATE_INPUTS_FILE: inputsFile };
+  const diagnosticOne = `SELECT 'diagnostic-route-one-${process.pid}' AS note;`;
+  const diagnosticTwo = `SELECT 'diagnostic-route-two-${process.pid}' AS note;`;
+  const diagnosticMiss = "-- TODO diagnostic-only incomplete SQL";
+  const diagnosticFirstMiss = "-- TODO diagnostic-only first miss";
+  const diagnosticForms = [diagnosticOne, diagnosticTwo, diagnosticMiss, diagnosticFirstMiss].flatMap((value) => [
+    value,
+    Buffer.from(value).toString("base64"),
+    createHash("sha256").update(value).digest("hex"),
+  ]);
+  const pass = (editor, check, key) => [
+    { do: "fill", selector: editor, valueFrom: `private:${key}` },
+    { do: "click", selector: check },
+  ];
+  const miss = (editor, check) => [
+    { do: "fill", selector: editor, value: diagnosticMiss },
+    { do: "click", selector: check },
+    { do: "click", selector: check },
+  ];
+  const allPass = guidedOverlayRoutes(
+    pass("#editor-2", "#check-2", "one"),
+    pass("#editor-3", "#check-3", "two"),
+  );
+  const wrongFirstPass = guidedOverlayRoutes(
+    [
+      { do: "fill", selector: "#editor-2", value: diagnosticFirstMiss },
+      { do: "click", selector: "#check-2" },
+      ...pass("#editor-2", "#check-2", "one"),
+    ],
+    pass("#editor-3", "#check-3", "two"),
+  );
+  const passingOverlay = {
+    schemaVersion: 1,
+    runId: "local-safe-sql-diagnostics",
+    topic: "course/module/topic",
+    completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+    progress: { selector: "#progress", text: "^4 of 4 done$" },
+    routes: {
+      success: allPass,
+      wrongFirst: wrongFirstPass,
+      keyboard: allPass,
+      sandbox: allPass,
+    },
+  };
+  const writeOverlay = (overlay) => writeFile(overlayFile, `${JSON.stringify(overlay)}\n`);
+  const assertDiagnostic = async (overlay, expected) => {
+    await writeOverlay(overlay);
+    await assert.rejects(
+      runPrivateOverlay(context(repository.root), overlayFile, { environment }),
+      (error) => {
+        assert.equal(error.message, expected);
+        for (const form of diagnosticForms) assert.ok(!error.message.includes(form), "diagnostic must not expose SQL or a derivative");
+        return true;
+      },
+    );
+  };
+  const commitScratch = (message) => {
+    for (const args of [["add", "."], ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit", "-qm", message]]) {
+      const result = spawnSync("git", args, { cwd: repository.root, encoding: "utf8" });
+      assert.equal(result.status, 0, result.stderr);
+    }
+  };
+  try {
+    assert.deepEqual(await validateLearnerGuidance(publicHtml, spec), []);
+    await writeFile(inputsFile, `${JSON.stringify({ one: diagnosticOne, two: diagnosticTwo })}\n`);
+
+    await writeOverlay(passingOverlay);
+    const result = await runPrivateOverlay(context(repository.root), overlayFile, { environment });
+    assert.equal(result.result, "pass");
+    for (const form of diagnosticForms) assert.ok(!JSON.stringify(result).includes(form), "proof result must not contain SQL or a derivative");
+
+    for (const routeName of ["success", "wrongFirst", "keyboard", "sandbox"]) {
+      const actionFailure = structuredClone(passingOverlay);
+      actionFailure.routes[routeName] = [
+        { do: "click", selector: "#diagnostic-missing-control", timeoutMs: 50 },
+      ];
+      await assertDiagnostic(actionFailure, privateRouteDiagnostic(routeName, "actions"));
+    }
+
+    const completionFailure = structuredClone(passingOverlay);
+    completionFailure.completion.equals = "false";
+    await assertDiagnostic(completionFailure, privateRouteDiagnostic("success", "completion"));
+
+    const progressFailure = structuredClone(passingOverlay);
+    progressFailure.progress.text = "^0 of 4 done$";
+    await assertDiagnostic(progressFailure, privateRouteDiagnostic("success", "progress"));
+
+    const mixedRoute = guidedOverlayRoutes(
+      pass("#editor-2", "#check-2", "one"),
+      miss("#editor-3", "#check-3"),
+    );
+    const declaredTaskFailure = structuredClone(passingOverlay);
+    declaredTaskFailure.completion.equals = "false";
+    declaredTaskFailure.progress.text = "^3 of 4 done$";
+    declaredTaskFailure.routes = {
+      success: mixedRoute,
+      wrongFirst: mixedRoute,
+      keyboard: mixedRoute,
+      sandbox: mixedRoute,
+    };
+    await assertDiagnostic(
+      declaredTaskFailure,
+      privateRouteDiagnostic(
+        "success",
+        "declared-task-state",
+        "task=2 id=task-3 completed=false credit=false grade=false",
+      ),
+    );
+
+    const artifactFile = path.join(repository.topicRoot, "artifact.html");
+    const externalHtml = publicHtml.replace(
+      "</main>",
+      '<img src="https://diagnostic.invalid/external.png" alt="">\n  </main>',
+    );
+    await writeFile(artifactFile, externalHtml);
+    commitScratch("add diagnostic external load");
+    await assertDiagnostic(passingOverlay, privateRouteDiagnostic("success", "external-load"));
+
+    await writeFile(
+      artifactFile,
+      externalHtml.replace(
+        "lesson.dataset.pepComplete = String(state.every(item => item.completed));",
+        "lesson.dataset.pepComplete = 'false';",
+      ),
+    );
+    commitScratch("add diagnostic incomplete guided page");
+    const pageCompletionFailure = structuredClone(passingOverlay);
+    pageCompletionFailure.completion = {
+      selector: "#activity-4",
+      attribute: "data-pep-completed",
+      equals: "true",
+    };
+    await assertDiagnostic(
+      pageCompletionFailure,
+      privateRouteDiagnostic("success", "page-completion", "complete=false"),
+    );
+
+    const history = spawnSync("git", ["log", "-p", "--all"], {
+      cwd: repository.root,
+      encoding: "utf8",
+    }).stdout;
+    for (const form of diagnosticForms) assert.ok(!history.includes(form), "repository history must not contain diagnostic SQL or a derivative");
+    await assert.rejects(readFile(path.join(repository.root, "build", "qa", "qa-receipt.json")), { code: "ENOENT" });
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+    await rm(staging, { recursive: true, force: true });
+  }
+});
+
+test("private SQL proof keeps receipts public-only and refuses mixed or all-fail routes", { timeout: 420000 }, async () => {
+  const spec = sqlGuidedSpec();
+  const repository = await makeOverlayRepository("guided-answer-sensitive.html", {
+    spec,
+    transformHtml: (html) => sqlGuidedHtml(html.replace('data-pep-predict="settle"', 'data-pep-predict="strict"')),
+  });
+  const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-sql-"));
+  const overlayFile = path.join(staging, "overlay.json");
+  const inputsFile = path.join(staging, "inputs.json");
+  const environment = { PEP_QA_PRIVATE_INPUTS_FILE: inputsFile };
+  const privateOne = `SELECT 'synthetic-one-${process.pid}' AS note;`;
+  const privateTwo = `SELECT 'synthetic-two-${process.pid}' AS note;`;
+  const privateForms = [
+    privateOne,
+    privateTwo,
+    Buffer.from(privateOne).toString("base64"),
+    Buffer.from(privateTwo).toString("base64"),
+    createHash("sha256").update(privateOne).digest("hex"),
+    createHash("sha256").update(privateTwo).digest("hex"),
+  ];
+  const pass = (editor, check, key) => [
+    { do: "fill", selector: editor, valueFrom: `private:${key}` },
+    { do: "click", selector: check },
+  ];
+  const miss = (editor, check) => [
+    { do: "fill", selector: editor, value: "-- TODO synthetic incomplete SQL" },
+    { do: "click", selector: check },
+    { do: "click", selector: check },
+  ];
+  const overlayFor = (route) => ({
+    schemaVersion: 1,
+    runId: "local-safe-sql",
+    topic: "course/module/topic",
+    completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+    progress: { selector: "#progress", text: "^4 of 4 done$" },
+    routes: { success: route, wrongFirst: route, keyboard: route, sandbox: route },
+  });
+  const allPass = guidedOverlayRoutes(pass("#editor-2", "#check-2", "one"), pass("#editor-3", "#check-3", "two"));
+  try {
+    await writeFile(inputsFile, `${JSON.stringify({ one: privateOne, two: privateTwo })}\n`);
+    await writeFile(overlayFile, `${JSON.stringify(overlayFor(allPass))}\n`);
+    const receiptRoot = path.join(repository.root, "authoring/evidence/course");
+    assert.match(
+      (await validateQaPrivateProofs(repository.root, receiptRoot)).map((item) => item.message).join("; "),
+      /opt-in requires a current private success receipt/,
+    );
+
+    const result = await runPrivateOverlay(context(repository.root), overlayFile, { environment });
+    assert.equal(result.result, "pass");
+    assert.equal(result.commit, spawnSync("git", ["rev-parse", "HEAD"], { cwd: repository.root, encoding: "utf8" }).stdout.trim());
+    assert.equal(result.publicBindings.length, 5);
+    for (const form of privateForms) assert.ok(!JSON.stringify(result).includes(form), "proof result must not contain private SQL or a derivative");
+    await assert.rejects(readFile(path.join(repository.root, "build", "qa", "qa-receipt.json")), { code: "ENOENT" });
+
+    for (const [name, route] of [
+      ["mixed", guidedOverlayRoutes(pass("#editor-2", "#check-2", "one"), miss("#editor-3", "#check-3"))],
+      ["all-fail", guidedOverlayRoutes(miss("#editor-2", "#check-2"), miss("#editor-3", "#check-3"))],
+    ]) {
+      await writeFile(overlayFile, `${JSON.stringify(overlayFor(route))}\n`);
+      await assert.rejects(
+        runPrivateOverlay(context(repository.root), overlayFile, { environment }),
+        (error) => /private success route failed; no private values were recorded/.test(error.message) &&
+          privateForms.every((form) => !error.message.includes(form)),
+        `${name} SQL proof must be refused without exposing private input`,
+      );
+    }
+
+    const receiptFile = path.join(repository.root, "authoring/evidence/course/module/topic/qa-receipt.json");
+    const receipt = { privateSuccessProof: {
+      record: `validated at ${result.commit} by run ${result.runId}`,
+      commit: result.commit,
+      runId: result.runId,
+      result: "pass",
+      publicBindings: result.publicBindings,
+    } };
+    const serializedReceipt = `${JSON.stringify(receipt)}\n`;
+    for (const form of privateForms) assert.ok(!serializedReceipt.includes(form), "receipt must not contain private SQL or a derivative");
+    await writeFile(receiptFile, serializedReceipt);
+    for (const args of [["add", path.relative(repository.root, receiptFile)], ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit", "-qm", "record SQL private proof"]]) {
+      const commit = spawnSync("git", args, { cwd: repository.root, encoding: "utf8" });
+      assert.equal(commit.status, 0, commit.stderr);
+    }
+    assert.deepEqual(await validateQaPrivateProofs(repository.root, receiptRoot), []);
+    const history = spawnSync("git", ["log", "-p", "--all"], { cwd: repository.root, encoding: "utf8" }).stdout;
+    for (const form of privateForms) assert.ok(!history.includes(form), "repository history must not contain private SQL or a derivative");
+
+    const mismatched = structuredClone(receipt);
+    mismatched.privateSuccessProof.publicBindings[0].reviewedSha256 = "0".repeat(64);
+    await writeFile(receiptFile, `${JSON.stringify(mismatched)}\n`);
+    assert.match(
+      (await validateQaPrivateProofs(repository.root, receiptRoot)).map((item) => item.message).join("; "),
+      /commit blob differs from receipt/,
+    );
+    await writeFile(receiptFile, serializedReceipt);
+
+    const checkerFile = path.join(repository.root, "authoring/tools/checks/T08-html-static.mjs");
+    const checkerBytes = await readFile(checkerFile);
+    await writeFile(checkerFile, Buffer.concat([checkerBytes, Buffer.from("// synthetic drift\n")]));
+    assert.match(
+      (await validateQaPrivateProofs(repository.root, receiptRoot)).map((item) => item.message).join("; "),
+      /stale private-success public binding/,
+    );
+    await writeFile(checkerFile, checkerBytes);
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+    await rm(staging, { recursive: true, force: true });
+  }
+});
+
+// Synthetic, value-free starters: each keeps a placeholder and a TODO, so no
+// fixture route or scan ever carries a successful input.
+const SYNTHETIC_STARTER = [
+  "int[] reverse(int[] values) {",
+  "    int left = 0;",
+  "    int right = ___;",
+  "    while (left < right) {",
+  "        // TODO swap the two ends, then move both indexes",
+  "    }",
+  "    return values;",
+  "}",
+  "",
+].join("\n");
+const SYNTHETIC_STATEMENT_STARTER = "int total = 0;\n// TODO add every value to total\n";
+const sha256Text = (value) => createHash("sha256").update(value, "utf8").digest("hex");
+const escapeText = (value) => value.replace(/&/gu, "&amp;").replace(/</gu, "&lt;");
+
+function declareStarterStatementTasks(html, options = {}) {
+  const starterAttribute = options.starterAttribute === null ? "" :
+    ` data-pep-answer-starter="${options.starterAttribute ?? "reverse"}"`;
+  const modeAttribute = options.statementMode === null ? "" :
+    ` data-pep-answer-target-mode="${options.statementMode ?? "statements"}"`;
+  return html
+    .replace('id="task-2" data-pep-task',
+      `id="task-2" data-pep-task data-pep-answer-sensitive="java" data-pep-answer-targets="${options.targets ?? "reverse"}"${starterAttribute}`)
+    .replace("// TODO complete reverse", escapeText(options.starter ?? SYNTHETIC_STARTER))
+    .replace('id="task-3" data-pep-task',
+      `id="task-3" data-pep-task data-pep-answer-sensitive="java" data-pep-answer-targets="total"${modeAttribute}`)
+    .replace('<span class="pep-editor__file">Report.java</span>',
+      `<span class="pep-editor__file">${options.statementFile ?? "Report.java (body of main)"}</span>`)
+    .replace("// TODO complete summarize", escapeText(SYNTHETIC_STATEMENT_STARTER));
+}
+
+function starterStatementTasks(reverse = {}, total = {}) {
+  return [
+    { task: "#task-2", language: "java", targets: ["reverse"], starter: { target: "reverse", sha256: sha256Text(SYNTHETIC_STARTER) }, ...reverse },
+    { task: "#task-3", language: "java", targetMode: "statements", targets: ["total"], ...total },
+  ];
+}
+
+function starterStatementSpec(reverse, total) {
+  return { answerSafety: { privateSuccessProof: true, tasks: starterStatementTasks(reverse, total) } };
+}
+
+test("Java starter binding exempts only the exact reviewed starter in its declared task", { timeout: 180000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "guided-answer-sensitive.html"), "utf8");
+  const html = declareStarterStatementTasks(baseHtml);
+  const spec = starterStatementSpec();
+  assert.deepEqual(await validateLearnerGuidance(html, spec), []);
+
+  const unboundSpec = starterStatementSpec();
+  delete unboundSpec.answerSafety.tasks[0].starter;
+  assert.match(
+    (await validateLearnerGuidance(declareStarterStatementTasks(baseHtml, { starterAttribute: null }), unboundSpec)).join("; "),
+    /complete target method implementation/,
+    "an unbound complete-looking starter must still be refused",
+  );
+
+  const starterLiteral = (value) => `(() => {\n      const starterCopy = ${JSON.stringify(value)};`;
+  const withCopies = html
+    .replace("(() => {", starterLiteral(SYNTHETIC_STARTER))
+    .replace('<label for="editor-2">', `<pre>${escapeText(SYNTHETIC_STARTER.slice(0, -1))}</pre><label for="editor-2">`);
+  assert.deepEqual(await validateLearnerGuidance(withCopies, spec), [],
+    "exact starter copies (script literal and <pre> reading without its final LF) stay exempt");
+
+  const drifted = SYNTHETIC_STARTER.replace("int left = 0;", "int left = 1;");
+  const completed = "int[] reverse(int[] values) { int[] out = new int[values.length]; for (int i = 0; i < values.length; i++) { out[values.length - 1 - i] = values[i]; } return out; }";
+  const twoTargetStarter = `${SYNTHETIC_STARTER}void swap(int[] v, int i, int j) { int t = v[i]; v[i] = v[j]; v[j] = t; }\n`;
+  const flippedHash = sha256Text(SYNTHETIC_STARTER).replace(/.$/u, (char) => (char === "0" ? "1" : "0"));
+  const cases = [
+    ["one-byte starter drift in its task", declareStarterStatementTasks(baseHtml, { starter: drifted }), spec,
+      [/starter binding does not match its exact authorized starter/, /complete target method implementation/]],
+    ["one-byte drift in an outside starter copy", html.replace("(() => {", starterLiteral(drifted)), spec,
+      [/complete target method implementation/]],
+    ["mismatched hash", html, starterStatementSpec({ starter: { target: "reverse", sha256: flippedHash } }),
+      [/starter binding does not match its exact authorized starter/]],
+    ["starter binding declared only in QA", declareStarterStatementTasks(baseHtml, { starterAttribute: null }), spec,
+      [/match one-to-one and exactly/]],
+    ["starter binding declared only in HTML", html, unboundSpec, [/match one-to-one and exactly/, /complete target method implementation/]],
+    ["starter outside its declared task", declareStarterStatementTasks(baseHtml, { starter: "// TODO complete reverse" })
+      .replace("<section data-pep-recap><h2>Recap</h2>", `<section data-pep-recap><h2>Recap</h2><pre>${escapeText(SYNTHETIC_STARTER)}</pre>`),
+    spec, [/starter binding does not match its exact authorized starter/]],
+    ["renamed target no longer declared by the starter", declareStarterStatementTasks(baseHtml, { targets: "reverseAll", starterAttribute: "reverseAll" }),
+      starterStatementSpec({ targets: ["reverseAll"], starter: { target: "reverseAll", sha256: sha256Text(SYNTHETIC_STARTER) } }),
+      [/starter binding does not match its exact authorized starter/]],
+    ["starter target outside declared targets", declareStarterStatementTasks(baseHtml, { starterAttribute: "helper" }),
+      starterStatementSpec({ starter: { target: "helper", sha256: sha256Text(SYNTHETIC_STARTER) } }),
+      [/unsupported target mode or starter binding/]],
+    ["HTML and QA bind different targets", declareStarterStatementTasks(baseHtml, { targets: "reverse swap", starterAttribute: "swap" }),
+      starterStatementSpec({ targets: ["reverse", "swap"] }), [/match one-to-one and exactly/]],
+    ["complete target implementation outside the bound starter", html.replace(
+      "Complete the reverse method", `${escapeText(completed)}. Complete the reverse method`), spec,
+    [/complete target method implementation/]],
+    ["starter superset value", html.replace(
+      '<label for="editor-2">', `<pre>${escapeText(`${SYNTHETIC_STARTER}// extended copy\n`)}</pre><label for="editor-2">`), spec,
+    [/complete target method implementation/]],
+    ["encoded starter", html.replace(
+      "Complete the reverse method", `${Buffer.from(SYNTHETIC_STARTER).toString("base64")} Complete the reverse method`), spec,
+    [/complete target method implementation/]],
+    ["other declared target inside the bound starter", declareStarterStatementTasks(baseHtml, { targets: "reverse swap", starter: twoTargetStarter }),
+      starterStatementSpec({ targets: ["reverse", "swap"], starter: { target: "reverse", sha256: sha256Text(twoTargetStarter) } }),
+      [/complete target method implementation/]],
+  ];
+  for (const [name, mutation, mutationSpec, patterns] of cases) {
+    const problems = (await validateLearnerGuidance(mutation, mutationSpec)).join("; ");
+    for (const pattern of patterns) assert.match(problems, pattern, `${name} unexpectedly passed`);
+  }
+});
+
+test("Java statement-body targets keep the body-of-main editor and refuse statement leaks", { timeout: 180000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "guided-answer-sensitive.html"), "utf8");
+  const html = declareStarterStatementTasks(baseHtml);
+  const spec = starterStatementSpec();
+  const statementLeak = "total += values[0]; total += values[1];";
+  const inTask = (text) => html.replace("Complete the summarize method", `${text} Complete the summarize method`);
+  const leaks = [
+    ["raw task prose", inTask(statementLeak), spec],
+    ["multiline HTML comment", html.replace("<section data-pep-recap>",
+      "<!-- total\n      += values[0];\n    total\n      += values[1]; -->\n    <section data-pep-recap>"), spec],
+    ["script literal", html.replace("(() => {", `(() => {\n      const example = ${JSON.stringify(statementLeak)};`), spec],
+    ["encoded value", inTask(Buffer.from(statementLeak).toString("base64")), spec],
+    ["prefix increments", inTask("++total; ++total;"), spec],
+    ["member calls", inTask("total.add(1); total.add(2);"), spec],
+    ["head attribute outside the enrolled main", html.replace("<head>", `<head>\n  <meta name="description" content="${statementLeak}">`), spec],
+    ["QA route string", html, { routes: { success: [{ do: "fill", selector: "#editor-3", value: statementLeak }] }, ...starterStatementSpec() }],
+  ];
+  for (const [name, mutation, mutationSpec] of leaks) {
+    assert.match((await validateLearnerGuidance(mutation, mutationSpec)).join("; "), /complete target statement body/,
+      `statement leak ${name} unexpectedly passed`);
+  }
+  for (const [name, harmless] of [
+    ["one target statement in teaching", inTask("Add each value with total += value; then print it.")],
+    ["target named in prose", inTask("The total ends as 6 and total is printed once.")],
+    ["other variable statements", inTask("sum += values[0]; sum += values[1];")],
+  ]) {
+    assert.deepEqual(await validateLearnerGuidance(harmless, spec), [], `${name} unexpectedly failed`);
+  }
+
+  for (const [name, mutation, mutationSpec, pattern] of [
+    ["statement mode on a plain Java file", declareStarterStatementTasks(baseHtml, { statementFile: "Report.java" }), spec,
+      /requires a matched java statement-body editor/],
+    ["method mode on a body-of-main surface", declareStarterStatementTasks(baseHtml, { statementMode: null }),
+      starterStatementSpec({}, { targetMode: undefined }), /requires a matched java editor/],
+    ["foreign body-of-main label", declareStarterStatementTasks(baseHtml, { statementFile: "Report.py (body of main)" }), spec,
+      /false language label/],
+    ["unsupported HTML target mode", declareStarterStatementTasks(baseHtml, { statementMode: "methods" }), spec,
+      /match one-to-one and exactly/],
+    ["unsupported QA target mode", declareStarterStatementTasks(baseHtml, { statementMode: "methods" }),
+      starterStatementSpec({}, { targetMode: "methods" }), /unsupported target mode or starter binding/],
+    ["statement mode on another language", declareAnswerTasks(baseHtml, [["task-2", "python-comprehension", "reverse"]]),
+      { answerSafety: { tasks: [{ task: "#task-2", language: "python-comprehension", targets: ["reverse"], targetMode: "statements" }] } },
+      /unsupported target mode or starter binding/],
+  ]) {
+    assert.match((await validateLearnerGuidance(mutation, mutationSpec)).join("; "), pattern, `${name} unexpectedly passed`);
+  }
+});
+
+test("decoder and digest associations with Java targets fail raw, decoded and multiline", { timeout: 120000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "guided-answer-sensitive.html"), "utf8");
+  const html = declareStarterStatementTasks(baseHtml);
+  const spec = starterStatementSpec();
+  // The recap sits outside every activity, so only target association applies.
+  const inRecap = (text) => html.replace("<section data-pep-recap><h2>Recap</h2>", `<section data-pep-recap><h2>Recap</h2><p>${text}</p>`);
+  for (const [name, mutation] of [
+    ["raw statement target", inRecap("total = atob(encoded)")],
+    ["raw method target", inRecap("reverse uses String.fromCharCode(118, 49)")],
+    ["multiline association", inRecap("total\n      = String.fromCharCode(\n        116, 111)")],
+    ["decoded association", inRecap(Buffer.from("total = atob(encoded)").toString("base64"))],
+    ["decoded multiline association", inRecap(Buffer.from("reverse\n  = decodeURIComponent(\n  part)").toString("base64"))],
+    ["associated digest", inRecap(`total digest ${"ab".repeat(32)}`)],
+  ]) {
+    assert.match((await validateLearnerGuidance(mutation, spec)).join("; "), /must not encode, assemble or hash/,
+      `${name} unexpectedly passed`);
+  }
+  assert.deepEqual(await validateLearnerGuidance(inRecap("Call atob(text) in the browser console."), spec), [],
+    "an unassociated decoder name outside answer surfaces stays legal");
+});
+
+function starterStatementGuidedSpec() {
+  const spec = guidedSpec("strict");
+  spec.answerSafety = starterStatementSpec().answerSafety;
+  // Starter routes: the success route runs the unchanged method starter and the
+  // keyboard route the unchanged statement starter, each twice; every route
+  // then proves both declared tasks stay incomplete at zero credit.
+  spec.routes.success = spec.routes.success.filter((action) => !(action.do === "fill" && action.selector === "#editor-2"));
+  spec.keyboard = spec.keyboard.filter((action) => !(action.do === "fill" && action.selector === "#editor-3"));
+  const zeroCredit = ["#activity-2", "#activity-3"].flatMap((selector) => [
+    { do: "expectAttribute", selector, attribute: "data-pep-completed", equals: "false" },
+    { do: "expectAttribute", selector, attribute: "data-pep-credit", equals: "0" },
+  ]);
+  for (const name of ["success", "wrongFirst", "wrongTwice"]) spec.routes[name].push(...zeroCredit);
+  spec.keyboard.push(...zeroCredit);
+  return spec;
+}
+
+test("T08 intake accepts the bound starter and statement task and refuses starter drift", { timeout: 120000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "guided-answer-sensitive.html"), "utf8");
+  const spec = starterStatementGuidedSpec();
+  assert.deepEqual(await runT08Document(declareStarterStatementTasks(baseHtml), spec), []);
+  const drifted = await runT08Document(declareStarterStatementTasks(baseHtml, {
+    starter: SYNTHETIC_STARTER.replace("int right = ___;", "int right = __;"),
+  }), spec);
+  assert.ok(drifted.some((item) => /starter binding does not match/.test(item.message)), JSON.stringify(drifted));
+});
+
+test("T11 keeps public starter and negative routes on bound Java tasks incomplete at zero credit", { timeout: 300000 }, async () => {
+  assert.deepEqual(await runFixture("T11", "guided-answer-sensitive.html", {
+    spec: starterStatementGuidedSpec(),
+    transformHtml: (html) => declareStarterStatementTasks(html.replace('data-pep-predict="settle"', 'data-pep-predict="strict"')),
+  }), []);
+});
+
+test("private overlay proves bound-starter and statement-body Java tasks only when both genuinely pass", { timeout: 420000 }, async () => {
+  const repository = await makeOverlayRepository("guided-answer-sensitive.html", {
+    spec: starterStatementGuidedSpec(),
+    transformHtml: (html) => declareStarterStatementTasks(html.replace('data-pep-predict="settle"', 'data-pep-predict="strict"')),
+  });
+  const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-java-starter-"));
+  const overlayFile = path.join(staging, "overlay.json");
+  const inputsFile = path.join(staging, "inputs.json");
+  const environment = { PEP_QA_PRIVATE_INPUTS_FILE: inputsFile };
+  const privateReverse = `runtime-only reverse placeholder ${process.pid}`;
+  const privateTotal = `runtime-only total placeholder ${process.pid}`;
+  const pass = (editor, check, key) => [{ do: "fill", selector: editor, valueFrom: `private:${key}` }, { do: "click", selector: check }];
+  const starterTwice = (check) => [{ do: "click", selector: check }, { do: "click", selector: check }];
+  const overlayFor = (route) => ({
+    schemaVersion: 1,
+    runId: "local-safe-java-starter-statements",
+    topic: "course/module/topic",
+    completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+    progress: { selector: "#progress", text: "^4 of 4 done$" },
+    routes: { success: route, wrongFirst: route, keyboard: route, sandbox: route },
+  });
+  try {
+    await writeFile(inputsFile, `${JSON.stringify({ reverse: privateReverse, total: privateTotal })}\n`);
+    const allPass = guidedOverlayRoutes(pass("#editor-2", "#check-2", "reverse"), pass("#editor-3", "#check-3", "total"));
+    await writeFile(overlayFile, `${JSON.stringify(overlayFor(allPass))}\n`);
+    const result = await runPrivateOverlay(context(repository.root), overlayFile, { environment });
+    assert.equal(result.result, "pass");
+    assert.equal(result.publicBindings.length, 5);
+    assert.ok(!JSON.stringify(result).includes(privateReverse) && !JSON.stringify(result).includes(privateTotal),
+      "overlay result must not echo private values");
+
+    for (const [name, route] of [
+      ["mixed: statement starter left unchanged", guidedOverlayRoutes(pass("#editor-2", "#check-2", "reverse"), starterTwice("#check-3"))],
+      ["mixed: method starter left unchanged", guidedOverlayRoutes(starterTwice("#check-2"), pass("#editor-3", "#check-3", "total"))],
+      ["all-fail: both starters left unchanged", guidedOverlayRoutes(starterTwice("#check-2"), starterTwice("#check-3"))],
+    ]) {
+      await writeFile(overlayFile, `${JSON.stringify(overlayFor(route))}\n`);
+      await assert.rejects(
+        runPrivateOverlay(context(repository.root), overlayFile, { environment }),
+        (error) => /private success route failed; no private values were recorded/.test(error.message) &&
+          !error.message.includes(privateReverse) && !error.message.includes(privateTotal),
+        `${name} must be refused`,
+      );
+    }
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+    await rm(staging, { recursive: true, force: true });
+  }
+});
+
+test("T08 admits a value-free non-guidance declaration only in the exact python scaffold scope", { timeout: 120000 }, async () => {
+  assert.deepEqual(await runT08Document(nonGuidanceScaffoldHtml(), nonGuidanceScaffoldSpec()), []);
+});
+
+test("T08 rejects every mismatched non-guidance answer declaration through real intake", { timeout: 180000 }, async () => {
+  const duplicateSpec = nonGuidanceScaffoldSpec();
+  duplicateSpec.answerSafety.tasks.push(structuredClone(duplicateSpec.answerSafety.tasks[0]));
+  const cases = [
+    ["missing adapter", nonGuidanceScaffoldHtml({ adapter: null }), nonGuidanceScaffoldSpec(), /exact python-scaffold@3 adapter scope/],
+    ["wrong adapter version", nonGuidanceScaffoldHtml({ adapter: "python-scaffold@2" }), nonGuidanceScaffoldSpec(), /exact python-scaffold@3 adapter scope/],
+    ["legacy adapter attribute", nonGuidanceScaffoldHtml().replace("data-lesson-editor-adapter", "data-pep-adapter"), nonGuidanceScaffoldSpec(), /exact python-scaffold@3 adapter scope/],
+    ["adapter outside target", nonGuidanceScaffoldHtml({ outsideTarget: true }), nonGuidanceScaffoldSpec(), /exact python-scaffold@3 adapter scope/],
+    ["missing declaration", nonGuidanceScaffoldHtml({ declaration: false }), nonGuidanceScaffoldSpec(), /HTML and QA must declare/],
+    ["duplicate declaration", nonGuidanceScaffoldHtml({ duplicateDeclaration: true }), nonGuidanceScaffoldSpec(), /uniquely identified task declarations/],
+    ["missing task id", nonGuidanceScaffoldHtml().replace('id="task-sensitive" ', ""), nonGuidanceScaffoldSpec(), /uniquely identified task declarations/],
+    ["duplicate task id", nonGuidanceScaffoldHtml().replace("</main>", '<div id="task-sensitive"></div></main>'), nonGuidanceScaffoldSpec(), /uniquely identified task declarations/],
+    ["mismatched target", nonGuidanceScaffoldHtml({ target: "different" }), nonGuidanceScaffoldSpec(), /match one-to-one and exactly/],
+    ["mismatched task", nonGuidanceScaffoldHtml(), nonGuidanceScaffoldSpec({ task: "#other-task" }), /match one-to-one and exactly/],
+    ["missing spec", nonGuidanceScaffoldHtml(), {}, /HTML and QA must declare/],
+    ["duplicate spec", nonGuidanceScaffoldHtml(), duplicateSpec, /match one-to-one and exactly/],
+    ["wrong extension", nonGuidanceScaffoldHtml({ extension: "java" }), nonGuidanceScaffoldSpec(), /false language label/],
+    ["unknown extension", nonGuidanceScaffoldHtml({ extension: "txt" }), nonGuidanceScaffoldSpec(), /requires a matched python-scaffold editor/],
+    ["wrong language", nonGuidanceScaffoldHtml({ language: "python-comprehension" }), {
+      answerSafety: { tasks: [{ task: "#task-sensitive", language: "python-comprehension", targets: ["placeholder"] }] },
+    }, /exact python-scaffold@3 adapter scope/],
+    ["unrelated unenrolled declaration", nonGuidanceScaffoldHtml({ adapter: null, language: "java", extension: "java" }), {
+      answerSafety: { tasks: [{ task: "#task-sensitive", language: "java", targets: ["placeholder"] }] },
+    }, /exact python-scaffold@3 adapter scope/],
+    ["public answer encoding", nonGuidanceScaffoldHtml().replace("Complete the private activity.", "placeholder uses atob(input)."), nonGuidanceScaffoldSpec(), /must not encode, assemble or hash/],
+  ];
+  for (const [name, html, spec, pattern] of cases) {
+    const errors = await runT08Document(html, spec);
+    assert.ok(errors.some((item) => pattern.test(item.message)), `${name} unexpectedly passed: ${JSON.stringify(errors)}`);
+  }
+});
+
+test("T08 preserves guidance-enrolled scaffold and python-comprehension intake", { timeout: 120000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "good.html"), "utf8");
+  const baseSpec = JSON.parse(await readFile(path.join(fixtures, "qa-paths.json"), "utf8"));
+  const scaffoldSpec = structuredClone(baseSpec);
+  scaffoldSpec.answerSafety = pythonScaffoldSpec().answerSafety;
+  assert.deepEqual(await runT08Document(declarePythonScaffold(baseHtml), scaffoldSpec), []);
+
+  const comprehensionSpec = structuredClone(baseSpec);
+  comprehensionSpec.answerSafety = { tasks: [
+    { task: "#task-safe", language: "python-comprehension", targets: ["placeholder"] },
+  ] };
+  const slicingHtml = declareAnswerTasks(baseHtml, [["task-safe", "python-comprehension", "placeholder"]]);
+  assert.deepEqual(await runT08Document(slicingHtml, comprehensionSpec), []);
+});
+
+test("python-scaffold answer declarations are limited to the identified adapter shell", { timeout: 120000 }, async () => {
+  const baseHtml = await readFile(path.join(fixtures, "good.html"), "utf8");
+  const scaffoldHtml = declarePythonScaffold(baseHtml);
+  const scaffoldSpec = pythonScaffoldSpec();
+  assert.deepEqual(await validateLearnerGuidance(scaffoldHtml, scaffoldSpec), []);
+
+  for (const [name, mutation, pattern] of [
+    ["missing adapter", declarePythonScaffold(baseHtml, { adapter: null }), /requires the python-scaffold@3 adapter root/],
+    ["wrong adapter", declarePythonScaffold(baseHtml, { adapter: "python-scaffold@2" }), /requires the python-scaffold@3 adapter root/],
+    ["wrong extension", declarePythonScaffold(baseHtml, { extension: "java" }), /false language label/],
+    ["unknown extension", declarePythonScaffold(baseHtml, { extension: "txt" }), /requires a matched python-scaffold editor/],
+    ["wrong shell label", declarePythonScaffold(baseHtml, { labelClass: "pep-editor__file" }), /requires a matched python-scaffold editor/],
+    ["duplicate adapter root", scaffoldHtml.replace(
+      '<span class="le-file">practice.py</span>',
+      '<span data-lesson-editor-adapter="python-scaffold@3"><span class="le-file">other.py</span></span><span class="le-file">practice.py</span>',
+    ), /requires the python-scaffold@3 adapter root/],
+  ]) {
+    assert.match((await validateLearnerGuidance(mutation, scaffoldSpec)).join("; "), pattern, `${name} unexpectedly passed`);
+  }
+
+  const comprehensionHtml = declarePythonScaffold(baseHtml, { language: "python-comprehension" });
+  const comprehensionSpec = { answerSafety: { tasks: [
+    { task: "#task-safe", language: "python-comprehension", targets: ["placeholder"] },
+  ] } };
+  assert.match(
+    (await validateLearnerGuidance(comprehensionHtml, comprehensionSpec)).join("; "),
+    /false language label for its adapter/,
+    "the scaffold adapter must not masquerade as python-comprehension",
+  );
+
+  const slicingHtml = declareAnswerTasks(baseHtml, [["task-safe", "python-comprehension", "placeholder"]]);
+  assert.deepEqual(await validateLearnerGuidance(slicingHtml, comprehensionSpec), [], "python-comprehension behavior must remain unchanged");
+  assert.match((await validateLearnerGuidance(scaffoldHtml)).join("; "), /HTML and QA must declare/);
+  assert.match((await validateLearnerGuidance(baseHtml, scaffoldSpec)).join("; "), /HTML and QA must declare/);
+  const mismatchedSpec = pythonScaffoldSpec();
+  mismatchedSpec.answerSafety.tasks[0].task = "#task-explain";
+  assert.match((await validateLearnerGuidance(scaffoldHtml, mismatchedSpec)).join("; "), /match one-to-one and exactly/);
+  const duplicateDeclaration = scaffoldHtml.replace(
+    '<span class="le-file">practice.py</span>',
+    '<span id="task-safe" data-pep-answer-sensitive="python-scaffold" data-pep-answer-targets="placeholder"></span><span class="le-file">practice.py</span>',
+  );
+  assert.match((await validateLearnerGuidance(duplicateDeclaration, scaffoldSpec)).join("; "), /uniquely identified task declarations/);
+
+  const unenrolled = scaffoldHtml.replace(" data-pep-guidance-contract", "");
+  assert.match((await validateLearnerGuidance(unenrolled)).join("; "), /HTML and QA must declare/,
+    "a non-guidance scaffold declaration must still have a matching QA spec");
 });
 
 test("private overlay proves multi-task Java success only when every declared editor genuinely passes", { timeout: 360000 }, async () => {
@@ -833,7 +1760,11 @@ test("private overlay rejects settle-as-complete false credit even when the page
     await writeFile(overlayFile, `${JSON.stringify(overlay)}\n`);
     await assert.rejects(
       runPrivateOverlay(context(repository.root), overlayFile, { environment }),
-      /private success route failed; no private values were recorded/,
+      (error) => error.message === privateRouteDiagnostic(
+        "success",
+        "declared-task-state",
+        "task=1 id=task-2 completed=true credit=true grade=false",
+      ),
       "an all-editor-fail run must be refused even when page completion claims success",
     );
     const mixed = structuredClone(overlay);
@@ -847,7 +1778,11 @@ test("private overlay rejects settle-as-complete false credit even when the page
     await writeFile(overlayFile, `${JSON.stringify(mixed)}\n`);
     await assert.rejects(
       runPrivateOverlay(context(repository.root), overlayFile, { environment }),
-      (error) => /private success route failed; no private values were recorded/.test(error.message) && !error.message.includes(privateReverse),
+      (error) => error.message === privateRouteDiagnostic(
+        "success",
+        "declared-task-state",
+        "task=2 id=task-3 completed=true credit=true grade=false",
+      ) && !error.message.includes(privateReverse),
       "false credit on a failed declared editor must be caught",
     );
   } finally {
@@ -1551,6 +2486,33 @@ test("target-aware Python AST scanning rejects complete generic answers in every
   }
 });
 
+test("Python answer scanner handles annotation-only target candidates", () => {
+  const scanner = path.resolve("authoring/tools/qa/python-answer-scan.py");
+  const scan = (value, answerBearing = false) => {
+    const result = spawnSync("python3", [scanner], {
+      input: JSON.stringify({
+        targets: ["result"],
+        sources: [{ value, answerBearing }],
+      }),
+      encoding: "utf8",
+    });
+    assert.equal(result.status, 0, result.stderr);
+    return JSON.parse(result.stdout).findings;
+  };
+
+  for (const source of [
+    "result: int",
+    "Expected result: all techniques found.",
+    "result: int = 0",
+    "other: int",
+    "result = [p: p for p in prices]",
+  ]) {
+    assert.deepEqual(scan(source), [], `${source} must remain a normal non-finding`);
+  }
+  assert.deepEqual(scan("result = [x for x in values]"), [0]);
+  assert.deepEqual(scan("result: list[int] = [x for x in values]"), [0]);
+});
+
 test("Python Activity 3 recipe is bounded and delegates semantic transfer proof to reviewers", async () => {
   const design = await readFile(path.resolve("DESIGN.md"), "utf8");
   const recipe = design.match(/### Python comprehension activity correction recipe([\s\S]*?)### Editor workspace/)?.[1] ?? "";
@@ -1752,6 +2714,62 @@ test("T18 catches Markdown parity mismatch against the exact file", { timeout: 6
     /artifact\.md differs from deterministic HTML derivation/,
     "course/module/topic/artifact.md",
   );
+});
+
+function steppedOptionalSpec() {
+  const success = [
+    { do: "click", selector: "#check-one" },
+    { do: "click", selector: "#next" },
+    { do: "click", selector: "#check-two" },
+  ];
+  return {
+    schemaVersion: 1,
+    completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+    progress: { selector: "#progress", text: "^2 of 2$" },
+    routes: {
+      success,
+      wrongFirst: [{ do: "click", selector: "#wrong-one" }, ...success],
+      wrongTwice: [{ do: "click", selector: "#wrong-one" }, { do: "click", selector: "#wrong-one" }, ...success],
+    },
+    simulatorEdges: [{
+      name: "a wrong answer leaves the step open",
+      actions: [
+        { do: "click", selector: "#wrong-one" },
+        { do: "expectAttribute", selector: "#lesson", attribute: "data-pep-complete", equals: "false" },
+      ],
+    }],
+    restart: {
+      actions: [{ do: "click", selector: "#check-one" }, { do: "click", selector: "#restart" }, { do: "click", selector: "#check-one" }],
+      credit: { selector: "#progress", text: "^1 of 2$" },
+    },
+    keyboard: success,
+  };
+}
+
+test("T11 reaches activity-owned optionals hidden in non-current stepped activities", { timeout: 120000 }, async () => {
+  assert.deepEqual(await runFixture("T11", "stepped-optional.html", { spec: steppedOptionalSpec() }), []);
+});
+
+test("T11 rejects a later-step stepped optional whose action changes required state", { timeout: 120000 }, async () => {
+  const errors = await runFixture("T11", "stepped-optional.html", {
+    spec: steppedOptionalSpec(),
+    transformHtml: (html) => html.replace(
+      "<p data-pep-success-criteria>",
+      "<button type=\"button\" onclick=\"document.getElementById('check-two').click()\">Mark done</button><p data-pep-success-criteria>",
+    ),
+  });
+  assertPreciseFailure(errors, "T11", /optional disclosure changed required state/);
+});
+
+test("T11 refuses a stepped optional whose owning activity the success route never reaches", { timeout: 120000 }, async () => {
+  const errors = await runFixture("T11", "stepped-optional.html", {
+    spec: steppedOptionalSpec(),
+    transformHtml: (html) => html.replace(
+      "    <p id=\"feedback\" aria-live=\"polite\"></p>",
+      "    <section data-step=\"3\" aria-labelledby=\"step-3-h\" hidden><h2 id=\"step-3-h\">Never shown</h2><details class=\"pep-optional pep-optional--challenge\" data-pep-optional=\"challenge\" data-section-skip><summary>Challenge (optional)</summary><div class=\"pep-optional__body\"><p data-pep-optional-time>Optional time: about 1 minute</p><p data-pep-success-criteria>Success criteria: none.</p></div></details></section>\n    <p id=\"feedback\" aria-live=\"polite\"></p>",
+    ),
+  });
+  assertPreciseFailure(errors, "T11", /owner step 3 is never reached by the success route/);
 });
 
 // Syntax-aware leak comparison. Every value here is a sentinel generated for this run: it answers no task,

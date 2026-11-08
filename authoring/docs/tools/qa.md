@@ -167,30 +167,57 @@ with exactly matching task selector, language and target names. A page may decla
 each declaration owns its activity scope and targets. The supported declarations are closed:
 
 - `python-comprehension`: CPython structural comprehension scanning of declared targets.
+- `python-scaffold`: explicit no-structural-scanner mode (`"scan": "none"`) only on the identified
+  `data-lesson-editor-adapter="python-scaffold@3"` root, with a matched `.py` file named by that shell's `.le-file`
+  label. Its protection is the private runner's exact in-memory value comparison plus mandatory independent review;
+  it does not claim a structural Python scanner guarantee. The adapter identity keeps this declaration distinct from
+  `python-comprehension`. A task inside this exact adapter scope is the only answer-sensitive declaration accepted
+  outside a `main[data-pep-guidance-contract]`; all declaration/spec binding and public-surface guards still apply.
 - `java`: structural Java scanning that rejects a complete implementation body of any declared target method
   (loops, branches, assignments or multi-statement bodies); a trivial placeholder starter stays legal. The declared
-  task must contain a matched `.java` editor.
+  task must contain a matched plain `.java` editor. Two Java-only extensions are declared on both sides:
+  - Statement-body mode (`data-pep-answer-target-mode="statements"`, `"targetMode": "statements"`): the targets name
+    the variables a body-of-main exercise builds, and the task must contain a matched `<name>.java (body of main)`
+    editor label (a method task never matches that label, and a statement task never matches a plain one). A target
+    statement is a member call, index, assignment, compound assignment or increment/decrement on a target; one is
+    ordinary teaching or a starter line, while two or more in one public value (raw or bounded-decoded, multiline
+    included) are refused as a complete statement body. Target method scanning still runs. No method is invented.
+  - Exact unchanged-starter binding (`data-pep-answer-starter="<target>"`,
+    `"starter": { "target": "<target>", "sha256": "<64 lowercase hex>" }`): the SHA-256 of the authorized starter's
+    UTF-8 bytes. It is accepted only when the target is one of the task's declared targets, at least one public value
+    inside the declared task is exactly those bytes (or those bytes less one final LF, the `<pre>`/static reading
+    form), and every such occurrence still declares the bound target. Only raw values that are exactly the bound
+    starter are exempt, and only for that one target: other targets, decoded forms, supersets, and every other value
+    and ancestor are still scanned, and encoded, assembled and digest checks never exempt it. Any starter, containing
+    task, declaration, target or hash drift refuses, and the binding must be re-pinned after review; review also owns
+    whether the bound starter itself is answer-safe.
+- `sql`: an explicit no-structural-scanner mode (`"scan": "none"`) for a matched `.sql` editor inside exactly one
+  `data-lesson-editor-adapter="sql-practice@1"` root contained by the declared task. Its protection is the private
+  runner's exact in-memory value comparison plus mandatory independent review; it does not add or claim a general SQL
+  evaluator.
 - `javascript-editor` and `jsx-editor`: an explicit no-structural-scanner mode (`"scan": "none"`), allowed only for
   a matched `.js`/`.mjs`/`.cjs` or `.jsx` editor in the declared task. Its protection is the private runner's exact
   in-memory value comparison plus mandatory independent review.
 
 A declaration whose task names an editor file owned by a different supported language is a false language label and
-fails; a `java`, `javascript-editor` or `jsx-editor` declaration without its matched editor fails; an unsupported
-language fails. A declaration whose required protection is not effective is refused rather than accepted vacuously.
+fails; a `python-scaffold` declaration without its exact adapter root and `.le-file`-named `.py` editor fails; a
+`python-comprehension` declaration on that adapter root also fails; a `sql` declaration without exactly one contained
+`sql-practice@1` adapter and matched `.sql` editor fails; a `java`, `javascript-editor` or `jsx-editor` declaration
+without its matched editor fails; an unsupported language fails. A declaration whose required protection is not effective is refused rather than accepted vacuously.
 
 Committed paths contain only public-safe starter, incomplete, malformed, unsupported-shape, reset and
 no-premature-credit routes. An incorrect observed or expected result may use starter, incomplete, malformed or
-unsupported-shape input; it never includes a completed declared-target assignment or method body. Complete bare
+unsupported-shape input; it never includes a completed declared-target assignment, method body or statement body. Complete bare
 comprehension syntax in an inline script literal is conservatively answer-bearing because static QA cannot prove where
 it will render. The target-aware scanner inventories decoded text and attributes from the
 document element and every descendant—including head, styles and body content outside the enrolled main—plus
 document-wide comments, no-JavaScript/templates/static alternatives and all QA strings. Its bounded JS
 parser cooks escapes/templates and folds all-literal `+` chains without execution. CPython `tokenize` extracts
 balanced candidates from prose; `ast` recursively checks declared targets through wrappers and positional destructuring.
-Target assignments and target method implementations fail anywhere, while standalone comprehensions fail only on
+Target assignments, target method implementations and target statement bodies fail anywhere, while standalone comprehensions fail only on
 answer-bearing task/activity/workspace or selector-associated QA surfaces, preserving unrelated teaching. Canonical
 UTF-8 base64, percent and hex-byte forms are decoded; target-associated decoder/character assembly and 40/64-hex
-digests fail. Exact and structural scanning never covers renamed, reshaped, assembled or encoded leaks beyond those
+digests fail in raw values and in those decodings. Exact and structural scanning never covers renamed, reshaped, assembled or encoded leaks beyond those
 bounded decodings: arbitrary semantic leakage and opaque provenance remain explicit education/SME review boundaries.
 
 Completed inputs run only from an absolute authorized uncommitted overlay outside the repository, and the committed
@@ -243,7 +270,10 @@ private value, private postcondition output or answer-derived hash is recorded.
   invariants include direct setup-state validation, authored-control Restart restoration and current task/check rendering
   against structural hiding, ordinary zero opacity and computed zero-valued `filter: opacity()` components;
   the latter is bounded full-element-transparency coverage, not arbitrary paint proof.
-- **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion. Enrolled
+- **T11:** runs all routes, simulator edge cases, restart/no-duplicate-credit, and the completion assertion. Every
+  optional disclosure is opened and must leave required state unchanged; on an unenrolled stepped page an optional hidden
+  in a non-current `[data-step]` activity is first reached by replaying the `success` route only until its summary shows,
+  and an owner the route never reaches fails. Enrolled
   pages additionally run navigation and objectives by pointer, keyboard and 320/390 px touch; owner/activity-aware
   nested hints by pointer, keyboard and phone touch after a public-safe wrong-twice route unlocks their activities;
   a direct locked-future activation and guarded future fragment; explicit destination focus; monotonic frontier/no-navigation-credit;

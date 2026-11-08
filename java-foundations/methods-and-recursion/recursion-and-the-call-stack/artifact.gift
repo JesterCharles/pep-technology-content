@@ -1,0 +1,47 @@
+// Practice quiz: Recursion: base case and the call stack
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+// Items use a String-length method so the page's own number example is not repeated.
+
+$CATEGORY: java-foundations/methods-and-recursion/recursion-and-the-call-stack
+
+::o1 moving toward the base::A method length(String s) returns 0 when s is empty, and otherwise returns 1 + length(s.substring(1)). Which part makes each call move toward the base case? {
+=s.substring(1), which passes a String one character shorter#Correct. Every call shortens the String, so it eventually becomes empty.
+~The 1 + that is added to each result#Not quite. That builds the answer on the way back; it does not shorten the input.
+~The check for an empty String#Not quite. That is the base case itself, not the step toward it.
+~The return 0#Not quite. That is what the base case returns.
+}
+
+::o1 what is missing::A method static int down(int n) has one statement, return down(n - 1). What does it lack? {
+=A base case that returns without calling itself#Correct. Without one, every call makes another call and nothing ever returns.
+~A recursive step#Not quite. down(n - 1) is the recursive step.
+~A return type#Not quite. It declares int as its return type.
+~A parameter#Not quite. It has the int parameter n.
+}
+
+::o2 deepest stack::For the length method above, length("abc") is called from main. How many length frames are on the stack at the deepest point? {
+=4#Correct. Frames for "abc", "bc", "c" and the empty String are all on the stack when the base case runs.
+~3#Not quite. The call with the empty String also gets its own frame.
+~1#Not quite. Each recursive call pushes a new frame while the earlier ones wait.
+~5#Not quite. main is a frame too, but it is not a length frame.
+}
+
+::o2 order of returns::For the same length method, in what order do the calls return during length("ab")? {
+=length of the empty String returns 0, then length("b") returns 1, then length("ab") returns 2#Correct. The newest frame returns first and hands its value to the frame waiting below it.
+~length("ab") returns first, then length("b"), then the empty String#Not quite. length("ab") is waiting for its call, so it returns last.
+~All three return at the same moment#Not quite. Frames are popped one at a time.
+~The order cannot be known in advance#Not quite. A call always returns before the frame that made it continues.
+}
+
+::o3 a step that moves away::A method static int count(int n) returns 0 when n is 0, and otherwise returns count(n + 1). Assume the JVM's permitted stack cannot hold the roughly four billion nested calls that n would need to wrap past the largest int and come back around to 0. Under that assumption, what happens when main calls count(1)? {
+=It ends in StackOverflowError, because n moves away from 0 and every call pushes another frame#Correct. Under the stated stack assumption, the stack overflows before n reaches 0: n moves away from 0 and frames accumulate until StackOverflowError.
+~It returns 0 once n wraps past the largest int and comes back around to 0#Not quite. Reaching 0 that way would take about four billion nested calls, and the stated assumption is that the stack cannot hold that many.
+~javac rejects it as infinite recursion#Not quite. javac does not detect this; the error happens while the program runs.
+~It returns 1#Not quite. Under the stated assumption no call returns before the stack overflows, so nothing is returned.
+}
+
+::o3 why the stack overflows::Why does a recursive method with an unreachable base case end in StackOverflowError? {
+=Every call pushes another frame, and the call stack has a limited size#Correct. With nothing returning, frames pile up until the stack is full.
+~The int parameter grows past its largest value#Not quite. An int that grows past its largest value wraps around without throwing an error; StackOverflowError comes from the frames that pile up while no call returns.
+~javac counts the calls and stops the program#Not quite. javac does not run the program; the JVM throws the error at run time.
+~The method returns too many values at once#Not quite. In this case nothing returns at all.
+}

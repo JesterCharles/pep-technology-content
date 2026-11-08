@@ -96,7 +96,7 @@
       "properties": {
         "task": { "type": "string", "pattern": "^#[A-Za-z][A-Za-z0-9_-]*$" },
         "language": {
-          "enum": ["python-comprehension", "java", "javascript-editor", "jsx-editor"]
+          "enum": ["python-comprehension", "python-scaffold", "java", "sql", "javascript-editor", "jsx-editor"]
         },
         "scan": { "const": "none" },
         "targets": {
@@ -104,13 +104,34 @@
           "minItems": 1,
           "uniqueItems": true,
           "items": { "type": "string", "pattern": "^[A-Za-z_]\\w*$" }
+        },
+        "targetMode": { "const": "statements" },
+        "starter": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["target", "sha256"],
+          "properties": {
+            "target": { "type": "string", "pattern": "^[A-Za-z_]\\w*$" },
+            "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+          }
         }
       },
       "allOf": [
         {
-          "if": { "properties": { "language": { "enum": ["javascript-editor", "jsx-editor"] } } },
+          "if": { "properties": { "language": { "enum": ["python-scaffold", "sql", "javascript-editor", "jsx-editor"] } } },
           "then": { "required": ["scan"] },
           "else": { "not": { "required": ["scan"] } }
+        },
+        {
+          "if": { "not": { "properties": { "language": { "const": "java" } } } },
+          "then": {
+            "not": {
+              "anyOf": [
+                { "required": ["targetMode"] },
+                { "required": ["starter"] }
+              ]
+            }
+          }
         }
       ]
     },
