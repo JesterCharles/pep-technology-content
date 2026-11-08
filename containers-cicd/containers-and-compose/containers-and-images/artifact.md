@@ -74,7 +74,7 @@ Next topic: Reading: image layers and build caching
 | `podman machine init`, `podman machine start` | create and start the Linux VM (macOS, Windows) |
 | `podman run`, `ps`, `images`, `build` | same core commands as Docker |
 
-**Another way to think about it (optional example).** A traveller’s hair dryer only works on the electricity supply back home. In a country with a different supply, they plug a small converter box into the wall and plug the dryer into the converter. The dryer is unchanged; it simply runs on the supply the converter provides.
+A traveller’s hair dryer only works on the electricity supply back home. In a country with a different supply, they plug a small converter box into the wall and plug the dryer into the converter. The dryer is unchanged; it simply runs on the supply the converter provides.
 
 Containers need a Linux kernel, so macOS and Windows provide one inside a small Linux virtual machine, and the same images run there unchanged.
 
