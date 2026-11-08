@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="python">
+<meta name="pep:module" content="data-pipelines">
+<meta name="pep:topic" content="Loading into a staging table with upserts">
+<meta name="pep:topic-id" content="loading-into-a-staging-table-with-upserts">
+<meta name="pep:budget-minutes" content="12">
+<meta name="pep:source" content="authoring/evidence/python/data-pipelines/loading-into-a-staging-table-with-upserts/sources.json">
+<meta name="pep:draft-status" content="first-draft-unreviewed">
+<title>Loading into a staging table with upserts · Data Pipelines: Extract, Load and Transform</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-dur-1: 120ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 0 0 12px; padding-inline-start: 24px; }
+li { margin-block-end: 4px; }
+svg { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible, .pep-btn:focus, .pep-step:focus, .pep-back:focus { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; margin: 0 0 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-objectives { position: relative; break-inside: avoid; min-width: 0; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; margin-block-start: 16px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+[data-pep-workspace] { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+[data-pep-activity-checks] { padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] > :last-child { margin-bottom: 0; }
+[data-pep-where-fits] { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+[data-pep-where-fits] h2 { font-size: 16px; line-height: 24px; font-weight: 600; margin-bottom: 8px; }
+[data-pep-where-fits] p:last-child { margin-bottom: 0; }
+.pep-hint, details[data-pep-hint] { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); break-inside: avoid; }
+.pep-hint > summary { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; align-items: center; min-height: 44px; padding-block: 8px; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { padding-block: 4px 12px; }
+.pep-hint .pep-hint { margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong); border-radius: 0; background: transparent; }
+.pep-optional { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; min-width: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent); }
+.pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 16px; }
+.pep-activity-actions .pep-btn { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn { flex: 0 1 auto; } }
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-options legend { padding: 0; margin-block-end: 8px; color: var(--pep-text-strong); font-weight: 600; max-width: 100%; }
+.pep-option { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; position: relative; min-width: 0; }
+.pep-option--plain { grid-template-columns: minmax(0, 1fr); }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pep-option input:disabled { cursor: default; }
+.pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-confidence { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-confidence .pep-option { flex: 1 1 96px; grid-template-columns: minmax(0, 1fr); text-align: center; }
+.pep-explain { display: grid; gap: 4px; margin: 8px 0 0; padding-inline-start: 20px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-feedback:empty { display: none; }
+.pep-feedback { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text); }
+.pep-feedback p { margin: 0; }
+.pep-feedback.is-correct { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-feedback.is-wrong { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-feedback.is-revealed { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-verdict { font-weight: 700; color: var(--pep-text-strong); }
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.pep-steps li { margin: 0; }
+.pep-step { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-disabled="true"] { border-color: var(--pep-line-strong); color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-back { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+.pep-activity { min-width: 0; }
+.pep-activity[hidden] { display: none; }
+.pep-code { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.pep-table-wrap { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); overflow: hidden; }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); table-layout: auto; }
+.pep-table th { text-align: left; font-weight: 600; color: var(--pep-text-strong); background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); padding: 8px 12px; overflow-wrap: anywhere; }
+.pep-table td { padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.pep-table td:first-child { font-weight: 600; color: var(--pep-text-strong); }
+.pep-field { display: grid; gap: 4px; min-width: 0; }
+.pep-field > span, .pep-label { color: var(--pep-text-strong); font: 600 13px/20px var(--pep-font-sans); }
+.pep-field input[type="text"], .pep-field select { min-height: 44px; width: 100%; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); scroll-margin-block: 16px; }
+.pep-check { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.pep-check input { width: 24px; height: 24px; margin: 0; flex: none; accent-color: var(--pep-accent); }
+.pep-model { display: grid; gap: 12px; min-width: 0; }
+.pep-stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.pep-stat { padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); min-width: 0; }
+.pep-stat b { display: block; color: var(--pep-text-strong); font: 700 20px/28px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-stat span { color: var(--pep-text-muted); font: 400 12px/16px var(--pep-font-sans); }
+.pep-log { margin: 0; min-height: 44px; padding: 12px 16px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); min-width: 0; }
+.pep-editor__bar { border-radius: 11px 11px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { display: block; width: 100%; margin: 0; padding: 12px; border: 0; resize: none; min-width: 0; min-height: 160px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow: hidden; overflow-wrap: normal; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; min-height: 64px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; cursor: pointer; overflow-wrap: anywhere; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; }
+.pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__problem .kind-hint { color: var(--pep-text-muted); font-weight: 600; }
+.pep-editor__status { border-radius: 0 0 11px 11px; padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-sources a { overflow-wrap: anywhere; }
+.pep-recap[hidden] { display: none; }
+.pep-recap { margin-block-start: 32px; padding-block-start: 16px; border-block-start: 1px solid var(--pep-line-strong); }
+.pep-recap h2 { margin-block-end: 8px; }
+.pep-recap section, .pep-recap details { margin-block-start: 16px; }
+.pep-sources > summary, .pep-cheat > summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+html:not(.is-enhanced) .pep-js-only { display: none; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+  [data-pep-workspace] { padding: 16px; }
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__code { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__gutter { line-height: 24px; font-size: 16px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-activity, [data-pep-activity], .pep-recap { display: block !important; }
+  .pep-noprint, .pep-activity-actions, nav[aria-label="Activities"], .pep-back { display: none !important; }
+  .pep-objectives > div { display: block !important; width: auto; }
+  .pep-topicbar, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional, .pep-code, .pep-table-wrap { break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .pep-optional > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker { display: none; }
+}
+</style>
+</head>
+<body>
+<main class="pep-main" id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="12">
+<header class="pep-topicbar">
+<h1 id="page-title">Loading into a staging table with upserts</h1>
+<span class="pep-topicbar__progress"><span id="pos-text">Activity 1 of 4</span> · about 12 min · <span id="prog-text">0 of 4 done</span></span>
+<details class="pep-objectives" data-pep-objectives>
+<summary aria-controls="objectives-body">Objectives</summary>
+<div id="objectives-body"><ul><li>Open a psycopg connection from an environment-variable connection string in a with block, then load parsed records into a staging table in batches with executemany or COPY instead of one statement per row</li><li>Write an INSERT ... ON CONFLICT ... DO UPDATE upsert keyed on a unique constraint and predict the table after the same load runs twice</li><li>Explain why the load is made idempotent so a failed or repeated run leaves no duplicate rows</li></ul></div>
+</details>
+<button class="pep-btn pep-js-only" type="button" id="restart" data-pep-reset>Restart activity</button>
+</header>
+<nav aria-label="Activities"><ol class="pep-steps"><li><a class="pep-step" href="#activity-1" data-pep-activity-link aria-current="step">Activity 1</a></li><li><a class="pep-step" href="#activity-2" data-pep-activity-link aria-disabled="true">Activity 2</a></li><li><a class="pep-step" href="#activity-3" data-pep-activity-link aria-disabled="true">Activity 3</a></li><li><a class="pep-step" href="#activity-4" data-pep-activity-link aria-disabled="true">Activity 4</a></li></ol></nav>
+<section class="pep-activity" id="activity-1" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<h2 id="activity-1-title" tabindex="-1">Activity 1: predict a repeated load</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-instructions>
+<h3>Predict before you read on</h3>
+<p>No teaching yet. Use what you already know, commit to a prediction, and the explanation follows.</p>
+</section>
+
+</div>
+<div data-pep-workspace="activity">
+<div id="task-1" data-pep-task>
+<h3>Your task: choose what the second run does in the options below</h3>
+<ol><li>Read the code. <code>id</code> is the primary key of <code>staging_orders</code>, and the same file is loaded twice.</li><li>Select what you expect from the second run. Nothing has been taught yet.</li><li>Press Check answer. A wrong first try gets one retry, then every option is explained.</li></ol>
+
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to one prediction, then read why each option is right or wrong.</p></section>
+<div data-interaction="predict" data-static-alt="Prediction: a plain INSERT into a table with a primary key runs twice with the same rows. Decide what the second run does.">
+<pre class="pep-code"><code>sql = &quot;INSERT INTO staging_orders (id, qty) VALUES (%s, %s)&quot;
+load(rows)   # first run succeeds
+load(rows)   # same rows again</code></pre>
+<fieldset class="pep-options"><legend>What happens on the second run?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a1-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">It fails with a unique violation, and that transaction rolls back</span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a1-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Every row is duplicated</span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a1-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">PostgreSQL silently skips the existing rows</span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a1-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">The existing rows are updated</span></label>
+</fieldset>
+
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a1-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. Compare your prediction with Activity 3: a plain INSERT cannot reuse a key, and ON CONFLICT changes that.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-2" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<h2 id="activity-2-title" tabindex="-1">Activity 2: compare ways to load a batch</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>Load batches inside one transaction</h3>
+<p>Open the connection from an environment variable in a <code>with</code> block: <code>with psycopg.connect(os.environ[&quot;DATABASE_URL&quot;]) as conn:</code>. A clean exit commits; an exception rolls back.</p>
+<p>Inside, avoid one <code>execute</code> and commit per row. <code>cur.executemany(sql, rows)</code> sends the same statement for many rows. <code>COPY</code> through <code>cur.copy(...)</code> is the fastest route for plain bulk loading, but it has no conflict handling, so upserts use <code>executemany</code>, or COPY into a staging table first.</p>
+<pre class="pep-code"><code>with conn.cursor() as cur:
+    cur.executemany(
+        &quot;INSERT INTO staging_events (id, kind) VALUES (%s, %s)&quot;,
+        batch,
+    )</code></pre>
+
+
+<details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+<summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+<div class="pep-optional__body"><p data-pep-anecdote-story>Moving house, you can carry one box per trip and lock the door each time, or load the whole van and drive once. If the van breaks down before you arrive, nothing has moved. If you carried boxes, half your belongings are now in the wrong house.</p><p data-pep-anecdote-map>One transaction is the single van trip: all of it arrives or none of it.</p></div>
+</details>
+</section>
+
+</div>
+<div data-pep-workspace="activity">
+<div id="task-2" data-pep-task data-pep-may-stall>
+<h3>Your task: use the model below, then choose the safest batch shape</h3>
+<ol><li>Select a load shape, then choose where the run dies in Crash after row.</li><li>Compare Rows left in the table for each shape.</li><li>Select your answer and press Check answer.</li></ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The Rows left in the table number in the model.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Set the crash to row 600 and compare the number across the three shapes.</p>
+</div>
+</details>
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>You used the model at least once.</p><p>You can say what a crash leaves behind for each shape.</p></section>
+<div class="pep-model" data-interaction="explore" data-static-alt="Model over a 1000-row file. Committing per row leaves as many rows as were processed before the crash. executemany and COPY in one transaction leave zero rows after a crash and all 1000 on success."><fieldset class="pep-options"><legend>Load shape</legend>
+<label class="pep-option pep-option--plain"><input type="radio" name="ld-shape" value="per" checked id="ld-per" data-pep-task-control><span class="pep-option__text">One <code>execute</code> and commit per row</span></label>
+<label class="pep-option pep-option--plain"><input type="radio" name="ld-shape" value="many" id="ld-many" data-pep-task-control><span class="pep-option__text"><code>executemany</code> in one transaction</span></label>
+<label class="pep-option pep-option--plain"><input type="radio" name="ld-shape" value="copy" id="ld-copy" data-pep-task-control><span class="pep-option__text"><code>COPY</code> in one transaction</span></label>
+</fieldset>
+<label class="pep-field"><span>Crash after row (1000 means no crash)</span><select id="ld-at" data-pep-task-control><option value="200">200</option><option value="400">400</option><option value="600" selected>600</option><option value="800">800</option><option value="1000">1000</option></select></label>
+<div class="pep-stat-row"><div class="pep-stat"><b id="ld-left">600</b><span>Rows left in the table</span></div><div class="pep-stat"><b id="ld-commits">600</b><span>Commits</span></div></div>
+<pre class="pep-log" id="ld-log" aria-live="polite"></pre></div>
+<noscript data-section-skip><p>Model over a 1000-row file. Committing per row leaves as many rows as were processed before the crash. executemany and COPY in one transaction leave zero rows after a crash and all 1000 on success.</p></noscript><div data-interaction="mcq" data-static-alt="Question: choose the load shape that leaves no partial data after a crash.">
+
+<fieldset class="pep-options"><legend>Which load leaves no partial data behind if it crashes halfway?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a2-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Batches sent with <code>executemany</code> or <code>COPY</code> inside one connection block</span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a2-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">One <code>execute</code> per row with a <code>commit()</code> after each</span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a2-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">One <code>execute</code> per row with no commit at all</span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a2-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Any of them, because PostgreSQL undoes partial loads on its own</span></label>
+</fieldset>
+
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a2-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. One transaction around a batch means a crash leaves nothing partial behind.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<p class="pep-noprint"><a class="pep-back" href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-3" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<h2 id="activity-3-title" tabindex="-1">Activity 3: write an upsert</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>ON CONFLICT turns a failure into a decision</h3>
+<p><code>INSERT ... ON CONFLICT (key) DO UPDATE SET ...</code> inserts a new key and updates an existing one. The key columns must match a unique constraint or primary key. Inside <code>SET</code>, <code>EXCLUDED</code> is the row you tried to insert. <code>DO NOTHING</code> keeps the old row instead.</p>
+<pre class="pep-code"><code>INSERT INTO customers (email, plan)
+VALUES (%s, %s)
+ON CONFLICT (email)
+DO UPDATE SET plan = EXCLUDED.plan;</code></pre>
+
+
+
+</section>
+<section data-pep-where-fits aria-labelledby="where-fits-3">
+<h2 id="where-fits-3">Where this fits</h2>
+<p data-pep-fit-decision><strong>Decision:</strong> On a repeated key, update the row (<code>DO UPDATE</code>) or keep the first one (<code>DO NOTHING</code>)?</p>
+<p data-pep-fit-good><strong>Good fit:</strong> Use <code>DO UPDATE</code> when a later file is a correction and the newest values should win, as with a re-exported order.</p>
+<p data-pep-fit-boundary><strong>Choose something else when:</strong> History matters and old rows must never change. Use <code>DO NOTHING</code>, or append every version with a load timestamp and pick the latest later.</p>
+</section>
+</div>
+<div data-pep-workspace="code">
+<div id="task-3" data-pep-task data-pep-may-stall>
+<h3>Your task: finish the upsert in the editor below</h3>
+<ol><li>In <code>upsert.sql</code>, keep the <code>INSERT</code> line and replace <code>___</code> with the conflict clause keyed on <code>id</code>.</li><li>Make both <code>qty</code> and <code>status</code> take the incoming values.</li><li>Press Run. Output shows the table after run 1 and after run 2 of the same load.</li><li>A mismatch uses an attempt and you get one retry.</li></ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 3</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The ___ line, directly after VALUES.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Name the conflict column first, then say which action to take.</p>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="2" data-section-skip>
+<summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 3</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The SET list inside your clause.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Give each non-key column a value from the incoming row, using the name for the row you tried to insert.</p>
+</div>
+</details></div>
+</details>
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>Output shows the same table after run 1 and run 2.</p><p>Row 2 shows the corrected incoming values.</p></section>
+<div class="pep-js-only" data-interaction="terminal" data-steps="2" data-static-alt="Coding task: add a conflict clause so a repeated load updates existing rows and adds none.">
+<div class="pep-editor">
+<div class="pep-editor__bar"><span class="pep-editor__file">upsert.sql</span>
+<button class="pep-btn pep-btn--primary" type="button" id="a3-run" data-pep-submit data-pep-run>Run</button>
+<button class="pep-btn" type="button" id="a3-reset" data-pep-reset-code data-pep-lock>Reset code</button></div>
+<div class="pep-editor__code"><div class="pep-editor__gutter" aria-hidden="true">1</div>
+<label class="pep-sr" for="a3-code" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Code editor for upsert.sql</label>
+<textarea class="pep-editor__input" id="a3-code" data-pep-editor data-pep-task-control spellcheck="false" autocapitalize="off" autocomplete="off">INSERT INTO staging_orders (id, qty, status)
+VALUES (%s, %s, %s)
+___;
+</textarea></div>
+<div class="pep-editor__tabs" role="tablist" aria-label="Results for upsert.sql">
+<button type="button" role="tab" id="a3-tab-problems" data-tab="problems" aria-selected="true" aria-controls="a3-panel-problems">Problems</button>
+<button type="button" role="tab" id="a3-tab-output" data-tab="output" aria-selected="false" aria-controls="a3-panel-output" tabindex="-1">Output</button></div>
+<div class="pep-editor__panel" role="tabpanel" id="a3-panel-problems" aria-labelledby="a3-tab-problems" data-panel="problems" tabindex="0"></div>
+<div class="pep-editor__panel" role="tabpanel" id="a3-panel-output" aria-labelledby="a3-tab-output" data-panel="output" tabindex="0" hidden></div>
+<div class="pep-editor__status" role="status"></div>
+</div></div>
+<noscript data-pep-no-js data-section-skip><div>
+<p><strong>JavaScript is off, so Run is not available.</strong> Finish the INSERT with a conflict clause keyed on id so that qty and status take the incoming values. To compare results, load the same rows twice in your local PostgreSQL and check that the row count does not change.</p>
+<p>Starter for upsert.sql:</p>
+<pre class="pep-code"><code>INSERT INTO staging_orders (id, qty, status)
+VALUES (%s, %s, %s)
+___;
+</code></pre>
+<p>This practice editor is not PostgreSQL. It parses one INSERT ... VALUES with an ON CONFLICT clause and simulates it over a small sample. SQL in any other form is not assessed and may be flagged even when PostgreSQL would accept it.</p>
+</div></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+<details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+<summary>Challenge (optional)</summary>
+<div class="pep-optional__body">
+<p data-pep-optional-time><strong>Optional time:</strong> about 3 minutes</p>
+<p data-pep-success-criteria><strong>Success criteria:</strong> Write on paper how you would add a <code>loaded_at</code> column so each upsert records when the row last changed, using only <code>SET</code> entries from this page.</p>
+</div></details>
+<p class="pep-noprint"><a class="pep-back" href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-4" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-4-title">
+<h2 id="activity-4-title" tabindex="-1">Activity 4: explain why idempotency matters</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>Idempotent: running it again changes nothing extra</h3>
+<p>Pipelines get rerun: a job times out, an operator retries, yesterday's file arrives twice. A load is idempotent when any number of repeats leaves the same table as one run.</p>
+<p>Two choices together give you that. A unique key with an upsert means a repeated row cannot add a duplicate, and one transaction means a failed run leaves no partial batch to clean up.</p>
+
+
+
+
+</section>
+
+</div>
+<div data-pep-workspace="activity">
+<div id="task-4" data-pep-task>
+<h3>Your task: choose the table state in the options below, then rate your confidence</h3>
+<ol><li>The batch has 1000 rows. It runs with <code>executemany</code> in one <code>with</code> block, keyed by an upsert on <code>id</code>.</li><li>The first run crashes after row 600. An operator simply reruns the whole file, which succeeds.</li><li>Select the final state, rate your confidence, and press Check answer.</li></ol>
+
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>You predict the final table and rate your confidence first.</p></section>
+<div data-interaction="mcq" data-confidence="true" data-static-alt="Question: a one-transaction upsert load crashes, then is rerun. Decide the final table state.">
+
+<fieldset class="pep-options"><legend>What does the table hold after the successful rerun?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a4-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Exactly one row per <code>id</code> in the file, with no duplicates</span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a4-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">1600 rows: 600 from the crash and 1000 from the rerun</span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a4-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">600 rows, because the rerun conflicts with them</span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a4-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">It depends on cleaning the table before the rerun</span></label>
+</fieldset>
+<fieldset class="pep-options"><legend>How sure are you?</legend><div class="pep-confidence">
+<label class="pep-option"><input type="radio" name="a4-conf" value="low" data-pep-task-control data-pep-lock><span class="pep-option__text">Guessing</span></label>
+<label class="pep-option"><input type="radio" name="a4-conf" value="medium" data-pep-task-control data-pep-lock><span class="pep-option__text">Fairly sure</span></label>
+<label class="pep-option"><input type="radio" name="a4-conf" value="high" data-pep-task-control data-pep-lock><span class="pep-option__text">Certain</span></label>
+</div></fieldset>
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a4-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. A one-transaction upsert leaves one row per key, however many times it is rerun.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<p class="pep-noprint"><a class="pep-back" href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+</div>
+</div>
+</section>
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+<button class="pep-btn" type="button" id="previous-activity" data-pep-previous>Previous activity</button>
+<button class="pep-btn pep-btn--primary" type="button" id="next-activity" data-pep-next>Next activity</button>
+</div>
+<section class="pep-recap" data-pep-recap aria-labelledby="recap-title">
+<h2 id="recap-title">Recap</h2>
+<ul><li>Open the connection from an environment variable in a <code>with</code> block, and send rows in batches with <code>executemany</code> or <code>COPY</code>, not one commit per row.</li><li><code>INSERT ... ON CONFLICT (key) DO UPDATE SET col = EXCLUDED.col</code> updates an existing key, and the key must match a unique constraint.</li><li>One transaction plus an upsert makes a load idempotent: a repeat leaves the table unchanged and a failure leaves no partial batch.</li></ul>
+<details class="pep-cheat" data-pep-cheat-sheet data-section-skip><summary>Cheat sheet (optional)</summary><pre class="pep-code"><code>with psycopg.connect(os.environ[&quot;DATABASE_URL&quot;]) as conn:
+    with conn.cursor() as cur:
+        cur.executemany(sql, rows)
+
+INSERT INTO t (k, v) VALUES (%s, %s)
+ON CONFLICT (k) DO UPDATE SET v = EXCLUDED.v;
+
+with cur.copy(&quot;COPY t (k, v) FROM STDIN&quot;) as copy:
+    for row in rows:
+        copy.write_row(row)</code></pre></details>
+<details class="pep-sources" data-pep-sources data-section-skip><summary>Sources and review date (optional)</summary>
+<p><strong>First draft, not reviewed.</strong> Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.</p>
+<ul><li><a href="https://www.postgresql.org/docs/current/sql-insert.html" rel="noopener">PostgreSQL: INSERT and ON CONFLICT</a></li><li><a href="https://www.psycopg.org/psycopg3/docs/basic/copy.html" rel="noopener">psycopg 3: Using COPY TO and COPY FROM</a></li><li><a href="https://www.psycopg.org/psycopg3/docs/api/cursors.html" rel="noopener">psycopg 3: Cursor classes</a></li><li><a href="https://www.psycopg.org/psycopg3/docs/basic/transactions.html" rel="noopener">psycopg 3: Transactions management</a></li></ul>
+</details>
+</section>
+</main>
+<script>
+(() => {
+  window.PEP_TOOLS = {
+    start(code, comment = '#') {
+      const strip = comment === '--' ? /--.*$/ : /#.*$/;
+      const lines = code.split('\n');
+      const clean = lines.map(l => l.replace(strip, '')).join('\n');
+      const lineOf = re => { const i = clean.split('\n').findIndex(l => re.test(l)); return i < 0 ? 0 : i + 1; };
+      const problems = [];
+      const bad = (msg, re, kind) => problems.push({ kind: kind || 'error', line: re ? lineOf(re) : 0, msg });
+      return {
+        code, clean, lines, lineOf, problems, bad,
+        flat: clean.replace(/\s+/g, ' ').trim(),
+        placeholder() { if (/___/.test(code)) { bad('Replace this placeholder with your code.', /___/); return true; } return false; },
+        hard() { return problems.filter(p => p.kind !== 'hint').length; },
+        stop(why) { return { problems, output: '', pass: false, why: why || 'A placeholder remains.' }; },
+      };
+    },
+    table(cols, rows) {
+      const cell = v => (v === null || v === undefined ? 'NULL' : String(v));
+      const widths = cols.map((c, i) => Math.max(c.length, ...rows.map(r => cell(r[c]).length)));
+      const line = vals => vals.map((v, i) => v.padEnd(widths[i])).join(' | ').trimEnd();
+      return [line(cols), widths.map(w => '-'.repeat(w)).join('-+-'), ...rows.map(r => line(cols.map(c => cell(r[c]))))].join('\n') + `\n(${rows.length} row${rows.length === 1 ? '' : 's'})`;
+    },
+  };
+  document.documentElement.classList.add('is-enhanced');
+  const lesson = document.querySelector('#lesson');
+  const activities = [...document.querySelectorAll('[data-pep-activity]')];
+  const timeline = [...document.querySelectorAll('[data-pep-activity-link]')];
+  const previous = document.querySelector('#previous-activity');
+  const next = document.querySelector('#next-activity');
+  const progressText = document.querySelector('#prog-text');
+  const positionText = document.querySelector('#pos-text');
+  window.PEP_SPEC = { activities: [{ kind: "choice", confidence: false, options: [{"k":"a","right":true,"why":"A plain INSERT cannot reuse an existing primary key, so the load fails instead of repeating cleanly."},{"k":"b","right":false,"why":"The primary key prevents duplicates. Without one, this is exactly what would happen."},{"k":"c","right":false,"why":"Skipping must be requested explicitly. A plain INSERT raises an error."},{"k":"d","right":false,"why":"Updating must be requested explicitly with ON CONFLICT."}],  },
+{ kind: "explore", confidence: false, options: [{"k":"a","right":true,"why":"All rows share one transaction, so an exception rolls them all back."},{"k":"b","right":false,"why":"Every committed row survives the crash, leaving a partial load."},{"k":"c","right":false,"why":"That loses every row even on success, because nothing ever commits."},{"k":"d","right":false,"why":"PostgreSQL undoes only what was not committed. Committed rows stay."}], needTouch: "Change the load shape or the crash point in the model at least once, then choose.",model: (api) => {
+        const q = s => api.root.querySelector(s);
+        const paint = () => {
+          const shape = q('input[name="ld-shape"]:checked').value;
+          const at = Number(q('#ld-at').value);
+          const finished = at === 1000;
+          const left = shape === 'per' ? at : finished ? 1000 : 0;
+          const commits = shape === 'per' ? at : finished ? 1 : 0;
+          q('#ld-left').textContent = String(left);
+          q('#ld-commits').textContent = String(commits);
+          q('#ld-log').textContent = finished
+            ? 'No crash: every row is loaded.'
+            : shape === 'per' ? 'Crash: ' + at + ' rows stay committed. A rerun must cope with the partial load.' : 'Crash: the transaction rolled back. The table is exactly as it was.';
+        };
+        q('#ld-at').addEventListener('change', () => { api.touch(); paint(); });
+        api.root.querySelectorAll('input[name="ld-shape"]').forEach(r => r.addEventListener('change', () => { api.touch(); paint(); }));
+        paint();
+        return { reset: paint };
+      }, },
+{ kind: "editor", confidence: false,  starter: "INSERT INTO staging_orders (id, qty, status)\nVALUES (%s, %s, %s)\n___;\n", settled: "Compare with the customers example: a conflict column, then an update action with one SET entry per non-key column.", run: (code) => {
+        const T = PEP_TOOLS.start(code, '--');
+        if (T.placeholder()) return T.stop();
+        const sql = T.flat.replace(/;\s*$/, '');
+        const m = /^insert\s+into\s+staging_orders\s*\(\s*id\s*,\s*qty\s*,\s*status\s*\)\s*values\s*\(\s*%s\s*,\s*%s\s*,\s*%s\s*\)(.*)$/i.exec(sql);
+        if (!m) { T.bad('Keep the INSERT INTO staging_orders (id, qty, status) VALUES (%s, %s, %s) lines unchanged.', /insert|values/i); return { problems: T.problems, output: '', pass: false, why: 'The statement does not match the supported shape.' }; }
+        const rest = m[1].trim();
+        const cols = ['id', 'qty', 'status'];
+        const incoming = [{ id: 1, qty: 2, status: 'new' }, { id: 2, qty: 5, status: 'new' }, { id: 2, qty: 7, status: 'corrected' }, { id: 3, qty: 1, status: 'new' }];
+        const clone = o => JSON.parse(JSON.stringify(o));
+        let apply;
+        if (!rest) {
+          T.bad('With no conflict clause, the repeated id raises a unique violation and the load stops.', /values/i);
+          return { problems: T.problems, output: 'Run 1: ERROR duplicate key value violates unique constraint (id=2)\nTransaction rolled back; the table is empty.', pass: false, why: 'A plain INSERT fails on the repeated key.' };
+        }
+        const c = /^on\s+conflict\s*(?:\(\s*([a-z_]\w*)\s*\))?\s*(.*)$/i.exec(rest);
+        if (!c) { T.bad('This clause is not supported here; expected ON CONFLICT (column) ...', /___|on/i, 'limit'); return { problems: T.problems, output: '', pass: false, why: 'The clause is outside the supported subset.' }; }
+        const key = (c[1] || '').toLowerCase();
+        const action = c[2].trim();
+        if (/^do\s+nothing$/i.test(action)) {
+          if (key && key !== 'id') T.bad('Only id has a unique constraint here, so PostgreSQL would reject this conflict target.', /conflict/i);
+          apply = (t, r) => { if (!t.some(x => x.id === r.id)) t.push(clone(r)); };
+        } else {
+          const u = /^do\s+update\s+set\s+(.*)$/i.exec(action);
+          if (!u) { T.bad('Finish the action with DO UPDATE SET ... or DO NOTHING.', /conflict|do/i); return { problems: T.problems, output: '', pass: false, why: 'The conflict action is incomplete.' }; }
+          if (!key) T.bad('DO UPDATE needs a conflict target such as (id).', /conflict/i);
+          else if (key !== 'id') T.bad('Only id has a unique constraint here, so PostgreSQL would reject this conflict target.', /conflict/i);
+          const sets = u[1].split(',').map(s => s.trim());
+          const plan = [];
+          for (const s of sets) {
+            const a = /^([a-z_]\w*)\s*=\s*(excluded\.([a-z_]\w*)|'([^']*)'|(\d+))$/i.exec(s);
+            if (!a) { T.bad('Not supported in this practice editor: ' + s + '. Use column = EXCLUDED.column.', /set/i, 'limit'); continue; }
+            const target = a[1].toLowerCase();
+            if (!cols.includes(target)) { T.bad('No column named ' + target + ' in staging_orders.', /set/i); continue; }
+            plan.push({ target, source: a[3] ? a[3].toLowerCase() : null, literal: a[4] ?? (a[5] ? Number(a[5]) : null) });
+          }
+          if (T.hard()) return { problems: T.problems, output: '', pass: false, why: 'Fix the items under Problems first.' };
+          apply = (t, r) => {
+            const hit = t.find(x => x.id === r.id);
+            if (!hit) { t.push(clone(r)); return; }
+            for (const p of plan) hit[p.target] = p.source ? r[p.source] : p.literal;
+          };
+        }
+        if (T.hard()) return { problems: T.problems, output: '', pass: false, why: 'Fix the items under Problems first.' };
+        const table = [];
+        incoming.forEach(r => apply(table, r));
+        const first = clone(table);
+        incoming.forEach(r => apply(table, r));
+        const same = JSON.stringify(first) === JSON.stringify(table);
+        const row2 = table.find(r => r.id === 2);
+        const pass = same && table.length === 3 && row2.qty === 7 && row2.status === 'corrected';
+        if (!pass && row2.qty !== 7) T.problems.push({ kind: 'hint', line: 0, msg: 'Row 2 kept its first values; the corrected row should win here.' });
+        if (!pass && row2.qty === 7 && row2.status !== 'corrected') T.problems.push({ kind: 'hint', line: 0, msg: 'Row 2 took only part of the correction; update every non-key column.' });
+        const output = 'Incoming batch has id 2 twice (the second is a correction).\n\nAfter run 1:\n' + PEP_TOOLS.table(cols, first) + '\n\nAfter run 2 of the same load:\n' + PEP_TOOLS.table(cols, table) + '\n\nSimulated, not real PostgreSQL.';
+        return { problems: T.problems, output, pass, why: pass ? 'The load is idempotent: run 2 changes nothing and the correction wins.' : 'The table does not show the corrected values for row 2 yet; compare Output with the checks.' };
+      }, },
+{ kind: "choice", confidence: true, options: [{"k":"a","right":true,"why":"The crash rolled back the first run, and the upsert would have absorbed any repeat anyway."},{"k":"b","right":false,"why":"The crashed run shared one transaction, so its 600 rows were rolled back."},{"k":"c","right":false,"why":"None of those 600 survived, and a conflict would have updated rather than stopped the load."},{"k":"d","right":false,"why":"Needing a manual cleanup is what idempotency removes."}],  }] };
+  const SPEC = window.PEP_SPEC;
+  let current = 1;
+  let unlocked = 1;
+  const blank = () => ({ attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false, touched: false });
+  const state = activities.map(blank);
+  const initial = activities.map(activity => [...activity.querySelectorAll('[data-pep-task-control]')].map(control => ({ control, value: control.value, checked: control.checked, selectedIndex: control.selectedIndex })));
+  let lastFocused = null;
+  document.addEventListener('focusin', event => { lastFocused = event.target; });
+  const activityNumber = hash => Number(/^#activity-(\d+)$/.exec(hash)?.[1] || 1);
+  const own = (n, selector) => activities[n - 1].querySelector(selector);
+  const ownAll = (n, selector) => [...activities[n - 1].querySelectorAll(selector)];
+  const reflect = n => {
+    const a = activities[n - 1], v = state[n - 1];
+    a.dataset.pepAttempts = String(v.attempts);
+    a.dataset.pepSettled = String(v.settled);
+    a.dataset.pepCompleted = String(v.completed);
+    a.dataset.pepCredit = String(v.credit);
+    a.dataset.pepGrade = String(v.grade);
+    a.dataset.pepContinue = String(v.canContinue);
+  };
+  const recap = document.querySelector('[data-pep-recap]');
+  const renderProgress = () => {
+    const done = state.filter(v => v.credit > 0).length;
+    recap.hidden = lesson.dataset.pepComplete !== 'true';
+    progressText.textContent = `${done} of ${activities.length} done`;
+    positionText.textContent = `Activity ${current} of ${activities.length}`;
+  };
+  const renderActivity = (number, historyMode = 'none', moveFocus = false) => {
+    if (!Number.isInteger(number) || number < 1 || number > activities.length || number > unlocked) return false;
+    current = number;
+    lesson.dataset.pepCurrentActivity = String(current);
+    lesson.dataset.pepUnlockedThrough = String(unlocked);
+    activities.forEach((a, i) => { a.hidden = i + 1 !== current; });
+    timeline.forEach((link, i) => {
+      const n = i + 1;
+      if (n === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+      if (n > unlocked) link.setAttribute('aria-disabled', 'true'); else link.removeAttribute('aria-disabled');
+    });
+    previous.disabled = current === 1;
+    next.disabled = current === activities.length || current >= unlocked || !state[current - 1].canContinue;
+    renderProgress();
+    try {
+      if (historyMode === 'push') history.pushState({ activity: current }, '', `#activity-${current}`);
+      if (historyMode === 'replace') history.replaceState({ activity: current }, '', `#activity-${current}`);
+    } catch {
+      if (historyMode !== 'none' && location.hash !== `#activity-${current}`) location.hash = `activity-${current}`;
+    }
+    if (moveFocus) document.querySelector(`#activity-${current} h2`)?.focus();
+    return true;
+  };
+  const setFeedback = (n, tone, verdict, body, list) => {
+    const box = own(n, '[data-pep-feedback]');
+    box.className = 'pep-feedback' + (tone ? ` is-${tone}` : '');
+    box.textContent = '';
+    if (!verdict && !body) return;
+    const p = document.createElement('p');
+    if (verdict) { const b = document.createElement('span'); b.className = 'pep-verdict'; b.textContent = verdict + ' '; p.append(b); }
+    if (body) p.append(body);
+    box.append(p);
+    if (list?.length) {
+      const ul = document.createElement('ul');
+      ul.className = 'pep-explain';
+      list.forEach(text => { const li = document.createElement('li'); li.textContent = text; ul.append(li); });
+      box.append(ul);
+    }
+  };
+  const lockControls = (n, locked) => {
+    ownAll(n, '[data-pep-submit]').forEach(b => { b.disabled = locked; });
+    ownAll(n, '[data-pep-lock]').forEach(c => { c.disabled = locked; });
+    ownAll(n, 'textarea[data-pep-editor]').forEach(t => { t.readOnly = locked; });
+  };
+  const settle = (n, grade) => {
+    const v = state[n - 1];
+    v.settled = true; v.completed = true; v.canContinue = true; v.grade = grade;
+    if (v.credit === 0) v.credit = 1;
+    reflect(n);
+    lockControls(n, true);
+    unlocked = Math.max(unlocked, Math.min(n + 1, activities.length));
+    if (state.every(s => s.credit > 0)) lesson.dataset.pepComplete = 'true';
+    renderActivity(current);
+  };
+  const choiceRun = n => {
+    const spec = SPEC.activities[n - 1];
+    const v = state[n - 1];
+    if (spec.kind === 'explore' && !v.touched) { setFeedback(n, '', 'Not checked yet.', spec.needTouch || 'Use the model above at least once, then choose.'); return; }
+    const picked = own(n, `input[name="a${n}-opt"]:checked`);
+    if (!picked) { setFeedback(n, '', 'Not checked yet.', 'Choose one option first.'); return; }
+    if (spec.confidence && !own(n, `input[name="a${n}-conf"]:checked`)) { setFeedback(n, '', 'Not checked yet.', 'Rate your confidence before seeing feedback.'); return; }
+    v.attempts += 1;
+    const chosen = spec.options.find(o => o.k === picked.value);
+    const labelFor = o => `${o.k.toUpperCase()}: ${o.why}`;
+    ownAll(n, '.pep-option[data-opt]').forEach(row => row.classList.remove('is-wrong', 'is-correct'));
+    const row = k => own(n, `.pep-option[data-opt="${k}"]`);
+    if (chosen.right) {
+      row(chosen.k).classList.add('is-correct');
+      setFeedback(n, 'correct', 'Correct.', chosen.why, spec.options.filter(o => !o.right).map(labelFor));
+      settle(n, 1);
+    } else if (v.attempts >= 2) {
+      row(chosen.k).classList.add('is-wrong');
+      const right = spec.options.find(o => o.right);
+      row(right.k).classList.add('is-correct');
+      setFeedback(n, 'revealed', 'Answered and settled, not correct.', `The correct answer is ${right.k.toUpperCase()}.`, spec.options.map(labelFor));
+      settle(n, 0);
+    } else {
+      row(chosen.k).classList.add('is-wrong');
+      setFeedback(n, 'wrong', 'Try again.', `${chosen.why} You have one more try.`);
+      reflect(n); renderActivity(current);
+    }
+  };
+  const editors = {};
+  const setupEditor = n => {
+    const spec = SPEC.activities[n - 1];
+    const input = own(n, 'textarea[data-pep-editor]');
+    const gutter = own(n, '.pep-editor__gutter');
+    const problems = own(n, '[data-panel="problems"]');
+    const output = own(n, '[data-panel="output"]');
+    const status = own(n, '.pep-editor__status');
+    const tabs = ownAll(n, '[role="tab"]');
+    const showTab = name => {
+      tabs.forEach(tab => { const on = tab.dataset.tab === name; tab.setAttribute('aria-selected', String(on)); tab.tabIndex = on ? 0 : -1; });
+      problems.hidden = name !== 'problems';
+      output.hidden = name !== 'output';
+    };
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => showTab(tab.dataset.tab));
+      tab.addEventListener('keydown', event => {
+        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+        const other = tabs.find(t => t !== tab);
+        showTab(other.dataset.tab); other.focus(); event.preventDefault();
+      });
+    });
+    const sizeUp = () => {
+      const lines = input.value.split('\n').length;
+      gutter.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+      const lh = parseFloat(getComputedStyle(input).lineHeight) || 20;
+      input.style.height = `${Math.max(160, lines * lh + 24)}px`;
+    };
+    input.addEventListener('input', sizeUp);
+    const clear = () => {
+      problems.textContent = 'Nothing to report yet. Press Run to check your code.';
+      output.textContent = 'Output appears here after Run.';
+      status.textContent = 'Not run yet.';
+      showTab('problems');
+    };
+    const render = result => {
+      problems.textContent = '';
+      if (!result.problems.length) problems.textContent = 'No problems found.';
+      result.problems.forEach(problem => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'pep-editor__problem';
+        const kind = document.createElement('span');
+        kind.className = `kind-${problem.kind}`;
+        kind.textContent = { error: 'Error', limit: 'Not supported', hint: 'Note' }[problem.kind] + (problem.line ? ` line ${problem.line}: ` : ': ');
+        button.append(kind, problem.msg);
+        button.addEventListener('click', () => {
+          const lines = input.value.split('\n');
+          const offset = lines.slice(0, Math.max(0, (problem.line || 1) - 1)).join('\n').length + (problem.line > 1 ? 1 : 0);
+          input.focus(); input.setSelectionRange(offset, offset);
+        });
+        problems.append(button);
+      });
+      output.textContent = result.output || 'No output: the practice editor could not trace this code.';
+      showTab(result.problems.some(p => p.kind !== 'hint') ? 'problems' : 'output');
+    };
+    own(n, '[data-pep-run]').addEventListener('click', () => {
+      const v = state[n - 1];
+      const code = input.value;
+      const result = spec.run(code);
+      render(result);
+      if (/___/.test(code)) {
+        status.textContent = 'Not checked: a ___ placeholder remains.';
+        setFeedback(n, '', 'Not checked yet.', 'Replace every ___ placeholder, then press Run. Placeholders do not use an attempt.');
+        return;
+      }
+      v.attempts += 1;
+      if (result.pass) {
+        status.textContent = 'Passed: the practice checks match.';
+        setFeedback(n, 'correct', 'Correct.', result.why);
+        settle(n, 1);
+      } else if (v.attempts >= 2) {
+        status.textContent = 'Settled: the practice checks did not match.';
+        setFeedback(n, 'revealed', 'Answered and settled, not correct by this editor\'s checks.', `${result.why} This editor checks only the forms it lists, so valid code in another form is unassessed here, not proven wrong. ${spec.settled} Restart activity lets you rewrite this without losing other work.`);
+        settle(n, 0);
+      } else {
+        status.textContent = 'Mismatch: read Problems and Output, then run again.';
+        setFeedback(n, 'wrong', 'Try again.', `${result.why} This editor checks only the forms it lists, so valid code in another form is unassessed here, not proven wrong. You have one more try.`);
+        reflect(n); renderActivity(current);
+      }
+    });
+    own(n, '[data-pep-reset-code]').addEventListener('click', () => {
+      if (input.readOnly) return;
+      input.value = spec.starter;
+      sizeUp(); clear();
+    });
+    clear(); sizeUp();
+    editors[n] = { clear, sizeUp };
+  };
+  const models = {};
+  SPEC.activities.forEach((spec, index) => {
+    const n = index + 1;
+    if (spec.kind === 'editor') setupEditor(n);
+    else own(n, '[data-pep-check]').addEventListener('click', () => choiceRun(n));
+    if (spec.model) {
+      models[n] = spec.model({
+        root: activities[index],
+        touch: () => { state[n - 1].touched = true; },
+      });
+    }
+  });
+  timeline.forEach((link, i) => link.addEventListener('click', event => { event.preventDefault(); renderActivity(i + 1, 'push', true); }));
+  document.querySelectorAll('[data-pep-back-link]').forEach(link => link.addEventListener('click', event => { event.preventDefault(); renderActivity(activityNumber(link.hash), 'push', true); }));
+  previous.addEventListener('click', () => renderActivity(current - 1, 'push', true));
+  next.addEventListener('click', () => renderActivity(current + 1, 'push', true));
+  const restoreFromHistory = () => {
+    const preservedFocus = lastFocused;
+    const requested = activityNumber(location.hash);
+    if (!renderActivity(requested, 'none', false)) renderActivity(Math.min(current, unlocked), 'replace', false);
+    if (preservedFocus?.isConnected && !preservedFocus.closest('[hidden]')) preservedFocus.focus({ preventScroll: true });
+  };
+  addEventListener('popstate', restoreFromHistory);
+  addEventListener('hashchange', restoreFromHistory);
+  document.querySelector('#restart').addEventListener('click', () => {
+    const n = current;
+    for (const item of initial[n - 1]) {
+      const c = item.control;
+      if (c.matches('input[type="checkbox"], input[type="radio"]')) c.checked = item.checked;
+      else if (c.tagName === 'SELECT') c.selectedIndex = item.selectedIndex;
+      else c.value = item.value;
+    }
+    state[n - 1] = blank();
+    lockControls(n, false);
+    setFeedback(n, '', '', '');
+    ownAll(n, '.pep-option[data-opt]').forEach(row => row.classList.remove('is-wrong', 'is-correct'));
+    editors[n]?.clear(); editors[n]?.sizeUp();
+    models[n]?.reset?.();
+    reflect(n);
+    renderActivity(current);
+  });
+  const objectives = document.querySelector('[data-pep-objectives]');
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); } });
+  document.addEventListener('click', event => { if (objectives.open && !objectives.contains(event.target)) objectives.open = false; });
+  let printOpened = [];
+  addEventListener('beforeprint', () => { printOpened = [...document.querySelectorAll('details:not([open])')]; printOpened.forEach(d => { d.open = true; }); });
+  addEventListener('afterprint', () => { printOpened.forEach(d => { d.open = false; }); printOpened = []; });
+  activities.forEach((_, i) => reflect(i + 1));
+  const requested = activityNumber(location.hash);
+  renderActivity(requested <= unlocked ? requested : 1, 'replace');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,841 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="python">
+<meta name="pep:module" content="data-pipelines">
+<meta name="pep:topic" content="Reading CSV and JSON files with generators">
+<meta name="pep:topic-id" content="reading-csv-and-json-files-with-generators">
+<meta name="pep:budget-minutes" content="13">
+<meta name="pep:source" content="authoring/evidence/python/data-pipelines/reading-csv-and-json-files-with-generators/sources.json">
+<meta name="pep:draft-status" content="first-draft-unreviewed">
+<title>Reading CSV and JSON files with generators · Data Pipelines: Extract, Load and Transform</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-dur-1: 120ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 0 0 12px; padding-inline-start: 24px; }
+li { margin-block-end: 4px; }
+svg { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible, .pep-btn:focus, .pep-step:focus, .pep-back:focus { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; margin: 0 0 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-objectives { position: relative; break-inside: avoid; min-width: 0; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; margin-block-start: 16px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+[data-pep-workspace] { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+[data-pep-activity-checks] { padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] > :last-child { margin-bottom: 0; }
+[data-pep-where-fits] { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+[data-pep-where-fits] h2 { font-size: 16px; line-height: 24px; font-weight: 600; margin-bottom: 8px; }
+[data-pep-where-fits] p:last-child { margin-bottom: 0; }
+.pep-hint, details[data-pep-hint] { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); break-inside: avoid; }
+.pep-hint > summary { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; align-items: center; min-height: 44px; padding-block: 8px; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { padding-block: 4px 12px; }
+.pep-hint .pep-hint { margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong); border-radius: 0; background: transparent; }
+.pep-optional { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; min-width: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent); }
+.pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 16px; }
+.pep-activity-actions .pep-btn { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn { flex: 0 1 auto; } }
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-options legend { padding: 0; margin-block-end: 8px; color: var(--pep-text-strong); font-weight: 600; max-width: 100%; }
+.pep-option { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; position: relative; min-width: 0; }
+.pep-option--plain { grid-template-columns: minmax(0, 1fr); }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pep-option input:disabled { cursor: default; }
+.pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-confidence { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-confidence .pep-option { flex: 1 1 96px; grid-template-columns: minmax(0, 1fr); text-align: center; }
+.pep-explain { display: grid; gap: 4px; margin: 8px 0 0; padding-inline-start: 20px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-feedback:empty { display: none; }
+.pep-feedback { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text); }
+.pep-feedback p { margin: 0; }
+.pep-feedback.is-correct { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-feedback.is-wrong { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-feedback.is-revealed { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-verdict { font-weight: 700; color: var(--pep-text-strong); }
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.pep-steps li { margin: 0; }
+.pep-step { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-disabled="true"] { border-color: var(--pep-line-strong); color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-back { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+.pep-activity { min-width: 0; }
+.pep-activity[hidden] { display: none; }
+.pep-code { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.pep-table-wrap { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); overflow: hidden; }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); table-layout: auto; }
+.pep-table th { text-align: left; font-weight: 600; color: var(--pep-text-strong); background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); padding: 8px 12px; overflow-wrap: anywhere; }
+.pep-table td { padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.pep-table td:first-child { font-weight: 600; color: var(--pep-text-strong); }
+.pep-field { display: grid; gap: 4px; min-width: 0; }
+.pep-field > span, .pep-label { color: var(--pep-text-strong); font: 600 13px/20px var(--pep-font-sans); }
+.pep-field input[type="text"], .pep-field select { min-height: 44px; width: 100%; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); scroll-margin-block: 16px; }
+.pep-check { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.pep-check input { width: 24px; height: 24px; margin: 0; flex: none; accent-color: var(--pep-accent); }
+.pep-model { display: grid; gap: 12px; min-width: 0; }
+.pep-stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.pep-stat { padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); min-width: 0; }
+.pep-stat b { display: block; color: var(--pep-text-strong); font: 700 20px/28px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-stat span { color: var(--pep-text-muted); font: 400 12px/16px var(--pep-font-sans); }
+.pep-log { margin: 0; min-height: 44px; padding: 12px 16px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); min-width: 0; }
+.pep-editor__bar { border-radius: 11px 11px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { display: block; width: 100%; margin: 0; padding: 12px; border: 0; resize: none; min-width: 0; min-height: 160px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow: hidden; overflow-wrap: normal; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; min-height: 64px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; cursor: pointer; overflow-wrap: anywhere; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; }
+.pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__problem .kind-hint { color: var(--pep-text-muted); font-weight: 600; }
+.pep-editor__status { border-radius: 0 0 11px 11px; padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-sources a { overflow-wrap: anywhere; }
+.pep-recap[hidden] { display: none; }
+.pep-recap { margin-block-start: 32px; padding-block-start: 16px; border-block-start: 1px solid var(--pep-line-strong); }
+.pep-recap h2 { margin-block-end: 8px; }
+.pep-recap section, .pep-recap details { margin-block-start: 16px; }
+.pep-sources > summary, .pep-cheat > summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+html:not(.is-enhanced) .pep-js-only { display: none; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+  [data-pep-workspace] { padding: 16px; }
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__code { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__gutter { line-height: 24px; font-size: 16px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-activity, [data-pep-activity], .pep-recap { display: block !important; }
+  .pep-noprint, .pep-activity-actions, nav[aria-label="Activities"], .pep-back { display: none !important; }
+  .pep-objectives > div { display: block !important; width: auto; }
+  .pep-topicbar, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional, .pep-code, .pep-table-wrap { break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .pep-optional > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker { display: none; }
+}
+</style>
+</head>
+<body>
+<main class="pep-main" id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="13">
+<header class="pep-topicbar">
+<h1 id="page-title">Reading CSV and JSON files with generators</h1>
+<span class="pep-topicbar__progress"><span id="pos-text">Activity 1 of 4</span> · about 13 min · <span id="prog-text">0 of 4 done</span></span>
+<details class="pep-objectives" data-pep-objectives>
+<summary aria-controls="objectives-body">Objectives</summary>
+<div id="objectives-body"><ul><li>Read rows from a CSV file with csv.DictReader and records from a JSON Lines file (json.loads on each line) or a small JSON document (json.load), opening each file in a with statement with an explicit encoding</li><li>Write a generator function with yield that streams parsed records one at a time, and explain that memory stays bounded only when the source is also read record by record (csv rows or JSON Lines), not when json.load has already read the whole document</li><li>Chain generators into an extract step (read, parse, filter) and predict what happens when a generator is iterated a second time</li></ul></div>
+</details>
+<button class="pep-btn pep-js-only" type="button" id="restart" data-pep-reset>Restart activity</button>
+</header>
+<nav aria-label="Activities"><ol class="pep-steps"><li><a class="pep-step" href="#activity-1" data-pep-activity-link aria-current="step">Activity 1</a></li><li><a class="pep-step" href="#activity-2" data-pep-activity-link aria-disabled="true">Activity 2</a></li><li><a class="pep-step" href="#activity-3" data-pep-activity-link aria-disabled="true">Activity 3</a></li><li><a class="pep-step" href="#activity-4" data-pep-activity-link aria-disabled="true">Activity 4</a></li></ol></nav>
+<section class="pep-activity" id="activity-1" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<h2 id="activity-1-title" tabindex="-1">Activity 1: predict what a generator call does</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-instructions>
+<h3>Predict before you read on</h3>
+<p>No teaching yet. Use what you already know, commit to a prediction, and the explanation follows.</p>
+</section>
+
+</div>
+<div data-pep-workspace="activity">
+<div id="task-1" data-pep-task>
+<h3>Your task: choose the printed output in the options below</h3>
+<ol><li>Read the code above the options. <code>read_lines</code> is defined, then called once.</li><li>Select the output you expect. This is a prediction; nothing has been taught yet.</li><li>Press Check answer. A wrong first try gets one retry, then every option is explained.</li></ol>
+
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to one prediction, then read why each option is right or wrong.</p></section>
+<div data-interaction="predict" data-static-alt="Prediction: a function containing yield is called once and a message is printed afterwards. Decide which prints happen before anything asks the generator for a value.">
+<pre class="pep-code"><code>import json
+
+def read_lines(path):
+    print(&quot;opening&quot;, path)
+    with open(path, encoding=&quot;utf-8&quot;) as f:
+        for line in f:
+            yield json.loads(line)
+
+lines = read_lines(&quot;events.jsonl&quot;)
+print(&quot;made lines&quot;)</code></pre>
+<fieldset class="pep-options"><legend>What does this program print?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a1-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Only <code>made lines</code></span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a1-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text"><code>opening events.jsonl</code>, then <code>made lines</code></span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a1-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text"><code>opening events.jsonl</code>, every record, then <code>made lines</code></span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a1-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">A <code>TypeError</code>, because <code>read_lines</code> has no <code>return</code></span></label>
+</fieldset>
+
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a1-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. Compare your prediction with the explanation in Activity 2: calling a generator function runs none of its body.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-2" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<h2 id="activity-2-title" tabindex="-1">Activity 2: watch records flow one at a time</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>A generator pauses between records</h3>
+<p>Calling a generator function returns a generator and runs none of its body. Each <code>next()</code>, or each pass of a <code>for</code> loop, resumes the body until the next <code>yield</code>, then pauses with the file still open.</p>
+<p><code>csv.DictReader</code> over an open file parses one row per pass; each row is a dict of strings keyed by the header. For JSON Lines, iterate over the file and call <code>json.loads</code> on each line.</p>
+<p><code>json.load</code> is different. It reads and parses the whole document before your first <code>yield</code>, so wrapping it in a generator does not bound memory.</p>
+
+
+
+<details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+<summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+<div class="pep-optional__body"><p data-pep-anecdote-story>A sushi counter makes one plate when a diner reaches for it, while a banquet caterer cooks the whole order before the first guest eats. Both feed everyone, but only the counter keeps a small amount of food out at any moment.</p><p data-pep-anecdote-map>Streaming reads a little at a time; loading everything first holds it all at once.</p></div>
+</details>
+</section>
+<section data-pep-where-fits aria-labelledby="where-fits-2">
+<h2 id="where-fits-2">Where this fits</h2>
+<p data-pep-fit-decision><strong>Decision:</strong> Stream records with a generator, or load the whole file into a list first?</p>
+<p data-pep-fit-good><strong>Good fit:</strong> Stream when a file may be larger than memory and each record can be handled alone, such as validating and batching rows into a staging table.</p>
+<p data-pep-fit-boundary><strong>Choose something else when:</strong> You need several passes, random access or sorting across all records. Load a bounded file into a list, or do that work in SQL after loading.</p>
+</section>
+</div>
+<div data-pep-workspace="activity">
+<div id="task-2" data-pep-task data-pep-may-stall>
+<h3>Your task: use the model below, then choose the safest source shape</h3>
+<ol><li>In the model, select a source, then press <code>next(records)</code> a few times and watch Records held in memory.</li><li>Switch to the <code>json.load</code> source and press <code>next(records)</code> once. Compare the numbers.</li><li>Press past the last record to see what an exhausted generator does.</li><li>Select your answer and press Check answer. A wrong try gets one retry.</li></ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> Watch the Records held in memory number in the model.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Compare that number after the first press for each of the three sources.</p>
+</div>
+</details>
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>You used the model at least once.</p><p>You can say which source shapes keep records in memory bounded, and why.</p></section>
+<div class="pep-model" data-interaction="explore" data-static-alt="Model with three sources over a six-record file. CSV rows and JSON Lines hold one record at a time: each next reads one record and yields it. json.load reads all six records on the first next, then yields them one by one while still holding all six. After the last record, next raises StopIteration."><fieldset class="pep-options"><legend>Source</legend>
+<label class="pep-option pep-option--plain"><input type="radio" name="gen-src" value="csv" checked data-pep-task-control id="gen-src-csv"><span class="pep-option__text"><code>csv.DictReader</code> over the open file</span></label>
+<label class="pep-option pep-option--plain"><input type="radio" name="gen-src" value="jsonl" data-pep-task-control id="gen-src-jsonl"><span class="pep-option__text">JSON Lines, <code>json.loads</code> per line</span></label>
+<label class="pep-option pep-option--plain"><input type="radio" name="gen-src" value="load" data-pep-task-control id="gen-src-load"><span class="pep-option__text"><code>json.load</code> on the whole document</span></label>
+</fieldset>
+<div class="pep-actions"><button class="pep-btn" type="button" id="gen-next">next(records)</button><button class="pep-btn" type="button" id="gen-fresh">New generator</button></div>
+<div class="pep-stat-row"><div class="pep-stat"><b id="gen-read">0</b><span>Records read from the file</span></div><div class="pep-stat"><b id="gen-held">0</b><span>Records held in memory</span></div><div class="pep-stat"><b id="gen-yielded">0</b><span>Records yielded so far</span></div></div>
+<pre class="pep-log" id="gen-log" aria-live="polite">Generator created. No code in its body has run yet.</pre></div>
+<noscript data-section-skip><p>Model with three sources over a six-record file. CSV rows and JSON Lines hold one record at a time: each next reads one record and yields it. json.load reads all six records on the first next, then yields them one by one while still holding all six. After the last record, next raises StopIteration.</p></noscript><div data-interaction="mcq" data-static-alt="Question: for a very large export, decide which source shape keeps the records in memory bounded.">
+
+<fieldset class="pep-options"><legend>Your input is a 10 GB export. Which approach keeps the number of records in memory bounded?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a2-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Read a CSV or JSON Lines file record by record inside a generator</span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a2-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Call <code>json.load</code> on the export, then <code>yield</code> each item</span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a2-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Call <code>list(read_lines(path))</code> so later steps can reuse the records</span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a2-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Any function that uses <code>yield</code>, because <code>yield</code> always streams</span></label>
+</fieldset>
+
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a2-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. A generator bounds memory only when its source is also read one record at a time.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<p class="pep-noprint"><a class="pep-back" href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-3" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<h2 id="activity-3-title" tabindex="-1">Activity 3: write a streaming CSV reader</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>The streaming reader shape</h3>
+<p>This JSON Lines reader shows the pattern. The <code>with</code> block keeps the file open while the generator is paused and closes it when the generator finishes.</p>
+<pre class="pep-code"><code>import json
+
+def read_events(path):
+    with open(path, encoding=&quot;utf-8&quot;) as f:
+        for line in f:
+            yield json.loads(line)</code></pre>
+
+<p>For CSV, open the file with <code>newline=&quot;&quot;</code> as the csv docs recommend, wrap the file in <code>csv.DictReader</code>, and yield each row. Always name the encoding; the default depends on the machine.</p>
+
+</section>
+
+</div>
+<div data-pep-workspace="code">
+<div id="task-3" data-pep-task data-pep-may-stall>
+<h3>Your task: finish <code>read_orders</code> in the editor below</h3>
+<ol><li>In <code>extract.py</code>, replace the <code>___</code> line with a <code>with open(...)</code> block that names <code>encoding</code>.</li><li>Inside it, loop over a <code>csv.DictReader</code> on the open file and <code>yield</code> each row.</li><li>Press Run. Output traces the file and each yielded row; Problems names anything missing.</li><li>A mismatch uses an attempt and you get one retry. A remaining <code>___</code> uses no attempt.</li></ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 3</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The line with the ___ placeholder, indented inside read_orders.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Start from the read_events pattern; only the reader in the middle changes.</p>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="2" data-section-skip>
+<summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 3</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The loop inside your with block.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Decide which object the for loop iterates over, and what each pass hands back with yield.</p>
+</div>
+</details></div>
+</details>
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>Run reports the file opened with an explicit encoding.</p><p>Output shows rows yielded one at a time, with no list built.</p></section>
+<div class="pep-js-only" data-interaction="terminal" data-steps="2" data-static-alt="Coding task: finish a generator function that opens a CSV with an explicit encoding and streams rows. Compare against the read_events pattern above.">
+<div class="pep-editor">
+<div class="pep-editor__bar"><span class="pep-editor__file">extract.py</span>
+<button class="pep-btn pep-btn--primary" type="button" id="a3-run" data-pep-submit data-pep-run>Run</button>
+<button class="pep-btn" type="button" id="a3-reset" data-pep-reset-code data-pep-lock>Reset code</button></div>
+<div class="pep-editor__code"><div class="pep-editor__gutter" aria-hidden="true">1</div>
+<label class="pep-sr" for="a3-code" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Code editor for extract.py</label>
+<textarea class="pep-editor__input" id="a3-code" data-pep-editor data-pep-task-control spellcheck="false" autocapitalize="off" autocomplete="off">import csv
+
+def read_orders(path):
+    # Open path with an explicit encoding, then stream each row.
+    ___
+</textarea></div>
+<div class="pep-editor__tabs" role="tablist" aria-label="Results for extract.py">
+<button type="button" role="tab" id="a3-tab-problems" data-tab="problems" aria-selected="true" aria-controls="a3-panel-problems">Problems</button>
+<button type="button" role="tab" id="a3-tab-output" data-tab="output" aria-selected="false" aria-controls="a3-panel-output" tabindex="-1">Output</button></div>
+<div class="pep-editor__panel" role="tabpanel" id="a3-panel-problems" aria-labelledby="a3-tab-problems" data-panel="problems" tabindex="0"></div>
+<div class="pep-editor__panel" role="tabpanel" id="a3-panel-output" aria-labelledby="a3-tab-output" data-panel="output" tabindex="0" hidden></div>
+<div class="pep-editor__status" role="status"></div>
+</div></div>
+<noscript data-pep-no-js data-section-skip><div>
+<p><strong>JavaScript is off, so Run is not available.</strong> Finish read_orders so that it opens the file with an explicit encoding, loops over a csv.DictReader on the open file, and yields each row. Compare your function with the read_events pattern above; run it on a small CSV with Python to see rows arrive one at a time.</p>
+<p>Starter for extract.py:</p>
+<pre class="pep-code"><code>import csv
+
+def read_orders(path):
+    # Open path with an explicit encoding, then stream each row.
+    ___
+</code></pre>
+<p>This practice editor does not run Python. It recognises one generator-function shape (with open, csv.DictReader, for, yield) and traces it over a three-row sample. Code in any other form is not assessed and may be flagged even when it is valid.</p>
+</div></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+<details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+<summary>Challenge (optional)</summary>
+<div class="pep-optional__body">
+<p data-pep-optional-time><strong>Optional time:</strong> about 3 minutes</p>
+<p data-pep-success-criteria><strong>Success criteria:</strong> On paper, extend your reader so it skips rows whose <code>qty</code> field is empty, still yielding one row at a time and still using only what this page taught.</p>
+</div></details>
+<p class="pep-noprint"><a class="pep-back" href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-4" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-4-title">
+<h2 id="activity-4-title" tabindex="-1">Activity 4: chain generators and reuse one</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>Pipelines, and the one-shot rule</h3>
+<p>Generators chain: a read step feeds a parse step, which feeds a filter. Nothing runs until the last step is iterated, and one record moves through at a time.</p>
+<p>A generator is single-use. Once exhausted, iterating it again yields nothing and raises no error, so a second loop silently sees zero records. For another pass, call the generator function again to get a fresh generator.</p>
+<pre class="pep-code"><code>lines = read_events(&quot;a.jsonl&quot;)
+paid = (e for e in lines if e[&quot;paid&quot;])
+total = sum(e[&quot;amount&quot;] for e in paid)  # pulls here</code></pre>
+
+
+
+</section>
+
+</div>
+<div data-pep-workspace="activity">
+<div id="task-4" data-pep-task>
+<h3>Your task: choose the printed output in the options below, then rate your confidence</h3>
+<ol><li>Assume <code>orders.csv</code> has three rows with <code>qty</code> values 2, 5 and 1.</li><li>Trace the two <code>print</code> calls, select an answer, and rate your confidence.</li><li>Press Check answer. Confidence is asked before any feedback.</li></ol>
+
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>You predict both printed values and rate your confidence first.</p></section>
+<div data-interaction="mcq" data-confidence="true" data-static-alt="Question: a filtering generator expression over a three-row reader is counted twice. Decide what the second count prints.">
+<pre class="pep-code"><code>orders = read_orders(&quot;orders.csv&quot;)
+big = (o for o in orders if int(o[&quot;qty&quot;]) &gt; 1)
+print(sum(1 for _ in big))
+print(sum(1 for _ in big))</code></pre>
+<fieldset class="pep-options"><legend>What prints?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a4-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text"><code>2</code> then <code>0</code></span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a4-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text"><code>2</code> then <code>2</code></span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a4-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text"><code>3</code> then <code>0</code></span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a4-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text"><code>2</code>, then <code>StopIteration</code> crashes the program</span></label>
+</fieldset>
+<fieldset class="pep-options"><legend>How sure are you?</legend><div class="pep-confidence">
+<label class="pep-option"><input type="radio" name="a4-conf" value="low" data-pep-task-control data-pep-lock><span class="pep-option__text">Guessing</span></label>
+<label class="pep-option"><input type="radio" name="a4-conf" value="medium" data-pep-task-control data-pep-lock><span class="pep-option__text">Fairly sure</span></label>
+<label class="pep-option"><input type="radio" name="a4-conf" value="high" data-pep-task-control data-pep-lock><span class="pep-option__text">Certain</span></label>
+</div></fieldset>
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a4-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. A generator is single-use: a second iteration yields nothing and raises no error.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<p class="pep-noprint"><a class="pep-back" href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+</div>
+</div>
+</section>
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+<button class="pep-btn" type="button" id="previous-activity" data-pep-previous>Previous activity</button>
+<button class="pep-btn pep-btn--primary" type="button" id="next-activity" data-pep-next>Next activity</button>
+</div>
+<section class="pep-recap" data-pep-recap aria-labelledby="recap-title">
+<h2 id="recap-title">Recap</h2>
+<ul><li>Calling a generator function runs nothing; each <code>next()</code> or <code>for</code> pass resumes to the next <code>yield</code>.</li><li>Open files in a <code>with</code> block and name the encoding. <code>csv.DictReader</code> gives one dict of strings per row; JSON Lines needs <code>json.loads</code> per line.</li><li>Memory stays bounded only when the source is also read record by record. <code>json.load</code> has already read the whole document.</li><li>Chain generators into read, parse and filter steps. A generator is one-shot: a second pass silently sees nothing.</li></ul>
+<details class="pep-cheat" data-pep-cheat-sheet data-section-skip><summary>Cheat sheet (optional)</summary><pre class="pep-code"><code>with open(path, encoding=&quot;utf-8&quot;) as f:
+    for line in f:
+        yield json.loads(line)   # JSON Lines
+
+open(path, newline=&quot;&quot;)           # recommended for csv
+next(gen)                        # StopIteration when exhausted</code></pre></details>
+<details class="pep-sources" data-pep-sources data-section-skip><summary>Sources and review date (optional)</summary>
+<p><strong>First draft, not reviewed.</strong> Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.</p>
+<ul><li><a href="https://docs.python.org/3/library/csv.html" rel="noopener">Python docs: csv (DictReader, newline)</a></li><li><a href="https://docs.python.org/3/library/json.html" rel="noopener">Python docs: json (load, loads)</a></li><li><a href="https://docs.python.org/3/howto/functional.html" rel="noopener">Python docs: Functional programming HOWTO (generators)</a></li><li><a href="https://docs.python.org/3/tutorial/classes.html" rel="noopener">Python tutorial: Generators and generator expressions</a></li></ul>
+</details>
+</section>
+</main>
+<script>
+(() => {
+  window.PEP_TOOLS = {
+    start(code, comment = '#') {
+      const strip = comment === '--' ? /--.*$/ : /#.*$/;
+      const lines = code.split('\n');
+      const clean = lines.map(l => l.replace(strip, '')).join('\n');
+      const lineOf = re => { const i = clean.split('\n').findIndex(l => re.test(l)); return i < 0 ? 0 : i + 1; };
+      const problems = [];
+      const bad = (msg, re, kind) => problems.push({ kind: kind || 'error', line: re ? lineOf(re) : 0, msg });
+      return {
+        code, clean, lines, lineOf, problems, bad,
+        flat: clean.replace(/\s+/g, ' ').trim(),
+        placeholder() { if (/___/.test(code)) { bad('Replace this placeholder with your code.', /___/); return true; } return false; },
+        hard() { return problems.filter(p => p.kind !== 'hint').length; },
+        stop(why) { return { problems, output: '', pass: false, why: why || 'A placeholder remains.' }; },
+      };
+    },
+    table(cols, rows) {
+      const cell = v => (v === null || v === undefined ? 'NULL' : String(v));
+      const widths = cols.map((c, i) => Math.max(c.length, ...rows.map(r => cell(r[c]).length)));
+      const line = vals => vals.map((v, i) => v.padEnd(widths[i])).join(' | ').trimEnd();
+      return [line(cols), widths.map(w => '-'.repeat(w)).join('-+-'), ...rows.map(r => line(cols.map(c => cell(r[c]))))].join('\n') + `\n(${rows.length} row${rows.length === 1 ? '' : 's'})`;
+    },
+  };
+  document.documentElement.classList.add('is-enhanced');
+  const lesson = document.querySelector('#lesson');
+  const activities = [...document.querySelectorAll('[data-pep-activity]')];
+  const timeline = [...document.querySelectorAll('[data-pep-activity-link]')];
+  const previous = document.querySelector('#previous-activity');
+  const next = document.querySelector('#next-activity');
+  const progressText = document.querySelector('#prog-text');
+  const positionText = document.querySelector('#pos-text');
+  window.PEP_SPEC = { activities: [{ kind: "choice", confidence: false, options: [{"k":"a","right":true,"why":"Calling a generator function builds a generator object and runs none of its body, so the first print has not happened yet."},{"k":"b","right":false,"why":"That is how an ordinary function behaves. A function containing yield does not start until something asks for the first value."},{"k":"c","right":false,"why":"Nothing prints records here, and the body has not started. A generator never runs ahead to the end on its own."},{"k":"d","right":false,"why":"A generator function needs no return statement. Using yield is what makes the call return a generator."}],  },
+{ kind: "explore", confidence: false, options: [{"k":"a","right":true,"why":"Both the source and the generator work one record at a time, so memory stays bounded by one record plus buffers."},{"k":"b","right":false,"why":"json.load has already built the whole document in memory before the first yield, so the generator saves nothing."},{"k":"c","right":false,"why":"list() drains the generator into memory, holding every record at once."},{"k":"d","right":false,"why":"yield only pauses your function. If the data was already loaded before the yield, memory is already spent."}], needTouch: "Press next(records) in the model at least once, then choose.",model: (api) => {
+        const q = s => api.root.querySelector(s);
+        const TOTAL = 6;
+        let read = 0, yielded = 0, done = false, opened = false;
+        const src = () => q('input[name="gen-src"]:checked').value;
+        const paint = msg => {
+          const mode = src();
+          const held = !opened ? 0 : done ? 0 : mode === 'load' ? TOTAL : 1;
+          q('#gen-read').textContent = String(read);
+          q('#gen-held').textContent = String(held);
+          q('#gen-yielded').textContent = String(yielded);
+          q('#gen-log').textContent = msg;
+        };
+        const fresh = msg => { read = 0; yielded = 0; done = false; opened = false; paint(msg || 'Generator created. No code in its body has run yet.'); };
+        q('#gen-next').addEventListener('click', () => {
+          api.touch();
+          const mode = src();
+          if (done) { paint('StopIteration: this generator is exhausted. It will not restart.'); return; }
+          if (yielded === TOTAL) { done = true; paint('StopIteration: the body finished and the file closed.'); return; }
+          opened = true;
+          if (mode === 'load') read = TOTAL; else read += 1;
+          yielded += 1;
+          paint(mode === 'load' && yielded === 1 ? 'json.load read all 6 records, then yielded record 1.' : 'Yielded record ' + yielded + ', paused at yield.');
+        });
+        q('#gen-fresh').addEventListener('click', () => { api.touch(); fresh(); });
+        api.root.querySelectorAll('input[name="gen-src"]').forEach(r => r.addEventListener('change', () => { api.touch(); fresh('Source changed. New generator created; no code has run yet.'); }));
+        return { reset: () => fresh() };
+      }, },
+{ kind: "editor", confidence: false,  starter: "import csv\n\ndef read_orders(path):\n    # Open path with an explicit encoding, then stream each row.\n    ___\n", settled: "Compare your function with the read_events shape above: with open, then a loop, then yield inside the loop.", run: (code) => {
+        const clean = code.replace(/#.*$/gm, '');
+        const lines = code.split('\n');
+        const lineOf = re => { const i = lines.findIndex(l => re.test(l.replace(/#.*$/, ''))); return i < 0 ? 0 : i + 1; };
+        const problems = [];
+        const bad = (msg, re, kind) => problems.push({ kind: kind || 'error', line: re ? lineOf(re) : 0, msg });
+        if (/___/.test(code)) { bad('Replace this placeholder with your code.', /___/); return { problems, output: '', pass: false, why: 'A placeholder remains.' }; }
+        if (!/def\s+read_orders\s*\(\s*path\s*\)\s*:/.test(clean)) bad('Keep the function header def read_orders(path):.');
+        if (/\.read\(|\.readlines\(|json\.load\(|pandas/.test(clean)) bad('This reads everything at once or uses something outside this practice; stream one row at a time.', /\.read\(|\.readlines\(|json\.load\(|pandas/, 'limit');
+        if (/\breturn\b/.test(clean)) bad('A return here hands back a finished value or ends the generator. Use yield inside the loop.', /\breturn\b/);
+        if (/\blist\s*\(/.test(clean)) bad('list(...) drains every row into memory at once.', /\blist\s*\(/);
+        const w = /^([ \t]+)with\s+open\s*\(\s*path\b([^)]*)\)\s+as\s+([A-Za-z_]\w*)\s*:\s*$/m.exec(clean);
+        if (!w) bad('Open the file with: with open(path, ...) as name: on its own indented line.');
+        else if (!/encoding\s*=/.test(w[2])) bad('Name the encoding in open(); the default depends on the machine.', /with\s+open/);
+        const fileVar = w ? w[3] : '';
+        const loop = /^([ \t]+)for\s+([A-Za-z_]\w*)\s+in\s+(.+):\s*$/m.exec(clean);
+        let readerOk = false;
+        if (w) {
+          const direct = new RegExp('csv\\.DictReader\\(\\s*' + fileVar + '\\b').test(clean);
+          readerOk = direct;
+          if (!direct) bad('Wrap the open file in csv.DictReader so each row becomes a dict keyed by the header.');
+        }
+        let yieldOk = false;
+        const yieldFrom = w && new RegExp('^[ \\t]+yield\\s+from\\s+csv\\.DictReader\\(\\s*' + fileVar + '\\b', 'm').test(clean);
+        if (yieldFrom) yieldOk = true;
+        else if (!loop) bad('Loop over the reader with a for statement so you yield once per row.');
+        else {
+          const y = new RegExp('^([ \\t]+)yield\\s+' + loop[2] + '\\s*$', 'm').exec(clean);
+          if (!y) bad('Inside the loop, yield the loop variable on its own line.', /for\s/);
+          else if (y[1].length <= loop[1].length) bad('Indent yield inside the for loop.', /yield/);
+          else if (w && loop[1].length <= w[1].length) bad('Indent the for loop inside the with block so the file stays open.', /for\s/);
+          else yieldOk = true;
+        }
+        const encodingOk = !!(w && /encoding\s*=/.test(w[2]));
+        if (w && encodingOk && !/newline\s*=/.test(w[2])) problems.push({ kind: 'hint', line: lineOf(/with\s+open/), msg: 'The csv docs recommend newline="" when opening CSV files.' });
+        const hard = problems.filter(p => p.kind !== 'hint').length;
+        const pass = hard === 0 && readerOk && yieldOk && encodingOk;
+        const output = pass
+          ? 'Traced over a 3-row sample (not real Python execution):\nnext() -> opens orders.csv\nnext() -> yields {"id": "1", "qty": "2"}\nnext() -> yields {"id": "2", "qty": "5"}\nnext() -> yields {"id": "3", "qty": "1"}\nnext() -> file closed, StopIteration'
+          : 'No trace: fix the items under Problems first.';
+        return { problems, output, pass, why: pass ? 'Your reader opens the file with an explicit encoding and yields one dict per row.' : 'The reader does not match the streaming shape yet; see Problems.' };
+      }, },
+{ kind: "choice", confidence: true, options: [{"k":"a","right":true,"why":"Two rows pass the filter on the first pass. That exhausts both generators, so the second pass counts nothing and raises no error."},{"k":"b","right":false,"why":"That would need a list. A generator cannot rewind, so the second pass has no rows left."},{"k":"c","right":false,"why":"The filter keeps only qty above 1, and the row with qty 1 is dropped."},{"k":"d","right":false,"why":"The for machinery inside the sum absorbs StopIteration, so the second sum is simply 0."}],  }] };
+  const SPEC = window.PEP_SPEC;
+  let current = 1;
+  let unlocked = 1;
+  const blank = () => ({ attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false, touched: false });
+  const state = activities.map(blank);
+  const initial = activities.map(activity => [...activity.querySelectorAll('[data-pep-task-control]')].map(control => ({ control, value: control.value, checked: control.checked, selectedIndex: control.selectedIndex })));
+  let lastFocused = null;
+  document.addEventListener('focusin', event => { lastFocused = event.target; });
+  const activityNumber = hash => Number(/^#activity-(\d+)$/.exec(hash)?.[1] || 1);
+  const own = (n, selector) => activities[n - 1].querySelector(selector);
+  const ownAll = (n, selector) => [...activities[n - 1].querySelectorAll(selector)];
+  const reflect = n => {
+    const a = activities[n - 1], v = state[n - 1];
+    a.dataset.pepAttempts = String(v.attempts);
+    a.dataset.pepSettled = String(v.settled);
+    a.dataset.pepCompleted = String(v.completed);
+    a.dataset.pepCredit = String(v.credit);
+    a.dataset.pepGrade = String(v.grade);
+    a.dataset.pepContinue = String(v.canContinue);
+  };
+  const recap = document.querySelector('[data-pep-recap]');
+  const renderProgress = () => {
+    const done = state.filter(v => v.credit > 0).length;
+    recap.hidden = lesson.dataset.pepComplete !== 'true';
+    progressText.textContent = `${done} of ${activities.length} done`;
+    positionText.textContent = `Activity ${current} of ${activities.length}`;
+  };
+  const renderActivity = (number, historyMode = 'none', moveFocus = false) => {
+    if (!Number.isInteger(number) || number < 1 || number > activities.length || number > unlocked) return false;
+    current = number;
+    lesson.dataset.pepCurrentActivity = String(current);
+    lesson.dataset.pepUnlockedThrough = String(unlocked);
+    activities.forEach((a, i) => { a.hidden = i + 1 !== current; });
+    timeline.forEach((link, i) => {
+      const n = i + 1;
+      if (n === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+      if (n > unlocked) link.setAttribute('aria-disabled', 'true'); else link.removeAttribute('aria-disabled');
+    });
+    previous.disabled = current === 1;
+    next.disabled = current === activities.length || current >= unlocked || !state[current - 1].canContinue;
+    renderProgress();
+    try {
+      if (historyMode === 'push') history.pushState({ activity: current }, '', `#activity-${current}`);
+      if (historyMode === 'replace') history.replaceState({ activity: current }, '', `#activity-${current}`);
+    } catch {
+      if (historyMode !== 'none' && location.hash !== `#activity-${current}`) location.hash = `activity-${current}`;
+    }
+    if (moveFocus) document.querySelector(`#activity-${current} h2`)?.focus();
+    return true;
+  };
+  const setFeedback = (n, tone, verdict, body, list) => {
+    const box = own(n, '[data-pep-feedback]');
+    box.className = 'pep-feedback' + (tone ? ` is-${tone}` : '');
+    box.textContent = '';
+    if (!verdict && !body) return;
+    const p = document.createElement('p');
+    if (verdict) { const b = document.createElement('span'); b.className = 'pep-verdict'; b.textContent = verdict + ' '; p.append(b); }
+    if (body) p.append(body);
+    box.append(p);
+    if (list?.length) {
+      const ul = document.createElement('ul');
+      ul.className = 'pep-explain';
+      list.forEach(text => { const li = document.createElement('li'); li.textContent = text; ul.append(li); });
+      box.append(ul);
+    }
+  };
+  const lockControls = (n, locked) => {
+    ownAll(n, '[data-pep-submit]').forEach(b => { b.disabled = locked; });
+    ownAll(n, '[data-pep-lock]').forEach(c => { c.disabled = locked; });
+    ownAll(n, 'textarea[data-pep-editor]').forEach(t => { t.readOnly = locked; });
+  };
+  const settle = (n, grade) => {
+    const v = state[n - 1];
+    v.settled = true; v.completed = true; v.canContinue = true; v.grade = grade;
+    if (v.credit === 0) v.credit = 1;
+    reflect(n);
+    lockControls(n, true);
+    unlocked = Math.max(unlocked, Math.min(n + 1, activities.length));
+    if (state.every(s => s.credit > 0)) lesson.dataset.pepComplete = 'true';
+    renderActivity(current);
+  };
+  const choiceRun = n => {
+    const spec = SPEC.activities[n - 1];
+    const v = state[n - 1];
+    if (spec.kind === 'explore' && !v.touched) { setFeedback(n, '', 'Not checked yet.', spec.needTouch || 'Use the model above at least once, then choose.'); return; }
+    const picked = own(n, `input[name="a${n}-opt"]:checked`);
+    if (!picked) { setFeedback(n, '', 'Not checked yet.', 'Choose one option first.'); return; }
+    if (spec.confidence && !own(n, `input[name="a${n}-conf"]:checked`)) { setFeedback(n, '', 'Not checked yet.', 'Rate your confidence before seeing feedback.'); return; }
+    v.attempts += 1;
+    const chosen = spec.options.find(o => o.k === picked.value);
+    const labelFor = o => `${o.k.toUpperCase()}: ${o.why}`;
+    ownAll(n, '.pep-option[data-opt]').forEach(row => row.classList.remove('is-wrong', 'is-correct'));
+    const row = k => own(n, `.pep-option[data-opt="${k}"]`);
+    if (chosen.right) {
+      row(chosen.k).classList.add('is-correct');
+      setFeedback(n, 'correct', 'Correct.', chosen.why, spec.options.filter(o => !o.right).map(labelFor));
+      settle(n, 1);
+    } else if (v.attempts >= 2) {
+      row(chosen.k).classList.add('is-wrong');
+      const right = spec.options.find(o => o.right);
+      row(right.k).classList.add('is-correct');
+      setFeedback(n, 'revealed', 'Answered and settled, not correct.', `The correct answer is ${right.k.toUpperCase()}.`, spec.options.map(labelFor));
+      settle(n, 0);
+    } else {
+      row(chosen.k).classList.add('is-wrong');
+      setFeedback(n, 'wrong', 'Try again.', `${chosen.why} You have one more try.`);
+      reflect(n); renderActivity(current);
+    }
+  };
+  const editors = {};
+  const setupEditor = n => {
+    const spec = SPEC.activities[n - 1];
+    const input = own(n, 'textarea[data-pep-editor]');
+    const gutter = own(n, '.pep-editor__gutter');
+    const problems = own(n, '[data-panel="problems"]');
+    const output = own(n, '[data-panel="output"]');
+    const status = own(n, '.pep-editor__status');
+    const tabs = ownAll(n, '[role="tab"]');
+    const showTab = name => {
+      tabs.forEach(tab => { const on = tab.dataset.tab === name; tab.setAttribute('aria-selected', String(on)); tab.tabIndex = on ? 0 : -1; });
+      problems.hidden = name !== 'problems';
+      output.hidden = name !== 'output';
+    };
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => showTab(tab.dataset.tab));
+      tab.addEventListener('keydown', event => {
+        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+        const other = tabs.find(t => t !== tab);
+        showTab(other.dataset.tab); other.focus(); event.preventDefault();
+      });
+    });
+    const sizeUp = () => {
+      const lines = input.value.split('\n').length;
+      gutter.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+      const lh = parseFloat(getComputedStyle(input).lineHeight) || 20;
+      input.style.height = `${Math.max(160, lines * lh + 24)}px`;
+    };
+    input.addEventListener('input', sizeUp);
+    const clear = () => {
+      problems.textContent = 'Nothing to report yet. Press Run to check your code.';
+      output.textContent = 'Output appears here after Run.';
+      status.textContent = 'Not run yet.';
+      showTab('problems');
+    };
+    const render = result => {
+      problems.textContent = '';
+      if (!result.problems.length) problems.textContent = 'No problems found.';
+      result.problems.forEach(problem => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'pep-editor__problem';
+        const kind = document.createElement('span');
+        kind.className = `kind-${problem.kind}`;
+        kind.textContent = { error: 'Error', limit: 'Not supported', hint: 'Note' }[problem.kind] + (problem.line ? ` line ${problem.line}: ` : ': ');
+        button.append(kind, problem.msg);
+        button.addEventListener('click', () => {
+          const lines = input.value.split('\n');
+          const offset = lines.slice(0, Math.max(0, (problem.line || 1) - 1)).join('\n').length + (problem.line > 1 ? 1 : 0);
+          input.focus(); input.setSelectionRange(offset, offset);
+        });
+        problems.append(button);
+      });
+      output.textContent = result.output || 'No output: the practice editor could not trace this code.';
+      showTab(result.problems.some(p => p.kind !== 'hint') ? 'problems' : 'output');
+    };
+    own(n, '[data-pep-run]').addEventListener('click', () => {
+      const v = state[n - 1];
+      const code = input.value;
+      const result = spec.run(code);
+      render(result);
+      if (/___/.test(code)) {
+        status.textContent = 'Not checked: a ___ placeholder remains.';
+        setFeedback(n, '', 'Not checked yet.', 'Replace every ___ placeholder, then press Run. Placeholders do not use an attempt.');
+        return;
+      }
+      v.attempts += 1;
+      if (result.pass) {
+        status.textContent = 'Passed: the practice checks match.';
+        setFeedback(n, 'correct', 'Correct.', result.why);
+        settle(n, 1);
+      } else if (v.attempts >= 2) {
+        status.textContent = 'Settled: the practice checks did not match.';
+        setFeedback(n, 'revealed', 'Answered and settled, not correct by this editor\'s checks.', `${result.why} This editor checks only the forms it lists, so valid code in another form is unassessed here, not proven wrong. ${spec.settled} Restart activity lets you rewrite this without losing other work.`);
+        settle(n, 0);
+      } else {
+        status.textContent = 'Mismatch: read Problems and Output, then run again.';
+        setFeedback(n, 'wrong', 'Try again.', `${result.why} This editor checks only the forms it lists, so valid code in another form is unassessed here, not proven wrong. You have one more try.`);
+        reflect(n); renderActivity(current);
+      }
+    });
+    own(n, '[data-pep-reset-code]').addEventListener('click', () => {
+      if (input.readOnly) return;
+      input.value = spec.starter;
+      sizeUp(); clear();
+    });
+    clear(); sizeUp();
+    editors[n] = { clear, sizeUp };
+  };
+  const models = {};
+  SPEC.activities.forEach((spec, index) => {
+    const n = index + 1;
+    if (spec.kind === 'editor') setupEditor(n);
+    else own(n, '[data-pep-check]').addEventListener('click', () => choiceRun(n));
+    if (spec.model) {
+      models[n] = spec.model({
+        root: activities[index],
+        touch: () => { state[n - 1].touched = true; },
+      });
+    }
+  });
+  timeline.forEach((link, i) => link.addEventListener('click', event => { event.preventDefault(); renderActivity(i + 1, 'push', true); }));
+  document.querySelectorAll('[data-pep-back-link]').forEach(link => link.addEventListener('click', event => { event.preventDefault(); renderActivity(activityNumber(link.hash), 'push', true); }));
+  previous.addEventListener('click', () => renderActivity(current - 1, 'push', true));
+  next.addEventListener('click', () => renderActivity(current + 1, 'push', true));
+  const restoreFromHistory = () => {
+    const preservedFocus = lastFocused;
+    const requested = activityNumber(location.hash);
+    if (!renderActivity(requested, 'none', false)) renderActivity(Math.min(current, unlocked), 'replace', false);
+    if (preservedFocus?.isConnected && !preservedFocus.closest('[hidden]')) preservedFocus.focus({ preventScroll: true });
+  };
+  addEventListener('popstate', restoreFromHistory);
+  addEventListener('hashchange', restoreFromHistory);
+  document.querySelector('#restart').addEventListener('click', () => {
+    const n = current;
+    for (const item of initial[n - 1]) {
+      const c = item.control;
+      if (c.matches('input[type="checkbox"], input[type="radio"]')) c.checked = item.checked;
+      else if (c.tagName === 'SELECT') c.selectedIndex = item.selectedIndex;
+      else c.value = item.value;
+    }
+    state[n - 1] = blank();
+    lockControls(n, false);
+    setFeedback(n, '', '', '');
+    ownAll(n, '.pep-option[data-opt]').forEach(row => row.classList.remove('is-wrong', 'is-correct'));
+    editors[n]?.clear(); editors[n]?.sizeUp();
+    models[n]?.reset?.();
+    reflect(n);
+    renderActivity(current);
+  });
+  const objectives = document.querySelector('[data-pep-objectives]');
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); } });
+  document.addEventListener('click', event => { if (objectives.open && !objectives.contains(event.target)) objectives.open = false; });
+  let printOpened = [];
+  addEventListener('beforeprint', () => { printOpened = [...document.querySelectorAll('details:not([open])')]; printOpened.forEach(d => { d.open = true; }); });
+  addEventListener('afterprint', () => { printOpened.forEach(d => { d.open = false; }); printOpened = []; });
+  activities.forEach((_, i) => reflect(i + 1));
+  const requested = activityNumber(location.hash);
+  renderActivity(requested <= unlocked ? requested : 1, 'replace');
+})();
+</script>
+</body>
+</html>

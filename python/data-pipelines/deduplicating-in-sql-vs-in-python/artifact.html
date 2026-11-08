@@ -1,0 +1,821 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="python">
+<meta name="pep:module" content="data-pipelines">
+<meta name="pep:topic" content="Deduplicating: in SQL vs in Python">
+<meta name="pep:topic-id" content="deduplicating-in-sql-vs-in-python">
+<meta name="pep:budget-minutes" content="12">
+<meta name="pep:source" content="authoring/evidence/python/data-pipelines/deduplicating-in-sql-vs-in-python/sources.json">
+<meta name="pep:draft-status" content="first-draft-unreviewed">
+<title>Deduplicating: in SQL vs in Python · Data Pipelines: Extract, Load and Transform</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-dur-1: 120ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 0 0 12px; padding-inline-start: 24px; }
+li { margin-block-end: 4px; }
+svg { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible, .pep-btn:focus, .pep-step:focus, .pep-back:focus { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; margin: 0 0 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-objectives { position: relative; break-inside: avoid; min-width: 0; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; margin-block-start: 16px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+[data-pep-workspace] { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+[data-pep-activity-checks] { padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] > :last-child { margin-bottom: 0; }
+[data-pep-where-fits] { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+[data-pep-where-fits] h2 { font-size: 16px; line-height: 24px; font-weight: 600; margin-bottom: 8px; }
+[data-pep-where-fits] p:last-child { margin-bottom: 0; }
+.pep-hint, details[data-pep-hint] { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); break-inside: avoid; }
+.pep-hint > summary { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; align-items: center; min-height: 44px; padding-block: 8px; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { padding-block: 4px 12px; }
+.pep-hint .pep-hint { margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong); border-radius: 0; background: transparent; }
+.pep-optional { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; min-width: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent); }
+.pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 16px; }
+.pep-activity-actions .pep-btn { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn { flex: 0 1 auto; } }
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-options legend { padding: 0; margin-block-end: 8px; color: var(--pep-text-strong); font-weight: 600; max-width: 100%; }
+.pep-option { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; position: relative; min-width: 0; }
+.pep-option--plain { grid-template-columns: minmax(0, 1fr); }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pep-option input:disabled { cursor: default; }
+.pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-confidence { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-confidence .pep-option { flex: 1 1 96px; grid-template-columns: minmax(0, 1fr); text-align: center; }
+.pep-explain { display: grid; gap: 4px; margin: 8px 0 0; padding-inline-start: 20px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-feedback:empty { display: none; }
+.pep-feedback { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text); }
+.pep-feedback p { margin: 0; }
+.pep-feedback.is-correct { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-feedback.is-wrong { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-feedback.is-revealed { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-verdict { font-weight: 700; color: var(--pep-text-strong); }
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.pep-steps li { margin: 0; }
+.pep-step { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-disabled="true"] { border-color: var(--pep-line-strong); color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-back { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+.pep-activity { min-width: 0; }
+.pep-activity[hidden] { display: none; }
+.pep-code { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.pep-table-wrap { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); overflow: hidden; }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); table-layout: auto; }
+.pep-table th { text-align: left; font-weight: 600; color: var(--pep-text-strong); background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); padding: 8px 12px; overflow-wrap: anywhere; }
+.pep-table td { padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.pep-table td:first-child { font-weight: 600; color: var(--pep-text-strong); }
+.pep-field { display: grid; gap: 4px; min-width: 0; }
+.pep-field > span, .pep-label { color: var(--pep-text-strong); font: 600 13px/20px var(--pep-font-sans); }
+.pep-field input[type="text"], .pep-field select { min-height: 44px; width: 100%; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); scroll-margin-block: 16px; }
+.pep-check { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.pep-check input { width: 24px; height: 24px; margin: 0; flex: none; accent-color: var(--pep-accent); }
+.pep-model { display: grid; gap: 12px; min-width: 0; }
+.pep-stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.pep-stat { padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); min-width: 0; }
+.pep-stat b { display: block; color: var(--pep-text-strong); font: 700 20px/28px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-stat span { color: var(--pep-text-muted); font: 400 12px/16px var(--pep-font-sans); }
+.pep-log { margin: 0; min-height: 44px; padding: 12px 16px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); min-width: 0; }
+.pep-editor__bar { border-radius: 11px 11px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { display: block; width: 100%; margin: 0; padding: 12px; border: 0; resize: none; min-width: 0; min-height: 160px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow: hidden; overflow-wrap: normal; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; min-height: 64px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; cursor: pointer; overflow-wrap: anywhere; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; }
+.pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__problem .kind-hint { color: var(--pep-text-muted); font-weight: 600; }
+.pep-editor__status { border-radius: 0 0 11px 11px; padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-sources a { overflow-wrap: anywhere; }
+.pep-recap[hidden] { display: none; }
+.pep-recap { margin-block-start: 32px; padding-block-start: 16px; border-block-start: 1px solid var(--pep-line-strong); }
+.pep-recap h2 { margin-block-end: 8px; }
+.pep-recap section, .pep-recap details { margin-block-start: 16px; }
+.pep-sources > summary, .pep-cheat > summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+html:not(.is-enhanced) .pep-js-only { display: none; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+  [data-pep-workspace] { padding: 16px; }
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__code { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__gutter { line-height: 24px; font-size: 16px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-activity, [data-pep-activity], .pep-recap { display: block !important; }
+  .pep-noprint, .pep-activity-actions, nav[aria-label="Activities"], .pep-back { display: none !important; }
+  .pep-objectives > div { display: block !important; width: auto; }
+  .pep-topicbar, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional, .pep-code, .pep-table-wrap { break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .pep-optional > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker { display: none; }
+}
+</style>
+</head>
+<body>
+<main class="pep-main" id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="12">
+<header class="pep-topicbar">
+<h1 id="page-title">Deduplicating: in SQL vs in Python</h1>
+<span class="pep-topicbar__progress"><span id="pos-text">Activity 1 of 4</span> · about 12 min · <span id="prog-text">0 of 4 done</span></span>
+<details class="pep-objectives" data-pep-objectives>
+<summary aria-controls="objectives-body">Objectives</summary>
+<div id="objectives-body"><ul><li>Remove duplicates in Python with a set or a dict keyed on a chosen natural key, keeping either the first or the latest record</li><li>Remove duplicates in SQL with DISTINCT ON or ROW_NUMBER() over a partition</li><li>Choose where to deduplicate, in Python before loading or in SQL after loading, for a described data size and pipeline step, and justify the choice</li></ul></div>
+</details>
+<button class="pep-btn pep-js-only" type="button" id="restart" data-pep-reset>Restart activity</button>
+</header>
+<nav aria-label="Activities"><ol class="pep-steps"><li><a class="pep-step" href="#activity-1" data-pep-activity-link aria-current="step">Activity 1</a></li><li><a class="pep-step" href="#activity-2" data-pep-activity-link aria-disabled="true">Activity 2</a></li><li><a class="pep-step" href="#activity-3" data-pep-activity-link aria-disabled="true">Activity 3</a></li><li><a class="pep-step" href="#activity-4" data-pep-activity-link aria-disabled="true">Activity 4</a></li></ol></nav>
+<section class="pep-activity" id="activity-1" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<h2 id="activity-1-title" tabindex="-1">Activity 1: predict which duplicate survives</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-instructions>
+<h3>Predict before you read on</h3>
+<p>No teaching yet. Use what you already know, commit to a prediction, and the explanation follows.</p>
+</section>
+
+</div>
+<div data-pep-workspace="activity">
+<div id="task-1" data-pep-task>
+<h3>Your task: choose the printed result in the options below</h3>
+<ol><li>Read the code. Two rows share <code>id</code> 1, and they arrive in the order shown.</li><li>Select what prints. Nothing has been taught yet.</li><li>Press Check answer. A wrong first try gets one retry, then every option is explained.</li></ol>
+
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to one prediction, then read why each option is right or wrong.</p></section>
+<div data-interaction="predict" data-static-alt="Prediction: a dict comprehension keyed on id runs over three rows where one id repeats. Decide which row survives.">
+<pre class="pep-code"><code>rows = [
+    {&quot;id&quot;: 1, &quot;qty&quot;: 2},
+    {&quot;id&quot;: 2, &quot;qty&quot;: 5},
+    {&quot;id&quot;: 1, &quot;qty&quot;: 9},
+]
+by_id = {r[&quot;id&quot;]: r for r in rows}
+print(by_id[1][&quot;qty&quot;], len(by_id))</code></pre>
+<fieldset class="pep-options"><legend>What prints?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a1-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text"><code>9 2</code></span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a1-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text"><code>2 2</code></span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a1-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text"><code>9 3</code></span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a1-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">A <code>KeyError</code> because <code>id</code> 1 is duplicated</span></label>
+</fieldset>
+
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a1-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. Compare your prediction with Activity 2: assigning to an existing key keeps the last row.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-2" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<h2 id="activity-2-title" tabindex="-1">Activity 2: keep first or keep latest</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>Choose a natural key, then choose who wins</h3>
+<p>A natural key is what makes two records the same real thing, such as an order number. With a <code>set</code> of seen keys you keep the first row. With a dict you overwrite, keeping the last.</p>
+<p>Last in the file is not the same as latest in time. To keep the latest, compare a timestamp, because rows can arrive out of order.</p>
+<pre class="pep-code"><code>seen, kept = set(), []
+for r in rows:
+    if r[&quot;id&quot;] not in seen:
+        seen.add(r[&quot;id&quot;])
+        kept.append(r)</code></pre>
+
+
+<details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+<summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+<div class="pep-optional__body"><p data-pep-anecdote-story>A club secretary gets several membership forms from one person. Keeping whichever form sits on top of the pile is quick, but the pile was shuffled in the post. Only the date written on each form tells you which is really newest.</p><p data-pep-anecdote-map>Position in the pile can differ from the true date, so compare the date.</p></div>
+</details>
+</section>
+
+</div>
+<div data-pep-workspace="activity">
+<div id="task-2" data-pep-task data-pep-may-stall>
+<h3>Your task: use the model below, then choose the reliable way to keep the latest</h3>
+<ol><li>Select a strategy, then press Shuffle arrival order a few times.</li><li>Watch which row survives for <code>id</code> 1 under each strategy.</li><li>Select your answer and press Check answer.</li></ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The Surviving row for id 1 line in the model.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Choose one strategy, then shuffle several times and see whether the survivor changes.</p>
+</div>
+</details>
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>You used the model at least once.</p><p>You can say which strategy gives the same answer whatever the arrival order.</p></section>
+<div class="pep-model" data-interaction="explore" data-static-alt="Model with three rows for one id, updated at 09:00, 10:00 and 11:00. Keeping the first or keeping the last gives a different survivor when the arrival order changes. Comparing updated_at always keeps the 11:00 row."><fieldset class="pep-options"><legend>Strategy</legend>
+<label class="pep-option pep-option--plain"><input type="radio" name="dd-s" value="first" checked id="dd-first" data-pep-task-control><span class="pep-option__text">Keep first (a <code>set</code> of seen keys)</span></label>
+<label class="pep-option pep-option--plain"><input type="radio" name="dd-s" value="last" id="dd-last" data-pep-task-control><span class="pep-option__text">Keep last (a dict that overwrites)</span></label>
+<label class="pep-option pep-option--plain"><input type="radio" name="dd-s" value="ts" id="dd-ts" data-pep-task-control><span class="pep-option__text">Keep the greatest <code>updated_at</code></span></label>
+</fieldset>
+<div class="pep-actions"><button class="pep-btn" type="button" id="dd-shuffle">Shuffle arrival order</button></div>
+<pre class="pep-log" id="dd-log" aria-live="polite"></pre></div>
+<noscript data-section-skip><p>Model with three rows for one id, updated at 09:00, 10:00 and 11:00. Keeping the first or keeping the last gives a different survivor when the arrival order changes. Comparing updated_at always keeps the 11:00 row.</p></noscript><div data-interaction="mcq" data-static-alt="Question: choose the reliable way to keep the latest row per key when arrival order varies.">
+
+<fieldset class="pep-options"><legend>Rows can arrive in any order. How do you reliably keep the latest row per key in Python?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a2-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Keep a dict by key, and replace an entry only when the new <code>updated_at</code> is greater</span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a2-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Build a dict and let the last row overwrite</span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a2-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Add rows to a <code>set</code> of seen keys</span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a2-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Call <code>set(rows)</code> on the list of dicts</span></label>
+</fieldset>
+
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a2-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. Only comparing a timestamp keeps the true latest whatever the arrival order.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<p class="pep-noprint"><a class="pep-back" href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-3" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<h2 id="activity-3-title" tabindex="-1">Activity 3: deduplicate in SQL</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>DISTINCT ON and ROW_NUMBER</h3>
+<p><code>DISTINCT ON (key)</code> keeps the first row per key, and <code>ORDER BY</code> decides which is first, so it must start with the same key. It is PostgreSQL-specific and short. <code>ROW_NUMBER() OVER (PARTITION BY key ORDER BY ...)</code> numbers rows within each key; you then keep number 1, and it also works in other databases.</p>
+<pre class="pep-code"><code>SELECT DISTINCT ON (device_id) device_id, reading, seen_at
+FROM staging_readings
+ORDER BY device_id, seen_at DESC;</code></pre>
+
+
+
+</section>
+
+</div>
+<div data-pep-workspace="code">
+<div id="task-3" data-pep-task data-pep-may-stall>
+<h3>Your task: write the query in the editor below</h3>
+<ol><li>In <code>latest.sql</code>, replace <code>___</code> with a query on <code>staging_customers</code> returning <code>customer_id</code>, <code>email</code> and <code>updated_at</code>.</li><li>Keep one row per <code>customer_id</code>: the one with the greatest <code>updated_at</code>. Use <code>DISTINCT ON</code> or <code>ROW_NUMBER</code>.</li><li>Press Run. Output shows the input rows and your result.</li><li>A mismatch uses an attempt and you get one retry.</li></ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 3</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The ORDER BY of your query.</p>
+<p data-pep-hint-step><strong>Next step:</strong> List the key first, then the column that decides which row counts as first.</p>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="2" data-section-skip>
+<summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 3</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The sort direction on your time column.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Ask whether the row you want should sort first or last within its key, then choose the direction.</p>
+</div>
+</details></div>
+</details>
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>Output keeps exactly one row per customer.</p><p>Each kept row has the greatest <code>updated_at</code> for that customer.</p></section>
+<div class="pep-js-only" data-interaction="terminal" data-steps="2" data-static-alt="Coding task: write a query that keeps the most recently updated row per customer.">
+<div class="pep-editor">
+<div class="pep-editor__bar"><span class="pep-editor__file">latest.sql</span>
+<button class="pep-btn pep-btn--primary" type="button" id="a3-run" data-pep-submit data-pep-run>Run</button>
+<button class="pep-btn" type="button" id="a3-reset" data-pep-reset-code data-pep-lock>Reset code</button></div>
+<div class="pep-editor__code"><div class="pep-editor__gutter" aria-hidden="true">1</div>
+<label class="pep-sr" for="a3-code" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Code editor for latest.sql</label>
+<textarea class="pep-editor__input" id="a3-code" data-pep-editor data-pep-task-control spellcheck="false" autocapitalize="off" autocomplete="off">-- One row per customer_id: the most recently updated.
+___;
+</textarea></div>
+<div class="pep-editor__tabs" role="tablist" aria-label="Results for latest.sql">
+<button type="button" role="tab" id="a3-tab-problems" data-tab="problems" aria-selected="true" aria-controls="a3-panel-problems">Problems</button>
+<button type="button" role="tab" id="a3-tab-output" data-tab="output" aria-selected="false" aria-controls="a3-panel-output" tabindex="-1">Output</button></div>
+<div class="pep-editor__panel" role="tabpanel" id="a3-panel-problems" aria-labelledby="a3-tab-problems" data-panel="problems" tabindex="0"></div>
+<div class="pep-editor__panel" role="tabpanel" id="a3-panel-output" aria-labelledby="a3-tab-output" data-panel="output" tabindex="0" hidden></div>
+<div class="pep-editor__status" role="status"></div>
+</div></div>
+<noscript data-pep-no-js data-section-skip><div>
+<p><strong>JavaScript is off, so Run is not available.</strong> Write one query over staging_customers that returns one row per customer_id, keeping the greatest updated_at, using DISTINCT ON or ROW_NUMBER. Run it on your local PostgreSQL and compare it with a query that groups by customer_id and takes the maximum updated_at.</p>
+<p>Starter for latest.sql:</p>
+<pre class="pep-code"><code>-- One row per customer_id: the most recently updated.
+___;
+</code></pre>
+<p>This practice editor is not PostgreSQL. It recognises SELECT DISTINCT ON with ORDER BY, and ROW_NUMBER in a subquery or CTE filtered to 1, over staging_customers. SQL in any other form is not assessed and may be flagged even when PostgreSQL would accept it.</p>
+</div></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+<details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+<summary>Challenge (optional)</summary>
+<div class="pep-optional__body">
+<p data-pep-optional-time><strong>Optional time:</strong> about 3 minutes</p>
+<p data-pep-success-criteria><strong>Success criteria:</strong> Write the same result with whichever form you did not use, <code>DISTINCT ON</code> or <code>ROW_NUMBER</code>, and explain in one sentence when you would prefer it.</p>
+</div></details>
+<p class="pep-noprint"><a class="pep-back" href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-4" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-4-title">
+<h2 id="activity-4-title" tabindex="-1">Activity 4: decide where to deduplicate</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>Where the work belongs</h3>
+<p>Python before loading suits small data, or duplicates that need Python logic, but the seen keys must fit in memory and it only sees this batch. SQL after loading sees everything already in the table and handles more data than memory, at the cost of loading duplicates into staging first.</p>
+<p>A unique constraint plus an upsert is a third guard: it stops duplicates reaching the target whichever you choose.</p>
+
+
+
+
+</section>
+<section data-pep-where-fits aria-labelledby="where-fits-4">
+<h2 id="where-fits-4">Where this fits</h2>
+<p data-pep-fit-decision><strong>Decision:</strong> Deduplicate in Python before loading, or in SQL after loading?</p>
+<p data-pep-fit-good><strong>Good fit:</strong> Use SQL after loading for large files and for duplicates across several batches, since the table can see them all.</p>
+<p data-pep-fit-boundary><strong>Choose something else when:</strong> A small file with a key computed by Python logic, such as a normalized email. Deduplicate in Python, and keep the unique constraint as the safety net.</p>
+</section>
+</div>
+<div data-pep-workspace="activity">
+<div id="task-4" data-pep-task>
+<h3>Your task: choose the placement in the options below, then rate your confidence</h3>
+<ol><li>Read the scenario in the question. Each day brings a 40 GB file on a machine with 8 GB of memory.</li><li>Records can repeat across days. Select your answer and rate your confidence.</li><li>Press Check answer. Confidence is asked before any feedback.</li></ol>
+
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>You choose a placement, rate your confidence, and can justify the choice from the scenario.</p></section>
+<div data-interaction="mcq" data-confidence="true" data-static-alt="Question: given file size, memory and duplicates across days, choose where to deduplicate.">
+
+<fieldset class="pep-options"><legend>A 40 GB daily file on an 8 GB machine, with duplicates across days. Where should deduplication happen?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a4-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">In SQL after loading, since it can see all days and is not limited by process memory</span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a4-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">In Python with a <code>set</code> of every key, before loading</span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a4-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">In Python using <code>list(set(rows))</code></span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a4-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Nowhere: a primary key on the staging table is enough</span></label>
+</fieldset>
+<fieldset class="pep-options"><legend>How sure are you?</legend><div class="pep-confidence">
+<label class="pep-option"><input type="radio" name="a4-conf" value="low" data-pep-task-control data-pep-lock><span class="pep-option__text">Guessing</span></label>
+<label class="pep-option"><input type="radio" name="a4-conf" value="medium" data-pep-task-control data-pep-lock><span class="pep-option__text">Fairly sure</span></label>
+<label class="pep-option"><input type="radio" name="a4-conf" value="high" data-pep-task-control data-pep-lock><span class="pep-option__text">Certain</span></label>
+</div></fieldset>
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a4-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. Choose SQL after loading when data exceeds memory or duplicates span batches.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<p class="pep-noprint"><a class="pep-back" href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+</div>
+</div>
+</section>
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+<button class="pep-btn" type="button" id="previous-activity" data-pep-previous>Previous activity</button>
+<button class="pep-btn pep-btn--primary" type="button" id="next-activity" data-pep-next>Next activity</button>
+</div>
+<section class="pep-recap" data-pep-recap aria-labelledby="recap-title">
+<h2 id="recap-title">Recap</h2>
+<ul><li>Pick a natural key first. A <code>set</code> of seen keys keeps the first row; a dict that overwrites keeps the last.</li><li>To keep the latest, compare a timestamp, because file order is not time order.</li><li><code>DISTINCT ON (key)</code> with <code>ORDER BY key, time DESC</code> or <code>ROW_NUMBER() OVER (PARTITION BY ...)</code> filtered to 1 keeps one row per key in SQL.</li><li>Use Python for small batches and Python-only keys. Use SQL for large data and duplicates across batches.</li></ul>
+<details class="pep-cheat" data-pep-cheat-sheet data-section-skip><summary>Cheat sheet (optional)</summary><pre class="pep-code"><code>-- PostgreSQL only
+SELECT DISTINCT ON (k) k, v, ts FROM t ORDER BY k, ts DESC;
+
+-- Portable
+SELECT k, v, ts FROM (
+  SELECT k, v, ts,
+         ROW_NUMBER() OVER (PARTITION BY k ORDER BY ts DESC) AS rn
+  FROM t
+) ranked WHERE rn = 1;</code></pre></details>
+<details class="pep-sources" data-pep-sources data-section-skip><summary>Sources and review date (optional)</summary>
+<p><strong>First draft, not reviewed.</strong> Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.</p>
+<ul><li><a href="https://www.postgresql.org/docs/current/sql-select.html" rel="noopener">PostgreSQL: SELECT (DISTINCT ON)</a></li><li><a href="https://www.postgresql.org/docs/current/functions-window.html" rel="noopener">PostgreSQL: Window functions</a></li><li><a href="https://www.postgresql.org/docs/current/tutorial-window.html" rel="noopener">PostgreSQL tutorial: Window functions</a></li><li><a href="https://docs.python.org/3/tutorial/datastructures.html" rel="noopener">Python tutorial: Data structures</a></li></ul>
+</details>
+</section>
+</main>
+<script>
+(() => {
+  window.PEP_TOOLS = {
+    start(code, comment = '#') {
+      const strip = comment === '--' ? /--.*$/ : /#.*$/;
+      const lines = code.split('\n');
+      const clean = lines.map(l => l.replace(strip, '')).join('\n');
+      const lineOf = re => { const i = clean.split('\n').findIndex(l => re.test(l)); return i < 0 ? 0 : i + 1; };
+      const problems = [];
+      const bad = (msg, re, kind) => problems.push({ kind: kind || 'error', line: re ? lineOf(re) : 0, msg });
+      return {
+        code, clean, lines, lineOf, problems, bad,
+        flat: clean.replace(/\s+/g, ' ').trim(),
+        placeholder() { if (/___/.test(code)) { bad('Replace this placeholder with your code.', /___/); return true; } return false; },
+        hard() { return problems.filter(p => p.kind !== 'hint').length; },
+        stop(why) { return { problems, output: '', pass: false, why: why || 'A placeholder remains.' }; },
+      };
+    },
+    table(cols, rows) {
+      const cell = v => (v === null || v === undefined ? 'NULL' : String(v));
+      const widths = cols.map((c, i) => Math.max(c.length, ...rows.map(r => cell(r[c]).length)));
+      const line = vals => vals.map((v, i) => v.padEnd(widths[i])).join(' | ').trimEnd();
+      return [line(cols), widths.map(w => '-'.repeat(w)).join('-+-'), ...rows.map(r => line(cols.map(c => cell(r[c]))))].join('\n') + `\n(${rows.length} row${rows.length === 1 ? '' : 's'})`;
+    },
+  };
+  document.documentElement.classList.add('is-enhanced');
+  const lesson = document.querySelector('#lesson');
+  const activities = [...document.querySelectorAll('[data-pep-activity]')];
+  const timeline = [...document.querySelectorAll('[data-pep-activity-link]')];
+  const previous = document.querySelector('#previous-activity');
+  const next = document.querySelector('#next-activity');
+  const progressText = document.querySelector('#prog-text');
+  const positionText = document.querySelector('#pos-text');
+  window.PEP_SPEC = { activities: [{ kind: "choice", confidence: false, options: [{"k":"a","right":true,"why":"Assigning to an existing dict key replaces the value, so the last row wins and two keys remain."},{"k":"b","right":false,"why":"That would keep the first row. A dict comprehension overwrites, so the last row wins."},{"k":"c","right":false,"why":"A dict has one entry per key, so there are only two entries."},{"k":"d","right":false,"why":"Duplicates raise nothing. The later assignment simply replaces the earlier value."}],  },
+{ kind: "explore", confidence: false, options: [{"k":"a","right":true,"why":"Comparing the timestamp gives the same answer whatever the arrival order."},{"k":"b","right":false,"why":"That keeps the last to arrive, which is the latest only when the input is already sorted."},{"k":"c","right":false,"why":"That keeps the first to arrive, which may be the oldest."},{"k":"d","right":false,"why":"Dicts are unhashable, so this raises TypeError, and it would not pick by key anyway."}], needTouch: "Press Shuffle arrival order or change the strategy at least once, then choose.",model: (api) => {
+        const q = s => api.root.querySelector(s);
+        const orders = [['09:00', '10:00', '11:00'], ['11:00', '09:00', '10:00'], ['10:00', '11:00', '09:00']];
+        let turn = 0;
+        const paint = () => {
+          const o = orders[turn];
+          const s = q('input[name="dd-s"]:checked').value;
+          const pick = s === 'first' ? o[0] : s === 'last' ? o[2] : '11:00';
+          q('#dd-log').textContent = 'Arrival order for id 1: ' + o.join(', ') + '\nSurviving row for id 1: updated_at ' + pick + (pick === '11:00' ? ' (the true latest)' : ' (not the true latest)');
+        };
+        q('#dd-shuffle').addEventListener('click', () => { api.touch(); turn = (turn + 1) % orders.length; paint(); });
+        api.root.querySelectorAll('input[name="dd-s"]').forEach(r => r.addEventListener('change', () => { api.touch(); paint(); }));
+        paint();
+        return { reset: () => { turn = 0; paint(); } };
+      }, },
+{ kind: "editor", confidence: false,  starter: "-- One row per customer_id: the most recently updated.\n___;\n", settled: "Compare with the device_id example: the key leads the ORDER BY, and the time column sorts so the wanted row comes first.", run: (code) => {
+        const T = PEP_TOOLS.start(code, '--');
+        if (T.placeholder()) return T.stop();
+        const f = T.flat.replace(/;\s*$/, '');
+        const rows = [
+          { customer_id: 1, email: 'old@x.org', updated_at: '2026-01-01' },
+          { customer_id: 2, email: 'b@x.org', updated_at: '2026-02-01' },
+          { customer_id: 1, email: 'new@x.org', updated_at: '2026-03-01' },
+          { customer_id: 2, email: 'b2@x.org', updated_at: '2026-01-15' },
+        ];
+        const cols = ['customer_id', 'email', 'updated_at'];
+        let key = null, order = null, dir = 'asc', recognised = false;
+        const d = /^select\s+distinct\s+on\s*\(\s*([a-z_]\w*)\s*\)\s+(.*?)\s+from\s+staging_customers\s+order\s+by\s+(.*)$/i.exec(f);
+        const r = /row_number\s*\(\s*\)\s+over\s*\(\s*partition\s+by\s+([a-z_]\w*)\s+order\s+by\s+([a-z_]\w*)(\s+asc|\s+desc)?\s*\)/i.exec(f);
+        if (d) {
+          recognised = true;
+          key = d[1].toLowerCase();
+          const parts = d[3].split(',').map(s => s.trim().toLowerCase());
+          if (parts[0].split(/\s+/)[0] !== key) T.bad('PostgreSQL requires ORDER BY to start with the DISTINCT ON key.', /order\s+by/i);
+          const second = (parts[1] || '').split(/\s+/);
+          order = second[0] || null; dir = second[1] || 'asc';
+          if (!order) T.bad('Add a second ORDER BY column to decide which row counts as first per key.', /order\s+by/i);
+          for (const c of cols) if (!new RegExp('\\b' + c + '\\b', 'i').test(d[2]) && d[2].trim() !== '*') T.bad('Return the ' + c + ' column.', /select/i);
+        } else if (r) {
+          recognised = true;
+          key = r[1].toLowerCase(); order = r[2].toLowerCase(); dir = (r[3] || 'asc').trim().toLowerCase();
+          if (!/staging_customers/i.test(f)) T.bad('Read from staging_customers.', /from/i);
+          if (!/\bwhere\s+[a-z_]\w*\s*=\s*1\b/i.test(f)) T.bad('Filter on the row number in an outer query: WHERE rn = 1.', /row_number/i);
+          if (!/^(with\s|select\s+.*\(\s*select)/i.test(f)) T.bad('A window function cannot be filtered in the same SELECT. Wrap it in a subquery or CTE.', /row_number/i, 'limit');
+        } else {
+          T.bad('Not supported in this practice editor. Use SELECT DISTINCT ON (...) ... ORDER BY ..., or ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...) in a subquery.', null, 'limit');
+          return { problems: T.problems, output: '', pass: false, why: 'The query is outside the supported subset.' };
+        }
+        if (T.hard()) return { problems: T.problems, output: '', pass: false, why: 'Fix the items under Problems first.' };
+        const seen = new Map();
+        const sorted = [...rows].sort((a, b) => (a[order] > b[order] ? 1 : a[order] < b[order] ? -1 : 0) * (dir === 'desc' ? -1 : 1));
+        for (const row of sorted) if (!seen.has(row[key])) seen.set(row[key], row);
+        const out = [...seen.values()].sort((a, b) => a.customer_id - b.customer_id);
+        const pass = key === 'customer_id' && order === 'updated_at' && dir === 'desc' && out.length === 2;
+        if (!pass && key === 'customer_id' && order === 'updated_at' && dir !== 'desc') T.problems.push({ kind: 'hint', line: T.lineOf(/order\s+by/i), msg: 'This keeps the oldest row per customer. Check the sort direction.' });
+        if (!pass && key !== 'customer_id') T.problems.push({ kind: 'hint', line: 0, msg: 'Each customer should appear once. Check which column identifies a customer.' });
+        return {
+          problems: T.problems, pass,
+          output: 'staging_customers:\n' + PEP_TOOLS.table(cols, rows) + '\n\nYour result:\n' + PEP_TOOLS.table(cols, out) + '\n\nSimulated, not real PostgreSQL.',
+          why: pass ? 'One row per customer, and each is the most recently updated.' : 'The result does not match the checks yet; compare Output with them.',
+        };
+      }, },
+{ kind: "choice", confidence: true, options: [{"k":"a","right":true,"why":"Duplicates across days are only visible where earlier days are stored, and the database handles the volume."},{"k":"b","right":false,"why":"That set may not fit in memory, and it sees only today, missing duplicates from earlier days."},{"k":"c","right":false,"why":"This loads the whole file, and dicts are unhashable, so it fails."},{"k":"d","right":false,"why":"A plain INSERT would then fail at the first repeat, and staging usually holds raw rows on purpose."}],  }] };
+  const SPEC = window.PEP_SPEC;
+  let current = 1;
+  let unlocked = 1;
+  const blank = () => ({ attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false, touched: false });
+  const state = activities.map(blank);
+  const initial = activities.map(activity => [...activity.querySelectorAll('[data-pep-task-control]')].map(control => ({ control, value: control.value, checked: control.checked, selectedIndex: control.selectedIndex })));
+  let lastFocused = null;
+  document.addEventListener('focusin', event => { lastFocused = event.target; });
+  const activityNumber = hash => Number(/^#activity-(\d+)$/.exec(hash)?.[1] || 1);
+  const own = (n, selector) => activities[n - 1].querySelector(selector);
+  const ownAll = (n, selector) => [...activities[n - 1].querySelectorAll(selector)];
+  const reflect = n => {
+    const a = activities[n - 1], v = state[n - 1];
+    a.dataset.pepAttempts = String(v.attempts);
+    a.dataset.pepSettled = String(v.settled);
+    a.dataset.pepCompleted = String(v.completed);
+    a.dataset.pepCredit = String(v.credit);
+    a.dataset.pepGrade = String(v.grade);
+    a.dataset.pepContinue = String(v.canContinue);
+  };
+  const recap = document.querySelector('[data-pep-recap]');
+  const renderProgress = () => {
+    const done = state.filter(v => v.credit > 0).length;
+    recap.hidden = lesson.dataset.pepComplete !== 'true';
+    progressText.textContent = `${done} of ${activities.length} done`;
+    positionText.textContent = `Activity ${current} of ${activities.length}`;
+  };
+  const renderActivity = (number, historyMode = 'none', moveFocus = false) => {
+    if (!Number.isInteger(number) || number < 1 || number > activities.length || number > unlocked) return false;
+    current = number;
+    lesson.dataset.pepCurrentActivity = String(current);
+    lesson.dataset.pepUnlockedThrough = String(unlocked);
+    activities.forEach((a, i) => { a.hidden = i + 1 !== current; });
+    timeline.forEach((link, i) => {
+      const n = i + 1;
+      if (n === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+      if (n > unlocked) link.setAttribute('aria-disabled', 'true'); else link.removeAttribute('aria-disabled');
+    });
+    previous.disabled = current === 1;
+    next.disabled = current === activities.length || current >= unlocked || !state[current - 1].canContinue;
+    renderProgress();
+    try {
+      if (historyMode === 'push') history.pushState({ activity: current }, '', `#activity-${current}`);
+      if (historyMode === 'replace') history.replaceState({ activity: current }, '', `#activity-${current}`);
+    } catch {
+      if (historyMode !== 'none' && location.hash !== `#activity-${current}`) location.hash = `activity-${current}`;
+    }
+    if (moveFocus) document.querySelector(`#activity-${current} h2`)?.focus();
+    return true;
+  };
+  const setFeedback = (n, tone, verdict, body, list) => {
+    const box = own(n, '[data-pep-feedback]');
+    box.className = 'pep-feedback' + (tone ? ` is-${tone}` : '');
+    box.textContent = '';
+    if (!verdict && !body) return;
+    const p = document.createElement('p');
+    if (verdict) { const b = document.createElement('span'); b.className = 'pep-verdict'; b.textContent = verdict + ' '; p.append(b); }
+    if (body) p.append(body);
+    box.append(p);
+    if (list?.length) {
+      const ul = document.createElement('ul');
+      ul.className = 'pep-explain';
+      list.forEach(text => { const li = document.createElement('li'); li.textContent = text; ul.append(li); });
+      box.append(ul);
+    }
+  };
+  const lockControls = (n, locked) => {
+    ownAll(n, '[data-pep-submit]').forEach(b => { b.disabled = locked; });
+    ownAll(n, '[data-pep-lock]').forEach(c => { c.disabled = locked; });
+    ownAll(n, 'textarea[data-pep-editor]').forEach(t => { t.readOnly = locked; });
+  };
+  const settle = (n, grade) => {
+    const v = state[n - 1];
+    v.settled = true; v.completed = true; v.canContinue = true; v.grade = grade;
+    if (v.credit === 0) v.credit = 1;
+    reflect(n);
+    lockControls(n, true);
+    unlocked = Math.max(unlocked, Math.min(n + 1, activities.length));
+    if (state.every(s => s.credit > 0)) lesson.dataset.pepComplete = 'true';
+    renderActivity(current);
+  };
+  const choiceRun = n => {
+    const spec = SPEC.activities[n - 1];
+    const v = state[n - 1];
+    if (spec.kind === 'explore' && !v.touched) { setFeedback(n, '', 'Not checked yet.', spec.needTouch || 'Use the model above at least once, then choose.'); return; }
+    const picked = own(n, `input[name="a${n}-opt"]:checked`);
+    if (!picked) { setFeedback(n, '', 'Not checked yet.', 'Choose one option first.'); return; }
+    if (spec.confidence && !own(n, `input[name="a${n}-conf"]:checked`)) { setFeedback(n, '', 'Not checked yet.', 'Rate your confidence before seeing feedback.'); return; }
+    v.attempts += 1;
+    const chosen = spec.options.find(o => o.k === picked.value);
+    const labelFor = o => `${o.k.toUpperCase()}: ${o.why}`;
+    ownAll(n, '.pep-option[data-opt]').forEach(row => row.classList.remove('is-wrong', 'is-correct'));
+    const row = k => own(n, `.pep-option[data-opt="${k}"]`);
+    if (chosen.right) {
+      row(chosen.k).classList.add('is-correct');
+      setFeedback(n, 'correct', 'Correct.', chosen.why, spec.options.filter(o => !o.right).map(labelFor));
+      settle(n, 1);
+    } else if (v.attempts >= 2) {
+      row(chosen.k).classList.add('is-wrong');
+      const right = spec.options.find(o => o.right);
+      row(right.k).classList.add('is-correct');
+      setFeedback(n, 'revealed', 'Answered and settled, not correct.', `The correct answer is ${right.k.toUpperCase()}.`, spec.options.map(labelFor));
+      settle(n, 0);
+    } else {
+      row(chosen.k).classList.add('is-wrong');
+      setFeedback(n, 'wrong', 'Try again.', `${chosen.why} You have one more try.`);
+      reflect(n); renderActivity(current);
+    }
+  };
+  const editors = {};
+  const setupEditor = n => {
+    const spec = SPEC.activities[n - 1];
+    const input = own(n, 'textarea[data-pep-editor]');
+    const gutter = own(n, '.pep-editor__gutter');
+    const problems = own(n, '[data-panel="problems"]');
+    const output = own(n, '[data-panel="output"]');
+    const status = own(n, '.pep-editor__status');
+    const tabs = ownAll(n, '[role="tab"]');
+    const showTab = name => {
+      tabs.forEach(tab => { const on = tab.dataset.tab === name; tab.setAttribute('aria-selected', String(on)); tab.tabIndex = on ? 0 : -1; });
+      problems.hidden = name !== 'problems';
+      output.hidden = name !== 'output';
+    };
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => showTab(tab.dataset.tab));
+      tab.addEventListener('keydown', event => {
+        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+        const other = tabs.find(t => t !== tab);
+        showTab(other.dataset.tab); other.focus(); event.preventDefault();
+      });
+    });
+    const sizeUp = () => {
+      const lines = input.value.split('\n').length;
+      gutter.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+      const lh = parseFloat(getComputedStyle(input).lineHeight) || 20;
+      input.style.height = `${Math.max(160, lines * lh + 24)}px`;
+    };
+    input.addEventListener('input', sizeUp);
+    const clear = () => {
+      problems.textContent = 'Nothing to report yet. Press Run to check your code.';
+      output.textContent = 'Output appears here after Run.';
+      status.textContent = 'Not run yet.';
+      showTab('problems');
+    };
+    const render = result => {
+      problems.textContent = '';
+      if (!result.problems.length) problems.textContent = 'No problems found.';
+      result.problems.forEach(problem => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'pep-editor__problem';
+        const kind = document.createElement('span');
+        kind.className = `kind-${problem.kind}`;
+        kind.textContent = { error: 'Error', limit: 'Not supported', hint: 'Note' }[problem.kind] + (problem.line ? ` line ${problem.line}: ` : ': ');
+        button.append(kind, problem.msg);
+        button.addEventListener('click', () => {
+          const lines = input.value.split('\n');
+          const offset = lines.slice(0, Math.max(0, (problem.line || 1) - 1)).join('\n').length + (problem.line > 1 ? 1 : 0);
+          input.focus(); input.setSelectionRange(offset, offset);
+        });
+        problems.append(button);
+      });
+      output.textContent = result.output || 'No output: the practice editor could not trace this code.';
+      showTab(result.problems.some(p => p.kind !== 'hint') ? 'problems' : 'output');
+    };
+    own(n, '[data-pep-run]').addEventListener('click', () => {
+      const v = state[n - 1];
+      const code = input.value;
+      const result = spec.run(code);
+      render(result);
+      if (/___/.test(code)) {
+        status.textContent = 'Not checked: a ___ placeholder remains.';
+        setFeedback(n, '', 'Not checked yet.', 'Replace every ___ placeholder, then press Run. Placeholders do not use an attempt.');
+        return;
+      }
+      v.attempts += 1;
+      if (result.pass) {
+        status.textContent = 'Passed: the practice checks match.';
+        setFeedback(n, 'correct', 'Correct.', result.why);
+        settle(n, 1);
+      } else if (v.attempts >= 2) {
+        status.textContent = 'Settled: the practice checks did not match.';
+        setFeedback(n, 'revealed', 'Answered and settled, not correct by this editor\'s checks.', `${result.why} This editor checks only the forms it lists, so valid code in another form is unassessed here, not proven wrong. ${spec.settled} Restart activity lets you rewrite this without losing other work.`);
+        settle(n, 0);
+      } else {
+        status.textContent = 'Mismatch: read Problems and Output, then run again.';
+        setFeedback(n, 'wrong', 'Try again.', `${result.why} This editor checks only the forms it lists, so valid code in another form is unassessed here, not proven wrong. You have one more try.`);
+        reflect(n); renderActivity(current);
+      }
+    });
+    own(n, '[data-pep-reset-code]').addEventListener('click', () => {
+      if (input.readOnly) return;
+      input.value = spec.starter;
+      sizeUp(); clear();
+    });
+    clear(); sizeUp();
+    editors[n] = { clear, sizeUp };
+  };
+  const models = {};
+  SPEC.activities.forEach((spec, index) => {
+    const n = index + 1;
+    if (spec.kind === 'editor') setupEditor(n);
+    else own(n, '[data-pep-check]').addEventListener('click', () => choiceRun(n));
+    if (spec.model) {
+      models[n] = spec.model({
+        root: activities[index],
+        touch: () => { state[n - 1].touched = true; },
+      });
+    }
+  });
+  timeline.forEach((link, i) => link.addEventListener('click', event => { event.preventDefault(); renderActivity(i + 1, 'push', true); }));
+  document.querySelectorAll('[data-pep-back-link]').forEach(link => link.addEventListener('click', event => { event.preventDefault(); renderActivity(activityNumber(link.hash), 'push', true); }));
+  previous.addEventListener('click', () => renderActivity(current - 1, 'push', true));
+  next.addEventListener('click', () => renderActivity(current + 1, 'push', true));
+  const restoreFromHistory = () => {
+    const preservedFocus = lastFocused;
+    const requested = activityNumber(location.hash);
+    if (!renderActivity(requested, 'none', false)) renderActivity(Math.min(current, unlocked), 'replace', false);
+    if (preservedFocus?.isConnected && !preservedFocus.closest('[hidden]')) preservedFocus.focus({ preventScroll: true });
+  };
+  addEventListener('popstate', restoreFromHistory);
+  addEventListener('hashchange', restoreFromHistory);
+  document.querySelector('#restart').addEventListener('click', () => {
+    const n = current;
+    for (const item of initial[n - 1]) {
+      const c = item.control;
+      if (c.matches('input[type="checkbox"], input[type="radio"]')) c.checked = item.checked;
+      else if (c.tagName === 'SELECT') c.selectedIndex = item.selectedIndex;
+      else c.value = item.value;
+    }
+    state[n - 1] = blank();
+    lockControls(n, false);
+    setFeedback(n, '', '', '');
+    ownAll(n, '.pep-option[data-opt]').forEach(row => row.classList.remove('is-wrong', 'is-correct'));
+    editors[n]?.clear(); editors[n]?.sizeUp();
+    models[n]?.reset?.();
+    reflect(n);
+    renderActivity(current);
+  });
+  const objectives = document.querySelector('[data-pep-objectives]');
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); } });
+  document.addEventListener('click', event => { if (objectives.open && !objectives.contains(event.target)) objectives.open = false; });
+  let printOpened = [];
+  addEventListener('beforeprint', () => { printOpened = [...document.querySelectorAll('details:not([open])')]; printOpened.forEach(d => { d.open = true; }); });
+  addEventListener('afterprint', () => { printOpened.forEach(d => { d.open = false; }); printOpened = []; });
+  activities.forEach((_, i) => reflect(i + 1));
+  const requested = activityNumber(location.hash);
+  renderActivity(requested <= unlocked ? requested : 1, 'replace');
+})();
+</script>
+</body>
+</html>

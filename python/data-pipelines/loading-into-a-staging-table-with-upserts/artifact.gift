@@ -1,0 +1,39 @@
+// Practice quiz: Loading into a staging table with upserts
+// Formative, low-stakes retention practice. First draft, not reviewed. Titles name the objective id each item practises.
+
+$CATEGORY: python/data-pipelines/loading-into-a-staging-table-with-upserts
+
+::o1 per row commit::What is the main reliability risk of committing after every row of a 1000-row load? {
+=A crash leaves a partial load in the table #Correct. Every committed row survives the crash.
+~The rows are stored out of order #Not quite. Order is not the concern here.
+~PostgreSQL refuses more than 100 commits #Not quite. There is no such limit.
+~The primary key stops working #Not quite. Constraints still apply on every commit.
+}
+
+::o1 copy limits::Why might a pipeline load a file with executemany rather than COPY? {
+=COPY has no ON CONFLICT handling, so upserting directly needs INSERT #Correct. A common alternative is COPY into a staging table, then upsert from it.
+~COPY cannot run from psycopg #Not quite. psycopg supports it through Cursor.copy.
+~executemany is always faster than COPY #Not quite. COPY is the efficient bulk route; the reason here is conflict handling.
+~COPY ignores transactions #Not quite. COPY runs inside the usual transaction behaviour.
+}
+
+::o2 excluded::In ON CONFLICT (id) DO UPDATE SET qty \= EXCLUDED.qty, what does EXCLUDED refer to? {
+=The row that was proposed for insertion #Correct. EXCLUDED holds the incoming values; the table name refers to the existing row.
+~The row already in the table #Not quite. That is referenced with the table name, not EXCLUDED.
+~Rows removed by an earlier DELETE #Not quite. It has no connection to deletes.
+~A table you must create first #Not quite. It is a special name available inside the clause.
+}
+
+::o2 target::ON CONFLICT (email) raises an error saying there is no matching constraint. What is the fix? {
+=Add a unique constraint or unique index on email #Correct. The conflict target must match one.
+~Switch to DO NOTHING #Not quite. With that target listed, a matching constraint is still needed.
+~Add a trailing comma to the columns #Not quite. The syntax is fine; the constraint is missing.
+~Run the statement outside a transaction #Not quite. Transactions are unrelated to this error.
+}
+
+::o3 idempotent::Which statement best describes an idempotent load? {
+=Running it again with the same input leaves the same table #Correct. That is what makes a blind rerun safe.
+~It can only be run once #Not quite. Idempotent loads are designed to be repeated safely.
+~It never fails #Not quite. It can fail; a failure just leaves nothing to clean up.
+~It deletes the table before each run #Not quite. Deleting first is a different approach and can lose data if the load then fails outside a transaction.
+}

@@ -1,0 +1,39 @@
+// Practice quiz: ELT: transforming in SQL after loading
+// Formative, low-stakes retention practice. First draft, not reviewed. Titles name the objective id each item practises.
+
+$CATEGORY: python/data-pipelines/elt-transforming-in-sql-after-loading
+
+::o1 elt order::What defines ELT? {
+=Load raw rows first, then transform them inside the database #Correct. The transform runs where the data lives, after loading.
+~Transform in the program, then load the results #Not quite. That is ETL.
+~Extract with SQL only and never use Python #Not quite. Python still drives the load and runs the SQL.
+~Load only rows that are already clean #Not quite. ELT keeps raw rows on purpose.
+}
+
+::o1 reason::A staging table keeps yesterday's raw rows. A transform bug is found today. What does that make cheaper? {
+=Rerunning the corrected SQL without refetching the source #Correct. The raw rows are already in the database.
+~Skipping validation next time #Not quite. Validation is still needed.
+~Removing the target table permanently #Not quite. The target table is still what readers use.
+~Avoiding transactions for the rerun #Not quite. The rerun should still be transactional.
+}
+
+::o2 cast::A staging column qty is text. Why must a filter cast it with qty\:\:int before comparing it with 0? {
+=PostgreSQL rejects comparing text with an integer, so cast first #Correct. There is no implicit text-to-integer cast for that comparison.
+~The cast makes the query faster #Not quite. The reason is type correctness, not speed.
+~It changes the staging column permanently #Not quite. A cast in a query does not alter the table.
+~It is optional style only #Not quite. Without the cast the statement fails.
+}
+
+::o2 cte::What does a common table expression do in WITH cleaned AS (SELECT ...) INSERT INTO t SELECT ... FROM cleaned? {
+=Names a temporary result that the INSERT reads from #Correct. It exists only for that one statement.
+~Creates a permanent table named cleaned #Not quite. That is CREATE TABLE AS.
+~Runs after the INSERT finishes #Not quite. The INSERT reads its result.
+~Requires a separate transaction #Not quite. The whole statement is one unit.
+}
+
+::o3 autocommit failure::DELETE FROM target then INSERT ... SELECT run in autocommit mode, and the INSERT fails. What is left in target? {
+=Nothing, because the DELETE already committed #Correct. Each autocommitted statement stands alone.
+~The old rows, because the failure rolled everything back #Not quite. That is what one transaction gives you, not autocommit.
+~The new rows #Not quite. The INSERT failed.
+~A mix of old and new rows #Not quite. The old rows were already deleted.
+}
