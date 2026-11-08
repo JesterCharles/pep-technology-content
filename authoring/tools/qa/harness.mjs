@@ -1121,8 +1121,21 @@ async function checkBehavior(browser, topic) {
       }
       return required;
     };
-    for (let index = 0; index < await optionals.count(); index++) {
+    // Stepped pages hide every non-current step, so an activity-owned optional can be hidden at load. Reach its owner
+    // through the page's own forward navigation: replay the success route only until that optional's summary shows.
+    let ownerAction = 0;
+    let checkedOptionals = 0;
+    const optionalCount = await optionals.count();
+    for (let index = 0; index < optionalCount; index++) {
       const disclosure = optionals.nth(index);
+      if (!spec.guidance && !(await disclosure.locator(":scope > summary").isVisible())) {
+        const owner = await disclosure.evaluate((element) => element.closest("[data-step]")?.getAttribute("data-step") ?? null);
+        if (!owner) throw new Error("hidden optional disclosure has no owning step");
+        while (!(await disclosure.locator(":scope > summary").isVisible())) {
+          if (ownerAction >= spec.routes.success.length) throw new Error(`optional disclosure owner step ${owner} is never reached by the success route`);
+          await perform(page, spec.routes.success[ownerAction++]);
+        }
+      }
       if (spec.guidance) {
         const activityNumber = await disclosure.evaluate((element) => {
           const activities = [...document.querySelectorAll("[data-pep-activity]")];
@@ -1148,7 +1161,10 @@ async function checkBehavior(browser, topic) {
       if (JSON.stringify(after) !== JSON.stringify(before)) {
         throw new Error(`optional disclosure changed required state from ${JSON.stringify(before)} to ${JSON.stringify(after)}`);
       }
+      checkedOptionals++;
     }
+    const finalCount = await optionals.count();
+    if (checkedOptionals !== finalCount) throw new Error(`optional accounting checked ${checkedOptionals} of ${finalCount} disclosures`);
     if (spec.guidance?.hints) await exerciseSequentialHints(page, { prepared: true });
   });
 }
@@ -1657,6 +1673,52 @@ export async function updateReceipt(ctx, topic, rule, passed, detail, writeEvide
   await writeFile(receiptFile, `${JSON.stringify(receipt, null, 2)}\n`);
 }
 
+// Strings the HTML parser produces from public page bytes: text nodes, attribute
+// values and template contents after character-reference decoding. Scripting is
+// off, so <noscript> content parses as elements, and nothing is loaded. Only
+// public bytes enter this browser; private values are compared afterwards.
+async function parsedHtmlStrings(html) {
+  const browser = await launchChromium();
+  try {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    await context.route("**/*", (route) => route.abort());
+    const page = await context.newPage();
+    await page.setContent(html, { waitUntil: "domcontentloaded" });
+    return await page.evaluate(() => {
+      const strings = [];
+      const visit = (node) => {
+        if (node.nodeType === Node.TEXT_NODE) strings.push(node.nodeValue);
+        for (const attribute of node.attributes ?? []) strings.push(attribute.value);
+        if (node.tagName === "TEMPLATE") visit(node.content);
+        for (const child of node.childNodes) visit(child);
+      };
+      visit(document);
+      return strings;
+    });
+  } finally {
+    await browser.close();
+  }
+}
+
+// Every string JSON.parse produced from a QA path, object keys included.
+function parsedJsonStrings(value) {
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(parsedJsonStrings);
+  if (value && typeof value === "object") {
+    return Object.entries(value).flatMap(([key, item]) => [key, ...parsedJsonStrings(item)]);
+  }
+  return [];
+}
+
+class PrivateRouteFailure extends Error {}
+
+function privateRouteFailure(route, phase, details = []) {
+  const diagnostic = [`route=${route}`, `phase=${phase}`, ...details].join(" ");
+  return new PrivateRouteFailure(
+    `private success route failed; no private values were recorded [${diagnostic}]`,
+  );
+}
+
 export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
   const git = (args) => spawnSync("git", args, { cwd: ctx.root, encoding: "utf8" });
   const top = git(["rev-parse", "--show-toplevel"]);
@@ -1718,8 +1780,11 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
   );
   // Exact in-memory leak comparison: every resolved private value is compared
   // against every declared public learner and companion surface of the topic.
-  // Only exact and whitespace-collapsed occurrences are caught here; renamed,
-  // reshaped, assembled or encoded leaks remain an independent review duty.
+  // Raw bytes are always scanned; the page's parsed strings and the QA path's
+  // parsed JSON strings are scanned too, so HTML character references and JSON
+  // string escapes do not hide an exact value. Only those two syntaxes are
+  // decoded: renamed, reshaped, assembled, digest or otherwise encoded leaks
+  // remain an independent review duty.
   const collapse = (text) => text.replace(/\s+/gu, " ");
   const privateValues = [...new Set(flatActions
     .map((action, index) => (Object.hasOwn(action, "valueFrom") ? resolvedActions[index].value : null))
@@ -1730,8 +1795,13 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
       const bytes = await readFile(surface).catch(() => null);
       if (!bytes) continue;
       const text = bytes.toString("utf8");
-      const collapsed = collapse(text);
-      if (privateValues.some((value) => text.includes(value) || collapsed.includes(collapse(value)))) {
+      const candidates = [text];
+      if (surface === topic.html) candidates.push(...await parsedHtmlStrings(text));
+      if (surface === topic.spec) candidates.push(...parsedJsonStrings(JSON.parse(text)));
+      if (candidates.some((candidate) => {
+        const collapsed = collapse(candidate);
+        return privateValues.some((value) => candidate.includes(value) || collapsed.includes(collapse(value)));
+      })) {
         throw new Error("a private success value appears in public topic bytes; no private values were recorded");
       }
     }
@@ -1749,33 +1819,60 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
     if (!validateQaPath(candidate)) throw new Error(`private overlay ${name} route or postconditions do not match the public QA schema`);
   }
   const browser = await launchChromium();
+  let activeRoute = "success";
+  let activePhase = "actions";
   // Gate-owned success postconditions: the runner itself requires every
   // declared answer-sensitive task to genuinely pass. Overlay- or page-level
   // completion claims are never trusted as proof, so all-fail and mixed runs
   // fail even on an engine that settles failed attempts as complete.
   const assertDeclaredTasksPassed = async (target) => {
-    for (const declaration of declaredTasks) {
-      const state = await target.locator(declaration.task).evaluate((element) => {
-        const activity = element.closest("[data-pep-activity]");
-        if (!activity) return null;
-        return {
-          completed: activity.dataset.pepCompleted ?? null,
-          credit: activity.dataset.pepCredit ?? null,
-          grade: activity.dataset.pepGrade ?? null,
-        };
-      });
-      if (!state) throw new Error("declared task has no gate-readable activity state");
-      if (state.completed !== "true" || state.credit !== "1" || state.grade !== "1") {
-        throw new Error("declared task did not genuinely pass");
+    for (let index = 0; index < declaredTasks.length; index++) {
+      const declaration = declaredTasks[index];
+      let state = null;
+      try {
+        state = await target.locator(declaration.task).evaluate((element) => {
+          const activity = element.closest("[data-pep-activity]");
+          if (!activity) return null;
+          return {
+            completed: activity.dataset.pepCompleted ?? null,
+            credit: activity.dataset.pepCredit ?? null,
+            grade: activity.dataset.pepGrade ?? null,
+          };
+        });
+      } catch {
+        // The fixed false checks below safely represent unavailable state.
+      }
+      const checks = {
+        completed: state?.completed === "true",
+        credit: state?.credit === "1",
+        grade: state?.grade === "1",
+      };
+      if (!checks.completed || !checks.credit || !checks.grade) {
+        throw privateRouteFailure(activeRoute, "declared-task-state", [
+          `task=${index + 1}`,
+          `id=${declaration.task.slice(1)}`,
+          `completed=${checks.completed}`,
+          `credit=${checks.credit}`,
+          `grade=${checks.grade}`,
+        ]);
       }
     }
     const guidanceRoot = target.locator("[data-pep-guidance-contract]");
-    if (await guidanceRoot.count()) {
-      const complete = await guidanceRoot.first().getAttribute("data-pep-complete");
-      if (complete !== "true") throw new Error("guided page did not genuinely complete");
+    let pageComplete = true;
+    try {
+      if (await guidanceRoot.count()) {
+        pageComplete = await guidanceRoot.first().getAttribute("data-pep-complete") === "true";
+      }
+    } catch {
+      pageComplete = false;
+    }
+    if (!pageComplete) {
+      throw privateRouteFailure(activeRoute, "page-completion", ["complete=false"]);
     }
   };
-  const runTopLevel = async (actions, keyboard = false) => {
+  const runTopLevel = async (routeName, actions, keyboard = false) => {
+    activeRoute = routeName;
+    activePhase = "actions";
     const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
     const page = await context.newPage();
     let attemptedExternalLoad = false;
@@ -1788,18 +1885,24 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
     try {
       await page.goto(pathToFileURL(topic.html).href, { waitUntil: "load" });
       await execute(page, actions, { keyboard });
+      activePhase = "completion";
       await assertState(page, overlay.completion);
+      activePhase = "progress";
       await assertState(page, overlay.progress);
+      activePhase = "declared-task-state";
       await assertDeclaredTasksPassed(page);
+      activePhase = "external-load";
       if (attemptedExternalLoad) throw new Error("external load");
     } finally {
       await context.close();
     }
   };
   try {
-    await runTopLevel(resolvedRoutes.success);
-    await runTopLevel(resolvedRoutes.wrongFirst);
-    await runTopLevel(resolvedRoutes.keyboard, true);
+    await runTopLevel("success", resolvedRoutes.success);
+    await runTopLevel("wrongFirst", resolvedRoutes.wrongFirst);
+    await runTopLevel("keyboard", resolvedRoutes.keyboard, true);
+    activeRoute = "sandbox";
+    activePhase = "actions";
     const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
     const page = await context.newPage();
     let sandboxExternalLoad = false;
@@ -1807,15 +1910,20 @@ export async function runPrivateOverlay(ctx, overlayFile, options = {}) {
     try {
       const frame = await sandboxFrame(page, topic);
       await execute(frame, resolvedRoutes.sandbox);
+      activePhase = "completion";
       await assertState(frame, overlay.completion);
+      activePhase = "progress";
       await assertState(frame, overlay.progress);
+      activePhase = "declared-task-state";
       await assertDeclaredTasksPassed(frame);
+      activePhase = "external-load";
       if (sandboxExternalLoad) throw new Error("external load");
     } finally {
       await context.close();
     }
-  } catch {
-    throw new Error("private success route failed; no private values were recorded");
+  } catch (error) {
+    if (error instanceof PrivateRouteFailure) throw error;
+    throw privateRouteFailure(activeRoute, activePhase);
   } finally {
     await browser.close();
   }
