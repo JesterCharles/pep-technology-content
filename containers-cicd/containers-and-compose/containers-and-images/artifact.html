@@ -1,0 +1,703 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="containers-cicd">
+<meta name="pep:module" content="containers-and-compose">
+<meta name="pep:topic" content="Containers and images (Docker and Podman)">
+<meta name="pep:topic-id" content="containers-and-images">
+<meta name="pep:budget-minutes" content="12">
+<meta name="pep:source" content="authoring/evidence/containers-cicd/containers-and-compose/containers-and-images/sources.json">
+<title>Containers and images (Docker and Podman)</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  #current-teaching > [data-step][hidden], #current-task > [data-step][hidden], #current-control > [data-step][hidden] { display: block !important; }
+  [data-static-alt]::after { content: attr(data-static-alt); display: block; margin-top: 8px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); white-space: normal; }
+  .log { height: auto; overflow: visible; }
+}
+/* pep:component terminal@1 css */
+.term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
+.term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
+.term-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px var(--s3);margin:0;padding:var(--s1) var(--s3);border-bottom:1px solid var(--rule);font-size:15px;color:var(--muted)}
+.term-top span:first-child{font-weight:700}
+.log{height:220px;overflow-y:auto;padding:var(--s2) var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.log .c{font-weight:700}
+.log .c::before{content:attr(data-p) " ";color:var(--teal);font-weight:700}
+.log .e{color:var(--red)}
+.log .h{color:var(--muted);font-family:var(--sans)}
+.cmdline{display:flex;gap:var(--s2);align-items:center;padding:0 var(--s1) 0 var(--s3);border-top:1px solid var(--rule)}
+.cmdline label{flex:0 1 auto;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 16px var(--mono);color:var(--teal)}
+.cmdline{padding:var(--s2) var(--s2) var(--s2) var(--s3)}
+.cmdline input{flex:1 1 auto;min-width:0;min-height:44px;padding:var(--s2) 0;font:16px var(--mono);color:var(--ink);background:transparent;border:0;caret-color:var(--teal)}
+.cmdline input::placeholder{color:var(--muted);opacity:1}
+.cmdline input:focus,.cmdline input:focus-visible{outline:none}
+.cmdline .runbtn{flex:0 0 auto;min-height:36px;padding:var(--s1) var(--s3);background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:600}
+.cmdline .runbtn:hover{border-color:var(--ink)}
+.simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+/* /pep:component terminal css */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.nojs { margin: 16px; padding: 12px 16px; border: 1px solid var(--pep-warning); border-radius: var(--pep-radius-md); background: var(--pep-warning-soft); color: var(--pep-text-strong); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+button, .pep-option { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+/* topic bar */
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { display: flex; flex: 1 1 260px; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress .pep-progress { flex: 1 1 96px; width: 96px; max-width: 160px; }
+.pep-topicbar .pep-btn { flex: 0 0 auto; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.pep-progress > span { height: 8px; border-radius: var(--pep-radius-pill); background: var(--pep-control); border: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); border-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning-soft); border: 1px dashed var(--pep-warning); }
+/* regions */
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region > * { min-width: 0; }
+.pep-goals { margin: 0; padding: 12px 16px; list-style: none; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-goals > li:first-child { border-top: 0; }
+.pep-goals .state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; }
+.pep-goals .is-done .state { color: var(--pep-success); }
+.pep-goals-h { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0 0 -8px; }
+.pep-steps-list { margin: 0; padding-left: 24px; }
+.pep-steps-list > li + li { margin-top: 8px; }
+.pep-steps-list .state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-left: 8px; white-space: nowrap; }
+.pep-steps-list .is-done .state { color: var(--pep-success); }
+.pep-summary { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0; }
+.pep-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 4px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); background: var(--pep-control); color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); }
+.pep-chip--ok { border-color: var(--pep-success); color: var(--pep-success); background: var(--pep-success-soft); }
+.pep-chip--no { border-style: dashed; border-color: var(--pep-danger); color: var(--pep-danger); background: var(--pep-danger-soft); }
+.pep-chip--wait { border-style: dotted; border-color: var(--pep-warning); color: var(--pep-warning); background: var(--pep-warning-soft); }
+/* cards, callouts, buttons */
+.pep-card { background: var(--pep-card); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); padding: 16px; min-width: 0; }
+.pep-callout { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text); }
+.pep-callout p { margin: 0 0 8px; } .pep-callout p:last-child { margin: 0; }
+.pep-callout ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-callout--info { background: var(--pep-accent-soft); border-color: var(--pep-accent); }
+.pep-callout--success { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-callout--warning { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-callout--danger { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); max-width: 100%; text-align: center; }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+.pep-btn:disabled, .pep-btn[aria-disabled="true"] { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-btn[aria-pressed="true"] { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); }
+.pep-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+/* options, confidence, feedback */
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-options > legend, .pep-legend { padding: 0; margin: 0 0 8px; font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-option { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; min-width: 0; }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option.is-correct .pep-option__key { background: var(--pep-success); color: var(--pep-page); }
+.pep-option.is-wrong .pep-option__key { background: var(--pep-danger); color: var(--pep-page); }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+.pep-option input:disabled { cursor: default; }
+.pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-option:has(input:disabled) { cursor: default; }
+.pep-explain { display: block; margin: 4px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-tag { display: inline-block; margin: 4px 8px 0 0; padding: 0 8px; border: 1px solid currentColor; border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); }
+.pep-tag--ok { color: var(--pep-success); } .pep-tag--no { color: var(--pep-danger); } .pep-tag--me { color: var(--pep-text-strong); }
+.pep-conf { display: grid; grid-template-columns: repeat(3, minmax(96px, 1fr)); gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-conf > legend { grid-column: 1 / -1; padding: 0; margin: 0 0 8px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-conf .pep-option { grid-template-columns: minmax(0, 1fr); text-align: center; }
+@media (max-width: 480px) { .pep-conf { grid-template-columns: minmax(0, 1fr); } }
+.pep-verdict { font-weight: 700; }
+.pep-verdict--correct { color: var(--pep-success); } .pep-verdict--wrong { color: var(--pep-danger); } .pep-verdict--revealed { color: var(--pep-warning); }
+.feedback:empty { display: none; }
+.feedback ul { margin: 4px 0 0; padding-left: 20px; }
+.feedback li + li { margin-top: 4px; }
+.conf-report { color: var(--pep-text-muted); }
+/* model and code */
+.model { margin: 0; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-bottom: 8px; }
+.boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.box { padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.box h3 { font-size: 14px; line-height: 20px; margin: 0 0 4px; }
+.box ul { margin: 0; padding-left: 18px; font: 400 14px/20px var(--pep-font-sans); }
+.box p { margin: 0; font: 400 14px/20px var(--pep-font-sans); }
+.mnote { margin: 8px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-code, .teach pre, .recap pre { margin: 0 0 12px; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.outlog { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; margin: 8px 0 0; padding: 12px 16px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--pep-text-strong); }
+@media (max-width: 480px) { .outlog { max-height: 180px; } }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); }
+.pep-table td, .pep-table th { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; text-align: left; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.recap ul { padding-left: 20px; }
+.recap details, .sources { margin: 12px 0; padding: 0 0 0 0; border-block: 1px solid var(--pep-line-strong); }
+.recap summary, .sources summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-weight: 600; color: var(--pep-text-strong); }
+.next-topic { font-weight: 600; }
+.next-topic a { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; }
+.complete { margin: 0; }
+/* terminal@1 bridge: keep the drift-checked fragment, adapt sizes around it */
+.term { border-radius: var(--pep-radius-sm); }
+.term-top { font: 600 13px/20px var(--pep-font-sans); }
+.log { font: 400 14px/20px var(--pep-font-mono); max-height: 240px; overscroll-behavior: contain auto; }
+.cmdline .runbtn { min-height: 44px; min-width: 64px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); }
+.cmdline input { scroll-margin-block: 16px; }
+@media (max-width: 480px) { .log { height: 180px; } .cmdline { flex-wrap: wrap; row-gap: 4px; } .cmdline label { flex: 1 0 100%; max-width: none; } }
+/* editor shell */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__secondary { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { margin: 0; padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font: inherit; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; cursor: pointer; white-space: normal; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-editor noscript, .pep-noscript { display: block; padding: 12px; font: 400 14px/20px var(--pep-font-sans); }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__gutter { line-height: 24px; font-size: 16px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* optional disclosures */
+.pep-optional { min-width: 0; border-block: 1px solid var(--pep-line-strong); background: transparent; break-inside: avoid; }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+@media print { .pep-optional > summary { list-style: none; } .pep-optional > summary::-webkit-details-marker { display: none; } }
+/* figure */
+.pep-figure { margin: 0; }
+.pep-figure figcaption { margin-top: 8px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.state[data-state]::before { content: attr(data-state); }
+summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; }
+.feedback details { margin: 8px 0; }
+.pep-optional-area { display: flex; flex-direction: column; gap: 8px; }
+</style>
+</head>
+<body>
+<noscript><p class="nojs">The reading, task steps, file readings and recap below work without JavaScript. Turn JavaScript on to use the practice terminal, editor checks and answer feedback.</p></noscript>
+<main id="lesson" class="pep-main" data-pep-responsive>
+  <header class="pep-topicbar">
+    <h1>Containers and images (Docker and Podman)</h1>
+    <div class="pep-topicbar__progress" data-pep-progress id="progress"><span id="prog-text">Activity 1 of 5 · 0 done</span><span>about 12 min</span><span class="pep-progress" id="progress-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></div>
+    <button type="button" class="pep-btn" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+    <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+  </header>
+  <div class="pep-regions" id="stage" data-step="1">
+    <section class="pep-region" id="panel" data-pep-instructions aria-label="Reading and instructions">
+      <div id="current-teaching" class="teach">
+<div data-step="1">
+  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+<p>Practice prediction, not scored.</p>
+</div>
+<div data-step="2" data-pep-teaching>
+  <h2 id="teach-2-h" tabindex="-1">Image: template. Container: instance.</h2>
+<p>An <strong>image</strong> is a read-only, layered template: files, settings and a start command. It never changes once built.</p>
+  <p>A <strong>container</strong> is one instance of an image, with its own thin writable layer. Running or stopped, it exists until you remove it.</p>
+  <p><code>docker run IMAGE</code> creates a new container every time; <code>docker ps</code> lists running ones.</p>
+</div>
+<div data-step="3" data-pep-teaching>
+  <h2 id="teach-3-h" tabindex="-1">Three run flags</h2>
+<ul>
+    <li><code>--name web</code> names it; otherwise Docker invents a name. Names are unique.</li>
+    <li><code>-d</code> (detached) runs it in the background and prints its ID.</li>
+    <li><code>--rm</code> removes the container when its main process exits. Without it, the container stays as <code>Exited</code>.</li>
+  </ul>
+  <p><code>docker ps</code> shows running containers; <code>docker ps -a</code> adds stopped ones. Removing a container never removes its image.</p>
+</div>
+<div data-step="4" data-pep-teaching>
+  <h2 id="teach-4-h" tabindex="-1">Podman runs the same images</h2>
+<p>Docker and Podman follow the open OCI standards, so they run the same images. On Linux, Podman is <strong>daemonless</strong>: no background service.</p>
+  <p>On macOS and Windows, Podman runs containers inside a Linux virtual machine: <code>podman machine init</code> creates it, <code>podman machine start</code> starts it.</p>
+  <p>Core commands match: <code>podman build</code>, <code>run</code>, <code>ps</code>, <code>images</code>. A full image name such as <code>docker.io/library/nginx:alpine</code> avoids a registry prompt.</p>
+</div>
+<div data-step="5" data-pep-teaching>
+  <h2 id="teach-5-h" tabindex="-1">Apply it to a new command</h2>
+<p>Read each flag, then decide.</p>
+</div>
+<div data-step="6" data-pep-recap class="recap">
+  <h2 id="teach-6-h" tabindex="-1">Recap</h2>
+<ul><li>Image: read-only template. Container: a running or stopped instance. One image, many containers.</li><li><code>--name</code> names it, <code>-d</code> runs it in the background, <code>--rm</code> deletes the container, never the image, on exit.</li><li>Podman runs the same OCI images and core commands: daemonless on Linux, a <code>podman machine</code> VM on macOS and Windows.</li></ul>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <table><tr><td><code>docker run -d --name web nginx:alpine</code></td><td>new background container named web</td></tr><tr><td><code>docker run --rm IMAGE</code></td><td>remove the container when it exits</td></tr><tr><td><code>docker ps</code> / <code>docker ps -a</code></td><td>running / all containers</td></tr><tr><td><code>docker stop web</code> / <code>docker rm web</code></td><td>stop / remove a container</td></tr><tr><td><code>podman machine init</code>, <code>podman machine start</code></td><td>create and start the Linux VM (macOS, Windows)</td></tr><tr><td><code>podman run</code>, <code>ps</code>, <code>images</code>, <code>build</code></td><td>same core commands as Docker</td></tr></table>
+  </details>
+  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live official sources on 2026-10-13. Versions shown: Docker Engine 29 and Podman 6 (the course compatibility baseline). Terminal output is simulated and shortened where marked; IDs, times and some message wording differ on a real machine.</p><ul><li><a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/" rel="noopener">Docker Docs: What is a container?</a></li><li><a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/" rel="noopener">Docker Docs: What is an image?</a></li><li><a href="https://docs.docker.com/reference/cli/docker/container/run/" rel="noopener">Docker CLI reference: docker container run (-d, --rm, --name)</a></li><li><a href="https://docs.docker.com/reference/cli/docker/container/ls/" rel="noopener">Docker CLI reference: docker container ls (docker ps, -a)</a></li><li><a href="https://docs.podman.io/en/latest/index.html" rel="noopener">Podman documentation: What is Podman?</a></li><li><a href="https://docs.podman.io/en/latest/markdown/podman-machine.1.html" rel="noopener">Podman documentation: podman machine</a></li><li><a href="https://docs.podman.io/en/latest/markdown/podman-machine-start.1.html" rel="noopener">Podman documentation: podman machine start</a></li><li><a href="https://docs.podman.io/en/latest/markdown/podman-run.1.html" rel="noopener">Podman documentation: podman run</a></li><li><a href="https://github.com/opencontainers/image-spec/blob/main/spec.md" rel="noopener">OCI Image Format Specification</a></li></ul></details>
+  <p class="next-topic">Next topic: <a href="../image-layers-and-build-caching/artifact.html" rel="noopener">Reading: image layers and build caching</a></p>
+</div>
+      </div>
+      <p class="pep-goals-h" id="goals-h">Goals</p>
+      <ul class="pep-goals" data-pep-objectives aria-labelledby="goals-h">
+      <li data-obj="o1"><span>Tell an image (a read-only, layered template) from a container (a running or stopped instance created from an image) in a described scenario</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o2"><span>Predict what a given docker run or podman run command does: which image it starts, the container name, and the effect of -d and --rm</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o3"><span>Explain that Podman runs the same OCI images, is daemonless on Linux but on macOS and Windows runs containers inside a Linux virtual machine started with podman machine, and accepts the same core build, run, ps and images commands used in this course</span><span class="state" data-state="open"></span></li>
+      </ul>
+      <div id="current-task" class="task">
+<div data-step="1">
+<ol class="pep-steps-list" id="task-1"><li>You run <code>docker run -d nginx:alpine</code> three times. What do you have afterwards?</li></ol>
+</div>
+<div data-step="2">
+<ol class="pep-steps-list" id="task-2"><li>Start two named background containers from <code>nginx:alpine</code>, then list them.</li><li data-goal="two">Two running containers from <code>nginx:alpine</code>, each named <span class="state" data-state="open"></span></li><li data-goal="ps">List them with <code>docker ps</code> <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="3">
+<ol class="pep-steps-list" id="task-3"><li>Run <code>hello-world</code>, which prints and exits, without and then with <code>--rm</code>. Check <code>docker ps -a</code> after each.</li><li data-goal="left">Without <code>--rm</code>: see the container left as Exited <span class="state" data-state="open"></span></li><li data-goal="gone">With <code>--rm</code>: see that no container is left <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="4">
+<ol class="pep-steps-list" id="task-4"><li>On a Mac with Podman but no machine yet, run <code>web</code> in the background from <code>docker.io/library/nginx:alpine</code>.</li><li data-goal="vm">Create and start the Podman machine <span class="state" data-state="open"></span></li><li data-goal="prun">Run <code>web</code> in the background with Podman <span class="state" data-state="open"></span></li><li data-goal="pps">List it with <code>podman ps</code> <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="5">
+<p id="task-apply">A teammate runs <code>docker run -d --rm --name api shop-api:1.0</code>. Later the app inside crashes and its main process exits. What is left?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same situation, shown as listings. After the crash, which pair of listings would you see?</p>
+</div>
+<div data-step="6">
+<p>All activities finished.</p><div id="complete-msg" class="complete"></div>
+</div>
+      </div>
+      <p class="pep-summary" id="goal-summary" hidden></p>
+      <div class="pep-optional-area"><details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+  <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+  <div class="pep-optional__body"><p data-pep-anecdote-story>A traveller’s hair dryer only works on the electricity supply back home. In a country with a different supply, they plug a small converter box into the wall and plug the dryer into the converter. The dryer is unchanged; it simply runs on the supply the converter provides.</p><p data-pep-anecdote-map>Containers need a Linux kernel, so macOS and Windows provide one inside a small Linux virtual machine, and the same images run there unchanged.</p></div>
+</details></div>
+    </section>
+    <section class="pep-region" id="workspace" data-pep-workspace="activity" aria-label="Workspace">
+      <div id="current-head">
+<div data-step="1"><h2>Start with a guess</h2></div>
+<div data-step="2"><h2>Image: template. Container: instance.</h2></div>
+<div data-step="3"><h2>Three run flags</h2></div>
+<div data-step="4"><h2>Podman runs the same images</h2></div>
+<div data-step="5"><h2>Apply it to a new command</h2></div>
+<div data-step="6"><h2>Finished</h2></div>
+      </div>
+      <figure id="live-model" class="model" aria-labelledby="model-cap">
+<figcaption id="model-cap">Your machine (simulated): images and the containers made from them</figcaption>
+  <div class="boxes" id="mboxes">
+    <div class="box"><h3 id="m-img-h">Images: read-only templates</h3><ul id="m-images"><li><code>nginx:alpine</code></li><li><code>hello-world:latest</code></li></ul></div>
+    <div class="box"><h3 id="m-ctr-h">Containers: instances</h3><ul id="m-ctrs"><li>None yet.</li></ul></div>
+  </div>
+  <p class="mnote" id="m-note">Both images are already downloaded here.</p>
+      </figure>
+      <div id="current-control" class="control">
+<div data-step="1">
+  <fieldset class="pep-options" data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): you run docker run -d nginx:alpine three times. Answer: one image and three containers. Each docker run creates a new container from the same read-only image; the image is not copied. It is not three images, not one container restarted, and not one container.">
+    <legend>Your prediction</legend>
+    <label class="pep-option"><input type="radio" name="predict" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">One image and three containers</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Three images and three containers</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">One container, started three times</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">One image and one container</span></label>
+  </fieldset>
+  <fieldset class="pep-conf" id="pconf" aria-describedby="pconf-help"><legend id="pconf-help">How sure are you? Then check.</legend><label class="pep-option"><input type="radio" name="pconf" value="low"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="pconf" value="medium"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="pconf" value="high"><span class="pep-option__text">Certain</span></label></fieldset>
+  <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button></div>
+</div>
+<div data-step="2">
+  <div class="term" data-interaction="terminal" data-steps="2" data-static-alt="Terminal activity: start two named background containers from nginx:alpine, then list them. Worked example: docker run -d --name web1 nginx:alpine prints a long container ID; docker run -d --name web2 nginx:alpine prints another; docker ps lists web1 and web2, both with IMAGE nginx:alpine and STATUS Up. Reusing a name fails with a Conflict error because names must be unique.">
+    <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-2">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
+    <div class="log" id="log-2" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
+    <div class="cmdline" data-term="2">
+      <label for="cmd-2"><span class="pr">$</span><span class="vh"> command</span></label>
+      <input type="text" id="cmd-2" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-2 keys-2">
+      <button type="button" class="runbtn">Run</button>
+    </div>
+  </div>
+</div>
+<div data-step="3">
+  <div class="term" data-interaction="terminal" data-steps="2" data-static-alt="Terminal activity: hello-world prints a message and exits. docker run hello-world prints Hello from Docker!; docker ps -a then lists that container with STATUS Exited (0). docker run --rm hello-world prints the same message, but docker ps -a shows no new container, because --rm removed it when it exited. The hello-world image stays in both cases.">
+    <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-3">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
+    <div class="log" id="log-3" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
+    <div class="cmdline" data-term="3">
+      <label for="cmd-3"><span class="pr">$</span><span class="vh"> command</span></label>
+      <input type="text" id="cmd-3" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-3 keys-3">
+      <button type="button" class="runbtn">Run</button>
+    </div>
+  </div>
+</div>
+<div data-step="4">
+  <div class="term" data-interaction="terminal" data-steps="3" data-static-alt="Terminal activity on a simulated Mac: podman run fails until the Linux VM exists and is running. podman machine init creates it; podman machine start starts it; podman run -d --name web docker.io/library/nginx:alpine prints a container ID; podman ps lists web with STATUS Up.">
+    <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-4">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
+    <div class="log" id="log-4" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
+    <div class="cmdline" data-term="4">
+      <label for="cmd-4"><span class="pr">$</span><span class="vh"> command</span></label>
+      <input type="text" id="cmd-4" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-4 keys-4">
+      <button type="button" class="runbtn">Run</button>
+    </div>
+  </div>
+</div>
+<div data-step="5">
+  <div data-first>
+  <fieldset class="pep-options" id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: docker run -d --rm --name api shop-api:1.0, then the main process exits. Answer: the image shop-api:1.0 stays and the container api is removed, because --rm removes the container when it exits and never removes the image. Not both removed (images are kept); not Exited in docker ps -a (that would need no --rm); not image removed (removing a container never removes its image). Retry as listings: docker ps -a has no api row and the image list still has shop-api:1.0.">
+    <legend>Choose what is left</legend>
+    <label class="pep-option"><input type="radio" name="apply-a" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">The image <code>shop-api:1.0</code> stays; the container <code>api</code> is removed</span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Both the image and the container are removed</span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">The container <code>api</code> stays as Exited, listed by <code>docker ps -a</code></span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">The image is removed, but the container stays</span></label>
+  </fieldset>
+  <fieldset class="pep-conf" id="conf" aria-describedby="conf-help"><legend id="conf-help">How sure are you? Then check.</legend><label class="pep-option"><input type="radio" name="conf" value="low"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="conf" value="medium"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="conf" value="high"><span class="pep-option__text">Certain</span></label></fieldset>
+  <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button></div>
+  </div>
+  <div data-retry hidden>
+    <fieldset class="pep-options" id="apply-b" aria-describedby="task-apply-b">
+      <legend>Choose the listings</legend>
+      <label class="pep-option"><input type="radio" name="apply-b" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text"><code>ps -a</code>: no api row · images: <code>shop-api:1.0</code></span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text"><code>ps -a</code>: api Exited (1) · images: <code>shop-api:1.0</code></span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text"><code>ps -a</code>: no api row · images: none</span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text"><code>ps -a</code>: api Up · images: <code>shop-api:1.0</code></span></label>
+    </fieldset>
+    <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+  </div>
+</div>
+<div data-step="6"></div>
+      </div>
+      <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-explore-feedback></div>
+<div data-step="5" data-pep-apply-feedback></div>
+<div data-step="6"></div>
+      </div>
+      <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="next" hidden>Continue</button></div>
+
+    </section>
+  </div>
+</main>
+<script>
+var TOPIC={
+steps:6,acts:["predict","instances","flags","podman","apply"],objActs:{"o1":["instances","apply"],"o2":["flags","apply"],"o3":["podman"]},editors:{},
+prompt:function(S){return S.step===4?'mac$':'$';},
+complete:function(v,S){var c=['docker run -d --name ','docker ps','docker ps -a','docker stop ','docker rm ','podman machine init','podman machine start','podman run -d --name web docker.io/library/nginx:alpine','podman ps'];var m=c.filter(function(x){return x.indexOf(v)===0&&x!==v;});return m.length===1?m[0]:null;},
+init:function(){return {g:{},ctr:[],n:0,vm:0,pctr:[]};},
+goals:{2:['two','ps'],3:['left','gone'],4:['vm','prun','pps']},
+predict:{correct:'a',why:{
+ a:'each docker run creates a new container from the same image, and the image is not copied.',
+ b:'the image is a shared read-only template; running it again does not copy it.',
+ c:'docker run never restarts an old container; it creates a new one each time.',
+ d:'three runs make three containers, not one.'}},
+apply:{A:{fs:'apply-a',correct:'a',okNote:'<p><code>--rm</code> deletes the container when its main process exits; the image it came from stays.</p>',
+  why:{a:'--rm removed the container when it exited; the image is untouched.',b:'--rm removes only the container. Images stay until you remove them yourself.',c:'that is what happens without --rm. With it, the exited container is deleted.',d:'removing a container never removes its image, and here the container is the part that goes.'},
+  miss:{b:'<code>--rm</code> acts on the container only; the image stays.',c:'An exited container stays only when you leave out <code>--rm</code>.',d:'It is the other way round: the container goes, the image stays.'},
+  hint:'Ask two questions: what does --rm delete, and does deleting a container touch its image?'},
+ B:{fs:'apply-b',correct:'a',reveal:'With <code>--rm</code> the exited container is deleted, so <code>docker ps -a</code> has no api row, and the image list still shows <code>shop-api:1.0</code>.',
+  why:{a:'container deleted on exit, image kept.',b:'this is the result without --rm.',c:'the image is never deleted by --rm.',d:'Up means still running, but the process exited.'}}},
+run:function(line,term,S,api){
+ var t=S.t,out=[],msg='',step=+term;function o(c,s){out.push([c,s]);}
+ function hex(n,len){var s='',x=(n*2654435761+12345)>>>0;while(s.length<len){x=(x*1103515245+12345)>>>0;s+=('00000000'+x.toString(16)).slice(-8);}return s.slice(0,len);}
+ function pad(s,n){s=String(s);while(s.length<n){s+=' ';}return s;}
+ function table(list,all){var rows=list.filter(function(c){return all||c.st==='up';});o('o','CONTAINER ID   '+pad('IMAGE',15)+pad('COMMAND',26)+pad('STATUS',26)+'NAMES');
+  rows.forEach(function(c){o('o',c.id.slice(0,12)+'   '+pad(c.img,15)+pad(c.cmd,26)+pad(c.st==='up'?'Up 12 seconds':'Exited (0) 9 seconds ago',26)+c.name);});
+  if(!rows.length){o('h','(no rows: nothing '+(all?'exists':'is running')+')');}return rows;}
+ var w=line.trim().split(/\s+/).filter(Boolean);o('c',line);
+ if(!w.length){o('h','(nothing to run)');}
+ else if(step===4&&w[0]==='docker'){o('e','docker: command not found');msg='This Mac has Podman, not Docker. Use podman with the same subcommands.';}
+ else if(step!==4&&w[0]==='podman'){o('e','podman: not available in this practice terminal');msg='This step uses Docker. Podman comes in step 4.';}
+ else if(w[0]==='docker'||w[0]==='podman'){var P=w[0]==='podman',list=P?t.pctr:t.ctr,sub=w[1]||'';
+  if(P&&sub==='machine'){var a=w[2];
+   if(a==='init'&&w.length===3){if(t.vm){o('e','Error: podman-machine-default: VM already exists');}else{t.vm=1;o('o','Looking up Podman Machine image ... (shortened)');o('o','Machine init complete');o('o','To start your machine run:');o('o','');o('o','\tpodman machine start');msg='The VM exists but is not running yet.';}}
+   else if(a==='start'&&w.length===3){if(!t.vm){o('e','Error: podman-machine-default: VM does not exist');msg='Create it first with podman machine init.';}else if(t.vm===2){o('e','Error: unable to start "podman-machine-default": already running');}else{t.vm=2;o('o','Starting machine "podman-machine-default" (shortened)');o('o','Machine "podman-machine-default" started successfully');msg='The Linux VM is running; Podman commands now reach it.';api.goal('vm');}}
+   else{o('e','podman machine '+(a||'')+': only init and start are available in this practice terminal');}}
+  else if(P&&t.vm!==2&&(sub==='run'||sub==='ps'||sub==='images'||sub==='build')){o('e','Cannot connect to Podman. Please verify your connection to the Linux system using \x60podman system connection list\x60, or try \x60podman machine init\x60 and \x60podman machine start\x60 to manage a new Linux VM (shortened)');msg='On a Mac, containers run inside the Linux VM, so it must exist and be running first.';}
+  else if(sub==='run'){var d=false,rm=false,name=null,img=null,bad=null;
+   for(var i=2;i<w.length;i++){var x=w[i];if(x==='-d'||x==='--detach'){d=true;}else if(x==='--rm'){rm=true;}else if(x==='--name'){name=w[++i]||'';}else if(x.indexOf('--name=')===0){name=x.slice(7);}else if(x.charAt(0)==='-'){bad=x;break;}else if(!img){img=x;}else{bad=x;break;}}
+   var known=P?{'docker.io/library/nginx:alpine':'nginx'}:{'nginx:alpine':'nginx','nginx':'nginx','hello-world':'hello','hello-world:latest':'hello'};
+   if(bad){o('e',bad.charAt(0)==='-'?'option '+bad+' is not available in this practice terminal (-d, --rm and --name are)':'extra word '+bad+': a command after the image is not available in this practice terminal');}
+   else if(!img){o('e','"'+w[0]+' run" requires at least 1 argument: the image');}
+   else if(P&&(img==='nginx:alpine'||img==='nginx')){o('e','The practice terminal stops here: a short name can make Podman ask which registry to search. Use the full name docker.io/library/nginx:alpine.');}
+   else if(!known[img]){o('e','The image '+img+' is not on this simulated machine. Available: '+(P?'docker.io/library/nginx:alpine':'nginx:alpine, hello-world')+'.');}
+   else if(name===''){o('e','--name needs a value');}
+   else if(name&&list.some(function(c){return c.name===name;})){var ex=list.filter(function(c){return c.name===name;})[0];o('e','docker: Error response from daemon: Conflict. The container name "/'+name+'" is already in use by container "'+ex.id+'". You have to remove (or rename) that container to be able to reuse that name.');msg='Names are unique. Pick a new name, or remove the old container first.';}
+   else if(known[img]==='nginx'&&!d){o('e','The practice terminal stops here: nginx keeps running, so without -d it would hold your terminal until you pressed Ctrl+C. Add -d to run it in the background.');}
+   else{t.n++;var c={id:hex(t.n+(P?50:0),64),img:img==='nginx'?'nginx':img,name:name||(['quirky_turing','eager_hopper','calm_lovelace','brave_noether','keen_babbage'][t.n%5]),st:'up',cmd:known[img]==='nginx'?'"/docker-entrypoint.…"':'"/hello"',rm:rm};
+    if(known[img]==='hello'){c.st='exited';if(d){o('o',c.id);}else{o('o','');o('o','Hello from Docker!');o('o','This message shows that your installation appears to be working correctly.');o('o','(output shortened)');}
+     if(rm){t.rmRun=1;msg='hello-world printed its message and exited. --rm deleted the container as it exited. Check docker ps -a.';}else{list.push(c);t.leftRun=1;msg='hello-world printed its message and exited. The container stays behind. Check docker ps -a.';}}
+    else{list.push(c);o('o',c.id);msg='Detached: Docker printed the new container\'s full ID and gave you the prompt back.'+(name?'':' No --name, so it got an invented name.');if(P){msg='Podman printed the container ID: the same run command, the same image, now inside the Linux VM.';api.goal('prun');}}}}
+  else if(sub==='ps'){var all=w[2]==='-a'||w[2]==='--all';if(w.length>(all?3:2)){o('e','only ps and ps -a are available in this practice terminal');}else{var rows=table(list,all);
+   if(P){if(rows.some(function(c){return c.name==='web';})){api.goal('pps');msg='web is listed from Podman, just as docker ps would list it.';}}
+   else if(step===2){var named=t.ctr.filter(function(c){return c.st==='up'&&c.img.indexOf('nginx')===0&&c.name.indexOf('_')<0;});if(named.length>=2){api.goal('two');api.goal('ps');msg='Two containers, one image. Each row is its own instance with its own name.';}else{msg='docker ps lists '+rows.length+' running container'+(rows.length===1?'':'s')+'. You need two named ones from nginx:alpine.';}}
+   else if(step===3){if(all&&t.leftRun&&rows.some(function(c){return c.img.indexOf('hello')===0;})){api.goal('left');msg='There it is: the hello-world container stays as Exited until you remove it.';}
+    if(all&&t.rmRun){api.goal('gone');msg=(t.leftRun?'Only the run without --rm left a row. ':'')+'The --rm run left no container behind; the image is still there.';}
+    if(!all){msg='Plain docker ps shows only running containers. hello-world has already exited, so add -a.';}}}}
+  else if(sub==='stop'||sub==='rm'){var nm=w[2],ix=-1;list.forEach(function(c,j){if(c.name===nm||c.id.indexOf(nm||'#')===0){ix=j;}});
+   if(!nm||w.length>3){o('e',w[0]+' '+sub+': give exactly one container name');}else if(ix<0){o('e','Error response from daemon: No such container: '+nm);}
+   else if(sub==='stop'){if(list[ix].rm){list.splice(ix,1);}else{list[ix].st='exited';}o('o',nm);msg='Stopped. '+(ix<list.length&&list[ix]&&list[ix].name===nm?'It still exists as Exited until you remove it.':'It had --rm, so it was removed as it stopped.');}
+   else if(list[ix].st==='up'){o('e','Error response from daemon: cannot remove container "'+nm+'": container is running: stop the container before removing or force remove');}
+   else{list.splice(ix,1);o('o',nm);msg='Removed the container. Its image is still on the machine.';}}
+  else if(sub==='images'||sub==='build'){o('h',w[0]+' '+sub+' is not available in this practice terminal. The model on the right lists the images.');}
+  else{o('e',w[0]+' '+sub+': not available in this practice terminal (run, ps, stop and rm are)');}}
+ else{o('e',w[0]+': not available in this practice terminal');}
+ var log=api.$('log-'+term);out.forEach(function(x){var dv=document.createElement('div');dv.className=x[0];dv.textContent=x[1];log.appendChild(dv);});log.scrollTop=log.scrollHeight;
+ if(!msg&&out.length&&out[out.length-1][0]==='e'){msg='That command did not run, so nothing changed.';}
+ api.say('<p>'+api.esc(msg||'Command run.')+'</p>'+api.goalStatus());
+ this.render(S,api);
+},
+render:function(S,api){var t=S.t,P=S.step===4,list=P?t.pctr:t.ctr;
+ api.$('m-img-h').textContent=P?'Images in the Podman VM':'Images: read-only templates';
+ var im=api.$('m-images');im.innerHTML=P?'<li><code>docker.io/library/nginx:alpine</code></li>':'<li><code>nginx:alpine</code></li><li><code>hello-world:latest</code></li>';
+ if(S.step===5||S.step===6){im.innerHTML='<li><code>shop-api:1.0</code></li>';}
+ var ul=api.$('m-ctrs');ul.innerHTML='';
+ var shown=(S.step>=5)?[]:list;
+ if(!shown.length){ul.innerHTML='<li>None yet.</li>';}
+ shown.forEach(function(c){var li=document.createElement('li');li.innerHTML='<code>'+api.esc(c.name)+'</code> from <code>'+api.esc(c.img)+'</code> <span class="chip '+(c.st==='up'?'ok':'wait')+'">'+(c.st==='up'?'running':'exited')+'</span>';ul.appendChild(li);});
+ api.$('m-ctr-h').textContent=P?'Containers inside the Linux VM':'Containers: instances';
+ api.$('m-note').textContent=P?(t.vm===2?'Podman machine: running. Containers live inside this Linux VM.':t.vm?'Podman machine: created, not started.':'Podman machine: none yet. On a Mac, containers need this Linux VM.'):(S.step>=5?'The image the teammate ran.':'Both images are already downloaded, so nothing is pulled in this practice.');
+}
+};
+
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
+var SNAP={};
+function clone(o){return JSON.parse(JSON.stringify(o));}
+var LAST=TOPIC.steps,S;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init()};}
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,goal:goal,left:left,editorText:editorText,get S(){return S;}};
+function need(step){return (TOPIC.goals&&TOPIC.goals[step])||[];}
+function left(step){var g=S.t.g||{};return need(step||S.step).filter(function(k){return !g[k];}).length;}
+function goal(k){var g=S.t.g||(S.t.g={});g[k]=1;var st=S.step,act=TOPIC.acts[st-1];if(need(st).length&&!left(st)&&!S.done[act]){complete(act);}renderGoals();}
+function goalStatus(){var st=S.step,n=need(st),l=left(st);return n.length?'<p>'+(l?l+' of '+n.length+' task goals still open.':'<strong>All task goals met.</strong> Continue when ready.')+'</p>':'';}
+api.goalStatus=goalStatus;
+function renderGoals(){var g=(S.t&&S.t.g)||{};
+  qa('[data-goal]').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('is-done',!!g[k]);var s=li.querySelector('.state');if(s){s.setAttribute('data-state',g[k]?'✓ done':'open');}});
+  var sum=$('goal-summary');if(sum){var n=need(S.step),l=left(S.step);sum.textContent=n.length?(l?l+' of '+n.length+' task goals still open':'All task goals met'):'';sum.hidden=!n.length;}
+  qa('[data-obj]').forEach(function(li){var acts=(TOPIC.objActs||{})[li.getAttribute('data-obj')]||[];var ok=acts.length&&acts.every(function(a){return S.done[a]&&!S.settled[a];});li.classList.toggle('is-done',!!ok);li.querySelector('.state').setAttribute('data-state',ok?'✓ done':'open');});}
+function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
+function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}if(S.t&&S.t.g){renderGoals();}}
+function progress(){
+  var acts=TOPIC.acts,n=0,set=0,cur=Math.min(S.step,acts.length);
+  acts.forEach(function(a,i){var p=qa('#progress-bar > span')[i];var on=!!S.done[a];if(on&&!S.settled[a]){n++;}if(S.settled[a]){set++;}
+    p.className=on?(S.settled[a]?'is-settled':'is-done'):'';});
+  $('prog-text').textContent='Activity '+cur+' of '+acts.length+' · '+n+' done'+(set?' ('+set+' settled, not marked correct)':'');
+  renderGoals();
+}
+function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
+function show(step,focus){
+  S.step=step;stageEl.setAttribute('data-step',String(step));
+  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
+  if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
+    SNAP[step]={html:h,t:clone(S.t)};}
+  var rb=$('reset');rb.disabled=(step===LAST);
+  $('next').hidden=true;
+  if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
+    c.innerHTML='<p><strong>All '+TOPIC.acts.length+' activities finished.</strong>'+(set?' '+set+' was answered without being marked correct. That is fine: review its explanation before moving on.':'')+'</p>';}}
+  else{main.removeAttribute('data-pep-complete');}
+  initEditors();TOPIC.render(S,api);progress();
+  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+}
+function optLabel(inp){return inp.closest('label');}
+function optText(inp){var t=optLabel(inp).querySelector('.pep-option__text');return t?t.firstChild.textContent.trim():optLabel(inp).textContent.trim();}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function tag(cls,txt){return '<span class="pep-tag pep-tag--'+cls+'">'+txt+'</span>';}
+function annotate(name,correct,chosen,why,who){qa('input[name="'+name+'"]').forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===correct){l.classList.add('is-correct');}else if(i.value===chosen){l.classList.add('is-wrong');}
+  var t=l.querySelector('.pep-option__text');var w=d.createElement('span');w.className='pep-explain';
+  w.innerHTML=(i.value===chosen?tag('me',who):'')+(i.value===correct?tag('ok','✓ Correct answer'):(i.value===chosen?tag('no','✗ Not correct'):''))+'<span class="why">'+why[i.value]+'</span>';t.appendChild(w);});}
+function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
+function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
+  var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
+  var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function explainList(set){var html='<ul>';qa('input[name="'+set.fs+'"]').forEach(function(i){html+='<li><strong>'+(i.value===set.correct?'✓ Correct: ':'✗ Not this: ')+'</strong>'+esc(optText(i))+': '+set.why[i.value]+'</li>';});return html+'</ul>';}
+function checkApply(which){
+  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  if(which==='a'){
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;
+    if(ch===A.correct){S.tries=2;annotate('apply-a',A.correct,ch,A.why,'Your answer');$('apply-check').hidden=true;
+      say('<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Correct.</p>'+A.okNote+'<p>Each option is explained above.</p>'+confText()+'</div>');complete('apply');TOPIC.render(S,api);focusVerdict();return;}
+    qa('input[name="apply-a"]').forEach(function(i){i.disabled=true;if(i.value===ch){optLabel(i).classList.add('is-wrong');}});
+    S.firstPick=optText(qa('input[name="apply-a"][value="'+ch+'"]')[0]);
+    say('<div class="pep-callout pep-callout--danger"><p class="pep-verdict pep-verdict--wrong">✗ Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <strong>'+esc(S.firstPick)+'</strong>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText()+'</div>');
+    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});TOPIC.render(S,api);
+    var t=$('task-apply-b');if(t){t.focus();}
+  } else {
+    var c2=checked('apply-b');if(!c2){return;}
+    S.tries=2;$('apply-check-b').hidden=true;annotate('apply-b',B.correct,c2,B.why,'Your answer');
+    var first='<details><summary>First question: every option explained</summary>'+explainList(A)+'</details>';
+    if(c2===B.correct){say('<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Correct on the second try.</p><p>Each option is explained above.</p>'+first+confText()+'</div>');}
+    else{S.settled.apply=true;say('<div class="pep-callout pep-callout--warning"><p class="pep-verdict pep-verdict--revealed">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained above.</p>'+first+confText()+'</div>');}
+    complete('apply');TOPIC.render(S,api);focusVerdict();
+  }
+}
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .pep-verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
+  if(!ch||!pc){return;}
+  qa('input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  annotate('predict',P.correct,ch,P.why,'Your prediction');
+  say('<div class="pep-callout pep-callout--info"><p class="pep-verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+'</p><p>Each option is explained above.</p><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||'')+'</div>',1);complete('predict');
+}
+/* editor shell */
+var ED={};
+function editorText(step){var i=$('ed-'+step+'-input');return i?i.value:'';}
+function gutter(step){var i=$('ed-'+step+'-input'),g=$('ed-'+step+'-gutter');if(!i||!g){return;}var n=Math.max(1,i.value.split('\n').length),s=[];for(var k=1;k<=n;k++){s.push(k);}g.textContent=s.join('\n');}
+function initEditors(){qa('.pep-editor[data-ed]').forEach(function(box){var st=box.getAttribute('data-ed');var i=$('ed-'+st+'-input');if(i&&!i.getAttribute('data-wired')){i.setAttribute('data-wired','1');i.addEventListener('input',function(){gutter(st);});}gutter(st);});}
+function edTab(st,which){['problems','output'].forEach(function(w){var t=$('ed-'+st+'-tab-'+w),p=$('ed-'+st+'-'+w);if(t&&p){t.setAttribute('aria-selected',w===which?'true':'false');t.tabIndex=w===which?0:-1;p.hidden=w!==which;}});}
+function edRun(st){var E=TOPIC.editors[st];if(!E){return;}var r=E.check(editorText(st),S,api)||{};
+  var pp=$('ed-'+st+'-problems'),op=$('ed-'+st+'-output'),probs=r.problems||[];
+  pp.innerHTML='';if(!probs.length){pp.textContent='No problems found.';}
+  probs.forEach(function(p){var b=d.createElement('button');b.type='button';b.className='pep-editor__problem';b.setAttribute('data-line',String(p.line||1));
+    b.innerHTML='<span class="kind-'+(p.kind==='limit'?'limit':'error')+'">'+(p.kind==='limit'?'Not supported':'Problem')+'</span> line '+(p.line||1)+': '+esc(p.msg);pp.appendChild(b);});
+  op.textContent=(r.output||[]).join('\n')||'(no output)';
+  var stt=$('ed-'+st+'-status');stt.textContent=r.ok?'✓ All checks pass. '+(r.summary||''):(probs.length?'✗ '+probs.length+' problem'+(probs.length>1?'s':'')+' to fix. Open each one to jump to its line.':(r.summary||'Checked.'));
+  edTab(st,r.ok?'output':'problems');
+  if(r.ok&&E.goal){goal(E.goal);}
+  say((r.ok?'<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Your file passes every check.</p>':'<div class="pep-callout pep-callout--danger"><p class="pep-verdict pep-verdict--wrong">✗ Not yet: read the Problems tab, fix one thing, and run the checks again.</p>')+(r.note?'<p>'+r.note+'</p>':'')+'</div>'+goalStatus());}
+function edReset(st){var E=TOPIC.editors[st];var i=$('ed-'+st+'-input');if(!E||!i){return;}i.value=E.starter;gutter(st);$('ed-'+st+'-problems').textContent='Not run yet.';$('ed-'+st+'-output').textContent='(no output)';$('ed-'+st+'-status').textContent='Starter restored. Not run yet.';edTab(st,'problems');i.focus();}
+var userAct=TOPIC.act;
+TOPIC.act=function(a,b,Sx,apix){
+  if(a==='edrun'){edRun(+b.getAttribute('data-ed'));return;}
+  if(a==='edreset'){edReset(+b.getAttribute('data-ed'));return;}
+  if(a==='edtab'){edTab(+b.getAttribute('data-ed'),b.getAttribute('data-tab'));return;}
+  if(a==='edline'){return;}
+  if(userAct){userAct.call(TOPIC,a,b,Sx,apix);}
+};
+d.addEventListener('click',function(e){var p=e.target.closest&&e.target.closest('.pep-editor__problem');if(!p){return;}var box=p.closest('.pep-editor');var i=box.querySelector('textarea');var ln=+p.getAttribute('data-line');var lines=i.value.split('\n'),pos=0;for(var k=0;k<ln-1&&k<lines.length;k++){pos+=lines[k].length+1;}i.focus();i.setSelectionRange(pos,pos+((lines[ln-1]||'').length));});
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.getAttribute||t.getAttribute('role')!=='tab'){return;}if(e.key==='ArrowRight'||e.key==='ArrowLeft'){var st=t.getAttribute('data-ed');var nx=t.getAttribute('data-tab')==='problems'?'output':'problems';e.preventDefault();edTab(+st,nx);$('ed-'+st+'-tab-'+nx).focus();}});
+function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
+function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
+  Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
+  qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
+  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  show(step,false);syncPrompt();say('<p>Activity restarted. Earlier activities keep their results.</p>'+goalStatus());var h=$('teach-'+step+'-h');if(h){h.focus();}}
+/* pep:component terminal@1 js */
+d.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b){return;}
+  if(b.id==='reset'){restart();return;}
+  if(b.id==='next'){show(S.step+1);return;}
+  if(b.id==='predict-check'){checkPredict();return;}
+  if(b.id==='apply-check'){checkApply('a');return;}
+  if(b.id==='apply-check-b'){checkApply('b');return;}
+  if(b.classList.contains('runbtn')){runTerminal(b.closest('.cmdline'));return;}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+});
+d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
+var HIST={};
+function prompt(){return TOPIC.prompt?TOPIC.prompt(S):'$';}
+function syncPrompt(){qa('.cmdline .pr').forEach(function(n){n.textContent=prompt();});}
+function runTerminal(box){
+  if(!box){return;}var inp=box.querySelector('input[type="text"]');if(!inp||inp.disabled){return;}
+  var line=inp.value,H=HIST[inp.id]||(HIST[inp.id]={l:[],i:0});if(line.trim()){H.l.push(line);}H.i=H.l.length;
+  var p=prompt();inp.value='';TOPIC.run(line,box.getAttribute('data-term'),S,api);
+  qa('.log .c:not([data-p])').forEach(function(n){n.setAttribute('data-p',p);});syncPrompt();inp.focus();}
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closest('.cmdline')||t.tagName!=='INPUT'){return;}
+  var H=HIST[t.id]||(HIST[t.id]={l:[],i:0});
+  if(e.key==='Enter'&&!e.isComposing){e.preventDefault();runTerminal(t.closest('.cmdline'));}
+  else if(e.key==='ArrowUp'){if(!H.l.length){return;}e.preventDefault();H.i=Math.max(0,H.i-1);t.value=H.l[H.i];}
+  else if(e.key==='ArrowDown'){if(!H.l.length){return;}e.preventDefault();H.i=Math.min(H.l.length,H.i+1);t.value=H.l[H.i]||'';}
+  else if(e.key==='Tab'&&!e.shiftKey&&!e.altKey&&!e.ctrlKey&&!e.metaKey){
+    // capture Tab only when a completion actually changes the line, so Tab never traps focus
+    var v=t.value.trim()&&TOPIC.complete?TOPIC.complete(t.value,S):null;if(v&&v!==t.value){e.preventDefault();t.value=v;}}
+  else if(e.key==='Escape'){var tk=$('task-'+S.step);if(tk){e.preventDefault();tk.setAttribute('tabindex','-1');tk.focus();}}
+});
+/* /pep:component terminal js */
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+setTheme(mq&&mq.matches?'dark':'light');
+if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=qa('details[data-pep-optional]:not([open])');printOpened.forEach(function(x){x.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(x){x.open=false;});printOpened=[];});
+fresh();show(1,false);syncPrompt();
+})();
+</script>
+</body>
+</html>

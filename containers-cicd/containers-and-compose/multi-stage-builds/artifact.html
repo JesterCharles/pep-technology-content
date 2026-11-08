@@ -1,0 +1,889 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="containers-cicd">
+<meta name="pep:module" content="containers-and-compose">
+<meta name="pep:topic" content="Multi-stage builds: back-end and front-end images">
+<meta name="pep:topic-id" content="multi-stage-builds">
+<meta name="pep:budget-minutes" content="15">
+<meta name="pep:source" content="authoring/evidence/containers-cicd/containers-and-compose/multi-stage-builds/sources.json">
+<title>Multi-stage builds: back-end and front-end images</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  #current-teaching > [data-step][hidden], #current-task > [data-step][hidden], #current-control > [data-step][hidden] { display: block !important; }
+  [data-static-alt]::after { content: attr(data-static-alt); display: block; margin-top: 8px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); white-space: normal; }
+  .log { height: auto; overflow: visible; }
+}
+/* pep:component terminal@1 css */
+.term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
+.term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
+.term-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px var(--s3);margin:0;padding:var(--s1) var(--s3);border-bottom:1px solid var(--rule);font-size:15px;color:var(--muted)}
+.term-top span:first-child{font-weight:700}
+.log{height:220px;overflow-y:auto;padding:var(--s2) var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.log .c{font-weight:700}
+.log .c::before{content:attr(data-p) " ";color:var(--teal);font-weight:700}
+.log .e{color:var(--red)}
+.log .h{color:var(--muted);font-family:var(--sans)}
+.cmdline{display:flex;gap:var(--s2);align-items:center;padding:0 var(--s1) 0 var(--s3);border-top:1px solid var(--rule)}
+.cmdline label{flex:0 1 auto;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 16px var(--mono);color:var(--teal)}
+.cmdline{padding:var(--s2) var(--s2) var(--s2) var(--s3)}
+.cmdline input{flex:1 1 auto;min-width:0;min-height:44px;padding:var(--s2) 0;font:16px var(--mono);color:var(--ink);background:transparent;border:0;caret-color:var(--teal)}
+.cmdline input::placeholder{color:var(--muted);opacity:1}
+.cmdline input:focus,.cmdline input:focus-visible{outline:none}
+.cmdline .runbtn{flex:0 0 auto;min-height:36px;padding:var(--s1) var(--s3);background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:600}
+.cmdline .runbtn:hover{border-color:var(--ink)}
+.simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+/* /pep:component terminal css */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.nojs { margin: 16px; padding: 12px 16px; border: 1px solid var(--pep-warning); border-radius: var(--pep-radius-md); background: var(--pep-warning-soft); color: var(--pep-text-strong); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+button, .pep-option { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+/* topic bar */
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { display: flex; flex: 1 1 260px; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress .pep-progress { flex: 1 1 96px; width: 96px; max-width: 160px; }
+.pep-topicbar .pep-btn { flex: 0 0 auto; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.pep-progress > span { height: 8px; border-radius: var(--pep-radius-pill); background: var(--pep-control); border: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); border-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning-soft); border: 1px dashed var(--pep-warning); }
+/* regions */
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region > * { min-width: 0; }
+.pep-goals { margin: 0; padding: 12px 16px; list-style: none; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-goals > li:first-child { border-top: 0; }
+.pep-goals .state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; }
+.pep-goals .is-done .state { color: var(--pep-success); }
+.pep-goals-h { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0 0 -8px; }
+.pep-steps-list { margin: 0; padding-left: 24px; }
+.pep-steps-list > li + li { margin-top: 8px; }
+.pep-steps-list .state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-left: 8px; white-space: nowrap; }
+.pep-steps-list .is-done .state { color: var(--pep-success); }
+.pep-summary { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0; }
+.pep-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 4px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); background: var(--pep-control); color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); }
+.pep-chip--ok { border-color: var(--pep-success); color: var(--pep-success); background: var(--pep-success-soft); }
+.pep-chip--no { border-style: dashed; border-color: var(--pep-danger); color: var(--pep-danger); background: var(--pep-danger-soft); }
+.pep-chip--wait { border-style: dotted; border-color: var(--pep-warning); color: var(--pep-warning); background: var(--pep-warning-soft); }
+/* cards, callouts, buttons */
+.pep-card { background: var(--pep-card); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); padding: 16px; min-width: 0; }
+.pep-callout { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text); }
+.pep-callout p { margin: 0 0 8px; } .pep-callout p:last-child { margin: 0; }
+.pep-callout ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-callout--info { background: var(--pep-accent-soft); border-color: var(--pep-accent); }
+.pep-callout--success { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-callout--warning { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-callout--danger { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); max-width: 100%; text-align: center; }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+.pep-btn:disabled, .pep-btn[aria-disabled="true"] { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-btn[aria-pressed="true"] { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); }
+.pep-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+/* options, confidence, feedback */
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-options > legend, .pep-legend { padding: 0; margin: 0 0 8px; font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-option { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; min-width: 0; }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option.is-correct .pep-option__key { background: var(--pep-success); color: var(--pep-page); }
+.pep-option.is-wrong .pep-option__key { background: var(--pep-danger); color: var(--pep-page); }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+.pep-option input:disabled { cursor: default; }
+.pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-option:has(input:disabled) { cursor: default; }
+.pep-explain { display: block; margin: 4px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-tag { display: inline-block; margin: 4px 8px 0 0; padding: 0 8px; border: 1px solid currentColor; border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); }
+.pep-tag--ok { color: var(--pep-success); } .pep-tag--no { color: var(--pep-danger); } .pep-tag--me { color: var(--pep-text-strong); }
+.pep-conf { display: grid; grid-template-columns: repeat(3, minmax(96px, 1fr)); gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-conf > legend { grid-column: 1 / -1; padding: 0; margin: 0 0 8px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-conf .pep-option { grid-template-columns: minmax(0, 1fr); text-align: center; }
+@media (max-width: 480px) { .pep-conf { grid-template-columns: minmax(0, 1fr); } }
+.pep-verdict { font-weight: 700; }
+.pep-verdict--correct { color: var(--pep-success); } .pep-verdict--wrong { color: var(--pep-danger); } .pep-verdict--revealed { color: var(--pep-warning); }
+.feedback:empty { display: none; }
+.feedback ul { margin: 4px 0 0; padding-left: 20px; }
+.feedback li + li { margin-top: 4px; }
+.conf-report { color: var(--pep-text-muted); }
+/* model and code */
+.model { margin: 0; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-bottom: 8px; }
+.boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.box { padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.box h3 { font-size: 14px; line-height: 20px; margin: 0 0 4px; }
+.box ul { margin: 0; padding-left: 18px; font: 400 14px/20px var(--pep-font-sans); }
+.box p { margin: 0; font: 400 14px/20px var(--pep-font-sans); }
+.mnote { margin: 8px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-code, .teach pre, .recap pre { margin: 0 0 12px; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.outlog { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; margin: 8px 0 0; padding: 12px 16px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--pep-text-strong); }
+@media (max-width: 480px) { .outlog { max-height: 180px; } }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); }
+.pep-table td, .pep-table th { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; text-align: left; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.recap ul { padding-left: 20px; }
+.recap details, .sources { margin: 12px 0; padding: 0 0 0 0; border-block: 1px solid var(--pep-line-strong); }
+.recap summary, .sources summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-weight: 600; color: var(--pep-text-strong); }
+.next-topic { font-weight: 600; }
+.next-topic a { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; }
+.complete { margin: 0; }
+/* terminal@1 bridge: keep the drift-checked fragment, adapt sizes around it */
+.term { border-radius: var(--pep-radius-sm); }
+.term-top { font: 600 13px/20px var(--pep-font-sans); }
+.log { font: 400 14px/20px var(--pep-font-mono); max-height: 240px; overscroll-behavior: contain auto; }
+.cmdline .runbtn { min-height: 44px; min-width: 64px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); }
+.cmdline input { scroll-margin-block: 16px; }
+@media (max-width: 480px) { .log { height: 180px; } .cmdline { flex-wrap: wrap; row-gap: 4px; } .cmdline label { flex: 1 0 100%; max-width: none; } }
+/* editor shell */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__secondary { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { margin: 0; padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font: inherit; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; cursor: pointer; white-space: normal; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-editor noscript, .pep-noscript { display: block; padding: 12px; font: 400 14px/20px var(--pep-font-sans); }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__gutter { line-height: 24px; font-size: 16px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* optional disclosures */
+.pep-optional { min-width: 0; border-block: 1px solid var(--pep-line-strong); background: transparent; break-inside: avoid; }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+@media print { .pep-optional > summary { list-style: none; } .pep-optional > summary::-webkit-details-marker { display: none; } }
+/* figure */
+.pep-figure { margin: 0; }
+.pep-figure figcaption { margin-top: 8px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.state[data-state]::before { content: attr(data-state); }
+summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; }
+.feedback details { margin: 8px 0; }
+.pep-optional-area { display: flex; flex-direction: column; gap: 8px; }
+.chip { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text); background: var(--pep-control); }
+.chip.ok { border-color: var(--pep-success); color: var(--pep-success); background: var(--pep-success-soft); }
+.chip.no { border-style: dashed; border-color: var(--pep-danger); color: var(--pep-danger); background: var(--pep-danger-soft); }
+.chip.wait { border-style: dotted; border-color: var(--pep-warning); color: var(--pep-warning); background: var(--pep-warning-soft); }
+.pep-chal { display: block; width: 100%; min-height: 120px; margin: 4px 0 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); white-space: pre; overflow-wrap: normal; }
+
+.dgm{margin:0 0 var(--s2);padding:var(--s2);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
+.dgm figcaption{font-size:15px;margin-top:var(--s1)}
+.msd{display:block;width:100%;height:auto;max-width:380px;margin:0 auto;font-family:var(--sans)}
+.msd .c-mask,.msd .msd-halo{fill:var(--surface);stroke:var(--surface)}
+.msd .c-backend,.msd .c-database,.msd .c-external{fill:var(--surface);stroke:var(--rule);stroke-width:2}
+.msd .msd-jarf .c-backend,.msd .msd-jre .c-backend{stroke:var(--teal);stroke-width:3}
+.msd .c-region{fill:none;stroke:var(--rule);stroke-dasharray:6 4}
+.msd .a-default{fill:none;stroke:var(--muted)}
+.msd .a-emphasis{fill:none;stroke:var(--teal);stroke-width:2.5}
+.msd .m-default,.msd .m-dashed,.msd .m-security{fill:var(--muted)}
+.msd .m-emphasis{fill:var(--teal)}
+.msd .semantic-sigil{fill:none;stroke:var(--muted);stroke-width:1.5}
+.msd .t-primary,.msd .t-edge-default{fill:var(--ink)}
+.msd .t-muted,.msd .t-cloud{fill:var(--muted)}
+.msd .t-edge-emphasis{fill:var(--teal);font-weight:700}
+.msd text{font-family:var(--sans)}
+</style>
+</head>
+<body>
+<noscript><p class="nojs">The reading, task steps, file readings and recap below work without JavaScript. Turn JavaScript on to use the practice terminal, editor checks and answer feedback.</p></noscript>
+<main id="lesson" class="pep-main" data-pep-responsive>
+  <header class="pep-topicbar">
+    <h1>Multi-stage builds: back-end and front-end images</h1>
+    <div class="pep-topicbar__progress" data-pep-progress id="progress"><span id="prog-text">Activity 1 of 5 · 0 done</span><span>about 15 min</span><span class="pep-progress" id="progress-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></div>
+    <button type="button" class="pep-btn" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+    <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+  </header>
+  <div class="pep-regions" id="stage" data-step="1">
+    <section class="pep-region" id="panel" data-pep-instructions aria-label="Reading and instructions">
+      <div id="current-teaching" class="teach">
+<div data-step="1">
+  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+<p>Practice prediction, not scored.</p>
+</div>
+<div data-step="2" data-pep-teaching>
+  <h2 id="teach-2-h" tabindex="-1">Build in one stage, run in another</h2>
+<p>Every <code>FROM</code> starts a new <strong>stage</strong>. <code>FROM eclipse-temurin:25-jdk AS build</code> names the first stage <code>build</code>; it has the JDK to compile and package.</p>
+  <p>The <strong>last</strong> stage becomes the image. Start it from a smaller JRE image and copy in only the jar with <code>COPY --from=build</code>, which reads from the named stage instead of your folder.</p>
+  <p><code>ENTRYPOINT</code> sets the command the container runs; <code>RUN</code> runs only while building.</p>
+</div>
+<div data-step="3" data-pep-teaching>
+  <h2 id="teach-3-h" tabindex="-1">Front end: Node builds, nginx serves</h2>
+<p>The front end needs Node only to build. <code>npm run build</code> (Vite) writes plain HTML, CSS and JavaScript into <code>dist</code>.</p>
+  <p>The final stage starts <code>FROM nginx:alpine</code>, a web server that serves files from <code>/usr/share/nginx/html</code>. Copy only <code>dist</code> there; Node, <code>node_modules</code> and the source stay behind.</p>
+</div>
+<div data-step="4" data-pep-teaching>
+  <h2 id="teach-4-h" tabindex="-1">Why the final image is smaller</h2>
+<p>A stage left behind adds nothing to the image. Only the final stage's base layers and what you copy into it ship.</p>
+  <figure class="dgm" aria-describedby="msd-words">
+    <!-- Diagram generated with Archify v3.0.1 (MIT, tt-a1i/archify commit 2ab3cae7ac2c2a55d7386ca789d03c4fcd31816c), post-processed by diagram-postprocess.mjs and inlined; see authoring/evidence/containers-cicd/containers-and-compose/multi-stage-builds/diagram-multi-stage.json -->
+    <svg class="msd" viewBox="70 20 300 644" role="img" aria-labelledby="msd-title msd-desc">
+<title id="msd-title">Multi-stage back-end build: what ships</title>
+<desc id="msd-desc">One column, top to bottom: the project folder is copied into the build stage, which packages a jar; only that jar is copied with COPY --from=build into the final stage, the image. The caption below describes every part.</desc>
+<defs>
+<marker id="msd-arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+<polygon points="0 0, 10 3.5, 0 7" class="m-default" />
+</marker>
+<marker id="msd-arrowhead-emphasis" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+<polygon points="0 0, 10 3.5, 0 7" class="m-emphasis" />
+</marker>
+<marker id="msd-arrowhead-security" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+<polygon points="0 0, 10 3.5, 0 7" class="m-security" />
+</marker>
+<marker id="msd-arrowhead-dashed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+<polygon points="0 0, 10 3.5, 0 7" class="m-dashed" />
+</marker>
+</defs>
+<rect x="80" y="150" width="280" height="234" rx="12" class="c-region" stroke-width="1"/>
+<rect x="80" y="440" width="280" height="214" rx="12" class="c-region" stroke-width="1"/>
+<g>
+<path d="M 220 94 L 220 180" fill="none" class="msd-halo" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 220 94 L 220 180" class="a-default" stroke-width="1.5" marker-end="url(#msd-arrowhead)"/>
+</g>
+<g>
+<path d="M 220 244 L 220 300" fill="none" class="msd-halo" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 220 244 L 220 300" class="a-default" stroke-width="1.5" marker-end="url(#msd-arrowhead)"/>
+</g>
+<g>
+<path d="M 220 364 L 220 470" fill="none" class="msd-halo" stroke-width="5.8" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 220 364 L 220 470" class="a-emphasis" stroke-width="1.8" marker-end="url(#msd-arrowhead-emphasis)"/>
+</g>
+<g class="msd-n msd-proj">
+<rect x="110" y="30" width="220" height="64" rx="6" class="c-mask"/>
+<rect x="110" y="30" width="220" height="64" rx="6" class="c-external" stroke-width="1.5"/>
+<g aria-hidden="true" class="semantic-sigil s-external" transform="translate(116 36) scale(0.6875)">
+<rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/>
+<path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>
+</g>
+<text x="220" y="60" class="t-primary" font-size="15" font-weight="600" text-anchor="middle">Project folder</text>
+<text x="220" y="76" class="t-muted" font-size="13" text-anchor="middle">mvnw, pom.xml, src/</text>
+</g>
+<g class="msd-n msd-jdk">
+<rect x="110" y="180" width="220" height="64" rx="6" class="c-mask"/>
+<rect x="110" y="180" width="220" height="64" rx="6" class="c-backend" stroke-width="1.5"/>
+<g aria-hidden="true" class="semantic-sigil s-backend" transform="translate(116 186) scale(0.6875)">
+<path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+</g>
+<text x="220" y="210" class="t-primary" font-size="15" font-weight="600" text-anchor="middle">JDK, Maven cache, source</text>
+<text x="220" y="226" class="t-muted" font-size="13" text-anchor="middle">left behind</text>
+</g>
+<g class="msd-n msd-jarb">
+<rect x="110" y="300" width="220" height="64" rx="6" class="c-mask"/>
+<rect x="110" y="300" width="220" height="64" rx="6" class="c-backend" stroke-width="1.5"/>
+<g aria-hidden="true" class="semantic-sigil s-backend" transform="translate(116 306) scale(0.6875)">
+<path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+</g>
+<text x="220" y="330" class="t-primary" font-size="15" font-weight="600" text-anchor="middle">target/*.jar</text>
+<text x="220" y="346" class="t-muted" font-size="13" text-anchor="middle">packaged, then copied out</text>
+</g>
+<g class="msd-n msd-jarf">
+<rect x="110" y="470" width="220" height="64" rx="6" class="c-mask"/>
+<rect x="110" y="470" width="220" height="64" rx="6" class="c-backend" stroke-width="1.5"/>
+<g aria-hidden="true" class="semantic-sigil s-backend" transform="translate(116 476) scale(0.6875)">
+<path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+</g>
+<text x="220" y="500" class="t-primary" font-size="15" font-weight="600" text-anchor="middle">app.jar</text>
+<text x="220" y="516" class="t-muted" font-size="13" text-anchor="middle">ships; ENTRYPOINT java -jar</text>
+</g>
+<g class="msd-n msd-jre">
+<rect x="110" y="570" width="220" height="64" rx="6" class="c-mask"/>
+<rect x="110" y="570" width="220" height="64" rx="6" class="c-backend" stroke-width="1.5"/>
+<g aria-hidden="true" class="semantic-sigil s-backend" transform="translate(116 576) scale(0.6875)">
+<path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
+</g>
+<text x="220" y="600" class="t-primary" font-size="15" font-weight="600" text-anchor="middle">Java runtime (JRE)</text>
+<text x="220" y="616" class="t-muted" font-size="13" text-anchor="middle">ships: the final base image</text>
+</g>
+<g>
+<rect x="184" y="130" width="30" height="14" rx="3" class="c-mask"/>
+<text x="228" y="140" class="t-edge-default" font-size="13" text-anchor="start">COPY</text>
+</g>
+<g>
+<rect x="170.39999999999998" y="265" width="43.6" height="14" rx="3" class="c-mask"/>
+<text x="228" y="275" class="t-edge-default" font-size="13" text-anchor="start">package</text>
+</g>
+<g>
+<rect x="122.39999999999999" y="410" width="91.6" height="14" rx="3" class="c-mask"/>
+<text x="228" y="420" class="t-edge-emphasis" font-size="13" text-anchor="start">COPY --from=build</text>
+</g>
+<g>
+<rect x="84" y="160" width="69.4" height="16" rx="3" class="c-mask"/>
+<text x="88" y="173" class="t-cloud" font-size="14" font-weight="600">Build stage</text>
+</g>
+<g>
+<rect x="84" y="450" width="69.4" height="16" rx="3" class="c-mask"/>
+<text x="88" y="463" class="t-cloud" font-size="14" font-weight="600">Final stage</text>
+</g>
+</svg>
+    <figcaption id="msd-words">Diagram in words, top to bottom: the project folder (<code>mvnw</code>, <code>pom.xml</code>, <code>src/</code>) is copied into the build stage, based on <code>eclipse-temurin:25-jdk</code>. There the JDK and Maven wrapper fill the Maven cache and package <code>target/*.jar</code>. Only that jar crosses, with <code>COPY --from=build</code>, into the final stage, based on <code>eclipse-temurin:25-jre</code>, as <code>app.jar</code>, which <code>ENTRYPOINT java -jar</code> starts. The JDK, the Maven cache and the source stay behind in the build stage.</figcaption>
+  </figure>
+  <p>So compilers, package caches and source files never reach production: a smaller download, fewer tools for an attacker, and the same running app.</p>
+</div>
+<div data-step="5" data-pep-teaching>
+  <h2 id="teach-5-h" tabindex="-1">Apply it: find the leak</h2>
+<p>Look at what the last stage copies.</p>
+</div>
+<div data-step="6" data-pep-recap class="recap">
+  <h2 id="teach-6-h" tabindex="-1">Recap</h2>
+<ul><li>Each <code>FROM</code> starts a stage; <code>AS build</code> names it; the last stage is the image.</li><li>Back end: JDK stage packages the jar; JRE stage copies only the jar.</li><li>Front end: Node stage runs <code>npm run build</code>; nginx stage copies only <code>dist</code>.</li><li><code>COPY --from</code> picks exactly what ships, so tools and source stay out.</li></ul>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <pre># backend/Dockerfile
+FROM eclipse-temurin:25-jdk AS build
+WORKDIR /app
+COPY mvnw pom.xml ./
+COPY .mvn .mvn
+RUN ./mvnw -q dependency:go-offline
+COPY src ./src
+RUN ./mvnw -q package -DskipTests
+
+FROM eclipse-temurin:25-jre
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]</pre>
+    <pre># frontend/Dockerfile
+FROM node:24-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html</pre>
+    <p>Podman builds the same file with <code>podman build</code>.</p>
+  </details>
+  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live official sources on 2026-10-13. Versions shown: Docker Engine 29, eclipse-temurin 25, node:24-alpine, nginx:alpine, Spring Boot 4.1 with the Maven wrapper, Vite. The model compares image contents, not measured sizes.</p><ul><li><a href="https://docs.docker.com/build/building/multi-stage/" rel="noopener">Docker Docs: Multi-stage builds (AS names, COPY --from)</a></li><li><a href="https://docs.docker.com/build/building/best-practices/" rel="noopener">Docker Docs: Building best practices (use multi-stage builds)</a></li><li><a href="https://docs.docker.com/reference/dockerfile/" rel="noopener">Dockerfile reference: FROM ... AS, COPY --from, ENTRYPOINT</a></li><li><a href="https://docs.spring.io/spring-boot/reference/packaging/container-images/dockerfiles.html" rel="noopener">Spring Boot reference: Dockerfiles</a></li><li><a href="https://vite.dev/guide/build.html" rel="noopener">Vite guide: Building for production (output in dist)</a></li><li><a href="https://hub.docker.com/_/nginx" rel="noopener">Docker Hub: nginx official image (static content in /usr/share/nginx/html)</a></li><li><a href="https://hub.docker.com/_/eclipse-temurin" rel="noopener">Docker Hub: eclipse-temurin official image (25-jdk, 25-jre tags)</a></li><li><a href="https://docs.podman.io/en/latest/markdown/podman-build.1.html" rel="noopener">Podman documentation: podman build</a></li></ul></details>
+  <p class="next-topic">Next topic: <a href="../ports-volumes-and-environment-variables/artifact.html" rel="noopener">Ports, volumes and environment variables</a></p>
+</div>
+      </div>
+      <p class="pep-goals-h" id="goals-h">Goals</p>
+      <ul class="pep-goals" data-pep-objectives aria-labelledby="goals-h">
+      <li data-obj="o1"><span>Write a two-stage Dockerfile for the Spring Boot back end that builds the jar in a JDK stage and copies only the jar into a JRE runtime stage</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o2"><span>Write a two-stage Dockerfile for the front end that builds static files with Node and serves only the build output with nginx</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o3"><span>Explain how COPY --from keeps compilers, package caches and source files out of the final image, and why that makes the image smaller</span><span class="state" data-state="open"></span></li>
+      </ul>
+      <div id="current-task" class="task">
+<div data-step="1">
+<p id="task-1">A one-stage back-end image starts <code>FROM eclipse-temurin:25-jdk</code>, copies the project and runs the Maven wrapper to package the jar. What ends up in that image?</p>
+</div>
+<div data-step="2">
+<ol class="pep-steps-list" id="task-2"><li>The editor holds the build stage from the last topic. Read it first.</li><li>Below the TODO, write a second stage on a Java 25 JRE image.</li><li>Copy only the packaged jar from the build stage, then start that jar.</li><li>Press <strong>Run checks</strong>; fix each Problem until all checks pass.</li><li data-goal="be">Back-end Dockerfile passes the checks <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="3">
+<ol class="pep-steps-list" id="task-3"><li>The editor holds the Node build stage. Read it first.</li><li>Below the TODO, add a stage on an nginx image.</li><li>Copy only the built folder from the Node stage into the folder nginx serves.</li><li>Press <strong>Run checks</strong> until all checks pass.</li><li data-goal="fe">Front-end Dockerfile passes the checks <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="4">
+<ol class="pep-steps-list" id="task-4"><li>Press each item that ends up in your final back-end image.</li><li>Press <strong>Check contents</strong>.</li><li data-goal="inside">Final image contents correct <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="5">
+<p id="task-apply">A teammate's back-end image still contains the source and the Maven cache. Its last stage is <code>FROM eclipse-temurin:25-jre</code>, <code>COPY --from=build /app /app</code>, <code>ENTRYPOINT ["java", "-jar", "/app/target/app.jar"]</code>. What is the cause?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same Dockerfile. Which change fixes it?</p>
+</div>
+<div data-step="6">
+<p>All activities finished.</p><div id="complete-msg" class="complete"></div>
+</div>
+      </div>
+      <p class="pep-summary" id="goal-summary" hidden></p>
+
+    </section>
+    <section class="pep-region" id="workspace" data-pep-workspace="activity" aria-label="Workspace">
+      <div id="current-head">
+<div data-step="1"><h2>Start with a guess</h2></div>
+<div data-step="2"><h2>Build in one stage, run in another</h2></div>
+<div data-step="3"><h2>Front end: Node builds, nginx serves</h2></div>
+<div data-step="4"><h2>Why the final image is smaller</h2></div>
+<div data-step="5"><h2>Apply it: find the leak</h2></div>
+<div data-step="6"><h2>Finished</h2></div>
+      </div>
+      <figure id="live-model" class="model" aria-labelledby="model-cap">
+<figcaption id="model-cap">Two stages; only the last one ships (contents, not sizes)</figcaption>
+  <div class="boxes">
+    <div class="box"><h3 id="m-s1h">Build stage</h3><ul id="m-s1"><li>JDK, Maven cache, source, jar</li></ul></div>
+    <div class="box"><h3 id="m-s2h">Final stage: the image</h3><ul id="m-s2"><li>Only what you copy in</li></ul></div>
+  </div>
+  <p class="mnote" id="m-note">Left behind: everything in the build stage that is not copied.</p>
+      </figure>
+      <div id="current-control" class="control">
+<div data-step="1">
+  <fieldset class="pep-options" data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): a one-stage image FROM eclipse-temurin:25-jdk copies the project and packages the jar. Answer: the JDK, the Maven download cache, the source and the jar all end up in the image, because everything a single stage creates ships. Not only the jar; not just a runtime and the jar (that needs a second stage); not only source.">
+    <legend>Your prediction</legend>
+    <label class="pep-option"><input type="radio" name="predict" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Only the jar</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">The JDK, the Maven cache, the source and the jar</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">A Java runtime and the jar</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Only the source code</span></label>
+  </fieldset>
+  <fieldset class="pep-conf" id="pconf" aria-describedby="pconf-help"><legend id="pconf-help">How sure are you? Then check.</legend><label class="pep-option"><input type="radio" name="pconf" value="low"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="pconf" value="medium"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="pconf" value="high"><span class="pep-option__text">Certain</span></label></fieldset>
+  <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button></div>
+</div>
+<div data-step="2">
+  <div data-pep-workspace="code" data-interaction="terminal" data-steps="4" data-static-alt="Editor activity: complete the back-end Dockerfile. Stage 1 (given): FROM eclipse-temurin:25-jdk AS build, WORKDIR /app, copy mvnw, pom.xml and .mvn, RUN ./mvnw -q dependency:go-offline, COPY src ./src, RUN ./mvnw -q package -DskipTests. Stage 2 (written by the learner): FROM eclipse-temurin:25-jre, WORKDIR /app, COPY --from=build /app/target/*.jar app.jar, ENTRYPOINT [&quot;java&quot;, &quot;-jar&quot;, &quot;app.jar&quot;]. Copying /app or the whole folder would ship the source and caches; RUN java -jar would run during the build instead of when the container starts.">
+  <div class="pep-editor" data-ed="2">
+    <div class="pep-editor__bar"><span class="pep-editor__file" id="ed-2-file">backend/Dockerfile</span><span class="pep-editor__secondary">Practice editor · checks run offline</span><button type="button" class="pep-btn pep-btn--primary" id="ed-2-run" data-act="edrun" data-ed="2">Run checks</button><button type="button" class="pep-btn" id="ed-2-reset" data-act="edreset" data-ed="2">Reset code</button></div>
+    <div class="pep-editor__code"><pre class="pep-editor__gutter" id="ed-2-gutter" aria-hidden="true">1</pre><textarea class="pep-editor__input" id="ed-2-input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="backend/Dockerfile editor" aria-describedby="task-2">FROM eclipse-temurin:25-jdk AS build
+WORKDIR /app
+COPY mvnw pom.xml ./
+COPY .mvn .mvn
+RUN ./mvnw -q dependency:go-offline
+COPY src ./src
+RUN ./mvnw -q package -DskipTests
+
+# TODO: add a second stage on a JRE image
+# that copies only the jar and starts it
+</textarea></div>
+    <div class="pep-editor__tabs" role="tablist" aria-label="Results"><button type="button" role="tab" id="ed-2-tab-problems" aria-selected="true" aria-controls="ed-2-problems" data-act="edtab" data-ed="2" data-tab="problems">Problems</button><button type="button" role="tab" id="ed-2-tab-output" aria-selected="false" tabindex="-1" aria-controls="ed-2-output" data-act="edtab" data-ed="2" data-tab="output">Output</button></div>
+    <div class="pep-editor__panel" role="tabpanel" id="ed-2-problems" aria-labelledby="ed-2-tab-problems" tabindex="0">Not run yet.</div>
+    <div class="pep-editor__panel" role="tabpanel" id="ed-2-output" aria-labelledby="ed-2-tab-output" tabindex="0" hidden>(no output)</div>
+    <div class="pep-editor__status" id="ed-2-status" aria-live="polite">Not run yet.</div>
+  </div>
+  <noscript data-pep-no-js><div class="pep-noscript"><p><strong>Task:</strong> add a second stage to this back-end Dockerfile. It starts from a Java 25 JRE image, copies only the packaged jar from the <code>build</code> stage, and starts that jar.</p><pre>FROM eclipse-temurin:25-jdk AS build
+WORKDIR /app
+COPY mvnw pom.xml ./
+COPY .mvn .mvn
+RUN ./mvnw -q dependency:go-offline
+COPY src ./src
+RUN ./mvnw -q package -DskipTests
+
+# TODO: add a second stage on a JRE image
+# that copies only the jar and starts it
+</pre><p><strong>Supported in the practice editor:</strong> FROM (with AS), WORKDIR, COPY (with --from), RUN, ENTRYPOINT, CMD and comments.</p><p><strong>How to compare:</strong> the packaged jar is in <code>target/</code> under the build stage's working directory; the path after <code>-jar</code> must be the file you copied.</p></div></noscript>
+  </div>
+</div>
+<div data-step="3">
+  <div data-pep-workspace="code" data-interaction="terminal" data-steps="2" data-static-alt="Editor activity: complete the front-end Dockerfile. Stage 1 (given): FROM node:24-alpine AS build, WORKDIR /app, COPY package.json package-lock.json ./, RUN npm ci, COPY . ., RUN npm run build. Stage 2 (written by the learner): FROM nginx:alpine, COPY --from=build /app/dist /usr/share/nginx/html. Copying /app would ship node_modules and source; COPY dist without --from reads your own folder, not the build stage.">
+  <div class="pep-editor" data-ed="3">
+    <div class="pep-editor__bar"><span class="pep-editor__file" id="ed-3-file">frontend/Dockerfile</span><span class="pep-editor__secondary">Practice editor · checks run offline</span><button type="button" class="pep-btn pep-btn--primary" id="ed-3-run" data-act="edrun" data-ed="3">Run checks</button><button type="button" class="pep-btn" id="ed-3-reset" data-act="edreset" data-ed="3">Reset code</button></div>
+    <div class="pep-editor__code"><pre class="pep-editor__gutter" id="ed-3-gutter" aria-hidden="true">1</pre><textarea class="pep-editor__input" id="ed-3-input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="frontend/Dockerfile editor" aria-describedby="task-3">FROM node:24-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# TODO: add an nginx stage that serves
+# only the built dist folder
+</textarea></div>
+    <div class="pep-editor__tabs" role="tablist" aria-label="Results"><button type="button" role="tab" id="ed-3-tab-problems" aria-selected="true" aria-controls="ed-3-problems" data-act="edtab" data-ed="3" data-tab="problems">Problems</button><button type="button" role="tab" id="ed-3-tab-output" aria-selected="false" tabindex="-1" aria-controls="ed-3-output" data-act="edtab" data-ed="3" data-tab="output">Output</button></div>
+    <div class="pep-editor__panel" role="tabpanel" id="ed-3-problems" aria-labelledby="ed-3-tab-problems" tabindex="0">Not run yet.</div>
+    <div class="pep-editor__panel" role="tabpanel" id="ed-3-output" aria-labelledby="ed-3-tab-output" tabindex="0" hidden>(no output)</div>
+    <div class="pep-editor__status" id="ed-3-status" aria-live="polite">Not run yet.</div>
+  </div>
+  <noscript data-pep-no-js><div class="pep-noscript"><p><strong>Task:</strong> add an nginx stage to this front-end Dockerfile that serves only the built site.</p><pre>FROM node:24-alpine AS build
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# TODO: add an nginx stage that serves
+# only the built dist folder
+</pre><p><strong>Supported in the practice editor:</strong> FROM (with AS), WORKDIR, COPY (with --from), RUN and comments.</p><p><strong>How to compare:</strong> <code>npm run build</code> writes <code>dist</code> inside the build stage's working directory; nginx serves files from <code>/usr/share/nginx/html</code>.</p></div></noscript>
+  </div>
+</div>
+<div data-step="4">
+  <div data-interaction="explore" data-pep-explore id="x4" aria-describedby="task-4" data-static-alt="Activity: which items are in the final back-end image? Inside: the Java runtime (JRE), from the final stage base, and the application jar, copied with COPY --from. Left behind in the build stage: the JDK compiler and tools, the Maven download cache and the Java source.">
+  <p class="pep-legend">In the final image? Press to mark inside.</p>
+  <div class="boxes"><button type="button" class="pep-btn" id="in-jdk" data-act="in" data-k="jdk" aria-pressed="false">JDK compiler and tools</button><button type="button" class="pep-btn" id="in-m2" data-act="in" data-k="m2" aria-pressed="false">Maven download cache</button><button type="button" class="pep-btn" id="in-src" data-act="in" data-k="src" aria-pressed="false">Java source in src/</button><button type="button" class="pep-btn" id="in-jar" data-act="in" data-k="jar" aria-pressed="false">The application jar</button><button type="button" class="pep-btn" id="in-jre" data-act="in" data-k="jre" aria-pressed="false">Java runtime (JRE)</button></div>
+  <div class="pep-row" style="margin-top:12px"><button type="button" class="pep-btn pep-btn--primary" id="in-check" data-act="incheck">Check contents</button></div>
+  </div>
+</div>
+<div data-step="5">
+  <div data-first>
+  <fieldset class="pep-options" id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: the last stage is FROM eclipse-temurin:25-jre, COPY --from=build /app /app, ENTRYPOINT java -jar /app/target/app.jar, and the image still has the source and Maven cache. Answer: COPY --from=build /app /app copies the whole build folder, so the source and cache ship. The JDK in stage 1 is left behind; the JRE base is right; ENTRYPOINT only starts the jar. Retry as a fix: copy only the jar with COPY --from=build /app/target/*.jar app.jar (and start app.jar).">
+    <legend>Choose the cause</legend>
+    <label class="pep-option"><input type="radio" name="apply-a" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">The first stage uses the JDK</span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text"><code>COPY --from=build /app /app</code> copies the whole build folder</span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">The last stage uses the JRE</span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text"><code>ENTRYPOINT</code> runs Maven again</span></label>
+  </fieldset>
+  <fieldset class="pep-conf" id="conf" aria-describedby="conf-help"><legend id="conf-help">How sure are you? Then check.</legend><label class="pep-option"><input type="radio" name="conf" value="low"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="conf" value="medium"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="conf" value="high"><span class="pep-option__text">Certain</span></label></fieldset>
+  <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button></div>
+  </div>
+  <div data-retry hidden>
+    <fieldset class="pep-options" id="apply-b" aria-describedby="task-apply-b">
+      <legend>Choose the fix</legend>
+      <label class="pep-option"><input type="radio" name="apply-b" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Copy only the jar: <code>COPY --from=build /app/target/*.jar app.jar</code></span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Change the last stage to <code>FROM eclipse-temurin:25-jdk</code></span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Merge both stages into one</span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Add <code>RUN rm -rf src</code> to the first stage</span></label>
+    </fieldset>
+    <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+  </div>
+</div>
+<div data-step="6"></div>
+      </div>
+      <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-explore-feedback></div>
+<div data-step="5" data-pep-apply-feedback></div>
+<div data-step="6"></div>
+      </div>
+      <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="next" hidden>Continue</button></div>
+
+    </section>
+  </div>
+</main>
+<script>
+/* Dockerfile reader for the practice editor: instructions, stages and working directories. */
+function dfParse(text){var lines=text.split('\n'),out=[],buf='',start=0;
+  for(var i=0;i<lines.length;i++){var raw=lines[i],t=raw.trim();if(!buf){start=i+1;}
+    if(!buf&&(!t||t.charAt(0)==='#')){continue;}
+    if(/\\$/.test(t)){buf+=t.slice(0,-1)+' ';continue;}
+    buf+=t;var m=buf.match(/^(\S+)\s*(.*)$/);out.push({line:start,op:m[1].toUpperCase(),args:m[2],raw:buf});buf='';}
+  return out;}
+function dfWords(args){var a=args.trim();if(a.charAt(0)==='['){try{return JSON.parse(a).map(String);}catch(e){return null;}}return a.split(/\s+/).filter(Boolean);}
+var DF_OPS={FROM:1,WORKDIR:1,COPY:1,ADD:1,RUN:1,ENV:1,ARG:1,EXPOSE:1,CMD:1,ENTRYPOINT:1,USER:1,LABEL:1};
+/* Multi-stage Dockerfile checks for the practice editor (no engine; rules only). */
+function dfStages(text){var ins=dfParse(text),st=[],P=[];
+  ins.forEach(function(x){if(!DF_OPS[x.op]){P.push({line:x.line,kind:'limit',msg:x.op+' is not supported in this practice editor.'});return;}
+    if(x.op==='FROM'){var f=x.args.split(/\s+/).filter(function(w){return w.indexOf('--')!==0;});st.push({line:x.line,image:(f[0]||'').toLowerCase(),name:/^as$/i.test(f[1]||'')?(f[2]||'').toLowerCase():null,cwd:'/',steps:[]});return;}
+    var s=st[st.length-1];if(!s){P.push({line:x.line,kind:'error',msg:'Every Dockerfile starts with FROM.'});return;}
+    if(x.op==='WORKDIR'){var w=x.args.trim();s.cwd=w.charAt(0)==='/'?w:(s.cwd.replace(/\/$/,'')+'/'+w);}
+    x.cwd=s.cwd;s.steps.push(x);});
+  return {st:st,P:P};}
+function pjoin(a,b){if(b.charAt(0)==='/'){return b;}return (a==='/'?'':a.replace(/\/$/,''))+'/'+b.replace(/^\.\//,'');}
+function copyWords(x){var w=dfWords(x.args.replace(/--\S+/g,''))||[];return w;}
+function fromOf(x){var m=x.args.match(/--from=(\S+)/);return m?m[1].toLowerCase():null;}
+function t3Check2(text){var r=dfStages(text),st=r.st,P=r.P,out=[];
+  var last=st[st.length-1],first=st[0];
+  if(st.length<2){P.push({line:last?last.line:1,kind:'error',msg:'Add a second stage: a new FROM line on a JRE image.'});}
+  if(first&&!first.name){P.push({line:first.line,kind:'error',msg:'Name the build stage with AS so the second stage can copy from it.'});}
+  if(first&&!/jdk/.test(first.image)){P.push({line:first.line,kind:'error',msg:'The build stage needs a JDK image to compile, such as eclipse-temurin:25-jdk.'});}
+  if(st.length>=2&&(!/jre/.test(last.image)||/jdk/.test(last.image))){P.push({line:last.line,kind:'error',msg:'The last stage should start FROM a JRE image, such as eclipse-temurin:25-jre: it only runs the jar.'});}
+  var pkg=first&&first.steps.filter(function(x){return x.op==='RUN'&&/mvnw?\b.*\bpackage\b/.test(x.args);})[0];
+  var target=pkg?pjoin(pkg.cwd,'target'):null,jarDest=null;
+  if(st.length>=2){var copies=last.steps.filter(function(x){return x.op==='COPY'||x.op==='ADD';});
+    if(!copies.length){P.push({line:last.line,kind:'error',msg:'The last stage copies nothing yet: copy the jar from the build stage with COPY --from.'});}
+    copies.forEach(function(x){var w=copyWords(x),src=w[0]||'',dst=w[w.length-1]||'';
+      if(fromOf(x)!==(first.name||'#')){P.push({line:x.line,kind:'error',msg:'Copy from the build stage with --from='+(first.name||'<stage name>')+'; plain COPY reads your project folder and would ship the source.'});return;}
+      if(w.length!==2||!/\.jar$/.test(src)||!target||src.replace(/\/[^\/]*$/,'')!==target){P.push({line:x.line,kind:'error',msg:'Copy only the packaged jar: it is in '+(target||'<build workdir>/target')+'/ in the build stage. Copying a whole folder ships the source and the Maven cache.'});return;}
+      if(!/\.jar$/.test(dst)){P.push({line:x.line,kind:'error',msg:'Give the copied jar a file name, such as app.jar.'});return;}
+      jarDest=pjoin(x.cwd,dst);});
+    var start=last.steps.filter(function(x){return x.op==='ENTRYPOINT'||x.op==='CMD';}).pop();
+    var runs=last.steps.filter(function(x){return x.op==='RUN'&&/java\b.*-jar/.test(x.args);})[0];
+    if(runs){P.push({line:runs.line,kind:'error',msg:'RUN executes while the image is built. Start the jar with ENTRYPOINT instead.'});}
+    if(!start){P.push({line:last.line,kind:'error',msg:'Start the jar with ENTRYPOINT ["java", "-jar", "<the jar you copied>"].'});}
+    else{var w=dfWords(start.args)||[],i=w.indexOf('-jar');var jar=(w[0]==='java'&&i>0&&w[i+1])?pjoin(start.cwd,w[i+1]):null;
+      if(!jar||jar!==jarDest){P.push({line:start.line,kind:'error',msg:'The start command must run exactly the jar you copied'+(jarDest?' ('+jarDest+')':'')+'.'});}}}
+  if(st.length>=2){out.push('Final image (simulated contents):');out.push('  base '+last.image+(/jre/.test(last.image)?': Java runtime only':''));if(jarDest){out.push('  '+jarDest+' from stage '+first.name);}out.push('Left behind in stage '+(first.name||'1')+': JDK, Maven cache, src/');}
+  return {problems:P,output:out,ok:!P.length,summary:'The final image holds only a JRE and the jar.',note:!P.length?'The JDK stage packages the jar; the JRE stage holds only the runtime and the jar.':''};}
+function t3Check3(text){var r=dfStages(text),st=r.st,P=r.P,out=[];var last=st[st.length-1],first=st[0];
+  if(st.length<2){P.push({line:last?last.line:1,kind:'error',msg:'Add a second stage: FROM an nginx image.'});}
+  if(first&&!first.name){P.push({line:first.line,kind:'error',msg:'Name the Node stage with AS so nginx can copy from it.'});}
+  if(st.length>=2&&!/^nginx:/.test(last.image)){P.push({line:last.line,kind:'error',msg:'Serve the site from an nginx image, such as nginx:alpine. Node is only needed to build.'});}
+  var bld=first&&first.steps.filter(function(x){return x.op==='RUN'&&/npm run build/.test(x.args);})[0];
+  if(first&&!bld){P.push({line:first.line,kind:'error',msg:'Keep RUN npm run build in the Node stage: it writes dist.'});}
+  var dist=bld?pjoin(bld.cwd,'dist'):null;
+  if(st.length>=2){var copies=last.steps.filter(function(x){return x.op==='COPY'||x.op==='ADD';});
+    if(!copies.length){P.push({line:last.line,kind:'error',msg:'The nginx stage copies nothing yet: copy the built files with COPY --from.'});}
+    copies.forEach(function(x){var w=copyWords(x),src=(w[0]||'').replace(/\/$/,''),dst=(w[w.length-1]||'').replace(/\/$/,'');
+      if(fromOf(x)!==(first.name||'#')){P.push({line:x.line,kind:'error',msg:'Copy from the Node stage with --from='+(first.name||'<stage name>')+'; plain COPY reads your folder, where dist may be missing or stale.'});return;}
+      if(w.length!==2||src!==dist){P.push({line:x.line,kind:'error',msg:'Copy only '+(dist||'<build workdir>/dist')+', the built site. Copying more ships node_modules and the source.'});return;}
+      if(dst!=='/usr/share/nginx/html'){P.push({line:x.line,kind:'error',msg:'nginx serves files from /usr/share/nginx/html: copy dist there.'});}});}
+  if(st.length>=2){out.push('Final image (simulated contents):');out.push('  base '+last.image);if(dist){out.push('  /usr/share/nginx/html <- '+dist+' from stage '+first.name);}out.push('Left behind: Node, node_modules, source');}
+  return {problems:P,output:out,ok:!P.length,summary:'nginx serves only the built dist folder.',note:!P.length?'Node built the files; nginx serves only dist.':''};}
+var TOPIC={
+steps:6,acts:["predict","backend","frontend","contents","apply"],objActs:{"o1":["backend"],"o2":["frontend"],"o3":["contents","apply"]},editors:{},
+init:function(){return {g:{},inn:{}};},
+goals:{2:['be'],3:['fe'],4:['inside']},
+predict:{correct:'b',why:{
+ a:'one stage ships everything it created, not just the jar.',
+ b:'a single stage keeps everything: the JDK base, the downloaded dependencies, the source and the jar.',
+ c:'a runtime-only image needs a second stage that copies just the jar.',
+ d:'the build also added the JDK, the Maven cache and the jar.'}},
+apply:{A:{fs:'apply-a',correct:'b',okNote:'<p>The last stage ships whatever it copies. Copying all of <code>/app</code> brings the source and caches along.</p>',
+  why:{a:'the build stage is left behind, so its JDK does not ship.',b:'copying /app brings src, target and the downloaded files into the last stage.',c:'a JRE base is the right, smaller runtime.',d:'ENTRYPOINT only starts the jar when the container runs.'},
+  miss:{a:'The first stage is left behind; its JDK never ships.',c:'The JRE base is the small runtime you want.',d:'<code>ENTRYPOINT</code> starts the app; it does not build anything.'},
+  hint:'Only the last stage ships. Which line puts files into it?'},
+ B:{fs:'apply-b',correct:'a',reveal:'Copy only the jar: <code>COPY --from=build /app/target/*.jar app.jar</code>, then start <code>app.jar</code>.',
+  why:{a:'only the jar crosses into the final stage.',b:'a JDK base makes the image bigger and still copies the source.',c:'one stage would ship every tool and file.',d:'deleting src in stage 1 still leaves the Maven cache, and the fix belongs in what stage 2 copies.'}}},
+editors:{
+ 2:{file:'backend/Dockerfile',goal:'be',starter:"FROM eclipse-temurin:25-jdk AS build\nWORKDIR /app\nCOPY mvnw pom.xml ./\nCOPY .mvn .mvn\nRUN ./mvnw -q dependency:go-offline\nCOPY src ./src\nRUN ./mvnw -q package -DskipTests\n\n# TODO: add a second stage on a JRE image\n# that copies only the jar and starts it\n",check:t3Check2},
+ 3:{file:'frontend/Dockerfile',goal:'fe',starter:"FROM node:24-alpine AS build\nWORKDIR /app\nCOPY package.json package-lock.json ./\nRUN npm ci\nCOPY . .\nRUN npm run build\n\n# TODO: add an nginx stage that serves\n# only the built dist folder\n",check:t3Check3}},
+act:function(a,b,S,api){var t=S.t;
+ if(a==='in'){var k=b.getAttribute('data-k');t.inn[k]=!t.inn[k];b.setAttribute('aria-pressed',t.inn[k]?'true':'false');}
+ if(a==='incheck'){var want={jar:1,jre:1},W={jdk:'The JDK stayed in the build stage.',m2:'The Maven cache stayed in the build stage.',src:'The source stayed in the build stage.',jar:'The jar is copied in with COPY --from.',jre:'The JRE comes from the final stage base image.'},is2=[];
+  Object.keys(W).forEach(function(k){if(!!t.inn[k]!==!!want[k]){is2.push((want[k]?'Inside: ':'Left behind: ')+W[k]);}});
+  if(!is2.length){api.goal('inside');api.say('<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Correct.</p><p>Only the JRE base and the copied jar ship.</p></div>'+api.goalStatus());}
+  else{api.say('<div class="pep-callout pep-callout--danger"><p class="pep-verdict pep-verdict--wrong">✗ Not yet. Check these:</p><ul>'+is2.map(function(x){return '<li>'+api.esc(x)+'</li>';}).join('')+'</ul></div>'+api.goalStatus());}}
+},
+render:function(S,api){var s1=api.$('m-s1'),s2=api.$('m-s2'),h1=api.$('m-s1h');
+ if(S.step===3){h1.textContent='Build stage (Node)';s1.innerHTML='<li>Node 24, npm, node_modules and source</li><li><code>dist</code>: the built site</li>';s2.innerHTML='<li>nginx and only what you copy in</li>';}
+ else{h1.textContent='Build stage (JDK)';s1.innerHTML='<li>JDK compiler and tools</li><li>Maven download cache</li><li>Java source in <code>src</code></li><li>The jar in <code>target</code></li>';s2.innerHTML=S.step>=4?'<li>JRE: runtime only</li><li><code>app.jar</code> only</li>':'<li>Only what you copy in</li>';}
+}
+};
+
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
+var SNAP={};
+function clone(o){return JSON.parse(JSON.stringify(o));}
+var LAST=TOPIC.steps,S;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init()};}
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,goal:goal,left:left,editorText:editorText,get S(){return S;}};
+function need(step){return (TOPIC.goals&&TOPIC.goals[step])||[];}
+function left(step){var g=S.t.g||{};return need(step||S.step).filter(function(k){return !g[k];}).length;}
+function goal(k){var g=S.t.g||(S.t.g={});g[k]=1;var st=S.step,act=TOPIC.acts[st-1];if(need(st).length&&!left(st)&&!S.done[act]){complete(act);}renderGoals();}
+function goalStatus(){var st=S.step,n=need(st),l=left(st);return n.length?'<p>'+(l?l+' of '+n.length+' task goals still open.':'<strong>All task goals met.</strong> Continue when ready.')+'</p>':'';}
+api.goalStatus=goalStatus;
+function renderGoals(){var g=(S.t&&S.t.g)||{};
+  qa('[data-goal]').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('is-done',!!g[k]);var s=li.querySelector('.state');if(s){s.setAttribute('data-state',g[k]?'✓ done':'open');}});
+  var sum=$('goal-summary');if(sum){var n=need(S.step),l=left(S.step);sum.textContent=n.length?(l?l+' of '+n.length+' task goals still open':'All task goals met'):'';sum.hidden=!n.length;}
+  qa('[data-obj]').forEach(function(li){var acts=(TOPIC.objActs||{})[li.getAttribute('data-obj')]||[];var ok=acts.length&&acts.every(function(a){return S.done[a]&&!S.settled[a];});li.classList.toggle('is-done',!!ok);li.querySelector('.state').setAttribute('data-state',ok?'✓ done':'open');});}
+function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
+function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}if(S.t&&S.t.g){renderGoals();}}
+function progress(){
+  var acts=TOPIC.acts,n=0,set=0,cur=Math.min(S.step,acts.length);
+  acts.forEach(function(a,i){var p=qa('#progress-bar > span')[i];var on=!!S.done[a];if(on&&!S.settled[a]){n++;}if(S.settled[a]){set++;}
+    p.className=on?(S.settled[a]?'is-settled':'is-done'):'';});
+  $('prog-text').textContent='Activity '+cur+' of '+acts.length+' · '+n+' done'+(set?' ('+set+' settled, not marked correct)':'');
+  renderGoals();
+}
+function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
+function show(step,focus){
+  S.step=step;stageEl.setAttribute('data-step',String(step));
+  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
+  if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
+    SNAP[step]={html:h,t:clone(S.t)};}
+  var rb=$('reset');rb.disabled=(step===LAST);
+  $('next').hidden=true;
+  if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
+    c.innerHTML='<p><strong>All '+TOPIC.acts.length+' activities finished.</strong>'+(set?' '+set+' was answered without being marked correct. That is fine: review its explanation before moving on.':'')+'</p>';}}
+  else{main.removeAttribute('data-pep-complete');}
+  initEditors();TOPIC.render(S,api);progress();
+  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+}
+function optLabel(inp){return inp.closest('label');}
+function optText(inp){var t=optLabel(inp).querySelector('.pep-option__text');return t?t.firstChild.textContent.trim():optLabel(inp).textContent.trim();}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function tag(cls,txt){return '<span class="pep-tag pep-tag--'+cls+'">'+txt+'</span>';}
+function annotate(name,correct,chosen,why,who){qa('input[name="'+name+'"]').forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===correct){l.classList.add('is-correct');}else if(i.value===chosen){l.classList.add('is-wrong');}
+  var t=l.querySelector('.pep-option__text');var w=d.createElement('span');w.className='pep-explain';
+  w.innerHTML=(i.value===chosen?tag('me',who):'')+(i.value===correct?tag('ok','✓ Correct answer'):(i.value===chosen?tag('no','✗ Not correct'):''))+'<span class="why">'+why[i.value]+'</span>';t.appendChild(w);});}
+function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
+function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
+  var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
+  var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function explainList(set){var html='<ul>';qa('input[name="'+set.fs+'"]').forEach(function(i){html+='<li><strong>'+(i.value===set.correct?'✓ Correct: ':'✗ Not this: ')+'</strong>'+esc(optText(i))+': '+set.why[i.value]+'</li>';});return html+'</ul>';}
+function checkApply(which){
+  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  if(which==='a'){
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;
+    if(ch===A.correct){S.tries=2;annotate('apply-a',A.correct,ch,A.why,'Your answer');$('apply-check').hidden=true;
+      say('<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Correct.</p>'+A.okNote+'<p>Each option is explained above.</p>'+confText()+'</div>');complete('apply');TOPIC.render(S,api);focusVerdict();return;}
+    qa('input[name="apply-a"]').forEach(function(i){i.disabled=true;if(i.value===ch){optLabel(i).classList.add('is-wrong');}});
+    S.firstPick=optText(qa('input[name="apply-a"][value="'+ch+'"]')[0]);
+    say('<div class="pep-callout pep-callout--danger"><p class="pep-verdict pep-verdict--wrong">✗ Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <strong>'+esc(S.firstPick)+'</strong>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText()+'</div>');
+    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});TOPIC.render(S,api);
+    var t=$('task-apply-b');if(t){t.focus();}
+  } else {
+    var c2=checked('apply-b');if(!c2){return;}
+    S.tries=2;$('apply-check-b').hidden=true;annotate('apply-b',B.correct,c2,B.why,'Your answer');
+    var first='<details><summary>First question: every option explained</summary>'+explainList(A)+'</details>';
+    if(c2===B.correct){say('<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Correct on the second try.</p><p>Each option is explained above.</p>'+first+confText()+'</div>');}
+    else{S.settled.apply=true;say('<div class="pep-callout pep-callout--warning"><p class="pep-verdict pep-verdict--revealed">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained above.</p>'+first+confText()+'</div>');}
+    complete('apply');TOPIC.render(S,api);focusVerdict();
+  }
+}
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .pep-verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
+  if(!ch||!pc){return;}
+  qa('input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  annotate('predict',P.correct,ch,P.why,'Your prediction');
+  say('<div class="pep-callout pep-callout--info"><p class="pep-verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+'</p><p>Each option is explained above.</p><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||'')+'</div>',1);complete('predict');
+}
+/* editor shell */
+var ED={};
+function editorText(step){var i=$('ed-'+step+'-input');return i?i.value:'';}
+function gutter(step){var i=$('ed-'+step+'-input'),g=$('ed-'+step+'-gutter');if(!i||!g){return;}var n=Math.max(1,i.value.split('\n').length),s=[];for(var k=1;k<=n;k++){s.push(k);}g.textContent=s.join('\n');}
+function initEditors(){qa('.pep-editor[data-ed]').forEach(function(box){var st=box.getAttribute('data-ed');var i=$('ed-'+st+'-input');if(i&&!i.getAttribute('data-wired')){i.setAttribute('data-wired','1');i.addEventListener('input',function(){gutter(st);});}gutter(st);});}
+function edTab(st,which){['problems','output'].forEach(function(w){var t=$('ed-'+st+'-tab-'+w),p=$('ed-'+st+'-'+w);if(t&&p){t.setAttribute('aria-selected',w===which?'true':'false');t.tabIndex=w===which?0:-1;p.hidden=w!==which;}});}
+function edRun(st){var E=TOPIC.editors[st];if(!E){return;}var r=E.check(editorText(st),S,api)||{};
+  var pp=$('ed-'+st+'-problems'),op=$('ed-'+st+'-output'),probs=r.problems||[];
+  pp.innerHTML='';if(!probs.length){pp.textContent='No problems found.';}
+  probs.forEach(function(p){var b=d.createElement('button');b.type='button';b.className='pep-editor__problem';b.setAttribute('data-line',String(p.line||1));
+    b.innerHTML='<span class="kind-'+(p.kind==='limit'?'limit':'error')+'">'+(p.kind==='limit'?'Not supported':'Problem')+'</span> line '+(p.line||1)+': '+esc(p.msg);pp.appendChild(b);});
+  op.textContent=(r.output||[]).join('\n')||'(no output)';
+  var stt=$('ed-'+st+'-status');stt.textContent=r.ok?'✓ All checks pass. '+(r.summary||''):(probs.length?'✗ '+probs.length+' problem'+(probs.length>1?'s':'')+' to fix. Open each one to jump to its line.':(r.summary||'Checked.'));
+  edTab(st,r.ok?'output':'problems');
+  if(r.ok&&E.goal){goal(E.goal);}
+  say((r.ok?'<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Your file passes every check.</p>':'<div class="pep-callout pep-callout--danger"><p class="pep-verdict pep-verdict--wrong">✗ Not yet: read the Problems tab, fix one thing, and run the checks again.</p>')+(r.note?'<p>'+r.note+'</p>':'')+'</div>'+goalStatus());}
+function edReset(st){var E=TOPIC.editors[st];var i=$('ed-'+st+'-input');if(!E||!i){return;}i.value=E.starter;gutter(st);$('ed-'+st+'-problems').textContent='Not run yet.';$('ed-'+st+'-output').textContent='(no output)';$('ed-'+st+'-status').textContent='Starter restored. Not run yet.';edTab(st,'problems');i.focus();}
+var userAct=TOPIC.act;
+TOPIC.act=function(a,b,Sx,apix){
+  if(a==='edrun'){edRun(+b.getAttribute('data-ed'));return;}
+  if(a==='edreset'){edReset(+b.getAttribute('data-ed'));return;}
+  if(a==='edtab'){edTab(+b.getAttribute('data-ed'),b.getAttribute('data-tab'));return;}
+  if(a==='edline'){return;}
+  if(userAct){userAct.call(TOPIC,a,b,Sx,apix);}
+};
+d.addEventListener('click',function(e){var p=e.target.closest&&e.target.closest('.pep-editor__problem');if(!p){return;}var box=p.closest('.pep-editor');var i=box.querySelector('textarea');var ln=+p.getAttribute('data-line');var lines=i.value.split('\n'),pos=0;for(var k=0;k<ln-1&&k<lines.length;k++){pos+=lines[k].length+1;}i.focus();i.setSelectionRange(pos,pos+((lines[ln-1]||'').length));});
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.getAttribute||t.getAttribute('role')!=='tab'){return;}if(e.key==='ArrowRight'||e.key==='ArrowLeft'){var st=t.getAttribute('data-ed');var nx=t.getAttribute('data-tab')==='problems'?'output':'problems';e.preventDefault();edTab(+st,nx);$('ed-'+st+'-tab-'+nx).focus();}});
+function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
+function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
+  Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
+  qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
+  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  show(step,false);syncPrompt();say('<p>Activity restarted. Earlier activities keep their results.</p>'+goalStatus());var h=$('teach-'+step+'-h');if(h){h.focus();}}
+/* pep:component terminal@1 js */
+d.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b){return;}
+  if(b.id==='reset'){restart();return;}
+  if(b.id==='next'){show(S.step+1);return;}
+  if(b.id==='predict-check'){checkPredict();return;}
+  if(b.id==='apply-check'){checkApply('a');return;}
+  if(b.id==='apply-check-b'){checkApply('b');return;}
+  if(b.classList.contains('runbtn')){runTerminal(b.closest('.cmdline'));return;}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+});
+d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
+var HIST={};
+function prompt(){return TOPIC.prompt?TOPIC.prompt(S):'$';}
+function syncPrompt(){qa('.cmdline .pr').forEach(function(n){n.textContent=prompt();});}
+function runTerminal(box){
+  if(!box){return;}var inp=box.querySelector('input[type="text"]');if(!inp||inp.disabled){return;}
+  var line=inp.value,H=HIST[inp.id]||(HIST[inp.id]={l:[],i:0});if(line.trim()){H.l.push(line);}H.i=H.l.length;
+  var p=prompt();inp.value='';TOPIC.run(line,box.getAttribute('data-term'),S,api);
+  qa('.log .c:not([data-p])').forEach(function(n){n.setAttribute('data-p',p);});syncPrompt();inp.focus();}
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closest('.cmdline')||t.tagName!=='INPUT'){return;}
+  var H=HIST[t.id]||(HIST[t.id]={l:[],i:0});
+  if(e.key==='Enter'&&!e.isComposing){e.preventDefault();runTerminal(t.closest('.cmdline'));}
+  else if(e.key==='ArrowUp'){if(!H.l.length){return;}e.preventDefault();H.i=Math.max(0,H.i-1);t.value=H.l[H.i];}
+  else if(e.key==='ArrowDown'){if(!H.l.length){return;}e.preventDefault();H.i=Math.min(H.l.length,H.i+1);t.value=H.l[H.i]||'';}
+  else if(e.key==='Tab'&&!e.shiftKey&&!e.altKey&&!e.ctrlKey&&!e.metaKey){
+    // capture Tab only when a completion actually changes the line, so Tab never traps focus
+    var v=t.value.trim()&&TOPIC.complete?TOPIC.complete(t.value,S):null;if(v&&v!==t.value){e.preventDefault();t.value=v;}}
+  else if(e.key==='Escape'){var tk=$('task-'+S.step);if(tk){e.preventDefault();tk.setAttribute('tabindex','-1');tk.focus();}}
+});
+/* /pep:component terminal js */
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+setTheme(mq&&mq.matches?'dark':'light');
+if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=qa('details[data-pep-optional]:not([open])');printOpened.forEach(function(x){x.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(x){x.open=false;});printOpened=[];});
+fresh();show(1,false);syncPrompt();
+})();
+</script>
+</body>
+</html>

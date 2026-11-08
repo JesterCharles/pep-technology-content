@@ -1,0 +1,46 @@
+// Practice quiz: Service-name networking
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: containers-cicd/containers-and-compose/service-name-networking
+
+::o1 localhost inside a container::Code running in a container named web connects to localhost\:6379. Where does that connection go? {
+=To the web container itself #Correct. Each container has its own network stack, so localhost is that container.
+~To the host machine #Not quite. Inside a container, localhost does not mean the host.
+~To whichever container runs Redis #Not quite. Use the service name to reach another container.
+~To every container on the network #Not quite. localhost names exactly one place: the container itself.
+}
+
+::o1 why it fails::An API container uses localhost\:5432 for a database that runs in a separate db container. Why does it fail? {
+=Nothing listens on port 5432 inside the API container #Correct. The database listens inside its own container.
+~PostgreSQL rejects connections from containers #Not quite. It accepts them; the request just never reaches it.
+~The db container must use host networking #Not quite. The fix is to use the service name db.
+~Port 5432 is reserved for the host #Not quite. Each container has its own ports.
+}
+
+::o2 service URL::In compose.yaml, a Redis service is named cache and listens on 6379. Which address should another service use? {
+=cache\:6379 #Correct. Service name plus container port.
+~localhost\:6379 #Not quite. That stays inside the calling container.
+~redis\:6379 #Not quite. Use the service name from compose.yaml, here cache.
+~127.0.0.1\:6379 #Not quite. That is the calling container's own loopback address.
+}
+
+::o2 why names::Why should services reach each other by service name rather than by container IP address? {
+=IP addresses can change when containers are recreated; the service name stays the same #Correct. Compose registers the name on the network.
+~IP addresses are secret #Not quite. They are simply not stable.
+~Names are faster than IP addresses #Not quite. The reason is stability, not speed.
+~Containers have no IP addresses #Not quite. They do, but those addresses change.
+}
+
+::o3 host or container port::A service maps "127.0.0.1\:15432\:5432". Which address does a database tool on your laptop use? {
+=localhost\:15432 #Correct. The laptop uses the published host port.
+~localhost\:5432 #Not quite. 5432 is the port inside the container.
+~db\:5432 #Not quite. Your laptop cannot resolve Compose service names.
+~db\:15432 #Not quite. The laptop cannot resolve db, and 15432 is not the container port.
+}
+
+::o3 which port for services::With ports "127.0.0.1\:8081\:8080" on service api, which address does another service in the stack use? {
+=api\:8080 #Correct. Services use the container port.
+~api\:8081 #Not quite. 8081 is the host port on the laptop.
+~localhost\:8081 #Not quite. That is the laptop's address, not reachable as localhost from another container.
+~localhost\:8080 #Not quite. That stays inside the calling container.
+}
