@@ -782,6 +782,11 @@ function sqlGuidedSpec() {
   return spec;
 }
 
+function privateRouteDiagnostic(route, phase, details = "") {
+  const suffix = details ? ` ${details}` : "";
+  return `private success route failed; no private values were recorded [route=${route} phase=${phase}${suffix}]`;
+}
+
 const JAVA_GUIDED_TASKS = [
   { task: "#task-2", language: "java", targets: ["reverse"] },
   { task: "#task-3", language: "java", targets: ["summarize"] },
@@ -984,6 +989,166 @@ test("SQL answer declarations require matched markers, adapters and editors", { 
   const reversible = Buffer.from("queryOne = atob(encoded)").toString("base64");
   const encodedLeak = html.replace("Complete the reverse method", `${reversible}. Complete the reverse method`);
   assert.match((await validateLearnerGuidance(encodedLeak, spec)).join("; "), /must not encode, assemble or hash/);
+});
+
+test("private SQL proof reports fixed value-free route and phase diagnostics", { timeout: 600000 }, async () => {
+  const spec = sqlGuidedSpec();
+  const baseHtml = await readFile(path.join(fixtures, "guided-answer-sensitive.html"), "utf8");
+  const publicHtml = sqlGuidedHtml(baseHtml.replace('data-pep-predict="settle"', 'data-pep-predict="strict"'));
+  const repository = await makeOverlayRepository("guided-answer-sensitive.html", {
+    spec,
+    transformHtml: () => publicHtml,
+  });
+  const staging = await mkdtemp(path.join(os.tmpdir(), "pep-private-overlay-sql-diagnostics-"));
+  const overlayFile = path.join(staging, "overlay.json");
+  const inputsFile = path.join(staging, "inputs.json");
+  const environment = { PEP_QA_PRIVATE_INPUTS_FILE: inputsFile };
+  const diagnosticOne = `SELECT 'diagnostic-route-one-${process.pid}' AS note;`;
+  const diagnosticTwo = `SELECT 'diagnostic-route-two-${process.pid}' AS note;`;
+  const diagnosticMiss = "-- TODO diagnostic-only incomplete SQL";
+  const diagnosticFirstMiss = "-- TODO diagnostic-only first miss";
+  const diagnosticForms = [diagnosticOne, diagnosticTwo, diagnosticMiss, diagnosticFirstMiss].flatMap((value) => [
+    value,
+    Buffer.from(value).toString("base64"),
+    createHash("sha256").update(value).digest("hex"),
+  ]);
+  const pass = (editor, check, key) => [
+    { do: "fill", selector: editor, valueFrom: `private:${key}` },
+    { do: "click", selector: check },
+  ];
+  const miss = (editor, check) => [
+    { do: "fill", selector: editor, value: diagnosticMiss },
+    { do: "click", selector: check },
+    { do: "click", selector: check },
+  ];
+  const allPass = guidedOverlayRoutes(
+    pass("#editor-2", "#check-2", "one"),
+    pass("#editor-3", "#check-3", "two"),
+  );
+  const wrongFirstPass = guidedOverlayRoutes(
+    [
+      { do: "fill", selector: "#editor-2", value: diagnosticFirstMiss },
+      { do: "click", selector: "#check-2" },
+      ...pass("#editor-2", "#check-2", "one"),
+    ],
+    pass("#editor-3", "#check-3", "two"),
+  );
+  const passingOverlay = {
+    schemaVersion: 1,
+    runId: "local-safe-sql-diagnostics",
+    topic: "course/module/topic",
+    completion: { selector: "#lesson", attribute: "data-pep-complete", equals: "true" },
+    progress: { selector: "#progress", text: "^4 of 4 done$" },
+    routes: {
+      success: allPass,
+      wrongFirst: wrongFirstPass,
+      keyboard: allPass,
+      sandbox: allPass,
+    },
+  };
+  const writeOverlay = (overlay) => writeFile(overlayFile, `${JSON.stringify(overlay)}\n`);
+  const assertDiagnostic = async (overlay, expected) => {
+    await writeOverlay(overlay);
+    await assert.rejects(
+      runPrivateOverlay(context(repository.root), overlayFile, { environment }),
+      (error) => {
+        assert.equal(error.message, expected);
+        for (const form of diagnosticForms) assert.ok(!error.message.includes(form), "diagnostic must not expose SQL or a derivative");
+        return true;
+      },
+    );
+  };
+  const commitScratch = (message) => {
+    for (const args of [["add", "."], ["-c", "user.name=QA", "-c", "user.email=qa@example.invalid", "commit", "-qm", message]]) {
+      const result = spawnSync("git", args, { cwd: repository.root, encoding: "utf8" });
+      assert.equal(result.status, 0, result.stderr);
+    }
+  };
+  try {
+    assert.deepEqual(await validateLearnerGuidance(publicHtml, spec), []);
+    await writeFile(inputsFile, `${JSON.stringify({ one: diagnosticOne, two: diagnosticTwo })}\n`);
+
+    await writeOverlay(passingOverlay);
+    const result = await runPrivateOverlay(context(repository.root), overlayFile, { environment });
+    assert.equal(result.result, "pass");
+    for (const form of diagnosticForms) assert.ok(!JSON.stringify(result).includes(form), "proof result must not contain SQL or a derivative");
+
+    for (const routeName of ["success", "wrongFirst", "keyboard", "sandbox"]) {
+      const actionFailure = structuredClone(passingOverlay);
+      actionFailure.routes[routeName] = [
+        { do: "click", selector: "#diagnostic-missing-control", timeoutMs: 50 },
+      ];
+      await assertDiagnostic(actionFailure, privateRouteDiagnostic(routeName, "actions"));
+    }
+
+    const completionFailure = structuredClone(passingOverlay);
+    completionFailure.completion.equals = "false";
+    await assertDiagnostic(completionFailure, privateRouteDiagnostic("success", "completion"));
+
+    const progressFailure = structuredClone(passingOverlay);
+    progressFailure.progress.text = "^0 of 4 done$";
+    await assertDiagnostic(progressFailure, privateRouteDiagnostic("success", "progress"));
+
+    const mixedRoute = guidedOverlayRoutes(
+      pass("#editor-2", "#check-2", "one"),
+      miss("#editor-3", "#check-3"),
+    );
+    const declaredTaskFailure = structuredClone(passingOverlay);
+    declaredTaskFailure.completion.equals = "false";
+    declaredTaskFailure.progress.text = "^3 of 4 done$";
+    declaredTaskFailure.routes = {
+      success: mixedRoute,
+      wrongFirst: mixedRoute,
+      keyboard: mixedRoute,
+      sandbox: mixedRoute,
+    };
+    await assertDiagnostic(
+      declaredTaskFailure,
+      privateRouteDiagnostic(
+        "success",
+        "declared-task-state",
+        "task=2 id=task-3 completed=false credit=false grade=false",
+      ),
+    );
+
+    const artifactFile = path.join(repository.topicRoot, "artifact.html");
+    const externalHtml = publicHtml.replace(
+      "</main>",
+      '<img src="https://diagnostic.invalid/external.png" alt="">\n  </main>',
+    );
+    await writeFile(artifactFile, externalHtml);
+    commitScratch("add diagnostic external load");
+    await assertDiagnostic(passingOverlay, privateRouteDiagnostic("success", "external-load"));
+
+    await writeFile(
+      artifactFile,
+      externalHtml.replace(
+        "lesson.dataset.pepComplete = String(state.every(item => item.completed));",
+        "lesson.dataset.pepComplete = 'false';",
+      ),
+    );
+    commitScratch("add diagnostic incomplete guided page");
+    const pageCompletionFailure = structuredClone(passingOverlay);
+    pageCompletionFailure.completion = {
+      selector: "#activity-4",
+      attribute: "data-pep-completed",
+      equals: "true",
+    };
+    await assertDiagnostic(
+      pageCompletionFailure,
+      privateRouteDiagnostic("success", "page-completion", "complete=false"),
+    );
+
+    const history = spawnSync("git", ["log", "-p", "--all"], {
+      cwd: repository.root,
+      encoding: "utf8",
+    }).stdout;
+    for (const form of diagnosticForms) assert.ok(!history.includes(form), "repository history must not contain diagnostic SQL or a derivative");
+    await assert.rejects(readFile(path.join(repository.root, "build", "qa", "qa-receipt.json")), { code: "ENOENT" });
+  } finally {
+    await rm(repository.root, { recursive: true, force: true });
+    await rm(staging, { recursive: true, force: true });
+  }
 });
 
 test("private SQL proof keeps receipts public-only and refuses mixed or all-fail routes", { timeout: 420000 }, async () => {
@@ -1595,7 +1760,11 @@ test("private overlay rejects settle-as-complete false credit even when the page
     await writeFile(overlayFile, `${JSON.stringify(overlay)}\n`);
     await assert.rejects(
       runPrivateOverlay(context(repository.root), overlayFile, { environment }),
-      /private success route failed; no private values were recorded/,
+      (error) => error.message === privateRouteDiagnostic(
+        "success",
+        "declared-task-state",
+        "task=1 id=task-2 completed=true credit=true grade=false",
+      ),
       "an all-editor-fail run must be refused even when page completion claims success",
     );
     const mixed = structuredClone(overlay);
@@ -1609,7 +1778,11 @@ test("private overlay rejects settle-as-complete false credit even when the page
     await writeFile(overlayFile, `${JSON.stringify(mixed)}\n`);
     await assert.rejects(
       runPrivateOverlay(context(repository.root), overlayFile, { environment }),
-      (error) => /private success route failed; no private values were recorded/.test(error.message) && !error.message.includes(privateReverse),
+      (error) => error.message === privateRouteDiagnostic(
+        "success",
+        "declared-task-state",
+        "task=2 id=task-3 completed=true credit=true grade=false",
+      ) && !error.message.includes(privateReverse),
       "false credit on a failed declared editor must be caught",
     );
   } finally {
