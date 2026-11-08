@@ -13,39 +13,60 @@ Retested on the `bf84329` bytes with public failing input. An editor, match or a
 - `data-pep-complete` requires every activity to be completed. `data-pep-route-settled` marks the end of a route and opens the recap.
 - A wrong prediction keeps `completed=true, credit=1, grade=0`. Predictions are ungraded, and the harness Restart check requires a prior settled grade-0 activity with one credit.
 
-## Checks run by the author on this machine (macOS)
+## Minimum release
+
+This module is marked for the tonight minimum-release profile. Each topic carries `owner-essential-qa.json`, an implementation-owner record bound to the current `artifact.html` and `artifact.gift` hashes. It states that independent education and JavaScript SME critic approval was not required and was not performed. Draft status still holds: these bytes are not final, not upload-safe, not published and not merged.
+
+Owner work on the current bytes:
+
+1. **Choice controls simplified** (`d1cb8953`). Native selects became native radio groups (`fieldset.pep-choice`). The harness drives keyboard selects with Home and ArrowDown, which macOS ignores and no Linux run has proven. Radios work with Space on every platform, and QA select steps map one-to-one to radio checks.
+2. **One bounded essential pass** (`315f9317`) covered correctness, answer safety and GIFT validity. One owner-dispatched read-only helper per module reported findings; the owner verified and applied them. No content-review wave, critic or reconciliation record was run or written.
+3. **Main merged** (`39bbf50b`, main `e9a8aa28`). That merge changed `harness.mjs` and `T08-html-static.mjs`, which every private-success receipt binds.
+
+## Checks on the current bytes (macOS, no browser)
 
 | Check | Result |
 | --- | --- |
-| `npm test` | 269 passed, 0 failed |
-| All other gates in `npm run check`, including T05, T06, T09, T13, T14, T15 and T18 | No failures in this module |
-| T10, T11, T12 in `npm run check` | Failures, see below |
-| T25 in `npm run check` | Failures, see below |
-| Author smoke with success inputs kept outside the repository | Passed: pass, fail, restart, history, viewports, sandbox, no-JavaScript, print |
+| Inline script and JSON parse, all pages | Pass |
+| T01-T05, T07, T14-T17, T19, T20, T24 | Pass |
+| T06 | Fails until each answer-sensitive topic has a current private success receipt (table below) |
+| T25 | Fails on this branch: minimum-profile support arrives with the T25 change on the inheritance-and-design branch. With that T25 and T01 applied to a scratch copy, T25 passes |
+| T08-T13, T18, `npm test` browser suites | Not run: Chromium is held by another lane |
 
-## Exact remaining failures
+## Proof inventory
 
-1. **T25**: each `artifact.html` and `artifact.gift` reports missing current education and SME critic coverage. No review has been allocated, and no critic record was written.
-2. **T10, T11, T12 on macOS**: the harness drives keyboard selects with Home and ArrowDown, which native macOS selects ignore. Pages with a select in a keyboard route stop at that step. On a throwaway copy with identical pages and QA paths, replacing only those two harness select steps gave `QA: T09-T13 and T18 passed`.
+The "Page" and "QA paths" columns compare with `4d4fc1b5`, the last receipt checkpoint. No receipt is current, because every receipt binds the shared tool files changed by the main merge.
+
+| Topic | Answer-sensitive | Receipt | Page | QA paths | Needed before release |
+| --- | --- | --- | --- | --- | --- |
+| `project-setup-with-npm-and-vite` | no | none | changed | changed | No private proof (no answer-sensitive editor); public browser gates only |
+| `selecting-and-changing-the-dom` | yes | none | changed | changed | New private success proof (never proven) |
+| `events-and-event-bubbling` | yes | none | changed | unchanged | New private success proof (never proven) |
+| `preventing-cross-site-scripting` | yes | none | changed | changed | New private success proof (never proven) |
+| `promises` | yes | none | changed | changed | New private success proof (never proven) |
+| `async-and-await` | yes | none | unchanged | unchanged | New private success proof (never proven) |
+| `the-event-loop` | yes | none | changed | unchanged | New private success proof (never proven) |
+| `debugging-with-devtools-breakpoints` | yes | none | changed | changed | New private success proof (never proven) |
+
+Run the proofs serially from one checkpoint, after the browser lane clears, and then run T08-T13 and T18 on the same bytes. Any later byte change to a page or its QA paths makes its proof and its `owner-essential-qa.json` stale again.
 
 ## Open gaps
 
-- **Linux keyboard evidence is unavailable.** Keyboard operation of native selects has not been proven by the unmodified harness. This needs a Linux or CI run; the diagnostic above does not replace it.
-- **Passing editor routes are not committed proof.** Committed QA paths hold only answer-free failing input, so they prove failure handling. Passing was exercised only by the uncommitted author smoke, and no receipt records it. The private-proof path supports only the Python comprehension scanner, so these JavaScript tasks cannot opt in.
-- **Answer safety is author-scanned.** T08 has no JavaScript answer scanner. The author checked that no complete success input appears in the page, Markdown, GIFT, QA paths or catalog. Semantic leakage needs independent review.
+- **Browser evidence is pending** for every topic. No claim is made about Linux keyboard behaviour.
+- **Answer safety is owner-checked.** T08 has no JavaScript answer scanner.
 - **Sources are bound per topic.** Every URL returned HTTP 200, but no claim-by-claim SME check exists.
-- **Timing is an author model.** Budgets below were raised to fit the modeled worst path. T14 passes with them.
+- **Companion generator quirk.** The derived `artifact.md` repeats skipped sections under its Cheat sheet heading. This comes from shared tooling, not from the content.
 - **Not built here:** labs stay deferred, and video stays absent with no search record.
 
 ## Budgets
 
-| Topic | Planned | Now | P50 | Worst path |
-| --- | --- | --- | --- | --- |
-| `project-setup-with-npm-and-vite` | 10 | 12 | 10.05 | 11.55 |
-| `selecting-and-changing-the-dom` | 10 | 13 | 10.9 | 12.4 |
-| `events-and-event-bubbling` | 10 | 13 | 11.5 | 13 |
-| `preventing-cross-site-scripting` | 10 | 11 | 8.86 | 10.36 |
-| `promises` | 10 | 10 | 8.91 | 9.91 |
-| `async-and-await` | 10 | 13 | 10.62 | 12.12 |
-| `the-event-loop` | 10 | 10 | 8.68 | 9.68 |
-| `debugging-with-devtools-breakpoints` | 10 | 10 | 8.46 | 9.46 |
+| Topic | Budget | P50 | Worst path |
+| --- | --- | --- | --- |
+| `project-setup-with-npm-and-vite` | 12 | 10.01 | 11.51 |
+| `selecting-and-changing-the-dom` | 13 | 10.9 | 12.4 |
+| `events-and-event-bubbling` | 13 | 11.5 | 13 |
+| `preventing-cross-site-scripting` | 11 | 8.83 | 10.33 |
+| `promises` | 10 | 8.91 | 9.91 |
+| `async-and-await` | 13 | 10.62 | 12.12 |
+| `the-event-loop` | 10 | 8.68 | 9.68 |
+| `debugging-with-devtools-breakpoints` | 10 | 8.45 | 9.45 |
