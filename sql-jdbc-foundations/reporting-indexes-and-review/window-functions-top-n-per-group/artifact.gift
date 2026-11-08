@@ -1,0 +1,53 @@
+// Practice quiz: Window functions, top N per group
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: sql-jdbc-foundations/reporting-indexes-and-review/window-functions-top-n-per-group
+
+::o1 rows kept::sales has 12 rows across 3 regions. How many rows does SELECT region, amount, SUM(amount) OVER (PARTITION BY region) FROM sales return? {
+=12 #Correct. A window function adds a value to every row; it never folds rows together.
+~3 #Not quite. Three rows is what GROUP BY region would return.
+~1 #Not quite. One row is what a plain SUM(amount) with no GROUP BY would return.
+~36 #Not quite. PARTITION BY groups rows for the calculation; it does not repeat them.
+}
+
+::o1 what PARTITION BY does::In ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC), what does PARTITION BY dept do? {
+=It restarts the numbering at 1 for each department #Correct. Each department is its own window, so each gets its own 1, 2, 3.
+~It sorts the final result by department #Not quite. Sorting the output needs the query's own ORDER BY.
+~It keeps one row per department #Not quite. Window functions keep every row.
+~It removes departments with only one employee #Not quite. PARTITION BY filters nothing.
+}
+
+::o2 filter the number::Why can you not write WHERE ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC) \= 1 directly? {
+=Window functions are computed after WHERE, so PostgreSQL rejects them in WHERE #Correct. The error is "window functions are not allowed in WHERE"; compute the number in a subquery or CTE, then filter it outside.
+~Because ROW_NUMBER can only be used with GROUP BY #Not quite. ROW_NUMBER needs OVER, not GROUP BY.
+~It works, but it is slow #Not quite. PostgreSQL rejects it with an error.
+~Because \= cannot compare numbers #Not quite. The comparison is fine; the place it appears is the problem.
+}
+
+::o2 top two per group::A CTE ranked computes rn \= ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC). Which outer query returns the two best-paid employees in each department? {
+=SELECT * FROM ranked WHERE rn IN (1, 2) #Correct. Each department numbers its own rows, so rn 1 and 2 are its top two.
+~SELECT * FROM ranked ORDER BY salary DESC LIMIT 2 #Not quite. LIMIT 2 keeps two rows for the whole table, not two per department.
+~SELECT * FROM ranked WHERE rn \= 2 #Not quite. That keeps only the second-best in each department.
+~SELECT dept, MAX(salary) FROM ranked GROUP BY dept #Not quite. That gives one value per department, not two employees.
+}
+
+::o3 RANK with ties::Scores in one group, highest first, are 90, 90 and 80. What does RANK() give them? {
+=1, 1, 3 #Correct. Tied rows share a rank, and the next rank skips the places the tie used.
+~1, 2, 3 #Not quite. That is ROW_NUMBER, which never gives a tie the same number.
+~1, 1, 2 #Not quite. That is DENSE_RANK, which leaves no gap after a tie.
+~1, 2, 2 #Not quite. The two 90s are tied, so they share the first rank.
+}
+
+::o3 DENSE_RANK with ties::Scores in one group, highest first, are 70, 70, 70 and 60. What does DENSE_RANK() give the 60? {
+=2 #Correct. DENSE_RANK leaves no gaps, so the next distinct score after the tie gets 2.
+~4 #Not quite. 4 is what RANK and ROW_NUMBER give it, because three rows come first.
+~3 #Not quite. Neither function gives 3 here.
+~1 #Not quite. 60 is lower than 70, so it ranks after the tie.
+}
+
+::o3 ROW_NUMBER and ties::Two employees in one department earn the same top salary, and the query uses ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC). Which statement is true? {
+=One of them gets 1 and the other 2, and which one gets 1 is not guaranteed #Correct. ROW_NUMBER always numbers rows uniquely; add another ORDER BY column to make the order fixed.
+~Both get 1 #Not quite. Sharing a number is what RANK and DENSE_RANK do.
+~The query fails because of the tie #Not quite. Ties are allowed; they only make the order of the tied rows unspecified.
+~Both are left out #Not quite. Every row gets a number.
+}

@@ -1,0 +1,53 @@
+// Practice quiz: Query plans with EXPLAIN
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: sql-jdbc-foundations/reporting-indexes-and-review/query-plans-with-explain
+
+::o1 read the scan line::An EXPLAIN plan's top line is Seq Scan on members. What is PostgreSQL planning to do? {
+=Read every row of members and test each one against the conditions #Correct. A sequential scan reads the whole table from start to end.
+~Use an index on members to jump to the matching rows #Not quite. That plan line would say Index Scan using ... on members.
+~Read members in sorted order #Not quite. A sequential scan reads rows in storage order, not sorted.
+~Skip members because it is empty #Not quite. The line describes how the table will be read, not that it is empty.
+}
+
+::o1 name the index::Which plan line shows that PostgreSQL will use the index named members_email_idx? {
+=Index Scan using members_email_idx on members #Correct. An index scan line names both the index and the table.
+~Seq Scan on members_email_idx #Not quite. Sequential scans read tables, and this line would not use the index as an index.
+~Seq Scan on members #Not quite. That reads the whole table without the index.
+~Filter: email \= 'a@b.co' #Not quite. A Filter line tests rows; it does not say which index is used.
+}
+
+::o1 small table::A table has 20 rows and an index on code. EXPLAIN SELECT * FROM t WHERE code \= 'X' shows Seq Scan. What is the most likely reason? {
+=For so few rows, reading the whole table is estimated to be cheaper than using the index #Correct. The planner picks the plan with the lowest estimated cost, and the index is not always cheaper.
+~The index is broken #Not quite. A working index is still skipped when a scan looks cheaper.
+~EXPLAIN never shows index scans #Not quite. EXPLAIN shows whatever plan the planner chose.
+~Indexes only work on numeric columns #Not quite. B-tree indexes work on text too.
+}
+
+::o1 cost numbers::A plan line shows cost\=0.00..35.50. What are these numbers? {
+=The planner's estimated startup cost and total cost, in arbitrary cost units #Correct. They are estimates for comparing plans, not measured times.
+~Milliseconds measured while the query ran #Not quite. Plain EXPLAIN runs nothing; measured times come from EXPLAIN ANALYZE.
+~The number of rows read and returned #Not quite. Row estimates appear separately as rows\=...
+~Dollars charged by the server #Not quite. Cost units are internal estimates.
+}
+
+::o2 does EXPLAIN run it::You run EXPLAIN DELETE FROM sessions; and nothing else. What happens to the rows in sessions? {
+=Nothing; EXPLAIN only shows the plan and does not execute the statement #Correct. Plain EXPLAIN plans the statement without running it.
+~They are deleted, and the plan is shown afterwards #Not quite. That is what EXPLAIN ANALYZE would do.
+~They are deleted and then restored #Not quite. Nothing is deleted at all.
+~The statement is rejected because EXPLAIN only accepts SELECT #Not quite. EXPLAIN accepts DELETE and other statements.
+}
+
+::o2 EXPLAIN ANALYZE safely::You want actual timings for an UPDATE without keeping its changes. What should you do? {
+=Run BEGIN; then EXPLAIN ANALYZE on the UPDATE, then ROLLBACK; #Correct. EXPLAIN ANALYZE really executes the UPDATE, so the transaction lets you undo it.
+~Run EXPLAIN ANALYZE on its own; it never changes data #Not quite. EXPLAIN ANALYZE executes the statement, so the rows really change.
+~Run plain EXPLAIN; it shows actual timings #Not quite. Plain EXPLAIN shows estimates only.
+~Add LIMIT 0 to the UPDATE #Not quite. UPDATE has no LIMIT clause in PostgreSQL.
+}
+
+::o2 what ANALYZE adds::Compared with plain EXPLAIN, what does EXPLAIN ANALYZE add to each plan line? {
+=Actual time and actual row counts from really running the statement #Correct. It runs the statement and reports what happened beside the estimates.
+~Nothing; the two are the same #Not quite. Only ANALYZE runs the statement and measures it.
+~Suggestions for which indexes to create #Not quite. PostgreSQL does not suggest indexes in EXPLAIN output.
+~A guarantee that the statement did not change data #Not quite. It does change data, because it executes the statement.
+}

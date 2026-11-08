@@ -1,0 +1,53 @@
+// Practice quiz: Subqueries and CTEs
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: sql-jdbc-foundations/reporting-indexes-and-review/subqueries-and-ctes
+
+::o1 scalar subquery too many rows::A query uses (SELECT price FROM products WHERE category \= 'tea') as a single value in its SELECT list, and three tea products exist. What happens? {
+=The query fails with "more than one row returned by a subquery used as an expression" #Correct. A scalar subquery must return at most one row; three rows is an error.
+~PostgreSQL uses the first of the three prices #Not quite. PostgreSQL does not pick a row for you; it raises an error.
+~PostgreSQL uses the sum of the three prices #Not quite. Nothing is added up unless the subquery itself uses SUM.
+~The outer query returns three times as many rows #Not quite. A scalar subquery supplies one value; it never multiplies the outer rows.
+}
+
+::o1 scalar subquery no rows::A scalar subquery in the SELECT list finds no matching row. What value does it supply to the outer row? {
+=NULL #Correct. A scalar subquery that returns no rows yields null.
+~0 #Not quite. No row means no value, which is null, not zero.
+~An empty string #Not quite. An empty string is a value; no row gives null.
+~The whole query fails #Not quite. Zero rows is allowed; only more than one row is an error.
+}
+
+::o1 IN or EXISTS::You want every customer who has placed at least one order. Which WHERE clause does that? {
+=WHERE EXISTS (SELECT 1 FROM orders o WHERE o.customer_id \= c.id) #Correct. EXISTS is true as soon as the subquery finds one matching order for this customer.
+~WHERE c.id \= (SELECT customer_id FROM orders) #Not quite. That is a scalar comparison, so it fails as soon as orders has more than one row.
+~WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.customer_id \= c.id) #Not quite. NOT EXISTS keeps the customers with no orders.
+~WHERE EXISTS (SELECT 1 FROM orders) #Not quite. Without a link to c.id, this is true for every customer as long as any order exists.
+}
+
+::o1 what EXISTS checks::Inside EXISTS (SELECT 1 FROM orders o WHERE o.customer_id \= c.id), why is it fine to select just 1? {
+=EXISTS only asks whether the subquery returns any row, not what the row contains #Correct. The selected value is ignored; only the presence of a row matters.
+~Because 1 means true, so EXISTS is always true #Not quite. EXISTS is false when the subquery returns no rows, whatever it selects.
+~Because EXISTS needs a number to compare with #Not quite. EXISTS compares nothing; it checks for at least one row.
+~It is not fine; EXISTS needs the real column names #Not quite. Any select list works, and 1 is a common convention.
+}
+
+::o1 NOT IN and null::banned(user_id) holds the values 3 and NULL. What does SELECT id FROM users WHERE id NOT IN (SELECT user_id FROM banned) return? {
+=No rows #Correct. With a null in the list, NOT IN can never be true, only false or unknown, so every row is filtered out.
+~Every user except user 3 #Not quite. That would be true without the null; the null makes each comparison unknown.
+~Every user #Not quite. User 3 is certainly excluded, and the null excludes the rest.
+~An error, because the list contains NULL #Not quite. The query runs; it just returns nothing.
+}
+
+::o2 why a WITH query::What does rewriting a nested query as a WITH query mainly give you? {
+=Named steps that read top to bottom, each usable by later steps and the main query #Correct. A common table expression names an intermediate result so the query reads as a sequence of steps.
+~A permanent table saved in the database #Not quite. A WITH query exists only while that one statement runs.
+~Faster results in every case #Not quite. WITH is about structure; speed depends on the plan.
+~A way to change rows without a WHERE clause #Not quite. WITH does not change what a statement is allowed to do.
+}
+
+::o2 order of steps::A statement starts WITH big_orders AS (...), big_customers AS (...). Which of these can big_customers use? {
+=big_orders, because it is defined earlier in the same WITH list #Correct. A later WITH entry may refer to an earlier one by name.
+~Nothing; each WITH entry must stand alone #Not quite. Later entries can build on earlier ones.
+~Only tables, never another WITH name #Not quite. Referring to an earlier WITH name is the point of named steps.
+~The main query's result #Not quite. The main query comes after the WITH list and is not available inside it.
+}
