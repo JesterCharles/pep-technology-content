@@ -334,6 +334,10 @@ nav[aria-label="Activities"] { margin-bottom: 24px; }
 .pep-chip-option { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; min-width: 96px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; }
 .pep-chip-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 7px 11px; }
 .pep-chip-option input { width: 20px; height: 20px; margin: 0; accent-color: var(--pep-accent); }
+.pep-choice { border: 0; margin: 0; padding: 0; min-width: 0; flex: 1 1 200px; }
+.pep-choice > legend { padding: 0; margin-bottom: 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-choice > legend.pep-match__label { font: inherit; font-weight: 600; }
+.pep-choice .pep-chip-option { max-width: 100%; min-width: 0; overflow-wrap: anywhere; }
 .pep-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .pep-feedback { margin-top: 16px; }
 .pep-feedback:empty { display: none; }
@@ -723,23 +727,19 @@ console.log(double(4), isLong(&quot;callback&quot;));</code></pre><p>Supported i
 </section>
 <div data-interaction="explore">
 <div class="pep-match__row">
-<label for="a4-row-1" class="pep-match__label"><code>[1, 2].forEach(cb)</code></label>
-<select id="a4-row-1"><option value="">Choose</option><option value="now">During the call</option><option value="later">Later</option></select>
+<fieldset class="pep-choice" id="a4-row-1"><legend class="pep-match__label"><code>[1, 2].forEach(cb)</code></legend><div class="pep-confidence__row"><label class="pep-chip-option"><input type="radio" name="a4-row-1" id="a4-row-1-opt-1" value="now"> During the call</label><label class="pep-chip-option"><input type="radio" name="a4-row-1" id="a4-row-1-opt-2" value="later"> Later</label></div></fieldset>
 <p class="pep-match__mark" hidden></p>
 </div>
 <div class="pep-match__row">
-<label for="a4-row-2" class="pep-match__label"><code>setTimeout(cb, 0)</code></label>
-<select id="a4-row-2"><option value="">Choose</option><option value="now">During the call</option><option value="later">Later</option></select>
+<fieldset class="pep-choice" id="a4-row-2"><legend class="pep-match__label"><code>setTimeout(cb, 0)</code></legend><div class="pep-confidence__row"><label class="pep-chip-option"><input type="radio" name="a4-row-2" id="a4-row-2-opt-1" value="now"> During the call</label><label class="pep-chip-option"><input type="radio" name="a4-row-2" id="a4-row-2-opt-2" value="later"> Later</label></div></fieldset>
 <p class="pep-match__mark" hidden></p>
 </div>
 <div class="pep-match__row">
-<label for="a4-row-3" class="pep-match__label"><code>button.addEventListener(&quot;click&quot;, cb)</code></label>
-<select id="a4-row-3"><option value="">Choose</option><option value="now">During the call</option><option value="later">Later</option></select>
+<fieldset class="pep-choice" id="a4-row-3"><legend class="pep-match__label"><code>button.addEventListener(&quot;click&quot;, cb)</code></legend><div class="pep-confidence__row"><label class="pep-chip-option"><input type="radio" name="a4-row-3" id="a4-row-3-opt-1" value="now"> During the call</label><label class="pep-chip-option"><input type="radio" name="a4-row-3" id="a4-row-3-opt-2" value="later"> Later</label></div></fieldset>
 <p class="pep-match__mark" hidden></p>
 </div>
 <div class="pep-match__row">
-<label for="a4-row-4" class="pep-match__label"><code>[3, 1].map(cb)</code></label>
-<select id="a4-row-4"><option value="">Choose</option><option value="now">During the call</option><option value="later">Later</option></select>
+<fieldset class="pep-choice" id="a4-row-4"><legend class="pep-match__label"><code>[3, 1].map(cb)</code></legend><div class="pep-confidence__row"><label class="pep-chip-option"><input type="radio" name="a4-row-4" id="a4-row-4-opt-1" value="now"> During the call</label><label class="pep-chip-option"><input type="radio" name="a4-row-4" id="a4-row-4-opt-2" value="later"> Later</label></div></fieldset>
 <p class="pep-match__mark" hidden></p>
 </div>
 <div class="pep-static" data-static-alt data-section-skip><h3>Static alternative</h3><ul><li><code>[1, 2].forEach(cb)</code>: <strong>During the call</strong>. <code>forEach</code> calls the callback for each item before it returns.</li><li><code>setTimeout(cb, 0)</code>: <strong>Later</strong>. Even at 0 ms it waits until the current code has finished.</li><li><code>button.addEventListener(&quot;click&quot;, cb)</code>: <strong>Later</strong>. It only registers the callback; it runs on each click.</li><li><code>[3, 1].map(cb)</code>: <strong>During the call</strong>. <code>map</code> builds its result by calling the callback before it returns.</li></ul></div>
@@ -866,6 +866,12 @@ window.PEP_FN = {
   document.documentElement.classList.add('is-enhanced');
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  /* Choice groups are native radios in a fieldset; expose the chosen value like a form control. */
+  $$('fieldset.pep-choice').forEach((group) => Object.defineProperty(group, 'value', {
+    configurable: true,
+    get: () => { const radio = group.querySelector('input[type="radio"]:checked'); return radio ? radio.value : ''; },
+    set: (next) => { $$('input[type="radio"]', group).forEach((radio) => { radio.checked = radio.value === String(next); }); },
+  }));
   const DATA = JSON.parse($('#pep-data').textContent);
   const FN = window.PEP_FN || {};
   const lesson = $('#lesson');
@@ -1039,7 +1045,7 @@ window.PEP_FN = {
   /* ---------- match each row to a choice ---------- */
   function setupMatch(i, a, def) {
     const rows = $$('.pep-match__row', a);
-    const selects = rows.map((r) => $('select', r));
+    const selects = rows.map((r) => $('fieldset.pep-choice', r));
     const check = $('[data-pep-submit]', a);
     const paint = (reveal) => {
       rows.forEach((row, n) => {

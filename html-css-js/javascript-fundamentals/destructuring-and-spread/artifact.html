@@ -334,6 +334,10 @@ nav[aria-label="Activities"] { margin-bottom: 24px; }
 .pep-chip-option { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; min-width: 96px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; }
 .pep-chip-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 7px 11px; }
 .pep-chip-option input { width: 20px; height: 20px; margin: 0; accent-color: var(--pep-accent); }
+.pep-choice { border: 0; margin: 0; padding: 0; min-width: 0; flex: 1 1 200px; }
+.pep-choice > legend { padding: 0; margin-bottom: 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-choice > legend.pep-match__label { font: inherit; font-weight: 600; }
+.pep-choice .pep-chip-option { max-width: 100%; min-width: 0; overflow-wrap: anywhere; }
 .pep-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .pep-feedback { margin-top: 16px; }
 .pep-feedback:empty { display: none; }
@@ -711,7 +715,7 @@ console.log(settings, all, copy, first);</code></pre><p>Supported in the practic
 </section>
 <div class="pep-lab" data-interaction="explore">
 <div class="pep-row">
-<label class="pep-field">How the copy is made<select id="a4-method"><option value="spread">const copy = { ...original }</option><option value="clone">const copy = structuredClone(original)</option></select></label>
+<fieldset class="pep-choice pep-field" id="a4-method"><legend>How the copy is made</legend><div class="pep-confidence__row"><label class="pep-chip-option"><input type="radio" name="a4-method" id="a4-method-opt-1" value="spread" checked> const copy = { ...original }</label><label class="pep-chip-option"><input type="radio" name="a4-method" id="a4-method-opt-2" value="clone"> const copy = structuredClone(original)</label></div></fieldset>
 </div>
 <div class="pep-row">
 <button type="button" class="pep-btn" id="a4-top">Run copy.name = "Grace"</button>
@@ -841,7 +845,7 @@ window.PEP_FN = {
         return { ok: true, msg: 'You made new containers and the originals stayed intact.' };
       } },
   a4: { lab: (api) => {
-        const method = api.$('select[id$="-method"]');
+        const method = api.$('fieldset[id$="-method"]');
         const orig = api.$('[id$="-orig"]'); const cp = api.$('[id$="-copy"]'); const note = api.$('[id$="-note"]');
         let original; let copy; let sawShared; let sawSeparate;
         const fresh = () => {
@@ -870,6 +874,12 @@ window.PEP_FN = {
   document.documentElement.classList.add('is-enhanced');
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  /* Choice groups are native radios in a fieldset; expose the chosen value like a form control. */
+  $$('fieldset.pep-choice').forEach((group) => Object.defineProperty(group, 'value', {
+    configurable: true,
+    get: () => { const radio = group.querySelector('input[type="radio"]:checked'); return radio ? radio.value : ''; },
+    set: (next) => { $$('input[type="radio"]', group).forEach((radio) => { radio.checked = radio.value === String(next); }); },
+  }));
   const DATA = JSON.parse($('#pep-data').textContent);
   const FN = window.PEP_FN || {};
   const lesson = $('#lesson');
@@ -1043,7 +1053,7 @@ window.PEP_FN = {
   /* ---------- match each row to a choice ---------- */
   function setupMatch(i, a, def) {
     const rows = $$('.pep-match__row', a);
-    const selects = rows.map((r) => $('select', r));
+    const selects = rows.map((r) => $('fieldset.pep-choice', r));
     const check = $('[data-pep-submit]', a);
     const paint = (reveal) => {
       rows.forEach((row, n) => {

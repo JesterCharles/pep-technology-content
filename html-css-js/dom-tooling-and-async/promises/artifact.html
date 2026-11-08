@@ -334,6 +334,10 @@ nav[aria-label="Activities"] { margin-bottom: 24px; }
 .pep-chip-option { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; min-width: 96px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; }
 .pep-chip-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 7px 11px; }
 .pep-chip-option input { width: 20px; height: 20px; margin: 0; accent-color: var(--pep-accent); }
+.pep-choice { border: 0; margin: 0; padding: 0; min-width: 0; flex: 1 1 200px; }
+.pep-choice > legend { padding: 0; margin-bottom: 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-choice > legend.pep-match__label { font: inherit; font-weight: 600; }
+.pep-choice .pep-chip-option { max-width: 100%; min-width: 0; overflow-wrap: anywhere; }
 .pep-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .pep-feedback { margin-top: 16px; }
 .pep-feedback:empty { display: none; }
@@ -702,7 +706,7 @@ getUser(99)
 <div class="pep-lab" data-interaction="explore">
 <fieldset><legend>Three independent requests</legend>
 <div class="pep-row"><label class="pep-check"><input type="checkbox" id="a4-a"> user (300 ms) rejects</label><label class="pep-check"><input type="checkbox" id="a4-b"> orders (100 ms) rejects</label><label class="pep-check"><input type="checkbox" id="a4-c"> stock (200 ms) rejects</label></div></fieldset>
-<div class="pep-row"><label class="pep-field">Combinator<select id="a4-mode"><option value="all">Promise.all</option><option value="settled">Promise.allSettled</option></select></label></div>
+<div class="pep-row"><fieldset class="pep-choice pep-field" id="a4-mode"><legend>Combinator</legend><div class="pep-confidence__row"><label class="pep-chip-option"><input type="radio" name="a4-mode" id="a4-mode-opt-1" value="all" checked> Promise.all</label><label class="pep-chip-option"><input type="radio" name="a4-mode" id="a4-mode-opt-2" value="settled"> Promise.allSettled</label></div></fieldset></div>
 <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="a4-go">Run them together</button></div>
 <div class="pep-readout" id="a4-out" aria-live="polite">Nothing has run yet.</div>
 <div class="pep-static" data-static-alt data-section-skip><h3>Static alternative</h3><p>With no failures, Promise.all gives results in input order after about 300 ms. If orders rejects, it rejects at about 100 ms with that reason. allSettled waits about 300 ms and reports every outcome.</p></div>
@@ -843,7 +847,7 @@ setup: (ctx) => ({
   }),
 }) },
   a4: { lab: (api) => {
-        const out = api.$('[id$="-out"]'); const go = api.$('[id$="-go"]'); const mode = api.$('select[id$="-mode"]');
+        const out = api.$('[id$="-out"]'); const go = api.$('[id$="-go"]'); const mode = api.$('fieldset[id$="-mode"]');
         const boxes = { user: api.$('input[id$="-a"]'), orders: api.$('input[id$="-b"]'), stock: api.$('input[id$="-c"]') };
         const delays = { user: 300, orders: 100, stock: 200 };
         let sawAll = false; let sawReject = false; let sawSettled = false;
@@ -874,6 +878,12 @@ setup: (ctx) => ({
   document.documentElement.classList.add('is-enhanced');
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  /* Choice groups are native radios in a fieldset; expose the chosen value like a form control. */
+  $$('fieldset.pep-choice').forEach((group) => Object.defineProperty(group, 'value', {
+    configurable: true,
+    get: () => { const radio = group.querySelector('input[type="radio"]:checked'); return radio ? radio.value : ''; },
+    set: (next) => { $$('input[type="radio"]', group).forEach((radio) => { radio.checked = radio.value === String(next); }); },
+  }));
   const DATA = JSON.parse($('#pep-data').textContent);
   const FN = window.PEP_FN || {};
   const lesson = $('#lesson');
@@ -1047,7 +1057,7 @@ setup: (ctx) => ({
   /* ---------- match each row to a choice ---------- */
   function setupMatch(i, a, def) {
     const rows = $$('.pep-match__row', a);
-    const selects = rows.map((r) => $('select', r));
+    const selects = rows.map((r) => $('fieldset.pep-choice', r));
     const check = $('[data-pep-submit]', a);
     const paint = (reveal) => {
       rows.forEach((row, n) => {

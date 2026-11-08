@@ -334,6 +334,10 @@ nav[aria-label="Activities"] { margin-bottom: 24px; }
 .pep-chip-option { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; min-width: 96px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; }
 .pep-chip-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 7px 11px; }
 .pep-chip-option input { width: 20px; height: 20px; margin: 0; accent-color: var(--pep-accent); }
+.pep-choice { border: 0; margin: 0; padding: 0; min-width: 0; flex: 1 1 200px; }
+.pep-choice > legend { padding: 0; margin-bottom: 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-choice > legend.pep-match__label { font: inherit; font-weight: 600; }
+.pep-choice .pep-chip-option { max-width: 100%; min-width: 0; overflow-wrap: anywhere; }
 .pep-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .pep-feedback { margin-top: 16px; }
 .pep-feedback:empty { display: none; }
@@ -730,8 +734,8 @@ export default function makeSlug(text) {
 </section>
 <div class="pep-lab" data-interaction="explore">
 <div class="pep-row">
-<label class="pep-field">Script tag<select id="a4-tag"><option value="classic">&lt;script src="main.js"&gt;</option><option value="module">&lt;script type="module" src="main.js"&gt;</option></select></label>
-<label class="pep-field">How the page is opened<select id="a4-origin"><option value="file">Double-click: file:///project/index.html</option><option value="http">Dev server: http://localhost:5173/</option></select></label>
+<fieldset class="pep-choice pep-field" id="a4-tag"><legend>Script tag</legend><div class="pep-confidence__row"><label class="pep-chip-option"><input type="radio" name="a4-tag" id="a4-tag-opt-1" value="classic" checked> &lt;script src="main.js"&gt;</label><label class="pep-chip-option"><input type="radio" name="a4-tag" id="a4-tag-opt-2" value="module"> &lt;script type="module" src="main.js"&gt;</label></div></fieldset>
+<fieldset class="pep-choice pep-field" id="a4-origin"><legend>How the page is opened</legend><div class="pep-confidence__row"><label class="pep-chip-option"><input type="radio" name="a4-origin" id="a4-origin-opt-1" value="file" checked> Double-click: file:///project/index.html</label><label class="pep-chip-option"><input type="radio" name="a4-origin" id="a4-origin-opt-2" value="http"> Dev server: http://localhost:5173/</label></div></fieldset>
 </div>
 <div class="pep-readout" id="a4-out" aria-live="polite"></div>
 <p class="pep-note">main.js starts with: import { addTax } from "./prices.js";</p>
@@ -845,7 +849,7 @@ window.PEP_FN = {
         return { ok: true, msg: 'Each import now matches its export, and the rename keeps your local name.' };
       } },
   a4: { lab: (api) => {
-        const tag = api.$('select[id$="-tag"]'); const origin = api.$('select[id$="-origin"]'); const out = api.$('[id$="-out"]');
+        const tag = api.$('fieldset[id$="-tag"]'); const origin = api.$('fieldset[id$="-origin"]'); const out = api.$('[id$="-out"]');
         let seen = new Set();
         const render = () => {
           seen.add(`${tag.value}/${origin.value}`);
@@ -866,6 +870,12 @@ window.PEP_FN = {
   document.documentElement.classList.add('is-enhanced');
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  /* Choice groups are native radios in a fieldset; expose the chosen value like a form control. */
+  $$('fieldset.pep-choice').forEach((group) => Object.defineProperty(group, 'value', {
+    configurable: true,
+    get: () => { const radio = group.querySelector('input[type="radio"]:checked'); return radio ? radio.value : ''; },
+    set: (next) => { $$('input[type="radio"]', group).forEach((radio) => { radio.checked = radio.value === String(next); }); },
+  }));
   const DATA = JSON.parse($('#pep-data').textContent);
   const FN = window.PEP_FN || {};
   const lesson = $('#lesson');
@@ -1039,7 +1049,7 @@ window.PEP_FN = {
   /* ---------- match each row to a choice ---------- */
   function setupMatch(i, a, def) {
     const rows = $$('.pep-match__row', a);
-    const selects = rows.map((r) => $('select', r));
+    const selects = rows.map((r) => $('fieldset.pep-choice', r));
     const check = $('[data-pep-submit]', a);
     const paint = (reveal) => {
       rows.forEach((row, n) => {

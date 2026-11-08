@@ -334,6 +334,10 @@ nav[aria-label="Activities"] { margin-bottom: 24px; }
 .pep-chip-option { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; min-width: 96px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; }
 .pep-chip-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 7px 11px; }
 .pep-chip-option input { width: 20px; height: 20px; margin: 0; accent-color: var(--pep-accent); }
+.pep-choice { border: 0; margin: 0; padding: 0; min-width: 0; flex: 1 1 200px; }
+.pep-choice > legend { padding: 0; margin-bottom: 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-choice > legend.pep-match__label { font: inherit; font-weight: 600; }
+.pep-choice .pep-chip-option { max-width: 100%; min-width: 0; overflow-wrap: anywhere; }
 .pep-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
 .pep-feedback { margin-top: 16px; }
 .pep-feedback:empty { display: none; }
@@ -641,8 +645,8 @@ console.log(itemCount, order.paid, taxRate);</code></pre><p>Supported in the pra
 </section>
 <div class="pep-lab" data-interaction="explore">
 <div class="pep-row">
-<label class="pep-field">Left value<select id="a3-left"><option>0</option><option>"0"</option><option>""</option><option>false</option><option>null</option><option>undefined</option><option>NaN</option><option>1</option><option>"1"</option></select></label>
-<label class="pep-field">Right value<select id="a3-right"><option>0</option><option>"0"</option><option>""</option><option>false</option><option>null</option><option>undefined</option><option>NaN</option><option>1</option><option>"1"</option></select></label>
+<fieldset class="pep-choice pep-field" id="a3-left"><legend>Left value</legend><div class="pep-confidence__row"><label class="pep-chip-option"><input type="radio" name="a3-left" id="a3-left-opt-1" value="0" checked> 0</label><label class="pep-chip-option"><input type="radio" name="a3-left" id="a3-left-opt-2" value="&quot;0&quot;"> "0"</label><label class="pep-chip-option"><input type="radio" name="a3-left" id="a3-left-opt-3" value="&quot;&quot;"> ""</label><label class="pep-chip-option"><input type="radio" name="a3-left" id="a3-left-opt-4" value="false"> false</label><label class="pep-chip-option"><input type="radio" name="a3-left" id="a3-left-opt-5" value="null"> null</label><label class="pep-chip-option"><input type="radio" name="a3-left" id="a3-left-opt-6" value="undefined"> undefined</label><label class="pep-chip-option"><input type="radio" name="a3-left" id="a3-left-opt-7" value="NaN"> NaN</label><label class="pep-chip-option"><input type="radio" name="a3-left" id="a3-left-opt-8" value="1"> 1</label><label class="pep-chip-option"><input type="radio" name="a3-left" id="a3-left-opt-9" value="&quot;1&quot;"> "1"</label></div></fieldset>
+<fieldset class="pep-choice pep-field" id="a3-right"><legend>Right value</legend><div class="pep-confidence__row"><label class="pep-chip-option"><input type="radio" name="a3-right" id="a3-right-opt-1" value="0" checked> 0</label><label class="pep-chip-option"><input type="radio" name="a3-right" id="a3-right-opt-2" value="&quot;0&quot;"> "0"</label><label class="pep-chip-option"><input type="radio" name="a3-right" id="a3-right-opt-3" value="&quot;&quot;"> ""</label><label class="pep-chip-option"><input type="radio" name="a3-right" id="a3-right-opt-4" value="false"> false</label><label class="pep-chip-option"><input type="radio" name="a3-right" id="a3-right-opt-5" value="null"> null</label><label class="pep-chip-option"><input type="radio" name="a3-right" id="a3-right-opt-6" value="undefined"> undefined</label><label class="pep-chip-option"><input type="radio" name="a3-right" id="a3-right-opt-7" value="NaN"> NaN</label><label class="pep-chip-option"><input type="radio" name="a3-right" id="a3-right-opt-8" value="1"> 1</label><label class="pep-chip-option"><input type="radio" name="a3-right" id="a3-right-opt-9" value="&quot;1&quot;"> "1"</label></div></fieldset>
 </div>
 <div class="pep-readout" id="a3-result" aria-live="polite"></div>
 <p id="a3-tally" class="pep-note"></p>
@@ -751,7 +755,7 @@ window.PEP_FN = {
       } },
   a3: { lab: (api) => {
         const values = { '0': 0, '"0"': '0', '""': '', false: false, null: null, undefined: undefined, NaN: NaN, '1': 1, '"1"': '1' };
-        const left = api.$('select[id$="-left"]'); const right = api.$('select[id$="-right"]');
+        const left = api.$('fieldset[id$="-left"]'); const right = api.$('fieldset[id$="-right"]');
         const out = api.$('[id$="-result"]'); const tally = api.$('[id$="-tally"]');
         let pairs = new Set(); let sawNaN = false;
         const why = (a, b) => {
@@ -782,6 +786,12 @@ window.PEP_FN = {
   document.documentElement.classList.add('is-enhanced');
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  /* Choice groups are native radios in a fieldset; expose the chosen value like a form control. */
+  $$('fieldset.pep-choice').forEach((group) => Object.defineProperty(group, 'value', {
+    configurable: true,
+    get: () => { const radio = group.querySelector('input[type="radio"]:checked'); return radio ? radio.value : ''; },
+    set: (next) => { $$('input[type="radio"]', group).forEach((radio) => { radio.checked = radio.value === String(next); }); },
+  }));
   const DATA = JSON.parse($('#pep-data').textContent);
   const FN = window.PEP_FN || {};
   const lesson = $('#lesson');
@@ -955,7 +965,7 @@ window.PEP_FN = {
   /* ---------- match each row to a choice ---------- */
   function setupMatch(i, a, def) {
     const rows = $$('.pep-match__row', a);
-    const selects = rows.map((r) => $('select', r));
+    const selects = rows.map((r) => $('fieldset.pep-choice', r));
     const check = $('[data-pep-submit]', a);
     const paint = (reveal) => {
       rows.forEach((row, n) => {
