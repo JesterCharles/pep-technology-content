@@ -2,6 +2,28 @@
 
 Status: **unreviewed first drafts, not delivery-ready.** This author-side record routes later review. It approves nothing, waives no gate, replaces no education or React-SME review, and marks nothing final, green, upload-safe, published or merged. No critic or reconciliation record exists for this module.
 
+## Minimum-release preparation (2026-11-08)
+
+This module is explicitly marked for the tonight minimum release. Each topic carries `owner-essential-qa.json`: `acceptanceProfile` minimum, `independentCriticApproval` not-required-not-performed, bound to the current `artifact.html` and `artifact.gift`. Independent critic approval was not required or performed. Each record lists its browser gates, replacement private proof and owner essential pass as **pending, not performed**. Main `e9a8aa28` was merged; no history was rewritten and `2221d3dc` and its receipts remain in history.
+
+**Native select practice was replaced, not emulated.** Every native `<select>` practice control became a radio group (`fieldset[data-pep-choice]`) with the same option values, labels, default selection and grading. A small in-page shim gives the group the same `value` and `selectedIndex` behavior the simulators already read, so simulator logic is unchanged apart from two `querySelectorAll('select')` calls. QA `select` actions became `check` actions on the matching radio. The estimator P50 and interaction units and the generated `artifact.md` are unchanged on every converted page. The keyboard-`select` limitation recorded below therefore no longer applies to these pages. Radio keyboard operation has not yet been run in a browser here or on Linux.
+
+**Every receipt in this module is stale and queued for replacement.** Main changed the bound `harness.mjs`, `T08-html-static.mjs` and `python-answer-scan.py`, so all receipts are stale in addition to any page or QA change. Until source-owned replacement proofs land, T06 fails on them. No browser run, private proof or owner essential pass was performed for this preparation checkpoint, because another task held the browser lane.
+
+| Topic | Change | Receipt | Next |
+| --- | --- | --- | --- |
+| loading-data-with-useeffect | 1 select control to radio groups; 9 QA actions | stale: html, qa-paths, harness, python-scan, T08 | replacement private proof required |
+| loading-and-error-states | 2 select controls to radio groups; 30 QA actions | stale: html, qa-paths, harness, python-scan, T08 | replacement private proof required |
+| custom-hooks | 1 select control to radio groups; 9 QA actions | stale: html, qa-paths, harness, python-scan, T08 | replacement private proof required |
+| routing-and-route-parameters | 1 select control to radio groups; 9 QA actions | stale: html, qa-paths, harness, python-scan, T08 | replacement private proof required |
+| navigation | 1 select control to radio groups; 9 QA actions | stale: html, qa-paths, harness, python-scan, T08 | replacement private proof required |
+| what-makes-a-component-re-render | 1 select control to radio groups; 9 QA actions | no receipt (no editor) | not applicable |
+| lifting-state-up | 1 select control to radio groups; 3 QA actions | stale: html, qa-paths, harness, python-scan, T08 | replacement private proof required |
+
+Non-browser gates on these bytes: T01, T02, T05, T07, T14, T15, T16, T19 and T24 pass. Source receipts were re-fetched live and every source returned HTTP 200. T06 fails only on this module's stale receipt bindings listed above (30 errors). T25 on `main` does not yet support the minimum profile, so it still requires critic coverage.
+
+Sections below describe checkpoint `2221d3dc` and are superseded where they conflict with this section.
+
 Base: readiness checkpoint `134d977` with main `817aeb6` merged. Gates ran on 2026-11-05 on Darwin arm64 with Playwright Chromium 140.0.7339.16 and the unmodified shared harness. `first-draft-manifest.json` remains the record of the original `a91aee3` bytes.
 
 ## What changed since 134d977
@@ -82,10 +104,10 @@ Worst path is a model from the estimator cost table, not a measurement with lear
 
 | Topic | artifact.html sha256 | artifact.md sha256 |
 | --- | --- | --- |
-| loading-data-with-useeffect | `f2b7120af19553e520b34c75129252858f198fd08dd1042820c52c4cc4c9909b` | `74a1ee4c5a946adc31111f102074262a4a5d6af180825a43abd546c5291b20f4` |
-| loading-and-error-states | `570e006919254721de5c62e137167f77f0a5605f72e95a4af23cb61e1d744910` | `ef85e6529fe1b166090488b93bc2f7b39d43fcc706ca8771efcf778c0b2cc75d` |
-| custom-hooks | `1e72ce5c98d4bcc15ee64447f7a48808d3d29f311805df110b060e69a3eb31a9` | `f49217fcfc8164bae6a7fc150c3f437b65ae7bb2f4e6ee5b2d364644e5fbcf43` |
-| routing-and-route-parameters | `f2a9b93253dfab4ef48539a9241b0789637291de31516547e8b3be58e61fb90a` | `fe9d7296d2083c633893119e845dc6128b0fe596b3b66897df9d5126721abd8a` |
-| navigation | `7605d260ea3ec82946db353fd311a83969541131bc81b4676020294944f93f9d` | `53a50f4a3792e87fe885b5484efb6ac979e17a63d2cd7210e1bcad58f54fb670` |
-| what-makes-a-component-re-render | `533b8e273d90c9bb361ea8471b9d233eeacd0a6dd7afb74157d673f83085abd5` | `af222e44a86932656adf179feb679b29a1094e1be25cb44ff1db24396f98d986` |
-| lifting-state-up | `7c65ec73d6fc3c29ff13bbdc39412b8a108dc6337f297efb8893daa619952f7e` | `ad5f8d7f9eec35cb1e84bcde65b92f508543719ca31d9f4238f4655e74b3244c` |
+| loading-data-with-useeffect | `bc4b2f425c7dcfa556f094fb9618e6a932b36b410e8895c41a6e688732312ac5` | `74a1ee4c5a946adc31111f102074262a4a5d6af180825a43abd546c5291b20f4` |
+| loading-and-error-states | `40b2358b26258fc062378705556d01f87ecb58f27e88e2484b6acbdce4246c58` | `ef85e6529fe1b166090488b93bc2f7b39d43fcc706ca8771efcf778c0b2cc75d` |
+| custom-hooks | `3bc18aa82d20c46f6b30eb999064da915206eba89466e2f88ebb6fa6882462b6` | `f49217fcfc8164bae6a7fc150c3f437b65ae7bb2f4e6ee5b2d364644e5fbcf43` |
+| routing-and-route-parameters | `001f2e771444d0e0b853cf17421ac9ffa8e907ac3f61b9e10b99f92b51edc09c` | `fe9d7296d2083c633893119e845dc6128b0fe596b3b66897df9d5126721abd8a` |
+| navigation | `6138b833d41ba826095d4a856538fdfefb93afd6eafe1a360c87b9857d5adb7e` | `53a50f4a3792e87fe885b5484efb6ac979e17a63d2cd7210e1bcad58f54fb670` |
+| what-makes-a-component-re-render | `af4d1d7f26d4524bf011ee2087ee431383d8c9de3007bf5b18f9797bed0f1d6e` | `af222e44a86932656adf179feb679b29a1094e1be25cb44ff1db24396f98d986` |
+| lifting-state-up | `6b80acc1dc998f6517691931cb50823ff84d8c4eb6fa3bfa693fb4f402b6a843` | `ad5f8d7f9eec35cb1e84bcde65b92f508543719ca31d9f4238f4655e74b3244c` |

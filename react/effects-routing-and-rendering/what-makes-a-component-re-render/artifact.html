@@ -162,6 +162,8 @@ button,.pep-option,.pep-step{transition:background-color var(--pep-dur-1) var(--
 .pep-sim input[type=text],.pep-sim select,.pep-sim input[type=range]{min-height:44px;width:100%;padding:8px 12px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-page);color:var(--pep-text-strong)}
 .pep-sim input[type=range]{padding:0;accent-color:var(--pep-accent)}
 .pep-sim .pep-check{display:flex;grid-template-columns:none;align-items:center;gap:8px;min-height:44px;font-weight:400}
+.pep-choice{border:0;margin:0;padding:0;min-width:0;display:grid;gap:4px}
+.pep-choice>legend{padding:0;margin:0 0 4px;font-weight:600;color:var(--pep-text-strong)}
 .pep-sim .pep-check input{flex:0 0 44px;width:44px;height:44px;margin:0;accent-color:var(--pep-accent)}
 .pep-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
 .pep-row>.pep-btn{flex:0 1 auto}
@@ -297,7 +299,7 @@ function Parent() {
 <section data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><ul><li>You trigger both updates and read the counts.</li><li>You name exactly the components that render after a state update in Counter.</li></ul></section>
 <div class="q"><div class="pep-sim pep-js-only" data-pep-sim><div class="pep-row"><button type="button" class="pep-btn" id="p16-c">Set state in Counter</button><button type="button" class="pep-btn" id="p16-a">Set state in App</button></div>
 <div id="p16-tree"></div>
-<label for="p16-pick">After a state update in Counter, these render:</label><select id="p16-pick"><option value="">Choose one</option><option value="cd">Counter and Display</option><option value="c">Counter only</option><option value="all">All four components</option><option value="ac">App and Counter</option></select></div><p class="pep-js-only" data-pep-sim-live aria-live="polite" style="margin:8px 0 0;font:400 14px/20px var(--pep-font-sans)"></p><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-2" data-pep-submit data-pep-complete-activity>Check result</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Without JavaScript the tree cannot run. On paper: App contains Header and Counter, and Counter contains Display. List which components render after a state update in Counter, and after a state update in App.</p></div></noscript></div>
+<fieldset class="pep-choice" id="p16-pick" data-pep-choice data-pep-choice-empty=""><legend>After a state update in Counter, these render:</legend><label class="pep-check"><input type="radio" name="p16-pick" id="p16-pick-1" value="cd"> Counter and Display</label><label class="pep-check"><input type="radio" name="p16-pick" id="p16-pick-2" value="c"> Counter only</label><label class="pep-check"><input type="radio" name="p16-pick" id="p16-pick-3" value="all"> All four components</label><label class="pep-check"><input type="radio" name="p16-pick" id="p16-pick-4" value="ac"> App and Counter</label></fieldset></div><p class="pep-js-only" data-pep-sim-live aria-live="polite" style="margin:8px 0 0;font:400 14px/20px var(--pep-font-sans)"></p><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-2" data-pep-submit data-pep-complete-activity>Check result</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Without JavaScript the tree cannot run. On paper: App contains Header and Counter, and Counter contains Display. List which components render after a state update in Counter, and after a state update in App.</p></div></noscript></div>
 <div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
 
 <div data-static-alt data-section-skip><p>Without JavaScript the tree cannot run. On paper: App contains Header and Counter, and Counter contains Display. List which components render after a state update in Counter, and after a state update in App.</p></div>
@@ -358,6 +360,17 @@ const Slow = memo(function Slow({ value }) {
 <details class="pep-optional pep-sources" data-pep-sources data-section-skip><summary><span>Sources and review date</span><span class="pep-optional__cue">Optional reference</span></summary><div class="pep-optional__body"><p>First draft, not yet independently reviewed. Official sources checked 2026-11-04:</p><ul><li><a href="https://react.dev/learn/render-and-commit" rel="noopener">react.dev/learn/render-and-commit</a>: Step 1: Trigger a render; Step 2: React renders your components; Step 3: React commits changes to the DOM</li><li><a href="https://react.dev/learn/state-as-a-snapshot" rel="noopener">react.dev/learn/state-as-a-snapshot</a>: Setting state triggers renders</li><li><a href="https://react.dev/reference/react/memo" rel="noopener">react.dev/reference/react/memo</a>: Reference; Usage</li></ul></div></details>
 </main>
 <script>
+// Radio groups stand in for native selects: each [data-pep-choice] fieldset reads and sets like a select.
+(() => {
+  const radios = el => [...el.querySelectorAll('input[type=radio]')];
+  const hasEmpty = el => el.hasAttribute('data-pep-choice-empty');
+  Object.defineProperty(HTMLFieldSetElement.prototype, 'value', { configurable: true,
+    get() { if (!this.hasAttribute('data-pep-choice')) return undefined; const r = radios(this).find(x => x.checked); return r ? r.value : (this.getAttribute('data-pep-choice-empty') ?? ''); },
+    set(v) { for (const r of radios(this)) r.checked = r.value === String(v); } });
+  Object.defineProperty(HTMLFieldSetElement.prototype, 'selectedIndex', { configurable: true,
+    get() { const i = radios(this).findIndex(x => x.checked); return hasEmpty(this) ? i + 1 : i; },
+    set(n) { const k = hasEmpty(this) ? n - 1 : n; radios(this).forEach((r, i) => { r.checked = i === k; }); } });
+})();
 window.PEP_ACTIVITIES=[{kind:'choice',key:0,confidence:false,why:["By default, rendering a component also renders the components inside it.","That is what memo opts into. By default a parent render renders its children.","Re-rendering keeps the component in place, and its state survives.","React updates only the DOM that differs, and here nothing differs for Child."]},
 {kind:'sim',reveal:"Counter updated its state, so it renders along with its child, Display. App and Header do not.",success:"Render flows down from where the state changed.",setup:(root, api) => {
         let counts, lit, usedC, usedA;
