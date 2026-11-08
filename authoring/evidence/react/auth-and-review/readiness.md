@@ -2,6 +2,27 @@
 
 Status: **unreviewed first drafts, not delivery-ready.** This author-side record routes later review. It approves nothing, waives no gate, replaces no education or React-SME review, and marks nothing final, green, upload-safe, published or merged. No critic or reconciliation record exists for this module.
 
+## Minimum-release completion (2026-11-08)
+
+Main `174d4c86` (minimum-profile T25 support) was merged at `19ef8ab8` without rewriting checkpoint `ccf35668` or `2221d3dc`; their receipts remain in history. Learner bytes are final at `ecf4e760ed6d79d246fc158c5be2f784adc47af7`.
+
+**Replacement private proofs.** Each receipt below was replaced from a clean proof commit by an evidence-only child, with staging retired after the passing run. Every editor task reached completed, credit 1 and grade 1 with the page complete across the success, wrong-first, keyboard and sandbox routes, and the gate's exact public-byte leak comparison passed. A dry run at `19ef8ab8` refused every mixed or all-fail run with no private value recorded.
+
+| Topic | Private success proof |
+| --- | --- |
+| login-with-a-session-cookie-or-jwt | validated at 547398539c7b2c24b7a0c54da0a137d25b3ecf65 by run react-login-with-a-session-cookie-or-jwt-1794118276160; pass |
+| protected-pages-and-role-based-screens | validated at aa8ce923353fc79fa52e5d0f49008cf4d46779b5 by run react-protected-pages-and-role-based-screens-1794118276227; pass |
+| handling-401-and-403-redirect-and-sign-out | validated at 872faffa4e63ed7e32e50d44e8f7d5182173fe7b by run react-handling-401-and-403-redirect-and-sign-out-1794118276323; pass |
+| turning-off-the-dev-profile | validated at c931a246e968dc7e79594b03f5ad293103efe7c1 by run react-turning-off-the-dev-profile-1794118276399; pass |
+| javascript-fundamentals-review | validated at 589e5840365805e4edd53ca4d618eea464e02fe2 by run react-javascript-fundamentals-review-1794118276506; pass |
+| react-review | validated at 7cf5937baf0b9db3fb118e7915bf9f695924cfd6 by run react-react-review-1794118276631; pass |
+
+**Browser gates.** T08, T09, T12, T13 and T18 passed at `19ef8ab8`. T10 first failed on `props`: disabling the radio fieldset left each radio's own `disabled` property false, so a restart check tried an inert radio. The page now disables each radio (commit `4f65773a`); T10 and T11 then passed. The first T11 run crashed on a full shared disk (`ENOSPC`), not on page content, and passed on rerun. Runs used Darwin arm64 Playwright Chromium 140.0.7339.16. Radio groups use Space through the harness keyboard route; Linux keyboard operation was not run and is unassessed.
+
+**Owner essential pass.** Each topic's `owner-essential-qa.json` (`acceptanceProfile` minimum, `independentCriticApproval` not-required-not-performed) binds the current `artifact.html` and `artifact.gift` and lists the checks performed. Every private input was compared exactly and whitespace-normalized against all tracked files at `ecf4e760` with no match, then retired. The full repository check and npm test passed at `ecf4e760`. This is implementation-owner evidence only; no independent critic reviewed these drafts and nothing here is published.
+
+The preparation section below is superseded where it conflicts with this section.
+
 ## Minimum-release preparation (2026-11-08)
 
 This module is explicitly marked for the tonight minimum release. Each topic carries `owner-essential-qa.json`: `acceptanceProfile` minimum, `independentCriticApproval` not-required-not-performed, bound to the current `artifact.html` and `artifact.gift`. Independent critic approval was not required or performed. Each record lists its browser gates, replacement private proof and owner essential pass as **pending, not performed**. Main `e9a8aa28` was merged; no history was rewritten and `2221d3dc` and its receipts remain in history.
