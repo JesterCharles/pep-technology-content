@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval'; style-src 'unsafe-inline'; img-src data:">
+<meta name="pep:course" content="react">
+<meta name="pep:module" content="effects-routing-and-rendering">
+<meta name="pep:topic" content="What makes a component re-render">
+<meta name="pep:topic-id" content="what-makes-a-component-re-render">
+<meta name="pep:budget-minutes" content="10">
+<meta name="pep:source" content="authoring/evidence/react/effects-routing-and-rendering/what-makes-a-component-re-render/sources.json">
+<meta name="pep:position" content="6 of 7">
+<meta name="pep:draft-status" content="first-draft-unreviewed">
+<title>What makes a component re-render · Effects, Routing and Rendering</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;max-width:100%;overflow-x:clip}
+body{background:var(--pep-page);color:var(--pep-text);font:400 16px/24px var(--pep-font-sans);-webkit-text-size-adjust:100%}
+h1,h2,h3{color:var(--pep-text-strong);margin:0;text-wrap:balance}
+h1,h2{font-size:20px;line-height:28px;font-weight:700}
+h3{font-size:16px;line-height:24px;font-weight:600}
+p,li{max-width:68ch;overflow-wrap:anywhere}
+p{margin:0 0 12px}
+ul,ol{margin:0 0 12px;padding-inline-start:24px}
+svg{max-width:100%;height:auto}
+button,input,select,textarea,summary{font:inherit}
+a{color:var(--pep-accent-text);text-underline-offset:3px}
+a:hover{text-decoration-thickness:2px}
+code,kbd,samp{font-family:var(--pep-font-mono);font-size:.875em}
+:focus-visible{outline:2px solid var(--pep-focus);outline-offset:2px}
+::selection{background:var(--pep-accent-fill);color:var(--pep-on-accent-fill)}
+.pep-main{max-width:1200px;margin:0 auto;padding:24px;min-width:0}
+button,.pep-option,.pep-step{transition:background-color var(--pep-dur-1) var(--pep-ease),border-color var(--pep-dur-1) var(--pep-ease),color var(--pep-dur-1) var(--pep-ease)}
+.pep-topicbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:12px 16px;margin:0 0 16px;border:1px solid var(--pep-line-strong);border-block-start:4px solid var(--pep-accent);border-radius:var(--pep-radius-md);background:var(--pep-accent-soft)}
+.pep-topicbar h1{flex:1 1 240px;min-width:0}
+.pep-topicbar__progress{flex:1 1 220px;min-width:0;color:var(--pep-text);font:600 13px/20px var(--pep-font-sans);font-variant-numeric:tabular-nums}
+.pep-topicbar__progress p{margin:0;font:inherit}
+.pep-objectives{position:relative;break-inside:avoid;min-width:0}
+.pep-objectives>summary{display:flex;align-items:center;min-height:44px;min-width:44px;padding:8px 12px;cursor:pointer;color:var(--pep-accent-text);font-weight:600}
+.pep-objectives>div{width:min(360px,100%);padding:12px 16px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);background:var(--pep-card)}
+.pep-objectives ul{margin:0;padding-inline-start:20px;font-size:14px;line-height:20px}
+.pep-steps{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 24px;padding:0;list-style:none}
+.pep-step{display:inline-flex;align-items:center;gap:8px;min-height:44px;min-width:44px;padding:6px 12px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);color:var(--pep-text);font-weight:600;font-size:14px;line-height:20px;text-decoration:none}
+.pep-step[aria-current="step"]{background:var(--pep-accent-soft);border-color:var(--pep-accent);color:var(--pep-text-strong)}
+.pep-step[aria-disabled="true"]{color:var(--pep-text-muted);border-style:dashed;cursor:not-allowed}
+.pep-activity{margin:0 0 32px;min-width:0}
+.pep-activity[hidden]{display:none}
+.pep-activity>h2{margin-bottom:16px}
+.pep-regions{display:grid;grid-template-columns:minmax(0,1fr);gap:24px}
+@media (min-width:960px){.pep-regions{grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:start}}
+.pep-region{display:flex;flex-direction:column;gap:16px;min-width:0}
+[data-pep-workspace]{padding:24px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-lg);background:var(--pep-card)}
+[data-pep-teaching] p:last-child{margin-bottom:0}
+[data-pep-activity-checks]{padding:12px 16px;border:1px solid var(--pep-accent);border-block-start-width:4px;border-radius:var(--pep-radius-md);background:var(--pep-accent-soft)}
+[data-pep-activity-checks] p:last-child,[data-pep-activity-checks] ul:last-child{margin-bottom:0}
+[data-pep-where-fits]{padding:12px 16px;border:1px solid var(--pep-line-strong);border-block-start:4px solid var(--pep-accent);border-radius:var(--pep-radius-md);background:var(--pep-card)}
+[data-pep-where-fits] h2{font-size:16px;line-height:24px;margin-bottom:8px}
+[data-pep-where-fits] p:last-child{margin-bottom:0}
+.pep-hint,details[data-pep-hint]{min-width:0;margin-block:12px 0;padding:0 12px;border:1px solid var(--pep-line-strong);border-block-start:4px solid var(--pep-accent);border-radius:var(--pep-radius-md);background:var(--pep-accent-soft);break-inside:avoid}
+.pep-hint>summary{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center;min-height:44px;padding:8px 0;color:var(--pep-text-strong);font-weight:600;cursor:pointer}
+.pep-hint>summary::marker{color:var(--pep-accent-text)}
+.pep-hint__ordinal,.pep-optional__cue,[data-pep-optional-time]{color:var(--pep-text-muted);font:600 13px/20px var(--pep-font-sans)}
+.pep-hint__body{padding:4px 0 12px}
+.pep-hint .pep-hint{margin-inline-start:12px;padding:0;border:0;border-block-start:1px solid var(--pep-line-strong);border-radius:0;background:transparent}
+.pep-optional{min-width:0;padding:0 12px;border:1px solid var(--pep-line-strong);border-block-start:4px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);background:var(--pep-card);break-inside:avoid}
+.pep-optional--challenge{margin-top:16px;border-color:var(--pep-line-strong);background:var(--pep-control)}
+.pep-optional>summary{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:4px 12px;min-height:44px;padding:8px 0;cursor:pointer;color:var(--pep-text-strong);font-weight:600}
+.pep-optional__body{padding:4px 0 16px}
+.pep-optional__body>:last-child{margin-bottom:0}
+.pep-sources{margin-top:16px}
+.pep-sources a{display:inline-flex;align-items:center;min-height:44px;min-width:44px}
+.pep-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;min-width:44px;padding:10px 20px;border-radius:var(--pep-radius-sm);font:600 16px/24px var(--pep-font-sans);cursor:pointer;border:1px solid var(--pep-line-strong);background:var(--pep-control);color:var(--pep-text-strong)}
+.pep-btn--primary{background:var(--pep-accent-fill);border-color:var(--pep-accent);color:var(--pep-on-accent-fill)}
+.pep-btn--primary:hover{background:var(--pep-accent-fill-hover);border-color:var(--pep-accent)}
+.pep-btn:disabled{cursor:not-allowed;background:var(--pep-control);border-color:var(--pep-line-strong);color:var(--pep-text-muted)}
+.pep-activity-actions{display:flex;flex-wrap:wrap;gap:8px;margin-block:0 32px}
+.pep-activity-actions .pep-btn{flex:1 1 180px}
+@media (min-width:481px){.pep-activity-actions .pep-btn{flex:0 1 auto}}
+.pep-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.pep-options{display:grid;gap:8px;margin:12px 0 0;padding:0;border:0;min-width:0}
+.pep-options>legend{padding:0;margin-bottom:8px;font-weight:600;color:var(--pep-text-strong)}
+.pep-option{position:relative;display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;align-items:center;min-height:48px;padding:10px 16px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);background:var(--pep-page);color:var(--pep-text-strong);cursor:pointer}
+.pep-option__key{display:grid;place-items:center;width:28px;height:28px;border-radius:var(--pep-radius-sm);background:var(--pep-control);font:600 13px/1 var(--pep-font-sans);color:var(--pep-text)}
+.pep-option:hover{border-color:var(--pep-accent)}
+.pep-option:has(input:checked){border:2px solid var(--pep-accent);background:var(--pep-accent-soft);padding:9px 15px}
+.pep-option.is-correct,.pep-option.is-correct:has(input:checked){border:2px solid var(--pep-success);background:var(--pep-success-soft);padding:9px 15px}
+.pep-option.is-wrong,.pep-option.is-wrong:has(input:checked){border:2px dashed var(--pep-danger);background:var(--pep-danger-soft);padding:9px 15px}
+.pep-option input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:.001;cursor:pointer}
+.pep-option input:disabled{cursor:not-allowed}
+.pep-option:has(input:focus-visible){outline:2px solid var(--pep-focus);outline-offset:2px}
+.pep-option__text{min-width:0;overflow-wrap:anywhere}
+.pep-explain{display:block;margin-top:4px;font:400 14px/20px var(--pep-font-sans);color:var(--pep-text)}
+.pep-explain[hidden]{display:none}
+.pep-confidence{margin-top:16px;padding:0;border:0;min-width:0}
+.pep-confidence>legend{padding:0;margin-bottom:8px;font-weight:600;color:var(--pep-text-strong)}
+.pep-confidence__row{display:flex;flex-wrap:wrap;gap:8px}
+.pep-confidence .pep-option{flex:1 1 96px;grid-template-columns:minmax(0,1fr);text-align:center;justify-items:center}
+.pep-feedback{margin-top:12px;min-height:24px}
+.pep-feedback:empty{display:none}
+.pep-callout{padding:12px 16px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);background:var(--pep-card);color:var(--pep-text)}
+.pep-callout p:last-child{margin-bottom:0}
+.pep-callout--success{background:var(--pep-success-soft);border-color:var(--pep-success)}
+.pep-callout--wrong{background:var(--pep-danger-soft);border-color:var(--pep-danger)}
+.pep-callout--warning{background:var(--pep-warning-soft);border-color:var(--pep-warning)}
+.pep-callout--info{background:var(--pep-accent-soft);border-color:var(--pep-accent)}
+.pep-code{margin:12px 0;padding:12px 16px;background:var(--pep-sunken);color:var(--pep-text-strong);border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);font:400 14px/20px var(--pep-font-mono);white-space:pre-wrap;overflow-wrap:anywhere;tab-size:2}
+:not(pre)>code{padding:1px 6px;border-radius:var(--pep-radius-sm);background:var(--pep-control);color:var(--pep-text-strong)}
+.pep-sim{display:grid;gap:12px;margin-top:12px;min-width:0}
+.pep-sim label{display:grid;gap:4px;font-weight:600;color:var(--pep-text-strong);min-width:0}
+.pep-sim input[type=text],.pep-sim select,.pep-sim input[type=range]{min-height:44px;width:100%;padding:8px 12px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-page);color:var(--pep-text-strong)}
+.pep-sim input[type=range]{padding:0;accent-color:var(--pep-accent)}
+.pep-sim .pep-check{display:flex;grid-template-columns:none;align-items:center;gap:8px;min-height:44px;font-weight:400}
+.pep-choice{border:0;margin:0;padding:0;min-width:0;display:grid;gap:4px}
+.pep-choice>legend{padding:0;margin:0 0 4px;font-weight:600;color:var(--pep-text-strong)}
+.pep-sim .pep-check input{flex:0 0 44px;width:44px;height:44px;margin:0;accent-color:var(--pep-accent)}
+.pep-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;min-width:0}
+.pep-row>.pep-btn{flex:0 1 auto}
+.pep-panel{padding:12px 16px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-sunken);color:var(--pep-text-strong);min-width:0;overflow-wrap:anywhere}
+.pep-panel--mono{font:400 14px/20px var(--pep-font-mono);white-space:pre-wrap}
+.pep-panel__label{display:block;margin-bottom:4px;color:var(--pep-text-muted);font:600 13px/20px var(--pep-font-sans)}
+.pep-chip{display:inline-block;padding:2px 10px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-pill);background:var(--pep-control);font:600 13px/20px var(--pep-font-sans);color:var(--pep-text)}
+.pep-chip.is-on{background:var(--pep-accent-soft);border-color:var(--pep-accent);color:var(--pep-text-strong)}
+.pep-box{padding:8px 12px;margin-block:4px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-card);min-width:0}
+.pep-box.is-on{border:2px solid var(--pep-accent);background:var(--pep-accent-soft)}
+.pep-box .pep-box{margin-inline-start:12px}
+.pep-figure{margin:12px 0}
+.pep-figure svg{display:block;width:100%;height:auto}
+.pep-figure .node{fill:var(--pep-card);stroke:var(--pep-line-strong);stroke-width:1.5}
+.pep-figure .node.is-focus{fill:var(--pep-accent-soft);stroke:var(--pep-accent);stroke-width:2}
+.pep-figure .edge{fill:none;stroke:var(--pep-line-strong);stroke-width:2}
+.pep-figure .label{fill:var(--pep-text-strong);font:600 16px var(--pep-font-sans)}
+.pep-figure figcaption{margin-top:8px;font:400 12px/16px var(--pep-font-sans);color:var(--pep-text-muted)}
+.pep-table-wrap{border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);overflow:hidden;margin-block:12px}
+.pep-table{width:100%;border-collapse:collapse;font:400 14px/20px var(--pep-font-sans)}
+.pep-table th{text-align:left;font-weight:600;color:var(--pep-text-strong);background:var(--pep-card);border-bottom:1px solid var(--pep-line-strong);padding:8px 12px}
+.pep-table td{padding:8px 12px;border-bottom:1px solid var(--pep-line-strong);vertical-align:top;overflow-wrap:anywhere}
+.pep-table tr:last-child td{border-bottom:0}
+.pep-table td:first-child{font-weight:600;color:var(--pep-text-strong)}
+.pep-editor{border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);background:var(--pep-sunken);margin-top:12px;min-width:0}
+.pep-editor__bar{border-radius:var(--pep-radius-md) var(--pep-radius-md) 0 0}
+.pep-editor__status{border-radius:0 0 var(--pep-radius-md) var(--pep-radius-md)}
+.pep-editor__bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;background:var(--pep-card);border-bottom:1px solid var(--pep-line-strong)}
+.pep-editor__file{min-width:0;overflow-wrap:anywhere;font:400 13px/20px var(--pep-font-mono);color:var(--pep-text-strong);padding:4px 8px;border-bottom:2px solid var(--pep-accent);margin-inline-end:auto}
+.pep-editor__code{display:grid;grid-template-columns:auto minmax(0,1fr);max-height:400px;overflow:auto;overscroll-behavior:contain auto;font:400 14px/20px var(--pep-font-mono)}
+.pep-editor__gutter{padding:12px 8px 12px 12px;text-align:right;color:var(--pep-text-muted);user-select:none;font-variant-numeric:tabular-nums;white-space:pre}
+.pep-editor__input{display:block;width:100%;margin:0;padding:12px;border:0;resize:vertical;min-width:0;min-height:200px;max-height:400px;scroll-margin-block:16px;background:transparent;color:var(--pep-text-strong);font:inherit;caret-color:var(--pep-accent-text);white-space:pre;overflow-wrap:normal;tab-size:2}
+.pep-editor__input:focus-visible{outline:2px solid var(--pep-focus);outline-offset:-2px}
+.pep-editor__tabs{display:flex;gap:4px;padding:0 12px;background:var(--pep-card);border-top:1px solid var(--pep-line-strong)}
+.pep-editor__tabs [role=tab]{min-height:44px;min-width:44px;padding:0 12px;border:0;border-bottom:2px solid transparent;background:none;color:var(--pep-text-muted);font:600 13px/20px var(--pep-font-sans);cursor:pointer}
+.pep-editor__tabs [role=tab][aria-selected=true]{color:var(--pep-text-strong);border-bottom-color:var(--pep-accent)}
+.pep-editor__panel{max-height:240px;overflow:auto;overscroll-behavior:contain auto;padding:12px;font:400 14px/20px var(--pep-font-mono);color:var(--pep-text);overflow-wrap:anywhere;white-space:pre-wrap}
+.pep-editor__panel[hidden]{display:none}
+.pep-editor__problem{display:block;width:100%;min-height:44px;text-align:left;padding:8px;border:0;border-radius:var(--pep-radius-sm);background:none;color:var(--pep-text);font:inherit;cursor:pointer;white-space:normal}
+.pep-editor__problem .kind-error{color:var(--pep-danger);font-weight:600}
+.pep-editor__problem .kind-limit{color:var(--pep-warning);font-weight:600}
+.pep-editor__preview{margin-top:8px;padding:8px 12px;border:1px dashed var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-page);color:var(--pep-text-strong);font:400 14px/20px var(--pep-font-sans);white-space:normal}
+.pep-editor__preview:empty{display:none}
+.pep-editor__preview button{min-height:44px;min-width:44px;padding:4px 12px;margin:2px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-control);color:var(--pep-text-strong);cursor:pointer}
+.pep-editor__preview input,.pep-editor__preview select{min-height:44px;padding:4px 8px;margin:2px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);background:var(--pep-page);color:var(--pep-text-strong)}
+.pep-editor__status{padding:8px 12px;background:var(--pep-control);color:var(--pep-text);font:400 13px/20px var(--pep-font-sans);border-top:1px solid var(--pep-line-strong)}
+.pep-terminal{padding:12px 16px;background:var(--pep-sunken);color:var(--pep-text-strong);border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-sm);font:400 14px/20px var(--pep-font-mono);overflow-wrap:anywhere;white-space:pre-wrap}
+.pep-terminal .prompt{color:var(--pep-accent-text);font-weight:600}
+.pep-recap{margin-block:48px 0}
+.pep-recap h2{margin-bottom:12px}
+html:not(.is-enhanced) .pep-js-only{display:none}
+.pep-noscript{margin-top:12px;padding:12px 16px;border:1px solid var(--pep-line-strong);border-radius:var(--pep-radius-md);background:var(--pep-control)}
+[data-pep-back-link]{display:inline-flex;align-items:center;min-height:44px;min-width:44px;margin-top:12px}
+html.is-enhanced [data-pep-back-link]{display:inline-flex}
+[data-static-alt]{display:none}
+@media (max-width:480px){
+.pep-main{padding:16px}
+input,select,textarea{font-size:16px;scroll-margin-block:16px}
+[data-pep-workspace]{padding:16px}
+.pep-editor__bar{align-items:stretch}
+.pep-editor__file{flex:1 1 100%;margin-inline-end:0}
+.pep-editor__bar .pep-btn{flex:1 1 calc(50% - 4px)}
+.pep-editor__code,.pep-editor__input{max-height:240px}
+.pep-editor__input{min-height:160px;font-size:16px;line-height:24px}
+.pep-editor__tabs{flex-wrap:wrap}
+.pep-editor__tabs [role=tab]{flex:1 1 120px}
+.pep-editor__panel{max-height:180px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0s!important;animation-iteration-count:1!important;transition-duration:0s!important;scroll-behavior:auto!important}}
+@media (forced-colors:active){.pep-topicbar,[data-pep-where-fits],details[data-pep-hint],[data-pep-activity-checks],.pep-optional,[data-pep-workspace]{border-color:CanvasText}.pep-topicbar,[data-pep-where-fits],details[data-pep-hint],[data-pep-activity-checks]{border-block-start-color:Highlight}}
+@media print{
+body{background:#FFF}
+.pep-noprint,.pep-activity-actions,nav[aria-label="Activities"],[data-pep-back-link],[data-pep-reset],.pep-js-only,.pep-editor__bar .pep-btn{display:none!important}
+.pep-activity,[data-pep-activity],.pep-activity[hidden],[data-pep-recap][hidden],[data-pep-cheat][hidden]{display:block!important}
+[data-static-alt]{display:block}
+.pep-objectives>div{display:block!important;width:auto}
+.pep-topicbar,[data-pep-workspace],[data-pep-where-fits],details[data-pep-hint],[data-pep-activity-checks],.pep-optional,.pep-callout{break-inside:avoid;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+.pep-optional>summary{list-style:none}
+.pep-optional>summary::-webkit-details-marker{display:none}
+}
+</style>
+</head>
+<body>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-route-settled="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="10">
+<header class="pep-topicbar">
+<h1 id="page-title">What makes a component re-render</h1>
+<div class="pep-topicbar__progress"><p><span id="pep-position">4 activities</span> · about 10 min</p><p class="progress" id="progress" aria-live="polite">0 of 4 activities finished</p></div>
+<details class="pep-objectives" data-pep-objectives><summary aria-controls="objectives-body">Objectives</summary><div id="objectives-body"><ul><li>Identify a state update and a parent re-render as two causes of a re-render taught so far</li><li>Explain that rendering calls the component function and that React then commits only the differences to the DOM</li><li>Predict which components re-render after a parent's state changes, and describe memo as a performance optimisation rather than a correctness fix</li></ul></div></details>
+<button type="button" class="pep-btn" id="restart" data-pep-reset>Restart activity</button>
+</header>
+<nav aria-label="Activities"><ol class="pep-steps"><li><a class="pep-step" id="timeline-a1" href="#activity-1" data-pep-activity-link aria-current="step">Activity 1</a></li><li><a class="pep-step" id="timeline-a2" href="#activity-2" data-pep-activity-link aria-disabled="true">Activity 2</a></li><li><a class="pep-step" id="timeline-a3" href="#activity-3" data-pep-activity-link aria-disabled="true">Activity 3</a></li><li><a class="pep-step" id="timeline-a4" href="#activity-4" data-pep-activity-link aria-disabled="true">Activity 4</a></li></ol></nav>
+<section class="pep-activity" id="activity-1" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<h2 id="activity-1-title" tabindex="-1">Activity 1: Predict a child render</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div data-pep-teaching><p>Knowing when your component function runs makes bugs and performance much easier to reason about. Predict this first.</p></div>
+
+</div>
+<div class="pep-region" data-pep-workspace="activity" data-interaction="predict">
+<div id="task-1" data-pep-task><h3>Your task: predict whether the child re-renders</h3><p><code>Parent</code> updates its state in the code below. <code>Child</code> receives no props. Choose what you expect from the option list.</p></div>
+<section data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to one result and read why each option is right or wrong.</p></section>
+<div class="q"><pre class="pep-code"><code>function Child() {
+  return &lt;p&gt;Static text&lt;/p&gt;;
+}
+
+function Parent() {
+  const [n, setN] = useState(0);
+  return (
+    &lt;&gt;
+      &lt;button onClick={() =&gt; setN(n + 1)}&gt;{n}&lt;/button&gt;
+      &lt;Child /&gt;
+    &lt;/&gt;
+  );
+}</code></pre><fieldset class="pep-options"><legend>When the button is clicked, what happens to Child?</legend><label class="pep-option" id="a1-opt-1-row"><input type="radio" name="a1-choice" id="a1-opt-1" value="1"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Its function runs again, because its parent re-rendered<span class="pep-explain" hidden><strong class="pep-verdict"></strong>By default, rendering a component also renders the components inside it.</span></span></label><label class="pep-option" id="a1-opt-2-row"><input type="radio" name="a1-choice" id="a1-opt-2" value="2"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">It does not run, because its props did not change<span class="pep-explain" hidden><strong class="pep-verdict"></strong>That is what memo opts into. By default a parent render renders its children.</span></span></label><label class="pep-option" id="a1-opt-3-row"><input type="radio" name="a1-choice" id="a1-opt-3" value="3"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">It unmounts and mounts again<span class="pep-explain" hidden><strong class="pep-verdict"></strong>Re-rendering keeps the component in place, and its state survives.</span></span></label><label class="pep-option" id="a1-opt-4-row"><input type="radio" name="a1-choice" id="a1-opt-4" value="4"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Its DOM is rebuilt from scratch<span class="pep-explain" hidden><strong class="pep-verdict"></strong>React updates only the DOM that differs, and here nothing differs for Child.</span></span></label></fieldset><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-1" data-pep-submit data-pep-complete-activity>Check answer</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Static version: Parent holds state and renders Child with no props. Parent's button updates the state. Decide whether Child's function runs, then compare with Activity 2.</p></div></noscript></div>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<div data-static-alt data-section-skip><p>Static version: Parent holds state and renders Child with no props. Parent's button updates the state. Decide whether Child's function runs, then compare with Activity 2.</p></div>
+</div>
+</div>
+
+</section>
+<section class="pep-activity" id="activity-2" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<h2 id="activity-2-title" tabindex="-1">Activity 2: Trace renders through a tree</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div data-pep-teaching><p>So far, two things cause a re-render:</p>
+<ul><li><strong>A state update</strong> in the component.</li><li><strong>Its parent re-rendering</strong>, which by default re-renders every child below it.</li></ul>
+<p>A render flows <strong>down</strong> the tree from the component that updated. Parents and siblings of that component are not affected.</p><details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip><summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary><div class="pep-optional__body"><p data-pep-anecdote-story>A manager announces a change. Everyone who reports to that manager re-reads their instructions, while peers in other departments carry on.</p><p data-pep-anecdote-map>A render flows down from the update, and not up or sideways.</p></div></details></div>
+
+</div>
+<div class="pep-region" data-pep-workspace="activity" data-interaction="explore">
+<div id="task-2" data-pep-task data-pep-may-stall><h3>Your task: trigger updates in the component tree</h3><p>The <strong>tree</strong> below shows <code>App</code>, <code>Header</code>, <code>Counter</code> and <code>Display</code>, with a render count on each. Press <strong>Set state in Counter</strong>, then <strong>Set state in App</strong>, reading the counts after each. Then use the list to say which components render after a state update in Counter. Press <strong>Check result</strong>.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> The render counts after pressing Set state in Counter.</p><p data-pep-hint-step><strong>Next step:</strong> See which counts change and which stay put. Then find where each of those components sits in the tree.</p></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><ul><li>You trigger both updates and read the counts.</li><li>You name exactly the components that render after a state update in Counter.</li></ul></section>
+<div class="q"><div class="pep-sim pep-js-only" data-pep-sim><div class="pep-row"><button type="button" class="pep-btn" id="p16-c">Set state in Counter</button><button type="button" class="pep-btn" id="p16-a">Set state in App</button></div>
+<div id="p16-tree"></div>
+<fieldset class="pep-choice" id="p16-pick" data-pep-choice data-pep-choice-empty=""><legend>After a state update in Counter, these render:</legend><label class="pep-check"><input type="radio" name="p16-pick" id="p16-pick-1" value="cd"> Counter and Display</label><label class="pep-check"><input type="radio" name="p16-pick" id="p16-pick-2" value="c"> Counter only</label><label class="pep-check"><input type="radio" name="p16-pick" id="p16-pick-3" value="all"> All four components</label><label class="pep-check"><input type="radio" name="p16-pick" id="p16-pick-4" value="ac"> App and Counter</label></fieldset></div><p class="pep-js-only" data-pep-sim-live aria-live="polite" style="margin:8px 0 0;font:400 14px/20px var(--pep-font-sans)"></p><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-2" data-pep-submit data-pep-complete-activity>Check result</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Without JavaScript the tree cannot run. On paper: App contains Header and Counter, and Counter contains Display. List which components render after a state update in Counter, and after a state update in App.</p></div></noscript></div>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<div data-static-alt data-section-skip><p>Without JavaScript the tree cannot run. On paper: App contains Header and Counter, and Counter contains Display. List which components render after a state update in Counter, and after a state update in App.</p></div>
+</div>
+</div>
+<p><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</section>
+<section class="pep-activity" id="activity-3" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<h2 id="activity-3-title" tabindex="-1">Activity 3: Separate render from commit</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div data-pep-teaching><p><strong>Rendering</strong> means React calling your component function to find out what the screen should look like. It is just computing.</p>
+<p><strong>Committing</strong> comes next: React compares the new output with the previous output, then changes <strong>only the DOM nodes that differ</strong>. So many functions can run while very few DOM nodes change, and a re-render alone does not mean the page was rebuilt.</p></div>
+
+</div>
+<div class="pep-region" data-pep-workspace="activity" data-interaction="explore">
+<div id="task-3" data-pep-task data-pep-may-stall><h3>Your task: count function calls and DOM changes in the commit lab</h3><p>In the <strong>commit lab</strong> below, press <strong>Update count</strong> once and read both counters. The list has 5 items, and only the count item contains changing data. Then enter how many DOM nodes changed, and press <strong>Check result</strong>.</p><details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 3</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> The &quot;Last update&quot; panel.</p><p data-pep-hint-step><strong>Next step:</strong> It lists the function calls and the DOM changes separately. Use the one that says DOM.</p></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><ul><li>You trigger at least one update.</li><li>Your number matches the DOM changes for one update.</li></ul></section>
+<div class="q"><div class="pep-sim pep-js-only" data-pep-sim><div class="pep-row"><button type="button" class="pep-btn" id="p17-u">Update count</button></div>
+<ul id="p17-list" style="margin:0"></ul>
+<div class="pep-panel pep-panel--mono" id="p17-out">Nothing has updated yet.</div>
+<label for="p17-n">DOM nodes changed by one update</label><input type="text" inputmode="numeric" id="p17-n" autocomplete="off"></div><p class="pep-js-only" data-pep-sim-live aria-live="polite" style="margin:8px 0 0;font:400 14px/20px var(--pep-font-sans)"></p><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-3" data-pep-submit data-pep-complete-activity>Check result</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Without JavaScript the lab cannot run. On paper, a list has five items and only the Count item shows changing data. After one update, say how many item functions run, and how many DOM nodes change. Explain the difference in one sentence.</p></div></noscript></div>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<div data-static-alt data-section-skip><p>Without JavaScript the lab cannot run. On paper, a list has five items and only the Count item shows changing data. After one update, say how many item functions run, and how many DOM nodes change. Explain the difference in one sentence.</p></div>
+</div>
+</div>
+<p><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</section>
+<section class="pep-activity" id="activity-4" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-4-title">
+<h2 id="activity-4-title" tabindex="-1">Activity 4: Place memo correctly</h2>
+<div class="pep-regions">
+<div class="pep-region" data-pep-instructions>
+<div data-pep-teaching><p><code>memo</code> wraps a component so React can <strong>skip its render when its props are unchanged</strong>. It is a <strong>performance optimisation</strong> only, for when a slow component re-renders often with the same props.</p>
+<p>Correct code must work without it. React may still re-render a memoized component, and its own state or context changes still render it. A bug that depends on render count should be fixed, not hidden with <code>memo</code>.</p></div>
+
+</div>
+<div class="pep-region" data-pep-workspace="activity" data-interaction="mcq" data-confidence>
+<div id="task-4" data-pep-task><h3>Your task: decide what memo is for and rate your confidence</h3><p>Below is a code review situation. Choose the best response from the list, rate your confidence, then press <strong>Check answer</strong>.</p></div>
+<section data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>You rate your confidence first, and you can describe memo as a performance tool rather than a fix for correctness.</p></section>
+<div class="q"><fieldset class="pep-options"><legend>A teammate wraps a component in memo because &quot;otherwise a counter inside it goes wrong when it re-renders&quot;. What is your response?</legend><label class="pep-option" id="a4-opt-1-row"><input type="radio" name="a4-choice" id="a4-opt-1" value="1"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Find and fix the bug; memo is a performance optimisation and must not be needed for correct behavior<span class="pep-explain" hidden><strong class="pep-verdict"></strong>Correct components tolerate extra renders. memo may skip work, but it cannot guarantee a skip.</span></span></label><label class="pep-option" id="a4-opt-2-row"><input type="radio" name="a4-choice" id="a4-opt-2" value="2"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Approve it, since memo guarantees the component never re-renders<span class="pep-explain" hidden><strong class="pep-verdict"></strong>memo makes no such guarantee. State and context changes still render it.</span></span></label><label class="pep-option" id="a4-opt-3-row"><input type="radio" name="a4-choice" id="a4-opt-3" value="3"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Wrap every component in memo so the bug cannot return<span class="pep-explain" hidden><strong class="pep-verdict"></strong>That adds comparison work everywhere and still would not fix the bug.</span></span></label><label class="pep-option" id="a4-opt-4-row"><input type="radio" name="a4-choice" id="a4-opt-4" value="4"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Replace state with a global variable to stop the renders<span class="pep-explain" hidden><strong class="pep-verdict"></strong>That stops the screen from updating, and it hides the real problem.</span></span></label></fieldset><fieldset class="pep-confidence" data-confidence-group><legend>How sure are you?</legend><div class="pep-confidence__row"><label class="pep-option"><input type="radio" name="a4-confidence" id="a4-conf-1" value="Guessing"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="a4-confidence" id="a4-conf-2" value="Fairly sure"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="a4-confidence" id="a4-conf-3" value="Certain"><span class="pep-option__text">Certain</span></label></div></fieldset><div class="pep-actions pep-js-only"><button type="button" class="pep-btn pep-btn--primary" id="check-4" data-pep-submit data-pep-complete-activity>Check answer</button></div><noscript data-pep-no-js data-section-skip><div class="pep-noscript"><p>Static version: a teammate uses memo to prevent a bug that appears on re-render. Compare fixing the bug, trusting memo as a guarantee, wrapping everything, and using a global variable. Choose using the teaching text.</p></div></noscript></div>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<div data-static-alt data-section-skip><p>Static version: a teammate uses memo to prevent a bug that appears on re-render. Compare fixing the bug, trusting memo as a guarantee, wrapping everything, and using a global variable. Choose using the teaching text.</p></div>
+</div>
+</div>
+<p><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+</section>
+<div class="pep-activity-actions" role="group" aria-label="Activity navigation"><button type="button" class="pep-btn" id="previous-activity" data-pep-previous>Previous activity</button><button type="button" class="pep-btn pep-btn--primary" id="next-activity" data-pep-next>Next activity</button></div>
+<section class="pep-recap" data-pep-recap aria-labelledby="recap-title"><h2 id="recap-title">Recap</h2><p>A state update and a parent re-render are two causes of a re-render taught so far, and a render flows down from where the update happened. Rendering just calls your function; React then commits only the DOM differences. <code>memo</code> can skip a render when props are unchanged, but it is a performance optimisation and not a correctness fix: your code must still work if extra renders happen.</p></section>
+<details class="pep-optional pep-sources" data-pep-cheat data-section-skip><summary><span>Cheat sheet</span><span class="pep-optional__cue">Optional reference</span></summary><div class="pep-optional__body"><pre class="pep-code"><code>// Trigger: setState in the component, or parent renders
+// Render: React calls your function
+// Commit: React changes only the DOM that differs
+
+const Slow = memo(function Slow({ value }) {
+  return &lt;Chart value={value} /&gt;;
+});</code></pre></div></details>
+<details class="pep-optional pep-sources" data-pep-sources data-section-skip><summary><span>Sources and review date</span><span class="pep-optional__cue">Optional reference</span></summary><div class="pep-optional__body"><p>First draft, not yet independently reviewed. Official sources checked 2026-11-04:</p><ul><li><a href="https://react.dev/learn/render-and-commit" rel="noopener">react.dev/learn/render-and-commit</a>: Step 1: Trigger a render; Step 2: React renders your components; Step 3: React commits changes to the DOM</li><li><a href="https://react.dev/learn/state-as-a-snapshot" rel="noopener">react.dev/learn/state-as-a-snapshot</a>: Setting state triggers renders</li><li><a href="https://react.dev/reference/react/memo" rel="noopener">react.dev/reference/react/memo</a>: Reference; Usage</li></ul></div></details>
+</main>
+<script>
+// Radio groups stand in for native selects: each [data-pep-choice] fieldset reads and sets like a select.
+(() => {
+  const radios = el => [...el.querySelectorAll('input[type=radio]')];
+  const hasEmpty = el => el.hasAttribute('data-pep-choice-empty');
+  Object.defineProperty(HTMLFieldSetElement.prototype, 'value', { configurable: true,
+    get() { if (!this.hasAttribute('data-pep-choice')) return undefined; const r = radios(this).find(x => x.checked); return r ? r.value : (this.getAttribute('data-pep-choice-empty') ?? ''); },
+    set(v) { for (const r of radios(this)) r.checked = r.value === String(v); } });
+  Object.defineProperty(HTMLFieldSetElement.prototype, 'selectedIndex', { configurable: true,
+    get() { const i = radios(this).findIndex(x => x.checked); return hasEmpty(this) ? i + 1 : i; },
+    set(n) { const k = hasEmpty(this) ? n - 1 : n; radios(this).forEach((r, i) => { r.checked = i === k; }); } });
+})();
+window.PEP_ACTIVITIES=[{kind:'choice',key:0,confidence:false,why:["By default, rendering a component also renders the components inside it.","That is what memo opts into. By default a parent render renders its children.","Re-rendering keeps the component in place, and its state survives.","React updates only the DOM that differs, and here nothing differs for Child."]},
+{kind:'sim',reveal:"Counter updated its state, so it renders along with its child, Display. App and Header do not.",success:"Render flows down from where the state changed.",setup:(root, api) => {
+        let counts, lit, usedC, usedA;
+        const tree = root.querySelector('#p16-tree');
+        const box = (name, kids = '') => `<div class="pep-box${lit.includes(name) ? ' is-on' : ''}"><strong>${name}</strong> renders: ${counts[name]}${lit.includes(name) ? ' (just rendered)' : ''}${kids}</div>`;
+        const draw = () => { tree.innerHTML = box('App', box('Header') + box('Counter', box('Display'))); };
+        const hit = names => { lit = names; names.forEach(n => { counts[n] += 1; }); draw(); api.announce(`Rendered: ${names.join(', ')}`); };
+        const init = () => { counts = { App: 1, Header: 1, Counter: 1, Display: 1 }; lit = []; usedC = false; usedA = false; draw(); };
+        root.querySelector('#p16-c').addEventListener('click', () => { usedC = true; hit(['Counter', 'Display']); });
+        root.querySelector('#p16-a').addEventListener('click', () => { usedA = true; hit(['App', 'Header', 'Counter', 'Display']); });
+        init();
+        return {
+          reset: init,
+          check: () => {
+            const pick = root.querySelector('#p16-pick').value;
+            if (!usedC || !usedA) return { incomplete: true, msg: 'Press both buttons and read the counts first.' };
+            if (!pick) return { incomplete: true, msg: 'Choose which components render.' };
+            return pick === 'cd' ? { ok: true, msg: 'The update renders Counter and everything below it. App and Header are untouched.' } : { ok: false, msg: 'Press Set state in Counter again and see which counts go up.' };
+          },
+        };
+      }},
+{kind:'sim',reveal:"One DOM node changed, even though all five item functions ran.",success:"A render is a calculation; the commit is the small part that touches the page.",setup:(root, api) => {
+        let count, updates;
+        const list = root.querySelector('#p17-list'), out = root.querySelector('#p17-out');
+        const paint = () => { list.innerHTML = ['Header', `Count: ${count}`, 'Menu', 'Help', 'Footer'].map(t => `<li>${t}</li>`).join(''); };
+        const init = () => { count = 0; updates = 0; paint(); out.textContent = 'Nothing has updated yet.'; };
+        root.querySelector('#p17-u').addEventListener('click', () => {
+          count += 1; updates += 1;
+          const before = [...list.children].map(li => li);
+          const fresh = ['Header', `Count: ${count}`, 'Menu', 'Help', 'Footer'];
+          let changed = 0;
+          before.forEach((li, i) => { if (li.textContent !== fresh[i]) { li.textContent = fresh[i]; changed += 1; } });
+          const line = `Last update: 5 item functions called, ${changed} DOM node changed`;
+          out.textContent = line; api.announce(line);
+        });
+        init();
+        return {
+          reset: init,
+          check: () => {
+            if (!updates) return { incomplete: true, msg: 'Press Update count first.' };
+            const v = root.querySelector('#p17-n').value.trim();
+            if (!/^\d+$/.test(v)) return { incomplete: true, msg: 'Enter a whole number.' };
+            return v === '1' ? { ok: true, msg: 'Five functions ran, but React only touched the one node whose output differed.' } : { ok: false, msg: 'Read the Last update line again. Which number is about the DOM?' };
+          },
+        };
+      }},
+{kind:'choice',key:0,confidence:true,why:["Correct components tolerate extra renders. memo may skip work, but it cannot guarantee a skip.","memo makes no such guarantee. State and context changes still render it.","That adds comparison work everywhere and still would not fix the bug.","That stops the screen from updating, and it hides the real problem."]}];
+(() => {
+  document.documentElement.classList.add('is-enhanced');
+  const lesson = document.querySelector('#lesson');
+  const activities = [...document.querySelectorAll('[data-pep-activity]')];
+  const timeline = [...document.querySelectorAll('[data-pep-activity-link]')];
+  const previous = document.querySelector('[data-pep-previous]');
+  const next = document.querySelector('[data-pep-next]');
+  const progress = document.querySelector('#progress');
+  const position = document.querySelector('#pep-position');
+  const total = activities.length;
+  const defs = window.PEP_ACTIVITIES;
+  let current = 1;
+  let unlocked = 1;
+  const state = activities.map(() => ({ attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false }));
+  let initial = [];
+  const mounted = [];
+  const say = (n, kind, html) => {
+    const box = activities[n - 1].querySelector('[data-pep-feedback]');
+    box.innerHTML = html ? `<div class="pep-callout pep-callout--${kind}">${html}</div>` : '';
+  };
+  const reflect = n => {
+    const a = activities[n - 1], v = state[n - 1];
+    a.dataset.pepAttempts = String(v.attempts); a.dataset.pepSettled = String(v.settled);
+    a.dataset.pepCompleted = String(v.completed); a.dataset.pepCredit = String(v.credit);
+    a.dataset.pepGrade = String(v.grade); a.dataset.pepContinue = String(v.canContinue);
+  };
+  const updateProgress = () => {
+    const done = state.filter(v => v.settled).length;
+    progress.textContent = `${done} of ${total} activities finished`;
+    lesson.dataset.pepRouteSettled = String(done === total);
+    lesson.dataset.pepComplete = String(state.every(v => v.completed));
+    // The recap and cheat sheet close the path; showing them earlier would teach before the predict step.
+    const closed = done === total;
+    document.querySelectorAll('[data-pep-recap], [data-pep-cheat]').forEach(n => { n.hidden = !closed; });
+  };
+  const render = (n, mode = 'none', focus = false) => {
+    if (!Number.isInteger(n) || n < 1 || n > total || n > unlocked) return false;
+    current = n;
+    lesson.dataset.pepCurrentActivity = String(current);
+    lesson.dataset.pepUnlockedThrough = String(unlocked);
+    activities.forEach((a, i) => { a.hidden = i + 1 !== current; });
+    timeline.forEach((link, i) => {
+      const k = i + 1;
+      if (k === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+      if (k > unlocked) link.setAttribute('aria-disabled', 'true'); else link.removeAttribute('aria-disabled');
+    });
+    position.textContent = `Activity ${current} of ${total}`;
+    previous.disabled = current === 1;
+    next.disabled = current === total || current >= unlocked || !state[current - 1].canContinue;
+    try {
+      if (mode === 'push') history.pushState({ activity: current }, '', `#activity-${current}`);
+      if (mode === 'replace') history.replaceState({ activity: current }, '', `#activity-${current}`);
+    } catch (e) {
+      if (mode !== 'none' && location.hash !== `#activity-${current}`) location.hash = `activity-${current}`;
+    }
+    if (focus) document.querySelector(`#activity-${current}-title`)?.focus();
+    return true;
+  };
+  const finish = (n, ok) => {
+    const v = state[n - 1];
+    v.settled = true; v.canContinue = true; v.completed = ok; v.grade = ok ? 1 : 0; v.credit = ok ? 1 : 0;
+    reflect(n); updateProgress();
+    if (n === unlocked && unlocked < total) unlocked = n + 1;
+    render(current);
+  };
+  const attempt = (n, result, def) => {
+    const v = state[n - 1];
+    if (v.settled) return;
+    v.attempts += 1;
+    if (result.ok) {
+      say(n, 'success', `<p><strong>Correct.</strong> ${result.msg || def.success || ''}</p>`);
+      lock(n); finish(n, true);
+    } else if (v.attempts >= 2) {
+      say(n, 'wrong', `<p><strong>Settled, not correct.</strong> ${result.msg || ''}</p>${def.reveal ? `<p>${def.reveal}</p>` : ''}`);
+      lock(n); finish(n, false);
+    } else {
+      reflect(n);
+      say(n, 'wrong', `<p><strong>Try again.</strong> ${result.msg || ''} You have one more try.</p>`);
+    }
+  };
+  const lock = n => {
+    const a = activities[n - 1];
+    a.querySelectorAll('[data-pep-submit]').forEach(b => { b.disabled = true; });
+    a.querySelectorAll('input, textarea, select').forEach(c => { if (!c.closest('[data-pep-optional]') && c.dataset.pepKeepLive === undefined) c.disabled = true; });
+    a.querySelectorAll('[data-pep-sim] button').forEach(b => { if (b.dataset.pepKeepLive === undefined) b.disabled = true; });
+  };
+  const unlockControls = n => {
+    const a = activities[n - 1];
+    a.querySelectorAll('[data-pep-submit], input, textarea, select, [data-pep-sim] button').forEach(c => { if (!c.closest('[data-pep-optional]')) c.disabled = false; });
+  };
+  const mountChoice = (n, def) => {
+    const a = activities[n - 1];
+    const name = `a${n}-choice`;
+    const opts = [...a.querySelectorAll(`input[name="${name}"]`)];
+    a.querySelector('[data-pep-submit]').addEventListener('click', () => {
+      const v = state[n - 1];
+      if (v.settled) return;
+      const picked = opts.find(o => o.checked);
+      if (!picked) { say(n, 'info', '<p><strong>Not checked yet.</strong> Choose an option first.</p>'); return; }
+      if (def.confidence && !a.querySelector(`input[name="a${n}-confidence"]:checked`)) { say(n, 'info', '<p><strong>Not checked yet.</strong> Rate your confidence first, then check.</p>'); return; }
+      const i = opts.indexOf(picked);
+      const ok = i === def.key;
+      v.attempts += 1;
+      const why = def.why[i];
+      if (ok || v.attempts >= 2) {
+        opts.forEach((o, j) => {
+          const row = o.closest('.pep-option');
+          row.querySelector('.pep-explain').hidden = false;
+          if (j === def.key) { row.classList.add('is-correct'); row.querySelector('.pep-verdict').textContent = 'Correct answer: '; }
+          else if (o === picked) { row.classList.add('is-wrong'); row.querySelector('.pep-verdict').textContent = 'Your answer: '; }
+        });
+        say(n, ok ? 'success' : 'wrong', ok ? `<p><strong>Correct.</strong> ${why}</p>` : `<p><strong>Settled, not correct.</strong> ${why} ${def.why[def.key]}</p>`);
+        lock(n); finish(n, ok);
+      } else {
+        reflect(n);
+        say(n, 'wrong', `<p><strong>Try again.</strong> ${why} You have one more try.</p>`);
+      }
+    });
+    return () => opts.forEach(o => {
+      const row = o.closest('.pep-option');
+      row.classList.remove('is-correct', 'is-wrong');
+      row.querySelector('.pep-explain').hidden = true;
+      row.querySelector('.pep-verdict').textContent = '';
+    });
+  };
+  const mountSim = (n, def) => {
+    const a = activities[n - 1];
+    const root = a.querySelector('[data-pep-sim]');
+    const sim = def.setup(root, { esc, announce: t => { const l = a.querySelector('[data-pep-sim-live]'); if (l) l.textContent = t; } });
+    a.querySelector('[data-pep-submit]').addEventListener('click', () => {
+      if (state[n - 1].settled) return;
+      const result = sim.check();
+      if (result.incomplete) { say(n, 'info', `<p><strong>Not checked yet.</strong> ${result.msg}</p>`); return; }
+      attempt(n, result, def);
+    });
+    return () => sim.reset();
+  };
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const mountEditor = (n, def) => {
+    const a = activities[n - 1];
+    const input = a.querySelector('.pep-editor__input');
+    const gutter = a.querySelector('.pep-editor__gutter');
+    const tabs = [...a.querySelectorAll('[role=tab]')];
+    const panels = [...a.querySelectorAll('[role=tabpanel]')];
+    const problems = panels[0], output = panels[1];
+    const status = a.querySelector('.pep-editor__status');
+    const preview = a.querySelector('.pep-editor__preview');
+    const log = a.querySelector('.pep-editor__log');
+    const starter = input.value;
+    const empty = 'No problems yet. Press Run to check your code.';
+    const lines = () => { gutter.textContent = input.value.split('\n').map((_, i) => i + 1).join('\n'); };
+    input.addEventListener('input', lines); lines();
+    const select = i => tabs.forEach((t, j) => { t.setAttribute('aria-selected', String(i === j)); panels[j].hidden = i !== j; });
+    tabs.forEach((t, i) => t.addEventListener('click', () => select(i)));
+    const jump = line => { const pos = input.value.split('\n').slice(0, Math.max(0, line - 1)).join('\n').length + (line > 1 ? 1 : 0); input.focus(); input.setSelectionRange(pos, pos); };
+    const showProblems = list => {
+      problems.innerHTML = '';
+      if (!list.length) { problems.textContent = 'No problems.'; return; }
+      for (const p of list) {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'pep-editor__problem';
+        const k = p.kind === 'limit' ? 'Not supported in this practice editor' : 'Problem';
+        b.innerHTML = `<span class="kind-${p.kind === 'limit' ? 'limit' : 'error'}">${k}${p.line ? ` (line ${p.line})` : ''}:</span> ${esc(p.msg)}`;
+        b.addEventListener('click', () => jump(p.line || 1));
+        problems.append(b);
+      }
+    };
+    a.querySelector('[data-pep-run]').addEventListener('click', async () => {
+      if (state[n - 1].settled || a.dataset.pepRunning === 'true') return;
+      const code = input.value;
+      if (code.trim() === starter.trim()) {
+        showProblems([{ kind: 'error', msg: 'The code is still the starter. Make your edit, then press Run.', line: 1 }]);
+        select(0); status.textContent = 'Not checked: edit the starter first.';
+        say(n, 'info', '<p><strong>Not checked yet.</strong> Edit the starter code, then press Run.</p>');
+        return;
+      }
+      let r;
+      preview.innerHTML = '';
+      a.dataset.pepRunning = 'true';
+      status.textContent = 'Running...';
+      try { r = await def.evaluate(code, { kit: window.PEP_KIT, preview }); }
+      catch (e) { r = { problems: [{ kind: 'error', msg: e.message || String(e), line: e.line }], ok: false }; }
+      a.dataset.pepRunning = 'false';
+      r.problems = r.problems || [];
+      log.textContent = r.output || (r.ok ? 'All checks passed.' : 'No output.');
+      showProblems(r.problems);
+      if (r.limit || r.incomplete) {
+        select(0); status.textContent = r.limit ? 'Not checked: outside the supported subset.' : 'Not checked: the code did not run.';
+        say(n, 'info', `<p><strong>Not checked yet.</strong> ${r.limit ? 'Your code uses something this practice editor cannot run. See Problems.' : 'Fix the problem listed under Problems and press Run again.'}</p>`);
+        return;
+      }
+      select(r.ok ? 1 : (r.problems.length ? 0 : 1));
+      status.textContent = r.ok ? 'Pass: the observed result matches the task.' : 'Mismatch: the observed result does not match the task yet.';
+      attempt(n, { ok: r.ok, msg: r.msg || (r.ok ? '' : 'Compare Problems and Output with the success checks.') }, def);
+    });
+    a.querySelector('[data-pep-reset-code]').addEventListener('click', () => {
+      if (state[n - 1].settled) return;
+      input.value = starter; lines(); showProblems([]); problems.textContent = empty; log.textContent = 'Nothing has run yet.'; preview.innerHTML = '';
+      status.textContent = 'Ready: code reset to the starter.';
+    });
+    problems.textContent = empty; log.textContent = 'Nothing has run yet.';
+    return () => { lines(); problems.textContent = empty; log.textContent = 'Nothing has run yet.'; preview.innerHTML = ''; status.textContent = 'Ready: edit the code, then press Run.'; select(0); };
+  };
+  const activityFromHash = h => { const m = /^#activity-(\d+)$/.exec(h); return m ? Number(m[1]) : 0; };
+  defs.forEach((def, i) => {
+    const n = i + 1;
+    mounted[i] = def.kind === 'choice' ? mountChoice(n, def) : def.kind === 'sim' ? mountSim(n, def) : mountEditor(n, def);
+  });
+  initial = activities.map(a => [...a.querySelectorAll('input, textarea, select')].filter(c => !c.closest('[data-pep-optional]')).map(c => ({ c, value: c.value, checked: c.checked, index: c.selectedIndex })));
+  timeline.forEach((link, i) => link.addEventListener('click', e => {
+    e.preventDefault();
+    if (link.getAttribute('aria-disabled') === 'true') return;
+    render(i + 1, 'push', true);
+  }));
+  document.querySelectorAll('[data-pep-back-link]').forEach(link => link.addEventListener('click', e => {
+    e.preventDefault(); render(activityFromHash(link.getAttribute('href')), 'push', true);
+  }));
+  previous.addEventListener('click', () => render(current - 1, 'push', true));
+  next.addEventListener('click', () => render(current + 1, 'push', true));
+  const restore = () => {
+    const requested = activityFromHash(location.hash) || 1;
+    if (!render(requested, 'none', false)) render(Math.min(current, unlocked), 'replace', false);
+  };
+  addEventListener('popstate', restore);
+  addEventListener('hashchange', restore);
+  document.querySelector('[data-pep-reset]').addEventListener('click', () => {
+    const i = current - 1;
+    unlockControls(current);
+    for (const s of initial[i]) {
+      if (s.c.matches('input[type=checkbox], input[type=radio]')) s.c.checked = s.checked;
+      else if (s.c.tagName === 'SELECT') s.c.selectedIndex = s.index;
+      else s.c.value = s.value;
+    }
+    state[i] = { attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false };
+    mounted[i]();
+    say(current, '', '');
+    reflect(current); updateProgress(); render(current);
+  });
+  const objectives = document.querySelector('[data-pep-objectives]');
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); } });
+  document.addEventListener('click', e => { if (objectives.open && !objectives.contains(e.target)) objectives.open = false; });
+  let opened = [];
+  addEventListener('beforeprint', () => { opened = [...document.querySelectorAll('details:not([open])')]; opened.forEach(d => { d.open = true; }); });
+  addEventListener('afterprint', () => { opened.forEach(d => { d.open = false; }); opened = []; });
+  activities.forEach((_, i) => reflect(i + 1));
+  updateProgress();
+  const start = activityFromHash(location.hash);
+  render(start >= 1 && start <= unlocked ? start : 1, 'replace');
+})();
+</script>
+</body>
+</html>

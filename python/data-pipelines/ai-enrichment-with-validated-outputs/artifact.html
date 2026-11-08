@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="python">
+<meta name="pep:module" content="data-pipelines">
+<meta name="pep:topic" content="AI enrichment with validated outputs">
+<meta name="pep:topic-id" content="ai-enrichment-with-validated-outputs">
+<meta name="pep:budget-minutes" content="12">
+<meta name="pep:source" content="authoring/evidence/python/data-pipelines/ai-enrichment-with-validated-outputs/sources.json">
+<meta name="pep:draft-status" content="first-draft-unreviewed">
+<title>AI enrichment with validated outputs · Data Pipelines: Extract, Load and Transform</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-dur-1: 120ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 0 0 12px; padding-inline-start: 24px; }
+li { margin-block-end: 4px; }
+svg { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible, .pep-btn:focus, .pep-step:focus, .pep-back:focus { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; margin: 0 0 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-objectives { position: relative; break-inside: avoid; min-width: 0; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; margin-block-start: 16px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+[data-pep-workspace] { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+[data-pep-activity-checks] { padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] > :last-child { margin-bottom: 0; }
+[data-pep-where-fits] { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+[data-pep-where-fits] h2 { font-size: 16px; line-height: 24px; font-weight: 600; margin-bottom: 8px; }
+[data-pep-where-fits] p:last-child { margin-bottom: 0; }
+.pep-hint, details[data-pep-hint] { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); break-inside: avoid; }
+.pep-hint > summary { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; align-items: center; min-height: 44px; padding-block: 8px; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { padding-block: 4px 12px; }
+.pep-hint .pep-hint { margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong); border-radius: 0; background: transparent; }
+.pep-optional { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; min-width: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent); }
+.pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-block: 16px; }
+.pep-activity-actions .pep-btn { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn { flex: 0 1 auto; } }
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-options legend { padding: 0; margin-block-end: 8px; color: var(--pep-text-strong); font-weight: 600; max-width: 100%; }
+.pep-option { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; position: relative; min-width: 0; }
+.pep-option--plain { grid-template-columns: minmax(0, 1fr); }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pep-option input:disabled { cursor: default; }
+.pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-confidence { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-confidence .pep-option { flex: 1 1 96px; grid-template-columns: minmax(0, 1fr); text-align: center; }
+.pep-explain { display: grid; gap: 4px; margin: 8px 0 0; padding-inline-start: 20px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-feedback:empty { display: none; }
+.pep-feedback { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text); }
+.pep-feedback p { margin: 0; }
+.pep-feedback.is-correct { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-feedback.is-wrong { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-feedback.is-revealed { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-verdict { font-weight: 700; color: var(--pep-text-strong); }
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.pep-steps li { margin: 0; }
+.pep-step { display: inline-flex; align-items: center; min-height: 44px; padding: 6px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-disabled="true"] { border-color: var(--pep-line-strong); color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-back { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+.pep-activity { min-width: 0; }
+.pep-activity[hidden] { display: none; }
+.pep-code { margin: 0; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.pep-table-wrap { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); overflow: hidden; }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); table-layout: auto; }
+.pep-table th { text-align: left; font-weight: 600; color: var(--pep-text-strong); background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); padding: 8px 12px; overflow-wrap: anywhere; }
+.pep-table td { padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.pep-table td:first-child { font-weight: 600; color: var(--pep-text-strong); }
+.pep-field { display: grid; gap: 4px; min-width: 0; }
+.pep-field > span, .pep-label { color: var(--pep-text-strong); font: 600 13px/20px var(--pep-font-sans); }
+.pep-field input[type="text"], .pep-field select { min-height: 44px; width: 100%; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); scroll-margin-block: 16px; }
+.pep-check { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.pep-check input { width: 24px; height: 24px; margin: 0; flex: none; accent-color: var(--pep-accent); }
+.pep-model { display: grid; gap: 12px; min-width: 0; }
+.pep-stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.pep-stat { padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); min-width: 0; }
+.pep-stat b { display: block; color: var(--pep-text-strong); font: 700 20px/28px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-stat span { color: var(--pep-text-muted); font: 400 12px/16px var(--pep-font-sans); }
+.pep-log { margin: 0; min-height: 44px; padding: 12px 16px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); min-width: 0; }
+.pep-editor__bar { border-radius: 11px 11px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { display: block; width: 100%; margin: 0; padding: 12px; border: 0; resize: none; min-width: 0; min-height: 160px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow: hidden; overflow-wrap: normal; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; min-height: 64px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; cursor: pointer; overflow-wrap: anywhere; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; }
+.pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__problem .kind-hint { color: var(--pep-text-muted); font-weight: 600; }
+.pep-editor__status { border-radius: 0 0 11px 11px; padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-sources a { overflow-wrap: anywhere; }
+.pep-recap[hidden] { display: none; }
+.pep-recap { margin-block-start: 32px; padding-block-start: 16px; border-block-start: 1px solid var(--pep-line-strong); }
+.pep-recap h2 { margin-block-end: 8px; }
+.pep-recap section, .pep-recap details { margin-block-start: 16px; }
+.pep-sources > summary, .pep-cheat > summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+html:not(.is-enhanced) .pep-js-only { display: none; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+  [data-pep-workspace] { padding: 16px; }
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__code { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__gutter { line-height: 24px; font-size: 16px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-activity, [data-pep-activity], .pep-recap { display: block !important; }
+  .pep-noprint, .pep-activity-actions, nav[aria-label="Activities"], .pep-back { display: none !important; }
+  .pep-objectives > div { display: block !important; width: auto; }
+  .pep-topicbar, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional, .pep-code, .pep-table-wrap { break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .pep-optional > summary { list-style: none; }
+  .pep-optional > summary::-webkit-details-marker { display: none; }
+}
+</style>
+</head>
+<body>
+<main class="pep-main" id="lesson" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="12">
+<header class="pep-topicbar">
+<h1 id="page-title">AI enrichment with validated outputs</h1>
+<span class="pep-topicbar__progress"><span id="pos-text">Activity 1 of 4</span> · about 12 min · <span id="prog-text">0 of 4 done</span></span>
+<details class="pep-objectives" data-pep-objectives>
+<summary aria-controls="objectives-body">Objectives</summary>
+<div id="objectives-body"><ul><li>Explain why model output is untrusted input, and design an enrichment step that requests JSON matching a declared schema</li><li>Validate each model response against a Pydantic model and send invalid or failed responses to a retry or reject path instead of loading them</li><li>Test the enrichment step offline with a fake model client that returns fixed valid and invalid responses</li></ul></div>
+</details>
+<button class="pep-btn pep-js-only" type="button" id="restart" data-pep-reset>Restart activity</button>
+</header>
+<nav aria-label="Activities"><ol class="pep-steps"><li><a class="pep-step" href="#activity-1" data-pep-activity-link aria-current="step">Activity 1</a></li><li><a class="pep-step" href="#activity-2" data-pep-activity-link aria-disabled="true">Activity 2</a></li><li><a class="pep-step" href="#activity-3" data-pep-activity-link aria-disabled="true">Activity 3</a></li><li><a class="pep-step" href="#activity-4" data-pep-activity-link aria-disabled="true">Activity 4</a></li></ol></nav>
+<section class="pep-activity" id="activity-1" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<h2 id="activity-1-title" tabindex="-1">Activity 1: predict what validation does with a wrong type</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-instructions>
+<h3>Predict before you read on</h3>
+<p>No teaching yet. Use what you already know, commit to a prediction, and the explanation follows.</p>
+</section>
+
+</div>
+<div data-pep-workspace="activity">
+<div id="task-1" data-pep-task>
+<h3>Your task: choose the result in the options below</h3>
+<ol><li>Read the code. <code>text</code> is what a model returned, and the model declares <code>confidence: float</code>.</li><li>Select what you expect. Nothing has been taught yet.</li><li>Press Check answer. A wrong first try gets one retry, then every option is explained.</li></ol>
+
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to one prediction, then read why each option is right or wrong.</p></section>
+<div data-interaction="predict" data-static-alt="Prediction: a model response with a non-numeric confidence value is validated with Pydantic. Decide what happens.">
+<pre class="pep-code"><code>class Enrichment(BaseModel):
+    category: str
+    confidence: float
+
+text = '{&quot;category&quot;: &quot;billing&quot;, &quot;confidence&quot;: &quot;high&quot;}'
+result = Enrichment.model_validate_json(text)</code></pre>
+<fieldset class="pep-options"><legend>What happens on the last line?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a1-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">It raises <code>ValidationError</code>, because <code>&quot;high&quot;</code> is not a number</span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a1-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text"><code>result.confidence</code> is the string <code>&quot;high&quot;</code></span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a1-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text"><code>result.confidence</code> is <code>0.0</code>, the closest float</span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a1-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">It raises <code>json.JSONDecodeError</code></span></label>
+</fieldset>
+
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a1-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. Compare your prediction with Activity 2: validation rejects a response before anything uses it.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-2" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<h2 id="activity-2-title" tabindex="-1">Activity 2: send responses through the gate</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>Model output is untrusted input</h3>
+<p>Treat a model response like data from a stranger: it can be malformed, incomplete, or well-formed and wrong. Declare the shape you want as a Pydantic model and ask for JSON matching <code>Enrichment.model_json_schema()</code>.</p>
+<p>Provider structured-output features make the shape more reliable, but documented cases such as refusals and cut-off output can still miss the schema. No schema can tell whether a value is true. So validate every response, and give failures a bounded retry or a reject path.</p>
+
+
+
+<details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
+<summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
+<div class="pep-optional__body"><p data-pep-anecdote-story>A translator returns your letter with a neat form attached. You still check the form is complete before filing it, and if it stays incomplete after one more request, you put the letter in a tray for a person rather than filing a blank.</p><p data-pep-anecdote-map>Check before filing, retry a limited number of times, then set aside for a person.</p></div>
+</details>
+</section>
+<section data-pep-where-fits aria-labelledby="where-fits-2">
+<h2 id="where-fits-2">Where this fits</h2>
+<p data-pep-fit-decision><strong>Decision:</strong> Add model enrichment to this step, or use ordinary code?</p>
+<p data-pep-fit-good><strong>Good fit:</strong> Use a model for fuzzy judgements on free text, such as tagging a support message, where a wrong answer is tolerable and reviewable.</p>
+<p data-pep-fit-boundary><strong>Choose something else when:</strong> A deterministic rule can decide it, or errors are costly, such as tax or payment fields. Use ordinary code or a lookup table.</p>
+</section>
+</div>
+<div data-pep-workspace="activity">
+<div id="task-2" data-pep-task data-pep-may-stall>
+<h3>Your task: use the model below, then choose what to do with a failing response</h3>
+<ol><li>Select a fake response, and set Retries allowed.</li><li>Press Run gate and read the path it takes: load, retry or reject.</li><li>Try the response that passes validation but is wrong in meaning.</li><li>Select your answer and press Check answer.</li></ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The Fake response list in the model.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Run each response once and note which ones reach load, then look closely at the one that loads with a poor value.</p>
+</div>
+</details>
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>You used the model at least once.</p><p>You can say which responses a schema catches and which it cannot.</p></section>
+<div class="pep-model" data-interaction="explore" data-static-alt="Model with fixed fake responses. Valid JSON loads. Invalid JSON, a missing field and a wrong type fail validation and are retried up to the limit, then rejected. A category not on the allowed list is rejected when the field is a Literal. A well-formed but wrong category passes validation, showing that a schema cannot prove truth."><label class="pep-field"><span>Fake response</span><select id="ai-resp" data-pep-task-control>
+<option value="ok">{"category": "billing", "confidence": 0.9}</option>
+<option value="json">Sure! The category is billing.</option>
+<option value="missing">{"category": "billing"}</option>
+<option value="type">{"category": "billing", "confidence": "high"}</option>
+<option value="wrong">{"category": "shipping", "confidence": 0.99} (the message was about billing)</option>
+</select></label>
+<label class="pep-field"><span>Retries allowed</span><select id="ai-n" data-pep-task-control><option value="0">0</option><option value="1" selected>1</option><option value="2">2</option><option value="3">3</option></select></label>
+<div class="pep-actions"><button class="pep-btn" type="button" id="ai-run">Run gate</button></div>
+<pre class="pep-log" id="ai-log" aria-live="polite">No response checked yet.</pre></div>
+<noscript data-section-skip><p>Model with fixed fake responses. Valid JSON loads. Invalid JSON, a missing field and a wrong type fail validation and are retried up to the limit, then rejected. A category not on the allowed list is rejected when the field is a Literal. A well-formed but wrong category passes validation, showing that a schema cannot prove truth.</p></noscript><div data-interaction="mcq" data-static-alt="Question: choose what the pipeline does when a response still fails validation after the retry limit.">
+
+<fieldset class="pep-options"><legend>A response still fails validation after your retry limit. What should the pipeline do?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a2-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Send the record to a reject path with its error and load nothing for it</span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a2-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Load it anyway, because the model is usually right</span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a2-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Retry until it succeeds, however long that takes</span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a2-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Stop the whole pipeline for one bad response</span></label>
+</fieldset>
+
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a2-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. Bound the retries, then record the failure on a reject path and load nothing.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<p class="pep-noprint"><a class="pep-back" href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-3" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<h2 id="activity-3-title" tabindex="-1">Activity 3: write the validate and retry step</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>A bounded loop around validation</h3>
+<p>The enrichment step calls the model, validates the text, and returns on the first valid result. A <code>for</code> loop with <code>range</code> bounds the attempts. <code>model_validate_json</code> raises <code>ValidationError</code> for invalid JSON as well as for a wrong shape, so one <code>except</code> covers both.</p>
+<p>After the loop, return <code>None</code> so the caller can send the record to the reject path. A non-validation exception, such as a network failure, should get its own handling rather than being treated as a bad answer.</p>
+
+
+
+
+</section>
+
+</div>
+<div data-pep-workspace="code">
+<div id="task-3" data-pep-task data-pep-may-stall>
+<h3>Your task: finish <code>enrich_one</code> in the editor below</h3>
+<ol><li>In <code>enrich.py</code>, replace <code>___</code> inside the <code>for</code> loop.</li><li>Call <code>client.complete(prompt)</code>, then validate the text with <code>Enrichment.model_validate_json</code>.</li><li>Return the validated result. On <code>ValidationError</code>, let the loop try again. The final <code>return None</code> is already there.</li><li>Press Run. Output traces two fake clients. A mismatch uses an attempt; you get one retry.</li></ol>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
+<summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 3</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> The ___ line inside the for loop.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Get the text from the client first, then open a try block for the validation.</p>
+<details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="2" data-section-skip>
+<summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 3</span></summary>
+<div class="pep-hint__body">
+<p data-pep-hint-target><strong>Where to act:</strong> Your except clause.</p>
+<p data-pep-hint-step><strong>Next step:</strong> Decide which single exception class means a bad answer, and what the loop should do next, which needs no statement beyond a pass-through.</p>
+</div>
+</details></div>
+</details>
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>Output shows a valid response returned on the second try.</p><p>Output shows an always-bad client returning <code>None</code> after the bounded attempts.</p></section>
+<div class="pep-js-only" data-interaction="terminal" data-steps="2" data-static-alt="Coding task: write a bounded retry loop that validates each model response and returns None after the limit.">
+<div class="pep-editor">
+<div class="pep-editor__bar"><span class="pep-editor__file">enrich.py</span>
+<button class="pep-btn pep-btn--primary" type="button" id="a3-run" data-pep-submit data-pep-run>Run</button>
+<button class="pep-btn" type="button" id="a3-reset" data-pep-reset-code data-pep-lock>Reset code</button></div>
+<div class="pep-editor__code"><div class="pep-editor__gutter" aria-hidden="true">1</div>
+<label class="pep-sr" for="a3-code" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Code editor for enrich.py</label>
+<textarea class="pep-editor__input" id="a3-code" data-pep-editor data-pep-task-control spellcheck="false" autocapitalize="off" autocomplete="off">from pydantic import BaseModel, ValidationError
+
+class Enrichment(BaseModel):
+    category: str
+    confidence: float
+
+def enrich_one(client, prompt, attempts=2):
+    for _ in range(attempts):
+        ___
+    return None
+</textarea></div>
+<div class="pep-editor__tabs" role="tablist" aria-label="Results for enrich.py">
+<button type="button" role="tab" id="a3-tab-problems" data-tab="problems" aria-selected="true" aria-controls="a3-panel-problems">Problems</button>
+<button type="button" role="tab" id="a3-tab-output" data-tab="output" aria-selected="false" aria-controls="a3-panel-output" tabindex="-1">Output</button></div>
+<div class="pep-editor__panel" role="tabpanel" id="a3-panel-problems" aria-labelledby="a3-tab-problems" data-panel="problems" tabindex="0"></div>
+<div class="pep-editor__panel" role="tabpanel" id="a3-panel-output" aria-labelledby="a3-tab-output" data-panel="output" tabindex="0" hidden></div>
+<div class="pep-editor__status" role="status"></div>
+</div></div>
+<noscript data-pep-no-js data-section-skip><div>
+<p><strong>JavaScript is off, so Run is not available.</strong> Inside the for loop, call client.complete(prompt), validate the text with Enrichment.model_validate_json in a try block and return the result, and catch ValidationError so the loop tries again. Test it with a fake client that returns invalid text first, then valid JSON.</p>
+<p>Starter for enrich.py:</p>
+<pre class="pep-code"><code>from pydantic import BaseModel, ValidationError
+
+class Enrichment(BaseModel):
+    category: str
+    confidence: float
+
+def enrich_one(client, prompt, attempts=2):
+    for _ in range(attempts):
+        ___
+    return None
+</code></pre>
+<p>This practice editor does not run Python or call a model. It recognises the call, validate, return, except shape and traces it with two fixed fake clients. Code in any other form is not assessed and may be flagged even when it is valid.</p>
+</div></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+
+<p class="pep-noprint"><a class="pep-back" href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</div>
+</div>
+</section>
+<section class="pep-activity" id="activity-4" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-4-title">
+<h2 id="activity-4-title" tabindex="-1">Activity 4: test the step offline</h2>
+<div class="pep-regions">
+<div class="pep-region">
+<section class="pep-teach" data-pep-teaching data-pep-instructions>
+<h3>A fake client makes tests offline and repeatable</h3>
+<p>Do not call a real model in tests: it costs money, needs a network and gives different answers each time. Pass the client as a parameter, and in tests use a small fake that returns fixed responses in order.</p>
+<pre class="pep-code"><code>class FakeClient:
+    def __init__(self, responses):
+        self.responses = iter(responses)
+
+    def complete(self, prompt):
+        return next(self.responses)
+
+def test_retry_then_valid():
+    client = FakeClient([&quot;not json&quot;, GOOD_JSON])
+    assert enrich_one(client, &quot;tag this&quot;) is not None</code></pre>
+
+
+
+</section>
+
+</div>
+<div data-pep-workspace="activity">
+<div id="task-4" data-pep-task>
+<h3>Your task: choose what the test proves in the options below, then rate your confidence</h3>
+<ol><li>Read <code>test_retry_then_valid</code> in the teaching panel.</li><li>Select what a pass really proves, and rate your confidence.</li><li>Press Check answer. Confidence is asked before any feedback.</li></ol>
+
+</div>
+<section data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>You separate what an offline test proves from what it cannot, and rate your confidence first.</p></section>
+<div data-interaction="mcq" data-confidence="true" data-static-alt="Question: decide what passing an offline test with a fake model client proves.">
+
+<fieldset class="pep-options"><legend>What does a pass of <code>test_retry_then_valid</code> prove?</legend>
+<label class="pep-option" data-opt="a"><input type="radio" name="a4-opt" value="a" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Your code retries after invalid text and accepts valid JSON, with no network</span></label>
+<label class="pep-option" data-opt="b"><input type="radio" name="a4-opt" value="b" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">The real model returns correct categories</span></label>
+<label class="pep-option" data-opt="c"><input type="radio" name="a4-opt" value="c" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">The provider will always return valid JSON</span></label>
+<label class="pep-option" data-opt="d"><input type="radio" name="a4-opt" value="d" data-pep-task-control data-pep-lock><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Your API key is configured correctly</span></label>
+</fieldset>
+<fieldset class="pep-options"><legend>How sure are you?</legend><div class="pep-confidence">
+<label class="pep-option"><input type="radio" name="a4-conf" value="low" data-pep-task-control data-pep-lock><span class="pep-option__text">Guessing</span></label>
+<label class="pep-option"><input type="radio" name="a4-conf" value="medium" data-pep-task-control data-pep-lock><span class="pep-option__text">Fairly sure</span></label>
+<label class="pep-option"><input type="radio" name="a4-conf" value="high" data-pep-task-control data-pep-lock><span class="pep-option__text">Certain</span></label>
+</div></fieldset>
+<div class="pep-actions pep-js-only"><button class="pep-btn pep-btn--primary" type="button" id="a4-check" data-pep-submit data-pep-check>Check answer</button></div>
+</div>
+<noscript data-section-skip><p>JavaScript is off, so Check answer is not available. A fake client tests your control flow and validation, not the real model.</p></noscript>
+<div class="pep-feedback" data-pep-feedback aria-live="polite"></div>
+<details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+<summary>Challenge (optional)</summary>
+<div class="pep-optional__body">
+<p data-pep-optional-time><strong>Optional time:</strong> about 3 minutes</p>
+<p data-pep-success-criteria><strong>Success criteria:</strong> Write on paper a second test proving an always-invalid client makes <code>enrich_one</code> return <code>None</code>, and say how many responses that fake needs for <code>attempts=2</code>.</p>
+</div></details>
+<p class="pep-noprint"><a class="pep-back" href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+</div>
+</div>
+</section>
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+<button class="pep-btn" type="button" id="previous-activity" data-pep-previous>Previous activity</button>
+<button class="pep-btn pep-btn--primary" type="button" id="next-activity" data-pep-next>Next activity</button>
+</div>
+<section class="pep-recap" data-pep-recap aria-labelledby="recap-title">
+<h2 id="recap-title">Recap</h2>
+<ul><li>Model output is untrusted input. Declare the shape with a Pydantic model and ask for JSON matching its schema.</li><li>Validate every response with <code>model_validate_json</code>. Bound the retries, then send failures to a reject path with the error.</li><li>A schema checks shape, not truth, so review or sample the results for meaning.</li><li>Pass the client in as a parameter so a fake with fixed responses can test the step offline.</li></ul>
+<details class="pep-cheat" data-pep-cheat-sheet data-section-skip><summary>Cheat sheet (optional)</summary><pre class="pep-code"><code>schema = Enrichment.model_json_schema()   # ask for this shape
+Enrichment.model_validate_json(text)      # raises ValidationError
+# Bound the attempts; on the limit, record a reject and load nothing.</code></pre></details>
+<details class="pep-sources" data-pep-sources data-section-skip><summary>Sources and review date (optional)</summary>
+<p><strong>First draft, not reviewed.</strong> Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.</p>
+<ul><li><a href="https://pydantic.dev/docs/validation/latest/concepts/json_schema/" rel="noopener">Pydantic: JSON Schema</a></li><li><a href="https://pydantic.dev/docs/validation/latest/concepts/models/" rel="noopener">Pydantic: Models</a></li><li><a href="https://platform.claude.com/docs/en/build-with-claude/structured-outputs" rel="noopener">Claude docs: Structured outputs</a></li><li><a href="https://developers.openai.com/api/docs/guides/structured-outputs" rel="noopener">OpenAI docs: Structured outputs</a></li><li><a href="https://docs.pytest.org/en/stable/getting-started.html" rel="noopener">pytest: Get started</a></li></ul>
+</details>
+</section>
+</main>
+<script>
+(() => {
+  window.PEP_TOOLS = {
+    start(code, comment = '#') {
+      const strip = comment === '--' ? /--.*$/ : /#.*$/;
+      const lines = code.split('\n');
+      const clean = lines.map(l => l.replace(strip, '')).join('\n');
+      const lineOf = re => { const i = clean.split('\n').findIndex(l => re.test(l)); return i < 0 ? 0 : i + 1; };
+      const problems = [];
+      const bad = (msg, re, kind) => problems.push({ kind: kind || 'error', line: re ? lineOf(re) : 0, msg });
+      return {
+        code, clean, lines, lineOf, problems, bad,
+        flat: clean.replace(/\s+/g, ' ').trim(),
+        placeholder() { if (/___/.test(code)) { bad('Replace this placeholder with your code.', /___/); return true; } return false; },
+        hard() { return problems.filter(p => p.kind !== 'hint').length; },
+        stop(why) { return { problems, output: '', pass: false, why: why || 'A placeholder remains.' }; },
+      };
+    },
+    table(cols, rows) {
+      const cell = v => (v === null || v === undefined ? 'NULL' : String(v));
+      const widths = cols.map((c, i) => Math.max(c.length, ...rows.map(r => cell(r[c]).length)));
+      const line = vals => vals.map((v, i) => v.padEnd(widths[i])).join(' | ').trimEnd();
+      return [line(cols), widths.map(w => '-'.repeat(w)).join('-+-'), ...rows.map(r => line(cols.map(c => cell(r[c]))))].join('\n') + `\n(${rows.length} row${rows.length === 1 ? '' : 's'})`;
+    },
+  };
+  document.documentElement.classList.add('is-enhanced');
+  const lesson = document.querySelector('#lesson');
+  const activities = [...document.querySelectorAll('[data-pep-activity]')];
+  const timeline = [...document.querySelectorAll('[data-pep-activity-link]')];
+  const previous = document.querySelector('#previous-activity');
+  const next = document.querySelector('#next-activity');
+  const progressText = document.querySelector('#prog-text');
+  const positionText = document.querySelector('#pos-text');
+  window.PEP_SPEC = { activities: [{ kind: "choice", confidence: false, options: [{"k":"a","right":true,"why":"The JSON parses, but confidence fails float parsing, so the response is rejected before any code uses it."},{"k":"b","right":false,"why":"Pydantic checks against the declared type, so a non-numeric string does not get through."},{"k":"c","right":false,"why":"Pydantic never invents a value. It reports the failure."},{"k":"d","right":false,"why":"This text is valid JSON. The content is what fails, and invalid JSON would also surface as a ValidationError here."}],  },
+{ kind: "explore", confidence: false, options: [{"k":"a","right":true,"why":"The bad output never reaches the table, and the reject record lets a person inspect or replay it."},{"k":"b","right":false,"why":"That turns unvalidated text into trusted data."},{"k":"c","right":false,"why":"Unbounded retries can run forever and cost money. A fixed limit is required."},{"k":"d","right":false,"why":"One failed response should not block every other record, unless your rules demand it."}], needTouch: "Press Run gate at least once, then choose.",model: (api) => {
+        const q = s => api.root.querySelector(s);
+        const ERR = { json: 'json_invalid', missing: 'missing at ("confidence",)', type: 'float_parsing at ("confidence",)' };
+        const start = 'No response checked yet.';
+        q('#ai-run').addEventListener('click', () => {
+          api.touch();
+          const r = q('#ai-resp').value, n = Number(q('#ai-n').value);
+          if (r === 'ok') { q('#ai-log').textContent = 'Valid. Path: load.'; return; }
+          if (r === 'wrong') { q('#ai-log').textContent = 'Valid by the schema. Path: load.\nWatch out: the schema checked the shape, not the truth. Sampling and review catch this.'; return; }
+          const lines = ['Invalid: ' + ERR[r]];
+          for (let i = 1; i <= n; i++) lines.push('Retry ' + i + ' of ' + n + ': same fake response, still invalid.');
+          lines.push('Path: reject. Record the input and the error for review; nothing is loaded.');
+          q('#ai-log').textContent = lines.join('\n');
+        });
+        return { reset: () => { q('#ai-log').textContent = start; } };
+      }, },
+{ kind: "editor", confidence: false,  starter: "from pydantic import BaseModel, ValidationError\n\nclass Enrichment(BaseModel):\n    category: str\n    confidence: float\n\ndef enrich_one(client, prompt, attempts=2):\n    for _ in range(attempts):\n        ___\n    return None\n", settled: "Compare with the description: call the client, then try to validate and return; except ValidationError lets the loop continue; return None comes after the loop.", run: (code) => {
+        const T = PEP_TOOLS.start(code);
+        if (T.placeholder()) return T.stop();
+        const c = T.clean;
+        if (!/def\s+enrich_one\s*\(\s*client\s*,\s*prompt\s*,\s*attempts\s*=\s*\d+\s*\)\s*:/.test(c)) T.bad('Keep the enrich_one header as it was.');
+        if (/while\s+True/.test(c)) T.bad('while True retries forever. Keep the bounded for loop.', /while\s+True/);
+        if (!/for\s+_\s+in\s+range\s*\(\s*attempts\s*\)\s*:/.test(c)) T.bad('Keep the bounded loop: for _ in range(attempts):.');
+        if (/except\s*:/.test(c) || /except\s+(Exception|BaseException)\b/.test(c)) T.bad('Catch only ValidationError, so network failures and your own bugs are not treated as bad answers.', /except/);
+        const call = /([A-Za-z_]\w*)\s*=\s*client\.complete\s*\(\s*prompt\s*\)/.exec(c);
+        const inline = /model_validate_json\s*\(\s*client\.complete\s*\(\s*prompt\s*\)\s*\)/.test(c);
+        if (!call && !inline) T.bad('Call client.complete(prompt) to get the response text.', /for\s+_/);
+        const validates = inline || (call && new RegExp('Enrichment\\.model_validate_json\\s*\\(\\s*' + call[1] + '\\s*\\)').test(c));
+        if (!validates) T.bad('Validate the text with Enrichment.model_validate_json(...).', /for\s+_/);
+        if (/json\.loads/.test(c)) T.bad('Not needed: model_validate_json parses and validates in one call.', /json\.loads/, 'hint');
+        const tryLine = /^([ \t]+)try\s*:\s*$/m.exec(c);
+        if (!tryLine) T.bad('Put validation inside a try block.', /for\s+_/);
+        const exc = /^([ \t]+)except\s+ValidationError\b[^\n]*:\s*$/m.exec(c);
+        if (!exc) T.bad('Add: except ValidationError: so a bad answer lets the loop try again.', /try/);
+        const body = exc ? c.slice(exc.index + exc[0].length).split('\n').filter(l => l.trim()) : [];
+        const after = body[0] || '';
+        const inExcept = after.length - after.trimStart().length > (exc ? exc[1].length : 0);
+        const validBody = inExcept && /^\s*(continue|pass)\s*$|^\s*(logger|log|logging)\.|^\s*print\(/.test(after);
+        if (exc && !validBody) T.bad('Under except, use continue or pass (a log line is fine) so the loop moves to its next attempt.', /except/);
+        if (exc && inExcept && /^\s*(raise|return)\b/.test(after)) T.bad('Returning or raising here stops retrying.', /except/);
+        const returns = /return\s+Enrichment\.model_validate_json\(|return\s+[A-Za-z_]\w*\s*$/m.test(c.replace(/return\s+None/g, ''));
+        if (!returns) T.bad('Return the validated result from inside the try block.', /try/);
+        if (!/^ {4}return\s+None\s*$/m.test(c)) T.bad('Keep return None after the loop, for the reject path.', /return/);
+        const pass = !T.hard() && validates && !!tryLine && !!exc && validBody && returns;
+        return {
+          problems: T.problems, pass,
+          output: pass ? 'Traced with two fake clients (no real Python or model):\nFakeClient(["not json", \'{"category": "billing", "confidence": 0.9}\'])\n  attempt 1: ValidationError json_invalid, try again\n  attempt 2: valid, returns Enrichment(category="billing", confidence=0.9)\nFakeClient(["not json", "still not json"])\n  attempt 1 and 2: ValidationError\n  returns None, so the caller sends the record to the reject path' : 'No trace: fix the items under Problems first.',
+          why: pass ? 'Valid output returns early, invalid output retries, and the limit leads to the reject path.' : 'The loop does not match the validate and retry shape yet; see Problems.',
+        };
+      }, },
+{ kind: "choice", confidence: true, options: [{"k":"a","right":true,"why":"The fake fixes the inputs, so this tests your control flow and validation."},{"k":"b","right":false,"why":"No real model ran. Quality needs a separate evaluation on sampled data."},{"k":"c","right":false,"why":"The test says nothing about the provider, whose responses are faked."},{"k":"d","right":false,"why":"A fake client needs no key."}],  }] };
+  const SPEC = window.PEP_SPEC;
+  let current = 1;
+  let unlocked = 1;
+  const blank = () => ({ attempts: 0, settled: false, completed: false, credit: 0, grade: 0, canContinue: false, touched: false });
+  const state = activities.map(blank);
+  const initial = activities.map(activity => [...activity.querySelectorAll('[data-pep-task-control]')].map(control => ({ control, value: control.value, checked: control.checked, selectedIndex: control.selectedIndex })));
+  let lastFocused = null;
+  document.addEventListener('focusin', event => { lastFocused = event.target; });
+  const activityNumber = hash => Number(/^#activity-(\d+)$/.exec(hash)?.[1] || 1);
+  const own = (n, selector) => activities[n - 1].querySelector(selector);
+  const ownAll = (n, selector) => [...activities[n - 1].querySelectorAll(selector)];
+  const reflect = n => {
+    const a = activities[n - 1], v = state[n - 1];
+    a.dataset.pepAttempts = String(v.attempts);
+    a.dataset.pepSettled = String(v.settled);
+    a.dataset.pepCompleted = String(v.completed);
+    a.dataset.pepCredit = String(v.credit);
+    a.dataset.pepGrade = String(v.grade);
+    a.dataset.pepContinue = String(v.canContinue);
+  };
+  const recap = document.querySelector('[data-pep-recap]');
+  const renderProgress = () => {
+    const done = state.filter(v => v.credit > 0).length;
+    recap.hidden = lesson.dataset.pepComplete !== 'true';
+    progressText.textContent = `${done} of ${activities.length} done`;
+    positionText.textContent = `Activity ${current} of ${activities.length}`;
+  };
+  const renderActivity = (number, historyMode = 'none', moveFocus = false) => {
+    if (!Number.isInteger(number) || number < 1 || number > activities.length || number > unlocked) return false;
+    current = number;
+    lesson.dataset.pepCurrentActivity = String(current);
+    lesson.dataset.pepUnlockedThrough = String(unlocked);
+    activities.forEach((a, i) => { a.hidden = i + 1 !== current; });
+    timeline.forEach((link, i) => {
+      const n = i + 1;
+      if (n === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+      if (n > unlocked) link.setAttribute('aria-disabled', 'true'); else link.removeAttribute('aria-disabled');
+    });
+    previous.disabled = current === 1;
+    next.disabled = current === activities.length || current >= unlocked || !state[current - 1].canContinue;
+    renderProgress();
+    try {
+      if (historyMode === 'push') history.pushState({ activity: current }, '', `#activity-${current}`);
+      if (historyMode === 'replace') history.replaceState({ activity: current }, '', `#activity-${current}`);
+    } catch {
+      if (historyMode !== 'none' && location.hash !== `#activity-${current}`) location.hash = `activity-${current}`;
+    }
+    if (moveFocus) document.querySelector(`#activity-${current} h2`)?.focus();
+    return true;
+  };
+  const setFeedback = (n, tone, verdict, body, list) => {
+    const box = own(n, '[data-pep-feedback]');
+    box.className = 'pep-feedback' + (tone ? ` is-${tone}` : '');
+    box.textContent = '';
+    if (!verdict && !body) return;
+    const p = document.createElement('p');
+    if (verdict) { const b = document.createElement('span'); b.className = 'pep-verdict'; b.textContent = verdict + ' '; p.append(b); }
+    if (body) p.append(body);
+    box.append(p);
+    if (list?.length) {
+      const ul = document.createElement('ul');
+      ul.className = 'pep-explain';
+      list.forEach(text => { const li = document.createElement('li'); li.textContent = text; ul.append(li); });
+      box.append(ul);
+    }
+  };
+  const lockControls = (n, locked) => {
+    ownAll(n, '[data-pep-submit]').forEach(b => { b.disabled = locked; });
+    ownAll(n, '[data-pep-lock]').forEach(c => { c.disabled = locked; });
+    ownAll(n, 'textarea[data-pep-editor]').forEach(t => { t.readOnly = locked; });
+  };
+  const settle = (n, grade) => {
+    const v = state[n - 1];
+    v.settled = true; v.completed = true; v.canContinue = true; v.grade = grade;
+    if (v.credit === 0) v.credit = 1;
+    reflect(n);
+    lockControls(n, true);
+    unlocked = Math.max(unlocked, Math.min(n + 1, activities.length));
+    if (state.every(s => s.credit > 0)) lesson.dataset.pepComplete = 'true';
+    renderActivity(current);
+  };
+  const choiceRun = n => {
+    const spec = SPEC.activities[n - 1];
+    const v = state[n - 1];
+    if (spec.kind === 'explore' && !v.touched) { setFeedback(n, '', 'Not checked yet.', spec.needTouch || 'Use the model above at least once, then choose.'); return; }
+    const picked = own(n, `input[name="a${n}-opt"]:checked`);
+    if (!picked) { setFeedback(n, '', 'Not checked yet.', 'Choose one option first.'); return; }
+    if (spec.confidence && !own(n, `input[name="a${n}-conf"]:checked`)) { setFeedback(n, '', 'Not checked yet.', 'Rate your confidence before seeing feedback.'); return; }
+    v.attempts += 1;
+    const chosen = spec.options.find(o => o.k === picked.value);
+    const labelFor = o => `${o.k.toUpperCase()}: ${o.why}`;
+    ownAll(n, '.pep-option[data-opt]').forEach(row => row.classList.remove('is-wrong', 'is-correct'));
+    const row = k => own(n, `.pep-option[data-opt="${k}"]`);
+    if (chosen.right) {
+      row(chosen.k).classList.add('is-correct');
+      setFeedback(n, 'correct', 'Correct.', chosen.why, spec.options.filter(o => !o.right).map(labelFor));
+      settle(n, 1);
+    } else if (v.attempts >= 2) {
+      row(chosen.k).classList.add('is-wrong');
+      const right = spec.options.find(o => o.right);
+      row(right.k).classList.add('is-correct');
+      setFeedback(n, 'revealed', 'Answered and settled, not correct.', `The correct answer is ${right.k.toUpperCase()}.`, spec.options.map(labelFor));
+      settle(n, 0);
+    } else {
+      row(chosen.k).classList.add('is-wrong');
+      setFeedback(n, 'wrong', 'Try again.', `${chosen.why} You have one more try.`);
+      reflect(n); renderActivity(current);
+    }
+  };
+  const editors = {};
+  const setupEditor = n => {
+    const spec = SPEC.activities[n - 1];
+    const input = own(n, 'textarea[data-pep-editor]');
+    const gutter = own(n, '.pep-editor__gutter');
+    const problems = own(n, '[data-panel="problems"]');
+    const output = own(n, '[data-panel="output"]');
+    const status = own(n, '.pep-editor__status');
+    const tabs = ownAll(n, '[role="tab"]');
+    const showTab = name => {
+      tabs.forEach(tab => { const on = tab.dataset.tab === name; tab.setAttribute('aria-selected', String(on)); tab.tabIndex = on ? 0 : -1; });
+      problems.hidden = name !== 'problems';
+      output.hidden = name !== 'output';
+    };
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => showTab(tab.dataset.tab));
+      tab.addEventListener('keydown', event => {
+        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+        const other = tabs.find(t => t !== tab);
+        showTab(other.dataset.tab); other.focus(); event.preventDefault();
+      });
+    });
+    const sizeUp = () => {
+      const lines = input.value.split('\n').length;
+      gutter.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+      const lh = parseFloat(getComputedStyle(input).lineHeight) || 20;
+      input.style.height = `${Math.max(160, lines * lh + 24)}px`;
+    };
+    input.addEventListener('input', sizeUp);
+    const clear = () => {
+      problems.textContent = 'Nothing to report yet. Press Run to check your code.';
+      output.textContent = 'Output appears here after Run.';
+      status.textContent = 'Not run yet.';
+      showTab('problems');
+    };
+    const render = result => {
+      problems.textContent = '';
+      if (!result.problems.length) problems.textContent = 'No problems found.';
+      result.problems.forEach(problem => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'pep-editor__problem';
+        const kind = document.createElement('span');
+        kind.className = `kind-${problem.kind}`;
+        kind.textContent = { error: 'Error', limit: 'Not supported', hint: 'Note' }[problem.kind] + (problem.line ? ` line ${problem.line}: ` : ': ');
+        button.append(kind, problem.msg);
+        button.addEventListener('click', () => {
+          const lines = input.value.split('\n');
+          const offset = lines.slice(0, Math.max(0, (problem.line || 1) - 1)).join('\n').length + (problem.line > 1 ? 1 : 0);
+          input.focus(); input.setSelectionRange(offset, offset);
+        });
+        problems.append(button);
+      });
+      output.textContent = result.output || 'No output: the practice editor could not trace this code.';
+      showTab(result.problems.some(p => p.kind !== 'hint') ? 'problems' : 'output');
+    };
+    own(n, '[data-pep-run]').addEventListener('click', () => {
+      const v = state[n - 1];
+      const code = input.value;
+      const result = spec.run(code);
+      render(result);
+      if (/___/.test(code)) {
+        status.textContent = 'Not checked: a ___ placeholder remains.';
+        setFeedback(n, '', 'Not checked yet.', 'Replace every ___ placeholder, then press Run. Placeholders do not use an attempt.');
+        return;
+      }
+      v.attempts += 1;
+      if (result.pass) {
+        status.textContent = 'Passed: the practice checks match.';
+        setFeedback(n, 'correct', 'Correct.', result.why);
+        settle(n, 1);
+      } else if (v.attempts >= 2) {
+        status.textContent = 'Settled: the practice checks did not match.';
+        setFeedback(n, 'revealed', 'Answered and settled, not correct by this editor\'s checks.', `${result.why} This editor checks only the forms it lists, so valid code in another form is unassessed here, not proven wrong. ${spec.settled} Restart activity lets you rewrite this without losing other work.`);
+        settle(n, 0);
+      } else {
+        status.textContent = 'Mismatch: read Problems and Output, then run again.';
+        setFeedback(n, 'wrong', 'Try again.', `${result.why} This editor checks only the forms it lists, so valid code in another form is unassessed here, not proven wrong. You have one more try.`);
+        reflect(n); renderActivity(current);
+      }
+    });
+    own(n, '[data-pep-reset-code]').addEventListener('click', () => {
+      if (input.readOnly) return;
+      input.value = spec.starter;
+      sizeUp(); clear();
+    });
+    clear(); sizeUp();
+    editors[n] = { clear, sizeUp };
+  };
+  const models = {};
+  SPEC.activities.forEach((spec, index) => {
+    const n = index + 1;
+    if (spec.kind === 'editor') setupEditor(n);
+    else own(n, '[data-pep-check]').addEventListener('click', () => choiceRun(n));
+    if (spec.model) {
+      models[n] = spec.model({
+        root: activities[index],
+        touch: () => { state[n - 1].touched = true; },
+      });
+    }
+  });
+  timeline.forEach((link, i) => link.addEventListener('click', event => { event.preventDefault(); renderActivity(i + 1, 'push', true); }));
+  document.querySelectorAll('[data-pep-back-link]').forEach(link => link.addEventListener('click', event => { event.preventDefault(); renderActivity(activityNumber(link.hash), 'push', true); }));
+  previous.addEventListener('click', () => renderActivity(current - 1, 'push', true));
+  next.addEventListener('click', () => renderActivity(current + 1, 'push', true));
+  const restoreFromHistory = () => {
+    const preservedFocus = lastFocused;
+    const requested = activityNumber(location.hash);
+    if (!renderActivity(requested, 'none', false)) renderActivity(Math.min(current, unlocked), 'replace', false);
+    if (preservedFocus?.isConnected && !preservedFocus.closest('[hidden]')) preservedFocus.focus({ preventScroll: true });
+  };
+  addEventListener('popstate', restoreFromHistory);
+  addEventListener('hashchange', restoreFromHistory);
+  document.querySelector('#restart').addEventListener('click', () => {
+    const n = current;
+    for (const item of initial[n - 1]) {
+      const c = item.control;
+      if (c.matches('input[type="checkbox"], input[type="radio"]')) c.checked = item.checked;
+      else if (c.tagName === 'SELECT') c.selectedIndex = item.selectedIndex;
+      else c.value = item.value;
+    }
+    state[n - 1] = blank();
+    lockControls(n, false);
+    setFeedback(n, '', '', '');
+    ownAll(n, '.pep-option[data-opt]').forEach(row => row.classList.remove('is-wrong', 'is-correct'));
+    editors[n]?.clear(); editors[n]?.sizeUp();
+    models[n]?.reset?.();
+    reflect(n);
+    renderActivity(current);
+  });
+  const objectives = document.querySelector('[data-pep-objectives]');
+  document.addEventListener('keydown', event => { if (event.key === 'Escape' && objectives.open) { objectives.open = false; objectives.querySelector('summary').focus(); } });
+  document.addEventListener('click', event => { if (objectives.open && !objectives.contains(event.target)) objectives.open = false; });
+  let printOpened = [];
+  addEventListener('beforeprint', () => { printOpened = [...document.querySelectorAll('details:not([open])')]; printOpened.forEach(d => { d.open = true; }); });
+  addEventListener('afterprint', () => { printOpened.forEach(d => { d.open = false; }); printOpened = []; });
+  activities.forEach((_, i) => reflect(i + 1));
+  const requested = activityNumber(location.hash);
+  renderActivity(requested <= unlocked ? requested : 1, 'replace');
+})();
+</script>
+</body>
+</html>

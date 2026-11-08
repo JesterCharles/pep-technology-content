@@ -1,0 +1,39 @@
+// Practice quiz: Calling the Spring Boot API from FastAPI: service URL, token and timeouts
+// Formative, low-stakes retention practice. First draft, not reviewed. Titles name the objective id each item practises.
+
+$CATEGORY: python/fastapi-services/calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts
+
+::o1 settings::Why load the Spring Boot base URL and token through a settings class? {
+=They come from the environment, so code holds no secret and each deployment can differ #Correct. Settings read environment variables and validate them at startup.
+~httpx refuses hard-coded URLs #Not quite. httpx accepts any URL; this is about configuration and secrets.
+~It makes the call faster #Not quite. It does not affect speed.
+~It encrypts the token on the wire #Not quite. TLS protects the token in transit, not the settings class.
+}
+
+::o1 bearer::How is a bearer token normally sent? {
+=In the Authorization header, as Bearer followed by the token #Correct. This is the RFC 6750 header form.
+~In the URL path #Not quite. URLs often end up in logs, so avoid that.
+~As a query parameter named bearer #Not quite. The header form is the recommended one, and query strings leak into logs.
+~In the JSON response #Not quite. A request credential travels in the request.
+}
+
+::o2 default timeout::What is the httpx default when no timeout is passed? {
+=A 5-second timeout #Correct. Unlike many clients, httpx applies a timeout by default.
+~No timeout at all #Not quite. That needs an explicit timeout\=None.
+~60 seconds #Not quite. The documented default is 5 seconds.
+~It copies the upstream setting #Not quite. The client sets its own timeout.
+}
+
+::o2 order::Why catch httpx.TimeoutException before httpx.TransportError? {
+=TimeoutException is a subclass of TransportError, and the first matching except wins #Correct. Reversing the order means the timeout branch never runs.
+~Python requires alphabetical order #Not quite. It only checks clauses top to bottom.
+~TransportError cannot be caught #Not quite. It can be caught.
+~TimeoutException only happens once #Not quite. Frequency is not the reason.
+}
+
+::o3 mock::What does httpx.MockTransport let a handler do? {
+=Receive the request and return a fixed response or raise an error #Correct. This tests your client code with no network.
+~Start a Spring Boot service #Not quite. No service is started.
+~Record real traffic automatically #Not quite. It replaces the network; it records nothing by itself.
+~Check that the real token is valid #Not quite. It cannot check that without the real service.
+}

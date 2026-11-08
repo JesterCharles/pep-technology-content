@@ -1,0 +1,46 @@
+// Practice quiz: Adding the FastAPI service and its database to Compose
+// Unreviewed first draft, 2026-11-04. Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: containers-cicd/microservices-and-ci-cd/adding-fastapi-service-to-compose
+
+::o1 build key::A Compose service is made from a Dockerfile in the folder ./worker. Which setting says so? {
+=build\: ./worker#Correct. build points Compose at the folder with the Dockerfile.
+~image\: ./worker#Not quite. image names an image to pull, not a build folder.
+~volumes\: ./worker#Not quite. That would mount files, not build anything.
+~context\: ./worker at the top of the file#Not quite. context belongs inside a build section.
+}
+
+::o1 own volume::Two PostgreSQL services run in one Compose file. How should their data be stored? {
+~Both mount the same named volume#Not quite. Two servers must not share one data directory.
+=Each mounts its own named volume#Correct. Separate volumes keep their data files apart.
+~Neither needs a volume, because Compose saves containers#Not quite. Without a volume the data goes when the container is removed.
+~Both write to the image#Not quite. Images are read-only templates.
+}
+
+::o2 url host::A FastAPI service uses a Compose database service called search-db. Which DATABASE_URL host is right? {
+~localhost#Not quite. That is the FastAPI container itself.
+~127.0.0.1#Not quite. That is also the FastAPI container itself.
+=search-db#Correct. Service names resolve on the Compose network.
+~the laptop hostname#Not quite. Containers on one Compose network talk by service name.
+}
+
+::o2 password::How should a compose.yaml supply a disposable local database password? {
+~As a literal value in compose.yaml#Not quite. Tracked files must not hold the value.
+~In the Dockerfile with ENV#Not quite. That bakes it into the image.
+~In the service name#Not quite. Names are visible everywhere.
+=Through a reference such as $\{PASSWORD\}, with its value in an untracked env file#Correct. It keeps the value out of the tracked file.
+}
+
+::o3 why::Why can a server bound to 127.0.0.1 in a container not be reached from another container? {
+=Traffic from elsewhere arrives on a different interface, where the server is not listening#Correct. Loopback only accepts connections from inside that container.
+~Containers block all incoming traffic#Not quite. They accept traffic on interfaces a server listens on.
+~127.0.0.1 is reserved for databases#Not quite. It is not reserved for any kind of program.
+~Compose rewrites the port#Not quite. Compose does not rewrite the address the server listens on.
+}
+
+::o3 ports confusion::A file has ports\: "127.0.0.1\:9000\:9000" and the server listens on 0.0.0.0. What does 127.0.0.1 in that ports line control? {
+~Which address the server listens on in the container#Not quite. That is set by the server command.
+=Which address on the host publishes the port#Correct. It limits the host side and leaves the bind address in the container alone.
+~Which DNS name other services use#Not quite. Service names handle that.
+~Whether the port uses HTTPS#Not quite. It has nothing to do with TLS.
+}

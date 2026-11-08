@@ -1,0 +1,46 @@
+// Practice quiz: Monolith vs microservices: a database per service and the trade-offs
+// Unreviewed first draft, 2026-11-04. Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: containers-cicd/microservices-and-ci-cd/monolith-vs-microservices
+
+::o1 hotfix::A one-line fix in the invoicing module of a monolith must go live. What gets released? {
+=The whole application#Correct. One deployable unit means everything ships together.
+~Only the invoicing module#Not quite. A monolith has no separately deployable modules.
+~Only the changed class#Not quite. The unit of release is the application, not a class.
+~Nothing until the next scheduled sprint#Not quite. Timing is a team decision; the unit of release is still the whole application.
+}
+
+::o1 scale::Image resizing is the only busy part of a system. With it as a separate service, what can you scale? {
+~The whole system, as a single unit#Not quite. That describes scaling a monolith.
+=Just the image-resizing service#Correct. Separate services can run more copies independently.
+~Only its database#Not quite. More service copies are the first lever here, and its database is not the busy part.
+~Nothing, because services cannot be scaled#Not quite. Running more copies is exactly how services scale.
+}
+
+::o1 isolation::When does a crashed search service leave the rest of a microservices system working? {
+~Always, because services are separate#Not quite. A caller that waits forever can still hang.
+~Only if every service shares one database#Not quite. Sharing a database adds coupling and does nothing for this.
+=When its callers handle the failed call instead of hanging on it#Correct. Isolation depends on how upstream services deal with faults.
+~Never, because a failure always cascades#Not quite. Well-handled failed calls stop it spreading.
+}
+
+::o2 shared table::The billing service wants customer emails, which the accounts service stores. Which approach follows database per service? {
+~Billing runs SELECT on the accounts tables#Not quite. That makes the accounts schema a contract with billing.
+~Billing connects with the accounts database password#Not quite. Sharing credentials is still direct table access.
+~Accounts copies its tables into a schema both services write to#Not quite. Shared writable tables keep the coupling.
+=Billing calls an accounts API#Correct. The owner exposes the data through its API.
+}
+
+::o2 why::Why must one service not read another service's tables directly? {
+=Any schema change would have to be coordinated with every reader#Correct. Private tables are what let an owner change freely.
+~Databases allow only one connection#Not quite. Databases accept many connections.
+~SQL cannot cross a network#Not quite. It can; the issue is coupling.
+~It is always slower than an API call#Not quite. Speed is not the reason.
+}
+
+::o3 cost::An order must take payment and reserve stock, and those live in two services with private databases. Which new cost appears? {
+~The code can no longer be tested#Not quite. Each service can still be tested.
+=One database transaction cannot cover both, so consistency needs extra design#Correct. This is the consistency cost across services.
+~HTTP cannot carry order data#Not quite. It can.
+~Each service must use a different language#Not quite. Nothing requires that.
+}
