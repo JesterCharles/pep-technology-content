@@ -1,0 +1,39 @@
+// Practice quiz: Testing a repository against a provided test database
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: sql-jdbc-foundations/jdbc-data-access/testing-a-repository-against-a-test-database
+
+::o1 shared data::Repository tests pass on your laptop but fail on a classmate's, who has extra rows in the same database. What is the root cause? {
+~The classmate uses a different JDK #Not quite. The difference is the data the tests read.
+=The tests read whatever data is already in a shared database instead of a fresh, known one #Correct. A fresh test database gives every run the same start.
+~JUnit runs tests in a random order on other machines #Not quite. Order is not the cause here; existing rows are.
+~PostgreSQL returns rows differently on each machine #Not quite. The same data and query give the same rows.
+}
+
+::o1 unique name::Why does the helper give each test database a unique name? {
+~PostgreSQL requires unique names for every connection #Not quite. Names identify databases, not connections.
+~It makes queries faster #Not quite. The name does not change query speed.
+~It hides the database from psql #Not quite. Any database on the server can be listed.
+=Two runs, or a leftover from a crashed run, cannot collide #Correct. Each run creates and drops its own database.
+}
+
+::o2 read actual::assertEquals("York", found.city()) fails with expected York but was Bo, and psql shows the row stored as Bo, York. Where is the bug? {
+=The row mapping reads the name column into the city #Correct. The data is stored right but read back wrong.
+~The INSERT swapped the columns #Not quite. psql shows the values in the right columns.
+~The test expects the wrong city #Not quite. The stored row says York.
+~The test database was not seeded #Not quite. The row was found, so the data is there.
+}
+
+::o2 no rows::findByCity("Leeds") is expected to return 2 customers but returns 0, and the seed has two Leeds rows. Which line is the most likely bug? {
+~rs.getString("name") #Not quite. A mapping line cannot turn matching rows into no rows.
+~The seed script #Not quite. The seed has the rows.
+=ps.setString(1, "city") #Correct. It binds the literal text city instead of the variable, so nothing matches.
+~assertEquals(2, found.size()) #Not quite. Two is the right expectation for this seed.
+}
+
+::o3 lifecycle order::Which order does a test-database helper follow? {
+~Run tests, create database, apply schema, drop database #Not quite. Tests need the database and schema first.
+~Create database, run tests, apply schema, drop database #Not quite. Without the schema the tables do not exist.
+~Apply schema, create database, run tests, drop database #Not quite. A schema cannot be applied before its database exists.
+=Create database, apply schema and seed, run tests, close connections, drop database #Correct. Each step needs the one before it.
+}

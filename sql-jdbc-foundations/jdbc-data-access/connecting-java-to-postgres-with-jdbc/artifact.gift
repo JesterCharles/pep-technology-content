@@ -1,0 +1,39 @@
+// Practice quiz: Connecting Java to Postgres with JDBC
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: sql-jdbc-foundations/jdbc-data-access/connecting-java-to-postgres-with-jdbc
+
+::o1 URL shape::PostgreSQL runs on host db.local, port 6543, with a database named orders. Which JDBC URL reaches it? {
+~postgresql\://orders@db.local\:6543 #Not quite. JDBC URLs start with jdbc\:postgresql\: and end with the database name.
+~jdbc\:postgresql\://orders\:6543/db.local #Not quite. The host comes before the port; the database comes last.
+=jdbc\:postgresql\://db.local\:6543/orders #Correct. The form is jdbc\:postgresql\://host\:port/database.
+~jdbc\:db.local\:6543\:orders #Not quite. The URL must name the postgresql subprotocol so a driver accepts it.
+}
+
+::o1 settings source::Why does the project read the host, port, database, user and password from environment variables? {
+=The same code then reaches different databases, such as the tests' database, and no password is committed #Correct. Settings change per environment; the code does not.
+~JDBC refuses URLs written as string literals #Not quite. A literal URL works; it is just inflexible and risky.
+~pgJDBC reads the PG variables automatically, so the code needs no URL #Not quite. The code reads them with System.getenv and builds the URL itself.
+~Environment variables make the connection faster #Not quite. The reason is flexibility and keeping secrets out of Git.
+}
+
+::o2 missing driver::A program fails with "No suitable driver found for jdbc\:postgresql\://localhost\:5432/shop". What should you check first? {
+~That PostgreSQL is running on port 5432 #Not quite. The driver never got as far as contacting the server.
+=That the pgJDBC dependency is on the classpath and the URL prefix is spelled correctly #Correct. No loaded driver accepted the URL.
+~The password for the database user #Not quite. A password problem is reported by the server after it answers.
+~That the database shop exists #Not quite. A missing database is reported by the server, which was never reached.
+}
+
+::o2 server reply::Which message proves the program reached a running PostgreSQL server? {
+~Connection to localhost\:5433 refused #Not quite. Refused means nothing accepted a connection at that host and port.
+~No suitable driver found #Not quite. That fails inside Java before any network call.
+~ClassNotFoundException for the main class #Not quite. That is a build or launch problem, not JDBC.
+=FATAL\: database "shopp" does not exist #Correct. Only a running server can reply that a database is missing.
+}
+
+::o3 cursor start::Right after executeQuery returns a ResultSet, where is its cursor? {
+~On the first row #Not quite. You must call next() before reading the first row.
+=Before the first row #Correct. next() moves it onto the first row and returns true if there is one.
+~On the last row #Not quite. It starts at the beginning, before any row.
+~It has no position until you call first() #Not quite. It has a position already: before the first row.
+}

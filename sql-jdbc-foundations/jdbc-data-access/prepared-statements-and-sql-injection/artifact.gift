@@ -1,0 +1,39 @@
+// Practice quiz: Prepared statements and SQL injection
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: sql-jdbc-foundations/jdbc-data-access/prepared-statements-and-sql-injection
+
+::o1 why it works::Why can a typed value change a query that was built with string concatenation? {
+=The value becomes part of the SQL text, so a quote in it can end the string literal and add SQL #Correct. The database parses whatever text arrives.
+~PostgreSQL runs every quote as a command #Not quite. Quotes delimit strings; the problem is where the value lands.
+~Java strings cannot hold quote characters #Not quite. They can; the quote becomes part of the SQL text.
+~The JDBC driver escapes values incorrectly #Not quite. Concatenation never passes through the driver as a value at all.
+}
+
+::o1 bound value::A city typed as x' OR 'a'\='a is bound to WHERE city \= ? with setString. What does the database do with it? {
+~Runs the OR part as SQL #Not quite. A bound value is never parsed as SQL.
+=Compares the whole text as one city name, so it matches no row #Correct. The parameter is only ever a value.
+~Rejects the query with a syntax error #Not quite. The SQL text is fixed and valid; the value is just data.
+~Removes the quotes and searches for x #Not quite. The value is compared exactly as typed.
+}
+
+::o2 still unsafe::Code calls conn.prepareStatement(sql) where sql was built as "... WHERE city \= '" + city + "'". Is it safe from injection? {
+~Yes, because prepareStatement always escapes input #Not quite. It cannot separate a value already pasted into the text.
+~Yes, as long as setString is also called #Not quite. With no ? placeholder there is nothing to bind.
+=No, because the value is already inside the SQL text before the statement is prepared #Correct. Use a ? placeholder and a setter.
+~No, because prepared statements only work for INSERT #Not quite. They work for SELECT, INSERT, UPDATE and DELETE.
+}
+
+::o2 parameter index::The SQL is INSERT INTO customers (name, city) VALUES (?, ?). Which call binds the city? {
+~ps.setString(0, city) #Not quite. Parameter indexes start at 1.
+~ps.setString(1, city) #Not quite. Parameter 1 is the first placeholder, which is the name.
+=ps.setString(2, city) #Correct. Placeholders are numbered from 1, left to right.
+~ps.setString("city", city) #Not quite. PreparedStatement setters take an index, not a column name.
+}
+
+::o3 update count::ps.executeUpdate() runs UPDATE customers SET city \= ? WHERE city \= ? and three rows match. What does it return? {
+~A ResultSet with three rows #Not quite. executeQuery returns a ResultSet; executeUpdate returns a count.
+~true #Not quite. executeUpdate returns an int.
+~1, because one statement ran #Not quite. The count is rows changed, not statements.
+=3 #Correct. It returns how many rows the statement changed.
+}

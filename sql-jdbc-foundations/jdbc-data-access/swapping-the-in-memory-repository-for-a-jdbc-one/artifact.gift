@@ -1,0 +1,39 @@
+// Practice quiz: Swapping the in-memory repository for a JDBC one
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: sql-jdbc-foundations/jdbc-data-access/swapping-the-in-memory-repository-for-a-jdbc-one
+
+::o1 read mapping::A query returns columns id, name and city. Which line builds a Customer from the current row? {
+~new Customer(rs.getLong(0), rs.getString(1), rs.getString(2)) #Not quite. Column indexes start at 1, so index 0 is invalid.
+~new Customer(rs.next(), rs.getString("name"), rs.getString("city")) #Not quite. next() moves the cursor and returns a boolean, not the id.
+=new Customer(rs.getLong("id"), rs.getString("name"), rs.getString("city")) #Correct. Read each column of the current row by its label.
+~new Customer(rs) #Not quite. Customer does not know about JDBC; the repository maps columns to fields.
+}
+
+::o1 write mapping::save runs INSERT INTO customers (city, name) VALUES (?, ?). Which binding is right? {
+~setString(1, c.name()) and setString(2, c.city()) #Not quite. Parameter 1 matches the first listed column, city.
+~setString(1, c.city()) and setString(1, c.name()) #Not quite. Each placeholder needs its own index.
+~setString("city", c.city()) and setString("name", c.name()) #Not quite. Setters take an index, not a column name.
+=setString(1, c.city()) and setString(2, c.name()) #Correct. Parameters follow the placeholders, which follow the column list.
+}
+
+::o2 close order::try (Connection conn \= ...; PreparedStatement ps \= ...) declares two resources. When the block ends, in what order are they closed? {
+~conn, then ps #Not quite. That is the order they were opened.
+=ps, then conn #Correct. try-with-resources closes in reverse order of opening.
+~Only conn; that closes everything else #Not quite. Every declared resource is closed.
+~Whenever the garbage collector runs #Not quite. They are closed at the end of the block.
+}
+
+::o2 leak::A repository opens a Connection as a plain local variable and never closes it. What happens after many calls? {
+=Open connections pile up until the server refuses new ones #Correct. Declare it in try-with-resources.
+~Nothing, Java closes it when the method returns #Not quite. A local variable going out of scope does not close a connection.
+~The SQL starts returning wrong rows #Not quite. The queries still work until connections run out.
+~The code does not compile #Not quite. It compiles; the leak shows only at run time.
+}
+
+::o3 swap point::CustomerService takes a CustomerRepository in its constructor. What changes to make it use JdbcCustomerRepository? {
+=Only the line that constructs the repository and passes it to the service #Correct. The service depends on the interface, not the class.
+~Every CustomerService method, to add SQL #Not quite. The SQL lives in the JDBC repository.
+~The interface, so its methods declare throws SQLException #Not quite. The JDBC class catches SQLException and rethrows an unchecked exception.
+~CustomerService must extend JdbcCustomerRepository #Not quite. The service uses a repository; it is not one.
+}

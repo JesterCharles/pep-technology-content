@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="pep:course" content="sql-jdbc-foundations">
+<meta name="pep:module" content="jdbc-data-access">
+<meta name="pep:topic" content="Testing a repository against a provided test database">
+<meta name="pep:topic-id" content="testing-a-repository-against-a-test-database">
+<meta name="pep:budget-minutes" content="8">
+<meta name="pep:source" content="authoring/evidence/sql-jdbc-foundations/jdbc-data-access/testing-a-repository-against-a-test-database/sources.json">
+<title>Testing a repository against a provided test database</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
+}
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  #current-teaching > [data-step][hidden], #current-task > [data-step][hidden], #current-control > [data-step][hidden] { display: block !important; }
+  [data-static-alt]::after { content: attr(data-static-alt); display: block; margin-top: 8px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); white-space: normal; }
+  .log { height: auto; overflow: visible; }
+}
+/* pep:component terminal@1 css */
+.term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
+.term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
+.term-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px var(--s3);margin:0;padding:var(--s1) var(--s3);border-bottom:1px solid var(--rule);font-size:15px;color:var(--muted)}
+.term-top span:first-child{font-weight:700}
+.log{height:220px;overflow-y:auto;padding:var(--s2) var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
+.log .c{font-weight:700}
+.log .c::before{content:attr(data-p) " ";color:var(--teal);font-weight:700}
+.log .e{color:var(--red)}
+.log .h{color:var(--muted);font-family:var(--sans)}
+.cmdline{display:flex;gap:var(--s2);align-items:center;padding:0 var(--s1) 0 var(--s3);border-top:1px solid var(--rule)}
+.cmdline label{flex:0 1 auto;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 16px var(--mono);color:var(--teal)}
+.cmdline{padding:var(--s2) var(--s2) var(--s2) var(--s3)}
+.cmdline input{flex:1 1 auto;min-width:0;min-height:44px;padding:var(--s2) 0;font:16px var(--mono);color:var(--ink);background:transparent;border:0;caret-color:var(--teal)}
+.cmdline input::placeholder{color:var(--muted);opacity:1}
+.cmdline input:focus,.cmdline input:focus-visible{outline:none}
+.cmdline .runbtn{flex:0 0 auto;min-height:36px;padding:var(--s1) var(--s3);background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:600}
+.cmdline .runbtn:hover{border-color:var(--ink)}
+.simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+/* /pep:component terminal css */
+:root {
+  --bg: var(--pep-page); --surface: var(--pep-card); --ink: var(--pep-text-strong); --muted: var(--pep-text-muted);
+  --rule: var(--pep-line-strong); --line: var(--pep-line); --focus: var(--pep-focus);
+  --teal: var(--pep-accent-text); --on-teal: var(--pep-page); --teal-soft: var(--pep-accent-soft);
+  --red: var(--pep-danger); --red-soft: var(--pep-danger-soft); --amber: var(--pep-warning); --amber-soft: var(--pep-warning-soft);
+  --code: var(--pep-sunken); --term: var(--pep-sunken);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --sans: var(--pep-font-sans); --mono: var(--pep-font-mono);
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: 6px; background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[tabindex="-1"]:focus { outline: none; }
+[tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.nojs { margin: 16px; padding: 12px 16px; border: 1px solid var(--pep-warning); border-radius: var(--pep-radius-md); background: var(--pep-warning-soft); color: var(--pep-text-strong); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+button, .pep-option { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+/* topic bar */
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__progress { display: flex; flex: 1 1 260px; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress .pep-progress { flex: 1 1 96px; width: 96px; max-width: 160px; }
+.pep-topicbar .pep-btn { flex: 0 0 auto; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.pep-progress > span { height: 8px; border-radius: var(--pep-radius-pill); background: var(--pep-control); border: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); border-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning-soft); border: 1px dashed var(--pep-warning); }
+/* regions */
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-region > * { min-width: 0; }
+.pep-goals { margin: 0; padding: 12px 16px; list-style: none; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pep-line-strong); max-width: none; }
+.pep-goals > li:first-child { border-top: 0; }
+.pep-goals .state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; }
+.pep-goals .is-done .state { color: var(--pep-success); }
+.pep-goals-h { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0 0 -8px; }
+.pep-steps-list { margin: 0; padding-left: 24px; }
+.pep-steps-list > li + li { margin-top: 8px; }
+.pep-steps-list .state { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-left: 8px; white-space: nowrap; }
+.pep-steps-list .is-done .state { color: var(--pep-success); }
+.pep-summary { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0; }
+.pep-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 4px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); background: var(--pep-control); color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); }
+.pep-chip--ok { border-color: var(--pep-success); color: var(--pep-success); background: var(--pep-success-soft); }
+.pep-chip--no { border-style: dashed; border-color: var(--pep-danger); color: var(--pep-danger); background: var(--pep-danger-soft); }
+.pep-chip--wait { border-style: dotted; border-color: var(--pep-warning); color: var(--pep-warning); background: var(--pep-warning-soft); }
+/* cards, callouts, buttons */
+.pep-card { background: var(--pep-card); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); padding: 16px; min-width: 0; }
+.pep-callout { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text); }
+.pep-callout p { margin: 0 0 8px; } .pep-callout p:last-child { margin: 0; }
+.pep-callout ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-callout--info { background: var(--pep-accent-soft); border-color: var(--pep-accent); }
+.pep-callout--success { background: var(--pep-success-soft); border-color: var(--pep-success); }
+.pep-callout--warning { background: var(--pep-warning-soft); border-color: var(--pep-warning); }
+.pep-callout--danger { background: var(--pep-danger-soft); border-color: var(--pep-danger); }
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); max-width: 100%; text-align: center; }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+.pep-btn:disabled, .pep-btn[aria-disabled="true"] { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+.pep-btn[aria-pressed="true"] { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); }
+.pep-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+/* options, confidence, feedback */
+.pep-options { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-options > legend, .pep-legend { padding: 0; margin: 0 0 8px; font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
+.pep-option { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; min-width: 0; }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option.is-correct .pep-option__key { background: var(--pep-success); color: var(--pep-page); }
+.pep-option.is-wrong .pep-option__key { background: var(--pep-danger); color: var(--pep-page); }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
+.pep-option input:disabled { cursor: default; }
+.pep-option:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-option:has(input:disabled) { cursor: default; }
+.pep-explain { display: block; margin: 4px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-tag { display: inline-block; margin: 4px 8px 0 0; padding: 0 8px; border: 1px solid currentColor; border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); }
+.pep-tag--ok { color: var(--pep-success); } .pep-tag--no { color: var(--pep-danger); } .pep-tag--me { color: var(--pep-text-strong); }
+.pep-conf { display: grid; grid-template-columns: repeat(3, minmax(96px, 1fr)); gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.pep-conf > legend { grid-column: 1 / -1; padding: 0; margin: 0 0 8px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-conf .pep-option { grid-template-columns: minmax(0, 1fr); text-align: center; }
+@media (max-width: 480px) { .pep-conf { grid-template-columns: minmax(0, 1fr); } }
+.pep-verdict { font-weight: 700; }
+.pep-verdict--correct { color: var(--pep-success); } .pep-verdict--wrong { color: var(--pep-danger); } .pep-verdict--revealed { color: var(--pep-warning); }
+.feedback:empty { display: none; }
+.feedback ul { margin: 4px 0 0; padding-left: 20px; }
+.feedback li + li { margin-top: 4px; }
+.conf-report { color: var(--pep-text-muted); }
+/* model and code */
+.model { margin: 0; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-bottom: 8px; }
+.boxes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.box { padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.box h3 { font-size: 14px; line-height: 20px; margin: 0 0 4px; }
+.box ul { margin: 0; padding-left: 18px; font: 400 14px/20px var(--pep-font-sans); }
+.box p { margin: 0; font: 400 14px/20px var(--pep-font-sans); }
+.mnote { margin: 8px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-code, .teach pre, .recap pre { margin: 0 0 12px; padding: 12px 16px; background: var(--pep-sunken); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
+.outlog { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; margin: 8px 0 0; padding: 12px 16px; background: var(--pep-sunken); border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; color: var(--pep-text-strong); }
+@media (max-width: 480px) { .outlog { max-height: 180px; } }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); }
+.pep-table td, .pep-table th { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; text-align: left; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.recap ul { padding-left: 20px; }
+.recap details, .sources { margin: 12px 0; padding: 0 0 0 0; border-block: 1px solid var(--pep-line-strong); }
+.recap summary, .sources summary { min-height: 44px; padding: 10px 0; cursor: pointer; font-weight: 600; color: var(--pep-text-strong); }
+.next-topic { font-weight: 600; }
+.next-topic a { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; }
+.complete { margin: 0; }
+/* terminal@1 bridge: keep the drift-checked fragment, adapt sizes around it */
+.term { border-radius: var(--pep-radius-sm); }
+.term-top { font: 600 13px/20px var(--pep-font-sans); }
+.log { font: 400 14px/20px var(--pep-font-mono); max-height: 240px; overscroll-behavior: contain auto; }
+.cmdline .runbtn { min-height: 44px; min-width: 64px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); }
+.cmdline input { scroll-margin-block: 16px; }
+@media (max-width: 480px) { .log { height: 180px; } .cmdline { flex-wrap: wrap; row-gap: 4px; } .cmdline label { flex: 1 0 100%; max-width: none; } }
+/* editor shell */
+.pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; }
+.pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__secondary { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__gutter { margin: 0; padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font: inherit; font-variant-numeric: tabular-nums; white-space: pre; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
+.pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
+.pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
+.pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; cursor: pointer; white-space: normal; }
+.pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 600; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 600; }
+.pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); }
+.pep-editor noscript, .pep-noscript { display: block; padding: 12px; font: 400 14px/20px var(--pep-font-sans); }
+@media (max-width: 480px) {
+  .pep-editor__bar { align-items: stretch; }
+  .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
+  .pep-editor__bar .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
+  .pep-editor__code, .pep-editor__input { max-height: 240px; }
+  .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
+  .pep-editor__gutter { line-height: 24px; font-size: 16px; }
+  .pep-editor__tabs { flex-wrap: wrap; }
+  .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
+  .pep-editor__panel { max-height: 180px; }
+}
+/* optional disclosures */
+.pep-optional { min-width: 0; border-block: 1px solid var(--pep-line-strong); background: transparent; break-inside: avoid; }
+.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { padding: 4px 0 16px; }
+.pep-optional__body > :first-child { margin-top: 0; }
+.pep-optional__body > :last-child { margin-bottom: 0; }
+@media print { .pep-optional > summary { list-style: none; } .pep-optional > summary::-webkit-details-marker { display: none; } }
+/* figure */
+.pep-figure { margin: 0; }
+.pep-figure figcaption { margin-top: 8px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.state[data-state]::before { content: attr(data-state); }
+summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; }
+.feedback details { margin: 8px 0; }
+.pep-optional-area { display: flex; flex-direction: column; gap: 8px; }
+.chip { display: inline-flex; align-items: center; min-height: 24px; padding: 0 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text); background: var(--pep-control); }
+.chip.ok { border-color: var(--pep-success); color: var(--pep-success); background: var(--pep-success-soft); }
+.chip.no { border-style: dashed; border-color: var(--pep-danger); color: var(--pep-danger); background: var(--pep-danger-soft); }
+.chip.wait { border-style: dotted; border-color: var(--pep-warning); color: var(--pep-warning); background: var(--pep-warning-soft); }
+.pep-chal { display: block; width: 100%; min-height: 120px; margin: 4px 0 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); white-space: pre; overflow-wrap: normal; }
+</style>
+</head>
+<body>
+<noscript><p class="nojs">The reading, task steps, code samples and recap below work without JavaScript. Turn JavaScript on to use the lifecycle runner, the failure reader and answer feedback.</p></noscript>
+<main id="lesson" class="pep-main" data-pep-responsive>
+  <header class="pep-topicbar">
+    <h1>Testing a repository against a provided test database</h1>
+    <div class="pep-topicbar__progress" data-pep-progress id="progress"><span id="prog-text">Activity 1 of 4 · 0 done</span><span>about 8 min</span><span class="pep-progress" id="progress-bar" aria-hidden="true"><span></span><span></span><span></span><span></span></span></div>
+    <button type="button" class="pep-btn" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+    <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+  </header>
+  <div class="pep-regions" id="stage" data-step="1">
+    <section class="pep-region" id="panel" data-pep-instructions aria-label="Reading and instructions">
+      <div id="current-teaching" class="teach">
+<div data-step="1">
+  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+<p>A JUnit test for the JDBC repository points at your everyday database, <code>shop</code>, which already holds three customers. Practice prediction, not scored.</p>
+<pre>repo.save(new Customer(0, "Dee", "Hull"));
+assertEquals(1, repo.findAll().size());</pre>
+</div>
+<div data-step="2" data-pep-teaching>
+  <h2 id="teach-2-h" tabindex="-1">A database just for the tests</h2>
+<p>Tests that share your development database depend on whatever rows happen to be there, and can change or delete them. A test-database helper, like the one the project provides, avoids both: it creates a uniquely named database, applies <code>schema.sql</code> and the seed rows, runs the tests against it, then drops it.</p>
+<p>Order matters. A table cannot be created in a database that does not exist yet, and PostgreSQL refuses to drop a database while connections to it are still open.</p>
+</div>
+<div data-step="3" data-pep-teaching>
+  <h2 id="teach-3-h" tabindex="-1">Read the failure</h2>
+<p>A failed <code>assertEquals(expected, actual)</code> prints <code>expected: &lt;x&gt; but was: &lt;y&gt;</code>. The expected value is what the test wanted; the actual value is what your repository returned. Ask where that actual value came from, then follow it back to the SQL, the setter or the mapping line.</p>
+</div>
+<div data-step="4" data-pep-teaching>
+  <h2 id="teach-4-h" tabindex="-1">Apply it: why a fresh database</h2>
+<p>A repository test is only useful if it gives the same result on every machine and every run.</p>
+</div>
+<div data-step="5" data-pep-recap class="recap">
+  <h2 id="teach-5-h" tabindex="-1">Recap</h2>
+<ul><li>Run repository tests against a fresh, uniquely named test database, never your development data.</li><li>Use the expected and actual values, plus the stored data, to decide whether the bug is in the SQL, a setter or the mapping.</li><li>Create the database, apply the schema and seed, run the tests, close connections, then drop it.</li></ul>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <table><tr><td>Message</td><td>Usually means</td></tr><tr><td><code>FATAL: database ... does not exist</code></td><td>The test database was not created yet</td></tr><tr><td><code>relation "customers" does not exist</code></td><td>The schema was not applied</td></tr><tr><td><code>expected: &lt;3&gt; but was: &lt;0&gt;</code></td><td>The seed rows were not inserted, or a filter matches nothing</td></tr><tr><td><code>is being accessed by other users</code></td><td>A connection is still open; close it before dropping</td></tr></table>
+  </details>
+  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live official sources on 2026-11-09 for PostgreSQL 18 and JUnit Jupiter. This page never runs Java, JUnit, JDBC or a database: the lifecycle, messages and test failures are simulated and shortened.</p><ul><li><a href="https://www.postgresql.org/docs/current/sql-createdatabase.html" rel="noopener">PostgreSQL: CREATE DATABASE</a></li><li><a href="https://www.postgresql.org/docs/current/sql-dropdatabase.html" rel="noopener">PostgreSQL: DROP DATABASE (not while connected)</a></li><li><a href="https://docs.junit.org/current/user-guide/" rel="noopener">JUnit User Guide: assertions and test lifecycle</a></li></ul></details>
+  <p class="next-topic">Next: the F23 JDBC data access project, where you build and test the real JDBC repository with these steps.</p>
+</div>
+      </div>
+      <p class="pep-goals-h" id="goals-h">Goals</p>
+      <ul class="pep-goals" data-pep-objectives aria-labelledby="goals-h">
+      <li data-obj="o1"><span>Explain why repository tests run against a separate, freshly created test database rather than the development database</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o2"><span>Read a failing repository test's expected and actual values to locate the bug in the SQL or the row mapping</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o3"><span>Order the test database lifecycle: create the database, apply the schema and seed data, run the tests, close connections and drop the database</span><span class="state" data-state="open"></span></li>
+      </ul>
+      <div id="current-task" class="task">
+<div data-step="1">
+<ol class="pep-steps-list" id="task-1"><li>Choose what the test reports, choose how sure you are, then press <strong>Check my prediction</strong>.</li></ol>
+</div>
+<div data-step="2">
+<ol class="pep-steps-list" id="task-2"><li>Press the lifecycle steps in the order the helper must run them. The card on the right shows what exists so far.</li><li>A step pressed too early shows the error you would get; carry on from where you are.</li><li data-goal="cycle">Run the whole lifecycle from create to drop <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="3">
+<ol class="pep-steps-list" id="task-3"><li>Two tests fail. For each, read the expected and actual values and the evidence on the right.</li><li>Choose where the bug is, then press <strong>Check locations</strong>.</li><li data-goal="read">Both bugs located <span class="state" data-state="open"></span></li></ol>
+</div>
+<div data-step="4">
+<p id="task-apply">Why does the helper create a fresh, uniquely named database for each test run and drop it afterwards?</p>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Two test classes share one test database with no cleanup. The first inserts a customer; the second asserts there are 3 seed customers. The second fails only when it runs after the first. What fixes it?</p>
+</div>
+<div data-step="5">
+<p>All activities finished.</p><div id="complete-msg" class="complete"></div>
+</div>
+      </div>
+      <p class="pep-summary" id="goal-summary" hidden></p>
+
+    </section>
+    <section class="pep-region" id="workspace" data-pep-workspace="activity" aria-label="Workspace">
+      <div id="current-head">
+<div data-step="1"><h2>Start with a guess</h2></div>
+<div data-step="2"><h2>Lifecycle runner</h2></div>
+<div data-step="3"><h2>Failure reader</h2></div>
+<div data-step="4"><h2>Apply it: why a fresh database</h2></div>
+<div data-step="5"><h2>Finished</h2></div>
+      </div>
+      <figure id="live-model" class="model" aria-labelledby="model-cap">
+<figcaption id="model-cap">Test run state (simulated: no Java, JUnit or database runs here)</figcaption>
+  <div class="boxes">
+    <div class="box"><h3>Test database</h3><p id="m-db">shop_test_7f3a: not created</p></div>
+    <div class="box"><h3>Evidence</h3><p id="m-ev">No test run yet.</p></div>
+  </div>
+  <pre class="outlog" id="m-log" aria-label="Run log">No step run yet.</pre>
+      </figure>
+      <div id="current-control" class="control">
+<div data-step="1">
+  <fieldset class="pep-options" data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): the development database already has 3 customers, so after saving one, findAll returns 4 and the test fails with expected: &lt;1&gt; but was: &lt;4&gt;. The test is not isolated: its result depends on data it did not create, and it also left a new row in your development database.">
+    <legend>Your prediction</legend>
+    <label class="pep-option"><input type="radio" name="predict" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">It passes: one customer was saved</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">It fails: <code>expected: &lt;1&gt; but was: &lt;4&gt;</code></span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">It fails: JUnit cannot connect to a database</span></label>
+    <label class="pep-option"><input type="radio" name="predict" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">It passes, and JUnit deletes the new row afterwards</span></label>
+  </fieldset>
+  <fieldset class="pep-conf" id="pconf" aria-describedby="pconf-help"><legend id="pconf-help">How sure are you? Then check.</legend><label class="pep-option"><input type="radio" name="pconf" value="low"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="pconf" value="medium"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="pconf" value="high"><span class="pep-option__text">Certain</span></label></fieldset>
+  <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button></div>
+</div>
+<div data-step="2">
+  <div id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-2" data-static-alt="Activity: the test database lifecycle, in order: CREATE DATABASE shop_test_7f3a; apply schema.sql; insert the seed rows; run the tests; close connections; DROP DATABASE shop_test_7f3a. Too early: applying the schema first gives FATAL: database &quot;shop_test_7f3a&quot; does not exist; seeding before the schema gives ERROR: relation &quot;customers&quot; does not exist; running the tests before seeding gives expected: &lt;3&gt; but was: &lt;0&gt;; dropping with a connection still open gives ERROR: database &quot;shop_test_7f3a&quot; is being accessed by other users."><p class="pep-legend">Lifecycle steps (any order)</p>
+  <div class="boxes"><button type="button" class="pep-btn" id="l-seed" data-act="life" data-k="2">Insert the seed rows</button><button type="button" class="pep-btn" id="l-drop" data-act="life" data-k="5">DROP DATABASE shop_test_7f3a</button><button type="button" class="pep-btn" id="l-create" data-act="life" data-k="0">CREATE DATABASE shop_test_7f3a</button><button type="button" class="pep-btn" id="l-test" data-act="life" data-k="3">Run the tests</button><button type="button" class="pep-btn" id="l-schema" data-act="life" data-k="1">Apply schema.sql</button><button type="button" class="pep-btn" id="l-close" data-act="life" data-k="4">Close connections</button></div>
+  </div>
+</div>
+<div data-step="3">
+  <div id="x3" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-static-alt="Activity: locate two bugs. Test 1: assertEquals(&quot;Leeds&quot;, found.city()) fails with expected: &lt;Leeds&gt; but was: &lt;Amara&gt;, while psql shows the row stored as name Amara, city Leeds; the data is stored correctly, so the row mapping reads name into city. Test 2: findByCity(&quot;Leeds&quot;) expects 2 and gets 0, while the seed has two Leeds rows; the setter binds the literal text &quot;city&quot; instead of the city variable."><p class="pep-legend">Where is each bug?</p>
+  <div class="pep-region"><fieldset class="pep-options" id="f1-fs"><legend><code>findById_readsCity</code>: <code>expected: &lt;Leeds&gt; but was: &lt;Amara&gt;</code>. psql shows the stored row as <code>1 | Amara | Leeds</code>.</legend><label class="pep-option"><input type="radio" name="f1" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">The <code>INSERT</code> stored the values in the wrong columns</span></label><label class="pep-option"><input type="radio" name="f1" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">The test's expected value</span></label><label class="pep-option"><input type="radio" name="f1" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">The row mapping in <code>findById</code> reads the name into the city</span></label></fieldset><fieldset class="pep-options" id="f2-fs"><legend><code>findByCity_findsBoth</code>: <code>expected: &lt;2&gt; but was: &lt;0&gt;</code>. The seed has two Leeds rows. The code binds <code>ps.setString(1, "city");</code></legend><label class="pep-option"><input type="radio" name="f2" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">The setter binds the text "city", not the variable</span></label><label class="pep-option"><input type="radio" name="f2" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">The seed rows were not inserted</span></label><label class="pep-option"><input type="radio" name="f2" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">The <code>ResultSet</code> mapping reads the wrong column</span></label></fieldset></div>
+  <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="f-check" data-act="fcheck">Check locations</button></div>
+  </div>
+</div>
+<div data-step="4">
+  <div data-first>
+  <fieldset class="pep-options" id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: a fresh, uniquely named test database gives every run the same known starting data and never reads or changes the development database; a unique name also keeps parallel or leftover runs apart. PostgreSQL does not require it, it is not faster than an in-memory fake, and no production data is copied. Retry: give each test a known starting state, for example recreate or clean the data before each test, instead of depending on test order.">
+    <legend>Choose the reason</legend>
+    <label class="pep-option"><input type="radio" name="apply-a" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">PostgreSQL allows only one test connection per database</span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">It runs faster than an in-memory fake repository</span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">It copies real customer data so tests are realistic</span></label>
+    <label class="pep-option"><input type="radio" name="apply-a" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Every run starts from the same known data and never touches your development database</span></label>
+  </fieldset>
+  <fieldset class="pep-conf" id="conf" aria-describedby="conf-help"><legend id="conf-help">How sure are you? Then check.</legend><label class="pep-option"><input type="radio" name="conf" value="low"><span class="pep-option__text">Guessing</span></label><label class="pep-option"><input type="radio" name="conf" value="medium"><span class="pep-option__text">Fairly sure</span></label><label class="pep-option"><input type="radio" name="conf" value="high"><span class="pep-option__text">Certain</span></label></fieldset>
+  <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button></div>
+  </div>
+  <div data-retry hidden>
+    <fieldset class="pep-options" id="apply-b" aria-describedby="task-apply-b">
+      <legend>Choose the fix</legend>
+      <label class="pep-option"><input type="radio" name="apply-b" value="a"><span class="pep-option__key" aria-hidden="true">A</span><span class="pep-option__text">Change the expected count to 4</span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="b"><span class="pep-option__key" aria-hidden="true">B</span><span class="pep-option__text">Give each test a known starting state, such as fresh data before each test</span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="c"><span class="pep-option__key" aria-hidden="true">C</span><span class="pep-option__text">Always run the second class first</span></label>
+      <label class="pep-option"><input type="radio" name="apply-b" value="d"><span class="pep-option__key" aria-hidden="true">D</span><span class="pep-option__text">Point the tests at the development database instead</span></label>
+    </fieldset>
+    <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+  </div>
+</div>
+<div data-step="5"></div>
+      </div>
+      <div id="current-feedback" class="feedback" aria-live="polite">
+<div data-step="1" data-pep-predict-feedback></div>
+<div data-step="2" data-pep-explore-feedback></div>
+<div data-step="3" data-pep-explore-feedback></div>
+<div data-step="4" data-pep-apply-feedback></div>
+<div data-step="5"></div>
+      </div>
+      <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="next" hidden>Continue</button></div>
+      <div class="pep-optional-area"><details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+  <summary>Challenge (optional)</summary>
+  <div class="pep-optional__body">
+    <p data-pep-optional-time><strong>Optional time:</strong> about 3 minutes, in addition to the topic time</p>
+    <p data-pep-success-criteria><strong>Success criteria:</strong> your test name and assertion would fail for exactly one bug and pass once it is fixed.</p>
+    <p>Write a test for <code>deleteById</code>: arrange with a seed customer, act by deleting it, and assert one thing that proves it is gone. Nothing here is checked or counted.</p><label class="pep-legend" for="chal-test">Your test sketch (optional)</label><textarea id="chal-test" class="pep-chal" rows="4" spellcheck="false" autocapitalize="off">@Test
+void deleteById_removesTheCustomer() {
+    // arrange, act, assert
+}</textarea>
+  </div>
+</details></div>
+    </section>
+  </div>
+</main>
+<script>
+var TOPIC={
+steps:5,acts:["predict","cycle","read","apply"],objActs:{"o1":["apply"],"o2":["read"],"o3":["cycle"]},editors:{},
+init:function(){return {g:{},at:0,log:[]};},
+goals:{2:['cycle'],3:['read']},
+predict:{correct:'b',why:{
+ a:'findAll counts every row, including the three that were already there.',
+ b:'3 existing rows plus the saved one is 4, so the assertion fails.',
+ c:'the test connects through JDBC like any other Java code.',
+ d:'JUnit does not undo database changes; the new row stays in your development data.'}},
+apply:{A:{fs:'apply-a',correct:'d',okNote:'<p>A known starting point makes failures mean a real bug, and your own data is never read or changed. The unique name also keeps two runs, or a leftover from a crashed run, apart.</p>',
+  why:{a:'PostgreSQL allows many connections to one database.',b:'an in-memory fake is faster; the point is testing the real SQL against known data.',c:'test data is the seed in the project, not copied customer data.',d:'known data in, the same result out, and your development data stays untouched.'},
+  miss:{a:'PostgreSQL accepts many connections to one database.',b:'Speed is not the reason; an in-memory fake would be faster.',c:'The seed is small, invented test data, not copied real data.'},
+  hint:'What would make a test pass on your machine and fail on a classmate\'s, or pass today and fail tomorrow?'},
+ B:{fs:'apply-b',correct:'b',reveal:'Give each test a known starting state, for example fresh data before each test, so no test depends on another test\'s leftovers.',
+  why:{a:'then the test fails whenever it runs first.',b:'each test starts from known data, whatever ran before it.',c:'the order is not guaranteed and hides the dependency.',d:'that adds your own changing data to the problem.'}}},
+steps6:['CREATE DATABASE shop_test_7f3a','Apply schema.sql','Insert the seed rows','Run the tests','Close connections','DROP DATABASE shop_test_7f3a'],
+act:function(a,b,S,api){var t=S.t,N=this.steps6;
+ if(a==='life'){var k=+b.getAttribute('data-k'),msg,ok=false;
+  if(t.at>=6){msg='The lifecycle is complete; the test database is gone.';}
+  else if(k<t.at){msg=N[k]+': already done.';}
+  else if(k===t.at){ok=true;t.at++;msg=N[k]+': done.'+(t.at===6?' The test database is gone; the next run starts fresh.':'');t.log.push('ok   '+N[k]);if(t.at===6){api.goal('cycle');}}
+  else if(k>=4&&t.at<4){msg='The tests have not run yet, so there is nothing to clean up. Run the tests first.';t.log.push('fail '+N[k]);}
+  else{msg=[ 'FATAL: database "shop_test_7f3a" does not exist. Create it first.',
+    'ERROR: relation "customers" does not exist. Apply schema.sql first.',
+    k===3?'Tests ran on empty tables: expected: <3> but was: <0>. Insert the seed rows first.':'Insert the seed rows and run the tests first.',
+    'Nothing has run yet, so there is nothing to clean up. Run the tests first.',
+    'ERROR: database "shop_test_7f3a" is being accessed by other users. Close connections first.'][t.at];t.log.push('fail '+N[k]);}
+  api.say('<p>'+(ok?'<span class="chip ok">ok</span> ':'<span class="chip no">refused</span> ')+api.esc(msg)+'</p>'+api.goalStatus());}
+ if(a==='fcheck'){function v(n){var r=api.qa('input[name="'+n+'"]:checked')[0];return r?r.value:'';}var is=[];
+  if(v('f1')!=='c'){is.push(v('f1')==='a'?'psql shows city Leeds stored in the city column, so the INSERT was right. The wrong value appears when the row is read back.':v('f1')==='b'?'The stored row says Leeds, so Leeds is the right expectation.':'Choose where test 1\'s bug is.');}
+  if(v('f2')!=='a'){is.push(v('f2')==='b'?'The seed has two Leeds rows, and test 1 read one back, so the data is there.':v('f2')==='c'?'Mapping cannot turn rows into no rows: the query matched nothing. Look at the value bound to the ?.':'Choose where test 2\'s bug is.');}
+  if(!is.length){api.goal('read');api.say('<p class="verdict ok">Correct.</p><p>Compare the actual value with the stored data: stored right but read wrong points at the mapping; no rows at all points at the WHERE value.</p>'+api.goalStatus());}
+  else{api.say('<p class="verdict no">Not yet. Check these:</p><ul>'+is.map(function(x){return '<li>'+api.esc(x)+'</li>';}).join('')+'</ul>'+api.goalStatus());}}
+ this.render(S,api);
+},
+render:function(S,api){var t=S.t,db=api.$('m-db'),ev=api.$('m-ev'),lg=api.$('m-log'),D=['not created','created, empty','schema applied, no rows','schema and 3 seed rows','tests ran; connections open','connections closed','dropped'];
+ if(S.step===2){db.textContent='shop_test_7f3a: '+D[t.at];ev.textContent='Next needed step: '+(t.at<6?this.steps6[t.at]:'none');lg.textContent=t.log.length?t.log.join('\n'):'No step run yet.';}
+ else if(S.step===3){db.textContent='shop_test_7f3a: schema and 3 seed rows';ev.textContent='psql: SELECT id, name, city FROM customers WHERE id = 1  ->  1 | Amara | Leeds';lg.textContent='FAILED findById_readsCity: expected: <Leeds> but was: <Amara>\nFAILED findByCity_findsBoth: expected: <2> but was: <0>';}
+ else if(S.step>=4){db.textContent='shop_test_7f3a: dropped after the run';ev.textContent='Each run gets its own fresh database.';lg.textContent='Tests run against known seed data.';}
+ else{db.textContent='shop (development): 3 customers';ev.textContent='No test run yet.';lg.textContent='No step run yet.';}}
+};
+
+(function(){
+'use strict';
+var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
+var SNAP={};
+function clone(o){return JSON.parse(JSON.stringify(o));}
+var LAST=TOPIC.steps,S;
+function $(id){return d.getElementById(id);}
+function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init()};}
+var api={$:$,qa:qa,esc:esc,say:say,complete:complete,goal:goal,left:left,editorText:editorText,get S(){return S;}};
+function need(step){return (TOPIC.goals&&TOPIC.goals[step])||[];}
+function left(step){var g=S.t.g||{};return need(step||S.step).filter(function(k){return !g[k];}).length;}
+function goal(k){var g=S.t.g||(S.t.g={});g[k]=1;var st=S.step,act=TOPIC.acts[st-1];if(need(st).length&&!left(st)&&!S.done[act]){complete(act);}renderGoals();}
+function goalStatus(){var st=S.step,n=need(st),l=left(st);return n.length?'<p>'+(l?l+' of '+n.length+' task goals still open.':'<strong>All task goals met.</strong> Continue when ready.')+'</p>':'';}
+api.goalStatus=goalStatus;
+function renderGoals(){var g=(S.t&&S.t.g)||{};
+  qa('[data-goal]').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('is-done',!!g[k]);var s=li.querySelector('.state');if(s){s.setAttribute('data-state',g[k]?'✓ done':'open');}});
+  var sum=$('goal-summary');if(sum){var n=need(S.step),l=left(S.step);sum.textContent=n.length?(l?l+' of '+n.length+' task goals still open':'All task goals met'):'';sum.hidden=!n.length;}
+  qa('[data-obj]').forEach(function(li){var acts=(TOPIC.objActs||{})[li.getAttribute('data-obj')]||[];var ok=acts.length&&acts.every(function(a){return S.done[a]&&!S.settled[a];});li.classList.toggle('is-done',!!ok);li.querySelector('.state').setAttribute('data-state',ok?'✓ done':'open');});}
+function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
+function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}if(S.t&&S.t.g){renderGoals();}}
+function progress(){
+  var acts=TOPIC.acts,n=0,set=0,cur=Math.min(S.step,acts.length);
+  acts.forEach(function(a,i){var p=qa('#progress-bar > span')[i];var on=!!S.done[a];if(on&&!S.settled[a]){n++;}if(S.settled[a]){set++;}
+    p.className=on?(S.settled[a]?'is-settled':'is-done'):'';});
+  $('prog-text').textContent='Activity '+cur+' of '+acts.length+' · '+n+' done'+(set?' ('+set+' settled, not marked correct)':'');
+  renderGoals();
+}
+function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
+function show(step,focus){
+  S.step=step;stageEl.setAttribute('data-step',String(step));
+  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
+  if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
+    SNAP[step]={html:h,t:clone(S.t)};}
+  var rb=$('reset');rb.disabled=(step===LAST);
+  $('next').hidden=true;
+  if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
+    c.innerHTML='<p><strong>All '+TOPIC.acts.length+' activities finished.</strong>'+(set?' '+set+' was answered without being marked correct. That is fine: review its explanation before moving on.':'')+'</p>';}}
+  else{main.removeAttribute('data-pep-complete');}
+  initEditors();TOPIC.render(S,api);progress();
+  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+}
+function optLabel(inp){return inp.closest('label');}
+function optText(inp){var t=optLabel(inp).querySelector('.pep-option__text');return t?t.firstChild.textContent.trim():optLabel(inp).textContent.trim();}
+function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
+function tag(cls,txt){return '<span class="pep-tag pep-tag--'+cls+'">'+txt+'</span>';}
+function annotate(name,correct,chosen,why,who){qa('input[name="'+name+'"]').forEach(function(i){var l=optLabel(i);i.disabled=true;
+  if(i.value===correct){l.classList.add('is-correct');}else if(i.value===chosen){l.classList.add('is-wrong');}
+  var t=l.querySelector('.pep-option__text');var w=d.createElement('span');w.className='pep-explain';
+  w.innerHTML=(i.value===chosen?tag('me',who):'')+(i.value===correct?tag('ok','✓ Correct answer'):(i.value===chosen?tag('no','✗ Not correct'):''))+'<span class="why">'+why[i.value]+'</span>';t.appendChild(w);});}
+function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
+function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
+  var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
+  var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
+function explainList(set){var html='<ul>';qa('input[name="'+set.fs+'"]').forEach(function(i){html+='<li><strong>'+(i.value===set.correct?'✓ Correct: ':'✗ Not this: ')+'</strong>'+esc(optText(i))+': '+set.why[i.value]+'</li>';});return html+'</ul>';}
+function checkApply(which){
+  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  if(which==='a'){
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
+    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;
+    if(ch===A.correct){S.tries=2;annotate('apply-a',A.correct,ch,A.why,'Your answer');$('apply-check').hidden=true;
+      say('<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Correct.</p>'+A.okNote+'<p>Each option is explained above.</p>'+confText()+'</div>');complete('apply');TOPIC.render(S,api);focusVerdict();return;}
+    qa('input[name="apply-a"]').forEach(function(i){i.disabled=true;if(i.value===ch){optLabel(i).classList.add('is-wrong');}});
+    S.firstPick=optText(qa('input[name="apply-a"][value="'+ch+'"]')[0]);
+    say('<div class="pep-callout pep-callout--danger"><p class="pep-verdict pep-verdict--wrong">✗ Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <strong>'+esc(S.firstPick)+'</strong>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText()+'</div>');
+    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});TOPIC.render(S,api);
+    var t=$('task-apply-b');if(t){t.focus();}
+  } else {
+    var c2=checked('apply-b');if(!c2){return;}
+    S.tries=2;$('apply-check-b').hidden=true;annotate('apply-b',B.correct,c2,B.why,'Your answer');
+    var first='<details><summary>First question: every option explained</summary>'+explainList(A)+'</details>';
+    if(c2===B.correct){say('<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Correct on the second try.</p><p>Each option is explained above.</p>'+first+confText()+'</div>');}
+    else{S.settled.apply=true;say('<div class="pep-callout pep-callout--warning"><p class="pep-verdict pep-verdict--revealed">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained above.</p>'+first+confText()+'</div>');}
+    complete('apply');TOPIC.render(S,api);focusVerdict();
+  }
+}
+function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .pep-verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function checkPredict(){
+  var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
+  if(!ch||!pc){return;}
+  qa('input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
+  annotate('predict',P.correct,ch,P.why,'Your prediction');
+  say('<div class="pep-callout pep-callout--info"><p class="pep-verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+'</p><p>Each option is explained above.</p><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||'')+'</div>',1);complete('predict');
+}
+/* editor shell */
+var ED={};
+function editorText(step){var i=$('ed-'+step+'-input');return i?i.value:'';}
+function gutter(step){var i=$('ed-'+step+'-input'),g=$('ed-'+step+'-gutter');if(!i||!g){return;}var n=Math.max(1,i.value.split('\n').length),s=[];for(var k=1;k<=n;k++){s.push(k);}g.textContent=s.join('\n');}
+function initEditors(){qa('.pep-editor[data-ed]').forEach(function(box){var st=box.getAttribute('data-ed');var i=$('ed-'+st+'-input');if(i&&!i.getAttribute('data-wired')){i.setAttribute('data-wired','1');i.addEventListener('input',function(){gutter(st);});}gutter(st);});}
+function edTab(st,which){['problems','output'].forEach(function(w){var t=$('ed-'+st+'-tab-'+w),p=$('ed-'+st+'-'+w);if(t&&p){t.setAttribute('aria-selected',w===which?'true':'false');t.tabIndex=w===which?0:-1;p.hidden=w!==which;}});}
+function edRun(st){var E=TOPIC.editors[st];if(!E){return;}var r=E.check(editorText(st),S,api)||{};
+  var pp=$('ed-'+st+'-problems'),op=$('ed-'+st+'-output'),probs=r.problems||[];
+  pp.innerHTML='';if(!probs.length){pp.textContent='No problems found.';}
+  probs.forEach(function(p){var b=d.createElement('button');b.type='button';b.className='pep-editor__problem';b.setAttribute('data-line',String(p.line||1));
+    b.innerHTML='<span class="kind-'+(p.kind==='limit'?'limit':'error')+'">'+(p.kind==='limit'?'Not supported':'Problem')+'</span> line '+(p.line||1)+': '+esc(p.msg);pp.appendChild(b);});
+  op.textContent=(r.output||[]).join('\n')||'(no output)';
+  var stt=$('ed-'+st+'-status');stt.textContent=r.ok?'✓ All checks pass. '+(r.summary||''):(probs.length?'✗ '+probs.length+' problem'+(probs.length>1?'s':'')+' to fix. Open each one to jump to its line.':(r.summary||'Checked.'));
+  edTab(st,r.ok?'output':'problems');
+  if(r.ok&&E.goal){goal(E.goal);}
+  say((r.ok?'<div class="pep-callout pep-callout--success"><p class="pep-verdict pep-verdict--correct">✓ Your file passes every check.</p>':'<div class="pep-callout pep-callout--danger"><p class="pep-verdict pep-verdict--wrong">✗ Not yet: read the Problems tab, fix one thing, and run the checks again.</p>')+(r.note?'<p>'+r.note+'</p>':'')+'</div>'+goalStatus());}
+function edReset(st){var E=TOPIC.editors[st];var i=$('ed-'+st+'-input');if(!E||!i){return;}i.value=E.starter;gutter(st);$('ed-'+st+'-problems').textContent='Not run yet.';$('ed-'+st+'-output').textContent='(no output)';$('ed-'+st+'-status').textContent='Starter restored. Not run yet.';edTab(st,'problems');i.focus();}
+var userAct=TOPIC.act;
+TOPIC.act=function(a,b,Sx,apix){
+  if(a==='edrun'){edRun(+b.getAttribute('data-ed'));return;}
+  if(a==='edreset'){edReset(+b.getAttribute('data-ed'));return;}
+  if(a==='edtab'){edTab(+b.getAttribute('data-ed'),b.getAttribute('data-tab'));return;}
+  if(a==='edline'){return;}
+  if(userAct){userAct.call(TOPIC,a,b,Sx,apix);}
+};
+d.addEventListener('click',function(e){var p=e.target.closest&&e.target.closest('.pep-editor__problem');if(!p){return;}var box=p.closest('.pep-editor');var i=box.querySelector('textarea');var ln=+p.getAttribute('data-line');var lines=i.value.split('\n'),pos=0;for(var k=0;k<ln-1&&k<lines.length;k++){pos+=lines[k].length+1;}i.focus();i.setSelectionRange(pos,pos+((lines[ln-1]||'').length));});
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.getAttribute||t.getAttribute('role')!=='tab'){return;}if(e.key==='ArrowRight'||e.key==='ArrowLeft'){var st=t.getAttribute('data-ed');var nx=t.getAttribute('data-tab')==='problems'?'output':'problems';e.preventDefault();edTab(+st,nx);$('ed-'+st+'-tab-'+nx).focus();}});
+function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
+function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
+  Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
+  qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
+  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  show(step,false);syncPrompt();say('<p>Activity restarted. Earlier activities keep their results.</p>'+goalStatus());var h=$('teach-'+step+'-h');if(h){h.focus();}}
+/* pep:component terminal@1 js */
+d.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b){return;}
+  if(b.id==='reset'){restart();return;}
+  if(b.id==='next'){show(S.step+1);return;}
+  if(b.id==='predict-check'){checkPredict();return;}
+  if(b.id==='apply-check'){checkApply('a');return;}
+  if(b.id==='apply-check-b'){checkApply('b');return;}
+  if(b.classList.contains('runbtn')){runTerminal(b.closest('.cmdline'));return;}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+});
+d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
+var HIST={};
+function prompt(){return TOPIC.prompt?TOPIC.prompt(S):'$';}
+function syncPrompt(){qa('.cmdline .pr').forEach(function(n){n.textContent=prompt();});}
+function runTerminal(box){
+  if(!box){return;}var inp=box.querySelector('input[type="text"]');if(!inp||inp.disabled){return;}
+  var line=inp.value,H=HIST[inp.id]||(HIST[inp.id]={l:[],i:0});if(line.trim()){H.l.push(line);}H.i=H.l.length;
+  var p=prompt();inp.value='';TOPIC.run(line,box.getAttribute('data-term'),S,api);
+  qa('.log .c:not([data-p])').forEach(function(n){n.setAttribute('data-p',p);});syncPrompt();inp.focus();}
+d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closest('.cmdline')||t.tagName!=='INPUT'){return;}
+  var H=HIST[t.id]||(HIST[t.id]={l:[],i:0});
+  if(e.key==='Enter'&&!e.isComposing){e.preventDefault();runTerminal(t.closest('.cmdline'));}
+  else if(e.key==='ArrowUp'){if(!H.l.length){return;}e.preventDefault();H.i=Math.max(0,H.i-1);t.value=H.l[H.i];}
+  else if(e.key==='ArrowDown'){if(!H.l.length){return;}e.preventDefault();H.i=Math.min(H.l.length,H.i+1);t.value=H.l[H.i]||'';}
+  else if(e.key==='Tab'&&!e.shiftKey&&!e.altKey&&!e.ctrlKey&&!e.metaKey){
+    // capture Tab only when a completion actually changes the line, so Tab never traps focus
+    var v=t.value.trim()&&TOPIC.complete?TOPIC.complete(t.value,S):null;if(v&&v!==t.value){e.preventDefault();t.value=v;}}
+  else if(e.key==='Escape'){var tk=$('task-'+S.step);if(tk){e.preventDefault();tk.setAttribute('tabindex','-1');tk.focus();}}
+});
+/* /pep:component terminal js */
+var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+setTheme(mq&&mq.matches?'dark':'light');
+if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=qa('details[data-pep-optional]:not([open])');printOpened.forEach(function(x){x.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(x){x.open=false;});printOpened=[];});
+fresh();show(1,false);syncPrompt();
+})();
+</script>
+</body>
+</html>
