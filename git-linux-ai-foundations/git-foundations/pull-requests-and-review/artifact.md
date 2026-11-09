@@ -40,16 +40,42 @@ Review by Ana: "Please handle an empty cart." (changes requested)
 
 Checks and status: tests passing; open
 
+Practice repository Simulation: no real Git runs
+
+### Pull request #12 branch feature/cart-total
+
+Commits: your computer C5; GitHub none
+
+Pull request: not opened
+
+Review by Ana: -
+
+Checks and status: -
+
+New situation: PR #20 Simulation: no real Git runs
+
+### Pull request #20 base main ← head feature/search
+
+Approvals: 1 approved
+
+Checks: tests failing (required)
+
+Comments: 1 unresolved
+
 ## Recap
+
+All activities are finished. Read the recap, then move on.
 
 - A pull request asks to merge a head branch into a base branch, usually `main`, after review.
 - Answer a review comment with a new commit pushed to the same branch; the PR updates itself.
 - Merge only with approval, passing required checks and resolved comments.
 - Review AI-made changes at least as carefully; see AI Foundations for how.
 
-Next topic: Review: Git and the shell
-
 ## Cheat sheet
+
+Where to act: Start in the practice terminal; the GitHub actions sit beside it.
+
+Next step: GitHub can open a pull request only for a branch it has, so publish your branch first, and answer the review on that same branch.
 
 |  |  |
 | --- | --- |

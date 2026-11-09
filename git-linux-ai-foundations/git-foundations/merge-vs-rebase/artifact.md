@@ -34,16 +34,32 @@ Practice repository Simulation: no real Git runs
 2. C3 Add search HEAD → feature
 3. C2 Add cart
 
+Practice repository Simulation: no real Git runs
+
+1. C4 Fix tax main
+2. C3 Add search HEAD → feature
+3. C2 Add cart
+
+New situation: feature is pushed and shared Simulation: no real Git runs
+
+1. C4 Fix tax main
+2. C3 Add search HEAD → feature
+3. C2 Add cart
+
 ## Recap
+
+All activities are finished. Read the recap, then move on.
 
 - `git merge main` keeps all commits and adds a merge commit with two parents.
 - `git rebase main` replays your commits as new commits on main's tip, making a straight line.
 - Rebased commits get new IDs; the old ones are abandoned.
 - Never rebase commits others already have. When in doubt, merge.
 
-Next topic: Pull requests and review comments
-
 ## Cheat sheet
+
+Where to act: In the practice terminal on `feature`, then the restore action beside it.
+
+Next step: Try one way and read the history in the model, then restore the starting history before you try the other way.
 
 |  |  |
 | --- | --- |

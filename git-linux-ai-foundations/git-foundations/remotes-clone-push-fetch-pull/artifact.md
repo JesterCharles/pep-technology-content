@@ -49,16 +49,65 @@ Practice repository Simulation: no real Git runs
 
 GitHub SSH keys: id_ed25519.pub (public)
 
+Practice repository Simulation: no real Git runs
+
+### Your computer ~/.ssh has id_ed25519 and id_ed25519.pub
+
+No copy yet: clone to get one.
+
+### GitHub (origin) remote repository
+
+1. C2 Add cart main
+2. C1 Start shop
+
+GitHub SSH keys: none yet
+
+Practice repository Simulation: no real Git runs
+
+### Your computer local repository
+
+1. C2 Add cart HEAD → main origin/main
+2. C1 Start shop
+
+### GitHub (origin) remote repository
+
+1. C3 Sam: add search main
+2. C2 Add cart
+3. C1 Start shop
+
+GitHub SSH keys: id_ed25519.pub (public)
+
+New situation: before you commit C7 Simulation: no real Git runs
+
+### Your computer local repository
+
+1. C5 Add tax HEAD → main origin/main
+
+### GitHub (origin) remote repository
+
+1. C6 Teammate: fix tax main
+2. C5 Add tax
+
+GitHub SSH keys: id_ed25519.pub (public)
+
 ## Recap
+
+All activities are finished. Read the recap, then move on.
 
 - Share only the public key (`.pub`); the private key never leaves your computer.
 - `git clone` copies the history and sets up `origin`.
 - `git fetch` moves `origin/main` only; `git pull` also updates your branch, and stops if both sides changed unless a pull strategy is configured.
 - `git push` is accepted only when your branch already contains everything on GitHub.
 
-Next topic: Merge conflicts
-
 ## Cheat sheet
+
+Where to act: In the GitHub SSH keys action beside the terminal, before you clone.
+
+Next step: Share only the half of the key pair whose file name ends in `.pub`; then clone over SSH.
+
+Where to act: In the practice terminal, watching `origin/main` and `main` in the model.
+
+Next step: First use the command that moves only `origin/main`, then the one that also moves your branch, and push last.
 
 |  |  |
 | --- | --- |

@@ -42,16 +42,49 @@ Practice repository Simulation: no real Git runs
 
 Staging area: empty. Working copy changes: none.
 
+Practice repository Simulation: no real Git runs
+
+1. C3 Change price calc HEAD → main origin/main
+2. C2 Add cart
+3. C1 Start shop
+
+Staging area: empty. Working copy changes: none.
+
+Practice repository Simulation: no real Git runs
+
+1. C4 Add discount (missing a file) HEAD → main
+2. R1 Revert "Change price calc" origin/main
+3. C2 Add cart
+4. C1 Start shop
+
+Staging area: empty. Working copy changes: none.
+
+New situation: C9 is pushed and pulled Simulation: no real Git runs
+
+1. C9 Change build config HEAD → main origin/main
+2. C8 Add filters
+3. C7 Add search
+
+Staging area: empty. Working copy changes: none.
+
 ## Recap
+
+All activities are finished. Read the recap, then move on.
 
 - `git revert <commit>` adds a new commit that undoes an earlier one. History keeps the original. Use it for anything pushed.
 - `git reset` moves your branch back. Use it only for commits nobody else has.
 - `--soft` keeps the changes staged; the default keeps them unstaged; `--hard` throws them away.
 - A reset of pushed commits makes your history differ from everyone else's, and a normal push is rejected.
 
-Next topic: Stash: setting work aside
-
 ## Cheat sheet
+
+Where to act: In the practice terminal on `main`, where C3 is already pushed.
+
+Next step: Choose the undo that adds a new commit instead of moving `main` back, then share it with a normal push.
+
+Where to act: In the practice terminal, with C4 as your latest local commit.
+
+Next step: Move the branch back one commit with the reset option that leaves the commit's changes staged.
 
 |  |  |
 | --- | --- |

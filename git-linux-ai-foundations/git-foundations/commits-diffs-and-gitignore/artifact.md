@@ -46,16 +46,69 @@ Practice repository Simulation: no real Git runs
 
 - C1 Start shop app.js, notes.txt
 
+Practice repository Simulation: no real Git runs
+
+### Working copy files you edit
+
+- app.js modified
+- notes.txt modified
+- .env untracked
+
+### Staging area next commit
+
+- nothing staged
+
+### Commits history, newest first
+
+- C1 Start shop app.js, notes.txt, .gitignore
+
+Practice repository Simulation: no real Git runs
+
+### Working copy files you edit
+
+- .env untracked
+
+### Staging area next commit
+
+- nothing staged
+
+### Commits history, newest first
+
+- C2 Fix cart total app.js
+- C1 Start shop app.js, notes.txt, .gitignore
+
+New situation: config.js Simulation: no real Git runs
+
+### Working copy files you edit
+
+- config.js edited again after git add
+
+### Staging area next commit
+
+- config.js copied in by git add
+
+### Commits history, newest first
+
+- C4 Add config config.js
+
 ## Recap
+
+All activities are finished. Read the recap, then move on.
 
 - A change starts in the working copy; `git add` copies it into the staging area; `git commit` saves the staged snapshot to history.
 - `git diff` shows unstaged changes; `git diff --staged` shows what the next commit will hold.
 - Stage files by name for a focused commit. `git add .` stages everything that is not ignored, secrets included.
 - `.gitignore` keeps untracked files such as `.env` out. Commit `.gitignore` itself.
 
-Next topic: Branches and switching between them
-
 ## Cheat sheet
+
+Where to act: In the practice terminal, while the staging area is still empty.
+
+Next step: Stage the cart fix by its file name rather than everything, then compare staging with the last commit before you commit.
+
+Where to act: In the `.gitignore` file, through the practice terminal.
+
+Next step: Add a pattern that matches `.env` first; then stage only `.gitignore`, not everything, and commit it.
 
 |  |  |
 | --- | --- |
