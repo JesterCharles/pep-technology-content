@@ -57,9 +57,15 @@ test("task 2: the search box filters the list as you type", async () => {
 });
 
 test("task 3: one delegated click listener marks trails hiked without navigating", async () => {
+  // Comments are stripped but strings are kept, so the scan can see which
+  // element the listener was looked up on.
+  const commentStripped = appSource.replace(
+    /("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)|\/\/[^\n]*|\/\*[\s\S]*?\*\//g,
+    (match, stringLiteral) => stringLiteral ?? "",
+  );
   assert.ok(
-    /(?:trailList|querySelector\s*\(\s*""\s*\)|getElementById\s*\(\s*""\s*\))\s*\.addEventListener\s*\(/.test(
-      bareSource,
+    /(?:trailList|querySelector\s*\(\s*["']#trail-list["']\s*\)|getElementById\s*\(\s*["']trail-list["']\s*\))\s*\.addEventListener\s*\(/.test(
+      commentStripped,
     ),
     "attach the click listener to the trail list element itself (event delegation)",
   );
