@@ -12,36 +12,36 @@ $CATEGORY: java-foundations/http-and-javalin/routes-and-handlers-in-javalin
 }
 
 ::o1 reading a query parameter::A handler for GET /search receives GET /search?title\=Dune. Which call gives the String Dune? {
-=ctx.queryParam("title")#Correct. queryParam reads a value after the question mark.
 ~ctx.pathParam("title")#Not quite. pathParam reads a \{title\} segment of the route's path, and this route has none.
+=ctx.queryParam("title")#Correct. queryParam reads a value after the question mark.
 ~ctx.bodyAsClass(String.class)#Not quite. bodyAsClass reads the JSON request body, and a GET like this sends the title in the query.
 ~ctx.result("title")#Not quite. result sets the response body; it reads nothing from the request.
 }
 
 ::o2 status left unset::A handler calls ctx.json(author) and never calls ctx.status. What status does the response have? {
-=200#Correct. When a handler does not set the status, Javalin answers 200.
 ~201#Not quite. 201 is sent only when the handler sets it with ctx.status(201).
 ~204, because no status was given#Not quite. Leaving the status unset gives 200, not 204.
+=200#Correct. When a handler does not set the status, Javalin answers 200.
 ~500, because the status is missing#Not quite. A missing status call is not an error. 500 comes from an unhandled exception.
 }
 
 ::o2 sending JSON::A handler must answer with an author record as a JSON body. Which call does that? {
-=ctx.json(author)#Correct. json turns a record, list or Map into JSON and sets a JSON content type.
 ~ctx.result(author)#Not quite. result sends a text body; it does not turn a record into JSON.
 ~ctx.bodyAsClass(author)#Not quite. bodyAsClass reads the request body; it does not write the response.
 ~ctx.status(author)#Not quite. status takes a status code number, not a body.
+=ctx.json(author)#Correct. json turns a record, list or Map into JSON and sets a JSON content type.
 }
 
 ::o3 no matching handler::A handler throws IllegalArgumentException, and the app registers an exception handler only for IllegalStateException. What does the client get? {
-=500 with Javalin's server error response#Correct. No exception handler matches the thrown class or a superclass of it, so Javalin answers 500.
 ~The IllegalStateException handler's response, because both are exceptions#Not quite. An exception handler runs only for its own class or a subclass of it.
 ~200 with an empty body#Not quite. The exception stops the handler, so it never reaches a normal answer.
 ~404, because the handler failed#Not quite. The route did match. 404 is for requests that match no route.
+=500 with Javalin's server error response#Correct. No exception handler matches the thrown class or a superclass of it, so Javalin answers 500.
 }
 
 ::o3 what an exception handler receives::Which two values does Javalin pass to an exception handler registered with config.routes.exception? {
-=The exception that was thrown and the Context of the request#Correct. With both, the handler can read the exception's message and set the status and body.
 ~The request path and the status code#Not quite. The handler gets the Context, which gives access to the request, and the exception itself.
 ~Only the exception#Not quite. Without the Context, the handler could not set the response.
+=The exception that was thrown and the Context of the request#Correct. With both, the handler can read the exception's message and set the status and body.
 ~The original handler and the exception#Not quite. Javalin passes the exception and the Context, not the handler that threw.
 }

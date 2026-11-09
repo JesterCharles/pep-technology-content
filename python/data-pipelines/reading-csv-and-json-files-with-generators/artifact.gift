@@ -4,23 +4,23 @@
 $CATEGORY: python/data-pipelines/reading-csv-and-json-files-with-generators
 
 ::o1 csv row type::csv.DictReader reads a line id,qty with values 1,2. What is the type of row["qty"]? {
-=str #Correct. The csv module does not convert values; conversion is your job.
 ~int #Not quite. No inference happens; every value arrives as a string.
 ~float #Not quite. No numeric conversion happens at all.
 ~bytes #Not quite. A file opened in text mode gives decoded strings.
+=str #Correct. The csv module does not convert values; conversion is your job.
 }
 
 ::o1 encoding::Why name encoding\="utf-8" when opening a file in a pipeline? {
-=The default encoding depends on the machine, so the same file can decode differently #Correct. Explicit encoding keeps the read repeatable across machines.
 ~open() raises an error without it #Not quite. open() works without it, using the platform default.
 ~It makes the file read faster #Not quite. It controls decoding, not speed.
 ~It lets open() read JSON documents #Not quite. open() knows nothing about JSON; it only decodes text.
+=The default encoding depends on the machine, so the same file can decode differently #Correct. Explicit encoding keeps the read repeatable across machines.
 }
 
 ::o2 json load bound::A function calls json.load(f) and then yields each item of the result. What is true about memory? {
-=The whole document is in memory before the first yield #Correct. json.load parses everything first, so the generator bounds nothing.
 ~Only one item is in memory at a time #Not quite. That needs a source read record by record, such as JSON Lines.
 ~Memory is bounded because the function uses yield #Not quite. yield pauses the function; it does not change what was already loaded.
+=The whole document is in memory before the first yield #Correct. json.load parses everything first, so the generator bounds nothing.
 ~json.load streams one key at a time #Not quite. json.load returns the fully parsed document.
 }
 
@@ -32,8 +32,8 @@ $CATEGORY: python/data-pipelines/reading-csv-and-json-files-with-generators
 }
 
 ::o3 second pass::A pipeline logs a count by iterating a generator, then loads the same generator into a table. The table ends up empty and no error appears. What happened? {
-=The count exhausted the generator, so the load saw nothing #Correct. Generators are single-use and a second pass quietly yields nothing.
 ~The file was closed by the logger #Not quite. The logger does not touch the file; the generator was simply exhausted.
+=The count exhausted the generator, so the load saw nothing #Correct. Generators are single-use and a second pass quietly yields nothing.
 ~The generator rewound but the table rejected the rows #Not quite. Generators cannot rewind.
 ~StopIteration was swallowed by the database driver #Not quite. The driver received nothing to insert; the cause is the earlier exhaustion.
 }
