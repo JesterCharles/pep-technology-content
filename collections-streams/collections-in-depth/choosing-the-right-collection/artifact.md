@@ -8,11 +8,7 @@
 
 ## Teaching
 
-### Start with a guess
-
 A report reads elements by position, `list.get(i)`, a million times from a list of 100,000 names. It never inserts in the middle.
-
-### Four questions pick the collection
 
 1. Look up by key? Yes: a `Map`.
 2. Duplicates allowed? No: a `Set`. Yes, with positions: a `List`.
@@ -21,13 +17,9 @@ A report reads elements by position, `list.get(i)`, a million times from a list 
 
 State the need first, then name the class that meets it.
 
-### ArrayList beats LinkedList for index and iteration
-
 The ArrayList documentation states that `get` runs in constant time. A `LinkedList` reaches index i by walking node by node from the nearer end, so reading the middle is O(n).
 
 Iterating is O(n) for both, but Dev.java's comparison finds `LinkedList` slower in practice: each step follows a reference to another place in memory ("pointer chasing"). Its conclusion: `ArrayList` outperforms `LinkedList` in almost all the classical list operations. `LinkedList` only wins at the ends, where an `ArrayDeque` usually serves better.
-
-### When the output order is part of the requirement
 
 If a result must keep insertion order, use `LinkedHashMap` or `LinkedHashSet`. If it must be sorted by key, use `TreeMap` or `TreeSet`. If the data is already a list, sort the list itself with `list.sort(...)`. A `HashMap` gives no order, and a `PriorityQueue`'s iterator visits elements in no particular order.
 
@@ -45,14 +37,6 @@ Next topic: Sorting with Comparator
 
 ## Cheat sheet
 
-|  |  |
-| --- | --- |
-| List, by position, duplicates | `ArrayList` |
-| Unique, fast `contains` | `HashSet` (no order), `LinkedHashSet` (insertion), `TreeSet` (sorted) |
-| Key to value | `HashMap` (no order), `LinkedHashMap` (insertion), `TreeMap` (sorted) |
-| Stack or queue | `ArrayDeque` |
-| Smallest first | `PriorityQueue` (use `poll`, not iteration) |
-
 Optional challenge time: about 4 minutes, in addition to this topic's time.
 
 For each need, name the interface and the implementation you would choose, and the one fact that decided it: a duplicate rule, an output order or an operation cost.
@@ -62,6 +46,14 @@ For each need, name the interface and the implementation you would choose, and t
 3. A spelling checker loads 50,000 words once, then answers "is this word known?" many times; output order never matters.
 
 Success criteria: each answer names one interface and one implementation from this page and cites the stated need that decided it, and no choice relies on a cost or an order this page does not state.
+
+|  |  |
+| --- | --- |
+| List, by position, duplicates | `ArrayList` |
+| Unique, fast `contains` | `HashSet` (no order), `LinkedHashSet` (insertion), `TreeSet` (sorted) |
+| Key to value | `HashMap` (no order), `LinkedHashMap` (insertion), `TreeMap` (sorted) |
+| Stack or queue | `ArrayDeque` |
+| Smallest first | `PriorityQueue` (use `poll`, not iteration) |
 
 ## Sources
 

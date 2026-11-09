@@ -12,24 +12,6 @@
 <meta name="pep:position" content="8 of 9">
 <title>Choosing the right collection · Collections in Depth</title>
 <style>
-/* pep:component restart@1 css */
-button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
-.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
-.ghost:hover{background:var(--surface);border-color:var(--ink)}
-.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
-.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
-.primary:hover{filter:brightness(1.08)}
-.primary:active{transform:translateY(1px)}
-button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
-:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-[tabindex="-1"]:focus{outline:none}
-[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-/* /pep:component restart css */
-.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
-.pips{display:flex;gap:var(--s1)}
-.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
-.pip.on{background:var(--teal);border-color:var(--teal)}
-.pip.settled{background:repeating-linear-gradient(135deg,var(--amber) 0 3px,transparent 3px 6px);border-color:var(--amber)}
 /* pep:component predict@1 css */
 fieldset{margin:0;padding:0;border:0;min-width:0}
 legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
@@ -151,7 +133,7 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
 @media print {
   body { background: #FFFFFF; }
   .pep-noprint { display: none !important; }
-  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code { break-inside: avoid; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
   .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
 /* Components bridge: embedded components/*@1 fragments read these older names */
@@ -166,13 +148,15 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
 }
 /* Base, focus and motion */
 *, *::before, *::after { box-sizing: border-box; }
-html, body { margin: 0; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
 body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
 h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; }
 h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
 h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
-p, li { max-width: 68ch; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
 p { margin: 0; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
 a { color: var(--pep-accent-text); text-underline-offset: 3px; }
 a:hover { text-decoration-thickness: 2px; }
 code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
@@ -184,111 +168,159 @@ pre code { font-size: 1em; }
 [tabindex="-1"]:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
 ::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
 [hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
 }
-.pep-page { max-width: 1200px; margin: 0 auto; padding: 24px; }
-@media (max-width: 480px) { .pep-page { padding: 16px; } }
-/* Topic bar */
-.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+}
+/* Buttons */
+button { cursor: pointer; min-height: 44px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); padding: 10px 20px; }
+.pep-btn, .ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.ghost:hover, .pep-btn:hover { border-color: var(--pep-accent); }
+.ghost[aria-pressed="true"] { background: var(--pep-accent-soft); border: 2px solid var(--pep-accent); }
+.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
+.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+button:disabled, .primary:disabled, .pep-btn:disabled { cursor: not-allowed; background: var(--pep-control); color: var(--pep-text-muted); border: 1px solid var(--pep-line-strong); }
+/* Topic bar: the clearest accent surface */
+.pep-topicbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  padding: 12px 16px; margin: 0;
+  border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
 .pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
-.pep-topicbar__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; min-width: 0; }
-.pep-topicbar__meta .progress { font: inherit; color: inherit; }
-.pep-topicbar__meta #prog-text, .pep-topicbar__meta #path-text { color: var(--pep-text-strong); }
-.pep-topicbar__meta .pips { gap: 4px; }
-.pep-topicbar__meta .pip { width: 20px; height: 6px; border: 0; border-radius: var(--pep-radius-pill); background: var(--pep-control); outline: 1px solid var(--pep-line-strong); outline-offset: 0; }
-.pep-topicbar__meta .pip.on { background: var(--pep-accent); outline-color: var(--pep-accent); }
-.pep-topicbar__meta .pip.settled { background: var(--pep-warning); outline-color: var(--pep-warning); }
-/* Regions */
+.pep-topicbar__progress { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 4px; color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-topicbar__progress p { max-width: none; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; max-width: 220px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); outline: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done { background: var(--pep-accent); outline-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning); outline-color: var(--pep-warning); }
+.pep-progress > span.is-current { outline: 2px solid var(--pep-accent); }
+.pep-objectives { position: relative; break-inside: avoid; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; border-radius: var(--pep-radius-sm); }
+.pep-objectives > summary::marker { color: var(--pep-accent-text); }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; padding-left: 20px; }
+.pep-objectives li + li { margin-top: 8px; }
+@media (min-width: 640px) { .pep-objectives[open] > div { position: absolute; right: 0; z-index: 2; width: 360px; } }
+/* Activity timeline */
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 6px 12px 6px 6px; border: 1px solid transparent; border-radius: var(--pep-radius-md); color: var(--pep-text); font-weight: 600; text-decoration: none; }
+.pep-steps { counter-reset: pep-step; }
+.pep-step__n::before { counter-increment: pep-step; content: counter(pep-step); }
+.pep-step__n { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--pep-control); color: var(--pep-text); font-size: 13px; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-current="step"] .pep-step__n { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-step.is-done .pep-step__n { background: var(--pep-accent-soft); color: var(--pep-accent-text); outline: 1px solid var(--pep-accent); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+.pep-step__state { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+/* Activities and regions */
+.pep-activity { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.pep-activity > h2 { padding-bottom: 8px; border-bottom: 1px solid var(--pep-line-strong); }
 .pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
 @media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
 .pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.teach > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.pep-region--workspace, [data-pep-workspace] {
+  padding: 24px; border: 1px solid var(--pep-line-strong);
+  border-radius: var(--pep-radius-lg); background: var(--pep-card);
+}
+@media (max-width: 480px) { .pep-region--workspace, [data-pep-workspace] { padding: 16px; } }
+.teach { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .teach ul, .teach ol { margin: 0; padding-left: 24px; }
-.teach li + li { margin-top: 4px; }
-.pep-goalsbox { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); min-width: 0; }
-.pep-goalsbox h3 { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); text-transform: none; }
-.pep-goals { margin: 0; padding: 0; list-style: none; }
-.pep-goals > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding: 8px 0; border-top: 1px solid var(--pep-line-strong); max-width: none; }
-.pep-goals > li:first-child { border-top: 0; }
-.pep-goals .state { display: inline-flex; align-items: center; gap: 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; }
-.pep-goals .state svg { width: 16px; height: 16px; display: none; }
-.pep-goals .state::after { content: "open"; }
-.pep-goals > li[data-state="done"] .state { color: var(--pep-success); }
-.pep-goals > li[data-state="done"] .state svg { display: block; }
-.pep-goals > li[data-state="done"] .state::after { content: "done"; }
-.pep-goals > li[data-state="unmet"] .state { color: var(--pep-warning); }
-.pep-goals > li[data-state="unmet"] .state::after { content: "not met yet"; }
-.pep-goal-summary { font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
-.pep-steps-list { margin: 0; padding-left: 24px; }
-.pep-steps-list > li + li { margin-top: 8px; }
-.pep-steps-h { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin-bottom: 4px; }
-/* Workspace */
-.task { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
-.task:not(:has(> div:not([hidden]))) { display: none; }
-.task p { font-weight: 600; color: var(--pep-text-strong); }
-.task > div, .task > div > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-.model { margin: 0; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); min-width: 0; }
-.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); margin: 0 0 8px; }
-.model > div { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.model .note { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
-.control { min-width: 0; }
-.lk { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+.task { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task > div { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.task .pep-task-q { font-weight: 600; color: var(--pep-text-strong); }
+/* Required activity checks: accent tint and rail, never success green */
+.pep-activity-checks, [data-pep-activity-checks] {
+  padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px;
+  border-radius: var(--pep-radius-md); background: var(--pep-accent-soft);
+}
+.pep-activity-checks h3 { margin-bottom: 4px; }
+.pep-activity-checks ul { margin: 0; padding-left: 20px; }
+/* Where this fits */
+[data-pep-where-fits] {
+  display: flex; flex-direction: column; gap: 8px;
+  padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent);
+  border-radius: var(--pep-radius-md); background: var(--pep-card);
+}
+[data-pep-where-fits] strong { color: var(--pep-text-strong); }
+/* Progressive optional hints */
+.pep-hint, details[data-pep-hint] {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md);
+  background: var(--pep-accent-soft); break-inside: avoid;
+}
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { display: flex; flex-direction: column; gap: 8px; padding: 0 0 12px; }
+.pep-hint .pep-hint {
+  margin-inline-start: 12px; padding: 0; border: 0; border-block-start: 1px solid var(--pep-line-strong);
+  border-radius: 0; background: transparent;
+}
+/* Optional Anecdote and Challenge disclosures */
+.pep-optional {
+  min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong);
+  border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md);
+  background: var(--pep-card); break-inside: avoid;
+}
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
+.pep-optional > summary {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer;
+  color: var(--pep-text-strong); font-weight: 600;
+}
+.pep-optional > summary::marker { color: var(--pep-accent-text); }
+.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-optional__body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 16px; }
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+  .pep-step[aria-current="step"] { border-color: Highlight; }
+}
+/* Model, cells and lanes */
+.model { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.model figcaption { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.pep-lists { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 600px) { .pep-lists { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.pep-list { padding: 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.pep-list h3 { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 4px; }
+.pep-list__state { font-weight: 600; }
+.lk { margin: 0 0 4px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
 .sub { margin: 0 0 8px; font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
-.cells { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; padding: 0; list-style: none; min-height: 36px; }
-.cells li { font: 400 14px/20px var(--pep-font-mono); padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); overflow-wrap: anywhere; }
-.cells li.hot { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 3px 7px; }
-.cells li.gone { border-style: dashed; color: var(--pep-text-muted); text-decoration: line-through; }
-.cells li .ix { display: block; font-size: 12px; line-height: 16px; color: var(--pep-text-muted); }
-.out { margin: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; min-height: 44px; }
-.out .err { color: var(--pep-danger); font-weight: 700; }
-.out .okl { color: var(--pep-success); font-weight: 700; }
-.ops { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
-.ops button { font-family: var(--pep-font-mono); font-size: 14px; }
-.ops button[aria-pressed="true"] { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); color: var(--pep-text-strong); }
+.cells { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 8px; padding: 0; list-style: none; min-height: 32px; }
+.cells li { font: 400 14px/20px var(--pep-font-mono); padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); color: var(--pep-text-strong); overflow-wrap: anywhere; }
 .lanebtns { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
 .lanebtns button { min-width: 120px; max-width: 100%; overflow-wrap: anywhere; text-align: left; }
-.lane .lk { overflow-wrap: anywhere; }
-.snip { margin: 0 0 4px; }
 .lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
 .lane { padding: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); min-height: 80px; background: var(--pep-page); min-width: 0; }
+.lane .lk { overflow-wrap: anywhere; color: var(--pep-text-strong); }
 .cards { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; }
 .cards li { font-size: 14px; line-height: 20px; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); overflow-wrap: anywhere; }
 .cards li.revealed { border-style: dashed; border-color: var(--pep-warning); }
 .tag { display: inline-block; margin-left: 4px; font-size: 12px; line-height: 16px; font-weight: 700; color: var(--pep-warning); }
-table.grid, .recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
-table.grid th, table.grid td { border: 1px solid var(--pep-line-strong); padding: 8px 12px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
-table.grid th { background: var(--pep-card); font-weight: 600; color: var(--pep-text-strong); }
-.recap details { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
-.recap summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: flex; align-items: center; }
-.recap td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
-.sources ul { margin: 8px 0; padding-left: 24px; font-size: 14px; line-height: 20px; }
-.sources li { margin-bottom: 4px; overflow-wrap: anywhere; }
-.sources p { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
-.next-topic { font-weight: 600; color: var(--pep-text-strong); }
-.complete { padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
-.complete.settled { border-color: var(--pep-warning); background: var(--pep-warning-soft); }
 /* Component overrides: DESIGN.md look for the embedded @1 fragments (their bytes stay unchanged) */
-button { border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); padding: 10px 20px; }
-.ghost { background: var(--pep-control); color: var(--pep-text-strong); border: 1px solid var(--pep-line-strong); }
-.ghost:hover { background: var(--pep-control); border-color: var(--pep-accent); }
-.ghost[aria-pressed="true"] { background: var(--pep-accent-soft); border: 2px solid var(--pep-accent); }
-.primary { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); border: 1px solid var(--pep-accent-fill); }
-.primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); filter: none; }
-.primary:active { transform: none; }
-button:disabled, .primary:disabled { background: var(--pep-control); color: var(--pep-text-muted); border: 1px solid var(--pep-line-strong); }
 legend { font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); margin-bottom: 8px; }
 .opts { gap: 8px; }
-.opt { min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); font-size: 16px; line-height: 24px; box-shadow: none; }
+.opt { position: relative; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); font-size: 16px; line-height: 24px; box-shadow: none; }
 .opt:hover { border-color: var(--pep-accent); }
 .opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; box-shadow: none; }
 .opt:has(input:focus-visible) { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
 .opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
 .opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; box-shadow: none; }
 .opt.mine { border-color: var(--pep-accent); }
-.opt input { accent-color: var(--pep-accent-fill); }
-.opts.explained .opt { padding: 8px 16px; }
+.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.opt input:disabled { cursor: default; }
+.opt::before { content: ""; flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); }
+.opt:has(input:checked)::before { border: 6px solid var(--pep-accent); }
+.opt:has(input:disabled)::before { opacity: 0.6; }
+.opts.explained .opt { padding: 8px 16px; align-items: flex-start; }
+.opts.explained .opt::before { margin-top: 2px; }
 .oexp { font-size: 14px; line-height: 20px; color: var(--pep-text); border-top-color: var(--pep-line-strong); }
 .badge { font-size: 13px; line-height: 20px; font-weight: 600; border-radius: var(--pep-radius-pill); padding: 0 8px; }
 .badge.ok-b { color: var(--pep-success); border-color: var(--pep-success); }
@@ -296,10 +328,9 @@ legend { font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong)
 .badge.mine-b { color: var(--pep-text-strong); border-color: var(--pep-line-strong); }
 .conf legend { line-height: 44px; }
 .conf .opt { min-width: 96px; }
-.row { gap: 12px; }
-.fbrow { gap: 12px; }
+.row, .fbrow { gap: 12px; }
 .feedback { font-size: 14px; line-height: 20px; color: var(--pep-text); }
-.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
 .feedback .verdict { font-size: 16px; line-height: 24px; font-weight: 700; }
 .feedback .ok { color: var(--pep-success); }
 .feedback .no { color: var(--pep-danger); }
@@ -307,65 +338,30 @@ legend { font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong)
 .feedback .info { color: var(--pep-text-strong); }
 .feedback .conf-report { color: var(--pep-text-muted); }
 .feedback ul { padding-left: 24px; }
+@media (max-width: 480px) { .opts, .lanes { grid-template-columns: minmax(0, 1fr); } }
 /* Editor workspace */
 .pep-editor { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-sunken); overflow: hidden; min-width: 0; }
 .pep-editor__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; background: var(--pep-card); border-bottom: 1px solid var(--pep-line-strong); }
-.pep-editor__file { font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-right: auto; }
-.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; font: 400 14px/20px var(--pep-font-mono); }
+.pep-editor__file { min-width: 0; overflow-wrap: anywhere; font: 400 13px/20px var(--pep-font-mono); color: var(--pep-text-strong); padding: 4px 8px; border-bottom: 2px solid var(--pep-accent); margin-inline-end: auto; }
+.pep-editor__code { display: grid; grid-template-columns: auto minmax(0, 1fr); max-height: 400px; overflow: auto; overscroll-behavior: contain auto; font: 400 14px/20px var(--pep-font-mono); }
 .pep-editor__gutter { padding: 12px 8px 12px 12px; text-align: right; color: var(--pep-text-muted); user-select: none; font-variant-numeric: tabular-nums; white-space: pre; }
-.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: none; min-height: 160px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; width: 100%; min-width: 0; }
+.pep-editor__input { margin: 0; padding: 12px; border: 0; resize: vertical; min-width: 0; width: 100%; min-height: 160px; max-height: 400px; scroll-margin-block: 16px; background: transparent; color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); white-space: pre; overflow-wrap: normal; overflow-x: auto; tab-size: 4; }
 .pep-editor__input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -2px; }
 .pep-editor__scope { padding: 8px 12px; font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); max-width: none; }
 .pep-editor__tabs { display: flex; gap: 4px; padding: 0 12px; background: var(--pep-card); border-top: 1px solid var(--pep-line-strong); }
 .pep-editor__tabs [role="tab"] { min-height: 44px; padding: 0 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
 .pep-editor__tabs [role="tab"][aria-selected="true"] { color: var(--pep-text-strong); border-bottom-color: var(--pep-accent); }
-.pep-editor__panel { max-height: 240px; overflow: auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); background: var(--pep-sunken); }
-.pep-editor__panel .out { border: 0; padding: 0; background: transparent; }
+.pep-editor__panel { max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 12px; font: 400 14px/20px var(--pep-font-mono); color: var(--pep-text); background: var(--pep-sunken); }
+.pep-editor__panel pre { border: 0; padding: 0; background: transparent; }
 .pep-editor__empty { font-family: var(--pep-font-sans); color: var(--pep-text-muted); }
 .pep-editor__problem { display: block; width: 100%; min-height: 44px; text-align: left; padding: 8px; border: 0; border-radius: var(--pep-radius-sm); background: none; color: var(--pep-text); font: inherit; }
 .pep-editor__problem .kind-error { color: var(--pep-danger); font-weight: 700; } .pep-editor__problem .kind-limit { color: var(--pep-warning); font-weight: 700; }
 .pep-editor__status { padding: 8px 12px; background: var(--pep-control); color: var(--pep-text); font: 400 13px/20px var(--pep-font-sans); max-width: none; }
-/* No-JavaScript reading route */
-.pep-nojs-reading { display: flex; flex-direction: column; gap: 16px; max-width: 72ch; }
-.pep-nojs-reading section { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--pep-line-strong); }
-.pep-nojs-reading ul, .pep-nojs-reading ol { margin: 0; padding-left: 24px; }
-.pep-nojs-reading .pep-callout { padding: 12px 16px; border: 1px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); color: var(--pep-text-strong); }
-.pep-nojs-reading .pep-expected { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
-.pep-nojs-reading details { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
-.pep-nojs-reading summary { min-height: 44px; display: flex; align-items: center; font-weight: 600; color: var(--pep-text-strong); }
-.pep-nojs-reading table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
-.pep-nojs-reading td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
-@media (max-width: 480px) { .opts, .lanes { grid-template-columns: minmax(0, 1fr); } }
-/* Responsive, touch and optional-disclosure contract (DESIGN.md, data-pep-responsive) */
-html, body { max-width: 100%; overflow-x: clip; }
-p, li { overflow-wrap: anywhere; }
-img, svg, video, canvas { max-width: 100%; height: auto; }
-input, select, textarea, summary { font: inherit; }
-.pep-page, .pep-app { min-width: 0; }
-@media (max-width: 480px) {
-  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
-}
-/* Topic bar: progress wraps, Restart stays a visible 44 px target */
-.pep-topicbar__meta { flex: 1 1 260px; }
-.pep-topicbar__meta .pips { flex-wrap: wrap; }
-.pep-topicbar .pep-js-only { flex: 0 0 auto; }
-/* Choice cards: the whole card is the touch target; the native radio stays the focusable control */
-.opt { position: relative; }
-.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
-.opt input:disabled { cursor: default; }
-.opt::before { content: ""; flex: 0 0 auto; width: 20px; height: 20px; border: 2px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); }
-.opt:has(input:checked)::before { border: 6px solid var(--pep-accent); }
-.opt:has(input:disabled)::before { opacity: 0.6; }
-.opts.explained .opt::before { margin-top: 2px; }
-/* Editor: bounded, resizable, and reduced on phones without hiding Run, Reset, Problems, Output or status */
-.pep-editor__file { min-width: 0; overflow-wrap: anywhere; margin-right: 0; margin-inline-end: auto; }
-.pep-editor__code { overscroll-behavior: contain auto; }
-.pep-editor__input { resize: vertical; max-height: 400px; scroll-margin-block: 16px; }
-.pep-editor__panel { overscroll-behavior: contain auto; }
 @media (max-width: 480px) {
   .pep-editor__bar { align-items: stretch; }
   .pep-editor__file { flex: 1 1 100%; margin-inline-end: 0; }
-  .pep-editor__bar button { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__bar .pep-btn, .pep-editor__bar button { flex: 1 1 calc(50% - 4px); }
+  .pep-editor__secondary { display: none; }
   .pep-editor__code, .pep-editor__input { max-height: 240px; }
   .pep-editor__code { font-size: 16px; line-height: 24px; }
   .pep-editor__input { min-height: 160px; font-size: 16px; line-height: 24px; }
@@ -373,121 +369,128 @@ input, select, textarea, summary { font: inherit; }
   .pep-editor__tabs [role="tab"] { flex: 1 1 120px; }
   .pep-editor__panel { max-height: 180px; }
 }
-/* Optional Anecdote and Challenge disclosures */
-.pep-optional { min-width: 0; border-block: 1px solid var(--pep-line-strong); background: transparent; break-inside: avoid; }
-.pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; list-style: none; }
-.pep-optional > summary::-webkit-details-marker { display: none; }
-.pep-optional > summary::before { content: ""; flex: 0 0 auto; width: 8px; height: 8px; margin: 0 4px; border-right: 2px solid var(--pep-accent-text); border-bottom: 2px solid var(--pep-accent-text); transform: rotate(-45deg); }
-.pep-optional[open] > summary::before { transform: rotate(45deg); }
-.pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
-.pep-optional__cue { margin-inline-start: auto; }
-.pep-optional__body { display: flex; flex-direction: column; gap: 12px; padding: 4px 0 16px; }
-.pep-optional__body ol { margin: 0; padding-left: 24px; }
-.pep-optional__body li + li { margin-top: 4px; }
-/* Reading version (no JavaScript) */
-.pep-nojs-code pre { margin: 0; }
+/* Navigation */
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn, .pep-activity-actions button { flex: 0 1 auto; } }
+.pep-back a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+/* Recap */
+.recap { display: flex; flex-direction: column; gap: 12px; padding-top: 16px; border-top: 1px solid var(--pep-line-strong); }
+.recap ul { margin: 0; padding-left: 24px; }
+.recap li + li { margin-top: 4px; }
+.recap details { padding: 0 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.recap details > summary { cursor: pointer; font-weight: 600; color: var(--pep-text-strong); min-height: 44px; display: flex; align-items: center; }
+.recap details > :last-child { margin-bottom: 12px; }
+.recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+.recap td { padding: 4px 12px 4px 0; vertical-align: top; overflow-wrap: anywhere; }
+.sources ul { margin: 8px 0; padding-left: 24px; font-size: 14px; line-height: 20px; }
+.sources li { margin-bottom: 4px; overflow-wrap: anywhere; }
+.sources p { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
+.next-topic { font-weight: 600; color: var(--pep-text-strong); }
+.complete { padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete.settled { border-color: var(--pep-warning); background: var(--pep-warning-soft); }
+.complete:empty { display: none; }
+/* Static expected results: no-JavaScript reading only */
+.pep-expected { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.pep-expected ul { margin: 4px 0 0; padding-left: 20px; }
+.pep-nojs-note { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text-strong); }
+.pep-nojs-code { display: flex; flex-direction: column; gap: 12px; }
 @media print {
-  .pep-optional > summary::before { display: none; }
-  .pep-optional { break-inside: avoid; }
-  [data-step][hidden] { display: block !important; }
-  [data-pep-recap][hidden] { display: block !important; }
+  [data-pep-activity][hidden], [data-pep-recap][hidden] { display: flex !important; }
+  .pep-nav, .pep-activity-actions, .pep-back, #reset, .pep-progress { display: none !important; }
+  .pep-topicbar, .pep-region--workspace, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+  }
+  .pep-objectives[open] > div { position: static; width: auto; }
+  .pep-activity { break-before: auto; }
   [data-pep-print-items]::after { content: "Practice items (answers omitted):\A" attr(data-pep-print-items); display: block; margin-top: 12px; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); white-space: pre-wrap; }
-  /* Flatten the two screen regions into activity order for the printed handout. */
-  #stage { display: flex !important; flex-direction: column; gap: 16px; }
-  .pep-reading, .pep-workspace, #current-teaching, #current-steps, #current-task, #model, #current-control { display: contents !important; }
-  .pep-goalsbox { order: 1; }
-  #current-teaching > [data-step="1"] { order: 10; }
-  #current-steps > [data-step="1"] { order: 11; }
-  #current-task > [data-step="1"] { order: 12; }
-  #model > [data-step="1 4 5"] { order: 13; }
-  #current-control > [data-step="1"] { order: 14; }
-  #current-teaching > [data-step="2"] { order: 20; break-before: page; }
-  #current-steps > [data-step="2"] { order: 21; }
-  #model > [data-step="2"] { order: 22; }
-  #current-control > [data-step="2"] { order: 23; }
-  #current-teaching > [data-step="3"] { order: 30; break-before: page; }
-  #current-steps > [data-step="3"] { order: 31; }
-  #model > [data-step="3"] { order: 32; }
-  #current-control > [data-step="3"] { order: 33; }
-  #current-teaching > [data-step="4"] { order: 40; break-before: page; }
-  #current-steps > [data-step="4"] { order: 41; }
-  #current-task > [data-step="4"] { order: 42; }
-  #current-control > [data-step="4"] { order: 43; }
-  #current-teaching > [data-step="5"] { order: 50; break-before: page; }
-  #current-teaching > [data-step="1"]::before { content: "Activity 1 of 4"; font-weight: 700; }
-  #current-teaching > [data-step="2"]::before { content: "Activity 2 of 4"; font-weight: 700; }
-  #current-teaching > [data-step="3"]::before { content: "Activity 3 of 4"; font-weight: 700; }
-  #current-teaching > [data-step="4"]::before { content: "Activity 4 of 4"; font-weight: 700; }
-  #m-cap, #goal-summary, .feedback { display: none !important; }
 }
+/* page-local practice styles carried from the previous layout */
+.pep-steps-list { margin: 0; padding-left: 24px; }
+.pep-steps-list > li + li { margin-top: 8px; }
+.out { margin: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; min-height: 44px; }
+.out .err { color: var(--pep-danger); font-weight: 700; }
+.out .okl { color: var(--pep-success); font-weight: 700; }
+.ops { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.ops button { font-family: var(--pep-font-mono); font-size: 14px; }
+.ops button[aria-pressed="true"] { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); color: var(--pep-text-strong); }
+table.grid, .recap table { border-collapse: collapse; width: 100%; font: 400 14px/20px var(--pep-font-sans); }
+table.grid th, table.grid td { border: 1px solid var(--pep-line-strong); padding: 8px 12px; text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+table.grid th { background: var(--pep-card); font-weight: 600; color: var(--pep-text-strong); }
+.pep-editor__panel .out { border: 0; padding: 0; background: transparent; }
+
+/* page-local step bench styles */
+.cells li.hot { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 3px 7px; }
+.model .note { font-size: 14px; line-height: 20px; color: var(--pep-text-muted); }
 </style>
-<noscript><style>.pep-js-only,.pep-reading>:not(noscript):not(.pep-optional),.pep-workspace>:not(noscript):not(.pep-optional){display:none!important}.pep-regions{display:flex!important;flex-direction:column}</style></noscript>
+<noscript><style>.pep-js-only{display:none!important}</style></noscript>
 </head>
 <body>
-<div class="pep-page">
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-path-settled="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="12">
 <header class="pep-topicbar">
-  <h1>Choosing the right collection</h1>
-  <div class="pep-topicbar__meta"><div class="pep-js-only">
-      <div class="progress" data-pep-progress id="progress"><span id="path-text">Answered 0 of 4</span><span id="prog-text">Completed 0 of 4</span><span class="pips" aria-hidden="true"><span class="pip" data-k="predict"></span><span class="pip" data-k="x1"></span><span class="pip" data-k="x2"></span><span class="pip" data-k="apply"></span></span></div>
-</div><span class="pep-minutes">about 12 min</span></div>
-  <div class="pep-js-only">
-<!-- pep:component restart@1 html -->
-      <button type="button" class="ghost" id="reset" data-pep-reset>Restart this activity</button>
-<!-- /pep:component restart html -->
+  <h1 id="page-title">Choosing the right collection</h1>
+  <div class="pep-topicbar__progress progress">
+    <p><span class="pep-js-only"><span id="pos-text">Activity 1 of 4</span> · <span id="path-text">Answered 0 of 4</span> · <span id="prog-text">Completed 0 of 4</span> · </span>about 12 min</p>
+    <div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
   </div>
+  <details class="pep-objectives" data-pep-objectives>
+    <summary aria-controls="objectives-body">Objectives</summary>
+    <div id="objectives-body"><ul>
+      <li>Choose a collection implementation from stated needs for duplicates, ordering, lookup by key and access pattern, and justify the choice</li>
+      <li>Justify ArrayList over LinkedList for indexed access and iteration using the operation costs the Java API documentation states</li>
+      <li>Pick LinkedHashMap, TreeMap or a sorted list when a result must keep insertion order or sorted order</li>
+    </ul></div>
+  </details>
+  <button type="button" class="pep-btn pep-js-only" id="reset" data-pep-reset>Restart activity</button>
+  <p class="vh" id="restart-status" role="status" aria-live="polite"></p>
 </header>
-<main id="lesson" class="pep-app" data-pep-responsive data-pep-complete="false" data-pep-path-settled="false">
-  <div class="pep-regions" id="stage" data-at="1">
-    <section class="pep-region pep-reading" aria-label="Reading and steps" data-pep-instructions>
-      <noscript data-section-skip><div class="pep-nojs-reading">
-<p class="pep-callout"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. Every teaching step is below, and each activity is listed with its expected results and why.</p>
-<section><h2>Goals</h2><ul><li>Choose a collection implementation from stated needs for duplicates, ordering, lookup by key and access pattern, and justify the choice</li><li>Justify ArrayList over LinkedList for indexed access and iteration using the operation costs the Java API documentation states</li><li>Pick LinkedHashMap, TreeMap or a sorted list when a result must keep insertion order or sorted order</li></ul></section>
-<section><h2>Start with a guess</h2><p>A report reads elements by position, <code>list.get(i)</code>, a million times from a list of 100,000 names. It never inserts in the middle.</p><h3>Activity 1 of 4: Prediction (practice, not scored)</h3><p>Which list fits, and why?</p><p class="pep-expected"><strong>Expected results and why:</strong> Prediction (practice, not scored): a report calls list.get(i) a million times on 100,000 names and never inserts in the middle. Options: ArrayList, because get by index runs in constant time (correct); LinkedList, because it is faster for big lists (wrong: LinkedList reaches an index by walking nodes); either, because both are lists (wrong: their get costs differ); a HashSet (wrong: a set has no positions).</p></section>
-<section><h2>The model</h2><p>The model: a short decision path. Key lookup leads to a map; uniqueness to a set; positions and duplicates to a list. The required output order then picks the hash, linked-hash or tree version, and the access pattern picks between an array-backed list, a deque at the ends, or a priority queue for smallest-first.</p></section>
-<section><h2>Four questions pick the collection</h2><ol>
-            <li><strong>Look up by key?</strong> Yes: a <code>Map</code>.</li>
-            <li><strong>Duplicates allowed?</strong> No: a <code>Set</code>. Yes, with positions: a <code>List</code>.</li>
-            <li><strong>Which order on output?</strong> None needed: <code>HashSet</code> or <code>HashMap</code>. Insertion order: <code>LinkedHashSet</code> or <code>LinkedHashMap</code>. Sorted: <code>TreeSet</code> or <code>TreeMap</code>.</li>
-            <li><strong>Which access pattern?</strong> By index or full scans: <code>ArrayList</code>. Only at the ends, as a stack or queue: <code>ArrayDeque</code>. Always the smallest next: <code>PriorityQueue</code>.</li>
-          </ol><p>State the need first, then name the class that meets it.</p><h3>Activity 2 of 4: Sorting practice</h3><p>For each need, choose the implementation that meets it.</p><p class="pep-expected"><strong>Expected results and why:</strong> Sorting activity, need and implementation: unique tags with fast contains and no order needed: HashSet. Look up a price by product code: HashMap. Cart items by position, duplicates allowed: ArrayList. Undo history, last action first: ArrayDeque. Word counts printed alphabetically: TreeMap. Settings printed in the order they were added: LinkedHashMap.</p></section>
-<section><h2>ArrayList beats LinkedList for index and iteration</h2><p>The ArrayList documentation states that <code>get</code> runs in constant time. A <code>LinkedList</code> reaches index <em>i</em> by walking node by node from the nearer end, so reading the middle is O(n).</p><p>Iterating is O(n) for both, but Dev.java's comparison finds <code>LinkedList</code> slower in practice: each step follows a reference to another place in memory ("pointer chasing"). Its conclusion: <code>ArrayList</code> outperforms <code>LinkedList</code> in almost all the classical list operations. <code>LinkedList</code> only wins at the ends, where an <code>ArrayDeque</code> usually serves better.</p><h3>Activity 3 of 4: Practice</h3><p>Compare the two lists on a list of 10,000 elements. Find an operation where <code>ArrayList</code> is clearly cheaper, and one where both cost about the same number of steps.</p><p class="pep-expected"><strong>Expected results and why:</strong> Step bench, n = 10,000, steps derived from each class's access method: get(5000) costs 1 array read on ArrayList and about 5,000 node hops on LinkedList (walk from the nearer end). get(0) costs 1 step on both. A full for-each loop visits 10,000 elements on both (the same O(n), though Dev.java finds LinkedList slower in practice because of pointer chasing). add at the end costs about 1 step on both (amortized constant for ArrayList).</p></section>
-<section><h2>When the output order is part of the requirement</h2><p>If a result must keep insertion order, use <code>LinkedHashMap</code> or <code>LinkedHashSet</code>. If it must be sorted by key, use <code>TreeMap</code> or <code>TreeSet</code>. If the data is already a list, sort the list itself with <code>list.sort(...)</code>. A <code>HashMap</code> gives no order, and a <code>PriorityQueue</code>'s iterator visits elements in no particular order.</p><h3>Activity 4 of 4: Final check</h3><div><p>A report counts words and must print each word with its count in the order the words first appeared. Which map should hold the counts?</p></div><p><strong>Retry form, if the first answer is wrong:</strong></p><div><p>Same report, new requirement: print the words sorted alphabetically. Which choice gives that order when the map is printed?</p></div><p class="pep-expected"><strong>Expected results and why:</strong> Apply question: word counts printed in the order words first appeared: a LinkedHashMap, which keeps insertion order (and a repeated put does not move a key). Wrong: HashMap (no order guarantee); TreeMap (sorted, not first-appearance order); ArrayList of words (loses the counts and keeps duplicates). Retry form: printed alphabetically: a TreeMap, which sorts keys by natural ordering. Wrong: LinkedHashMap (insertion order); HashMap (no order); PriorityQueue of words (its iterator and printing follow no particular order).</p></section>
-<section><h2>Recap</h2><ul>
-            <li>Ask in order: lookup by key, duplicates, output order, access pattern; then pick the class.</li>
-            <li><code>ArrayList</code> over <code>LinkedList</code> for indexed access (stated constant-time <code>get</code> against a node-by-node walk) and for iteration (no pointer chasing).</li>
-            <li>Insertion order: <code>LinkedHashMap</code>. Sorted by key: <code>TreeMap</code>. Already a list: sort it.</li>
-          </ul><details>
-            <summary>Cheat sheet</summary>
-            <table>
-              <tbody><tr><td>List, by position, duplicates</td><td><code>ArrayList</code></td></tr>
-              <tr><td>Unique, fast <code>contains</code></td><td><code>HashSet</code> (no order), <code>LinkedHashSet</code> (insertion), <code>TreeSet</code> (sorted)</td></tr>
-              <tr><td>Key to value</td><td><code>HashMap</code> (no order), <code>LinkedHashMap</code> (insertion), <code>TreeMap</code> (sorted)</td></tr>
-              <tr><td>Stack or queue</td><td><code>ArrayDeque</code></td></tr>
-              <tr><td>Smallest first</td><td><code>PriorityQueue</code> (use <code>poll</code>, not iteration)</td></tr>
-            </tbody></table>
-          </details><details class="sources">
-            <summary>Sources and review date</summary>
-            <p>Claims on this page were checked against the live official pages below on 14 October 2026 (UTC), for Java SE 25. Links open outside this lesson.</p>
-            <ul>
-              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/doc-files/coll-overview.html" rel="noopener">Collections Framework Overview (Java SE 25)</a>: the general-purpose implementations.</li>
-              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/ArrayList.html" rel="noopener">ArrayList (Java SE 25 API)</a>: get in constant time.</li>
-              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/LinkedList.html" rel="noopener">LinkedList (Java SE 25 API)</a>: indexing traverses from the nearer end.</li>
-              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/LinkedHashMap.html" rel="noopener">LinkedHashMap (Java SE 25 API)</a>: insertion order.</li>
-              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/TreeMap.html" rel="noopener">TreeMap (Java SE 25 API)</a>: sorted by natural ordering or a comparator.</li>
-              <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/PriorityQueue.html" rel="noopener">PriorityQueue (Java SE 25 API)</a>: head is the least element; the iterator has no particular order.</li>
-              <li><a href="https://dev.java/learn/api/collections-and-streams/collections-framework/arraylist-vs-linkedlist/" rel="noopener">Dev.java: Choosing Between ArrayList and LinkedList</a>: pointer chasing; which implementation to choose.</li>
-              <li><a href="https://dev.java/learn/api/collections-and-streams/collections-framework/organization/" rel="noopener">Dev.java: Getting to Know the Collection Hierarchy</a>; <a href="https://dev.java/learn/api/collections-and-streams/collections-framework/sets/" rel="noopener">Dev.java: Sets</a>; <a href="https://dev.java/learn/api/collections-and-streams/collections-framework/sorted-maps/" rel="noopener">Dev.java: SortedMap and NavigableMap</a>.</li>
-            </ul>
-            <p>Derived, not stated: the step counts in the practice model follow from the documented access methods; they are not timings.</p>
-          </details><p class="next-topic">Next topic: Sorting with Comparator</p></section>
-</div></noscript>
-      <div id="current-teaching" class="teach">
-        <div data-step="1" data-pep-teaching>
-          <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
+<nav class="pep-nav" aria-label="Activities"><ol class="pep-steps">
+  <li><a class="pep-step" id="tl-1" href="#activity-1" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Guess</a></li>
+  <li><a class="pep-step" id="tl-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Sort</a></li>
+  <li><a class="pep-step" id="tl-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Compare</a></li>
+  <li><a class="pep-step" id="tl-4" href="#activity-4" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Choice</a></li>
+</ol></nav>
+<noscript data-section-skip><p class="pep-nojs-note"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. All four activities follow in order, each with its expected results and why.</p></noscript>
+
+<section id="activity-1" class="pep-activity" data-pep-activity aria-labelledby="a1-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a1-h" tabindex="-1">Activity 1: Start with a guess</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
           <p>A report reads elements by position, <code>list.get(i)</code>, a million times from a list of 100,000 names. It never inserts in the middle.</p>
-        </div>
-        <div data-step="2" hidden data-pep-teaching>
-          <h2 id="teach-2-h" tabindex="-1">Four questions pick the collection</h2>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-1-box" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li>Read the example.</li><li>Choose an answer, then how sure you are.</li><li>Press <strong>Check prediction</strong> to see why each option is right or wrong.</li></ol>
+<p id="task-1">Which list fits, and why?</p>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to a guess first.</p></section>
+      <div class="pep-js-only">
+<fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict data-static-alt="Prediction (practice, not scored): a report calls list.get(i) a million times on 100,000 names and never inserts in the middle. Options: ArrayList, because get by index runs in constant time (correct); LinkedList, because it is faster for big lists (wrong: LinkedList reaches an index by walking nodes); either, because both are lists (wrong: their get costs differ); a HashSet (wrong: a set has no positions).">
+            <legend>Your prediction</legend>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="predict" id="p-al" value="al" aria-describedby="task-1"><span class="ot"><code>ArrayList</code>: <code>get(i)</code> is constant time</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-ll" value="ll" aria-describedby="task-1"><span class="ot"><code>LinkedList</code>: better for big lists</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-either" value="either" aria-describedby="task-1"><span class="ot">Either: both are lists</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-set" value="set" aria-describedby="task-1"><span class="ot"><code>HashSet</code>: lookups are constant time</span></label>
+            </div>
+            <div class="row"><fieldset class="conf" id="conf0" data-pep-confidence aria-describedby="conf0-instr"><legend id="conf0-instr">How sure are you?</legend><label class="opt"><input type="radio" name="conf0" id="conf0-low" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-medium" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-high" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check aria-describedby="conf0-instr" disabled>Check prediction</button></div>
+          </fieldset>
+      </div>
+      <div class="feedback" id="fb-1" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><h3>Activity 1 of 4: Prediction (practice, not scored)</h3><p>Which list fits, and why?</p><p class="pep-expected"><strong>Expected results and why:</strong> Prediction (practice, not scored): a report calls list.get(i) a million times on 100,000 names and never inserts in the middle. Options: ArrayList, because get by index runs in constant time (correct); LinkedList, because it is faster for big lists (wrong: LinkedList reaches an index by walking nodes); either, because both are lists (wrong: their get costs differ); a HashSet (wrong: a set has no positions).</p></div></noscript>
+    </div>
+  </div>
+</section>
+
+<section id="activity-2" class="pep-activity" data-pep-activity aria-labelledby="a2-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a2-h" tabindex="-1">Activity 2: Four questions pick the collection</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <p data-pep-model>The model: a short decision path. Key lookup leads to a map; uniqueness to a set; positions and duplicates to a list. The required output order then picks the hash, linked-hash or tree version, and the access pattern picks between an array-backed list, a deque at the ends, or a priority queue for smallest-first.</p>
+      <div class="teach" data-pep-teaching>
           <ol>
             <li><strong>Look up by key?</strong> Yes: a <code>Map</code>.</li>
             <li><strong>Duplicates allowed?</strong> No: a <code>Set</code>. Yes, with positions: a <code>List</code>.</li>
@@ -495,18 +498,144 @@ input, select, textarea, summary { font: inherit; }
             <li><strong>Which access pattern?</strong> By index or full scans: <code>ArrayList</code>. Only at the ends, as a stack or queue: <code>ArrayDeque</code>. Always the smallest next: <code>PriorityQueue</code>.</li>
           </ol>
           <p>State the need first, then name the class that meets it.</p>
-        </div>
-        <div data-step="3" hidden data-pep-teaching>
-          <h2 id="teach-3-h" tabindex="-1">ArrayList beats LinkedList for index and iteration</h2>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-2-box" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li id="task-2">For each need, choose the implementation that meets it.</li><li>A wrong choice gets one retry, then the answer shows.</li></ol>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>Every need sits under the implementation that meets it.</p></section>
+      <div class="pep-js-only">
+<fieldset id="x1" data-interaction="drag" data-pep-explore aria-describedby="task-2" data-pep-print-items="Choose an implementation for each need: unique tags with fast contains and no order; price by product code; cart items by position with duplicates; undo history last-first; word counts alphabetically; settings in insertion order." data-static-alt="Sorting activity, need and implementation: unique tags with fast contains and no order needed: HashSet. Look up a price by product code: HashMap. Cart items by position, duplicates allowed: ArrayList. Undo history, last action first: ArrayDeque. Word counts printed alphabetically: TreeMap. Settings printed in the order they were added: LinkedHashMap.">
+            <legend id="ln-legend">Need: <span id="ln-name"></span></legend>
+            <div class="lanebtns" id="ln-btns"></div>
+            <p class="sub" id="ln-count">0 of 6 sorted</p>
+          </fieldset>
+          <figure class="model" aria-labelledby="m-cap-2">
+          <figcaption id="m-cap-2">Needs to implementation</figcaption>
+          <div class="lanes" id="m-lanes"></div>
+          </figure>
+      </div>
+      <div class="feedback" id="fb-2" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><h3>Activity 2 of 4: Sorting practice</h3><p>For each need, choose the implementation that meets it.</p><p class="pep-expected"><strong>Expected results and why:</strong> Sorting activity, need and implementation: unique tags with fast contains and no order needed: HashSet. Look up a price by product code: HashMap. Cart items by position, duplicates allowed: ArrayList. Undo history, last action first: ArrayDeque. Word counts printed alphabetically: TreeMap. Settings printed in the order they were added: LinkedHashMap.</p></div></noscript>
+      <p class="pep-back"><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-3" class="pep-activity" data-pep-activity aria-labelledby="a3-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a3-h" tabindex="-1">Activity 3: ArrayList beats LinkedList for index and iteration</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
           <p>The ArrayList documentation states that <code>get</code> runs in constant time. A <code>LinkedList</code> reaches index <em>i</em> by walking node by node from the nearer end, so reading the middle is O(n).</p>
           <p>Iterating is O(n) for both, but Dev.java's comparison finds <code>LinkedList</code> slower in practice: each step follows a reference to another place in memory ("pointer chasing"). Its conclusion: <code>ArrayList</code> outperforms <code>LinkedList</code> in almost all the classical list operations. <code>LinkedList</code> only wins at the ends, where an <code>ArrayDeque</code> usually serves better.</p>
-        </div>
-        <div data-step="4" hidden data-pep-teaching>
-          <h2 id="teach-4-h" tabindex="-1">When the output order is part of the requirement</h2>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-3-box" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li id="task-3">Compare the two lists on a list of 10,000 elements. Find an operation where <code>ArrayList</code> is clearly cheaper, and one where both cost about the same number of steps.</li><li><strong>Continue</strong> appears once the task is met.</li></ol>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>You find one clear <code>ArrayList</code> advantage and one operation with about the same step count.</p></section>
+      <div class="pep-js-only">
+<fieldset id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-pep-print-items="At n = 10,000 compare ArrayList and LinkedList for get(5000), get(0), a full for-each, and add at the end. Record the step model and find one clear ArrayList advantage plus one operation with about the same step count." data-static-alt="Step bench, n = 10,000, steps derived from each class's access method: get(5000) costs 1 array read on ArrayList and about 5,000 node hops on LinkedList (walk from the nearer end). get(0) costs 1 step on both. A full for-each loop visits 10,000 elements on both (the same O(n), though Dev.java finds LinkedList slower in practice because of pointer chasing). add at the end costs about 1 step on both (amortized constant for ArrayList).">
+            <legend>Choose an operation</legend>
+            <div class="ops" id="bops">
+              <button type="button" class="ghost" id="b-mid">get(5000)</button>
+              <button type="button" class="ghost" id="b-first">get(0)</button>
+              <button type="button" class="ghost" id="b-loop">for-each over all</button>
+              <button type="button" class="ghost" id="b-add">add(x) at the end</button>
+            </div>
+          </fieldset>
+          <figure class="model" aria-labelledby="m-cap-3">
+          <figcaption id="m-cap-3">Step bench</figcaption>
+          <table class="grid">
+            <tr><th scope="col">Operation, n = 10,000</th><th scope="col">ArrayList</th><th scope="col">LinkedList</th></tr>
+            <tr><td id="b-op">Choose an operation</td><td id="b-al">-</td><td id="b-ll">-</td></tr>
+          </table>
+          <p class="note" id="b-note">Steps are derived from how each class reaches elements, not measured times.</p>
+          <p class="lk" id="m-found-k">Found so far</p>
+          <ul class="cells" id="m-found" aria-labelledby="m-found-k"></ul>
+          </figure>
+      </div>
+      <div class="feedback" id="fb-3" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><h3>Activity 3 of 4: Practice</h3><p>Compare the two lists on a list of 10,000 elements. Find an operation where <code>ArrayList</code> is clearly cheaper, and one where both cost about the same number of steps.</p><p class="pep-expected"><strong>Expected results and why:</strong> Step bench, n = 10,000, steps derived from each class's access method: get(5000) costs 1 array read on ArrayList and about 5,000 node hops on LinkedList (walk from the nearer end). get(0) costs 1 step on both. A full for-each loop visits 10,000 elements on both (the same O(n), though Dev.java finds LinkedList slower in practice because of pointer chasing). add at the end costs about 1 step on both (amortized constant for ArrayList).</p></div></noscript>
+      <p class="pep-back"><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-4" class="pep-activity" data-pep-activity aria-labelledby="a4-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a4-h" tabindex="-1">Activity 4: When the output order is part of the requirement</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
           <p>If a result must keep insertion order, use <code>LinkedHashMap</code> or <code>LinkedHashSet</code>. If it must be sorted by key, use <code>TreeMap</code> or <code>TreeSet</code>. If the data is already a list, sort the list itself with <code>list.sort(...)</code>. A <code>HashMap</code> gives no order, and a <code>PriorityQueue</code>'s iterator visits elements in no particular order.</p>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-apply" class="task" data-pep-task>
+        <h3>Your task</h3>
+        <ol class="pep-steps-list" aria-label="Steps"><li>Read the question below.</li><li>Choose an answer and how sure you are, then press <strong>Check answer</strong>.</li><li>A wrong first answer gets one retry.</li></ol>
+<div id="task-4"><p>A report counts words and must print each word with its count in the order the words first appeared. Which map should hold the counts?</p></div>
+          <div id="task-4b" tabindex="-1" hidden><p>Same report, new requirement: print the words sorted alphabetically. Which choice gives that order when the map is printed?</p></div>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>You pick the choice that gives the required print order.</p></section>
+      <div class="pep-js-only">
+<fieldset id="apply" data-interaction="mcq" data-confidence data-pep-apply data-static-alt="Apply question: word counts printed in the order words first appeared: a LinkedHashMap, which keeps insertion order (and a repeated put does not move a key). Wrong: HashMap (no order guarantee); TreeMap (sorted, not first-appearance order); ArrayList of words (loses the counts and keeps duplicates). Retry form: printed alphabetically: a TreeMap, which sorts keys by natural ordering. Wrong: LinkedHashMap (insertion order); HashMap (no order); PriorityQueue of words (its iterator and printing follow no particular order).">
+            <legend>The choice</legend>
+            <div class="opts one" id="a1">
+              <label class="opt"><input type="radio" name="a1" id="a1-hash" value="hash" aria-describedby="task-4"><span class="ot"><code>HashMap</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-linked" value="linked" aria-describedby="task-4"><span class="ot"><code>LinkedHashMap</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-tree" value="tree" aria-describedby="task-4"><span class="ot"><code>TreeMap</code></span></label>
+              <label class="opt"><input type="radio" name="a1" id="a1-list" value="list" aria-describedby="task-4"><span class="ot">An <code>ArrayList</code> of the words</span></label>
+            </div>
+            <div class="opts one" id="a2" hidden>
+              <label class="opt"><input type="radio" name="a2" id="a2-linked" value="linked" aria-describedby="task-4b"><span class="ot"><code>LinkedHashMap</code></span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-pq" value="pq" aria-describedby="task-4b"><span class="ot">A <code>PriorityQueue</code> of the words</span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-tree" value="tree" aria-describedby="task-4b"><span class="ot"><code>TreeMap</code></span></label>
+              <label class="opt"><input type="radio" name="a2" id="a2-hash" value="hash" aria-describedby="task-4b"><span class="ot"><code>HashMap</code></span></label>
+            </div>
+          </fieldset>
+          <div class="row">
+            <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-instr">
+              <legend id="conf-instr">How sure are you?</legend>
+              <label class="opt"><input type="radio" name="conf" id="conf-low" value="low"><span class="ot">Low</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-medium" value="medium"><span class="ot">Medium</span></label>
+              <label class="opt"><input type="radio" name="conf" id="conf-high" value="high"><span class="ot">High</span></label>
+            </fieldset>
+            <button type="button" class="primary" id="apply-check" data-pep-apply-check aria-describedby="conf-instr" disabled>Check answer</button>
+          </div>
+      </div>
+      <div class="feedback" id="fb-4" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><h3>Activity 4 of 4: Final check</h3><div><p>A report counts words and must print each word with its count in the order the words first appeared. Which map should hold the counts?</p></div><p><strong>Retry form, if the first answer is wrong:</strong></p><div><p>Same report, new requirement: print the words sorted alphabetically. Which choice gives that order when the map is printed?</p></div><p class="pep-expected"><strong>Expected results and why:</strong> Apply question: word counts printed in the order words first appeared: a LinkedHashMap, which keeps insertion order (and a repeated put does not move a key). Wrong: HashMap (no order guarantee); TreeMap (sorted, not first-appearance order); ArrayList of words (loses the counts and keeps duplicates). Retry form: printed alphabetically: a TreeMap, which sorts keys by natural ordering. Wrong: LinkedHashMap (insertion order); HashMap (no order); PriorityQueue of words (its iterator and printing follow no particular order).</p></div></noscript>
+      <details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
+        <summary>Challenge (optional)</summary>
+        <div class="pep-optional__body">
+    <p data-pep-optional-time><strong>Optional challenge time:</strong> about 4 minutes, in addition to this topic's time.</p>
+    <p>For each need, name the interface and the implementation you would choose, and the one fact that decided it: a duplicate rule, an output order or an operation cost.</p>
+    <ol>
+      <li>A music app keeps recently played songs, adding at the front and dropping from the back; it never reads by position.</li>
+      <li>A help desk always serves the ticket with the smallest priority number next.</li>
+      <li>A spelling checker loads 50,000 words once, then answers "is this word known?" many times; output order never matters.</li>
+    </ol>
+    <p data-pep-success-criteria><strong>Success criteria:</strong> each answer names one interface and one implementation from this page and cites the stated need that decided it, and no choice relies on a cost or an order this page does not state.</p>
         </div>
-        <div data-step="5" hidden data-pep-recap class="recap">
-          <h2 id="teach-5-h" tabindex="-1">Recap</h2>
+      </details>
+      <p class="pep-back"><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+    </div>
+  </div>
+</section>
+
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation">
+  <button type="button" class="pep-btn" id="prev" data-pep-previous>Previous activity</button>
+  <button type="button" class="primary" id="next" data-pep-next>Next activity</button>
+</div>
+
+<section id="recap" class="recap" data-pep-recap aria-labelledby="recap-h">
+  <h2 id="recap-h" tabindex="-1">Recap</h2>
           <ul>
             <li>Ask in order: lookup by key, duplicates, output order, access pattern; then pick the class.</li>
             <li><code>ArrayList</code> over <code>LinkedList</code> for indexed access (stated constant-time <code>get</code> against a node-by-node walk) and for iteration (no pointer chasing).</li>
@@ -539,128 +668,8 @@ input, select, textarea, summary { font: inherit; }
           </details>
           <p id="complete" class="complete" data-pep-completion></p>
           <p class="next-topic">Next topic: Sorting with Comparator</p>
-        </div>
-      </div>
-      <div class="pep-goalsbox">
-        <h3 id="goals-h">Goals</h3>
-        <ul class="pep-goals" data-pep-objectives aria-labelledby="goals-h">
-            <li data-state="open"><span>Choose a collection implementation from stated needs for duplicates, ordering, lookup by key and access pattern, and justify the choice</span><span class="state"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></li>
-            <li data-state="open"><span>Justify ArrayList over LinkedList for indexed access and iteration using the operation costs the Java API documentation states</span><span class="state"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></li>
-            <li data-state="open"><span>Pick LinkedHashMap, TreeMap or a sorted list when a result must keep insertion order or sorted order</span><span class="state"><svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8.5l3 3 7-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></li>
-        </ul>
-      </div>
-      <div id="current-steps">
-          <div data-step="1"><ol class="pep-steps-list" aria-label="Steps"><li>Read the example above.</li><li>Choose an answer, then how sure you are.</li><li>Press <strong>Check prediction</strong> to see why each option is right or wrong.</li></ol></div>
-          <div data-step="2" hidden><ol class="pep-steps-list" aria-label="Steps"><li id="task-2">For each need, choose the implementation that meets it.</li><li>A wrong choice gets one retry, then the answer shows.</li></ol></div>
-          <div data-step="3" hidden><ol class="pep-steps-list" aria-label="Steps"><li id="task-3">Compare the two lists on a list of 10,000 elements. Find an operation where <code>ArrayList</code> is clearly cheaper, and one where both cost about the same number of steps.</li><li><strong>Continue</strong> appears once the task is met.</li></ol></div>
-          <div data-step="4" hidden><ol class="pep-steps-list" aria-label="Steps"><li>Read the question in the workspace.</li><li>Choose an answer and how sure you are, then press <strong>Check answer</strong>.</li><li>A wrong first answer gets one retry.</li></ol></div>
-      </div>
-      <p class="pep-goal-summary" id="goal-summary" aria-live="polite"></p>
-    </section>
-    <section class="pep-region pep-workspace" aria-labelledby="ws-h" data-pep-workspace="practice">
-      <h2 id="ws-h"></h2>
-      <section id="current-task" class="task" aria-label="Current task">
-          <div data-step="1"><p id="task-1">Which list fits, and why?</p></div>
-          <div data-step="4" hidden>
-          <div id="task-4"><p>A report counts words and must print each word with its count in the order the words first appeared. Which map should hold the counts?</p></div>
-          <div id="task-4b" tabindex="-1" hidden><p>Same report, new requirement: print the words sorted alphabetically. Which choice gives that order when the map is printed?</p></div>
-        </div>
-      </section>
-      <figure id="model" class="model" aria-labelledby="m-cap">
-        <figcaption id="m-cap">Needs to implementation</figcaption>
-        <div data-step="2">
-          <div class="lanes" id="m-lanes"></div>
-        </div>
-        <div data-step="3">
-          <table class="grid">
-            <tr><th scope="col">Operation, n = 10,000</th><th scope="col">ArrayList</th><th scope="col">LinkedList</th></tr>
-            <tr><td id="b-op">Choose an operation</td><td id="b-al">-</td><td id="b-ll">-</td></tr>
-          </table>
-          <p class="note" id="b-note">Steps are derived from how each class reaches elements, not measured times.</p>
-          <p class="lk" id="m-found-k">Found so far</p>
-          <ul class="cells" id="m-found" aria-labelledby="m-found-k"></ul>
-        </div>
-        <div data-step="1 4 5">
-          <p data-pep-model>The model: a short decision path. Key lookup leads to a map; uniqueness to a set; positions and duplicates to a list. The required output order then picks the hash, linked-hash or tree version, and the access pattern picks between an array-backed list, a deque at the ends, or a priority queue for smallest-first.</p>
-        </div>
-      </figure>
-      <div id="current-control" class="control">
-        <div data-step="1">
-          <fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict data-static-alt="Prediction (practice, not scored): a report calls list.get(i) a million times on 100,000 names and never inserts in the middle. Options: ArrayList, because get by index runs in constant time (correct); LinkedList, because it is faster for big lists (wrong: LinkedList reaches an index by walking nodes); either, because both are lists (wrong: their get costs differ); a HashSet (wrong: a set has no positions).">
-            <legend>Your prediction</legend>
-            <div class="opts">
-              <label class="opt"><input type="radio" name="predict" id="p-al" value="al" aria-describedby="task-1"><span class="ot"><code>ArrayList</code>: <code>get(i)</code> is constant time</span></label>
-              <label class="opt"><input type="radio" name="predict" id="p-ll" value="ll" aria-describedby="task-1"><span class="ot"><code>LinkedList</code>: better for big lists</span></label>
-              <label class="opt"><input type="radio" name="predict" id="p-either" value="either" aria-describedby="task-1"><span class="ot">Either: both are lists</span></label>
-              <label class="opt"><input type="radio" name="predict" id="p-set" value="set" aria-describedby="task-1"><span class="ot"><code>HashSet</code>: lookups are constant time</span></label>
-            </div>
-            <div class="row"><fieldset class="conf" id="conf0" data-pep-confidence aria-describedby="conf0-instr"><legend id="conf0-instr">How sure are you?</legend><label class="opt"><input type="radio" name="conf0" id="conf0-low" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-medium" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-high" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check aria-describedby="conf0-instr" disabled>Check prediction</button></div>
-          </fieldset>
-        </div>
-        <div data-step="2" hidden>
-          <fieldset id="x1" data-interaction="drag" data-pep-explore aria-describedby="task-2" data-pep-print-items="Choose an implementation for each need: unique tags with fast contains and no order; price by product code; cart items by position with duplicates; undo history last-first; word counts alphabetically; settings in insertion order." data-static-alt="Sorting activity, need and implementation: unique tags with fast contains and no order needed: HashSet. Look up a price by product code: HashMap. Cart items by position, duplicates allowed: ArrayList. Undo history, last action first: ArrayDeque. Word counts printed alphabetically: TreeMap. Settings printed in the order they were added: LinkedHashMap.">
-            <legend id="ln-legend">Need: <span id="ln-name"></span></legend>
-            <div class="lanebtns" id="ln-btns"></div>
-            <p class="sub" id="ln-count">0 of 6 sorted</p>
-          </fieldset>
-        </div>
-        <div data-step="3" hidden>
-          <fieldset id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-pep-print-items="At n = 10,000 compare ArrayList and LinkedList for get(5000), get(0), a full for-each, and add at the end. Record the step model and find one clear ArrayList advantage plus one operation with about the same step count." data-static-alt="Step bench, n = 10,000, steps derived from each class's access method: get(5000) costs 1 array read on ArrayList and about 5,000 node hops on LinkedList (walk from the nearer end). get(0) costs 1 step on both. A full for-each loop visits 10,000 elements on both (the same O(n), though Dev.java finds LinkedList slower in practice because of pointer chasing). add at the end costs about 1 step on both (amortized constant for ArrayList).">
-            <legend>Choose an operation</legend>
-            <div class="ops" id="bops">
-              <button type="button" class="ghost" id="b-mid">get(5000)</button>
-              <button type="button" class="ghost" id="b-first">get(0)</button>
-              <button type="button" class="ghost" id="b-loop">for-each over all</button>
-              <button type="button" class="ghost" id="b-add">add(x) at the end</button>
-            </div>
-          </fieldset>
-        </div>
-        <div data-step="4" hidden>
-          <fieldset id="apply" data-interaction="mcq" data-confidence data-pep-apply data-static-alt="Apply question: word counts printed in the order words first appeared: a LinkedHashMap, which keeps insertion order (and a repeated put does not move a key). Wrong: HashMap (no order guarantee); TreeMap (sorted, not first-appearance order); ArrayList of words (loses the counts and keeps duplicates). Retry form: printed alphabetically: a TreeMap, which sorts keys by natural ordering. Wrong: LinkedHashMap (insertion order); HashMap (no order); PriorityQueue of words (its iterator and printing follow no particular order).">
-            <legend>The choice</legend>
-            <div class="opts one" id="a1">
-              <label class="opt"><input type="radio" name="a1" id="a1-hash" value="hash" aria-describedby="task-4"><span class="ot"><code>HashMap</code></span></label>
-              <label class="opt"><input type="radio" name="a1" id="a1-linked" value="linked" aria-describedby="task-4"><span class="ot"><code>LinkedHashMap</code></span></label>
-              <label class="opt"><input type="radio" name="a1" id="a1-tree" value="tree" aria-describedby="task-4"><span class="ot"><code>TreeMap</code></span></label>
-              <label class="opt"><input type="radio" name="a1" id="a1-list" value="list" aria-describedby="task-4"><span class="ot">An <code>ArrayList</code> of the words</span></label>
-            </div>
-            <div class="opts one" id="a2" hidden>
-              <label class="opt"><input type="radio" name="a2" id="a2-linked" value="linked" aria-describedby="task-4b"><span class="ot"><code>LinkedHashMap</code></span></label>
-              <label class="opt"><input type="radio" name="a2" id="a2-pq" value="pq" aria-describedby="task-4b"><span class="ot">A <code>PriorityQueue</code> of the words</span></label>
-              <label class="opt"><input type="radio" name="a2" id="a2-tree" value="tree" aria-describedby="task-4b"><span class="ot"><code>TreeMap</code></span></label>
-              <label class="opt"><input type="radio" name="a2" id="a2-hash" value="hash" aria-describedby="task-4b"><span class="ot"><code>HashMap</code></span></label>
-            </div>
-          </fieldset>
-          <div class="row">
-            <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-instr">
-              <legend id="conf-instr">How sure are you?</legend>
-              <label class="opt"><input type="radio" name="conf" id="conf-low" value="low"><span class="ot">Low</span></label>
-              <label class="opt"><input type="radio" name="conf" id="conf-medium" value="medium"><span class="ot">Medium</span></label>
-              <label class="opt"><input type="radio" name="conf" id="conf-high" value="high"><span class="ot">High</span></label>
-            </fieldset>
-            <button type="button" class="primary" id="apply-check" data-pep-apply-check aria-describedby="conf-instr" disabled>Check answer</button>
-          </div>
-        </div>
-      </div>
-      <div class="fbrow">
-        <div id="current-feedback" class="feedback" role="status" aria-live="polite" tabindex="-1" data-pep-predict-feedback data-pep-explore-feedback data-pep-apply-feedback></div>
-        <button type="button" class="primary" id="next" hidden>Continue</button>
-      </div>
-      <details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
-        <summary>Challenge (optional)</summary>
-        <div class="pep-optional__body">
-    <p data-pep-optional-time><strong>Optional challenge time:</strong> about 4 minutes, in addition to this topic's time.</p>
-    <p>For each need, name the interface and the implementation you would choose, and the one fact that decided it: a duplicate rule, an output order or an operation cost.</p>
-    <ol>
-      <li>A music app keeps recently played songs, adding at the front and dropping from the back; it never reads by position.</li>
-      <li>A help desk always serves the ticket with the smallest priority number next.</li>
-      <li>A spelling checker loads 50,000 words once, then answers "is this word known?" many times; output order never matters.</li>
-    </ol>
-    <p data-pep-success-criteria><strong>Success criteria:</strong> each answer names one interface and one implementation from this page and cites the stated need that decided it, and no choice relies on a cost or an order this page does not state.</p>
-        </div>
-      </details>
-    </section>
-  </div>
+</section>
+</main>
 <script>
 var PAGE={};
 (function(){
@@ -704,7 +713,7 @@ PAGE.apply={
    hash:'No order guarantee.'},
    mis:{linked:'LinkedHashMap keeps insertion order.',pq:'Only polling a PriorityQueue gives sorted order; printing it does not.',hash:'HashMap gives no order.'}}
 };
-PAGE.goals=[['x1'],['x2'],['apply']];
+PAGE.objectiveKeys=[['x1'],['x2'],['apply']];
 PAGE.checkLabels={x1:'Needs to implementation',apply:'Final check'};
 PAGE.init=function(eng){E=eng;$=eng.$;$$=eng.$$;
   Object.keys(OPS).forEach(function(k){$('#b-'+k).addEventListener('click',function(){bench(k);});});
@@ -712,14 +721,10 @@ PAGE.init=function(eng){E=eng;$=eng.$;$$=eng.$$;
 PAGE.resetStep=function(st){if(st===3){found={};$('#b-op').textContent='Choose an operation';$('#b-al').textContent='-';$('#b-ll').textContent='-';renderFound();}};
 })();
 </script>
-</main>
-<!-- pep:nojs -->
-<!-- /pep:nojs -->
-</div>
 <script>
 (function(){
 'use strict';
-var D=document,R=D.documentElement;
+var D=document;
 function $(s,r){return (r||D).querySelector(s);}
 function $$(s,r){return Array.prototype.slice.call((r||D).querySelectorAll(s));}
 function md(s){var f=D.createDocumentFragment(),re=/(`[^`]+`|\*\*[^*]+\*\*)/g,last=0,m;s=String(s);
@@ -727,42 +732,59 @@ function md(s){var f=D.createDocumentFragment(),re=/(`[^`]+`|\*\*[^*]+\*\*)/g,la
     var t=m[0],e=D.createElement(t.charAt(0)==='`'?'code':'strong');e.textContent=t.charAt(0)==='`'?t.slice(1,-1):t.slice(2,-2);f.appendChild(e);last=re.lastIndex;}
   if(last<s.length)f.appendChild(D.createTextNode(s.slice(last)));return f;}
 function el(tag,cls,txt){var e=D.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.appendChild(typeof txt==='string'?md(txt):txt);return e;}
-var main=$('#lesson'),stage=$('#stage'),fb=$('#current-feedback'),next=$('#next'),P=window.PAGE;
-var KEYS=['predict','x1','x2','apply'],S;
-function fresh(){S={step:1,done:{},results:{}};}
-fresh();
-function say(parts,focus){fb.textContent='';(parts||[]).forEach(function(p){
-  if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li',it[2]||'');li.appendChild(el('strong',null,it[0]));li.appendChild(D.createTextNode(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
+function T(t){return D.createTextNode(t);}
+/* Guidance state: current activity, a monotonic unlocked frontier and per-activity results kept apart */
+var P=window.PAGE||{};
+var main=$('#lesson'),ACTS=$$('[data-pep-activity]'),LINKS=$$('[data-pep-activity-link]'),prevBtn=$('#prev'),next=$('#next'),resetBtn=$('#reset'),recap=$('#recap');
+var KEYS=['predict','x1','x2','apply'],N=KEYS.length;
+var S={step:1,done:{},results:{}};
+function freshAct(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,cont:false};}
+var G={current:1,unlocked:1,complete:false,settled:false,acts:KEYS.map(freshAct)};
+function fbOf(n){return $('[data-pep-feedback]',ACTS[n-1]);}
+function say(parts,focus){var fb=fbOf(G.current);fb.textContent='';(parts||[]).forEach(function(p){
+  if(p.list){var ul=el('ul','expl');p.list.forEach(function(it){var li=el('li',it[2]||'');li.appendChild(el('strong',null,it[0]));li.appendChild(T(' '));li.appendChild(md(it[1]));ul.appendChild(li);});fb.appendChild(ul);}
   else if(p.pre){var pr=el('pre','out');pr.textContent=p.pre;fb.appendChild(pr);}
   else{var q=el('p',p.c||'',p.s);if(p.attr)q.setAttribute(p.attr,'');fb.appendChild(q);}});
   if(focus)fb.focus();}
 function optText(i){var l=i.closest('label');return l?l.textContent.replace(/\s+/g,' ').trim():i.value;}
-/* progress: completed (passed) and settled-without-passing are counted separately */
-function passed(k){return !!S.done[k]&&S.results[k]!=='settled';}
-function progress(){var c=0,s=0;KEYS.forEach(function(k){var pip=$('.pip[data-k="'+k+'"]');pip.className='pip';if(S.done[k]){if(S.results[k]==='settled'){s++;pip.className='pip settled';}else{c++;pip.className='pip on';}}});
-  $('#path-text').textContent='Answered '+(c+s)+' of 4';
-  $('#prog-text').textContent='Completed '+c+' of 4'+(s?'; '+s+' settled, not passed':'');}
 var WORD={'correct':'correct on the first try','correct-retry':'correct on the second try','settled':'answered and settled, not passed'};
-function complete(k,label){S.done[k]=true;progress();next.textContent=label||'Continue';next.hidden=false;}
-/* page anatomy: a goal is met only when every mapped activity passed; a settled check leaves it not met */
-var GOALS=P.goals||[],goalItems=$$('[data-pep-objectives] > li');
-function goalsUi(){var met=0,unmet=0;goalItems.forEach(function(li,i){var ks=GOALS[i]||[],ok=ks.length>0&&ks.every(passed),ans=ks.length>0&&ks.every(function(k){return !!S.done[k];});
-  li.setAttribute('data-state',ok?'done':(ans?'unmet':'open'));if(ok)met++;else if(ans)unmet++;});
-  var n=goalItems.length;$('#goal-summary').textContent=met===n?'All '+n+(n>1?' goals':' goal')+' met':met+' of '+n+(n>1?' goals':' goal')+' met'+(unmet?'; '+unmet+' not met after a settled check':'');}
-function stepUi(step){var h=$('#teach-'+step+'-h');$('#ws-h').textContent=h?h.textContent:'';goalsUi();}
-if(window.MutationObserver)new MutationObserver(goalsUi).observe($('#prog-text'),{childList:true,characterData:true,subtree:true});
-function actName(k){var i=KEYS.indexOf(k)+1,h=$('#teach-'+i+'-h');return 'Activity '+i+(h?' ('+h.textContent.trim()+')':'');}
-function show(step){S.step=step;stage.setAttribute('data-at',String(step));
-  $$('[data-step]',stage).forEach(function(e){e.hidden=e.getAttribute('data-step').split(' ').indexOf(String(step))<0;});
-  if(step===5){var miss=KEYS.filter(function(k){return !passed(k);}),all=!miss.length;
-    main.setAttribute('data-pep-path-settled','true');main.setAttribute('data-pep-complete',String(all));
-    var c=$('#complete'),labels=P.checkLabels||{apply:'Final check'},parts=[];
-    KEYS.forEach(function(k){if(S.results[k]&&labels[k])parts.push(labels[k]+': '+WORD[S.results[k]]+'.');});
-    c.className='complete'+(all?'':' settled');
-    c.textContent=all?'Topic complete. '+parts.join(' '):'Required path settled; '+miss.length+(miss.length>1?' activities remain':' activity remains')+' incomplete: '+miss.map(actName).join(', ')+'. '+parts.join(' ')+' The goals marked not met are still open: review those explanations before the practice quiz.';}
-  $('#reset').hidden=step>=5;stepUi(step);
-  if(P.onStep)P.onStep(step,S);}
-next.addEventListener('click',function(){next.hidden=true;fb.textContent='';show(S.step+1);var h=$('#teach-'+S.step+'-h');if(h)h.focus();});
+function reflect(){ACTS.forEach(function(sec,i){var a=G.acts[i];sec.setAttribute('data-pep-attempts',String(a.attempts));sec.setAttribute('data-pep-settled',String(a.settled));
+    sec.setAttribute('data-pep-completed',String(a.completed));sec.setAttribute('data-pep-credit',String(a.credit));sec.setAttribute('data-pep-grade',String(a.grade));sec.setAttribute('data-pep-continue',String(a.cont));});
+  main.setAttribute('data-pep-current-activity',String(G.current));main.setAttribute('data-pep-unlocked-through',String(G.unlocked));main.setAttribute('data-pep-complete',String(G.complete));main.setAttribute('data-pep-path-settled',String(G.settled));}
+function progress(){var c=0,set=0,segs=$$('.pep-progress > span');KEYS.forEach(function(k,i){var s=segs[i];s.className='';
+    if(S.done[k]){if(G.acts[i].completed){c++;s.className='is-done';}else{set++;s.className='is-settled';}}
+    if(i+1===G.current)s.className+=(s.className?' ':'')+'is-current';});
+  $('#path-text').textContent='Answered '+(c+set)+' of '+N;
+  $('#prog-text').textContent='Completed '+c+' of '+N+(set?'; '+set+' settled, not passed':'');}
+function attempt(n){G.acts[n-1].attempts++;reflect();}
+function finishPage(){var c=$('#complete'),labels=P.checkLabels||{apply:'Final check'},parts=[],miss=[];
+  KEYS.forEach(function(k,i){if(S.results[k]&&labels[k])parts.push(labels[k]+': '+WORD[S.results[k]]+'.');if(!G.acts[i].completed){var h=$('#a'+(i+1)+'-h');miss.push('Activity '+(i+1)+(h?' ('+h.textContent.trim()+')':''));}});
+  c.className='complete'+(G.complete?'':' settled');
+  c.textContent=G.complete?'Topic complete. '+parts.join(' '):'Required path settled; '+miss.length+(miss.length>1?' activities remain':' activity remains')+' incomplete: '+miss.join(', ')+'. '+parts.join(' ')+' Their objectives are not met yet: restart those activities, or review their explanations before the practice quiz.';}
+function complete(k){var n=KEYS.indexOf(k)+1,a=G.acts[n-1],failed=S.results[k]==='settled';S.done[k]=true;
+  a.settled=true;a.cont=true;a.completed=!failed;
+  if(!failed&&a.credit===0){a.credit=1;a.grade=k==='predict'?0:1;}
+  G.unlocked=Math.max(G.unlocked,Math.min(n+1,N));
+  if(KEYS.every(function(x){return !!S.done[x];})){G.settled=true;G.complete=G.acts.every(function(x){return x.completed;});finishPage();}
+  progress();render(G.current);}
+function render(number,mode,moveFocus){
+  if(!(number>=1&&number<=N&&number<=G.unlocked))return false;
+  G.current=number;S.step=number;
+  ACTS.forEach(function(sec,i){sec.hidden=i+1!==number;});
+  LINKS.forEach(function(link,i){var n=i+1;
+    if(n===number)link.setAttribute('aria-current','step');else link.removeAttribute('aria-current');
+    if(n>G.unlocked)link.setAttribute('aria-disabled','true');else link.removeAttribute('aria-disabled');
+    link.classList.toggle('is-done',!!S.done[KEYS[i]]);});
+  prevBtn.disabled=number===1;
+  next.disabled=number===N||number>=G.unlocked||!G.acts[number-1].cont;
+  recap.hidden=!G.settled;
+  $('#pos-text').textContent='Activity '+number+' of '+N;
+  reflect();progress();
+  try{if(mode==='push')history.pushState({activity:number},'','#activity-'+number);
+    else if(mode==='replace')history.replaceState({activity:number},'','#activity-'+number);}
+  catch(e){if(mode&&location.hash!=='#activity-'+number)location.hash='activity-'+number;}
+  if(moveFocus){var h=$('#a'+number+'-h');if(h)h.focus();}
+  return true;}
 /* pep:component predict@1 js */
 /* predict */
 var pf=$('#predict'),pc=$('#predict-check');
@@ -805,52 +827,77 @@ function check(o){var st={att:0,conf:[],result:null,step:{x1:2,x2:3,apply:4}[o.k
 var lanesets={};
 function lanes(o){var st={idx:0,tries:{},placed:{},revealed:{}},box=$(o.model),btns=$(o.btns);lanesets[o.key]=st;
   function laneName(id){for(var i=0;i<o.lanes.length;i++)if(o.lanes[i].id===id)return o.lanes[i].label;return id;}
-  function render(){box.textContent='';var cnt=0;
+  function draw(){box.textContent='';var cnt=0;
     o.lanes.forEach(function(ln){var d=el('div','lane'),h=el('p','lk',ln.label),u=el('ul','cards');h.id=o.key+'-lk-'+ln.id;u.setAttribute('aria-labelledby',h.id);d.appendChild(h);d.appendChild(u);box.appendChild(d);
       o.items.forEach(function(it,i){if(st.placed[i]!==ln.id)return;cnt++;var li=el('li',st.revealed[i]?'revealed':'',it.n);if(st.revealed[i])li.appendChild(el('span','tag','shown after two tries'));u.appendChild(li);});});
-    var it=o.items[st.idx];$(o.name).textContent=it?'':'all sorted';$(o.name).appendChild(it?md(it.n):D.createTextNode(''));
-    if(o.desc)$(o.desc).textContent=it&&it.d?it.d:'';
+    var it=o.items[st.idx];$(o.name).textContent=it?'':'all sorted';$(o.name).appendChild(it?md(it.n):T(''));
     $(o.count).textContent=cnt+' of '+o.items.length+' sorted';}
   function finish(msg){var anyRev=Object.keys(st.revealed).length,anyRetry=Object.keys(st.tries).some(function(k){return st.tries[k]>0;});
     var res=anyRev?'settled':(anyRetry?'correct-retry':'correct');S.results[o.key]=res;
     $$('button',btns).forEach(function(b){b.disabled=true;});
     msg.push({c:anyRev?'verdict set':'verdict ok',s:anyRev?'All sorted. Answered and settled: '+anyRev+(anyRev>1?' items were':' item was')+' shown after two tries, so this activity is not marked correct.':(anyRetry?'All sorted, some on a second try.':'All sorted on the first try.')});
-    if(o.done)msg.push({s:o.done});say(msg,true);complete(o.key,o.label);}
+    if(o.done)msg.push({s:o.done});say(msg,true);complete(o.key);}
   o.lanes.forEach(function(ln){var b=el('button','ghost',ln.label);b.type='button';b.id=o.key+'-to-'+ln.id;b.setAttribute('data-lane',ln.id);b.setAttribute('aria-describedby',o.legend);
-    b.addEventListener('click',function(){var i=st.idx,it=o.items[i];if(!it||S.done[o.key])return;
-      if(ln.id===it.lane){st.placed[i]=ln.id;st.idx++;var msg=[{c:'verdict ok',s:'Yes: '+laneName(ln.id)+'.'},{s:it.ok}];render();if(st.idx>=o.items.length)finish(msg);else say(msg);}
+    b.addEventListener('click',function(){var i=st.idx,it=o.items[i];if(!it||S.done[o.key])return;attempt(KEYS.indexOf(o.key)+1);
+      if(ln.id===it.lane){st.placed[i]=ln.id;st.idx++;var msg=[{c:'verdict ok',s:'Yes: '+laneName(ln.id)+'.'},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(msg);else say(msg);}
       else{st.tries[i]=(st.tries[i]||0)+1;
         if(st.tries[i]<2){say([{c:'verdict no',s:'Not '+laneName(ln.id)+'. '+it.w[ln.id]},{s:'Try another button for the same item.'}]);}
-        else{st.placed[i]=it.lane;st.revealed[i]=true;st.idx++;var m2=[{c:'verdict set',s:'Shown after two tries: '+laneName(it.lane)+'. '+it.w[ln.id]},{s:it.ok}];render();if(st.idx>=o.items.length)finish(m2);else say(m2);}}});
+        else{st.placed[i]=it.lane;st.revealed[i]=true;st.idx++;var m2=[{c:'verdict set',s:'Shown after two tries: '+laneName(it.lane)+'. '+it.w[ln.id]},{s:it.ok}];draw();if(st.idx>=o.items.length)finish(m2);else say(m2);}}});
     btns.appendChild(b);});
-  st.reset=function(){st.idx=0;st.tries={};st.placed={};st.revealed={};$$('button',btns).forEach(function(b){b.disabled=false;});render();};
-  st.step={x1:2,x2:3,apply:4}[o.key];render();return st;}
-/* pep:component restart@1 js */
-/* restart the current activity only: earlier activities keep their results */
-var STEPKEY={1:'predict',2:'x1',3:'x2',4:'apply'};
-function restartStep(){var stp=S.step;if(stp>=5)return;var k=STEPKEY[stp];
-  $$('#current-control [data-step], #current-task [data-step]').forEach(function(p){if(p.getAttribute('data-step').split(' ').indexOf(String(stp))<0)return;
-    $$('input',p).forEach(function(i){i.checked=false;i.disabled=false;});$$('.opt',p).forEach(function(o){o.classList.remove('right','wrong','mine');});
-    $$('.oexp,.badges',p).forEach(function(e){e.remove();});$$('.opts.explained',p).forEach(function(o){o.classList.remove('explained');});});
-  if(stp===1){pc.hidden=false;pc.disabled=true;$('#conf0').closest('.row').hidden=false;}
-  Object.keys(checks).forEach(function(ck){if(checks[ck].step===stp)checks[ck].reset();});
-  delete S.done[k];delete S.results[k];next.hidden=true;fb.textContent='';
-  if(P.resetStep)P.resetStep(stp);
-  progress();say([{c:'verdict info',s:'Activity restarted. Earlier activities keep their results.'}]);var h=$('#teach-'+stp+'-h');if(h)h.focus();}
-$('#reset').addEventListener('click',restartStep);
-/* /pep:component restart js */
-var userReset=P.resetStep;P.resetStep=function(stp){Object.keys(lanesets).forEach(function(k){if(lanesets[k].step===stp)lanesets[k].reset();});if(userReset)userReset(stp);};
-window.ENG={say:say,complete:complete,check:check,lanes:lanes,md:md,el:el,$:$,$$:$$,state:function(){return S;}};
-if(P.init)P.init(window.ENG);
-check({key:'apply',fs:'#apply',g1:'a1',g2:'a2',t1:'#task-4',t2:'#task-4b',conf:'#conf',confName:'conf',btn:'#apply-check',data:P.apply,label:'Continue to recap'});
-progress();show(1);
-})();
+  st.reset=function(){st.idx=0;st.tries={};st.placed={};st.revealed={};$$('button',btns).forEach(function(b){b.disabled=false;});draw();};
+  draw();return st;}
 
-</script>
-<script>
-(function(){var printOpened=[];
-addEventListener('beforeprint',function(){printOpened=[].slice.call(document.querySelectorAll('details.pep-optional:not([open])'));printOpened.forEach(function(d){d.open=true;});});
-addEventListener('afterprint',function(){printOpened.forEach(function(d){d.open=false;});printOpened=[];});})();
+/* Wire the activities: the page's own practice code keeps its engine interface */
+P.onPredict=function(){attempt(1);};
+check({key:'apply',fs:'#apply',g1:'a1',g2:'a2',t1:'#task-4',t2:'#task-4b',conf:'#conf',confName:'conf',btn:'#apply-check',data:P.apply,label:P.applyLabel});
+$('#apply-check').addEventListener('click',function(){var n=checks.apply.conf.length;if(n!==G.acts[3].attempts){G.acts[3].attempts=n;reflect();}});
+/* exploration attempts: any control press inside an activity's explore workspace counts once per press */
+ACTS.forEach(function(sec,i){$$('fieldset[data-interaction="explore"]',sec).forEach(function(fs){if(fs.querySelector('.pep-editor'))return;fs.addEventListener('click',function(ev){if(ev.target.closest('button')&&!S.done[KEYS[i]])attempt(i+1);});});});
+window.ENG={say:say,complete:complete,check:check,lanes:lanes,md:md,el:el,$:$,$$:$$,attempt:attempt,state:function(){return S;}};
+if(P.init)P.init(window.ENG);
+
+/* Restart: only the current activity returns to its authored start; other work and the unlocked frontier stay */
+function clearChoices(scope){$$('input',scope).forEach(function(i){i.checked=false;i.disabled=false;});$$('.opt',scope).forEach(function(o){o.classList.remove('right','wrong','mine');});
+  $$('.oexp,.badges',scope).forEach(function(e){e.remove();});$$('.opts.explained',scope).forEach(function(o){o.classList.remove('explained');});}
+function restart(){var n=G.current,k=KEYS[n-1],sec=ACTS[n-1];
+  if(k==='predict'){clearChoices(sec);pc.hidden=false;pc.disabled=true;$('#conf0').closest('.row').hidden=false;}
+  if(lanesets[k])lanesets[k].reset();
+  if(checks[k]){clearChoices(sec);checks[k].reset();}
+  delete S.done[k];delete S.results[k];G.acts[n-1]=freshAct();
+  G.settled=KEYS.every(function(x){return !!S.done[x];});
+  G.complete=G.settled&&G.acts.every(function(x){return x.completed;});
+  if(G.settled)finishPage();else{$('#complete').textContent='';recap.hidden=true;}
+  if(P.resetStep)P.resetStep(n);
+  $$('[data-pep-feedback]',sec).forEach(function(f){f.textContent='';});
+  render(n);
+  $('#restart-status').textContent='Activity '+n+' restarted. Other activities keep their work.';}
+resetBtn.addEventListener('click',restart);
+
+/* Reversible navigation: buttons, timeline, back links and browser history change only the current activity */
+function numberOf(hash){var m=/^#activity-(\d+)$/.exec(hash||'');return m?Number(m[1]):0;}
+prevBtn.addEventListener('click',function(){render(G.current-1,'push',true);});
+next.addEventListener('click',function(){render(G.current+1,'push',true);});
+LINKS.forEach(function(link,i){link.addEventListener('click',function(ev){ev.preventDefault();render(i+1,'push',true);});});
+$$('[data-pep-back-link]').forEach(function(link){link.addEventListener('click',function(ev){ev.preventDefault();render(numberOf(link.getAttribute('href')),'push',true);});});
+var lastFocused=null;D.addEventListener('focusin',function(ev){lastFocused=ev.target;});
+function fromHistory(){var keep=lastFocused,n=numberOf(location.hash);
+  if(!render(n,null,false))render(G.current,'replace',false);
+  if(keep&&keep.isConnected&&!keep.closest('[hidden]'))keep.focus({preventScroll:true});}
+addEventListener('popstate',fromHistory);addEventListener('hashchange',fromHistory);
+
+/* Objectives: native disclosure; Escape and an outside click close it */
+var obj=$('[data-pep-objectives]');
+D.addEventListener('keydown',function(ev){if(ev.key==='Escape'&&obj.open){obj.open=false;obj.querySelector('summary').focus();}});
+D.addEventListener('click',function(ev){if(obj.open&&!obj.contains(ev.target))obj.open=false;});
+
+/* Print: expand closed disclosures, then restore only those */
+var printOpened=[];
+addEventListener('beforeprint',function(){printOpened=$$('details:not([open])');printOpened.forEach(function(d){d.open=true;});});
+addEventListener('afterprint',function(){printOpened.forEach(function(d){d.open=false;});printOpened=[];});
+
+var first=numberOf(location.hash);
+render(first>=1&&first<=G.unlocked?first:1,'replace',false);
+})();
 </script>
 </body>
 </html>
