@@ -12,253 +12,360 @@
 <meta name="pep:topic-position" content="7 of 9">
 <title>Merge vs rebase · Git Foundations</title>
 <style>
-:root{
-  --bg:#eef1f3;--surface:#f9fafb;--ink:#1a2128;--muted:#46525d;--rule:#68747f;--line:#c8d0d6;
-  --teal:#0b6656;--teal-soft:#d5ebe5;--amber:#86470b;--amber-soft:#f6e7d5;--red:#a32218;--red-soft:#f8e0dc;
-  --blue:#1d4f9e;--blue-soft:#dde7f7;--violet:#5b3a99;--violet-soft:#ebe4f7;
-  --on-teal:#ffffff;--term:#e3e8ec;--focus:#1f4fbf;
-  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
-  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  color-scheme:light;
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
 }
-:root[data-theme="dark"]{
-  --bg:#12171b;--surface:#1a2127;--ink:#e3e9ee;--muted:#a9b6c0;--rule:#74828d;--line:#2e3943;
-  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
-  --blue:#8fb4f2;--blue-soft:#1b2a44;--violet:#bea6f0;--violet-soft:#2b2340;
-  --on-teal:#0b1311;--term:#0d1215;--focus:#8fb4ff;
-  color-scheme:dark;
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
 }
-*{box-sizing:border-box}
-html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
-::selection{background:var(--blue-soft);color:var(--ink)}
-code,kbd,.mono{font-family:var(--mono);font-size:.94em}
-a{color:var(--blue);text-underline-offset:3px}
-main{max-width:1280px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
-.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
-.top{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"crumbs tools" "title tools" "meta meta";column-gap:var(--s6);align-items:start;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
-.top .crumbs{grid-area:crumbs}.top h1{grid-area:title}.top .tools{grid-area:tools}.top .meta{grid-area:meta}
-.crumbs{margin:0 0 var(--s1);font-size:15px;color:var(--muted)}
-.crumbs ol{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s2);margin:0;padding:0;list-style:none}
-.crumbs li+li::before{content:"/";margin-right:var(--s2);color:var(--rule)}
-.crumbs [aria-current]{color:var(--ink);font-weight:600}
-h1{margin:0;font-size:26px;line-height:32px;letter-spacing:-.01em}
-.meta{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s1) 0 0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
-.meta li:first-child{font-weight:700;color:var(--ink)}
-.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
-.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2)}
-.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
-.pips{display:flex;gap:var(--s1)}
-.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
-.pip.on{background:var(--teal);border-color:var(--teal)}
-.pip.settled{background:repeating-linear-gradient(135deg,var(--amber) 0 3px,transparent 3px 6px);border-color:var(--amber)}
-button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s;color:var(--ink)}
-.ghost{background:transparent;border:1px solid var(--rule)}
-.ghost:hover{background:var(--surface);border-color:var(--ink)}
-.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
-.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
-.primary:hover{filter:brightness(1.08)}
-.primary:active{transform:translateY(1px)}
-button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
-:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-[tabindex="-1"]:focus{outline:none}
-[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s2);align-items:start}
-.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
-.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
-.teach p{margin:0 0 var(--s2);max-width:62ch}
-.teach ul{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
-.teach li{margin-bottom:var(--s1)}
-.teach code,.task code,.goals code{white-space:nowrap}
-.task{padding:var(--s3) var(--s4);border:1px solid var(--rule);border-top:4px solid var(--teal);border-radius:4px;background:var(--surface)}
-.task p{margin:0;font-weight:600}
-.task p+p{margin-top:var(--s2)}
-.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
-.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
-.goals li:first-child{border-top:0}
-.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
-.goals li.done .st{color:var(--teal)}
-.goals li.done .gt::before{content:"";display:inline-block;width:10px;height:6px;margin-right:var(--s2);border-left:3px solid var(--teal);border-bottom:3px solid var(--teal);transform:rotate(-45deg) translateY(-3px)}
-.simnote{font-size:14px;color:var(--muted);margin:0}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
+}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+/* base */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 0 0 12px; padding-inline-start: 24px; }
+img, svg, video, canvas { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible, button:focus, a:focus, summary:focus, input:focus { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+[tabindex="-1"]:focus:not(:focus-visible) { outline: none; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.vh { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+.nojs { margin: 16px; padding: 12px 16px; border: 1px solid var(--pep-warning); border-radius: var(--pep-radius-md); background: var(--pep-warning-soft); color: var(--pep-text-strong); }
+html:not(.is-enhanced) .pep-js-only { display: none; }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+button, .pep-option, .pep-step { transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+/* topic bar, objectives, timeline */
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; margin: 0 0 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__meta { flex: 1 1 220px; min-width: 0; display: grid; gap: 4px; }
+.pep-topicbar__progress { color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.pep-progress > span { height: 8px; border-radius: var(--pep-radius-pill); background: var(--pep-control); border: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done, .pep-progress > span.is-current { background: var(--pep-accent); border-color: var(--pep-accent); }
+.pep-progress > span.is-current:not(.is-done) { background: var(--pep-accent-soft); border-width: 2px; }
+.pep-objectives { break-inside: avoid; min-width: 0; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; }
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 24px; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; min-width: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); color: var(--pep-accent-text); font-weight: 600; text-decoration: none; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); border-style: dashed; cursor: not-allowed; }
+/* buttons */
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent-fill-hover); }
+.pep-btn:disabled, .pep-btn[aria-disabled="true"] { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+/* activities and regions */
+[data-pep-activity] { margin-bottom: 32px; min-width: 0; }
+[data-pep-activity][hidden] { display: none; }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+[data-pep-teaching] h2 { margin-bottom: 12px; outline-offset: 4px; }
+[data-pep-teaching] > :last-child { margin-bottom: 0; }
+[data-pep-teaching] li { margin-bottom: 4px; }
+[data-pep-workspace] { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+[data-pep-task] > h3 { margin-bottom: 4px; }
+[data-pep-task] p { margin: 0 0 8px; color: var(--pep-text-strong); }
+[data-pep-task] ol { margin: 0; }
+[data-pep-task] ol li { margin-bottom: 4px; }
+[data-pep-activity-checks] { padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] ul { margin: 8px 0 0; padding: 0; list-style: none; }
+[data-pep-activity-checks] li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; padding: 4px 0; border-top: 1px solid var(--pep-line-strong); font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
+[data-pep-activity-checks] li:first-child { border-top: 0; }
+[data-pep-activity-checks] .st { display: inline-flex; align-items: center; gap: 4px; color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+[data-pep-activity-checks] li.done .st { color: var(--pep-success); }
+[data-pep-where-fits] { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+[data-pep-where-fits] h2 { margin-bottom: 8px; }
+[data-pep-where-fits] p:last-child { margin-bottom: 0; }
+.pep-hint, details[data-pep-hint] { min-width: 0; margin-top: 12px; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); break-inside: avoid; }
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { padding: 4px 0 12px; }
+.pep-hint__body p { margin: 0 0 8px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-hint__body p:last-child { margin-bottom: 0; }
+.pep-back { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; }
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 32px; }
+.pep-activity-actions .pep-btn { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn { flex: 0 1 auto; } }
+[data-pep-teaching] .lead { color: var(--pep-text-strong); }
+[data-pep-teaching] .lead-only { margin-bottom: 4px; }
+.pep-note { margin: 0; color: var(--pep-text-muted); font: 400 14px/20px var(--pep-font-sans); }
+.pep-note:empty { display: none; }
+/* options and confidence */
+fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+legend { padding: 0 0 8px; color: var(--pep-text-strong); font-weight: 600; }
+.pep-options { counter-reset: pep-opt; }
+.pep-options__list { display: grid; gap: 8px; }
+.pep-option { position: relative; display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: 12px; align-items: center; min-height: 48px; padding: 10px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; }
+.pep-option__key { display: grid; place-items: center; width: 28px; height: 28px; border-radius: var(--pep-radius-sm); background: var(--pep-control); font: 600 13px/1 var(--pep-font-sans); color: var(--pep-text); }
+.pep-options .pep-option__key::before { counter-increment: pep-opt; content: counter(pep-opt, upper-alpha); }
+.pep-option__text { min-width: 0; overflow-wrap: anywhere; }
+.pep-option:hover { border-color: var(--pep-accent); }
+.pep-option:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
+.pep-option:has(input:checked) .pep-option__key { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+.pep-option.is-correct { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
+.pep-option.is-wrong { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
+.pep-option.is-correct .pep-option__key { background: var(--pep-success); color: var(--pep-page); }
+.pep-option.is-wrong .pep-option__key { background: var(--pep-danger); color: var(--pep-page); }
+.pep-option input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.pep-option input:disabled { cursor: default; }
+.pep-option:focus-within { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.pep-option .badges { display: flex; flex-wrap: wrap; gap: 4px 8px; margin-top: 4px; }
+.pep-badge { display: inline-flex; align-items: center; gap: 4px; font: 600 13px/20px var(--pep-font-sans); }
+.pep-badge--ok { color: var(--pep-success); }
+.pep-badge--no { color: var(--pep-danger); }
+.pep-icon { flex: 0 0 auto; width: 16px; height: 16px; }
+.pep-explain { display: block; margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--pep-line-strong); font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-check-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; }
+.pep-check-row[hidden] { display: none; }
+.pep-confidence { flex: 1 1 300px; display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+.pep-confidence > legend { padding: 0 0 8px; }
+.pep-confidence .pep-option { grid-template-columns: minmax(0, 1fr); text-align: center; min-height: 44px; padding: 8px 12px; }
+.pep-confidence .pep-option:has(input:checked) { padding: 7px 11px; }
+[data-pep-retry][hidden], #completion[hidden] { display: none; }
 /* model */
-.model{margin:0;padding:var(--s2) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);min-width:0}
-.model figcaption{display:flex;flex-wrap:wrap;justify-content:space-between;gap:var(--s1) var(--s3);margin:0 0 var(--s1);font-size:15px;font-weight:700;color:var(--muted)}
-.model figcaption .sim-tag{font-weight:600}
-.zones{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s2)}
-.zones.four{grid-template-columns:repeat(4,minmax(0,1fr))}
-.zone{min-width:0;padding:var(--s2);border:2px solid var(--rule);border-radius:4px;background:var(--bg)}
-.zone h3{margin:0 0 var(--s1);font-size:15px;line-height:20px}
-.zone h3 small{display:block;font-weight:500;color:var(--muted);font-size:14px}
-.zone.wc{border-color:var(--amber)}
-.zone.ix{border-color:var(--blue)}
-.zone.hist{border-color:var(--teal)}
-.zone.stash{border-color:var(--violet);border-style:dashed}
-.zone ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:var(--s1)}
-.chip{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 var(--s2);padding:4px var(--s2);border:2px solid var(--rule);border-radius:3px;background:var(--surface);font:600 15px/1.35 var(--mono);overflow-wrap:anywhere}
-.chip small{font:500 14px/1.3 var(--sans);color:var(--muted)}
-.chip.new{box-shadow:inset 0 -4px 0 var(--amber)}
-.chip.ign{border-style:dashed;color:var(--muted)}
-.chip.secret{border-color:var(--red)}
-.empty{font-size:14px;color:var(--muted);font-style:italic}
-.graphs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s3)}
-.graphs.one{grid-template-columns:minmax(0,1fr)}
-.gbox{min-width:0;padding:var(--s2);border:2px solid var(--rule);border-radius:4px;background:var(--bg)}
-.gbox.remote{border-style:dashed}
-.gbox h3{margin:0 0 var(--s1);font-size:15px;line-height:20px}
-.gbox h3 small{display:block;font-weight:500;color:var(--muted);font-size:14px}
-.graph{list-style:none;margin:0;padding:0}
-.grow{display:grid;grid-template-columns:var(--gw,56px) minmax(0,1fr);min-height:36px;align-items:stretch}
-.glane{position:relative}
-.glane svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-.glane svg line{stroke:var(--rule);stroke-width:3;vector-effect:non-scaling-stroke}
-.node{position:absolute;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--teal);border:3px solid var(--teal)}
-.node.ghost{background:var(--bg);border:3px dashed var(--rule)}
-.node.merge{background:var(--surface)}
-.gtext{display:flex;flex-wrap:wrap;align-items:center;gap:2px var(--s2);padding:2px 0;min-width:0;font-size:15px}
-.gtext .cid{font:700 15px/1.2 var(--mono)}
-.gtext .msg{color:var(--ink)}
-.gtext.ghost .msg::after{content:" (no branch points here)";color:var(--muted)}
-.ref{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border:2px solid var(--teal);border-radius:3px;font:600 15px/1.25 var(--mono);color:var(--ink);background:var(--surface)}
-.ref.head{background:var(--teal);color:var(--on-teal)}
-.ref.rt{border-style:dashed;border-color:var(--blue)}
-.ref.tag-new{box-shadow:inset 0 -4px 0 var(--amber)}
-.filebox{margin:0;border:2px solid var(--rule);border-radius:4px;background:var(--term);font:15px/1.5 var(--mono);overflow-wrap:anywhere;white-space:pre-wrap;padding:var(--s2) var(--s3)}
-.filebox .ln{display:block}
-.filebox .mk{font-weight:700;color:var(--red)}
-.filebox .ours{background:var(--teal-soft)}
-.filebox .theirs{background:var(--blue-soft)}
-.filebox .add{background:var(--teal-soft)}
-.filebox .add::before{content:"+ ";font-weight:700}
-.filebox .del{background:var(--red-soft)}
-.filebox .del::before{content:"- ";font-weight:700}
-.filebox .ctx::before{content:"  "}
-.legend{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);margin:var(--s2) 0 0;padding:0;list-style:none;font-size:14px;color:var(--muted)}
-.statusline{margin:var(--s2) 0 0;font-size:15px}
-.statusline b{font-family:var(--mono)}
-.gbox .statusline{margin-top:2px}
-/* controls */
-.control{min-width:0}
-fieldset{margin:0;padding:0;border:0;min-width:0}
-legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
-.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
-.opts.one{grid-template-columns:minmax(0,1fr)}
-.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:var(--s1) var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer;font-size:15px;line-height:1.35}
-.opt:hover{border-color:var(--ink)}
-.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
-.opt:has(input:disabled){cursor:default}
-.opt.right,.opt.right:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
-.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);box-shadow:inset 4px 0 0 var(--red)}
-.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
-.opt{flex-wrap:wrap}
-.opt > span:not(.why){flex:1 1 0;min-width:0}
-.opt .badges{flex:1 0 100%;display:flex;flex-wrap:wrap;gap:6px;padding-left:28px;margin-top:var(--s1)}
-.badge{display:inline-block;padding:2px 8px;border:2px solid;border-radius:3px;font:700 15px/1.3 var(--sans)}
-.badge.ok{color:var(--teal);border-color:var(--teal)}
-.badge.no{color:var(--red);border-color:var(--red);border-style:dashed}
-.opt .why{flex:1 0 100%;padding:var(--s1) 0 2px 28px;font-size:15px;line-height:1.4;color:var(--ink);border-top:1px solid var(--line);margin-top:var(--s1)}
-.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s2)}
-.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
-.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
-.conf .opt{min-width:88px}
-.cmds{display:flex;flex-wrap:wrap;gap:var(--s2)}
-.actions .ghost{min-height:40px;padding:var(--s1) var(--s3);font-size:15px;margin-left:auto}
-.cmd{min-height:40px;padding:var(--s1) var(--s3);background:var(--surface);border:2px solid var(--rule);font:600 15px/1.3 var(--mono);text-align:left}
-.cmd:hover{border-color:var(--ink)}
-.cmd:disabled{border-style:dashed}
-.cmd.plain{font-family:var(--sans)}
-.term:focus-within{outline:3px solid var(--focus);outline-offset:2px}
-.term{margin-top:var(--s1);border:2px solid var(--rule);border-radius:4px;background:var(--term)}
-.log{height:208px;overflow-y:auto;padding:6px var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
-.term-in{display:flex;align-items:center;gap:6px;padding:0 var(--s3);border-top:1px solid var(--rule)}
-.term-in label{font:700 15px/1.3 var(--mono);color:var(--teal);white-space:nowrap;max-width:55%;overflow:hidden;text-overflow:ellipsis}
-.term-in input{flex:1 1 auto;min-width:0;min-height:40px;padding:4px var(--s2);border:2px solid var(--rule);border-radius:3px;background:var(--surface);color:var(--ink);font:15px/1.3 var(--mono);caret-color:var(--teal)}
-.term-in{padding:var(--s2) var(--s3)}
-.term-in .run{flex:0 0 auto;min-height:40px;padding:var(--s1) var(--s4);background:transparent;border:2px solid var(--teal);color:var(--ink);font-weight:700}
-.term-in .run:disabled{border-style:dashed;border-color:var(--rule)}
-.actions{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2);margin-top:var(--s2)}
-.actions:empty{display:none}
-.term-in{flex-wrap:wrap}
-.term-in input{flex-basis:160px}
-.term-in .ghost{flex:0 0 auto;min-height:40px;padding:var(--s1) var(--s3);font-size:15px}
-.actions .cmd.plain{border-color:var(--blue);background:var(--surface)}
-.cmdref{margin-top:var(--s2);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
-.cmdref summary{cursor:pointer;min-height:40px;padding:var(--s2) var(--s3);font-size:15px;font-weight:600;color:var(--muted)}
-.cmdref[open] summary{color:var(--ink)}
-.cmdref .refnote{margin:0;padding:0 var(--s3) var(--s2);font-size:15px;color:var(--muted)}
-.cmdref .cmds{padding:0 var(--s3) var(--s3)}
-.teach .lead{color:var(--ink)}
-.teach .lead-only{margin-bottom:var(--s1)}
-.term-in input:focus{outline:none;border-color:var(--focus)}
-.term-in input::placeholder{color:var(--muted)}
-.term-in input:disabled{cursor:not-allowed}
-.log .c{font-weight:700}
-.log .c::before{content:"$ ";color:var(--teal)}
-.log .e{color:var(--red)}
-.log .hint{color:var(--muted);font-family:var(--sans)}
-.simbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:var(--s2);padding:var(--s1) var(--s2);border-top:1px solid var(--rule);font-size:14px;color:var(--muted)}
-.simbar button{min-height:40px;padding:var(--s1) var(--s3);font-size:15px}
-.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
-.fbrow{display:flex;gap:var(--s4);align-items:flex-start;justify-content:space-between}
-.feedback{flex:1 1 auto;min-width:0;min-height:44px;font-size:15px;line-height:1.45}
-.feedback p{margin:0 0 var(--s1)}
-.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
-.feedback li{margin-bottom:2px}
-.feedback .verdict{font-weight:700}
-.feedback .verdict.ok{color:var(--teal)}
-.feedback .verdict.no{color:var(--red)}
-.feedback .verdict.set{color:var(--amber)}
-.feedback .conf-report{color:var(--muted)}
-.fbrow .primary{flex:0 0 auto}
-.recap ul{padding-left:20px}
-.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
-.recap summary{cursor:pointer;font-weight:700;min-height:28px}
-.recap .sources p,.recap .sources li{font-size:15px}
-.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
-.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
-.next-topic{font-weight:700}
-.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
-.complete p{margin:0}
-.complete p+p{margin-top:var(--s1)}
-[hidden]{display:none!important}
-@media (max-width:860px){
-  main{padding:var(--s3) var(--s4) var(--s4)}
-  .top{grid-template-columns:minmax(0,1fr);grid-template-areas:"crumbs" "title" "meta" "tools";row-gap:var(--s1)}
-  .tools{justify-content:flex-start;flex-wrap:wrap}
-  .stage{grid-template-columns:minmax(0,1fr)}
-  .fbrow{flex-direction:column}
-  .cmd{min-height:44px}
-  .term-in input{min-height:44px}
-  .graphs{grid-template-columns:minmax(0,1fr)}
-  .zones.four{grid-template-columns:repeat(2,minmax(0,1fr))}
+.pep-model { margin: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.pep-model figcaption { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; margin: 0 0 8px; color: var(--pep-text-strong); font: 600 13px/20px var(--pep-font-sans); }
+.pep-model .sim-tag { padding: 2px 12px; border-radius: var(--pep-radius-pill); background: var(--pep-control); color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); }
+.zones { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 136px), 1fr)); gap: 8px; }
+.zone, .gbox { min-width: 0; padding: 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-card); }
+.zone.stash, .gbox.remote { border-style: dashed; }
+.zone h3, .gbox h3 { margin: 0 0 4px; font: 600 14px/20px var(--pep-font-sans); }
+.zone h3 small, .gbox h3 small { display: block; font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.zone ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.chip { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; max-width: none; padding: 4px 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 600 14px/20px var(--pep-font-mono); overflow-wrap: anywhere; }
+.chip small { font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.chip.new { border-bottom: 3px solid var(--pep-accent); }
+.chip.ign { border-style: dashed; color: var(--pep-text-muted); }
+.empty { font: italic 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.graphs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
+.graphs.one { grid-template-columns: minmax(0, 1fr); }
+.graph { list-style: none; margin: 0; padding: 0; }
+.grow { display: grid; grid-template-columns: var(--gw, 56px) minmax(0, 1fr); min-height: 40px; align-items: stretch; max-width: none; }
+.glane { position: relative; }
+.glane svg { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; overflow: visible; }
+.glane svg line { stroke: var(--pep-line-strong); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.node { position: absolute; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--pep-accent); border: 2px solid var(--pep-accent); }
+.node.ghost { background: var(--pep-page); border: 2px dashed var(--pep-line-strong); }
+.node.merge { background: var(--pep-page); }
+.gtext { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 4px 0; min-width: 0; font: 400 14px/20px var(--pep-font-sans); }
+.gtext .cid { font: 600 14px/20px var(--pep-font-mono); color: var(--pep-text-strong); }
+.gtext .msg { color: var(--pep-text-strong); }
+.gtext.ghost .msg::after { content: " (no branch points here)"; color: var(--pep-text-muted); }
+.ref { display: inline-flex; align-items: center; gap: 4px; padding: 0 8px; border: 1px solid var(--pep-accent); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 600 13px/20px var(--pep-font-mono); }
+.ref.head { background: var(--pep-accent-fill); border-color: var(--pep-accent); color: var(--pep-on-accent-fill); }
+.ref.rt { border-style: dashed; border-color: var(--pep-line-strong); }
+.ref.tag-new { border-bottom-width: 3px; }
+.filebox { margin: 0; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.filebox .ln { display: block; }
+.filebox .mk { font-weight: 700; color: var(--pep-accent-text); }
+.filebox .ours, .filebox .add { background: var(--pep-accent-soft); }
+.filebox .theirs, .filebox .del { background: var(--pep-control); }
+.filebox .add::before { content: "+ "; font-weight: 700; }
+.filebox .del::before { content: "- "; font-weight: 700; }
+.filebox .ctx::before { content: "  "; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 8px 0 0; padding: 0; list-style: none; font: 400 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.statusline { margin: 8px 0 0; font: 400 14px/20px var(--pep-font-sans); }
+.statusline b { font-family: var(--pep-font-mono); color: var(--pep-text-strong); }
+.gbox .statusline { margin-top: 4px; }
+/* practice terminal */
+.pep-terminal { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); font: 400 14px/20px var(--pep-font-mono); min-width: 0; }
+.pep-terminal:focus-within { border-color: var(--pep-focus); box-shadow: 0 0 0 1px var(--pep-focus); }
+.pep-terminal .log { min-height: 120px; max-height: 240px; overflow: auto; overscroll-behavior: contain auto; padding: 8px 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pep-terminal .log > div { max-width: none; }
+.pep-terminal .log .c { font-weight: 600; }
+.pep-terminal .log .c::before { content: "$ "; color: var(--pep-accent-text); }
+.pep-terminal .log .e { color: var(--pep-danger); }
+.pep-terminal .log .w { color: var(--pep-warning); }
+.pep-terminal .log .hint { color: var(--pep-text-muted); font-family: var(--pep-font-sans); }
+.term-in { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--pep-line-strong); }
+.term-in label { min-width: 0; max-width: 100%; color: var(--pep-accent-text); font-weight: 600; overflow-wrap: anywhere; }
+.term-in input { flex: 1 1 160px; min-width: 0; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: inherit; caret-color: var(--pep-accent-text); scroll-margin-block: 16px; }
+.term-in input::placeholder { color: var(--pep-text-muted); }
+.term-in input:disabled { cursor: not-allowed; }
+.term-in .pep-btn { flex: 0 0 auto; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.actions:empty { display: none; }
+.cmds { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 12px 12px; }
+.cmd { min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 600 14px/20px var(--pep-font-mono); text-align: left; cursor: pointer; overflow-wrap: anywhere; }
+.cmd:hover { border-color: var(--pep-accent); }
+.cmd:disabled { border-style: dashed; color: var(--pep-text-muted); cursor: not-allowed; }
+.cmd.plain { font-family: var(--pep-font-sans); border-color: var(--pep-accent); }
+.cmdref { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); }
+.cmdref > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-text-strong); font: 600 14px/20px var(--pep-font-sans); }
+.cmdref > summary::marker { color: var(--pep-accent-text); }
+/* feedback */
+.pep-feedback { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.pep-feedback:empty { display: none; }
+.pep-feedback p { margin: 0 0 4px; }
+.pep-feedback p:last-child { margin-bottom: 0; }
+.pep-feedback .verdict { display: flex; align-items: flex-start; gap: 8px; font-weight: 600; }
+.pep-feedback .verdict .pep-icon { margin-top: 2px; }
+.pep-feedback .verdict.ok { color: var(--pep-success); }
+.pep-feedback .verdict.no { color: var(--pep-danger); }
+.pep-feedback .verdict.set, .pep-feedback .verdict.warn { color: var(--pep-warning); }
+.pep-feedback .conf-report { color: var(--pep-text-muted); }
+/* recap, cheat sheet, sources */
+.pep-recap { padding: 24px 0 0; margin-top: 48px; border-block-start: 1px solid var(--pep-line-strong); }
+.pep-recap[hidden] { display: none; }
+.pep-recap h2 { margin-bottom: 12px; outline-offset: 4px; }
+.pep-callout { padding: 12px 16px; margin: 0 0 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); color: var(--pep-text); }
+.pep-callout p { margin: 0 0 4px; }
+.pep-callout p:last-child { margin-bottom: 0; }
+.pep-callout--success { background: var(--pep-success-soft); border-color: var(--pep-success); color: var(--pep-text-strong); }
+.pep-callout .conf-report { color: var(--pep-text); }
+.pep-cheat, .pep-sources { margin-top: 16px; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-cheat > summary, .pep-sources > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-cheat > summary::marker, .pep-sources > summary::marker { color: var(--pep-accent-text); }
+.pep-cheat > :last-child, .pep-sources > :last-child { margin-bottom: 12px; }
+.pep-sources p, .pep-sources li { font: 400 14px/20px var(--pep-font-sans); }
+.pep-sources a { display: inline-flex; align-items: center; min-height: 44px; overflow-wrap: anywhere; }
+.pep-table-wrap { border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); overflow: hidden; }
+.pep-table { width: 100%; border-collapse: collapse; font: 400 14px/20px var(--pep-font-sans); }
+.pep-table td { padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; }
+.pep-table tr:last-child td { border-bottom: 0; }
+.pep-table td:first-child { font-weight: 600; color: var(--pep-text-strong); }
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+  [data-pep-workspace] { padding: 16px; }
+  .term-in input { font-size: 16px; }
+  .term-in .pep-btn { flex: 1 1 calc(50% - 4px); }
+  .pep-table td { display: block; border-bottom: 0; padding: 4px 12px; }
+  .pep-table td:first-child { padding-top: 8px; }
+  .pep-table tr { display: block; border-bottom: 1px solid var(--pep-line-strong); }
+  .pep-table tr:last-child { border-bottom: 0; }
+  .pep-table td:last-child { padding-bottom: 8px; }
 }
-@media (min-width:861px) and (max-height:720px){.log{height:176px}.term-in input{min-height:32px}.cmds{gap:6px}.term-in{padding:4px var(--s3)}.term-in .run,.term-in .ghost{min-height:32px}.cmd,.cmds .ghost{min-height:36px}.grow{min-height:32px}}
-@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}.zones{grid-template-columns:minmax(0,1fr)}}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+@media (forced-colors: active) {
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional { border-color: CanvasText; }
+  .pep-topicbar, [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+  .pep-option:has(input:checked), .pep-option.is-correct { border-color: Highlight; }
+  .node { background: CanvasText; border-color: CanvasText; }
+}
+@media print {
+  .pep-activity-actions, nav[aria-label="Activities"], .pep-back, [data-pep-reset], .pep-check-row, .term-in, .cmdref { display: none !important; }
+  [data-pep-activity], [data-pep-activity][hidden], .pep-recap[hidden] { display: block !important; }
+  .pep-objectives > div { display: block !important; width: auto; }
+  .pep-topicbar, [data-pep-workspace], [data-pep-where-fits], details[data-pep-hint], [data-pep-activity-checks], .pep-optional, .pep-feedback { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  [data-pep-activity-checks], [data-pep-where-fits], .pep-model, .pep-cheat, .pep-sources { break-inside: avoid; }
+  .pep-terminal .log { max-height: none; overflow: visible; }
+}
 </style>
 </head>
 <body>
 <noscript><p class="nojs">This topic needs JavaScript for its practice repository and checks. The teaching text below still reads without it.</p></noscript>
-<main id="lesson">
-  <header class="top">
-    <h1 id="lesson-title" tabindex="-1">Merge vs rebase</h1>
-    <ul class="meta" data-pep-objectives aria-label="Objectives"><li>Describe how a merge joins diverged histories with a merge commit, while a fast-forward merge only moves the branch pointer</li><li>Describe how a rebase replays your commits as new commits on a new base</li><li>Apply the rule: do not rebase commits other people already have</li></ul>
-    <div class="tools">
-      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 3</span><span class="pips" id="pips" aria-hidden="true"></span></div>
-      <button type="button" class="ghost" id="restart" data-pep-reset>Restart this activity</button>
-    </div>
-  </header>
-  <div class="stage" id="stage" data-step="1">
-    <div class="col" id="col-a">
-      <section id="current-teaching" class="teach" aria-label="Teaching"><div data-step="1"><h2 id="teach-1-h" tabindex="-1">Start with a guess</h2><p>While you worked on <code>feature</code>, <code>main</code> gained a commit. There are two ways to bring that work into your branch. The model shows the starting history.</p></div><div data-step="2" hidden><h2 id="teach-2-h" tabindex="-1">Two ways to take in main</h2><p>Both commands bring <code>main</code>'s new work into your branch.</p><p><strong class="lead">Merge:</strong> <code>git merge main</code> keeps every existing commit and adds a <strong>merge commit</strong> with two parents.</p><p><strong class="lead">Rebase:</strong> <code>git rebase main</code> replays your commits on top of <code>main</code>'s tip. Each replayed commit is <strong>new</strong>, with a new ID (C3 becomes C3′); the old ones are abandoned. History becomes a straight line.</p><p><strong class="lead">The rule:</strong> Because rebase replaces commits, <strong>never rebase commits other people already have</strong>. Merging is always safe.</p></div><div data-step="3" hidden><h2 id="teach-3-h" tabindex="-1">Apply it to a shared branch</h2><p>Same two tools; now a teammate depends on your commits.</p></div><div data-step="4" hidden data-pep-recap class="recap"><h2 id="teach-4-h" tabindex="-1">Recap</h2><ul><li><code>git merge main</code> keeps all commits and adds a merge commit with two parents.</li><li><code>git rebase main</code> replays your commits as new commits on main's tip, making a straight line.</li><li>Rebased commits get new IDs; the old ones are abandoned.</li><li>Never rebase commits others already have. When in doubt, merge.</li></ul><details data-section-skip><summary>Cheat sheet</summary><table><tr><td><code>git merge main</code></td><td>join main into your branch with a merge commit</td></tr><tr><td><code>git rebase main</code></td><td>replay your commits on top of main</td></tr><tr><td><code>C3 vs C3′</code></td><td>same change, different commit after a rebase</td></tr></table></details><details data-section-skip class="sources"><summary>Sources and review date</summary><p>Teaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.</p><ul><li><a href="https://git-scm.com/docs/git-rebase#_description">git-rebase: description</a></li><li><a href="https://git-scm.com/docs/git-rebase#_recovering_from_upstream_rebase">git-rebase: recovering from upstream rebase</a></li><li><a href="https://git-scm.com/docs/git-merge#_description">git-merge: description</a></li></ul></details><p class="next-topic">Next topic: <a href="08-pull-requests-and-review.html">Pull requests and review comments</a></p></div></section>
-      <section id="current-task" class="task" aria-label="Current task"><div data-step="1"><p id="task-1">Your <code>feature</code> has C3; <code>main</code> gained C4 since you branched. On <code>feature</code> you run <code>git rebase main</code>. What happens to C3?</p></div><div data-step="2" hidden><p id="task-2">Try both from the same starting history and compare the results.</p><ul class="goals" id="goals-2" aria-label="Goals for this practice"></ul></div><div data-step="3" hidden><p id="task-3">You pushed <code>feature</code>, and a teammate already built commits on top of it. You need <code>main</code>'s new commits in <code>feature</code>. Which do you use?</p><p id="task-3b" tabindex="-1" hidden>Second try, as a picture. The model shows a history after someone took in <code>main</code>. Which command produced it?</p></div><div data-step="4" hidden><p id="task-4">All activities are finished. Read the recap, then move on.</p></div></section>
-    </div>
-    <div class="col" id="col-b">
-      <figure id="live-model" class="model"><figcaption><span id="model-cap">Practice repository &quot;shop&quot;: feature and main</span><span class="sim-tag">Simulation: no real Git runs</span></figcaption><div id="model-body"></div></figure>
-      <div id="current-control" class="control"><div data-step="1"><fieldset id="predict-1" data-static-alt="Prediction (not scored). Your feature has C3; main gained C4 since you branched. On feature you run git rebase main. What happens to C3? Options: A new commit C3′ with the same change lands on top of C4; C3 itself moves, unchanged, on top of C4; C3 and C4 combine into one merge commit; C3 is deleted and its change lost. Answer: A new commit C3′ with the same change lands on top of C4. A new commit C3′ with the same change lands on top of C4: Rebase replays your change as a brand-new commit on main&#x27;s tip. The old C3 is abandoned. C3 itself moves, unchanged, on top of C4: Attractive, but a commit&#x27;s parent is part of its identity, so Git must create a new commit, C3′. C3 and C4 combine into one merge commit: That describes a merge, not a rebase. C3 is deleted and its change lost: The change survives in C3′; only the old commit is left behind." data-interaction="predict" data-confidence data-pep-predict aria-describedby="task-1"><legend>Your prediction</legend><div class="opts"><label class="opt" for="pred-1-new" data-opt="new"><input type="radio" id="pred-1-new" name="pred-1" value="new"><span>A new commit C3′ with the same change lands on top of C4</span></label><label class="opt" for="pred-1-moved" data-opt="moved"><input type="radio" id="pred-1-moved" name="pred-1" value="moved"><span>C3 itself moves, unchanged, on top of C4</span></label><label class="opt" for="pred-1-merged" data-opt="merged"><input type="radio" id="pred-1-merged" name="pred-1" value="merged"><span>C3 and C4 combine into one merge commit</span></label><label class="opt" for="pred-1-lost" data-opt="lost"><input type="radio" id="pred-1-lost" name="pred-1" value="lost"><span>C3 is deleted and its change lost</span></label></div></fieldset><div class="row"><fieldset class="conf" id="conf-P" data-pep-confidence><legend id="conf-P-legend">Your confidence</legend><label class="opt" for="conf-P-low"><input type="radio" id="conf-P-low" name="conf-P" value="low"><span>Low</span></label><label class="opt" for="conf-P-medium"><input type="radio" id="conf-P-medium" name="conf-P" value="medium"><span>Medium</span></label><label class="opt" for="conf-P-high"><input type="radio" id="conf-P-high" name="conf-P" value="high"><span>High</span></label></fieldset><button type="button" class="primary" id="predict-check-1" data-predict-check data-pep-predict-check disabled>Check prediction</button></div></div><div data-step="2" hidden><div id="sim-2" data-static-alt="Practice terminal (simulated; nothing runs on your computer). Task: Try both from the same starting history and compare the results. Goals: Merge main into feature; find the merge commit; From the same start, rebase; find C3′. One sequence that meets every goal: git merge main, then Restore the starting history (practice only), then git rebase main." data-interaction="terminal" data-steps="3" data-pep-explore><div class="term" id="sim-2-term"><div class="log" id="sim-2-log" role="log" aria-live="off" aria-label="Simulated output" tabindex="0"></div><div class="term-in"><label for="sim-2-input"><span id="sim-2-prompt" aria-hidden="true">$</span><span class="vh">Command</span></label><input id="sim-2-input" type="text" data-sim-input="2" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="term-help task-2" placeholder="Type a command, then press Enter"><button type="button" class="run" data-sim-run="2">Run</button><button type="button" class="ghost" data-sim-reset="2">Reset practice repo</button></div></div><div class="actions" id="sim-2-actions" role="group" aria-label="Other actions for this practice (not terminal commands)"></div><details class="cmdref" id="sim-2-ref"><summary>Stuck? Show every command this practice accepts (choosing one runs it)</summary><div class="cmds" id="sim-2-cmds" role="group" aria-label="Command list"></div></details></div></div><div data-step="3" hidden><div id="apply-A-wrap"><fieldset id="apply-A" data-static-alt="Check (one retry, then the answer is shown). You pushed feature, and a teammate already built commits on top of it. You need main&#x27;s new commits in feature. Which do you use? Options: git merge main; git rebase main; Either; both give the same history; git reset --hard main. Answer: git merge main. git merge main: Right: merge keeps every commit your teammate built on, adding one merge commit. git rebase main: Rebase replaces your pushed commits with new ones, so your teammate&#x27;s work sits on commits that are no longer in your branch. Either; both give the same history: They differ: merge adds a merge commit; rebase creates new copies of your commits. git reset --hard main: That would throw away your feature commits entirely. Retry question: The model shows a history after someone took in main. Which command produced it? Options: git rebase main: C3 was replayed as C3′; git merge main: there is a merge commit; git merge main: C3 was kept as it was; Neither; nothing changed. Answer: git rebase main: C3 was replayed as C3′. git rebase main: C3 was replayed as C3′: Right: C3′ is a new commit on top of C4, and the old C3 is left with no branch. git merge main: there is a merge commit: No commit here has two parents, so no merge happened. git merge main: C3 was kept as it was: The branch now points at C3′, a different commit from C3. Neither; nothing changed: feature moved from C3 to C3′, so something did change." data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-3"><legend>Command for a shared branch</legend><div class="opts"><label class="opt" for="ans-A-merge" data-opt="merge"><input type="radio" id="ans-A-merge" name="ans-A" value="merge"><span>git merge main</span></label><label class="opt" for="ans-A-rebase" data-opt="rebase"><input type="radio" id="ans-A-rebase" name="ans-A" value="rebase"><span>git rebase main</span></label><label class="opt" for="ans-A-same" data-opt="same"><input type="radio" id="ans-A-same" name="ans-A" value="same"><span>Either; both give the same history</span></label><label class="opt" for="ans-A-reset" data-opt="reset"><input type="radio" id="ans-A-reset" name="ans-A" value="reset"><span>git reset --hard main</span></label></div></fieldset><div class="row"><fieldset class="conf" id="conf-A" data-pep-confidence><legend id="conf-A-legend">Your confidence</legend><label class="opt" for="conf-A-low"><input type="radio" id="conf-A-low" name="conf-A" value="low"><span>Low</span></label><label class="opt" for="conf-A-medium"><input type="radio" id="conf-A-medium" name="conf-A" value="medium"><span>Medium</span></label><label class="opt" for="conf-A-high"><input type="radio" id="conf-A-high" name="conf-A" value="high"><span>High</span></label></fieldset><button type="button" class="primary" id="apply-check-A" data-apply-check="A" data-pep-apply-check disabled>Check answer</button></div></div><div id="apply-B-wrap" hidden data-pep-retry><fieldset id="apply-B" aria-describedby="task-3b"><legend>What produced this history</legend><div class="opts"><label class="opt" for="ans-B-rebase" data-opt="rebase"><input type="radio" id="ans-B-rebase" name="ans-B" value="rebase"><span>git rebase main: C3 was replayed as C3′</span></label><label class="opt" for="ans-B-merge" data-opt="merge"><input type="radio" id="ans-B-merge" name="ans-B" value="merge"><span>git merge main: there is a merge commit</span></label><label class="opt" for="ans-B-kept" data-opt="kept"><input type="radio" id="ans-B-kept" name="ans-B" value="kept"><span>git merge main: C3 was kept as it was</span></label><label class="opt" for="ans-B-none" data-opt="none"><input type="radio" id="ans-B-none" name="ans-B" value="none"><span>Neither; nothing changed</span></label></div></fieldset><div class="row"><fieldset class="conf" id="conf-B" data-pep-confidence><legend id="conf-B-legend">Your confidence</legend><label class="opt" for="conf-B-low"><input type="radio" id="conf-B-low" name="conf-B" value="low"><span>Low</span></label><label class="opt" for="conf-B-medium"><input type="radio" id="conf-B-medium" name="conf-B" value="medium"><span>Medium</span></label><label class="opt" for="conf-B-high"><input type="radio" id="conf-B-high" name="conf-B" value="high"><span>High</span></label></fieldset><button type="button" class="primary" id="apply-check-B" data-apply-check="B" disabled>Check second answer</button></div></div></div><div data-step="4" hidden><div id="completion" class="complete" hidden></div></div></div>
-      <div class="fbrow"><div id="current-feedback" class="feedback" role="status" aria-live="polite" tabindex="-1" data-pep-predict-feedback data-pep-explore-feedback data-pep-apply-feedback></div><button type="button" class="primary" id="next" disabled>Continue</button></div>
-    </div>
-  </div>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="6">
+<header class="pep-topicbar">
+<h1 id="lesson-title">Merge vs rebase</h1>
+<div class="pep-topicbar__meta progress" id="progress" data-pep-progress><span class="pep-topicbar__progress" id="pep-position">3 activities · about 6 min</span><div class="pep-progress pep-js-only" id="pips" aria-hidden="true"><span></span><span></span><span></span></div><span class="pep-topicbar__progress pep-js-only" id="prog-text">Activities done: 0 of 3</span></div>
+<details class="pep-objectives" data-pep-objectives><summary aria-controls="pep-objectives-body">Objectives</summary><div id="pep-objectives-body"><ul><li>Describe how a merge joins diverged histories with a merge commit, while a fast-forward merge only moves the branch pointer</li><li>Describe how a rebase replays your commits as new commits on a new base</li><li>Apply the rule: do not rebase commits other people already have</li></ul></div></details>
+<button class="pep-btn pep-js-only" type="button" id="restart" data-pep-reset>Restart activity</button>
+</header>
+<nav aria-label="Activities"><ol class="pep-steps"><li><a class="pep-step" href="#activity-1" data-pep-activity-link>Activity 1</a></li><li><a class="pep-step" href="#activity-2" data-pep-activity-link>Activity 2</a></li><li><a class="pep-step" href="#activity-3" data-pep-activity-link>Activity 3</a></li></ol></nav>
+<section id="activity-1" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<div class="pep-regions">
+<div class="pep-region"><div data-pep-teaching data-pep-instructions><h2 id="activity-1-title" tabindex="-1">Start with a guess</h2><p>While you worked on <code>feature</code>, <code>main</code> gained a commit. There are two ways to bring that work into your branch. The model shows the starting history.</p></div></div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-1" data-pep-task><h3>Your task</h3><ol><li id="task-1-q">Your <code>feature</code> has C3; <code>main</code> gained C4 since you branched. On <code>feature</code> you run <code>git rebase main</code>. What happens to C3?</li><li>Choose a prediction and a confidence, then press <strong>Check prediction</strong></li></ol></div>
+<section data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><ul><li>Your prediction is checked, not scored.</li></ul></section>
+<figure class="pep-model pep-js-only" id="model-1" data-pep-model><figcaption><span id="model-cap-1"></span><span class="sim-tag"></span></figcaption><div id="model-body-1"></div></figure>
+<div id="control-1" class="pep-control q"><fieldset class="pep-options" id="predict-1" data-static-alt="Prediction (not scored). Your feature has C3; main gained C4 since you branched. On feature you run git rebase main. What happens to C3? Options: A new commit C3′ with the same change lands on top of C4; C3 itself moves, unchanged, on top of C4; C3 and C4 combine into one merge commit; C3 is deleted and its change lost. Answer: A new commit C3′ with the same change lands on top of C4. A new commit C3′ with the same change lands on top of C4: Rebase replays your change as a brand-new commit on main&#x27;s tip. The old C3 is abandoned. C3 itself moves, unchanged, on top of C4: Attractive, but a commit&#x27;s parent is part of its identity, so Git must create a new commit, C3′. C3 and C4 combine into one merge commit: That describes a merge, not a rebase. C3 is deleted and its change lost: The change survives in C3′; only the old commit is left behind." data-interaction="predict" data-confidence data-pep-predict aria-describedby="task-1-q"><legend>Your prediction</legend><div class="pep-options__list"><label class="pep-option" for="pred-1-new" data-opt="new"><input type="radio" id="pred-1-new" name="pred-1" value="new"><span class="pep-option__key" aria-hidden="true"></span><span class="pep-option__text">A new commit C3′ with the same change lands on top of C4</span></label><label class="pep-option" for="pred-1-moved" data-opt="moved"><input type="radio" id="pred-1-moved" name="pred-1" value="moved"><span class="pep-option__key" aria-hidden="true"></span><span class="pep-option__text">C3 itself moves, unchanged, on top of C4</span></label><label class="pep-option" for="pred-1-merged" data-opt="merged"><input type="radio" id="pred-1-merged" name="pred-1" value="merged"><span class="pep-option__key" aria-hidden="true"></span><span class="pep-option__text">C3 and C4 combine into one merge commit</span></label><label class="pep-option" for="pred-1-lost" data-opt="lost"><input type="radio" id="pred-1-lost" name="pred-1" value="lost"><span class="pep-option__key" aria-hidden="true"></span><span class="pep-option__text">C3 is deleted and its change lost</span></label></div></fieldset><div class="pep-check-row pep-js-only"><fieldset class="pep-confidence" id="conf-P" data-pep-confidence><legend id="conf-P-legend">Your confidence</legend><label class="pep-option" for="conf-P-low"><input type="radio" id="conf-P-low" name="conf-P" value="low"><span class="pep-option__text">Low</span></label><label class="pep-option" for="conf-P-medium"><input type="radio" id="conf-P-medium" name="conf-P" value="medium"><span class="pep-option__text">Medium</span></label><label class="pep-option" for="conf-P-high"><input type="radio" id="conf-P-high" name="conf-P" value="high"><span class="pep-option__text">High</span></label></fieldset><button type="button" class="pep-btn pep-btn--primary" id="predict-check-1" data-predict-check data-pep-predict-check disabled>Check prediction</button></div></div>
+<div class="pep-feedback" id="feedback-1" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+<p class="pep-note pep-js-only" id="restart-note-1" aria-live="polite"></p>
+</div>
+</div>
+</section>
+<section id="activity-2" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<div class="pep-regions">
+<div class="pep-region"><div data-pep-teaching data-pep-instructions><h2 id="activity-2-title" tabindex="-1">Two ways to take in main</h2><p>Both commands bring <code>main</code>'s new work into your branch.</p><p><strong class="lead">Merge:</strong> <code>git merge main</code> keeps every existing commit and adds a <strong>merge commit</strong> with two parents.</p><p><strong class="lead">Rebase:</strong> <code>git rebase main</code> replays your commits on top of <code>main</code>'s tip. Each replayed commit is <strong>new</strong>, with a new ID (C3 becomes C3′); the old ones are abandoned. History becomes a straight line.</p><p><strong class="lead">The rule:</strong> Because rebase replaces commits, <strong>never rebase commits other people already have</strong>. Merging is always safe.</p></div><section data-pep-where-fits aria-labelledby="where-fits-2"><h2 id="where-fits-2">Where this fits</h2><p data-pep-fit-decision><strong>Decision:</strong> Take <code>main</code>&#x27;s new work into your branch with a merge or with a rebase.</p><p data-pep-fit-good><strong>Good fit:</strong> Rebase commits nobody else has yet, when you want history as a straight line.</p><p data-pep-fit-boundary><strong>Choose something else when:</strong> Other people already have your commits: merge instead, which keeps every existing commit.</p></section></div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-2" data-pep-task data-pep-may-stall><h3>Your task</h3><ol><li id="task-2-q">Try both from the same starting history and compare the results.</li><li>Run commands in the practice terminal until every check says Done.</li></ol><details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> In the practice terminal on <code>feature</code>, then the restore action beside it.</p><p data-pep-hint-step><strong>Next step:</strong> Try one way and read the history in the model, then restore the starting history before you try the other way.</p></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><ul id="goals-2"><li data-goal="merged">Merge <code>main</code> into <code>feature</code>; find the merge commit</li><li data-goal="rebased">From the same start, rebase; find C3′</li></ul></section>
+<figure class="pep-model pep-js-only" id="model-2" data-pep-model><figcaption><span id="model-cap-2"></span><span class="sim-tag"></span></figcaption><div id="model-body-2"></div></figure>
+<div id="control-2" class="pep-control q"><div id="sim-2" data-static-alt="Practice terminal (simulated; nothing runs on your computer). Task: Try both from the same starting history and compare the results. Goals: Merge main into feature; find the merge commit; From the same start, rebase; find C3′. One sequence that meets every goal: git merge main, then Restore the starting history (practice only), then git rebase main." data-interaction="terminal" data-steps="3" data-pep-explore><div class="pep-terminal" id="sim-2-term"><div class="log" id="sim-2-log" role="log" aria-live="off" aria-label="Simulated output" tabindex="0"></div><div class="term-in"><label for="sim-2-input"><span id="sim-2-prompt" aria-hidden="true">$</span><span class="vh">Command</span></label><input id="sim-2-input" type="text" data-sim-input="2" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="term-help task-2-q" placeholder="Type a command, then press Enter"><button type="button" class="pep-btn pep-btn--primary" data-sim-run="2">Run</button><button type="button" class="pep-btn" data-sim-reset="2">Reset practice repo</button></div></div><div class="actions" id="sim-2-actions" role="group" aria-label="Other actions for this practice (not terminal commands)"></div><details class="cmdref" id="sim-2-ref"><summary>Stuck? Show every command this practice accepts (choosing one runs it)</summary><div class="cmds" id="sim-2-cmds" role="group" aria-label="Command list"></div></details></div></div>
+<div class="pep-feedback" id="feedback-2" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+<p class="pep-note pep-js-only" id="restart-note-2" aria-live="polite"></p>
+</div>
+</div>
+<p><a class="pep-back" href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</section>
+<section id="activity-3" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<div class="pep-regions">
+<div class="pep-region"><div data-pep-teaching data-pep-instructions><h2 id="activity-3-title" tabindex="-1">Apply it to a shared branch</h2><p>Same two tools; now a teammate depends on your commits.</p></div></div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-3" data-pep-task><h3>Your task</h3><ol><li id="task-3-q">You pushed <code>feature</code>, and a teammate already built commits on top of it. You need <code>main</code>'s new commits in <code>feature</code>. Which do you use?</li><li>Choose an answer and a confidence, then press <strong>Check answer</strong></li></ol><p id="task-3b" tabindex="-1" hidden>Second try, as a picture. The model shows a history after someone took in <code>main</code>. Which command produced it?</p></div>
+<section data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><ul><li>The right answer within two tries.</li></ul></section>
+<figure class="pep-model pep-js-only" id="model-3" data-pep-model><figcaption><span id="model-cap-3"></span><span class="sim-tag"></span></figcaption><div id="model-body-3"></div></figure>
+<div id="control-3" class="pep-control q"><div id="apply-A-wrap"><fieldset class="pep-options" id="apply-A" data-static-alt="Check (one retry, then the answer is shown). You pushed feature, and a teammate already built commits on top of it. You need main&#x27;s new commits in feature. Which do you use? Options: git merge main; git rebase main; Either; both give the same history; git reset --hard main. Answer: git merge main. git merge main: Right: merge keeps every commit your teammate built on, adding one merge commit. git rebase main: Rebase replaces your pushed commits with new ones, so your teammate&#x27;s work sits on commits that are no longer in your branch. Either; both give the same history: They differ: merge adds a merge commit; rebase creates new copies of your commits. git reset --hard main: That would throw away your feature commits entirely. Retry question: The model shows a history after someone took in main. Which command produced it? Options: git rebase main: C3 was replayed as C3′; git merge main: there is a merge commit; git merge main: C3 was kept as it was; Neither; nothing changed. Answer: git rebase main: C3 was replayed as C3′. git rebase main: C3 was replayed as C3′: Right: C3′ is a new commit on top of C4, and the old C3 is left with no branch. git merge main: there is a merge commit: No commit here has two parents, so no merge happened. git merge main: C3 was kept as it was: The branch now points at C3′, a different commit from C3. Neither; nothing changed: feature moved from C3 to C3′, so something did change." data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-3-q"><legend>Command for a shared branch</legend><div class="pep-options__list"><label class="pep-option" for="ans-A-merge" data-opt="merge"><input type="radio" id="ans-A-merge" name="ans-A" value="merge"><span class="pep-option__key" aria-hidden="true"></span><span class="pep-option__text">git merge main</span></label><label class="pep-option" for="ans-A-rebase" data-opt="rebase"><input type="radio" id="ans-A-rebase" name="ans-A" value="rebase"><span class="pep-option__key" aria-hidden="true"></span><span class="pep-option__text">git rebase main</span></label><label class="pep-option" for="ans-A-same" data-opt="same"><input type="radio" id="ans-A-same" name="ans-A" value="same"><span class="pep-option__key" aria-hidden="true"></span><span class="pep-option__text">Either; both give the same history</span></label><label class="pep-option" for="ans-A-reset" data-opt="reset"><input type="radio" id="ans-A-reset" name="ans-A" value="reset"><span class="pep-option__key" aria-hidden="true"></span><span class="pep-option__text">git reset --hard main</span></label></div></fieldset><div class="pep-check-row pep-js-only"><fieldset class="pep-confidence" id="conf-A" data-pep-confidence><legend id="conf-A-legend">Your confidence</legend><label class="pep-option" for="conf-A-low"><input type="radio" id="conf-A-low" name="conf-A" value="low"><span class="pep-option__text">Low</span></label><label class="pep-option" for="conf-A-medium"><input type="radio" id="conf-A-medium" name="conf-A" value="medium"><span class="pep-option__text">Medium</span></label><label class="pep-option" for="conf-A-high"><input type="radio" id="conf-A-high" name="conf-A" value="high"><span class="pep-option__text">High</span></label></fieldset><button type="button" class="pep-btn pep-btn--primary" id="apply-check-A" data-apply-check="A" data-pep-apply-check disabled>Check answer</button></div></div><div id="apply-B-wrap" hidden data-pep-retry><fieldset class="pep-options" id="apply-B" aria-describedby="task-3b"><legend>What produced this history</legend><div class="pep-options__list"><label class="pep-option" for="ans-B-rebase" data-opt="rebase"><input type="radio" id="ans-B-rebase" name="ans-B" value="rebase"><span class="pep-option__key" aria-hidden="true"></span><span class="pep-option__text">git rebase main: C3 was replayed as C3′</span></label><label class="pep-option" for="ans-B-merge" data-opt="merge"><input type="radio" id="ans-B-merge" name="ans-B" value="merge"><span class="pep-option__key" aria-hidden="true"></span><span class="pep-option__text">git merge main: there is a merge commit</span></label><label class="pep-option" for="ans-B-kept" data-opt="kept"><input type="radio" id="ans-B-kept" name="ans-B" value="kept"><span class="pep-option__key" aria-hidden="true"></span><span class="pep-option__text">git merge main: C3 was kept as it was</span></label><label class="pep-option" for="ans-B-none" data-opt="none"><input type="radio" id="ans-B-none" name="ans-B" value="none"><span class="pep-option__key" aria-hidden="true"></span><span class="pep-option__text">Neither; nothing changed</span></label></div></fieldset><div class="pep-check-row pep-js-only"><fieldset class="pep-confidence" id="conf-B" data-pep-confidence><legend id="conf-B-legend">Your confidence</legend><label class="pep-option" for="conf-B-low"><input type="radio" id="conf-B-low" name="conf-B" value="low"><span class="pep-option__text">Low</span></label><label class="pep-option" for="conf-B-medium"><input type="radio" id="conf-B-medium" name="conf-B" value="medium"><span class="pep-option__text">Medium</span></label><label class="pep-option" for="conf-B-high"><input type="radio" id="conf-B-high" name="conf-B" value="high"><span class="pep-option__text">High</span></label></fieldset><button type="button" class="pep-btn pep-btn--primary" id="apply-check-B" data-apply-check="B" disabled>Check second answer</button></div></div></div>
+<div class="pep-feedback" id="feedback-3" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+<p class="pep-note pep-js-only" id="restart-note-3" aria-live="polite"></p>
+</div>
+</div>
+<p><a class="pep-back" href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</section>
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation"><button class="pep-btn" type="button" id="previous" data-pep-previous>Previous activity</button><button class="pep-btn pep-btn--primary" type="button" id="next" data-pep-next>Next activity</button></div>
+<section class="pep-recap" id="recap" data-pep-recap aria-labelledby="recap-title"><h2 id="recap-title" tabindex="-1">Recap</h2><p class="pep-js-only" id="recap-task">All activities are finished. Read the recap, then move on.</p><div id="completion" role="status" hidden></div><ul><li><code>git merge main</code> keeps all commits and adds a merge commit with two parents.</li><li><code>git rebase main</code> replays your commits as new commits on main's tip, making a straight line.</li><li>Rebased commits get new IDs; the old ones are abandoned.</li><li>Never rebase commits others already have. When in doubt, merge.</li></ul><details class="pep-cheat" data-section-skip><summary>Cheat sheet</summary><div class="pep-table-wrap"><table class="pep-table"><tr><td><code>git merge main</code></td><td>join main into your branch with a merge commit</td></tr><tr><td><code>git rebase main</code></td><td>replay your commits on top of main</td></tr><tr><td><code>C3 vs C3′</code></td><td>same change, different commit after a rebase</td></tr></table></div></details></section>
+<details class="pep-sources" data-pep-sources data-section-skip><summary>Sources and review date</summary><p>Teaching claims were checked on 2026-10-06 (UTC) against live official documentation: the Git reference manual on git-scm.com (latest source release 2.56.0, released 2026-09-28). Simulated command output is illustrative: its exact wording was not checked and varies with Git version and settings.</p><ul><li><a rel="noopener" href="https://git-scm.com/docs/git-rebase#_description">git-rebase: description</a></li><li><a rel="noopener" href="https://git-scm.com/docs/git-rebase#_recovering_from_upstream_rebase">git-rebase: recovering from upstream rebase</a></li><li><a rel="noopener" href="https://git-scm.com/docs/git-merge#_description">git-merge: description</a></li></ul></details>
 </main>
 <p class="vh" id="term-help">Simulated Git terminal: nothing runs on your computer. Press Enter to run. Up and Down recall your commands. Tab completes a command. Escape leaves the input.</p>
 <script>
@@ -308,11 +415,21 @@ window.__TOPIC = (function () {
 (function () {
 'use strict';
 var root = document.documentElement;
+root.classList.add('is-enhanced');
 var main = document.getElementById('lesson');
-var INITIAL = main.innerHTML;
-/* entry snapshot of every activity, used by "Restart this activity" */
+var TOPIC = window.__TOPIC, CFG = window.__CFG;
+/* every step except the closing recap is one activity section */
+var TOTAL = CFG.steps.length - 1;
+var sections = Array.prototype.slice.call(main.querySelectorAll('[data-pep-activity]'));
+var links = Array.prototype.slice.call(main.querySelectorAll('[data-pep-activity-link]'));
+var prevBtn = main.querySelector('[data-pep-previous]');
+var nextBtn = main.querySelector('[data-pep-next]');
+var recap = document.getElementById('recap');
+var objectives = main.querySelector('details[data-pep-objectives]');
+var minutes = main.getAttribute('data-pep-required-minutes');
+/* entry snapshot of each activity's controls, used by "Restart activity" */
 var SNAP = {};
-Array.prototype.slice.call(main.querySelectorAll('#current-teaching > [data-step], #current-task > [data-step], #current-control > [data-step]')).forEach(function (e) { SNAP[e.parentNode.id + ':' + e.getAttribute('data-step')] = e.innerHTML; });
+sections.forEach(function (sec, i) { var c = document.getElementById('control-' + (i + 1)); if (c) SNAP[i + 1] = c.innerHTML; });
 var CONF_NAMES = { low: 'low', medium: 'medium', high: 'high' };
 
 /* ---------- tiny DOM helpers (text only, never innerHTML with variable content) ---------- */
@@ -345,7 +462,26 @@ function rt(str) {
   });
   return f;
 }
-function p(str, cls) { return h('p', { class: cls || null }, rt(str)); }
+/* status icons: check (correct, done), cross (wrong), alert (settled, not available) */
+var ICONS = { ok: 'M3.5 8.5l3 3 6-7', no: 'M4 4l8 8M12 4l-8 8', set: 'M8 3.5v5.5M8 11.5v1' };
+function icon(kind) {
+  var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 16 16'); svg.setAttribute('class', 'pep-icon');
+  svg.setAttribute('aria-hidden', 'true'); svg.setAttribute('focusable', 'false');
+  svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2'); svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round');
+  var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', ICONS[kind] || ICONS.set);
+  svg.append(path);
+  return svg;
+}
+function p(str, cls) {
+  var e = h('p', { class: cls || null });
+  var m = /\bverdict\b\s*(\w+)?/.exec(cls || '');
+  if (m) { e.append(icon(m[1] === 'ok' ? 'ok' : m[1] === 'no' ? 'no' : 'set')); e.append(h('span', null, rt(str))); }
+  else e.append(rt(str));
+  return e;
+}
 function $(sel, ctx) { return (ctx || main).querySelector(sel); }
 function $$(sel, ctx) { return Array.prototype.slice.call((ctx || main).querySelectorAll(sel)); }
 function clear(e) { while (e.firstChild) e.removeChild(e.firstChild); return e; }
@@ -421,99 +557,151 @@ var Model = {
 };
 
 /* ---------- lesson state ---------- */
-var TOPIC = window.__TOPIC, CFG = window.__CFG;
-var st;
+var st, current = 1, unlocked = 1, recapReached = false;
+var APPLY = 0;
+CFG.steps.forEach(function (s, i) { if (s.kind === 'apply') APPLY = i + 1; });
+function stepCfg(n) { return CFG.steps[n - 1]; }
 function boot() {
-  st = { step: 1, acts: {}, sims: {}, apply: { attempt: 0, conf: [], result: null, chosen: [] }, predict: null, prior: {}, restarts: 0 };
-  CFG.steps.forEach(function (s, i) { if (s.kind !== 'recap') st.acts[i + 1] = 'todo'; });
+  st = { acts: {}, att: {}, sims: {}, apply: { attempt: 0, conf: [], result: null, chosen: [] }, predict: null, prior: {}, restarts: 0 };
+  CFG.steps.forEach(function (s, i) { if (s.kind !== 'recap') { st.acts[i + 1] = 'todo'; st.att[i + 1] = 0; } });
   CFG.steps.forEach(function (s, i) { if (s.kind === 'sim') initSim(i + 1, s.sim); });
-  show(1, false);
+  for (var n = 1; n <= TOTAL; n++) {
+    renderModel(n);
+    if (stepCfg(n).kind === 'sim') renderSim(n);
+    reflect(n);
+  }
+  if (recap) recap.hidden = true;
 }
 function actCount() {
   var n = 0, d = 0, se = 0, k;
   for (k in st.acts) { n++; if (st.acts[k] === 'done') d++; if (st.acts[k] === 'settled') se++; }
   return { n: n, done: d, settled: se };
 }
+/* stable QA hooks: attempts, settlement, completion, credit (once), grade and Continue per activity */
+function reflect(n) {
+  var sec = sections[n - 1], a = st.acts[n], fin = a !== 'todo';
+  sec.setAttribute('data-pep-attempts', String(st.att[n]));
+  sec.setAttribute('data-pep-settled', String(fin));
+  sec.setAttribute('data-pep-completed', String(fin));
+  sec.setAttribute('data-pep-credit', fin ? '1' : '0');
+  sec.setAttribute('data-pep-grade', a === 'done' && stepCfg(n).kind !== 'predict' ? '1' : '0');
+  sec.setAttribute('data-pep-continue', String(fin));
+}
+function bump(n) { st.att[n]++; reflect(n); }
 function renderProgress() {
   var c = actCount();
-  var txt = $('#prog-text'); txt.textContent = 'Activities done: ' + (c.done + c.settled) + ' of ' + c.n + (c.settled ? ' (' + c.settled + ' settled, not correct)' : '');
-  var pips = clear($('#pips')), k;
-  for (k in st.acts) pips.append(h('span', { class: 'pip' + (st.acts[k] === 'done' ? ' on' : st.acts[k] === 'settled' ? ' settled' : '') }));
+  $('#prog-text').textContent = 'Activities done: ' + (c.done + c.settled) + ' of ' + c.n + (c.settled ? ' (' + c.settled + ' settled, not correct)' : '');
+  $$('#pips > span').forEach(function (seg, i) {
+    seg.classList.toggle('is-done', st.acts[i + 1] !== 'todo');
+    seg.classList.toggle('is-current', i + 1 === current);
+  });
+  $('#pep-position').textContent = 'Activity ' + current + ' of ' + TOTAL + ' · about ' + minutes + ' min';
 }
-function stepCfg(n) { return CFG.steps[n - 1]; }
-function show(n, focus) {
-  st.step = n;
-  $('#stage').setAttribute('data-step', String(n));
-  $$('[data-step]', $('#stage')).forEach(function (e) { if (e.id !== 'stage') e.hidden = e.getAttribute('data-step') !== String(n); });
-  clear($('#current-feedback'));
-  var s0 = stepCfg(n), fig = $('#live-model');
-  if (s0.kind === 'predict' || s0.kind === 'apply') $('#col-a').append(fig);
-  else $('#col-b').insertBefore(fig, $('#col-b').firstChild);
-  renderModel();
-  var s = stepCfg(n);
-  if (s.kind === 'sim') renderSim(n);
-  if (s.kind === 'recap') finish();
-  $('#restart').hidden = s.kind === 'recap';
-  updateNext();
-  renderProgress();
-  if (focus) { var hd = $('#teach-' + n + '-h'); if (hd) hd.focus(); }
+function syncLinks() {
+  main.setAttribute('data-pep-current-activity', String(current));
+  main.setAttribute('data-pep-unlocked-through', String(unlocked));
+  links.forEach(function (link, i) {
+    var n = i + 1;
+    if (n === current) link.setAttribute('aria-current', 'step'); else link.removeAttribute('aria-current');
+    if (n > unlocked) link.setAttribute('aria-disabled', 'true'); else link.removeAttribute('aria-disabled');
+  });
 }
 function updateNext() {
-  var nx = $('#next'), s = stepCfg(st.step);
-  if (s.kind === 'recap') { nx.hidden = true; return; }
-  nx.hidden = false;
-  nx.disabled = st.acts[st.step] === 'todo';
-  nx.textContent = stepCfg(st.step + 1).kind === 'recap' ? 'Continue to recap' : 'Continue';
+  var last = current === TOTAL, can = st.acts[current] !== 'todo';
+  prevBtn.disabled = current === 1;
+  nextBtn.textContent = last ? 'Continue to recap' : 'Next activity';
+  nextBtn.disabled = last ? !can : (current >= unlocked && !can);
 }
-function renderModel() {
-  var fig = $('#live-model'), body = clear($('#model-body')), s = stepCfg(st.step);
-  var out = TOPIC.model(st.step, s, st, Model, h);
+function refresh() { syncLinks(); updateNext(); renderProgress(); if (recapReached) finish(); }
+/* navigation changes only the current activity; controls are never rebuilt here */
+function render(number, mode, focus) {
+  if (typeof number !== 'number' || number !== number || number < 1 || number > TOTAL || number > unlocked) return false;
+  current = number;
+  sections.forEach(function (sec, i) { sec.hidden = i + 1 !== current; });
+  refresh();
+  try {
+    if (mode === 'push') history.pushState({ activity: current }, '', '#activity-' + current);
+    if (mode === 'replace') history.replaceState({ activity: current }, '', '#activity-' + current);
+  } catch (err) {
+    if (mode && location.hash !== '#activity-' + current) location.hash = 'activity-' + current;
+  }
+  if (focus) { var hd = document.getElementById('activity-' + current + '-title'); if (hd) hd.focus(); }
+  return true;
+}
+function hashNumber(hash) { var m = /#activity-(\d+)$/.exec(hash || ''); return m ? Number(m[1]) : 1; }
+function renderModel(n) {
+  var fig = document.getElementById('model-' + n);
+  if (!fig) return;
+  var body = clear(document.getElementById('model-body-' + n));
+  var out = TOPIC.model(n, stepCfg(n), st, Model, h);
   if (out) add(body, out.node || out);
-  $('#model-cap').textContent = (out && out.caption) || TOPIC.caption || 'Practice repository';
-  fig.setAttribute('data-model-state', (out && out.key) || ('step-' + st.step));
+  document.getElementById('model-cap-' + n).textContent = (out && out.caption) || TOPIC.caption || 'Practice repository';
+  var tag = fig.querySelector('.sim-tag'); if (tag) tag.textContent = 'Simulation: no real Git runs';
+  fig.setAttribute('data-model-state', (out && out.key) || ('step-' + n));
 }
-function feedback(nodes, focus) {
-  var fb = clear($('#current-feedback'));
+function feedback(n, nodes, focus) {
+  var fb = clear(document.getElementById('feedback-' + n));
+  var note = document.getElementById('restart-note-' + n); if (note) note.textContent = '';
   add(fb, nodes);
   if (focus) fb.focus();
 }
-function settle(n, how) { if (st.acts[n] === 'todo') st.acts[n] = how; renderProgress(); updateNext(); }
+function settle(n, how) {
+  if (st.acts[n] === 'todo') st.acts[n] = how;
+  unlocked = Math.max(unlocked, Math.min(n + 1, TOTAL));
+  reflect(n);
+  refresh();
+}
 
 /* ---------- option explanations, shown inside each option ---------- */
 function explainInline(fs, options, answer, chosen, isPredict) {
   var who = isPredict ? 'Your prediction' : 'Your choice';
   options.forEach(function (o) {
     var l = $('label[data-opt="' + o.id + '"]', fs);
-    if (!l || $('.why', l)) return;
+    if (!l || $('.pep-explain', l)) return;
+    var txt = $('.pep-option__text', l) || l;
     var b = [];
-    if (o.id === chosen) b.push(h('span', { class: 'badge ' + (o.id === answer ? 'ok' : 'no'), text: who + ': ' + (o.id === answer ? 'correct' : 'not correct') }));
-    if (o.id === answer) b.push(h('span', { class: 'badge ok', text: 'Correct answer' }));
-    if (b.length) l.append(h('span', { class: 'badges' }, b));
-    l.append(h('span', { class: 'why' }, rt(o.why)));
-    if (o.id === answer) l.classList.add('right');
-    else if (o.id === chosen) l.classList.add('wrong');
+    if (o.id === chosen) b.push(h('span', { class: 'pep-badge ' + (o.id === answer ? 'pep-badge--ok' : 'pep-badge--no') }, icon(o.id === answer ? 'ok' : 'no'), who + ': ' + (o.id === answer ? 'correct' : 'not correct')));
+    if (o.id === answer) b.push(h('span', { class: 'pep-badge pep-badge--ok' }, icon('ok'), 'Correct answer'));
+    if (b.length) txt.append(h('span', { class: 'badges' }, b));
+    txt.append(h('span', { class: 'pep-explain' }, rt(o.why)));
+    if (o.id === answer) l.classList.add('is-correct');
+    else if (o.id === chosen) l.classList.add('is-wrong');
   });
 }
 /* ---------- predict ---------- */
-function checkPredict() {
-  var s = stepCfg(st.step), fs = $('#predict-' + st.step), sel = $('input:checked', fs), cf = $('#conf-P input:checked');
-  if (!sel || !cf) return;
+function checkPredict(n) {
+  var s = stepCfg(n), fs = $('#predict-' + n), sel = $('input:checked', fs), cf = $('#conf-P input:checked');
+  if (!sel || !cf || st.acts[n] !== 'todo') return;
   var v = sel.value;
+  bump(n);
   $$('input', fs).forEach(function (i) { i.disabled = true; });
   $$('#conf-P input').forEach(function (i) { i.disabled = true; });
   st.predictConf = cf.value;
-  $('#predict-check-' + st.step).disabled = true;
+  $('#predict-check-' + n).disabled = true;
   st.predict = v;
   explainInline(fs, s.options, s.answer, v, true);
-  $('#predict-check-' + st.step).parentNode.hidden = true;
-  feedback([p('Practice prediction, not scored. Your prediction was ' + (v === s.answer ? '**correct**' : '**not correct**') + '; each option now shows what really happens.'), p('Your confidence: ' + CONF_NAMES[cf.value] + ' (reported as you chose it, not scored).', 'conf-report')], true);
-  settle(st.step, 'done');
+  $('#predict-check-' + n).parentNode.hidden = true;
+  feedback(n, [p('Practice prediction, not scored. Your prediction was ' + (v === s.answer ? '**correct**' : '**not correct**') + '; each option now shows what really happens.'), p('Your confidence: ' + CONF_NAMES[cf.value] + ' (reported as you chose it, not scored).', 'conf-report')], true);
+  settle(n, 'done');
 }
 
 /* ---------- sims ---------- */
 function initSim(n, id) {
   var def = TOPIC.sims[id];
   st.sims[n] = { id: id, s: def.init(), log: [], complete: false, hist: [], hi: 0 };
+}
+function renderGoals(n) {
+  var sim = st.sims[n], def = TOPIC.sims[sim.id];
+  def.goals.forEach(function (g) {
+    var li = $('#goals-' + n + ' [data-goal="' + g.id + '"]');
+    if (!li) return;
+    var ok = g.done(sim.s), stEl = $('.st', li);
+    if (!stEl) { stEl = h('span', { class: 'st' }); li.append(stEl); }
+    li.classList.toggle('done', ok);
+    clear(stEl);
+    if (ok) stEl.append(icon('ok'));
+    stEl.append(document.createTextNode(ok ? 'Done' : 'To do'));
+  });
 }
 function renderSim(n) {
   var sim = st.sims[n], def = TOPIC.sims[sim.id], wrap = clear($('#sim-' + n + '-cmds')), acts = clear($('#sim-' + n + '-actions'));
@@ -529,28 +717,25 @@ function renderSim(n) {
   if (!sim.log.length) log.append(h('div', { class: 'hint', text: def.empty || 'Type a command below and press Enter. Output from the practice repository appears here.' }));
   sim.log.forEach(function (l) { log.append(h('div', { class: l.k, text: l.t })); });
   log.scrollTop = log.scrollHeight;
-  var goals = clear($('#goals-' + n));
-  def.goals.forEach(function (g) {
-    var ok = g.done(sim.s);
-    goals.append(h('li', { class: ok ? 'done' : '', 'data-goal': g.id }, h('span', { class: 'gt' }, rt(g.text)), h('span', { class: 'st', text: ok ? 'Done' : 'To do' })));
-  });
+  renderGoals(n);
 }
 function runCmd(n, cid, typed, opts) {
   var sim = st.sims[n], def = TOPIC.sims[sim.id];
   if (sim.complete) return;
   var c = def.commands.filter(function (x) { return x.id === cid; })[0];
   if (!c || (c.when && !c.when(sim.s))) return;
+  bump(n);
   var r = c.run(sim.s, opts) || {};
   sim.log.push({ k: c.plain ? 'hint' : 'c', t: c.plain ? '[' + c.label + ']' : (typed && opts && opts.echo ? opts.echo : c.label) });
   (r.out || []).forEach(function (t) { sim.log.push({ k: r.err ? 'e' : '', t: t }); });
   var all = def.goals.every(function (g) { return g.done(sim.s); });
   var nodes = [];
-  if (r.fb) nodes.push(p(r.fb, 'verdict ' + (r.kind || '')));
+  if (r.fb) nodes.push(p(r.fb, r.kind ? 'verdict ' + r.kind : null));
   if (r.more) nodes.push(p(r.more));
   if (all) { sim.complete = true; nodes.push(p(def.doneText || 'Every goal is met. Continue when ready.', 'verdict ok')); }
-  renderModel();
+  renderModel(n);
   renderSim(n);
-  feedback(nodes, all);
+  feedback(n, nodes, all);
   if (all) settle(n, 'done');
   else if (typed) $('#sim-' + n + '-input').focus();
   else { var b = $('[data-cmd="' + cid + '"][data-step-n="' + n + '"]'); if (b) b.focus(); else { var f = $('#sim-' + n + '-cmds button'); if (f) f.focus(); } }
@@ -566,10 +751,11 @@ function runTyped(n, raw) {
   var echo = String(raw).trim().replace(/\s+/g, ' '), mm = /^git commit -m (["'])(.+)\1$/.exec(echo), opts = { echo: echo };
   if (/^git commit -m /.test(v)) { if (!mm) mm = /^git commit -m "(.+)"$/.exec(v) && [null, null, /^git commit -m "(.+)"$/.exec(v)[1]]; if (mm && mm[2].trim()) { opts.msg = mm[2]; if (!hit) hit = all.filter(function (c) { return /^git commit -m /.test(c.label) && (!c.when || c.when(sim.s)); })[0]; } }
   if (hit && (!hit.when || hit.when(sim.s))) { runCmd(n, hit.id, true, opts); return; }
+  bump(n);
   sim.log.push({ k: 'c', t: String(raw).trim().replace(/\s+/g, ' ') });
-  sim.log.push({ k: 'e', t: hit ? 'That command does not apply at this point in the practice.' : v.split(' ')[0] + ': not available in this practice terminal' });
+  sim.log.push({ k: 'w', t: hit ? 'That command does not apply at this point in the practice.' : v.split(' ')[0] + ': not available in this practice terminal' });
   renderSim(n);
-  feedback([p(hit ? 'That command is recognised but does not apply right now. Choose from the commands shown.' : 'Not available in this practice terminal. Type one of the commands shown as buttons, or press Tab to complete one.', 'verdict no')], false);
+  feedback(n, [p(hit ? 'That command is recognised but does not apply right now. Choose from the commands shown.' : 'Not available in this practice terminal. Type one of the commands shown as buttons, or press Tab to complete one.', 'verdict warn')], false);
   $('#sim-' + n + '-input').focus();
 }
 function completeTyped(n, inp) {
@@ -586,8 +772,8 @@ function completeTyped(n, inp) {
 function resetSim(n) {
   if (st.sims[n].complete) return;
   initSim(n, st.sims[n].id);
-  renderModel(); renderSim(n);
-  feedback([p('Practice repository restored to its starting state.')], false);
+  renderModel(n); renderSim(n);
+  feedback(n, [p('Practice repository restored to its starting state.')], false);
   var fb1 = $('#sim-' + n + '-cmds button'); if (fb1) fb1.focus();
 }
 
@@ -595,17 +781,18 @@ function resetSim(n) {
 function applyReady() {
   var a = st.apply, v = a.attempt === 0 ? 'A' : 'B';
   var ok = $('#apply-' + v + ' input:checked') && $('#conf-' + v + ' input:checked');
-  $('#apply-check-' + v).disabled = !ok || st.acts[st.step] !== 'todo';
+  $('#apply-check-' + v).disabled = !ok || st.acts[APPLY] !== 'todo';
 }
 function checkApply(v) {
-  var s = stepCfg(st.step), q = s[v], a = st.apply;
+  var n = APPLY, s = stepCfg(n), q = s[v], a = st.apply;
   var sel = $('#apply-' + v + ' input:checked'), cf = $('#conf-' + v + ' input:checked');
-  if (!sel || !cf) return;
+  if (!sel || !cf || st.acts[n] !== 'todo') return;
   var chosen = sel.value, conf = cf.value, right = chosen === q.answer;
+  bump(n);
   a.conf.push(conf); a.chosen.push(chosen);
   $$('#apply-' + v + ' input, #conf-' + v + ' input').forEach(function (i) { i.disabled = true; });
   $('#apply-check-' + v).disabled = true;
-  var lab = function (o) { var l = $('#apply-' + v + ' label[data-opt="' + o + '"]'); return l; };
+  var lab = function (o) { return $('#apply-' + v + ' label[data-opt="' + o + '"]'); };
   var explainAll = function () {
     explainInline($('#apply-' + v), q.options, q.answer, chosen, false);
     $('#conf-' + v).hidden = true;
@@ -616,56 +803,63 @@ function checkApply(v) {
   var confLine = function () {
     return p('Your confidence: ' + a.conf.map(function (c, i) { return (a.conf.length > 1 ? (i === 0 ? 'first try ' : 'second try ') : '') + CONF_NAMES[c]; }).join(', ') + ' (reported as you chose it, not scored).', 'conf-report');
   };
+  var fb = document.getElementById('feedback-' + n);
   if (right) {
-    lab(chosen).classList.add('right');
+    lab(chosen).classList.add('is-correct');
     a.result = a.attempt === 0 ? 'correct' : 'correct-second';
-    feedback([p(a.attempt === 0 ? 'Correct. Each option now shows why.' : 'Correct on the second try. Each option now shows why.', 'verdict ok'), explainAll(), confLine()], true);
-    $('#current-feedback').setAttribute('data-pep-result', a.result);
-    settle(st.step, 'done');
+    feedback(n, [p(a.attempt === 0 ? 'Correct. Each option now shows why.' : 'Correct on the second try. Each option now shows why.', 'verdict ok'), explainAll(), confLine()], true);
+    fb.setAttribute('data-pep-result', a.result);
+    settle(n, 'done');
     return;
   }
-  lab(chosen).classList.add('wrong');
+  lab(chosen).classList.add('is-wrong');
   if (a.attempt === 0) {
     a.attempt = 1;
     var why = q.options.filter(function (o) { return o.id === chosen; })[0].why;
-    feedback([p('Not yet. ' + why, 'verdict no'), p(s.misconception), confLine()], false);
+    feedback(n, [p('Not yet. ' + why, 'verdict no'), p(s.misconception), confLine()], false);
     $('#apply-A-wrap').hidden = true;
-    $('#current-feedback').setAttribute('data-pep-result', 'retry');
+    fb.setAttribute('data-pep-result', 'retry');
     $('#apply-B-wrap').hidden = false;
-    $('#task-' + st.step + 'b').hidden = false;
-    renderModel();
-    $('#task-' + st.step + 'b').focus();
+    $('#task-' + n + 'b').hidden = false;
+    renderModel(n);
+    $('#task-' + n + 'b').focus();
     return;
   }
   a.result = 'settled';
   var ans = q.options.filter(function (o) { return o.id === q.answer; })[0];
-  lab(q.answer).classList.add('right');
-  feedback([p('Answered and settled, not marked correct. The answer is: ' + ans.label + '. You can still finish the topic.', 'verdict set'), explainAll(), confLine()], true);
-  $('#current-feedback').setAttribute('data-pep-result', 'settled');
-  settle(st.step, 'settled');
+  lab(q.answer).classList.add('is-correct');
+  feedback(n, [p('Answered and settled, not marked correct. The answer is: ' + ans.label + '. You can still finish the topic.', 'verdict set'), explainAll(), confLine()], true);
+  fb.setAttribute('data-pep-result', 'settled');
+  settle(n, 'settled');
 }
 
-/* ---------- restart only the current activity; earlier activities keep their results ---------- */
+/* ---------- restart only the current activity; other activities and the unlocked frontier keep their state ---------- */
 function restartActivity() {
-  var n = st.step, s = stepCfg(n);
-  if (s.kind === 'recap') return;
-  ['current-teaching', 'current-task', 'current-control'].forEach(function (id) {
-    var el = $('#' + id + ' > [data-step="' + n + '"]');
-    if (el && SNAP[id + ':' + n] != null) el.innerHTML = SNAP[id + ':' + n];
-  });
+  var n = current, s = stepCfg(n);
+  var ctl = document.getElementById('control-' + n);
+  if (ctl && SNAP[n] != null) ctl.innerHTML = SNAP[n];
+  var tb = document.getElementById('task-' + n + 'b'); if (tb) tb.hidden = true;
   if (st.acts[n] !== 'todo') (st.prior[n] = st.prior[n] || []).push(s.kind === 'apply' ? (st.apply.result || st.acts[n]) : st.acts[n]);
   st.acts[n] = 'todo';
+  st.att[n] = 0;
   if (s.kind === 'predict') { st.predict = null; st.predictConf = null; }
   if (s.kind === 'apply') st.apply = { attempt: 0, conf: [], result: null, chosen: [] };
   if (s.kind === 'sim') initSim(n, s.sim);
   st.restarts++;
-  show(n, true);
-  feedback([p('This activity restarted from its beginning. Earlier activities keep their results.')], false);
+  var fb = document.getElementById('feedback-' + n);
+  clear(fb); fb.removeAttribute('data-pep-result');
+  renderModel(n);
+  if (s.kind === 'sim') renderSim(n);
+  reflect(n);
+  refresh();
+  var note = document.getElementById('restart-note-' + n);
+  if (note) note.textContent = 'This activity restarted from its beginning. Earlier activities keep their results.';
+  var hd = document.getElementById('activity-' + n + '-title'); if (hd) hd.focus();
 }
 
-/* ---------- finish ---------- */
+/* ---------- finish: the recap closes the required path ---------- */
 function finish() {
-  var c = actCount(), box = clear($('#completion'));
+  var c = actCount(), box = clear(document.getElementById('completion'));
   var all = c.done + c.settled === c.n;
   box.hidden = false;
   box.append(p(all ? 'Topic complete: ' + (c.done + c.settled) + ' of ' + c.n + ' activities done' + (c.settled ? ', ' + c.settled + ' settled rather than correct.' : '.') : 'Some activities are not finished yet.'));
@@ -673,23 +867,32 @@ function finish() {
   var ap = []; Object.keys(st.prior).forEach(function (k) { ap = ap.concat(st.prior[k]); });
   if (st.restarts) box.append(p('Activities restarted: ' + st.restarts + (ap.indexOf('settled') >= 0 ? ' (an earlier check attempt was settled before you restarted it).' : '.'), 'conf-report'));
   box.setAttribute('data-pep-confidence-report', st.apply.conf.join(','));
+  box.className = all ? 'pep-callout pep-callout--success' : 'pep-callout';
   main.setAttribute('data-pep-complete', all ? 'true' : 'false');
 }
-
-/* ---------- theme ---------- */
-function setTheme(t) {
-  root.setAttribute('data-theme', t);
-  var b = document.getElementById('theme');
-  if (b) b.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+function toRecap() {
+  recapReached = true;
+  if (recap) recap.hidden = false;
+  finish();
+  var hd = document.getElementById('recap-title'); if (hd) hd.focus();
 }
 
-/* ---------- events (delegated so reset can rebuild the DOM) ---------- */
+/* ---------- events (delegated) ---------- */
 document.addEventListener('click', function (ev) {
-  var t = ev.target.closest('button');
-  if (!t || !main.contains(t)) return;
-  if (t.id === 'restart') { restartActivity(); return; }
-  if (t.id === 'next') { if (!t.disabled) show(st.step + 1, true); return; }
-  if (t.hasAttribute('data-predict-check')) { checkPredict(); return; }
+  if (objectives && objectives.open && !objectives.contains(ev.target)) objectives.open = false;
+  var a = ev.target.closest && ev.target.closest('a[data-pep-activity-link], a[data-pep-back-link]');
+  if (a && main.contains(a)) {
+    ev.preventDefault();
+    if (a.getAttribute('aria-disabled') === 'true') return;
+    render(hashNumber(a.getAttribute('href')), 'push', true);
+    return;
+  }
+  var t = ev.target.closest && ev.target.closest('button');
+  if (!t || !main.contains(t) || t.disabled) return;
+  if (t.hasAttribute('data-pep-reset')) { restartActivity(); return; }
+  if (t.hasAttribute('data-pep-previous')) { render(current - 1, 'push', true); return; }
+  if (t.hasAttribute('data-pep-next')) { if (current === TOTAL) toRecap(); else render(current + 1, 'push', true); return; }
+  if (t.hasAttribute('data-predict-check')) { checkPredict(current); return; }
   if (t.hasAttribute('data-cmd')) { runCmd(Number(t.getAttribute('data-step-n')), t.getAttribute('data-cmd')); return; }
   if (t.hasAttribute('data-sim-run')) { var ri = $('#sim-' + t.getAttribute('data-sim-run') + '-input'), rn = Number(t.getAttribute('data-sim-run')), rv = ri.value; if (rv.trim()) { st.sims[rn].hist.push(rv); st.sims[rn].hi = st.sims[rn].hist.length; } ri.value = ''; runTyped(rn, rv); return; }
   if (t.hasAttribute('data-sim-reset')) { resetSim(Number(t.getAttribute('data-sim-reset'))); return; }
@@ -697,6 +900,11 @@ document.addEventListener('click', function (ev) {
 });
 document.addEventListener('keydown', function (ev) {
   var t = ev.target;
+  if (ev.key === 'Escape' && objectives && objectives.open) {
+    objectives.open = false;
+    objectives.querySelector('summary').focus();
+    return;
+  }
   if (!t || !t.hasAttribute || !t.hasAttribute('data-sim-input') || !main.contains(t)) return;
   var n = Number(t.getAttribute('data-sim-input')), sim = st.sims[n];
   if (ev.key === 'Enter') {
@@ -722,17 +930,34 @@ document.addEventListener('keydown', function (ev) {
 document.addEventListener('change', function (ev) {
   var t = ev.target;
   if (!main.contains(t)) return;
-  if (t.name && (t.name.indexOf('pred-') === 0 || t.name === 'conf-P')) { var pc = $('#predict-check-' + st.step); if (pc) pc.disabled = !($('#predict-' + st.step + ' input:checked') && $('#conf-P input:checked')); }
+  if (t.name && (t.name.indexOf('pred-') === 0 || t.name === 'conf-P')) { var pc = $('#predict-check-' + current); if (pc && st.acts[current] === 'todo') pc.disabled = !($('#predict-' + current + ' input:checked') && $('#conf-P input:checked')); }
   if (t.name && (t.name.indexOf('ans-') === 0 || t.name === 'conf-A' || t.name === 'conf-B')) applyReady();
 });
+/* browser Back/Forward restore an unlocked activity without rebuilding it; a locked fragment is normalized */
+var lastFocused = null;
+document.addEventListener('focusin', function (e) { lastFocused = e.target; });
+function restoreFromHistory() {
+  var keep = lastFocused;
+  if (!render(hashNumber(location.hash), null, false)) render(Math.min(current, unlocked), 'replace', false);
+  if (keep && keep.isConnected && !keep.closest('[hidden]')) keep.focus({ preventScroll: true });
+}
+addEventListener('popstate', restoreFromHistory);
+addEventListener('hashchange', restoreFromHistory);
+/* print opens every disclosure and restores the exact prior states afterwards */
+var printStates = [];
+addEventListener('beforeprint', function () {
+  printStates = Array.prototype.map.call(document.querySelectorAll('details'), function (d) { return { d: d, open: d.open }; });
+  printStates.forEach(function (x) { x.d.open = true; });
+});
+addEventListener('afterprint', function () {
+  printStates.forEach(function (x) { x.d.open = x.open; });
+  printStates = [];
+});
 
-var pref = 'light';
-try { if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) pref = 'dark'; } catch (e) {}
-setTheme(pref);
-/* automatic light/dark from the system setting; there is no manual toggle */
-try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (ev) { setTheme(ev.matches ? 'dark' : 'light'); }); } catch (e) {}
 window.__pepModel = Model;
 boot();
+var requested = hashNumber(location.hash);
+render(requested <= unlocked ? requested : 1, 'replace', false);
 })();
 </script>
 </body>
