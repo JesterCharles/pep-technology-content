@@ -308,7 +308,7 @@ var service = new CustomerService(new InMemoryCustomerRepository());</pre>
 </div>
 <div data-step="3" data-pep-teaching>
   <h2 id="teach-3-h" tabindex="-1">Close every resource</h2>
-<p>A <code>Connection</code>, <code>PreparedStatement</code> and <code>ResultSet</code> hold resources on the server until closed. Declare them in try-with-resources headers and Java closes them when the block ends, even when an exception is thrown, in the <strong>reverse</strong> order they were opened.</p>
+<p>A <code>Connection</code> holds a session on the PostgreSQL server until it is closed. A <code>PreparedStatement</code> and <code>ResultSet</code> hold driver memory (by default pgJDBC reads the whole result into memory on the Java side), and server resources only in some cases, such as server-prepared statements or fetching through a cursor. Declare them in try-with-resources headers and Java closes them when the block ends, even when an exception is thrown, in the <strong>reverse</strong> order they were opened.</p>
 <pre>try (Connection conn = Db.connect();
      PreparedStatement ps = conn.prepareStatement(sql)) {
     ps.setLong(1, id);
@@ -316,7 +316,7 @@ var service = new CustomerService(new InMemoryCustomerRepository());</pre>
         // read the row
     }
 }</pre>
-<p>A connection opened without it leaks on every call, until PostgreSQL refuses new connections.</p>
+<p>Closing a statement also closes its current <code>ResultSet</code>, if one exists. A connection opened without try-with-resources leaks on every call, until PostgreSQL refuses new connections.</p>
 </div>
 <div data-step="4" data-pep-teaching>
   <h2 id="teach-4-h" tabindex="-1">Apply it: close order</h2>

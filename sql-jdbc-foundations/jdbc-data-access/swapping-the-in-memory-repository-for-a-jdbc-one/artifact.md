@@ -29,7 +29,7 @@ Mapping runs both ways. `save` binds fields to parameters in placeholder order; 
 
 ### Close every resource
 
-A `Connection`, `PreparedStatement` and `ResultSet` hold resources on the server until closed. Declare them in try-with-resources headers and Java closes them when the block ends, even when an exception is thrown, in the reverse order they were opened.
+A `Connection` holds a session on the PostgreSQL server until it is closed. A `PreparedStatement` and `ResultSet` hold driver memory (by default pgJDBC reads the whole result into memory on the Java side), and server resources only in some cases, such as server-prepared statements or fetching through a cursor. Declare them in try-with-resources headers and Java closes them when the block ends, even when an exception is thrown, in the reverse order they were opened.
 
 ```
 try (Connection conn = Db.connect();
@@ -41,7 +41,7 @@ try (Connection conn = Db.connect();
 }
 ```
 
-A connection opened without it leaks on every call, until PostgreSQL refuses new connections.
+Closing a statement also closes its current `ResultSet`, if one exists. A connection opened without try-with-resources leaks on every call, until PostgreSQL refuses new connections.
 
 ### Apply it: close order
 

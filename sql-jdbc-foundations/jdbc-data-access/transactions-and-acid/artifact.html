@@ -339,7 +339,7 @@ try (...) {
 <ol class="pep-steps-list" id="task-1"><li>A has 100 and B has 20. The code runs with JDBC's default settings, and taking 150 from A breaks the <code>CHECK</code>. Choose the balances afterwards, choose how sure you are, then press <strong>Check my prediction</strong>.</li></ol>
 </div>
 <div data-step="2">
-<ol class="pep-steps-list" id="task-2"><li>Press each scenario. The card on the right shows what session 1 (your program) and session 2 (another user) see.</li><li>Watch where the balances end up, and when session 2 sees a change.</li><li data-goal="auto">See a failure leave half a change under auto-commit <span class="state" data-state="open"></span></li><li data-goal="rb">See a rollback undo the whole transfer <span class="state" data-state="open"></span></li><li data-goal="iso">See what session 2 reads before a commit <span class="state" data-state="open"></span></li></ol>
+<ol class="pep-steps-list" id="task-2"><li>Press each scenario. The card on the right shows what session 1 (your program) and session 2 (another user) see.</li><li>Watch where the balances end up. Before each session 2 scenario, choose what session 2 will read, then run it.</li><li data-goal="auto">See a failure leave half a change under auto-commit <span class="state" data-state="open"></span></li><li data-goal="rb">See a rollback undo the whole transfer <span class="state" data-state="open"></span></li><li data-goal="iso">Predict what session 2 reads before a commit <span class="state" data-state="open"></span></li><li data-goal="commit">Predict what session 2 reads after a commit <span class="state" data-state="open"></span></li></ol>
 </div>
 <div data-step="3">
 <ol class="pep-steps-list" id="task-3"><li>In <code>TransferService.java</code>, turn auto-commit off before the updates.</li><li>Commit after both updates; in a <code>catch (SQLException e)</code>, roll back and rethrow.</li><li>Press <strong>Run checks</strong>. Output shows the simulated failing transfer of 150.</li><li data-goal="file">All checks pass <span class="state" data-state="open"></span></li></ol>
@@ -384,7 +384,8 @@ try (...) {
   <div class="pep-row"><button type="button" class="pep-btn pep-btn--primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button></div>
 </div>
 <div data-step="2">
-  <div id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-2" data-static-alt="Activity: four scenarios from A 100, B 20. Auto-commit, move 150: B +150 commits, A -150 fails the CHECK, so A 100, B 170. Transaction, move 150: B +150, A -150 fails, rollback, so A 100, B 20. Transaction, move 50, session 2 reads before commit: session 2 sees A 100, B 20, the old committed values. Transaction, move 50, then commit: session 2 now sees A 50, B 70."><p class="pep-legend">Run the scenario</p>
+  <div id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-2" data-static-alt="Activity: four scenarios from A 100, B 20. Auto-commit, move 150: B +150 commits, A -150 fails the CHECK, so A 100, B 170. Transaction, move 150: B +150, A -150 fails, rollback, so A 100, B 20. Transaction, move 50, session 2 reads before commit: session 2 sees A 100, B 20, the old committed values. Transaction, move 50, then commit: session 2 now sees A 50, B 70. Before each session 2 scenario, predict whether session 2 reads the old committed balances or the new ones; the goal is met only when the prediction matches."><p class="pep-legend">Run the scenario</p>
+  <fieldset class="pep-options" id="s2p-fs"><legend>Before a session 2 scenario: what will session 2 read?</legend><label class="pep-option"><input type="radio" name="s2p" value="old"><span class="pep-option__text">The old committed balances, A 100 · B 20</span></label><label class="pep-option"><input type="radio" name="s2p" value="new"><span class="pep-option__text">The new balances, A 50 · B 70</span></label></fieldset>
   <div class="boxes"><button type="button" class="pep-btn" id="s-auto" data-act="scen" data-k="auto">Auto-commit: move 150</button><button type="button" class="pep-btn" id="s-rb" data-act="scen" data-k="rb">Transaction: move 150, then rollback</button><button type="button" class="pep-btn" id="s-iso" data-act="scen" data-k="iso">Transaction: move 50, session 2 reads before commit</button><button type="button" class="pep-btn" id="s-commit" data-act="scen" data-k="commit">Transaction: move 50, commit, session 2 reads</button></div>
   </div>
 </div>
@@ -477,14 +478,15 @@ function t3Check(text){var P=[],out=[],L=text.split('\n');
  function lastLine(re){for(var i=L.length-1;i>=0;i--){if(re.test(L[i])){return i+1;}}return 1;}
  if(!/void\s+transfer\s*\(/.test(text)||text.indexOf('credit.executeUpdate')<0||text.indexOf('debit.executeUpdate')<0){P.push({line:1,kind:'limit',msg:'Keep the transfer method and both executeUpdate calls; this editor only checks this one method.'});return {problems:P,output:['Fix the problems first; the simulated transfer appears here.'],ok:false};}
  var off=text.search(/conn\.setAutoCommit\s*\(\s*false\s*\)/),first=Math.min(text.indexOf('credit.executeUpdate'),text.indexOf('debit.executeUpdate')),last=Math.max(text.indexOf('credit.executeUpdate'),text.indexOf('debit.executeUpdate')),com=text.search(/conn\.commit\s*\(\s*\)/),cat=text.search(/catch\s*\(\s*SQLException\s+\w+\s*\)/),rb=text.search(/conn\.rollback\s*\(\s*\)/);
- if(/setAutoCommit\s*\(\s*true\s*\)/.test(text)){P.push({line:lineOf(/setAutoCommit\s*\(\s*true/),kind:'error',msg:'true keeps auto-commit on, so each update is saved on its own. Use setAutoCommit(false).'});}
+ var on=text.search(/setAutoCommit\s*\(\s*true\s*\)/);
+ if(on>=0&&(on<last||(com>=0&&on<com))){P.push({line:lineOf(/setAutoCommit\s*\(\s*true/),kind:'error',msg:'setAutoCommit(true) here turns auto-commit back on before the transfer is committed, so each update is saved on its own. Only restore it after commit() and rollback(), for example in a finally block.'});}
  else if(off<0){P.push({line:1,kind:'error',msg:'Turn auto-commit off first: conn.setAutoCommit(false);'});}
  else if(off>first){P.push({line:lineOf(/setAutoCommit/),kind:'error',msg:'setAutoCommit(false) runs after an update has already been saved. Move it before the first executeUpdate.'});}
  if(com<0){P.push({line:lastLine(/executeUpdate/),kind:'error',msg:'Nothing commits the transfer. Call conn.commit() after the second update.'});}
  else if(com<last){P.push({line:lineOf(/conn\.commit/),kind:'error',msg:'commit() runs before the second update, so a failing debit can no longer be undone. Commit after both updates.'});}
  if(cat<0){P.push({line:lastLine(/^\s*\}\s*$/),kind:'error',msg:'Catch the failure: } catch (SQLException e) { ... }'});}
  else{var body=text.slice(cat);if(rb<cat){P.push({line:lineOf(/catch\s*\(/),kind:'error',msg:'Roll back inside the catch: conn.rollback();'});}
-  else{var cv=body.match(/catch\s*\(\s*SQLException\s+(\w+)\s*\)/)[1],rt=new RegExp('throw\\s+(?:'+cv+'\\s*;|new\\s+[\\w.]+\\s*\\([^;]*\\b'+cv+'\\b[^;]*\\)\\s*;)');if(!rt.test(text.slice(rb))){P.push({line:lineOf(/catch\s*\(/),kind:'error',msg:'Rethrow after rollback so the caller knows the transfer failed: throw the caught exception, or wrap it in a new exception that keeps it as the cause.'});}}}
+  else{var cv=body.match(/catch\s*\(\s*SQLException\s+(\w+)\s*\)/)[1],rt=new RegExp('throw\\s+(?:'+cv+'\\s*;|new\\s+[\\w.]+\\s*\\((?:[^;()]*,)?\\s*'+cv+'\\s*\\)\\s*;)');if(!rt.test(text.slice(rb))){P.push({line:lineOf(/catch\s*\(/),kind:'error',msg:'Rethrow after rollback so the caller knows the transfer failed: throw the caught exception, or wrap it in a new exception that keeps it as the cause.'});}}}
  out.push('Simulated transfer of 150 from A (100) to B (20):');
  if(!P.length){out.push('BEGIN (auto-commit off)');out.push('credit: UPDATE accounts ... B + 150  (1 row, not yet committed)');out.push('debit:  ERROR: new row for relation "accounts" violates check constraint "accounts_balance_check"');out.push('ROLLBACK');out.push('Committed balances: A 100 · B 20. The failure is rethrown to the caller.');}
  else{out.push('Fix the problems first; then the transfer timeline appears here.');}
@@ -492,7 +494,7 @@ function t3Check(text){var P=[],out=[],L=text.split('\n');
 var TOPIC={
 steps:5,acts:["predict","timeline","atomic","apply"],objActs:{"o1":["apply"],"o2":["atomic"],"o3":["timeline"]},editors:{},
 init:function(){return {g:{},last:null};},
-goals:{2:['auto','rb','iso'],3:['file']},
+goals:{2:['auto','rb','iso','commit'],3:['file']},
 predict:{correct:'c',why:{
  a:'with auto-commit on, the credit was committed before the debit ran, so there is nothing left to undo.',
  b:'the CHECK rejects A going below zero, so the debit is not applied.',
@@ -510,14 +512,15 @@ act:function(a,b,S,api){var t=S.t;
   rb:['A 100 · B 20','A 100 · B 20',['setAutoCommit(false): transaction begins','credit B +150: done, not committed','debit A -150: ERROR: violates check constraint "accounts_balance_check"','rollback(): the credit is undone'],'The rollback undid the credit too. Both balances are back where they started.'],
   iso:['A 100 · B 20','A 100 · B 20 (old values)',['setAutoCommit(false): transaction begins','credit B +50, debit A -50: done, not committed','session 2 SELECT: sees only committed data'],'Session 2 still sees A 100 and B 20: the open transaction is invisible until it commits.'],
   commit:['A 50 · B 70','A 50 · B 70',['setAutoCommit(false): transaction begins','credit B +50, debit A -50: done','commit(): both changes saved together','session 2 SELECT: sees the new balances'],'After commit(), session 2 sees both changes at once.']}[k];
-  t.last=M;if(k==='auto'){api.goal('auto');}if(k==='rb'){api.goal('rb');}if(k==='iso'){api.goal('iso');}
-  api.say('<p>'+(k==='auto'?'<span class="chip no">half saved</span> ':'<span class="chip ok">consistent</span> ')+api.esc(M[3])+'</p>'+api.goalStatus());}
+  var pk=null,pv=null,pm='';if(k==='iso'||k==='commit'){var pe=document.querySelector('input[name=s2p]:checked');if(!pe){api.say('<p>First choose what session 2 will read, then run this scenario.</p>'+api.goalStatus());this.render(S,api);return;}pv=pe.value;pk=(k==='iso'?'old':'new');pm=pv===pk?'<p><span class="chip ok">prediction matched</span> You predicted it.</p>':'<p><span class="chip no">prediction missed</span> You predicted the '+pv+' balances, but session 2 reads the '+pk+' ones. Change your choice and run it again.</p>';}
+  t.last=M;if(k==='auto'){api.goal('auto');}if(k==='rb'){api.goal('rb');}if(k==='iso'&&pv===pk){api.goal('iso');}if(k==='commit'&&pv===pk){api.goal('commit');}
+  api.say(pm+'<p>'+(k==='auto'?'<span class="chip no">half saved</span> ':'<span class="chip ok">consistent</span> ')+api.esc(M[3])+'</p>'+api.goalStatus());}
  this.render(S,api);
 },
 render:function(S,api){var t=S.t,bal=api.$('m-bal'),s2=api.$('m-s2'),lg=api.$('m-log');
  if(S.step===2&&t.last){bal.textContent=t.last[0];s2.textContent=t.last[1];lg.textContent=t.last[2].join('\n');}
  else if(S.step===3){bal.textContent='A 100 · B 20';s2.textContent='Not read yet.';lg.textContent='Run the checks: the editor output shows the transfer.';}
- else if(S.step>=4){bal.textContent='A 50 · B 70';s2.textContent='Depends on commit.';lg.textContent='Committed transfer of 50.';}
+ else if(S.step>=4){bal.textContent='A 50 · B 70';s2.textContent='A 50 · B 70 (after commit)';lg.textContent='Step 2 commit scenario: the transfer of 50 committed, so every session reads A 50 · B 70.';}
  else{bal.textContent='A 100 · B 20';s2.textContent='Not read yet.';lg.textContent='No scenario run yet.';}}
 };
 TOPIC.editors={3:{file:"TransferService.java",goal:"file",starter:"void transfer(Connection conn, long from, long to, int amount) throws SQLException {\n    try (PreparedStatement credit = conn.prepareStatement(\n             \"UPDATE accounts SET balance = balance + ? WHERE id = ?\");\n         PreparedStatement debit = conn.prepareStatement(\n             \"UPDATE accounts SET balance = balance - ? WHERE id = ?\")) {\n        credit.setInt(1, amount);\n        credit.setLong(2, to);\n        debit.setInt(1, amount);\n        debit.setLong(2, from);\n        credit.executeUpdate();\n        debit.executeUpdate();\n    }\n}\n",check:t3Check}};

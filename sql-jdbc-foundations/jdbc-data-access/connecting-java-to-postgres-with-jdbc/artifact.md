@@ -61,7 +61,7 @@ Settings and results (simulated: no Java or database runs here)
 
 No connection yet.
 
-Built URL: `jdbc:postgresql://localhost:5432/shop`
+Built URL: not built yet.
 
 ## Recap
 
@@ -107,7 +107,7 @@ Prediction (practice, not scored): a project without the pgJDBC dependency calls
 
 ### explore
 
-Activity: connection attempts. Correct settings: connected to database shop at localhost:5432. PGPORT=5433: Connection to localhost:5433 refused, because nothing accepts connections on that port. PGDATABASE=shopp: FATAL: database "shopp" does not exist. Wrong PGPASSWORD: FATAL: password authentication failed for user "shop_app". pgJDBC missing from pom.xml: No suitable driver found for jdbc:postgresql://localhost:5432/shop.
+Activity: build the URL, then try connection attempts. From PGHOST=localhost, PGPORT=5432 and PGDATABASE=shop the code builds jdbc:postgresql://localhost:5432/shop: the jdbc: prefix, the postgresql subprotocol, // before the host, a colon before the port and a slash before the database. Correct settings: connected to database shop at localhost:5432. PGPORT=5433: Connection to localhost:5433 refused, because nothing accepts connections on that port. PGDATABASE=shopp: FATAL: database "shopp" does not exist. Wrong PGPASSWORD: FATAL: password authentication failed for user "shop_app". pgJDBC missing from pom.xml: No suitable driver found for jdbc:postgresql://localhost:5432/shop.
 
 ### explore
 

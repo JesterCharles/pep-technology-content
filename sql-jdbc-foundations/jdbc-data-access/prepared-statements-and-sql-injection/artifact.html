@@ -473,7 +473,7 @@ function t2Check(text){var P=[],out=[],L=text.split('\n');
  function lineOf(re){for(var i=0;i<L.length;i++){if(re.test(L[i])){return i+1;}}return 1;}
  var sqlLine=lineOf(/String\s+sql\s*=/),ps=text.indexOf('prepareStatement('),ex=text.indexOf('executeQuery('),set=text.search(/\.setString\s*\(/);
  if(!/findByCity\s*\(/.test(text)||ps<0){P.push({line:1,kind:'limit',msg:'Keep the findByCity method and its prepareStatement call; this editor only checks this one method.'});return {problems:P,output:['Fix the problems first; the simulated search appears here.'],ok:false};}
- var sqlDecl=(text.match(/String\s+sql\s*=([\s\S]*?);/)||[])[1]||'';
+ var sqlDecl=(text.match(/String\s+sql\s*=([\s\S]*?);/)||[])[1]||'',inl=(text.match(/prepareStatement\s*\(\s*("(?:[^"\\]|\\.)*"(?:\s*\+\s*"(?:[^"\\]|\\.)*")*)\s*\)/)||[])[1]||'';if(inl){sqlDecl=inl;sqlLine=lineOf(/prepareStatement/);}
  if(/\+\s*city|city\s*\+/.test(text)){P.push({line:lineOf(/\+\s*city|city\s*\+/),kind:'error',msg:'city is still joined into the SQL text with +. Even inside prepareStatement, that text already carries the injection. Use a ? placeholder.'});}
  else if(/'\?'/.test(text)){P.push({line:lineOf(/'\?'/),kind:'error',msg:'\'?\' in quotes is a literal question mark, not a parameter. Write the ? without quotes.'});}
  else if(!/city\s*=\s*\?/.test(sqlDecl)){P.push({line:sqlLine,kind:'error',msg:'The SQL text needs a placeholder: ... WHERE city = ?'});}

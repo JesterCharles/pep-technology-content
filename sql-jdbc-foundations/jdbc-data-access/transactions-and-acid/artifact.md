@@ -102,7 +102,7 @@ Prediction (practice, not scored): with auto-commit on, adding 150 to B commits 
 
 ### explore
 
-Activity: four scenarios from A 100, B 20. Auto-commit, move 150: B +150 commits, A -150 fails the CHECK, so A 100, B 170. Transaction, move 150: B +150, A -150 fails, rollback, so A 100, B 20. Transaction, move 50, session 2 reads before commit: session 2 sees A 100, B 20, the old committed values. Transaction, move 50, then commit: session 2 now sees A 50, B 70.
+Activity: four scenarios from A 100, B 20. Auto-commit, move 150: B +150 commits, A -150 fails the CHECK, so A 100, B 170. Transaction, move 150: B +150, A -150 fails, rollback, so A 100, B 20. Transaction, move 50, session 2 reads before commit: session 2 sees A 100, B 20, the old committed values. Transaction, move 50, then commit: session 2 now sees A 50, B 70. Before each session 2 scenario, predict whether session 2 reads the old committed balances or the new ones; the goal is met only when the prediction matches.
 
 ### terminal
 
