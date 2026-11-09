@@ -3,6 +3,9 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  // Keep Vitest's cache inside starter/node_modules, so the tests create
+  // nothing outside the folder that cleanup already removes.
+  cacheDir: "starter/node_modules/.vite",
   test: {
     root: "..",
     include: ["tests/**/*.test.mjs", "starter/**/*.test.mjs"],
