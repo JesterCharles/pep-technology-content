@@ -8,23 +8,15 @@
 
 ## Teaching
 
-### Start with a guess
-
 A team works in two-week sprints. On the first day, the team meets to decide what to work on.
-
-### One sprint, four events
 
 Scrum works in sprints: fixed periods of one month or less. Sprint Planning starts each sprint by choosing work from the ordered product backlog. During the sprint, Developers meet for a 15-minute Daily Scrum to adjust their plan. At the end, the Sprint Review inspects the result with stakeholders, then the Sprint Retrospective improves how the team works.
 
 Three accountabilities: the Product Owner orders the backlog, the Scrum Master helps the team use Scrum, and Developers build the work.
 
-### User stories and acceptance criteria
-
 Many Scrum teams write backlog items as user stories, a common practice the Scrum Guide does not require. Form: As a user role, I want something they can do, so that a benefit. Leave out how it will be built.
 
 Each story gets acceptance criteria: checks with a clear yes or no. A testable criterion names a situation, an action and an observable result, often as Given, When, Then. “Works well” or “fast” cannot be checked.
-
-### Apply it to a new story
 
 Testable criteria are also what you will check AI-made changes against in the next topic.
 
@@ -71,6 +63,14 @@ Acceptance criterion …
 Next topic: Checking AI-made changes before merging
 
 ## Cheat sheet
+
+Where to act: the four event buttons under Next event in the loop, and the empty step outlined in the loop.
+
+Next step: use the order in the teaching: which event starts the sprint, which happens every day, and which two end it?
+
+Where to act: the card bank, then the four lines of the story card in the model.
+
+Next step: for each line, look for a person who uses the product, something they can do, a benefit to them, and a check with a yes-or-no answer.
 
 |  |  |
 | --- | --- |

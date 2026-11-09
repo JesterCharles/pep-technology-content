@@ -8,25 +8,17 @@
 
 ## Teaching
 
-### Start with a guess
-
 You ask an AI assistant: “Add a line to start.sh that prints the port the app uses.” You did not share `start.sh` or any project rules.
 
 Every prompt, file and answer here is a synthetic example written for this lesson. Nothing calls a real AI model.
-
-### Three inputs you control
 
 In this lesson you control three inputs: standing instructions (a project rules file it reads with every request; the file name and support vary by tool), shared context (the files or snippets it can see) and your prompt.
 
 Tools may also add layers you do not set here, such as conversation history, system or organization instructions, memory and tool results. Depending on the tool, an assistant may also pick context itself or use permitted tools to read files in the workspace you opened, so workspace scope and exclusions are part of what you share. A missing input gets filled with something plausible. Whatever comes back is a proposal until you check it.
 
-### Setup decides what it can see
-
 Setup comes down to three choices: use a tool your program or employer approves, with the account they provide; open the workspace at the project folder for your task; keep a standing instructions file in that project.
 
 Opening the project folder helps the assistant pick up the right project context. It is not a guaranteed boundary: what the assistant may read, and which files are excluded, depends on the tool and its settings. The model here is an illustrative view: too wide, and private or unrelated files come into view; too narrow, and it loses files your change depends on.
-
-### Apply it to a new request
 
 A teammate, Jo, has a proposal that looks finished. Use the three inputs to decide the next step.
 
@@ -60,6 +52,14 @@ Hidden until you make your prediction.
 Next topic: Rules of use: what to share and what you own
 
 ## Cheat sheet
+
+Where to act: the two switches under Inputs to send with the prompt, then the proposal box in the model.
+
+Next step: for each proposal, ask which input it could not see and how that gap shows up in the line it wrote.
+
+Where to act: the four folder choices, then the list of files in view in the model.
+
+Next step: compare that list with what a change to start.sh depends on, and look for private or unrelated files.
 
 |  |  |
 | --- | --- |

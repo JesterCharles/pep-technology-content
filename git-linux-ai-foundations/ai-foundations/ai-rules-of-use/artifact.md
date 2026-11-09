@@ -7,25 +7,17 @@
 
 ## Teaching
 
-### Start with a guess
-
 Your script fails, and the error output includes your access token. You want an assistant's help.
 
 All files, values and messages here are synthetic and fake. Nothing calls a real AI model.
-
-### Three lanes at the prompt boundary
 
 Before anything goes into a prompt, put it in a lane. Share: material your program or employer permits for that approved tool and account, with no secrets, personal data or confidential business details. Redact first: useful material with a secret or personal detail inside. Never share: material that is secret or personal as a whole, such as private keys or customer records.
 
 Treat anything you paste as having left your control.
 
-### Redact, don't discard
-
 Redacting keeps what helps and replaces what harms with a placeholder such as `<TOKEN>`. Error codes and file and line numbers usually help; tokens, passwords and personal details do not.
 
 You also own the result. Submit code an assistant proposed, and you answer for it as if you wrote it. Use only tools your program or employer approves.
-
-### Apply it to a new message
 
 A teammate drafts a prompt for help with a database connection. Same lanes, new material.
 
@@ -64,6 +56,14 @@ What would be pasted
 Next topic: How Agile teams work: Scrum and user stories
 
 ## Cheat sheet
+
+Where to act: the three lane buttons under the item's name, and the outlined item in the model.
+
+Next step: ask whether the item is useful, and whether its secret or personal part is one piece you can remove or the whole item.
+
+Where to act: the four part buttons under Parts of the error output.
+
+Next step: for each part, ask: is it a token, a password or a personal detail, or does it say what failed or where?
 
 |  |  |
 | --- | --- |
