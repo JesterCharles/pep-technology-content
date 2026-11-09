@@ -73,9 +73,15 @@ Repository: what gets committed
 - Code reads secrets from the environment; the real values sit in a `.env` listed in `.gitignore`.
 - A secret that was committed stays in history, so change it.
 
-Next topic: Localhost and ports
-
 ## Cheat sheet
+
+Where to act: In the terminal command line, at the prompt.
+
+Next step: Mark the variable that already exists for export, then start the program and read what it received.
+
+Where to act: The button beside each file name in the repository list.
+
+Next step: For each file, ask whether it holds a real value or only reads, ignores or describes one.
 
 |  |  |
 | --- | --- |

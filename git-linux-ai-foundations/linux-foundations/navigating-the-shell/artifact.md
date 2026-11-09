@@ -72,9 +72,19 @@ filled you are here outlined path read
 - `/` starts at the root, a relative path where you are, `~` at home; `..` is up one.
 - Quote or escape spaces; a failed `cd` leaves you in place.
 
-Next topic: Pipes and grep
-
 ## Cheat sheet
+
+Where to act: In the command line at the bottom of the practice terminal, after the prompt.
+
+Next step: Type one command, press Enter, and compare the output with the filled row in the folder tree before you type the next.
+
+Where to act: In the terminal command line, after `ls` and a space.
+
+Next step: In the folder tree, find which folder lies between ana and pep; the relative path starts from where you are, and the `~` path starts from home.
+
+Where to act: In the terminal command line, one `cd` per move; the prompt and the filled row show where you end up.
+
+Next step: Decide how each path must start: keep the spaced name as one word, climb with the parent path, and begin the last path at the root.
 
 |  |  |
 | --- | --- |

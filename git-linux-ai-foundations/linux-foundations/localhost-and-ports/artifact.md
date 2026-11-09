@@ -66,9 +66,15 @@ No request sent yet.
 - `connection refused`: nothing listens there. `address already in use`: something already does.
 - localhost never reaches another computer, such as a teammate's laptop.
 
-Next: back to the course index for the next module
-
 ## Cheat sheet
+
+Where to act: The Host and Port choices, then Send request.
+
+Next step: Compare the port you choose with the ports listed on your laptop: one request needs a program listening there, the other needs a port where nothing listens.
+
+Where to act: The Port for the second API choices, then Start second API.
+
+Next step: Check which ports on your laptop already have a listener; only one program at a time can listen on a port.
 
 |  |  |
 | --- | --- |
