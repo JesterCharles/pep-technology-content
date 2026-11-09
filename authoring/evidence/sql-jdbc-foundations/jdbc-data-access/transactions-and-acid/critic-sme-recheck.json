@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "claude fresh independent technology SME recheck critic (jdbc-data-access 2026-11-09)",
+  "reviewedPath": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+  "reviewedSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46",
+  "artifactHashes": {
+    "artifact.html": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46",
+    "artifact.gift": "87d7fe967f307fa40293ee50d3ce7cb53a85967753e74c9a86e3e9a8e2b4b77d"
+  },
+  "findings": [
+    {
+      "id": "tx-sme-r-001",
+      "severity": "low",
+      "location": {
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "line": 481
+      },
+      "claim": "The new setAutoCommit(true) rule also fires when the call sits after the last executeUpdate but before conn.commit(), with the message 'turns auto-commit back on before the transfer is committed, so each update is saved on its own'. For that placement this is technically wrong: per the Connection.setAutoCommit NOTE, switching auto-commit on during a transaction commits the open transaction, so both already-successful updates are committed together, and the following conn.commit() then fails in pgJDBC with 'Cannot commit when autoCommit is enabled.' Rejecting the code is right; the stated reason is not.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/Connection.html",
+          "section": "setAutoCommit(boolean) NOTE",
+          "retrievedAt": "2026-11-09T19:28:27Z",
+          "textSha256": "ba7db6d18089f56a641263235fbc996511deb02efd12b08835b9f0d99fb8331b"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/pgjdbc/pgjdbc/master/pgjdbc/src/main/java/org/postgresql/jdbc/PgConnection.java",
+          "section": "PgConnection.commit(): autoCommit check",
+          "retrievedAt": "2026-11-09T19:28:27Z",
+          "textSha256": "4120ef670ba390c778bd309593edc1bd4a3a4d318c12decc78da93d465b29484"
+        }
+      ],
+      "recommendation": "Split the message by position: before the last executeUpdate keep 'each update is saved on its own'; between the last update and commit() say 'turning auto-commit on here commits the transaction early, and conn.commit() then throws because auto-commit is on. Restore it only after commit() and rollback(), for example in a finally block.'",
+      "reviewedSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/critic-sme.json",
+    "items": [
+      {
+        "findingId": "tx-sme-001",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "reviewedSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46",
+        "note": "Resolved. Ran the extracted t3Check in node: the correct transfer passes with and without finally { conn.setAutoCommit(true); } after the catch (Oracle Using Transactions pattern); setAutoCommit(true) before the updates, between them, or before commit() is rejected; missing setAutoCommit(false) and early commit() are still rejected. The old blanket 'true keeps auto-commit on' message is gone. The wording for the before-commit() placement is imprecise; raised separately as new low finding tx-sme-r-001."
+      },
+      {
+        "findingId": "tx-sme-002",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "reviewedSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46",
+        "note": "Resolved. In node: throw e;, throw new RuntimeException(e);, throw new RuntimeException(\"transfer failed\", e); and a '+'-concatenated message with e as cause pass; throw new RuntimeException(e.getMessage());, throw new IllegalStateException(\"bad e\"); and a swallowed exception are rejected with the keeps-it-as-the-cause message. Residual pattern-check limit (not a finding): a message argument containing parentheses, e.g. String.format(...), with e as cause is rejected; the page labels the editor as pattern checks only. Read Committed claims (session 2 sees old committed values before commit and new values after, each statement sees data committed before it began) and the new prediction step are accurate for PostgreSQL's default isolation."
+      }
+    ]
+  }
+}

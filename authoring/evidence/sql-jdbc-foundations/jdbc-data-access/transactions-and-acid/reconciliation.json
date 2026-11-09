@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "author": "claude-opus-5-5 (pep jdbc-data-access author)",
+  "decidedBy": "claude independent non-author reconciler (jdbc-data-access 2026-11-09)",
+  "reviewedPath": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+  "reviewedSha256": "4700eca6ae8bba648c412cb245a23424756c4d4ca422a3171e31191af80b5ecf",
+  "decisions": [
+    {
+      "findingId": "tx-edu-001",
+      "decision": "accept",
+      "rationale": "Fix verified: t3Check now flags setAutoCommit(true) only when it appears before the last executeUpdate or before conn.commit(), with a corrected message telling the learner to restore it only after commit/rollback. Ran t3Check in node: the correct transfer with finally { conn.setAutoCommit(true); } after the catch now passes; setAutoCommit(true) before the updates and between the two updates are still rejected; missing setAutoCommit(false) is still rejected.",
+      "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+      "fixedInSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46"
+    },
+    {
+      "findingId": "tx-edu-002",
+      "decision": "accept",
+      "rationale": "Fix verified: step 2 adds a required prediction fieldset (s2p: old vs new balances) and goals[2] is now auto, rb, iso, commit. Ran TOPIC.act in node with a stubbed document: iso/commit with no prediction are blocked with 'First choose what session 2 will read'; a wrong prediction shows 'prediction missed' and does not set the goal; iso+old and commit+new set iso and commit respectively. Both before-commit and after-commit visibility are now required and predicted before reveal; restart() restores the control snapshot so the radio is cleared.",
+      "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+      "fixedInSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46"
+    },
+    {
+      "findingId": "tx-edu-003",
+      "decision": "accept",
+      "rationale": "Fix verified: the rethrow regex now requires the catch variable as a standalone constructor argument (new X(e) or new X(..., e)). Ran t3Check in node: throw e;, throw new RuntimeException(e); and throw new RuntimeException(\"transfer failed\", e); pass; throw new RuntimeException(e.getMessage()); and throw new IllegalStateException(\"bad e\"); are rejected with the rethrow-with-cause message.",
+      "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+      "fixedInSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46"
+    },
+    {
+      "findingId": "tx-edu-004",
+      "decision": "accept",
+      "rationale": "Fix verified: render() for step 4 onward now labels the card as the step 2 commit scenario (log 'Step 2 commit scenario: the transfer of 50 committed, so every session reads A 50 · B 70.', session 2 'A 50 · B 70 (after commit)'), so the A 50 · B 70 state is explicitly tied to the committed transfer of 50 rather than appearing unexplained after the step 3 rollback. Confirmed by calling render() at step 4 in node.",
+      "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+      "fixedInSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46"
+    },
+    {
+      "findingId": "tx-sme-001",
+      "decision": "accept",
+      "rationale": "Same verified correction as tx-edu-001: setAutoCommit(true) is now an error only when positioned before the last executeUpdate or before commit(); a finally-block restore after the catch (Oracle Using Transactions pattern) passes in node, and the message no longer claims auto-commit stays on for that placement.",
+      "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+      "fixedInSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46"
+    },
+    {
+      "findingId": "tx-sme-002",
+      "decision": "accept",
+      "rationale": "Same verified correction as tx-edu-003: the regex now matches new X(e) or new X(\"...\", e) only; in node e.getMessage() and an 'e' inside a string literal are rejected, while throw e; and the cause-preserving wrappers pass, matching the page's 'keeps it as the cause' rule.",
+      "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+      "fixedInSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46"
+    },
+    {
+      "findingId": "tx-sme-r-001",
+      "decision": "accept",
+      "rationale": "Fix verified in current bytes: the single setAutoCommit(true) rule is split. Ran the extracted t3Check (function t3Check .. var TOPIC=) in node: setAutoCommit(true) between the last executeUpdate and conn.commit() is now rejected with 'Turning auto-commit back on here commits the open transaction at once, so a later commit() or rollback() has nothing to finish and fails', which matches the Connection.setAutoCommit NOTE and pgJDBC's 'Cannot commit when autoCommit is enabled'; the 'each update is saved on its own' reason is now emitted only when the call precedes the updates (verified with setAutoCommit(true) before credit.executeUpdate). The canonical answer with setAutoCommit(true) in finally, and the version with no restore, both still pass with no problems.",
+      "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+      "fixedInSha256": "a4799db593d8453fa79dda33b27c52872320fbd018f89bf3f1bf17ac5a52b6f9"
+    },
+    {
+      "findingId": "tx-edu-recheck-001",
+      "decision": "accept",
+      "rationale": "Fix verified in current bytes: the new else-if also fires when setAutoCommit(true) precedes conn.rollback() (rb>=0&&on<rb). Ran the extracted t3Check in node: catch (SQLException e) { conn.setAutoCommit(true); conn.rollback(); throw e; } now fails with ok=false and the 'commits the open transaction at once ... rollback() has nothing to finish and fails' problem pointing at the catch line, both alone and with an additional restore in finally; setAutoCommit(true) only in finally after the catch passes. Side observation, not blocking: a restore placed in the try immediately after commit() is also rejected with the same message; this is consistent with the page's instruction to restore only in finally (a later rollback() in auto-commit mode would throw), so the stricter check is acceptable.",
+      "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+      "fixedInSha256": "a4799db593d8453fa79dda33b27c52872320fbd018f89bf3f1bf17ac5a52b6f9"
+    },
+    {
+      "findingId": "tx-edu-final-001",
+      "decision": "accept",
+      "rationale": "Fix verified in current bytes by running the extracted t3Check (function t3Check .. var TOPIC=) in node. setAutoCommit(true) right after conn.commit() inside the try is now rejected with its own accurate message ('Restoring auto-commit right after commit() is skipped when the transfer fails and the catch runs. Move it to a finally block so it runs either way.'), no longer the false 'commits the open transaction' reason. The first message now reads 'comes before both updates have run, so auto-commit is back on and each update is saved on its own', which is true both before the first update and between credit.executeUpdate() and debit.executeUpdate(). Between last update and commit(), and inside the catch before rollback(), still get the 'commits the open transaction at once, so the commit() or rollback() that follows fails' message, which is accurate for those placements. finally { conn.setAutoCommit(true); } after the catch and the correct transfer both pass with ok=true.",
+      "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+      "fixedInSha256": "4700eca6ae8bba648c412cb245a23424756c4d4ca422a3171e31191af80b5ecf"
+    },
+    {
+      "findingId": "tx-sme-f-001",
+      "decision": "accept",
+      "rationale": "Fix verified in current bytes (same node run of extracted t3Check): the reworded 'before the updates run' text is replaced by 'setAutoCommit(true) here comes before both updates have run, so auto-commit is back on and each update is saved on its own', matching the recommendation. For the between-updates placement this no longer contradicts the visible credit.executeUpdate() above the call, and per the Connection.setAutoCommit NOTE the credit is committed on its own when auto-commit is enabled and the debit then auto-commits, so 'each update is saved on its own' holds. Placement before the first update gets the same, still accurate, message; all other placements behave as recorded for tx-edu-final-001.",
+      "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+      "fixedInSha256": "4700eca6ae8bba648c412cb245a23424756c4d4ca422a3171e31191af80b5ecf"
+    }
+  ]
+}

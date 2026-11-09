@@ -7,7 +7,7 @@
 <meta name="pep:module" content="jdbc-data-access">
 <meta name="pep:topic" content="Transactions and ACID">
 <meta name="pep:topic-id" content="transactions-and-acid">
-<meta name="pep:budget-minutes" content="11">
+<meta name="pep:budget-minutes" content="12">
 <meta name="pep:source" content="authoring/evidence/sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/sources.json">
 <title>Transactions and ACID</title>
 <style>
@@ -284,7 +284,7 @@ summary { display: flex; align-items: center; min-height: 44px; cursor: pointer;
 <main id="lesson" class="pep-main" data-pep-responsive>
   <header class="pep-topicbar">
     <h1>Transactions and ACID</h1>
-    <div class="pep-topicbar__progress" data-pep-progress id="progress"><span id="prog-text">Activity 1 of 4 · 0 done</span><span>about 11 min</span><span class="pep-progress" id="progress-bar" aria-hidden="true"><span></span><span></span><span></span><span></span></span></div>
+    <div class="pep-topicbar__progress" data-pep-progress id="progress"><span id="prog-text">Activity 1 of 4 · 0 done</span><span>about 12 min</span><span class="pep-progress" id="progress-bar" aria-hidden="true"><span></span><span></span><span></span><span></span></span></div>
     <button type="button" class="pep-btn" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
     <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
   </header>
@@ -479,7 +479,9 @@ function t3Check(text){var P=[],out=[],L=text.split('\n');
  if(!/void\s+transfer\s*\(/.test(text)||text.indexOf('credit.executeUpdate')<0||text.indexOf('debit.executeUpdate')<0){P.push({line:1,kind:'limit',msg:'Keep the transfer method and both executeUpdate calls; this editor only checks this one method.'});return {problems:P,output:['Fix the problems first; the simulated transfer appears here.'],ok:false};}
  var off=text.search(/conn\.setAutoCommit\s*\(\s*false\s*\)/),first=Math.min(text.indexOf('credit.executeUpdate'),text.indexOf('debit.executeUpdate')),last=Math.max(text.indexOf('credit.executeUpdate'),text.indexOf('debit.executeUpdate')),com=text.search(/conn\.commit\s*\(\s*\)/),cat=text.search(/catch\s*\(\s*SQLException\s+\w+\s*\)/),rb=text.search(/conn\.rollback\s*\(\s*\)/);
  var on=text.search(/setAutoCommit\s*\(\s*true\s*\)/);
- if(on>=0&&(on<last||(com>=0&&on<com))){P.push({line:lineOf(/setAutoCommit\s*\(\s*true/),kind:'error',msg:'setAutoCommit(true) here turns auto-commit back on before the transfer is committed, so each update is saved on its own. Only restore it after commit() and rollback(), for example in a finally block.'});}
+ if(on>=0&&on<last){P.push({line:lineOf(/setAutoCommit\s*\(\s*true/),kind:'error',msg:'setAutoCommit(true) here comes before both updates have run, so auto-commit is back on and each update is saved on its own. Only restore it after commit() and rollback(), for example in a finally block.'});}
+ else if(on>=0&&((com>=0&&on<com)||(cat>=0&&on>cat&&rb>=0&&on<rb))){P.push({line:lineOf(/setAutoCommit\s*\(\s*true/),kind:'error',msg:'Turning auto-commit back on here commits the open transaction at once, so the commit() or rollback() that follows fails. Only restore it after commit() and rollback(), for example in a finally block.'});}
+ else if(on>=0&&rb>=0&&on<rb){P.push({line:lineOf(/setAutoCommit\s*\(\s*true/),kind:'error',msg:'Restoring auto-commit right after commit() is skipped when the transfer fails and the catch runs. Move it to a finally block so it runs either way.'});}
  else if(off<0){P.push({line:1,kind:'error',msg:'Turn auto-commit off first: conn.setAutoCommit(false);'});}
  else if(off>first){P.push({line:lineOf(/setAutoCommit/),kind:'error',msg:'setAutoCommit(false) runs after an update has already been saved. Move it before the first executeUpdate.'});}
  if(com<0){P.push({line:lastLine(/executeUpdate/),kind:'error',msg:'Nothing commits the transfer. Call conn.commit() after the second update.'});}

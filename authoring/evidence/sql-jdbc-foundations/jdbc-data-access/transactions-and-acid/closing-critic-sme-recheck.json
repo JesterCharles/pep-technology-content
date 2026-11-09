@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "claude independent closing technology SME recheck critic (jdbc-data-access 2026-11-09)",
+  "reviewedPath": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+  "reviewedSha256": "4700eca6ae8bba648c412cb245a23424756c4d4ca422a3171e31191af80b5ecf",
+  "artifactHashes": {
+    "artifact.html": "4700eca6ae8bba648c412cb245a23424756c4d4ca422a3171e31191af80b5ecf",
+    "artifact.gift": "87d7fe967f307fa40293ee50d3ce7cb53a85967753e74c9a86e3e9a8e2b4b77d"
+  },
+  "findings": [],
+  "recheck": {
+    "of": "authoring/evidence/sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/critic-sme.json",
+    "items": [
+      {
+        "findingId": "tx-sme-001",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "reviewedSha256": "4700eca6ae8bba648c412cb245a23424756c4d4ca422a3171e31191af80b5ecf",
+        "note": "Ran the extracted t3Check (function t3Check up to var TOPIC=) in node on the current bytes. The correct transfer passes; the same transfer with finally { conn.setAutoCommit(true); } after the catch passes, as does restoring after rollback() inside the catch. Checked each rejection against the Java SE Connection.setAutoCommit NOTE (changing auto-commit mode during a transaction commits it) and the commit()/rollback() Throws clauses (SQLException in auto-commit mode). tx-sme-r-001 stays resolved: between the last executeUpdate and commit(), and in the catch before rollback(), are rejected with \"commits the open transaction at once, so the commit() or rollback() that follows fails\", which matches the contract and pgJDBC behaviour. tx-sme-f-001 is resolved: before the updates and between credit and debit now read \"comes before both updates have run, so auto-commit is back on and each update is saved on its own\", accurate for both (between, the NOTE commits the credit alone and the debit then auto-commits). The new third case, right after commit() in the try, says the restore \"is skipped when the transfer fails and the catch runs. Move it to a finally block\", which is correct: no transaction is open there, so the only defect is the missed restore on the failure path. Missing setAutoCommit(false) and early commit() checks are unchanged."
+      },
+      {
+        "findingId": "tx-sme-002",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "reviewedSha256": "4700eca6ae8bba648c412cb245a23424756c4d4ca422a3171e31191af80b5ecf",
+        "note": "Rethrow regex unchanged. In node: throw e;, throw new RuntimeException(e); and throw new RuntimeException(\"transfer failed\", e); pass; throw new RuntimeException(e.getMessage()); and a swallowed exception are rejected with the keeps-it-as-the-cause message."
+      }
+    ]
+  }
+}

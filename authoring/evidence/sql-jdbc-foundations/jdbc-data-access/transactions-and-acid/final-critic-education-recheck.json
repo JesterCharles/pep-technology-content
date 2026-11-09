@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "claude fresh independent education final recheck critic (jdbc-data-access 2026-11-09)",
+  "reviewedPath": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+  "reviewedSha256": "a4799db593d8453fa79dda33b27c52872320fbd018f89bf3f1bf17ac5a52b6f9",
+  "artifactHashes": {
+    "artifact.html": "a4799db593d8453fa79dda33b27c52872320fbd018f89bf3f1bf17ac5a52b6f9",
+    "artifact.gift": "87d7fe967f307fa40293ee50d3ce7cb53a85967753e74c9a86e3e9a8e2b4b77d"
+  },
+  "findings": [
+    {
+      "id": "tx-edu-final-001",
+      "severity": "low",
+      "location": {
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "line": 483
+      },
+      "claim": "The new second setAutoCommit(true) message ('Turning auto-commit back on here commits the open transaction at once, so a later commit() or rollback() has nothing to finish and fails') fires whenever setAutoCommit(true) appears textually before conn.rollback(). For try { ...; conn.commit(); conn.setAutoCommit(true); } catch (SQLException e) { conn.rollback(); throw e; } (verified by running the extracted t3Check in node) the transaction is already committed and rollback() only runs on paths where that line never executed, so the stated reason is false for this placement; the real problem is only that auto-commit is not restored when the transfer fails. Separately, the first message now says 'before the updates run', which is inaccurate when setAutoCommit(true) sits between credit.executeUpdate() and debit.executeUpdate() (credit has already run). Rejecting both placements is fine; the explanations are what mislead.",
+      "evidence": [],
+      "recommendation": "Give the after-commit-in-try case its own message (for example: 'This restores auto-commit only when the transfer succeeds; move it to a finally block so it is also restored after rollback().'), and reword the first message to 'before the second update runs' or back to 'before the transfer is committed'.",
+      "reviewedSha256": "a4799db593d8453fa79dda33b27c52872320fbd018f89bf3f1bf17ac5a52b6f9"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/critic-education.json",
+    "items": [
+      {
+        "findingId": "tx-edu-001",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "reviewedSha256": "a4799db593d8453fa79dda33b27c52872320fbd018f89bf3f1bf17ac5a52b6f9",
+        "note": "Ran the extracted t3Check (function t3Check up to var TOPIC=) in node on the current bytes. Original finding holds as fixed: the correct transfer and the same transfer plus finally { conn.setAutoCommit(true); } after the catch both pass. tx-edu-recheck-001 is fixed: catch (SQLException e) { conn.setAutoCommit(true); conn.rollback(); throw e; } is now rejected on the setAutoCommit line with a message that correctly explains switching auto-commit on commits the open transaction so the following rollback() fails (consistent with the java.sql.Connection contract). Restoring after rollback() inside the catch also passes. setAutoCommit(true) before the updates, between them, or before commit() is still rejected. Messages name no answer beyond the method's own guidance and keep the 'restore in a finally block' tip. Residual message-accuracy nits for two placements are raised as tx-edu-final-001 (low)."
+      },
+      {
+        "findingId": "tx-edu-002",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "reviewedSha256": "a4799db593d8453fa79dda33b27c52872320fbd018f89bf3f1bf17ac5a52b6f9",
+        "note": "Timeline code is unchanged by these edits (diff touches only t3Check lines 482-483 and the budget label). Step 2 still has the labelled session-2 prediction fieldset and goals auto, rb, iso, commit, so o3 is credited by real before- and after-commit predictions. Budget label 12 min matches topic.json minutes.budget 12."
+      },
+      {
+        "findingId": "tx-edu-003",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "reviewedSha256": "a4799db593d8453fa79dda33b27c52872320fbd018f89bf3f1bf17ac5a52b6f9",
+        "note": "Ran t3Check in node: throw e;, throw new RuntimeException(e); and throw new RuntimeException(\"transfer failed\", e); pass; throw new RuntimeException(e.getMessage()); is rejected with the rethrow-with-cause message, also when a finally restore is present."
+      },
+      {
+        "findingId": "tx-edu-004",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "reviewedSha256": "a4799db593d8453fa79dda33b27c52872320fbd018f89bf3f1bf17ac5a52b6f9",
+        "note": "render() for step 4 onward is unchanged: the card still ties A 50 · B 70 to the step-2 committed transfer of 50 and does not reveal the apply answers."
+      }
+    ]
+  }
+}
