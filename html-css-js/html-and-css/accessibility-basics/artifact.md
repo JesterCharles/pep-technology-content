@@ -65,6 +65,18 @@ Next topic: The box model
 
 ## Cheat sheet
 
+Where to act: The four barrier buttons under the item's markup.
+
+Next step: Read the markup for three things: an image with no alt attribute, a control with no linked label or other name, and a part of the page that Tab, Shift+Tab and Escape cannot leave. If none of the three applies, the item has no problem.
+
+Where to act: The two Save controls in the model, then the fix choices below them.
+
+Next step: Compare the log for the two controls. role="button" only changes what assistive technology is told; ask which fix gives control B the focus and key behaviour control A already has.
+
+Where to act: The simulated Tab, Shift+Tab and Escape buttons, then the control list.
+
+Next step: Press Tab one step at a time and compare the focus marker with the list. A control the marker never reaches fails, and so does a place where Tab, Shift+Tab and Escape all leave focus where it is.
+
 |  |  |
 | --- | --- |
 | `alt="Sales rose 20% in May"` | informative image |

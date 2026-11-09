@@ -85,6 +85,18 @@ Next topic: Responsive, mobile-first layout
 
 ## Cheat sheet
 
+Where to act: The grid-template-columns buttons below the model.
+
+Next step: Read the measured widths after each press. Equal columns need equal fr shares, a fixed sidebar needs a px track before 1fr, and as-many-as-fit needs repeat with auto-fill and minmax.
+
+Where to act: The cells of the area map, the name buttons, then Apply areas.
+
+Next step: Sketch the shell one row at a time. A name repeated in neighbouring cells spans them, and every name must form one filled rectangle, or the browser rejects the whole map.
+
+Where to act: The Grid and Flexbox buttons under the described layout.
+
+Next step: Ask whether the items must line up in both rows and columns. If they must, choose Grid; if they only need spacing along one axis, choose Flexbox.
+
 |  |  |
 | --- | --- |
 | `display: grid` | make a grid container |

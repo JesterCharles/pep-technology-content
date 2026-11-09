@@ -77,6 +77,18 @@ Next topic: Grid
 
 ## Cheat sheet
 
+Where to act: The display and flex-direction buttons below the model.
+
+Next step: flex-direction does nothing until display is flex. Turn flex on first, then pick the direction that keeps source order for Goal 1 and the one that stacks for Goal 2.
+
+Where to act: The justify-content, align-items and gap buttons.
+
+Next step: In a row, justify-content works along the width and align-items along the height. The default stretch fills the height, so change it before aiming for either goal.
+
+Where to act: The predicted width field and the Measure button.
+
+Next step: Add the three bases and compare the total with 300px. Space left over is shared by flex-grow; an overflow is taken back from the items whose flex-shrink is not 0, weighted by basis.
+
 |  |  |
 | --- | --- |
 | `display: flex` | children become flex items in a row |

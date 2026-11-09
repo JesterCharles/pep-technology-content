@@ -71,6 +71,18 @@ Next topic: Forms and HTML5 validation
 
 ## Cheat sheet
 
+Where to act: The element buttons under the region's name.
+
+Next step: Match the region to the job each element has in the teaching: introduction, major navigation, the one dominant content, a self-contained item, a themed group with a heading, tangential content or closing information.
+
+Where to act: The −1 and +1 buttons beside each heading, then Check outline.
+
+Next step: Start at the h1 and read down the outline. Each heading may be at most one level deeper than the heading before it; any jump back up is fine.
+
+Where to act: The tags in the recipe markup, the element buttons, then Check markup.
+
+Next step: For each div, ask what its content is: a self-contained item, a themed group with a heading, tangential tips or closing information. A wrapper that exists only to place things side by side stays a div.
+
 |  |  |
 | --- | --- |
 | `header` | logo, site name, intro |
@@ -99,7 +111,7 @@ Prediction (practice, not scored): two pages look identical; page A uses only di
 
 ### drag
 
-Steps: 1. Where to look: The news-page wireframe in the model; the current region has a blue outline, and its name appears above the element buttons. 2. What to do: Press the element button you think fits the outlined region. 3. What to expect: A right choice shows that tag in the wireframe and outlines the next region; a wrong choice explains why and lets you choose again. 4. How to know it is done: The counter under the buttons reads 6 of 6 regions done and Continue appears. Region sorter: choose the element for each region of a news page. Worked answer: A, the site banner with logo and site name, is header; B, the links to Home, World and Sport, is nav; C, everything unique to this page, is main; D, the news story, is article because it makes sense on its own; E, the related stories sidebar, is aside because it is tangential to the story; F, copyright and contact, is footer.
+Steps: 1. Where to look: The news-page wireframe in the model; the current region is outlined, and its name appears above the element buttons. 2. What to do: Press the element button you think fits the outlined region. 3. What to expect: A right choice shows that tag in the wireframe and outlines the next region; a wrong choice explains why and lets you choose again. 4. How to know it is done: The counter under the buttons reads 6 of 6 regions done and Continue appears. Region sorter: choose the element for each region of a news page. Worked answer: A, the site banner with logo and site name, is header; B, the links to Home, World and Sport, is nav; C, everything unique to this page, is main; D, the news story, is article because it makes sense on its own; E, the related stories sidebar, is aside because it is tangential to the story; F, copyright and contact, is footer.
 
 ### explore
 
