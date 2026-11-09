@@ -4,36 +4,36 @@
 $CATEGORY: containers-cicd/containers-and-compose/multi-stage-builds
 
 ::o1 runtime stage base::In a two-stage Spring Boot Dockerfile, which base suits the final stage that only runs the jar? {
-=A JRE image such as eclipse-temurin\:25-jre #Correct. Running a jar needs only the Java runtime.
 ~A JDK image such as eclipse-temurin\:25-jdk #Not quite. The JDK's compilers are needed to build, not to run.
+=A JRE image such as eclipse-temurin\:25-jre #Correct. Running a jar needs only the Java runtime.
 ~A Node image #Not quite. Node cannot run a Java jar.
 ~nginx\:alpine #Not quite. nginx serves static files; it has no Java runtime.
 }
 
 ::o1 start command::The final stage of a back-end Dockerfile must start the jar when the container runs. Which line does that? {
-=ENTRYPOINT ["java", "-jar", "app.jar"] #Correct. ENTRYPOINT sets the command the container runs.
 ~RUN java -jar app.jar #Not quite. RUN executes only while the image is being built.
 ~COPY --from\=build app.jar #Not quite. COPY adds files; it starts nothing.
+=ENTRYPOINT ["java", "-jar", "app.jar"] #Correct. ENTRYPOINT sets the command the container runs.
 ~FROM app.jar #Not quite. FROM names a base image or earlier stage.
 }
 
 ::o2 front-end copy::A front-end Dockerfile builds with Vite in a stage named build. Which line belongs in the nginx stage? {
-=COPY --from\=build /app/dist /usr/share/nginx/html #Correct. Only the built files go to the folder nginx serves.
 ~COPY --from\=build /app /usr/share/nginx/html #Not quite. That ships node_modules and the source too.
 ~RUN npm run build #Not quite. The nginx image has no Node; building belongs in the Node stage.
+=COPY --from\=build /app/dist /usr/share/nginx/html #Correct. Only the built files go to the folder nginx serves.
 ~COPY . /usr/share/nginx/html #Not quite. That copies your source folder, not the built output.
 }
 
 ::o2 build command::Which command in the Node stage writes the production files that nginx will serve? {
-=npm run build #Correct. With Vite, it writes the built site into dist.
 ~npm run dev #Not quite. It starts a development server and writes no dist folder.
 ~npm start #Not quite. It starts the app; it does not produce static files for nginx.
 ~nginx -s reload #Not quite. That reloads nginx; it builds nothing.
+=npm run build #Correct. With Vite, it writes the built site into dist.
 }
 
 ::o3 what COPY --from does::What does COPY --from\=build do in a multi-stage Dockerfile? {
-=Copies files from the earlier stage named build into the current stage #Correct. It reads from that stage instead of the build context.
 ~Copies files from your project folder #Not quite. Plain COPY reads the build context; --from reads a stage or image.
+=Copies files from the earlier stage named build into the current stage #Correct. It reads from that stage instead of the build context.
 ~Runs the build stage again #Not quite. It only copies files that stage produced.
 ~Merges every layer of the build stage into the final image #Not quite. Only the named paths are copied.
 }

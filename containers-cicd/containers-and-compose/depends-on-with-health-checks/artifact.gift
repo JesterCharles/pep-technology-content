@@ -4,36 +4,36 @@
 $CATEGORY: containers-cicd/containers-and-compose/depends-on-with-health-checks
 
 ::o1 what depends_on waits for::With depends_on\: [db] and no condition, what does Compose wait for before starting the dependent service? {
-=Until the db container is running #Correct. It orders the start but does not wait for readiness.
 ~Until PostgreSQL accepts connections #Not quite. That needs a healthcheck and condition\: service_healthy.
 ~Until db has run for 30 seconds #Not quite. There is no fixed wait.
+=Until the db container is running #Correct. It orders the start but does not wait for readiness.
 ~Nothing; services start in random order #Not quite. depends_on does order the start.
 }
 
 ::o1 the race::An API connects to its database at startup and sometimes exits with "connection refused" right after docker compose up. The file has only depends_on\: [db]. Why? {
-=The API started while PostgreSQL was still initialising #Correct. Running is not the same as ready.
 ~depends_on is ignored by docker compose up #Not quite. It is used; it just does not wait for readiness.
 ~The database port is not published #Not quite. Services reach each other on the container port without publishing.
 ~The API image is too old #Not quite. The timing of the database start is the cause.
+=The API started while PostgreSQL was still initialising #Correct. Running is not the same as ready.
 }
 
 ::o2 healthcheck for postgres::Which test fits a healthcheck for the postgres\:18 service? {
-=["CMD-SHELL", "pg_isready -U $$\{POSTGRES_USER\} -d $$\{POSTGRES_DB\}"] #Correct. pg_isready exits 0 when the server accepts connections.
 ~["CMD", "curl", "-f", "http\://localhost\:5432"] #Not quite. PostgreSQL does not speak HTTP.
 ~["CMD", "ls", "/var/lib/postgresql"] #Not quite. A folder existing says nothing about accepting connections.
+=["CMD-SHELL", "pg_isready -U $$\{POSTGRES_USER\} -d $$\{POSTGRES_DB\}"] #Correct. pg_isready exits 0 when the server accepts connections.
 ~["CMD-SHELL", "exit 0"] #Not quite. It always passes, so it checks nothing.
 }
 
 ::o2 wait condition::Which depends_on entry makes the api service wait for a healthy db? {
-=db\: condition\: service_healthy #Correct. Compose starts api only after db reports healthy.
 ~db\: condition\: service_started #Not quite. That waits only until db is running.
 ~db\: condition\: service_completed_successfully #Not quite. That waits for a one-off task to finish.
 ~db\: restart\: true #Not quite. That restarts api when db restarts; it sets no wait.
+=db\: condition\: service_healthy #Correct. Compose starts api only after db reports healthy.
 }
 
 ::o3 read starting::docker compose ps shows db as "Up 5 seconds (health\: starting)". What does it mean? {
-=The container runs, but no health check has passed yet #Correct. The state changes to healthy after a passing check.
 ~The database is ready #Not quite. Ready shows as (healthy).
+=The container runs, but no health check has passed yet #Correct. The state changes to healthy after a passing check.
 ~The health check failed repeatedly #Not quite. That shows as (unhealthy).
 ~The container is restarting #Not quite. It is up; only its health is still being decided.
 }

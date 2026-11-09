@@ -4,23 +4,23 @@
 $CATEGORY: collections-streams/lambdas-and-streams/streams-over-data-loaded-from-the-database
 
 ::o1 cursor start::Right after executeQuery returns a ResultSet, where is its cursor? {
-=Before the first row#Correct. The first call to next() moves the cursor onto row one.
 ~On the first row#Not quite. Reading a column before calling next() fails, because no row is current yet.
 ~After the last row#Not quite. The cursor reaches that position only when next() returns false.
 ~On a header row of column names#Not quite. A ResultSet has no header row; column names come from its metadata.
+=Before the first row#Correct. The first call to next() moves the cursor onto row one.
 }
 
 ::o1 end of rows::What does rs.next() return once the last row has already been read? {
-=false#Correct. false ends the while (rs.next()) loop.
 ~null#Not quite. next() returns a boolean, never null.
+=false#Correct. false ends the while (rs.next()) loop.
 ~The last row again#Not quite. next() moves forward and reports whether a row is there.
 ~It always throws SQLException#Not quite. Running out of rows is reported with false, not an exception.
 }
 
 ::o1 pipeline result::orders is a list of Order records. A stream over it keeps orders whose status equals "OPEN", then calls map(Order\:\:code), sorted() and toList(). What does the result hold? {
-=The codes of the open orders, in ascending order#Correct. filter keeps open orders, map turns each into its code, and sorted orders the codes.
 ~The open Order records, sorted#Not quite. map(Order\:\:code) replaced each Order with its code before sorting.
 ~Every code, in ascending order#Not quite. filter dropped the orders that are not open.
+=The codes of the open orders, in ascending order#Correct. filter keeps open orders, map turns each into its code, and sorted orders the codes.
 ~The codes of the open orders, in list order#Not quite. sorted() orders the codes before toList collects them.
 }
 
@@ -32,22 +32,22 @@ $CATEGORY: collections-streams/lambdas-and-streams/streams-over-data-loaded-from
 }
 
 ::o2 traverse again::A stream s over the list rows has already run count(). How do you traverse rows a second time? {
-=Call rows.stream() again to get a new stream#Correct. A stream is single-use, but the list can make as many streams as you need.
 ~Call s.toList() on the same stream#Not quite. Reusing s throws IllegalStateException.
+=Call rows.stream() again to get a new stream#Correct. A stream is single-use, but the list can make as many streams as you need.
 ~Call s.reset() first#Not quite. Stream has no reset method.
 ~Nothing; a stream can be traversed any number of times#Not quite. A stream may be used only once.
 }
 
 ::o3 reduce in SQL::A report needs only the number of SHIPPED orders per region and uses no other row data. Where should that reduction happen? {
-=In SQL, with WHERE for the status and GROUP BY region with COUNT#Correct. The program needs only the reduced result, so the database returns just the counts.
 ~In the stream, after loading every order#Not quite. That loads rows the program never uses.
 ~In SQL, with HAVING for the status#Not quite. HAVING filters groups; WHERE filters rows.
 ~In the stream, because grouping is Java-only logic#Not quite. GROUP BY with COUNT does this in SQL.
+=In SQL, with WHERE for the status and GROUP BY region with COUNT#Correct. The program needs only the reduced result, so the database returns just the counts.
 }
 
 ::o3 having::Which SQL clause keeps only the groups whose total passes a limit? {
-=HAVING#Correct. HAVING filters groups after GROUP BY has formed them.
 ~WHERE#Not quite. WHERE filters single rows before any groups exist.
 ~GROUP BY#Not quite. GROUP BY forms the groups but does not drop any.
+=HAVING#Correct. HAVING filters groups after GROUP BY has formed them.
 ~ORDER BY#Not quite. ORDER BY sorts the result and removes nothing.
 }

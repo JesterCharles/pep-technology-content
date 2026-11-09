@@ -5,10 +5,10 @@
 $CATEGORY: sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins
 
 ::o1 customers with no orders::Which query shape finds customers who have no orders? {
-=customers LEFT JOIN orders on the customer key, keeping rows where orders.order_id IS NULL#Correct. Unmatched customers get NULL in every orders column, and the order key is never NULL in a real order.
 ~customers LEFT JOIN orders, keeping rows where orders.order_id IS NOT NULL#Not quite. That keeps the customers who do have orders.
 ~customers INNER JOIN orders, keeping rows where orders.order_id IS NULL#Not quite. An inner join has already dropped the unmatched customers, so nothing is left.
 ~customers INNER JOIN orders, keeping rows where orders.total \= 0#Not quite. A zero-total order is still an order.
+=customers LEFT JOIN orders on the customer key, keeping rows where orders.order_id IS NULL#Correct. Unmatched customers get NULL in every orders column, and the order key is never NULL in a real order.
 }
 
 ::o1 NOT EXISTS form::Which NOT EXISTS subquery finds customers with no orders? {
@@ -19,22 +19,22 @@ $CATEGORY: sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-jo
 }
 
 ::o2 self-join condition::employees(emp_id, name, manager_id)\: manager_id points at another employee's emp_id. Which join pairs each employee e with their manager m? {
-=employees AS e JOIN employees AS m ON e.manager_id \= m.emp_id#Correct. The employee row supplies manager_id, and the manager row is the one whose emp_id matches it.
 ~employees AS e JOIN employees AS m ON e.emp_id \= m.emp_id#Not quite. That pairs every employee with themselves.
 ~employees AS e JOIN employees AS m ON e.manager_id \= m.manager_id#Not quite. That pairs colleagues who share a manager.
+=employees AS e JOIN employees AS m ON e.manager_id \= m.emp_id#Correct. The employee row supplies manager_id, and the manager row is the one whose emp_id matches it.
 ~employees JOIN employees ON manager_id \= emp_id#Not quite. PostgreSQL rejects it\: the same table name appears twice in FROM, so each occurrence needs its own alias.
 }
 
 ::o2 why two aliases::Why does a self-join give the same table two aliases? {
-=So each occurrence can be named in its own role, such as employee and manager#Correct. The aliases make each copy a distinct source that columns can be qualified with.
 ~To make PostgreSQL copy the table first#Not quite. An alias names a reference; nothing is copied.
 ~Because a table may only be joined once#Not quite. A table can appear several times, but each appearance needs its own name.
+=So each occurrence can be named in its own role, such as employee and manager#Correct. The aliases make each copy a distinct source that columns can be qualified with.
 ~To sort the result#Not quite. Aliases do not sort anything.
 }
 
 ::o3 NOT IN with a NULL::SELECT name FROM authors WHERE author_id NOT IN (SELECT author_id FROM books); and one book has author_id NULL. What does the query return? {
-=No rows#Correct. With a NULL in the list, NOT IN is never true for any author, so WHERE keeps nothing.
 ~Authors who have no books#Not quite. That is the intent, but the NULL makes every NOT IN test unknown or false.
+=No rows#Correct. With a NULL in the list, NOT IN is never true for any author, so WHERE keeps nothing.
 ~Every author#Not quite. Authors with books are excluded, and the rest become unknown.
 ~An ERROR#Not quite. The query is legal; it just selects nothing.
 }

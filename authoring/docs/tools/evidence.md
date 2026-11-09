@@ -64,6 +64,14 @@ by immutable review evidence has since been removed, its binding remains in the 
 `historical: true`, and `missing: true`. It cannot provide current critic coverage; replacement files still require
 current education and SME coverage.
 
+One narrow T25 exception covers formative answer-order changes: a stale binding to a topic `artifact.gift` counts as
+current critic or owner coverage only when the exact recorded blob is in the checkout's Git history (SHA-256 match)
+and `authoring/tools/gift/answer-order.mjs` proves the current bank moves whole option blocks only. Bytes outside
+answer blocks, layout, raw option blocks (marker, escaped text, attached feedback), question order and count must
+all be identical. Any other drift, a missing blob, a parse failure or an unsupported format stays stale. Locks still
+record the raw `current: false`; `node authoring/tools/gift/answer-order.mjs --check|--write` plans balanced,
+non-recurring correct-answer positions for topic banks.
+
 ### Solved-run evidence
 
 `authoring/schemas/solved-run.schema.json` owns JSON files named `lab-run.json` or `<scope>-solved-run.json` under

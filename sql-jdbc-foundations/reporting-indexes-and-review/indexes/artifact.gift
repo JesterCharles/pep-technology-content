@@ -4,10 +4,10 @@
 $CATEGORY: sql-jdbc-foundations/reporting-indexes-and-review/indexes
 
 ::o1 why faster::Why can an index on books(isbn) make WHERE isbn \= '978-0' faster on a large table? {
-=PostgreSQL can look the value up in the index and go straight to the matching rows instead of reading every row #Correct. Without an index, the only way to find the rows is to scan the whole table.
 ~The index keeps a copy of the query result #Not quite. An index stores column values and row locations, not results of past queries.
 ~The index sorts the table on disk once and for all #Not quite. The index is a separate structure; the table itself is not reordered.
 ~The index makes the table smaller #Not quite. An index adds storage; it does not shrink the table.
+=PostgreSQL can look the value up in the index and go straight to the matching rows instead of reading every row #Correct. Without an index, the only way to find the rows is to scan the whole table.
 }
 
 ::o1 cost on writes::A table gains three new indexes. What happens to each INSERT into it? {
@@ -18,9 +18,9 @@ $CATEGORY: sql-jdbc-foundations/reporting-indexes-and-review/indexes
 }
 
 ::o1 cost on storage::Besides slower writes, what else does every extra index cost? {
-=Disk space, because the index is stored alongside the table #Correct. An index is a separate structure that takes its own storage.
 ~Nothing else #Not quite. Each index uses storage as well.
 ~It removes the ability to UPDATE the indexed column #Not quite. Indexed columns can still be updated.
+=Disk space, because the index is stored alongside the table #Correct. An index is a separate structure that takes its own storage.
 ~It makes queries on other columns fail #Not quite. Other queries still work; they just do not use that index.
 }
 
@@ -32,22 +32,22 @@ $CATEGORY: sql-jdbc-foundations/reporting-indexes-and-review/indexes
 }
 
 ::o2 leading column::An index exists on employees (dept_id, last_name). Which WHERE clause can use it most efficiently? {
-=WHERE dept_id \= 4 #Correct. A multicolumn B-tree index works best when the query constrains its leading, leftmost column.
 ~WHERE last_name \= 'Okafor' #Not quite. last_name is the second column; without dept_id the index is of much less use.
+=WHERE dept_id \= 4 #Correct. A multicolumn B-tree index works best when the query constrains its leading, leftmost column.
 ~WHERE salary \= 50000 #Not quite. salary is not in the index at all.
 ~None of them; multicolumn indexes need both columns every time #Not quite. Constraining only the leading column is enough to use the index well.
 }
 
 ::o2 default index type::You run CREATE INDEX ON payments (paid_at); with no USING clause. What kind of index is created? {
-=A B-tree index #Correct. B-tree is the default, and it handles equality, ranges and sorting.
 ~A hash index #Not quite. Hash must be asked for with USING hash.
 ~A unique index #Not quite. Unique must be asked for with CREATE UNIQUE INDEX.
+=A B-tree index #Correct. B-tree is the default, and it handles equality, ranges and sorting.
 ~No index until the table is analyzed #Not quite. The index is built when the statement runs.
 }
 
 ::o3 automatic indexes::A table is declared with id integer PRIMARY KEY, email text UNIQUE and team_id integer REFERENCES teams (id). Which columns get an index automatically? {
-=id and email #Correct. PRIMARY KEY and UNIQUE each create a unique B-tree index; a foreign key does not index the referencing column.
 ~id, email and team_id #Not quite. REFERENCES adds a constraint but no index on team_id; create one yourself if you need it.
 ~Only id #Not quite. UNIQUE also creates an index.
 ~None; every index must be created by hand #Not quite. PRIMARY KEY and UNIQUE constraints are enforced with automatic indexes.
+=id and email #Correct. PRIMARY KEY and UNIQUE each create a unique B-tree index; a foreign key does not index the referencing column.
 }

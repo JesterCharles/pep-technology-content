@@ -5,6 +5,8 @@ import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { reorderBank } from "../tools/gift/answer-order.mjs";
+import { parseGift } from "../tools/gift/validate.mjs";
 import { createCourseLock, createModuleLock } from "../tools/lib/locks.mjs";
 
 const repo = path.resolve(import.meta.dirname, "../..");
@@ -853,4 +855,128 @@ test("T25 rejects a deferral naming a missing lab file", async () => {
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /deferred file .*other-topic\/coding-lab\/lab\.json is missing/);
   assert.match(result.stderr, /coding-lab\/README\.md: missing current/);
+});
+
+// Narrow T25 exception: a topic artifact.gift that is only an answer-order
+// permutation of the exact Git-history blob its evidence binds.
+const giftPath = "demo-course/demo-module/demo-topic/artifact.gift";
+const baseGift = [
+  "$CATEGORY: demo-course/demo-module/demo-topic",
+  "",
+  "::q1 escapes::Which value is x\\=1? {",
+  "=The safe \\= option \\{ok\\}#Correct. Uses \\~ safely\\: yes.",
+  "~Risky one#Not quite. First distractor.",
+  "~Risky two#Not quite. Second distractor.",
+  "~Risky three#Not quite. Third distractor.",
+  "}",
+  "",
+  "::q2 plain::Which is right? {",
+  "=Right#Correct. Yes.",
+  "~Wrong a#Not quite. A.",
+  "~Wrong b#Not quite. B.",
+  "~Wrong c#Not quite. C.",
+  "}",
+  "",
+].join("\n");
+
+function gitIn(root, ...args) {
+  const result = spawnSync(
+    "git",
+    ["-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", ...args],
+    { cwd: root, encoding: "utf8" },
+  );
+  assert.equal(result.status, 0, result.stderr);
+}
+
+async function giftFixture({ commit = true } = {}) {
+  const { root, digest } = await fixture();
+  await writeFile(path.join(root, giftPath), baseGift);
+  const artifactHashes = { "artifact.gift": hash(Buffer.from(baseGift)) };
+  await writeTopicEvidence(
+    root,
+    report("education", digest, { artifactHashes }),
+    report("sme", digest, { artifactHashes }),
+  );
+  if (commit) {
+    gitIn(root, "init", "-q");
+    gitIn(root, "add", "-A");
+    gitIn(root, "commit", "-q", "-m", "fixture");
+  }
+  return root;
+}
+
+const permutedGift = reorderBank(baseGift, "CB");
+
+test("T25 accepts a gift that only permutes whole option blocks of its bound history blob", async () => {
+  const root = await giftFixture();
+  assert.equal(check(root).status, 0);
+  await writeFile(path.join(root, giftPath), permutedGift);
+  const result = check(root);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("T25 rejects gift drift that is not a pure answer-order permutation", async () => {
+  const [header, q1, q2] = permutedGift.trimEnd().split("\n\n");
+  const bank = (...blocks) => `${blocks.join("\n\n")}\n`;
+  const cases = {
+    "marker switch": permutedGift
+      .replace("=Right#Correct. Yes.", "~Right#Not quite. Yes.")
+      .replace("~Wrong a#Not quite. A.", "=Wrong a#Correct. A."),
+    "feedback drift": permutedGift.replace("Second distractor.", "Another distractor."),
+    "option text drift": permutedGift.replace("~Risky one#", "~Risky uno#"),
+    "escape drift": permutedGift.replace("safely\\: yes", "safely: yes"),
+    "stem drift": permutedGift.replace("Which is right?", "Which one is right?"),
+    "question reorder": bank(header, q2, q1),
+    "question deleted": bank(header, q1),
+    "question added": bank(header, q1, q2, q2.replace("::q2 plain::", "::q3 plain::")),
+    "layout drift": permutedGift.replace("~Wrong b#Not quite. B.\n", "~Wrong b#Not quite. B. "),
+    "parse failure": permutedGift.replace("=Right#Correct. Yes.", "~Right#Correct. Yes."),
+    "unsupported CRLF": permutedGift.replaceAll("\n", "\r\n"),
+  };
+  const parseFailures = new Set(["parse failure", "unsupported CRLF"]);
+  for (const [label, bytes] of Object.entries(cases)) {
+    assert.notEqual(bytes, permutedGift, label);
+    // Every other case is valid GIFT, so only the permutation rule rejects it.
+    if (!parseFailures.has(label)) assert.doesNotThrow(() => parseGift(Buffer.from(bytes)), label);
+    const root = await giftFixture();
+    await writeFile(path.join(root, giftPath), bytes);
+    const result = check(root);
+    assert.notEqual(result.status, 0, label);
+    assert.match(result.stderr, /artifact\.gift: missing current education critic coverage/, label);
+  }
+});
+
+test("T25 rejects a permuted gift when the bound blob is not in Git history", async () => {
+  const root = await giftFixture({ commit: false });
+  await writeFile(path.join(root, giftPath), permutedGift);
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /artifact\.gift: missing current sme critic coverage/);
+});
+
+test("T25 keeps exact binding for non-GIFT artifacts even in a Git checkout", async () => {
+  const root = await giftFixture();
+  await writeFile(path.join(root, target), "changed after criticism\n");
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /artifact\.html: missing current education critic coverage/);
+});
+
+test("T25 accepts owner essential QA whose gift binding is only answer-order permuted", async () => {
+  const root = await giftFixture();
+  const html = hash(await readFile(path.join(root, target)));
+  await writeOwner(root, ownerRecord(html, {
+    artifacts: [
+      { reviewedPath: target, reviewedSha256: html },
+      { reviewedPath: giftPath, reviewedSha256: hash(Buffer.from(baseGift)) },
+    ],
+  }));
+  gitIn(root, "add", "-A");
+  gitIn(root, "commit", "-q", "-m", "owner");
+  await writeFile(path.join(root, giftPath), permutedGift);
+  assert.equal(check(root).status, 0, check(root).stderr);
+  await writeFile(path.join(root, giftPath), permutedGift.replace("Second distractor.", "Changed."));
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /owner essential QA binding artifacts\[1\]\.reviewedSha256 is stale/);
 });

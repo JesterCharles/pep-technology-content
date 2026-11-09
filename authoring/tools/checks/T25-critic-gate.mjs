@@ -11,6 +11,7 @@ import {
   sha256,
   walk,
 } from "../lib/common.mjs";
+import { acceptAnswerOrderPermutations } from "../gift/answer-order.mjs";
 import { bindingsForEvidenceFile } from "../lib/locks.mjs";
 
 export const id = "T25";
@@ -55,7 +56,7 @@ async function ownerEvidence(ctx, scope) {
   if (!Array.isArray(data?.artifacts) || !data.artifacts.length) fail("owner essential QA requires artifacts");
   let bindings = [];
   try {
-    bindings = await bindingsForEvidenceFile(scope.repoRoot, file, bindingOptions(scope.repoRoot, scope));
+    bindings = await scopeBindings(scope, file);
   } catch (cause) {
     fail(cause.message);
   }
@@ -229,6 +230,16 @@ function bindingOptions(repoRoot, scope) {
   };
 }
 
+// Evidence bindings for one scope. The only exception to exact-byte binding is
+// a topic artifact.gift whose recorded blob is in Git history and whose current
+// bytes are proven to be only an answer-order permutation of it.
+async function scopeBindings(scope, file) {
+  return acceptAnswerOrderPermutations(
+    scope.repoRoot,
+    await bindingsForEvidenceFile(scope.repoRoot, file, bindingOptions(scope.repoRoot, scope)),
+  );
+}
+
 function currentItemBinding(report, index) {
   return report.bindings.some(
     (binding) =>
@@ -256,11 +267,7 @@ async function checkScope(ctx, scope) {
       }
       let bindings = [];
       try {
-        bindings = await bindingsForEvidenceFile(
-          scope.repoRoot,
-          file,
-          bindingOptions(scope.repoRoot, scope),
-        );
+        bindings = await scopeBindings(scope, file);
       } catch (cause) {
         errors.push(error(id, ctx.display(file), cause.message));
       }
