@@ -276,6 +276,16 @@ summary { display: flex; align-items: center; min-height: 44px; cursor: pointer;
 .chip.no { border-style: dashed; border-color: var(--pep-danger); color: var(--pep-danger); background: var(--pep-danger-soft); }
 .chip.wait { border-style: dotted; border-color: var(--pep-warning); color: var(--pep-warning); background: var(--pep-warning-soft); }
 .pep-chal { display: block; width: 100%; min-height: 120px; margin: 4px 0 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); white-space: pre; overflow-wrap: normal; }
+
+/* DESIGN.md anatomy: topic-bar Objectives disclosure and per-activity checks */
+.pep-objectives { position: relative; flex: 0 0 auto; min-width: 0; max-width: 100%; }
+.pep-objectives > summary { display: flex; width: max-content; max-width: 100%; box-sizing: border-box; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-accent); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-accent-text); font: 600 14px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-objectives > .pep-goals { width: min(420px, 100%); margin-top: 8px; }
+[data-pep-activity-checks] { margin-top: 12px; padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] h3 { margin: 0 0 4px; font: 600 16px/24px var(--pep-font-sans); }
+[data-pep-activity-checks] .pep-checks-list { padding-left: 20px; }
+@media print { .pep-objectives > .pep-goals { display: block !important; width: auto; } .pep-objectives, [data-pep-activity-checks] { break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+@media (forced-colors: active) { .pep-topicbar, [data-pep-activity-checks] { border-color: CanvasText; } [data-pep-activity-checks] { border-block-start-color: Highlight; } }
 </style>
 </head>
 <body>
@@ -284,6 +294,11 @@ summary { display: flex; align-items: center; min-height: 44px; cursor: pointer;
   <header class="pep-topicbar">
     <h1>Debugging with logs and exec</h1>
     <div class="pep-topicbar__progress" data-pep-progress id="progress"><span id="prog-text">Activity 1 of 5 · 0 done</span><span>about 10 min</span><span class="pep-progress" id="progress-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></div>
+    <details class="pep-objectives" data-pep-objectives><summary aria-controls="pep-objectives-body">Objectives</summary><ul class="pep-goals" id="pep-objectives-body">
+      <li data-obj="o1"><span>Use docker compose logs with a service name, and -f to follow, to find why a service exited</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o2"><span>Use docker compose exec to run a command inside a running service container, such as printing its environment</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o3"><span>Choose logs, exec or ps as the first check for a given symptom: an exited container, wrong configuration or an unreachable service</span><span class="state" data-state="open"></span></li>
+      </ul></details>
     <button type="button" class="pep-btn" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
     <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
   </header>
@@ -323,24 +338,21 @@ summary { display: flex; align-items: center; min-height: 44px; cursor: pointer;
   <p class="next-topic">Module finished. Next module: Microservices and CI/CD.</p>
 </div>
       </div>
-      <p class="pep-goals-h" id="goals-h">Goals</p>
-      <ul class="pep-goals" data-pep-objectives aria-labelledby="goals-h">
-      <li data-obj="o1"><span>Use docker compose logs with a service name, and -f to follow, to find why a service exited</span><span class="state" data-state="open"></span></li>
-      <li data-obj="o2"><span>Use docker compose exec to run a command inside a running service container, such as printing its environment</span><span class="state" data-state="open"></span></li>
-      <li data-obj="o3"><span>Choose logs, exec or ps as the first check for a given symptom: an exited container, wrong configuration or an unreachable service</span><span class="state" data-state="open"></span></li>
-      </ul>
       <div id="current-task" class="task">
 <div data-step="1">
 <ol class="pep-steps-list" id="task-1"><li>After <code>docker compose up -d</code>, the API does not answer. <code>docker compose ps</code> lists only <code>shop-db-1</code>. What is the most likely state of the API container?</li></ol>
 </div>
 <div data-step="2">
-<ol class="pep-steps-list" id="task-2"><li>Find the API container's state, then the reason it stopped.</li><li data-goal="ps">Exited API found with <code>ps -a</code> <span class="state" data-state="open"></span></li><li data-goal="logs">Reason found in the API logs <span class="state" data-state="open"></span></li></ol>
+<ol class="pep-steps-list" id="task-2"><li>Find the API container's state, then the reason it stopped.</li></ol>
+<div class="pep-activity-checks" data-pep-activity-checks><h3>Activity checks</h3><ul class="pep-steps-list pep-checks-list"><li data-goal="ps">Exited API found with <code>ps -a</code> <span class="state" data-state="open"></span></li><li data-goal="logs">Reason found in the API logs <span class="state" data-state="open"></span></li></ul></div>
 </div>
 <div data-step="3">
-<ol class="pep-steps-list" id="task-3"><li>The log says authentication failed for user <code>shop</code>. Try exec on the exited API, then check which user the running database expects.</li><li data-goal="nr">See exec refuse the exited API <span class="state" data-state="open"></span></li><li data-goal="user">Read <code>POSTGRES_USER</code> inside <code>db</code> <span class="state" data-state="open"></span></li></ol>
+<ol class="pep-steps-list" id="task-3"><li>The log says authentication failed for user <code>shop</code>. Try exec on the exited API, then check which user the running database expects.</li></ol>
+<div class="pep-activity-checks" data-pep-activity-checks><h3>Activity checks</h3><ul class="pep-steps-list pep-checks-list"><li data-goal="nr">See exec refuse the exited API <span class="state" data-state="open"></span></li><li data-goal="user">Read <code>POSTGRES_USER</code> inside <code>db</code> <span class="state" data-state="open"></span></li></ul></div>
 </div>
 <div data-step="4">
-<ol class="pep-steps-list" id="task-4"><li>Choose the first check for each symptom.</li><li data-goal="pick">All three choices pass the check <span class="state" data-state="open"></span></li></ol>
+<ol class="pep-steps-list" id="task-4"><li>Choose the first check for each symptom.</li></ol>
+<div class="pep-activity-checks" data-pep-activity-checks><h3>Activity checks</h3><ul class="pep-steps-list pep-checks-list"><li data-goal="pick">All three choices pass the check <span class="state" data-state="open"></span></li></ul></div>
 </div>
 <div data-step="5">
 <p id="task-apply">The <code>web</code> container runs, but the browser shows an old page. You suspect old files in <code>/usr/share/nginx/html</code>. What is your first check?</p>
