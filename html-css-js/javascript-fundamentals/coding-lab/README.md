@@ -1,6 +1,6 @@
 # JavaScript fundamentals lab: Trail report utilities
 
-Standard track, S23 Lab day: about 55 minutes. Fast Track skips this lab; Fast learners practise the same JavaScript in the course project, and can use this lab as optional remediation.
+Standard track, S23 Lab day: one 30-minute lab block. The seven tasks are one-to-three-line functions sized to finish inside the block with a buffer left over; the block is a planning allowance, not a timer. Fast Track skips this lab; Fast learners practise the same JavaScript in the course project, and can use this lab as optional remediation.
 
 ## Goal
 

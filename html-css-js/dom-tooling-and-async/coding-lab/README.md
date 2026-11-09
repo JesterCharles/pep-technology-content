@@ -1,6 +1,6 @@
 # DOM, tooling and async lab: Trail Guides live dashboard
 
-Standard track, S25 Lab day: about 60 minutes. Fast Track skips this lab; Fast learners build the same dashboard behavior in the course project, and can use this lab as optional remediation.
+Standard track, S25 Lab day: one 30-minute lab block. Tasks 1 to 5 are the core path, sized to finish inside the block with a small buffer; Task 6 is a stretch task for time remaining, and finishing it completes the lab. The block is a planning allowance, not a timer. Fast Track skips this lab; Fast learners build the same dashboard behavior in the course project, and can use this lab as optional remediation.
 
 ## Goal
 
@@ -51,7 +51,7 @@ This lab practises these topics: Selecting and changing the DOM; Events and even
 
 ## Tasks
 
-Work only in `starter/app.js`; its comments repeat each task's exact contract, including the status messages. Everything else is the lab's fixed support and stays as shipped: `starter/data.js`, `starter/fake-api.js`, `starter/index.html`, `starter/styles.css`, the starter's package files, the tests in `tests/` and `expected/on-completion.txt`. A task counts as done only when the shipped tests for it pass exactly as shipped. After each task, rerun `node --test --test-reporter=spec` from `coding-lab/`. If you are stuck, open the hints one at a time; none of them gives the full code.
+Work only in `starter/app.js`; its comments repeat each task's exact contract, including the status messages. Task 6 is the stretch task: do it with the time the block leaves over, or whenever you return to the lab. Everything else is the lab's fixed support and stays as shipped: `starter/data.js`, `starter/fake-api.js`, `starter/index.html`, `starter/styles.css`, the starter's package files, the tests in `tests/` and `expected/on-completion.txt`. A task counts as done only when the shipped tests for it pass exactly as shipped. After each task, rerun `node --test --test-reporter=spec` from `coding-lab/`. If you are stuck, open the hints one at a time; none of them gives the full code.
 
 Open `starter/index.html` in your own browser alongside the tests. The starter page already shows the damage you will fix in Tasks 1 and 4: a broken image icon in Forest Path's note, put there by the payload in the untrusted visitor text.
 

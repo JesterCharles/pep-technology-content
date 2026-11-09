@@ -1,6 +1,6 @@
 # Fetch and browser client lab: Trail API client
 
-Standard track, S26 Lab day: about 55 minutes. Fast Track skips this lab; Fast learners build the same client logic in the course project, and can use this lab as optional remediation.
+Standard track, S26 Lab day: one 30-minute lab block. Tasks 1 to 6 are the core path, sized to finish inside the block with a buffer left over; Task 7 is a stretch task for time remaining, and finishing it completes the lab. The block is a planning allowance, not a timer. Fast Track skips this lab; Fast learners build the same client logic in the course project, and can use this lab as optional remediation.
 
 ## Goal
 
@@ -50,7 +50,7 @@ This lab practises these topics: Fetching data; Handling HTTP errors and Problem
 
 ## Tasks
 
-Work only in `starter/api.mjs`, plus the new test file you create in Task 7. Everything else is the lab's fixed support and stays as shipped: `starter/format-distance.mjs`, `starter/vitest.config.mjs`, the package files, the shipped tests in `tests/` and `expected/on-completion.txt`. A task counts as done only when the shipped tests for it pass exactly as shipped. Each task's comment in `starter/api.mjs` states its exact contract. After each task, rerun `npm test` from `starter/`: that task's test turns green. If you are stuck, open the hints one at a time; none of them gives the full code.
+Work only in `starter/api.mjs`, plus the new test file you create in Task 7 (the stretch task: do it with the time the block leaves over, or whenever you return to the lab). Everything else is the lab's fixed support and stays as shipped: `starter/format-distance.mjs`, `starter/vitest.config.mjs`, the package files, the shipped tests in `tests/` and `expected/on-completion.txt`. A task counts as done only when the shipped tests for it pass exactly as shipped. Each task's comment in `starter/api.mjs` states its exact contract. After each task, rerun `npm test` from `starter/`: that task's test turns green. If you are stuck, open the hints one at a time; none of them gives the full code.
 
 ### Task 1: the API address comes from the environment
 
