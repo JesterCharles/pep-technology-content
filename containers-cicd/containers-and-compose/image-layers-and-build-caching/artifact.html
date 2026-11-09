@@ -277,6 +277,16 @@ summary { display: flex; align-items: center; min-height: 44px; cursor: pointer;
 .chip.no { border-style: dashed; border-color: var(--pep-danger); color: var(--pep-danger); background: var(--pep-danger-soft); }
 .chip.wait { border-style: dotted; border-color: var(--pep-warning); color: var(--pep-warning); background: var(--pep-warning-soft); }
 .pep-chal { display: block; width: 100%; min-height: 120px; margin: 4px 0 8px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); white-space: pre; overflow-wrap: normal; }
+
+/* DESIGN.md anatomy: topic-bar Objectives disclosure and per-activity checks */
+.pep-objectives { position: relative; flex: 0 0 auto; min-width: 0; max-width: 100%; }
+.pep-objectives > summary { display: flex; width: max-content; max-width: 100%; box-sizing: border-box; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-accent); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-accent-text); font: 600 14px/20px var(--pep-font-sans); cursor: pointer; }
+.pep-objectives > .pep-goals { width: min(420px, 100%); margin-top: 8px; }
+[data-pep-activity-checks] { margin-top: 12px; padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] h3 { margin: 0 0 4px; font: 600 16px/24px var(--pep-font-sans); }
+[data-pep-activity-checks] .pep-checks-list { padding-left: 20px; }
+@media print { .pep-objectives > .pep-goals { display: block !important; width: auto; } .pep-objectives, [data-pep-activity-checks] { break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+@media (forced-colors: active) { .pep-topicbar, [data-pep-activity-checks] { border-color: CanvasText; } [data-pep-activity-checks] { border-block-start-color: Highlight; } }
 </style>
 </head>
 <body>
@@ -285,6 +295,11 @@ summary { display: flex; align-items: center; min-height: 44px; cursor: pointer;
   <header class="pep-topicbar">
     <h1>Reading: image layers and build caching</h1>
     <div class="pep-topicbar__progress" data-pep-progress id="progress"><span id="prog-text">Activity 1 of 5 · 0 done</span><span>about 13 min</span><span class="pep-progress" id="progress-bar" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span></div>
+    <details class="pep-objectives" data-pep-objectives><summary aria-controls="pep-objectives-body">Objectives</summary><ul class="pep-goals" id="pep-objectives-body">
+      <li data-obj="o1"><span>Explain that RUN, COPY and ADD instructions each add an image layer and that a changed step invalidates the build cache for every later step</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o2"><span>Reorder a Dockerfile so dependency files are copied and installed before application source, and predict which steps rebuild after a source-only change</span><span class="state" data-state="open"></span></li>
+      <li data-obj="o3"><span>Use a .dockerignore file to keep build output, version-control folders and local secret files out of the build context</span><span class="state" data-state="open"></span></li>
+      </ul></details>
     <button type="button" class="pep-btn" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
     <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
   </header>
@@ -336,24 +351,21 @@ dist
   <p class="next-topic">Next topic: <a href="../multi-stage-builds/artifact.html" rel="noopener">Multi-stage builds</a></p>
 </div>
       </div>
-      <p class="pep-goals-h" id="goals-h">Goals</p>
-      <ul class="pep-goals" data-pep-objectives aria-labelledby="goals-h">
-      <li data-obj="o1"><span>Explain that RUN, COPY and ADD instructions each add an image layer and that a changed step invalidates the build cache for every later step</span><span class="state" data-state="open"></span></li>
-      <li data-obj="o2"><span>Reorder a Dockerfile so dependency files are copied and installed before application source, and predict which steps rebuild after a source-only change</span><span class="state" data-state="open"></span></li>
-      <li data-obj="o3"><span>Use a .dockerignore file to keep build output, version-control folders and local secret files out of the build context</span><span class="state" data-state="open"></span></li>
-      </ul>
       <div id="current-task" class="task">
 <div data-step="1">
 <p id="task-1">With the Dockerfile shown, you edit <code>src/App.jsx</code> and build again. Which steps run again?</p>
 </div>
 <div data-step="2">
-<ol class="pep-steps-list" id="task-2"><li>Press <strong>Run docker build</strong> once, then again without changing anything.</li><li>Press <strong>Change src/App.jsx</strong>, then build again.</li><li>Compare which steps say <code>CACHED</code>.</li><li data-goal="same">Build with nothing changed <span class="state" data-state="open"></span></li><li data-goal="src">Build after changing <code>src/App.jsx</code> <span class="state" data-state="open"></span></li></ol>
+<ol class="pep-steps-list" id="task-2"><li>Press <strong>Run docker build</strong> once, then again without changing anything.</li><li>Press <strong>Change src/App.jsx</strong>, then build again.</li><li>Compare which steps say <code>CACHED</code>.</li></ol>
+<div class="pep-activity-checks" data-pep-activity-checks><h3>Activity checks</h3><ul class="pep-steps-list pep-checks-list"><li data-goal="same">Build with nothing changed <span class="state" data-state="open"></span></li><li data-goal="src">Build after changing <code>src/App.jsx</code> <span class="state" data-state="open"></span></li></ul></div>
 </div>
 <div data-step="3">
-<ol class="pep-steps-list" id="task-3"><li>In the editor, split the copy: copy only <code>package.json</code> and <code>package-lock.json</code> first.</li><li>Put <code>RUN npm ci</code> after that copy, then <code>COPY . .</code>, then the build.</li><li>Press <strong>Run checks</strong>: the Output tab simulates a build after a source-only change.</li><li>Done when the checks pass and Output shows <code>npm ci</code> as <code>CACHED</code>.</li><li data-goal="order">Dockerfile passes, with <code>npm ci</code> cached <span class="state" data-state="open"></span></li></ol>
+<ol class="pep-steps-list" id="task-3"><li>In the editor, split the copy: copy only <code>package.json</code> and <code>package-lock.json</code> first.</li><li>Put <code>RUN npm ci</code> after that copy, then <code>COPY . .</code>, then the build.</li><li>Press <strong>Run checks</strong>: the Output tab simulates a build after a source-only change.</li><li>Done when the checks pass and Output shows <code>npm ci</code> as <code>CACHED</code>.</li></ol>
+<div class="pep-activity-checks" data-pep-activity-checks><h3>Activity checks</h3><ul class="pep-steps-list pep-checks-list"><li data-goal="order">Dockerfile passes, with <code>npm ci</code> cached <span class="state" data-state="open"></span></li></ul></div>
 </div>
 <div data-step="4">
-<ol class="pep-steps-list" id="task-4"><li>Write one pattern per line in <code>.dockerignore</code>.</li><li>Leave out build output, installed packages, version control and local secret files.</li><li>Keep everything the build needs: <code>package.json</code>, <code>package-lock.json</code>, <code>src</code>, <code>public</code>, <code>index.html</code>, <code>vite.config.js</code>.</li><li>Press <strong>Run checks</strong>; Output lists what is sent to the builder.</li><li data-goal="ign"><code>.dockerignore</code> passes the checks <span class="state" data-state="open"></span></li></ol>
+<ol class="pep-steps-list" id="task-4"><li>Write one pattern per line in <code>.dockerignore</code>.</li><li>Leave out build output, installed packages, version control and local secret files.</li><li>Keep everything the build needs: <code>package.json</code>, <code>package-lock.json</code>, <code>src</code>, <code>public</code>, <code>index.html</code>, <code>vite.config.js</code>.</li><li>Press <strong>Run checks</strong>; Output lists what is sent to the builder.</li></ol>
+<div class="pep-activity-checks" data-pep-activity-checks><h3>Activity checks</h3><ul class="pep-steps-list pep-checks-list"><li data-goal="ign"><code>.dockerignore</code> passes the checks <span class="state" data-state="open"></span></li></ul></div>
 </div>
 <div data-step="5">
 <p id="task-apply">In the reordered Dockerfile, you add a dependency to <code>package.json</code>. Which steps run again?</p>
