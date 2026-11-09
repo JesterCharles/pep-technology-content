@@ -42,16 +42,42 @@ Practice repository Simulation: no real Git runs
 Welcome to PEP Shop
 ```
 
+Practice repository Simulation: no real Git runs
+
+### History newest first
+
+1. C4 Store title feature/title
+2. C3 Shop title HEAD → main
+3. C2 Add cart
+
+### index.html, heading line index.html on main
+
+```
+Welcome to PEP Shop
+```
+
+New situation: a conflict in price.txt Simulation: no real Git runs
+
+### price.txt during git merge sale on main
+
+```
+<<<<<<< HEADprice = 10=======price = 12>>>>>>> sale
+```
+
 ## Recap
+
+All activities are finished. Read the recap, then move on.
 
 - A common conflict happens when both branches change the same area and Git cannot combine the changes automatically; Git stops and asks you.
 - Between `<<<<<<< HEAD` and `=======` is your current branch; after it, the incoming branch.
 - Resolve by editing to the final text and deleting all markers, then `git add` and `git commit`.
 - Git lets you commit leftover markers, so check the file first. `git merge --abort` starts over.
 
-Next topic: Merge vs rebase
-
 ## Cheat sheet
+
+Where to act: In `index.html` after the merge stops, using the edit actions beside the terminal.
+
+Next step: Decide which side of the markers holds the heading the team chose, keep only that text with no marker lines, then mark the file resolved and finish the merge.
 
 |  |  |
 | --- | --- |

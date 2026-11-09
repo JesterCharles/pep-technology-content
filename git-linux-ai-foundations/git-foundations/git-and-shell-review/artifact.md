@@ -48,16 +48,60 @@ Shell location: /home/ana/projects/shop
 
 - main C7
 
+Practice repository Simulation: no real Git runs
+
+Shell location: /home/ana
+
+### Working copy shop
+
+- receipt.js modified
+
+### Staging area next commit
+
+- nothing staged
+
+### Commits HEAD on main
+
+- C7 Add receipt (main)
+
+### GitHub branches
+
+- main C7
+
+New situation: git status in /home/ana Simulation: no real Git runs
+
+Shell location: /home/ana
+
+### Working copy shop
+
+- receipt.js modified
+
+### Staging area next commit
+
+- nothing staged
+
+### Commits HEAD on main
+
+- C7 Add receipt (main)
+
+### GitHub branches
+
+- main C7
+
 ## Recap
+
+All activities are finished. Read the recap, then move on.
 
 - Changes move working copy → staging (`git add`) → commit; `.gitignore` keeps secrets out.
 - Branches are movable names; commit moves the one HEAD is on. Stash sets work aside.
 - Revert what is pushed; reset only local commits. Fetch looks, pull merges, push shares.
 - Resolve conflicts by editing out markers; merge shared work; land changes through reviewed pull requests.
 
-Next: back to the course page for Linux and AI Foundations.
-
 ## Cheat sheet
+
+Where to act: Start in `/home/ana`, before any Git command.
+
+Next step: Git works only inside a folder that contains `.git`, so move into the shop repository first; a new branch's first push also has to create it on GitHub.
 
 |  |  |
 | --- | --- |

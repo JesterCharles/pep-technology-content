@@ -37,16 +37,34 @@ Practice repository Simulation: no real Git runs
 
 HEAD is on main. Working copy files: app.js, cart.js
 
+Practice repository Simulation: no real Git runs
+
+1. C2 Add cart HEAD → main
+2. C1 Start shop
+
+HEAD is on main. Working copy files: app.js, cart.js
+
+New situation: before git switch -c fix Simulation: no real Git runs
+
+1. C4 Add tax HEAD → main
+2. C3 Add prices
+
+HEAD is on main. Working copy files: app.js, tax.js
+
 ## Recap
+
+All activities are finished. Read the recap, then move on.
 
 - A branch is a movable name that points at one commit; HEAD marks the branch you are on.
 - A commit moves only the branch HEAD is on. Other branches stay where they were.
 - `git branch name` creates; `git switch name` moves HEAD; `git switch -c name` does both.
 - Switching changes your working-copy files to match the branch you switch to.
 
-Next topic: Undoing mistakes: revert and reset
-
 ## Cheat sheet
+
+Where to act: In the practice terminal, while HEAD is still on `main` at C2.
+
+Next step: A commit moves only the branch HEAD is on, so be on a new `login` branch before you commit; one command can create a branch and switch to it.
 
 |  |  |
 | --- | --- |

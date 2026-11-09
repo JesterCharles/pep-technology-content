@@ -45,16 +45,59 @@ Practice repository Simulation: no real Git runs
 
 - empty
 
+Practice repository Simulation: no real Git runs
+
+### Working copy on feature
+
+- app.js modified
+- draft.md untracked
+
+### Staging area next commit
+
+- nothing staged
+
+### Branches latest commit
+
+- main C3 Fix login
+- HEAD → feature C4 Add search
+
+### Stash newest first
+
+- empty
+
+New situation: before git stash Simulation: no real Git runs
+
+### Working copy on feature
+
+- cart.js modified
+- todo.txt untracked
+
+### Staging area next commit
+
+- nothing staged
+
+### Branches latest commit
+
+- HEAD → feature C6 Add cart
+
+### Stash newest first
+
+- empty
+
 ## Recap
+
+All activities are finished. Read the recap, then move on.
 
 - `git stash` sets aside changes to tracked files and returns them to the last commit, so you can switch.
 - Untracked files stay unless you use `git stash -u`.
 - `git stash list` shows entries; `stash@{0}` is the newest.
 - `git stash pop` reapplies the newest entry to the current branch and removes it once it applies cleanly (after a conflict the entry stays until you drop it), so switch back first.
 
-Next topic: Remotes: SSH keys, clone, push, fetch vs pull
-
 ## Cheat sheet
+
+Where to act: In the practice terminal on `feature`, before you switch to `main`.
+
+Next step: Git will not switch while `app.js` holds your edit, so put the edit on the stash shelf first, and bring it back only after you return to `feature`.
 
 |  |  |
 | --- | --- |
