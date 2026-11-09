@@ -11,281 +11,304 @@
 <meta name="pep:source" content="authoring/evidence/git-linux-ai-foundations/linux-foundations/navigating-the-shell/sources.json">
 <title>Navigating files and folders in the shell · Linux Foundations</title>
 <style>
-:root{
-  --bg:#eef2f0;--surface:#f8faf9;--ink:#1b2320;--muted:#47524e;--rule:#6b7873;--line:#c9d2ce;
-  --teal:#0d6657;--teal-soft:#d6ebe5;--amber:#87470a;--amber-soft:#f6e7d6;--red:#a32218;--red-soft:#f8e0dc;
-  --on-teal:#ffffff;--term:#e2e8e5;--focus:#1f4fbf;
-  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s6:24px;--s8:32px;
-  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  color-scheme:light;
+:root {
+  color-scheme: light dark;
+  --pep-font-sans: "Figtree", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --pep-font-mono: "Source Code Pro", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --pep-radius-sm: 8px; --pep-radius-md: 12px; --pep-radius-lg: 16px; --pep-radius-pill: 999px;
+  --pep-space-4: 4px; --pep-space-8: 8px; --pep-space-12: 12px; --pep-space-16: 16px;
+  --pep-space-20: 20px; --pep-space-24: 24px; --pep-space-32: 32px; --pep-space-48: 48px;
+  --pep-dur-1: 120ms; --pep-dur-2: 200ms; --pep-ease: cubic-bezier(0.2, 0, 0, 1);
+  /* light */
+  --pep-page: #FFFFFF; --pep-card: #F6F7F9; --pep-control: #EEF0F3; --pep-sunken: #F6F7F9;
+  --pep-line: #E4E7EC; --pep-line-strong: #737C8A;
+  --pep-text-strong: #171A20; --pep-text: #38414E; --pep-text-muted: #5A616E;
+  --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+  --pep-accent: #5B3FD6; --pep-accent-text: #5B3FD6; --pep-accent-soft: #F2F0FC;
+  --pep-success: #067647; --pep-success-soft: #EBF4F0;
+  --pep-danger: #B42318; --pep-danger-soft: #F9EDED;
+  --pep-warning: #B54708; --pep-warning-soft: #F9F0EB;
+  --pep-focus: #5B3FD6;
 }
-:root[data-theme="dark"]{
-  --bg:#121816;--surface:#1a2220;--ink:#e3ebe7;--muted:#a8b6b0;--rule:#71827c;--line:#2f3b37;
-  --teal:#5fcab3;--teal-soft:#173430;--amber:#e6a65c;--amber-soft:#36281a;--red:#ff8b7c;--red-soft:#3d1d19;
-  --on-teal:#0b1311;--term:#0c1110;--focus:#8fb4ff;
-  color-scheme:dark;
+@media screen and (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
 }
-*{box-sizing:border-box}
-html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:16px/1.5 var(--sans)}
-::selection{background:var(--teal);color:var(--on-teal)}
-code,kbd,.mono{font-family:var(--mono);font-size:.94em}
-a{color:var(--teal);text-underline-offset:3px}
-main{max-width:1240px;margin:0 auto;padding:var(--s3) var(--s6) var(--s6)}
-.nojs{margin:var(--s4);padding:var(--s3);border:2px solid var(--red);background:var(--surface)}
-.top{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title tools";column-gap:var(--s6);align-items:center;padding-bottom:var(--s2);border-bottom:1px solid var(--rule)}
-.top .crumbs{grid-area:crumbs}.top h1{grid-area:title}.top .meta{grid-area:meta}.top .tools{grid-area:tools}
-.crumbs{margin:0 0 var(--s1);font-size:15px;color:var(--muted)}
-.crumbs ol{display:flex;flex-wrap:wrap;gap:0 var(--s2);margin:0;padding:0;list-style:none}
-.crumbs li+li::before{content:"/";margin-right:var(--s2);color:var(--rule)}
-.crumbs [aria-current]{color:var(--ink);font-weight:600}
-h1{margin:0;font-size:24px;line-height:30px;letter-spacing:-.01em}
-.meta{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s4);margin:var(--s2) 0 0;padding:0;list-style:none;font-size:15px;color:var(--muted)}
-.meta li:first-child{font-weight:700;color:var(--ink)}
-.meta li+li::before{content:"";display:inline-block;width:6px;height:6px;margin-right:var(--s2);border-radius:50%;background:var(--teal);vertical-align:middle}
-.tools{display:flex;flex-wrap:nowrap;justify-content:flex-end;align-items:center;gap:var(--s2);flex:0 0 auto}
-.progress{display:flex;align-items:center;gap:var(--s2);margin:0;font-size:15px}
-.pips{display:flex;gap:var(--s1)}
-.pip{width:16px;height:16px;border:2px solid var(--rule);border-radius:2px;background:transparent}
-.pip.on{background:var(--teal);border-color:var(--teal)}
-.pip.settled{background:var(--amber-soft);border:2px dashed var(--amber)}
-button{font:inherit;min-height:44px;padding:var(--s2) var(--s4);border-radius:4px;cursor:pointer;transition:background-color .15s,border-color .15s}
-.ghost{background:transparent;color:var(--ink);border:1px solid var(--rule)}
-.ghost:hover{background:var(--surface);border-color:var(--ink)}
-.ghost[aria-pressed="true"]{background:var(--surface);border-width:2px;font-weight:600}
-.primary{background:var(--teal);color:var(--on-teal);border:2px solid var(--teal);font-weight:700}
-.primary:hover{filter:brightness(1.08)}
-.primary:active{transform:translateY(1px)}
-button:disabled,.primary:disabled{background:transparent;color:var(--muted);border:2px dashed var(--rule);cursor:not-allowed;filter:none;transform:none;font-weight:600}
-:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-[tabindex="-1"]:focus{outline:none}
-[tabindex="-1"]:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
-.stage{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--s6);padding-top:var(--s3);align-items:start}
-.col{display:flex;flex-direction:column;gap:var(--s3);min-width:0}
-.teach h2{margin:0 0 var(--s2);font-size:20px;line-height:28px}
-.teach p{margin:0 0 var(--s2);max-width:62ch}
-.teach ul{margin:0 0 var(--s2);padding-left:20px;max-width:62ch}
-.teach li{margin-bottom:var(--s1)}
-.teach code,.task code{white-space:nowrap}
-.task{padding:var(--s3) var(--s4);border-top:2px solid var(--teal);background:var(--surface)}
-.task p{margin:0;font-weight:600}
-.task p+p{margin-top:var(--s2)}
-.goals{list-style:none;margin:var(--s2) 0 0;padding:0}
-.goals li{display:flex;justify-content:space-between;gap:var(--s3);padding:var(--s1) 0;border-top:1px solid var(--line)}
-.goals li:first-child{border-top:0}
-.goals .st{flex:0 0 auto;font-size:14px;font-weight:700;color:var(--muted);min-width:56px;text-align:right}
-.goals li.done .st{color:var(--teal)}
-.model{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--rule);border-radius:4px;background:var(--surface)}
-.model figcaption{font-size:15px;font-weight:700;color:var(--muted);margin-bottom:var(--s2)}
-.model code{font-size:1em}
-.control{min-width:0}
-fieldset{margin:0;padding:0;border:0;min-width:0}
-legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
-.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
-.opts.one{grid-template-columns:minmax(0,1fr)}
-.opt{display:flex;align-items:center;gap:var(--s2);min-height:44px;padding:6px var(--s3);border:2px solid var(--rule);border-radius:4px;background:var(--surface);cursor:pointer}
-.opt:hover{border-color:var(--ink)}
-.opt:has(input:checked){border-color:var(--teal);box-shadow:inset 4px 0 0 var(--teal)}
-.opt:has(input:disabled){cursor:default}
-.opt.right,.opt.right:has(input:checked){border-color:var(--teal);background:var(--teal-soft)}
-.opt.wrong,.opt.wrong:has(input:checked){border-style:dashed;border-color:var(--red);background:var(--red-soft);box-shadow:inset 4px 0 0 var(--red)}
-.opt input{width:20px;height:20px;margin:0;accent-color:var(--teal);flex:0 0 auto}
-.row{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3);margin-top:var(--s3)}
-.confrow{margin-top:var(--s2)}
-.conf{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center}
-.conf legend{float:left;margin:0 var(--s2) 0 0;line-height:44px}
-.conf .opt{min-width:96px}
-.term{border:2px solid var(--rule);border-radius:4px;background:var(--term)}
-.term:focus-within{border-color:var(--focus);box-shadow:0 0 0 2px var(--focus)}
-.term-top{display:flex;flex-wrap:wrap;justify-content:space-between;gap:2px var(--s3);margin:0;padding:var(--s1) var(--s3);border-bottom:1px solid var(--rule);font-size:15px;color:var(--muted)}
-.term-top span:first-child{font-weight:700}
-.log{height:220px;overflow-y:auto;padding:var(--s2) var(--s3);font:15px/1.45 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
-.log .c{font-weight:700}
-.log .c::before{content:attr(data-p) " ";color:var(--teal);font-weight:700}
-.log .e{color:var(--red)}
-.log .h{color:var(--muted);font-family:var(--sans)}
-.cmdline{display:flex;gap:var(--s2);align-items:center;padding:0 var(--s1) 0 var(--s3);border-top:1px solid var(--rule)}
-.cmdline label{flex:0 1 auto;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 16px var(--mono);color:var(--teal)}
-.cmdline{padding:var(--s2) var(--s2) var(--s2) var(--s3)}
-.cmdline input{flex:1 1 auto;min-width:0;min-height:44px;padding:var(--s2) 0;font:16px var(--mono);color:var(--ink);background:transparent;border:0;caret-color:var(--teal)}
-.cmdline input::placeholder{color:var(--muted);opacity:1}
-.cmdline input:focus,.cmdline input:focus-visible{outline:none}
-.cmdline .runbtn{flex:0 0 auto;min-height:36px;padding:var(--s1) var(--s3);background:transparent;color:var(--ink);border:1px solid var(--rule);font-weight:600}
-.cmdline .runbtn:hover{border-color:var(--ink)}
-.simnote{margin:var(--s1) 0 0;font-size:14px;color:var(--muted)}
-.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
-.fbrow{display:flex;flex-direction:column;gap:var(--s2);align-items:flex-start}
-.feedback{width:100%;min-width:0;line-height:1.4;font-size:15px;line-height:1.45}
-.feedback p{margin:0 0 var(--s1)}
-.feedback ul{margin:var(--s1) 0 0;padding-left:20px}
-.feedback li{margin-bottom:2px}
-.verdict{font-weight:700}
-.feedback .on{font-weight:600}
-.badge{display:inline-block;margin:0 var(--s1) 0 0;padding:0 6px;border:2px solid currentColor;border-radius:3px;font:700 15px/1.4 var(--sans);vertical-align:baseline}
-.badge.ok{color:var(--teal)}.badge.no{color:var(--red)}.badge.me{color:var(--ink)}
-.opt .badges{display:block;margin-top:2px}
-.explain{list-style:none;padding:0;margin:var(--s1) 0 0}
-.explain li{margin:0;padding:var(--s1) 0 var(--s1) var(--s3);border-left:2px solid var(--line)}
-.explain li+li{margin-top:var(--s1)}
-.explain li.mine{border-left-color:var(--teal)}
-.explain .on,.explain .ex{display:block}
-.explain .ex::first-letter{text-transform:uppercase}
-.teach ul.chunks{list-style:none;padding:0}
-.teach ul.chunks li{margin-bottom:var(--s2)}
-.opt .why{display:block;margin-top:2px;font:400 15px/1.35 var(--sans);color:var(--ink)}
-.opt .why code{font-size:.94em}
-.verdict.ok{color:var(--teal)}
-.verdict.no{color:var(--red)}
-.verdict.set{color:var(--amber)}
-.conf-report{color:var(--muted)}
-.fbrow .primary{flex:0 0 auto}
-.recap ul{padding-left:20px}
-.recap details{margin:var(--s2) 0;padding:var(--s2) var(--s3);border:1px solid var(--rule);border-radius:4px;background:var(--surface)}
-.recap summary,.feedback summary{cursor:pointer;font-weight:700;min-height:28px}
-.feedback details{margin:var(--s1) 0}
-.recap table{border-collapse:collapse;margin-top:var(--s2);font-size:15px}
-.recap td{padding:var(--s1) var(--s3) var(--s1) 0;vertical-align:top}
-.next-topic{font-weight:700}
-.complete{margin:0;padding:var(--s3) var(--s4);border:2px solid var(--teal);border-radius:4px;background:var(--teal-soft);font-weight:600}
-[hidden]{display:none!important}
-@media (min-width:861px) and (max-height:720px){
-  main{padding-top:var(--s2)}
-  .stage{padding-top:var(--s2)}
-  .col{gap:var(--s2)}
-  .model{padding:var(--s2) var(--s4)}
-  .model figcaption{margin-bottom:var(--s1)}
-  .meta{margin-top:var(--s1)}
-  .opts{gap:6px}
-  legend{margin-bottom:var(--s1)}
-  .row{margin-top:var(--s2)}
-  .teach h2{margin-bottom:var(--s1)}
+@media screen {
+  :root[data-theme="dark"] {
+    --pep-page: #1C1F26; --pep-card: #252A33; --pep-control: #2D333E; --pep-sunken: #16191F;
+    --pep-line: #333A48; --pep-line-strong: #7A8396;
+    --pep-text-strong: #E7EBF1; --pep-text: #C3CAD6; --pep-text-muted: #9AA2B1;
+    --pep-accent-fill: #5B3FD6; --pep-accent-fill-hover: #4C33BD; --pep-on-accent-fill: #FFFFFF;
+    --pep-accent: #8B78FF; --pep-accent-text: #A595FF; --pep-accent-soft: #2E2D4D;
+    --pep-success: #22E58A; --pep-success-soft: #254841;
+    --pep-danger: #FF6B6B; --pep-danger-soft: #362F37;
+    --pep-warning: #FFC24D; --pep-warning-soft: #484237;
+    --pep-focus: #8B78FF;
+  }
 }
-@media (max-width:860px){
-  main{padding:var(--s3) var(--s4) var(--s4)}
-  .top{grid-template-columns:minmax(0,1fr);grid-template-areas:"title" "tools";row-gap:var(--s2)}
-  .tools{justify-content:flex-start;flex-wrap:wrap}
-  .stage{display:flex;flex-direction:column;align-items:stretch;gap:var(--s3)}
-  .col{display:contents}
-  #current-teaching{order:1}#current-task{order:2}#live-model{order:3}#current-control{order:4}.fbrow{order:5}
-  .fbrow{flex-direction:column}
+@media print {
+  body { background: #FFFFFF; }
+  .pep-noprint { display: none !important; }
+  .pep-card, .pep-callout, .pep-figure, .pep-table-wrap, .pep-code, .pep-optional, .pep-hint, .pep-objectives { break-inside: avoid; }
+  .pep-callout { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
-@media (max-width:480px){.opts{grid-template-columns:minmax(0,1fr)}
-  .cmdline{flex-wrap:wrap;row-gap:var(--s1)}
-  .cmdline label{flex:1 0 100%;max-width:none}}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; max-width: 100%; overflow-x: clip; }
+body { background: var(--pep-page); color: var(--pep-text); font: 400 16px/24px var(--pep-font-sans); -webkit-text-size-adjust: 100%; }
+h1, h2, h3 { color: var(--pep-text-strong); margin: 0; text-wrap: balance; overflow-wrap: anywhere; }
+h1, h2 { font-size: 20px; line-height: 28px; font-weight: 700; }
+h3 { font-size: 16px; line-height: 24px; font-weight: 600; }
+p, li { max-width: 68ch; overflow-wrap: anywhere; }
+p { margin: 0 0 12px; }
+ul, ol { margin: 0 0 12px; padding-inline-start: 24px; }
+img, svg { max-width: 100%; height: auto; }
+button, input, select, textarea, summary { font: inherit; }
+a { color: var(--pep-accent-text); text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+:not(pre) > code { padding: 1px 6px; border-radius: var(--pep-radius-sm); background: var(--pep-control); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+:focus-visible, button:focus, a:focus, summary:focus { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
+[hidden] { display: none !important; }
+.vh { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+html:not(.is-enhanced) .pep-js-only { display: none; }
+.pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
+.nojs { max-width: 1200px; margin: 16px auto 0; padding: 12px 16px; border: 1px solid var(--pep-warning); border-radius: var(--pep-radius-md); background: var(--pep-warning-soft); color: var(--pep-text-strong); }
 
-.stage[data-step="5"] .tree li.file{display:none}
-.navmodel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:var(--s4);align-items:start}
-.tree{list-style:none;margin:0;padding:0;font:500 15px/1.2 var(--mono)}
-.tree li{display:flex;align-items:center;justify-content:space-between;gap:var(--s2);padding:1px var(--s2) 1px calc(var(--s2) + var(--d)*16px);border:2px solid transparent;border-radius:3px}
-.tree li.file .nm{color:var(--muted)}
-.tree li.hid .nm{font-style:italic}
-.tree li.via{border-color:var(--amber)}
-.tree li.goal{border:2px dashed var(--amber)}
-.tree li.here{background:var(--teal);border-color:var(--teal)}
-.tree li.here .nm,.tree li.here .tag{color:var(--on-teal)}
-.tag{font:600 15px/1 var(--sans);color:var(--muted);white-space:nowrap}
-.where .wl{margin:0;font-size:15px;font-weight:700;color:var(--muted)}
-.readout{margin:0 0 var(--s3);font:700 18px/1.3 var(--mono);overflow-wrap:anywhere}
-.route{display:flex;flex-wrap:wrap;gap:var(--s2);margin:var(--s1) 0 var(--s3);padding:0;list-style:none;font:500 15px/1.2 var(--mono)}
-.route li{padding:4px var(--s2);border:2px solid var(--amber);border-radius:3px}
-.route li.fail{border-style:dashed;border-color:var(--red);color:var(--red);background:var(--red-soft)}
-.route li.plain{border:0;padding-left:0;font-family:var(--sans);color:var(--muted)}
-.legend{margin:0;font-size:15px;color:var(--muted);line-height:1.8}
-.lg{display:inline-block;padding:0 6px;margin-right:2px;border:2px solid var(--rule);border-radius:3px;font-size:15px}
-.here-k{background:var(--teal);border-color:var(--teal);color:var(--on-teal)}
-.via-k{border-color:var(--amber)}
-.hid-k{font-style:italic;border-color:transparent}
-@media (max-width:480px){.navmodel{grid-template-columns:minmax(0,1fr)}}
+/* Topic bar, objectives, timeline */
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; margin: 0 0 16px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+.pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
+.pep-topicbar__meta { flex: 1 1 220px; min-width: 0; display: grid; gap: 4px; }
+.pep-topicbar__progress { color: var(--pep-text); font: 600 13px/20px var(--pep-font-sans); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+.pep-progress > span { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); border: 1px solid var(--pep-line-strong); }
+.pep-progress > span.is-done, .pep-progress > span.is-current { background: var(--pep-accent); border-color: var(--pep-accent); }
+.pep-progress > span.is-settled { background: var(--pep-warning-soft); border: 1px dashed var(--pep-warning); }
+.pep-objectives { break-inside: avoid; min-width: 0; }
+.pep-objectives > summary { display: flex; align-items: center; min-height: 44px; padding: 8px 12px; cursor: pointer; color: var(--pep-accent-text); font-weight: 600; }
+.pep-objectives > div { width: min(360px, 100%); padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives ul { margin: 0; }
+.pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.pep-step { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; min-width: 44px; padding: 6px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); color: var(--pep-accent-text); font-weight: 600; text-decoration: none; }
+.pep-step[aria-current="step"] { background: var(--pep-accent-soft); border-color: var(--pep-accent); color: var(--pep-text-strong); }
+.pep-step[aria-disabled="true"] { color: var(--pep-text-muted); cursor: not-allowed; }
+
+/* Buttons */
+.pep-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 10px 20px; border-radius: var(--pep-radius-sm); font: 600 16px/24px var(--pep-font-sans); cursor: pointer; border: 1px solid var(--pep-line-strong); background: var(--pep-control); color: var(--pep-text-strong); transition: background-color var(--pep-dur-1) var(--pep-ease), border-color var(--pep-dur-1) var(--pep-ease), color var(--pep-dur-1) var(--pep-ease); }
+.pep-btn--primary { background: var(--pep-accent-fill); border-color: var(--pep-accent); color: var(--pep-on-accent-fill); }
+.pep-btn--primary:hover { background: var(--pep-accent-fill-hover); border-color: var(--pep-accent); }
+.pep-btn:disabled, .pep-btn--primary:disabled { cursor: not-allowed; background: var(--pep-control); border-color: var(--pep-line-strong); color: var(--pep-text-muted); }
+
+/* Activities and regions */
+[data-pep-activity] { margin-bottom: 32px; min-width: 0; }
+[data-pep-activity] h2 { outline-offset: 4px; margin-bottom: 8px; }
+.pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
+@media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
+.pep-region { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+[data-pep-teaching] > :last-child { margin-bottom: 0; }
+[data-pep-teaching] ul.chunks { list-style: none; padding: 0; }
+[data-pep-teaching] ul.chunks li { margin-bottom: 8px; }
+[data-pep-workspace] { display: flex; flex-direction: column; gap: 16px; min-width: 0; padding: 24px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+[data-pep-task] ol { margin: 4px 0 0; }
+[data-pep-task] ol li { margin-bottom: 4px; }
+[data-pep-task] > p { margin: 8px 0 0; font-weight: 600; color: var(--pep-text-strong); }
+[data-pep-activity-checks] { padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] ul { margin: 8px 0 0; }
+[data-pep-activity-checks] li { font: 400 14px/20px var(--pep-font-sans); }
+.goals { list-style: none; padding: 0; }
+.goals li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-top: 1px solid var(--pep-line-strong); }
+.goals li:first-child { border-top: 0; }
+.goals .st { flex: 0 0 auto; min-width: 48px; text-align: right; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.goals li.done .st { color: var(--pep-success); }
+.pep-back { display: inline-flex; align-items: center; min-height: 44px; margin-top: 8px; }
+.pep-activity-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+.pep-activity-actions .pep-btn { flex: 1 1 180px; }
+@media (min-width: 481px) { .pep-activity-actions .pep-btn { flex: 0 1 auto; } }
+
+/* Hints */
+.pep-hint, details[data-pep-hint] { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); break-inside: avoid; margin-top: 12px; }
+.pep-hint > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; color: var(--pep-text-strong); font-weight: 600; cursor: pointer; }
+.pep-hint > summary::marker { color: var(--pep-accent-text); }
+.pep-hint__ordinal { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
+.pep-hint__body { padding: 4px 0 12px; }
+.pep-hint__body p { margin: 0 0 8px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-hint__body p:last-child { margin-bottom: 0; }
+
+/* Model, options, confidence */
+.model { margin: 0; padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); min-width: 0; }
+.model figcaption { margin: 0 0 8px; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.model code { font-size: 1em; }
+.control { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+legend { padding: 0; margin-bottom: 8px; color: var(--pep-text-strong); font-weight: 600; }
+.opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.opts.one { grid-template-columns: minmax(0, 1fr); }
+.opt { position: relative; display: flex; align-items: center; gap: 12px; min-height: 48px; min-width: 0; padding: 10px 16px 10px 48px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text-strong); cursor: pointer; transition: border-color var(--pep-dur-1) var(--pep-ease), background-color var(--pep-dur-1) var(--pep-ease); }
+.opt > span { min-width: 0; overflow-wrap: anywhere; }
+.opt:hover { border-color: var(--pep-accent); }
+.opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px 9px 47px; }
+.opt:focus-within { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
+.opt::before { content: ""; position: absolute; left: 16px; top: 50%; width: 20px; height: 20px; margin-top: -10px; border: 2px solid var(--pep-line-strong); border-radius: 50%; background: var(--pep-page); }
+.opt:has(input:checked)::before { left: 15px; border: 6px solid var(--pep-accent); }
+.opt.right::before, .opt.wrong::before { left: 15px; }
+.opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.opt input:focus-visible { outline: none; }
+.opt:has(input:disabled) { cursor: default; }
+.opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px 9px 47px; }
+.opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px 9px 47px; }
+.opt .badges { display: block; margin-top: 4px; }
+.opt .why { display: block; margin-top: 4px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.conf { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; flex: 1 1 100%; }
+.conf .opt { min-height: 44px; }
+.simnote { margin: 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+
+/* Practice terminal */
+.term { min-width: 0; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-sunken); color: var(--pep-text-strong); }
+.term:focus-within { border-color: var(--pep-focus); }
+.term-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin: 0; padding: 8px 12px; border-bottom: 1px solid var(--pep-line-strong); font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text); }
+.term-top span + span { font-weight: 400; color: var(--pep-text-muted); }
+.log { min-height: 120px; max-height: 240px; overflow-y: auto; overscroll-behavior: contain auto; padding: 8px 12px; font: 400 14px/20px var(--pep-font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.log .c { font-weight: 600; }
+.log .c::before { content: attr(data-p) " "; color: var(--pep-accent-text); font-weight: 600; }
+.log .e { color: var(--pep-danger); }
+.log .w { color: var(--pep-warning); }
+.log .h { color: var(--pep-text-muted); font-family: var(--pep-font-sans); }
+.cmdline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--pep-line-strong); }
+.cmdline label { flex: 0 1 auto; max-width: 55%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 600 14px/20px var(--pep-font-mono); color: var(--pep-accent-text); }
+.cmdline input { flex: 1 1 160px; min-width: 0; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 400 16px/24px var(--pep-font-mono); caret-color: var(--pep-accent-text); scroll-margin-block: 16px; }
+.cmdline input::placeholder { color: var(--pep-text-muted); opacity: 1; }
+.cmdline input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 0; }
+.cmdline .pep-btn { flex: 0 0 auto; }
+
+/* Feedback */
+.feedback { min-width: 0; }
+.feedback:not(:empty) { padding: 12px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-page); color: var(--pep-text); }
+.feedback p { margin: 0 0 8px; }
+.feedback > :last-child { margin-bottom: 0; }
+.feedback ul { margin: 4px 0 8px; padding-inline-start: 20px; }
+.feedback li { margin-bottom: 4px; font: 400 14px/20px var(--pep-font-sans); }
+.feedback details { margin: 8px 0; }
+.feedback summary { display: flex; align-items: center; min-height: 44px; cursor: pointer; font-weight: 600; color: var(--pep-text-strong); }
+.feedback .on { font-weight: 600; color: var(--pep-text-strong); }
+.verdict { font-weight: 700; color: var(--pep-text-strong); }
+.verdict.ok { color: var(--pep-success); }
+.verdict.no { color: var(--pep-danger); }
+.verdict.set { color: var(--pep-warning); }
+.badge { display: inline-block; margin: 0 4px 0 0; padding: 0 8px; border: 1px solid currentColor; border-radius: var(--pep-radius-pill); font: 600 13px/20px var(--pep-font-sans); }
+.badge.ok { color: var(--pep-success); }
+.badge.no { color: var(--pep-danger); }
+.badge.me { color: var(--pep-text-strong); }
+.explain { list-style: none; padding: 0; margin: 4px 0 8px; }
+.explain li { margin: 0; padding: 4px 0 4px 12px; border-left: 2px solid var(--pep-line-strong); }
+.explain li + li { margin-top: 4px; }
+.explain li.mine { border-left-color: var(--pep-accent); }
+.explain .on, .explain .ex { display: block; }
+.explain .ex::first-letter { text-transform: uppercase; }
+.conf-report { color: var(--pep-text-muted); }
+
+/* Recap, cheat sheet, sources */
+.pep-recap { padding: 24px 0 0; margin-top: 48px; border-block-start: 1px solid var(--pep-line-strong); }
+.pep-recap > h2 { margin-bottom: 8px; }
+.complete { margin: 0 0 16px; padding: 12px 16px; border: 1px solid var(--pep-success); border-radius: var(--pep-radius-md); background: var(--pep-success-soft); color: var(--pep-text-strong); font-weight: 600; }
+.complete:empty { display: none; }
+.pep-recap details { margin: 16px 0 0; padding: 0 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-recap summary { display: flex; align-items: center; min-height: 44px; padding: 8px 0; cursor: pointer; font-weight: 600; color: var(--pep-text-strong); }
+.pep-recap details > :last-child { margin-bottom: 12px; }
+.pep-recap table { width: 100%; border-collapse: collapse; margin: 0 0 12px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-recap td { padding: 8px 12px 8px 0; border-bottom: 1px solid var(--pep-line-strong); vertical-align: top; overflow-wrap: anywhere; }
+.pep-recap tr:last-child td { border-bottom: 0; }
+.pep-recap td:first-child { font-weight: 600; color: var(--pep-text-strong); }
+.pep-recap .sources li { margin-bottom: 4px; font: 400 14px/20px var(--pep-font-sans); }
+.pep-recap .sources a { display: inline-flex; align-items: center; min-height: 44px; }
+
+@media (max-width: 480px) {
+  .pep-main { padding: 16px; }
+  input, select, textarea { font-size: 16px; scroll-margin-block: 16px; }
+  [data-pep-workspace] { padding: 16px; }
+  .opts { grid-template-columns: minmax(0, 1fr); }
+  .log { max-height: 180px; }
+  .cmdline label { flex: 1 0 100%; max-width: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; scroll-behavior: auto !important; }
+}
+@media (forced-colors: active) {
+  .pep-topicbar, details[data-pep-hint], [data-pep-activity-checks] { border-color: CanvasText; }
+  .pep-topicbar, details[data-pep-hint], [data-pep-activity-checks] { border-block-start-color: Highlight; }
+}
+@media print {
+  .pep-activity-actions, nav[aria-label="Activities"], .pep-back, [data-pep-reset], .pep-js-only.pep-progress { display: none !important; }
+  [data-pep-activity], [data-pep-activity][hidden], .pep-recap[hidden] { display: block !important; }
+  .pep-objectives > div { display: block !important; width: auto; }
+  .pep-topicbar, [data-pep-workspace], details[data-pep-hint], [data-pep-activity-checks], .feedback, .complete { print-color-adjust: exact; -webkit-print-color-adjust: exact; break-inside: avoid; }
+  .model, .term, .pep-recap details { break-inside: avoid; }
+  .log { max-height: none; overflow: visible; }
+}
+/* Page model: folder tree and location readout */
+#live-model[data-step="5"] .tree li.file { display: none; }
+.navmodel { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.tree { list-style: none; margin: 0; padding: 0; font: 400 14px/20px var(--pep-font-mono); }
+.tree li { display: flex; align-items: center; justify-content: space-between; gap: 8px; max-width: none; padding: 4px 8px 4px calc(8px + var(--d) * 16px); border: 2px solid transparent; border-radius: var(--pep-radius-sm); }
+.tree .nm { min-width: 0; overflow-wrap: anywhere; }
+.tree li.file .nm { color: var(--pep-text-muted); }
+.tree li.hid .nm { font-style: italic; }
+.tree li.via { border-color: var(--pep-accent); }
+.tree li.goal { border: 2px dashed var(--pep-accent); }
+.tree li.here { background: var(--pep-accent-fill); border-color: var(--pep-accent); }
+.tree li.here .nm, .tree li.here .tag { color: var(--pep-on-accent-fill); }
+.tag { font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; }
+.where .wl { margin: 0; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); }
+.readout { margin: 0 0 12px; font: 600 16px/24px var(--pep-font-mono); color: var(--pep-text-strong); overflow-wrap: anywhere; }
+.route { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 12px; padding: 0; list-style: none; font: 400 14px/20px var(--pep-font-mono); }
+.route li { padding: 4px 8px; border: 2px solid var(--pep-accent); border-radius: var(--pep-radius-sm); }
+.route li.fail { border-style: dashed; border-color: var(--pep-danger); color: var(--pep-danger); background: var(--pep-danger-soft); }
+.route li.plain { border: 0; padding-left: 0; font-family: var(--pep-font-sans); color: var(--pep-text-muted); }
+.legend { margin: 0; font: 400 13px/28px var(--pep-font-sans); color: var(--pep-text-muted); }
+.lg { display: inline-block; padding: 0 8px; margin-right: 4px; border: 2px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); }
+.here-k { background: var(--pep-accent-fill); border-color: var(--pep-accent); color: var(--pep-on-accent-fill); }
+.via-k { border-color: var(--pep-accent); }
+@media (max-width: 480px) { .navmodel { grid-template-columns: minmax(0, 1fr); } .tag { white-space: normal; text-align: right; } }
+@media (forced-colors: active) { .tree li.here { forced-color-adjust: none; background: Highlight; border-color: Highlight; } .tree li.here .nm, .tree li.here .tag { color: HighlightText; } .here-k { forced-color-adjust: none; background: Highlight; color: HighlightText; } }
 </style>
 </head>
 <body>
 <noscript><p class="nojs">This topic needs JavaScript for its practice activities and checks. Turn JavaScript on to take part.</p></noscript>
-<main id="lesson">
-  <header class="top">
-    <h1>Navigating files and folders in the shell</h1>
-    <ul class="objectives" data-pep-objectives aria-label="Objectives" style="grid-column:1/-1;margin:0;padding-left:1.25em">
-      <li>Report your location with pwd and list entries with ls and ls -a</li>
-      <li>Tell absolute, relative, home (~) and parent (..) paths apart</li>
-      <li>Move with cd, including a folder name that contains a space</li>
-    </ul>
-    <div class="tools">
-      <div class="progress" data-pep-progress id="progress"><span id="prog-text">Activities done: 0 of 5</span><span class="pips" aria-hidden="true"><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span></span></div>
-      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
-      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
-    </div>
-  </header>
-  <div class="stage" id="stage" data-step="1">
-    <div class="col">
-      <section id="current-teaching" class="teach" aria-label="Current teaching">
-<div data-step="1">
-  <h2 id="teach-1-h" tabindex="-1">Start with a guess</h2>
-  <p>Practice prediction, not scored.</p>
-</div>
-<div data-step="2" data-pep-teaching>
-  <h2 id="teach-2-h" tabindex="-1">Where am I, and what is here?</h2>
-  <p>The filled row is your current folder, the working directory.</p>
-  <p><code>pwd</code> prints it as a full path. <code>ls</code> lists what it holds but skips hidden names, which start with a dot. <code>ls -a</code> shows them too, plus <code>.</code> (this folder) and <code>..</code> (its parent).</p>
-</div>
-<div data-step="3" data-pep-teaching>
-  <h2 id="teach-3-h" tabindex="-1">Four ways a path can start</h2>
-  <ul>
-    <li>Relative, like <code>projects/pep</code>: read from your current folder.</li>
-    <li>Absolute, like <code>/tmp</code>: read from the root.</li>
-    <li><code>~</code>, like <code>~/notes</code>: starts at home, <code>/home/ana</code> here.</li>
-    <li><code>..</code>: the parent folder, one level up.</li>
-  </ul>
-  <p><code>ls</code> plus a path lists that folder without moving you.</p>
-</div>
-<div data-step="4" data-pep-teaching>
-  <h2 id="teach-4-h" tabindex="-1">Move with cd</h2>
-  <p><code>cd</code> plus a path moves you there; <code>cd ~</code> or plain <code>cd</code> goes home.</p>
-  <p>Spaces split words: <code>cd class notes</code> passes two words and fails. Keep the name whole with <code>cd "class notes"</code> or <code>cd class\ notes</code>.</p>
-  <p>Every part of a path must be an existing folder; a failed <code>cd</code> prints an error and you stay put.</p>
-</div>
-<div data-step="5" data-pep-teaching>
-  <h2 id="teach-5-h" tabindex="-1">Apply it somewhere new</h2>
-  <p>Same rules, new starting point.</p>
-</div>
-<div data-step="6" hidden data-pep-recap class="recap">
-  <h2 id="teach-6-h" tabindex="-1">Recap</h2>
-  <ul><li><code>pwd</code> shows where you are; <code>ls -a</code> adds hidden names.</li><li><code>/</code> starts at the root, a relative path where you are, <code>~</code> at home; <code>..</code> is up one.</li><li>Quote or escape spaces; a failed <code>cd</code> leaves you in place.</li></ul>
-  <details data-section-skip>
-    <summary>Cheat sheet</summary>
-    <table><tr><td><code>pwd</code></td><td>print the current folder</td></tr><tr><td><code>ls</code> / <code>ls -a</code></td><td>list entries / include hidden ones</td></tr><tr><td><code>ls path</code></td><td>list another folder without moving</td></tr><tr><td><code>cd path</code></td><td>move to a folder</td></tr><tr><td><code>cd ..</code></td><td>up one level</td></tr><tr><td><code>cd ~</code> or <code>cd</code></td><td>home</td></tr><tr><td><code>cd "class notes"</code></td><td>a name with a space</td></tr></table>
-    <p>Error wording, ls ordering and quoting of spaced names vary between shells and systems; the rules above do not.</p>
-  </details>
-  <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Partly checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.</p><ul><li><a href="https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html" rel="noopener">GNU Bash 5.3 Reference Manual: cd and other builtins</a></li><li><a href="https://www.gnu.org/software/bash/manual/html_node/Quoting.html" rel="noopener">GNU Bash 5.3 Reference Manual: quoting</a></li><li><a href="https://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html" rel="noopener">GNU Bash 5.3 Reference Manual: tilde expansion</a></li><li><a href="https://www.gnu.org/software/coreutils/manual/html_node/ls-invocation.html" rel="noopener">GNU Coreutils manual: ls invocation</a></li><li><a href="https://www.gnu.org/software/coreutils/manual/html_node/pwd-invocation.html" rel="noopener">GNU Coreutils manual: pwd invocation</a></li></ul><p>Not confirmed by these sources: the exact wording of the "too many arguments" error, GNU ls quoting a spaced name by default on a terminal, and which folder a new terminal opens in. The page labels these as varying.</p></details>
-  <p class="next-topic">Next topic: <a href="../pipes-and-grep/artifact.html">Pipes and grep</a></p>
-</div>
-      </section>
-      <section id="current-task" class="task" aria-label="Current task">
-<div data-step="1"><p id="task-1">A new terminal opens and you type <code>pwd</code>. What does it print?</p></div>
-<div data-step="2"><p id="task-2">Run <code>pwd</code>, then <code>ls -a</code>.</p>
-  <ul class="goals"><li data-goal="pwd"><span>Run <code>pwd</code></span><span class="st"></span></li><li data-goal="lsa"><span>Run <code>ls -a</code></span><span class="st"></span></li></ul></div>
-<div data-step="3"><p id="task-3">From <code>/home/ana</code>, list <code>pep</code> twice: with a relative path, then with a <code>~</code> path.</p>
-  <ul class="goals"><li data-goal="rel"><span>Relative path to pep</span><span class="st"></span></li><li data-goal="home"><span><code>~</code> path to pep</span><span class="st"></span></li></ul></div>
-<div data-step="4"><p id="task-4">Make these three moves in any order.</p>
-  <ul class="goals"><li data-goal="space"><span>Into <code>class notes</code>, space quoted or escaped</span><span class="st"></span></li><li data-goal="up"><span>Up one level with <code>..</code></span><span class="st"></span></li><li data-goal="tmp"><span>To <code>/tmp</code> with an absolute path</span><span class="st"></span></li></ul></div>
-<div data-step="5"><p id="task-apply">You are in <code>/home/ana/projects/pep</code>. Which command takes you to <code>/home/ana/notes</code>?</p>
-  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same goal as routes. Which route reaches <code>notes</code> from <code>pep</code>?</p></div>
-<div data-step="6"><p>All activities finished.</p><p id="complete-msg" class="complete"></p></div>
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="9">
+<header class="pep-topicbar">
+<h1>Navigating files and folders in the shell</h1>
+<div class="pep-topicbar__meta progress" data-pep-progress><span class="pep-topicbar__progress" id="pep-position">5 activities · about 9 min</span><div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div><span class="pep-topicbar__progress pep-js-only" id="prog-text">Activities done: 0 of 5</span></div>
+<details class="pep-objectives" data-pep-objectives><summary aria-controls="pep-objectives-body">Objectives</summary><div id="pep-objectives-body"><ul>
+<li>Report your location with pwd and list entries with ls and ls -a</li>
+<li>Tell absolute, relative, home (~) and parent (..) paths apart</li>
+<li>Move with cd, including a folder name that contains a space</li>
+</ul></div></details>
+<button class="pep-btn pep-js-only" type="button" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button><span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+</header>
+<nav aria-label="Activities"><ol class="pep-steps"><li><a class="pep-step" href="#activity-1" data-pep-activity-link>Activity 1</a></li><li><a class="pep-step" href="#activity-2" data-pep-activity-link>Activity 2</a></li><li><a class="pep-step" href="#activity-3" data-pep-activity-link>Activity 3</a></li><li><a class="pep-step" href="#activity-4" data-pep-activity-link>Activity 4</a></li><li><a class="pep-step" href="#activity-5" data-pep-activity-link>Activity 5</a></li></ol></nav>
 
-      </section>
-      <div class="fbrow">
-        <div id="current-feedback" class="feedback" aria-live="polite">
-<div data-step="1" data-pep-predict-feedback></div>
-<div data-step="2" data-pep-explore-feedback></div>
-<div data-step="3" data-pep-explore-feedback></div>
-<div data-step="4" data-pep-explore-feedback></div>
-<div data-step="5" data-pep-apply-feedback></div>
-<div data-step="6" ></div>
-        </div>
-        <button type="button" class="primary" id="next" hidden>Continue</button>
-      </div>
-    </div>
-    <div class="col">
+<section id="activity-1" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-1-title">
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions>
+<h2 id="activity-1-title" tabindex="-1">Start with a guess</h2>
+<p>Practice prediction, not scored.</p>
+</div>
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-1" data-pep-task><h3>Your task</h3><ol id="task-1-do"><li>A new terminal opens and you type <code>pwd</code>. What does it print? Choose one answer.</li><li>Choose your confidence, then press <strong>Check my prediction</strong>.</li></ol></div>
+<section data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><ul><li>You check one prediction.</li></ul></section>
+<div data-model-slot>
 <figure id="live-model" class="model" aria-labelledby="model-cap">
   <figcaption id="model-cap">Ana's fictional folders. The terminal is a simulation.</figcaption>
   <div class="navmodel">
@@ -299,65 +322,150 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
     </div>
   </div>
 </figure>
-      <section id="current-control" class="control" aria-label="Your turn">
-<div data-step="1">
-  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1" data-static-alt="Prediction (practice, not scored): a new terminal opens and you type pwd. Options: /home/ana; ~; /; ana. Answer: /home/ana. A new terminal usually starts in your home folder, and pwd prints the full path from the root. ~ is a shortcut you type for home, but pwd does not print it; / is the root; pwd prints the whole path, not just the last folder name.">
+</div>
+<div class="control q" data-ctl="1">
+  <fieldset data-interaction="predict" data-confidence data-pep-predict id="predict-fs" aria-describedby="task-1-do" data-static-alt="Prediction (practice, not scored): a new terminal opens and you type pwd. Options: /home/ana; ~; /; ana. Answer: /home/ana. A new terminal usually starts in your home folder, and pwd prints the full path from the root. ~ is a shortcut you type for home, but pwd does not print it; / is the root; pwd prints the whole path, not just the last folder name.">
     <legend>Prediction</legend>
     <div class="opts"><label class="opt"><input type="radio" name="predict" value="a"> <span>/home/ana</span></label><label class="opt"><input type="radio" name="predict" value="b"> <span>~</span></label><label class="opt"><input type="radio" name="predict" value="c"> <span>/</span></label><label class="opt"><input type="radio" name="predict" value="d"> <span>ana</span></label></div>
   </fieldset>
-  <div class="row confrow">
+  <div class="row">
   <fieldset class="conf" id="pconf" data-pep-predict-confidence aria-describedby="pconf-help">
     <legend id="pconf-help">Confidence, then check</legend>
     <label class="opt"><input type="radio" name="pconf" value="low"> <span>Low</span></label>
     <label class="opt"><input type="radio" name="pconf" value="medium"> <span>Medium</span></label>
     <label class="opt"><input type="radio" name="pconf" value="high"> <span>High</span></label>
   </fieldset>
-  <button type="button" class="primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1 pconf-help">Check my prediction</button>
+  <button type="button" class="pep-btn pep-btn--primary" id="predict-check" data-pep-predict-check disabled aria-describedby="task-1-do pconf-help">Check my prediction</button>
   </div>
-</div><div data-step="2" hidden>
+</div>
+<div class="feedback" id="fb-1" data-pep-feedback data-pep-predict-feedback aria-live="polite"></div>
+</div>
+</div>
+</section>
+
+<section id="activity-2" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-2-title">
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions>
+<h2 id="activity-2-title" tabindex="-1">Where am I, and what is here?</h2>
+<p>The filled row is your current folder, the working directory.</p>
+<p><code>pwd</code> prints it as a full path. <code>ls</code> lists what it holds but skips hidden names, which start with a dot. <code>ls -a</code> shows them too, plus <code>.</code> (this folder) and <code>..</code> (its parent).</p>
+</div>
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-2" data-pep-task data-pep-may-stall><h3>Your task</h3><ol id="task-2-do"><li>In the practice terminal, run <code>pwd</code>.</li><li>Then run <code>ls -a</code>.</li></ol><details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> In the command line at the bottom of the practice terminal, after the prompt.</p><p data-pep-hint-step><strong>Next step:</strong> Type one command, press Enter, and compare the output with the filled row in the folder tree before you type the next.</p></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><ul class="goals"><li data-goal="pwd"><span>Run <code>pwd</code></span><span class="st"></span></li><li data-goal="lsa"><span>Run <code>ls -a</code></span><span class="st"></span></li></ul></section>
+<div data-model-slot></div>
+<div class="control q" data-ctl="2">
   <div class="term" data-interaction="terminal" data-steps="2" data-static-alt="Terminal activity: run pwd, then ls -a. Worked example: pwd prints /home/ana. ls -a lists every entry, including names that start with a dot: . .. .profile &#x27;class notes&#x27; notes projects. Plain ls hides the dot entries.">
     <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-2">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
     <div class="log" id="log-2" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
     <div class="cmdline" data-term="2">
       <label for="cmd-2"><span class="pr">$</span><span class="vh"> command</span></label>
-      <input type="text" id="cmd-2" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-2 keys-2">
-      <button type="button" class="runbtn">Run</button>
+      <input type="text" id="cmd-2" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-2-do keys-2">
+      <button type="button" class="pep-btn runbtn">Run</button>
     </div>
   </div>
-</div><div data-step="3" hidden>
+</div>
+<div class="feedback" id="fb-2" data-pep-feedback data-pep-explore-feedback aria-live="polite"></div>
+</div>
+</div>
+<p><a class="pep-back" href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+</section>
+
+<section id="activity-3" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-3-title">
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions>
+<h2 id="activity-3-title" tabindex="-1">Four ways a path can start</h2>
+<ul>
+  <li>Relative, like <code>projects/pep</code>: read from your current folder.</li>
+  <li>Absolute, like <code>/tmp</code>: read from the root.</li>
+  <li><code>~</code>, like <code>~/notes</code>: starts at home, <code>/home/ana</code> here.</li>
+  <li><code>..</code>: the parent folder, one level up.</li>
+</ul>
+<p><code>ls</code> plus a path lists that folder without moving you.</p>
+</div>
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-3" data-pep-task data-pep-may-stall><h3>Your task</h3><ol id="task-3-do"><li>In the practice terminal, from <code>/home/ana</code>, list <code>pep</code> with a relative path.</li><li>List it again with a <code>~</code> path.</li></ol><details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 3</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> In the terminal command line, after <code>ls</code> and a space.</p><p data-pep-hint-step><strong>Next step:</strong> In the folder tree, find which folder lies between ana and pep; the relative path starts from where you are, and the <code>~</code> path starts from home.</p></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><ul class="goals"><li data-goal="rel"><span>Relative path to pep</span><span class="st"></span></li><li data-goal="home"><span><code>~</code> path to pep</span><span class="st"></span></li></ul></section>
+<div data-model-slot></div>
+<div class="control q" data-ctl="3">
   <div class="term" data-interaction="terminal" data-steps="2" data-static-alt="Terminal activity: from /home/ana, list the pep folder twice. Relative path, which starts where you are: ls projects/pep. Home path, which starts at your home folder: ls ~/projects/pep. Both list README.md.">
     <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-3">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
     <div class="log" id="log-3" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
     <div class="cmdline" data-term="3">
       <label for="cmd-3"><span class="pr">$</span><span class="vh"> command</span></label>
-      <input type="text" id="cmd-3" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-3 keys-3">
-      <button type="button" class="runbtn">Run</button>
+      <input type="text" id="cmd-3" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-3-do keys-3">
+      <button type="button" class="pep-btn runbtn">Run</button>
     </div>
   </div>
-</div><div data-step="4" hidden>
+</div>
+<div class="feedback" id="fb-3" data-pep-feedback data-pep-explore-feedback aria-live="polite"></div>
+</div>
+</div>
+<p><a class="pep-back" href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
+</section>
+
+<section id="activity-4" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-4-title">
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions>
+<h2 id="activity-4-title" tabindex="-1">Move with cd</h2>
+<p><code>cd</code> plus a path moves you there; <code>cd ~</code> or plain <code>cd</code> goes home.</p>
+<p>Spaces split words: <code>cd class notes</code> passes two words and fails. Keep the name whole with <code>cd "class notes"</code> or <code>cd class\ notes</code>.</p>
+<p>Every part of a path must be an existing folder; a failed <code>cd</code> prints an error and you stay put.</p>
+</div>
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-4" data-pep-task data-pep-may-stall><h3>Your task</h3><ol id="task-4-do"><li>In the practice terminal, make the three moves below in any order.</li></ol><details class="pep-hint" data-pep-hint data-pep-hint-for="task-4" data-pep-hint-order="1" data-section-skip><summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 4</span></summary><div class="pep-hint__body"><p data-pep-hint-target><strong>Where to act:</strong> In the terminal command line, one <code>cd</code> per move; the prompt and the filled row show where you end up.</p><p data-pep-hint-step><strong>Next step:</strong> Decide how each path must start: keep the spaced name as one word, climb with the parent path, and begin the last path at the root.</p></div></details></div>
+<section data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><ul class="goals"><li data-goal="space"><span>Into <code>class notes</code>, space quoted or escaped</span><span class="st"></span></li><li data-goal="up"><span>Up one level with <code>..</code></span><span class="st"></span></li><li data-goal="tmp"><span>To <code>/tmp</code> with an absolute path</span><span class="st"></span></li></ul></section>
+<div data-model-slot></div>
+<div class="control q" data-ctl="4">
   <div class="term" data-interaction="terminal" data-steps="3" data-static-alt="Terminal activity: make three moves in any order. Into the folder with a space: cd &quot;class notes&quot; or cd class\ notes (quote or escape the space; cd class notes fails because it receives two arguments). Up one level: cd .. . To /tmp with an absolute path: cd /tmp. Check where you are with pwd after each move.">
     <p class="term-top"><span>Practice terminal (simulated)</span><span class="keys" id="keys-4">Enter runs · ↑↓ history · Tab completes · Esc leaves</span></p>
     <div class="log" id="log-4" role="log" tabindex="0" aria-label="Terminal output, scrollable"></div>
     <div class="cmdline" data-term="4">
       <label for="cmd-4"><span class="pr">$</span><span class="vh"> command</span></label>
-      <input type="text" id="cmd-4" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-4 keys-4">
-      <button type="button" class="runbtn">Run</button>
+      <input type="text" id="cmd-4" data-pep-explore spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="Type a command" aria-describedby="task-4-do keys-4">
+      <button type="button" class="pep-btn runbtn">Run</button>
     </div>
   </div>
-</div><div data-step="5">
+</div>
+<div class="feedback" id="fb-4" data-pep-feedback data-pep-explore-feedback aria-live="polite"></div>
+</div>
+</div>
+<p><a class="pep-back" href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
+</section>
+
+<section id="activity-5" data-pep-activity data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false" aria-labelledby="activity-5-title">
+<div class="pep-regions">
+<div class="pep-region">
+<div data-pep-teaching data-pep-instructions>
+<h2 id="activity-5-title" tabindex="-1">Apply it somewhere new</h2>
+<p>Same rules, new starting point.</p>
+</div>
+</div>
+<div class="pep-region--workspace" data-pep-workspace="activity">
+<div id="task-5" data-pep-task><h3>Your task</h3><ol id="task-5-do"><li id="task-apply">You are in <code>/home/ana/projects/pep</code>. Which command takes you to <code>/home/ana/notes</code>?</li><li>Choose one and your confidence, then press <strong>Check answer</strong>. You get one retry.</li></ol>
+  <p id="task-apply-b" tabindex="-1" data-retry hidden>Same goal as routes. Which route reaches <code>notes</code> from <code>pep</code>?</p></div>
+<section data-pep-activity-checks aria-labelledby="checks-5"><h3 id="checks-5">What success looks like</h3><ul><li>You rate your confidence and check one command.</li></ul></section>
+<div data-model-slot></div>
+<div class="control q" data-ctl="5">
   <div data-first>
   <fieldset id="apply-a" data-interaction="mcq" data-confidence data-pep-apply aria-describedby="task-apply" data-static-alt="Apply question: you are in /home/ana/projects/pep. Which command takes you to /home/ana/notes? Options: cd ../notes (one .. only reaches projects, which has no notes); cd notes (pep has no notes folder); cd ../../notes (correct: climbs pep to projects to ana, then enters notes); cd /notes (a leading / starts at the root, and there is no /notes). Retry as routes: pep to projects to ana to notes is the working route.">
     <legend>Choose a command</legend>
     <div class="opts"><label class="opt"><input type="radio" name="apply-a" value="a"> <span>cd ../notes</span></label><label class="opt"><input type="radio" name="apply-a" value="b"> <span>cd notes</span></label><label class="opt"><input type="radio" name="apply-a" value="c"> <span>cd ../../notes</span></label><label class="opt"><input type="radio" name="apply-a" value="d"> <span>cd /notes</span></label></div>
   </fieldset>
-  <div class="row confrow">
+  <div class="row">
   <fieldset class="conf" id="conf" data-pep-confidence aria-describedby="conf-help">
     <legend id="conf-help">Confidence, then check</legend>
     <label class="opt"><input type="radio" name="conf" value="low"> <span>Low</span></label>
     <label class="opt"><input type="radio" name="conf" value="medium"> <span>Medium</span></label>
     <label class="opt"><input type="radio" name="conf" value="high"> <span>High</span></label>
   </fieldset>
-  <button type="button" class="primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
+  <button type="button" class="pep-btn pep-btn--primary" id="apply-check" data-pep-apply-check disabled aria-describedby="task-apply conf-help">Check answer</button>
   </div>
   </div>
   <div data-retry hidden>
@@ -365,12 +473,28 @@ legend{padding:0;margin-bottom:var(--s2);font-weight:700;font-size:15px}
       <legend>Choose a route</legend>
       <div class="opts"><label class="opt"><input type="radio" name="apply-b" value="a"> <span>pep → projects → notes</span></label><label class="opt"><input type="radio" name="apply-b" value="b"> <span>pep → projects → ana → notes</span></label><label class="opt"><input type="radio" name="apply-b" value="c"> <span>pep → notes</span></label><label class="opt"><input type="radio" name="apply-b" value="d"> <span>/ → notes</span></label></div>
     </fieldset>
-    <div class="row"><button type="button" class="primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
+    <div class="row"><button type="button" class="pep-btn pep-btn--primary" id="apply-check-b" data-pep-apply-check-retry disabled aria-describedby="task-apply-b">Check second try</button></div>
   </div>
-</div><div data-step="6"></div>
-      </section>
-    </div>
-  </div>
+</div>
+<div class="feedback" id="fb-5" data-pep-feedback data-pep-apply-feedback aria-live="polite"></div>
+</div>
+</div>
+<p><a class="pep-back" href="#activity-4" data-pep-back-link>Back to activity 4</a></p>
+</section>
+
+<div class="pep-activity-actions pep-js-only" role="group" aria-label="Activity navigation"><button class="pep-btn" type="button" id="prev" data-pep-previous>Previous activity</button><button class="pep-btn pep-btn--primary" type="button" id="next" data-pep-next>Continue</button></div>
+
+<section class="pep-recap" id="pep-recap" data-pep-recap aria-labelledby="recap-title">
+  <h2 id="recap-title">Recap</h2>
+  <p id="complete-msg" class="complete pep-js-only"></p>
+  <ul><li><code>pwd</code> shows where you are; <code>ls -a</code> adds hidden names.</li><li><code>/</code> starts at the root, a relative path where you are, <code>~</code> at home; <code>..</code> is up one.</li><li>Quote or escape spaces; a failed <code>cd</code> leaves you in place.</li></ul>
+  <details data-section-skip>
+    <summary>Cheat sheet</summary>
+    <table><tr><td><code>pwd</code></td><td>print the current folder</td></tr><tr><td><code>ls</code> / <code>ls -a</code></td><td>list entries / include hidden ones</td></tr><tr><td><code>ls path</code></td><td>list another folder without moving</td></tr><tr><td><code>cd path</code></td><td>move to a folder</td></tr><tr><td><code>cd ..</code></td><td>up one level</td></tr><tr><td><code>cd ~</code> or <code>cd</code></td><td>home</td></tr><tr><td><code>cd "class notes"</code></td><td>a name with a space</td></tr></table>
+    <p>Error wording, ls ordering and quoting of spaced names vary between shells and systems; the rules above do not.</p>
+  </details>
+  <details data-section-skip class="sources" data-pep-sources><summary>Sources and review date</summary><p>Partly checked against these live sources on 2026-10-12. Commands and messages follow GNU/Linux (bash, coreutils, grep); macOS and other systems can differ.</p><ul><li><a href="https://www.gnu.org/software/bash/manual/html_node/Bourne-Shell-Builtins.html" rel="noopener">GNU Bash 5.3 Reference Manual: cd and other builtins</a></li><li><a href="https://www.gnu.org/software/bash/manual/html_node/Quoting.html" rel="noopener">GNU Bash 5.3 Reference Manual: quoting</a></li><li><a href="https://www.gnu.org/software/bash/manual/html_node/Tilde-Expansion.html" rel="noopener">GNU Bash 5.3 Reference Manual: tilde expansion</a></li><li><a href="https://www.gnu.org/software/coreutils/manual/html_node/ls-invocation.html" rel="noopener">GNU Coreutils manual: ls invocation</a></li><li><a href="https://www.gnu.org/software/coreutils/manual/html_node/pwd-invocation.html" rel="noopener">GNU Coreutils manual: pwd invocation</a></li></ul><p>Not confirmed by these sources: the exact wording of the "too many arguments" error, GNU ls quoting a spaced name by default on a terminal, and which folder a new terminal opens in. The page labels these as varying.</p></details>
+</section>
 </main>
 <script>
 var TOPIC={
@@ -498,42 +622,68 @@ render:function(S,api){var t=S.t,here=S.step===1?null:(S.step===5?'/home/ana/pro
  if(S.step===5){chip('Imagined position for this check only','plain');}
  else if(!t.route||S.step===1){chip('None yet.','plain');}
  else{chip('start '+t.route.from,'plain');t.route.trail.forEach(function(x){chip(x.n+(x.fail?' (stops here)':''),x.fail?'fail':'');});if(!t.route.trail.length){chip('(no path parts)','plain');}}
- var g=t.g;api.qa('.goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!g[k]);li.querySelector('.st').textContent=g[k]?'done':'open';});
+ var g=t.g;api.qa('#activity-'+S.step+' .goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!g[k]);li.querySelector('.st').textContent=g[k]?'done':'open';});
 }
 };
-
 (function(){
 'use strict';
-var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
-var SNAP={};
-function clone(o){return JSON.parse(JSON.stringify(o));}
-var LAST=TOPIC.steps,S;
+var d=document,main=d.getElementById('lesson');
+d.documentElement.classList.add('is-enhanced');
 function $(id){return d.getElementById(id);}
 function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-function fresh(){S={step:1,done:{},settled:{},conf:null,tries:0,t:TOPIC.init()};}
+function clone(o){return JSON.parse(JSON.stringify(o));}
+var sections=qa('[data-pep-activity]'),links=qa('[data-pep-activity-link]'),N=TOPIC.acts.length;
+var prevBtn=d.querySelector('[data-pep-previous]'),nextBtn=d.querySelector('[data-pep-next]');
+var model=$('live-model'),recap=$('pep-recap'),pos=$('pep-position'),segs=qa('.pep-progress > span');
+var minutes=main.getAttribute('data-pep-required-minutes');
+// Per-activity simulator state: an activity starts from the state the previous one left,
+// and Restart returns it to that starting point without touching any other activity.
+var S={step:1,done:{},settled:{},conf:null,tries:0,firstPick:null},T={},TSNAP={},CTL={},ATT={},HIST={},unlocked=1,lastFocused=null;
+Object.defineProperty(S,'t',{get:function(){return T[S.step];},set:function(v){T[S.step]=v;}});
+sections.forEach(function(s,i){var c=s.querySelector('[data-ctl]');CTL[i+1]=c?c.innerHTML:'';ATT[i+1]=0;});
 var api={$:$,qa:qa,esc:esc,say:say,complete:complete,get S(){return S;}};
-function fbFor(step){return qa('[data-step="'+step+'"]',$('current-feedback'))[0];}
+function act(n){return TOPIC.acts[n-1];}
+function fbFor(n){return $('fb-'+n);}
 function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}}
-function progress(){
-  var acts=TOPIC.acts,n=0,set=0;
-  acts.forEach(function(a,i){var p=qa('.pip',$('progress'))[i];var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
-    p.className='pip'+(on?(S.settled[a]?' settled':' on'):'');});
-  $('prog-text').textContent='Activities done: '+n+' of '+acts.length+(set?' ('+set+' answered, not marked correct)':'');
+function ensure(n){if(!T[n]){T[n]=(n>1&&T[n-1])?clone(T[n-1]):TOPIC.init();TSNAP[n]=clone(T[n]);}}
+function attempts(n){var a=act(n);if(a==='predict'){return S.done.predict?1:0;}return ATT[n];}
+function grade(n){var a=act(n);return (S.done[a]&&a!=='predict'&&!S.settled[a])?1:0;}
+function reflect(){
+  sections.forEach(function(s,i){var n=i+1,done=!!S.done[act(n)];
+    s.setAttribute('data-pep-attempts',String(attempts(n)));s.setAttribute('data-pep-settled',String(done));
+    s.setAttribute('data-pep-completed',String(done));s.setAttribute('data-pep-credit',done?'1':'0');
+    s.setAttribute('data-pep-grade',String(grade(n)));s.setAttribute('data-pep-continue',String(done));});
+  main.setAttribute('data-pep-current-activity',String(S.step));main.setAttribute('data-pep-unlocked-through',String(unlocked));
 }
-function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
-function show(step,focus){
-  S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
-  qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
-  if(!SNAP[step]){var h={};['current-task','current-control','current-feedback'].forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
-    SNAP[step]={html:h,t:clone(S.t)};}
-  var rb=$('reset');rb.disabled=(step===LAST);
-  $('next').hidden=true;
-  if(step===LAST){main.setAttribute('data-pep-complete','true');var c=$('complete-msg');if(c){var set=Object.keys(S.settled).length;
-    c.textContent='All '+TOPIC.acts.length+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: review its explanation above before moving on.':'.');}}
-  else{main.removeAttribute('data-pep-complete');}
-  TOPIC.render(S,api);progress();
-  if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
+function progress(){
+  var n=0,set=0;
+  TOPIC.acts.forEach(function(a,i){var on=!!S.done[a];if(on){n++;}if(S.settled[a]){set++;}
+    var sg=segs[i];if(sg){sg.className=on?(S.settled[a]?'is-done is-settled':'is-done'):(i+1===S.step?'is-current':'');}});
+  $('prog-text').textContent='Activities done: '+n+' of '+N+(set?' ('+set+' answered, not marked correct)':'');
+  var all=n===N;main.setAttribute('data-pep-complete',String(all));if(recap){recap.hidden=!all;}
+  var c=$('complete-msg');if(c){c.textContent=all?'All '+N+' activities finished'+(set?'; '+set+' was answered without being marked correct. That is fine: review its explanation above before moving on.':'.'):'';}
+  reflect();
+}
+function linkState(){links.forEach(function(l,i){var k=i+1;
+  if(k===S.step){l.setAttribute('aria-current','step');}else{l.removeAttribute('aria-current');}
+  if(k>unlocked){l.setAttribute('aria-disabled','true');}else{l.removeAttribute('aria-disabled');}});
+  prevBtn.disabled=S.step===1;nextBtn.disabled=S.step>=N||S.step+1>unlocked;}
+function complete(a){S.done[a]=true;var n=TOPIC.acts.indexOf(a)+1;unlocked=Math.max(unlocked,Math.min(n+1,N));linkState();progress();}
+function go(n,mode,focus){
+  if(typeof n!=='number'||n!==n||n<1||n>N||n>unlocked){return false;}
+  S.step=n;ensure(n);
+  sections.forEach(function(s,i){s.hidden=i+1!==n;});
+  var slot=sections[n-1].querySelector('[data-model-slot]');
+  if(model&&slot&&model.parentNode!==slot){slot.appendChild(model);}
+  if(model){model.setAttribute('data-step',String(n));}
+  linkState();
+  pos.textContent='Activity '+n+' of '+N+' · about '+minutes+' min';
+  TOPIC.render(S,api);syncPrompt();progress();
+  try{if(mode==='push'){history.pushState({activity:n},'','#activity-'+n);}else if(mode==='replace'){history.replaceState({activity:n},'','#activity-'+n);}}
+  catch(err){if(mode&&location.hash!=='#activity-'+n){location.hash='activity-'+n;}}
+  if(focus){var h=$('activity-'+n+'-title');if(h){h.focus();}}
+  return true;
 }
 function optLabel(inp){return inp.closest('label');}
 function checked(name){var r=qa('input[name="'+name+'"]:checked')[0];return r?r.value:null;}
@@ -553,24 +703,24 @@ function firstDetails(){return '<details><summary>First question: every option e
 function badges(ok,mine,who){return '<span class="badges">'+(mine?'<span class="badge me">'+who+'</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
 function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
   w.innerHTML=badges(i.value===set.correct,i.value===chosen,'Your answer')+set.why[i.value];sp.appendChild(w);});}
-function focusVerdict(){var v=qa('#current-feedback [data-step="'+S.step+'"] .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
+function focusVerdict(){var v=qa('#fb-'+S.step+' .verdict')[0];if(v){v.setAttribute('tabindex','-1');v.focus();}}
 function confText(){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(S.conf)+' (reported to you, never graded).</p>';}
 function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabled=!(checked('predict')&&checked('pconf'));}
   var b=$('apply-check');if(b&&S.tries===0){b.disabled=!(checked('apply-a')&&checked('conf'));}
   var bb=$('apply-check-b');if(bb&&S.tries===1){bb.disabled=!checked('apply-b');}}
 function checkApply(which){
-  var A=TOPIC.apply.A,B=TOPIC.apply.B;
+  var A=TOPIC.apply.A,B=TOPIC.apply.B,sec=sections[S.step-1];
   if(which==='a'){
     var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
-    S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
+    S.tries=1;ATT[S.step]=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
     if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText());complete('apply');TOPIC.render(S,api);focusVerdict();return;}
     S.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
     say('<p class="verdict no">Not yet. Try once more with the same goal shown a different way.</p><p>Your first answer, <span class="on">'+esc(S.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText());
-    qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});TOPIC.render(S,api);
+    qa('[data-retry]',sec).forEach(function(n){n.hidden=false;});qa('[data-first]',sec).forEach(function(n){n.hidden=true;});TOPIC.render(S,api);progress();
     var t=$('task-apply-b');if(t){t.focus();}
   } else {
     var c2=checked('apply-b');if(!c2){return;}
-    S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
+    S.tries=2;ATT[S.step]=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
     if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+firstDetails()+confText());}
     else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
       say('<p class="verdict set">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+firstDetails()+confText());}
@@ -588,32 +738,39 @@ function checkPredict(){
     html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
   say(html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p>'+(P.after||''),1);complete('predict');
 }
-function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
-function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
-  Object.keys(sn.html).forEach(function(c){var n=qa('#'+c+' > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
-  qa('#current-control > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
-  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
-  if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
-  show(step,false);syncPrompt();var h=$('teach-'+step+'-h');if(h){h.focus();}}
+function restart(){
+  var n=S.step,a=act(n),sec=sections[n-1],c=sec.querySelector('[data-ctl]');
+  if(c){c.innerHTML=CTL[n];}
+  qa('[data-retry]',sec).forEach(function(x){x.hidden=true;});qa('[data-first]',sec).forEach(function(x){x.hidden=false;});
+  say('',n);
+  qa('input[type="text"]',sec).forEach(function(i){delete HIST[i.id];});
+  if(TSNAP[n]){T[n]=clone(TSNAP[n]);}
+  delete S.done[a];delete S.settled[a];ATT[n]=0;
+  if(a==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
+  go(n,null,false);var h=$('activity-'+n+'-title');if(h){h.focus();}
+}
 d.addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b){return;}
-  if(b.id==='reset'){restart();return;}
-  if(b.id==='next'){show(S.step+1);return;}
+  if(b.hasAttribute('data-pep-reset')){restart();return;}
+  if(b.hasAttribute('data-pep-previous')){go(S.step-1,'push',true);return;}
+  if(b.hasAttribute('data-pep-next')){go(S.step+1,'push',true);return;}
   if(b.id==='predict-check'){checkPredict();return;}
   if(b.id==='apply-check'){checkApply('a');return;}
   if(b.id==='apply-check-b'){checkApply('b');return;}
   if(b.classList.contains('runbtn')){runTerminal(b.closest('.cmdline'));return;}
-  var a=b.getAttribute('data-act');if(a&&TOPIC.act){TOPIC.act(a,b,S,api);}
+  var a=b.getAttribute('data-act');if(a&&TOPIC.act){ATT[S.step]++;TOPIC.act(a,b,S,api);progress();}
 });
 d.addEventListener('change',function(e){syncApply();if(TOPIC.change){TOPIC.change(e.target,S,api);}});
-var HIST={};
 function prompt(){return TOPIC.prompt?TOPIC.prompt(S):'$';}
 function syncPrompt(){qa('.cmdline .pr').forEach(function(n){n.textContent=prompt();});}
 function runTerminal(box){
   if(!box){return;}var inp=box.querySelector('input[type="text"]');if(!inp||inp.disabled){return;}
-  var line=inp.value,H=HIST[inp.id]||(HIST[inp.id]={l:[],i:0});if(line.trim()){H.l.push(line);}H.i=H.l.length;
+  var line=inp.value,H=HIST[inp.id]||(HIST[inp.id]={l:[],i:0});if(line.trim()){H.l.push(line);ATT[S.step]++;}H.i=H.l.length;
   var p=prompt();inp.value='';TOPIC.run(line,box.getAttribute('data-term'),S,api);
-  qa('.log .c:not([data-p])').forEach(function(n){n.setAttribute('data-p',p);});syncPrompt();inp.focus();}
+  qa('.log .c:not([data-p])').forEach(function(n){n.setAttribute('data-p',p);});
+  // An unsupported command is a limit of the practice terminal, not a learner error: show it as a warning.
+  qa('.log .e').forEach(function(n){if(/available in this practice terminal/.test(n.textContent)){n.className='w';}});
+  syncPrompt();progress();inp.focus();}
 d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closest('.cmdline')||t.tagName!=='INPUT'){return;}
   var H=HIST[t.id]||(HIST[t.id]={l:[],i:0});
   if(e.key==='Enter'&&!e.isComposing){e.preventDefault();runTerminal(t.closest('.cmdline'));}
@@ -624,12 +781,25 @@ d.addEventListener('keydown',function(e){var t=e.target;if(!t.closest||!t.closes
     var v=t.value.trim()&&TOPIC.complete?TOPIC.complete(t.value,S):null;if(v&&v!==t.value){e.preventDefault();t.value=v;}}
   else if(e.key==='Escape'){var tk=$('task-'+S.step);if(tk){e.preventDefault();tk.setAttribute('tabindex','-1');tk.focus();}}
 });
-var mq=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
-setTheme(mq&&mq.matches?'dark':'light');
-if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.matches?'dark':'light');});}
-fresh();show(1,false);syncPrompt();
+d.addEventListener('focusin',function(e){lastFocused=e.target;});
+function hashNumber(h){var m=/^#activity-(\d+)$/.exec(h||'');return m?Number(m[1]):(h&&h!=='#'?NaN:1);}
+links.forEach(function(l,i){l.addEventListener('click',function(e){e.preventDefault();go(i+1,'push',true);});});
+qa('[data-pep-back-link]').forEach(function(l){l.addEventListener('click',function(e){e.preventDefault();go(hashNumber(l.hash),'push',true);});});
+function fromHistory(){var keep=lastFocused,n=hashNumber(location.hash);
+  if(n!==n){return;}
+  if(!go(n,null,false)){go(Math.min(S.step,unlocked),'replace',false);}
+  if(keep&&keep.isConnected&&!keep.closest('[hidden]')){keep.focus({preventScroll:true});}}
+addEventListener('popstate',fromHistory);
+addEventListener('hashchange',fromHistory);
+var objectives=d.querySelector('[data-pep-objectives]');
+d.addEventListener('keydown',function(e){if(e.key==='Escape'&&objectives&&objectives.open){objectives.open=false;objectives.querySelector('summary').focus();}});
+d.addEventListener('click',function(e){if(objectives&&objectives.open&&!objectives.contains(e.target)){objectives.open=false;}});
+var printStates=[];
+addEventListener('beforeprint',function(){printStates=qa('details').map(function(x){return {d:x,open:x.open};});printStates.forEach(function(x){x.d.open=true;});});
+addEventListener('afterprint',function(){printStates.forEach(function(x){x.d.open=x.open;});printStates=[];});
+var requested=hashNumber(location.hash);
+go(requested<=unlocked?requested:1,'replace',false);
 })();
-
 </script>
 </body>
 </html>

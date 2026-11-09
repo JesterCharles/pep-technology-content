@@ -62,9 +62,19 @@ The pipeline, stage by stage. `app.log` is a fictional file; the terminal is a s
 - A pipe `|` sends one command's standard output into the next command's standard input, left to right; stderr is not passed.
 - `wc -l` counts lines, so filter first, then count.
 
-Next topic: File permissions
-
 ## Cheat sheet
+
+Where to act: In the terminal command line, after `cat app.log |`.
+
+Next step: Decide which command filters the lines that flow in, and give it the pattern in the exact case you want to keep.
+
+Where to act: In the terminal command line: one `grep` with an option, a pattern and the file.
+
+Next step: Pick the option that keeps the lines that do not match, and put it before the pattern.
+
+Where to act: In the terminal command line: two stages joined by `|`.
+
+Next step: Make the first stage keep error lines in any case, then send them to the command that counts lines.
 
 |  |  |
 | --- | --- |

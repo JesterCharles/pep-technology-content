@@ -60,9 +60,19 @@ String `-rw-r--r--` Mode `644`
 - `chmod MODE FILE` applies a mode; you need `r` and `x` to run a script with `./`.
 - Give others nothing on secret files, and avoid `777`.
 
-Next topic: Environment variables and keeping secrets out of code
-
 ## Cheat sheet
+
+Where to act: In the `ls -l` listing, on the file rows.
+
+Next step: For each row, read the group part and the others part of the permission string, then pick the row where only the owner has anything.
+
+Where to act: The `r`, `w` and `x` buttons in the grid, one row per group.
+
+Next step: Write each row as letters first, then add r = 4, w = 2, x = 1 and compare each row's digit with the task.
+
+Where to act: In the terminal command line, at the prompt.
+
+Next step: Apply the mode first, then run the script the way the teaching shows for a file in the current folder; `ls -l` lets you check the string in between.
 
 |  |  |
 | --- | --- |
