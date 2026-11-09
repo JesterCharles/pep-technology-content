@@ -8,26 +8,18 @@
 
 ## Teaching
 
-### Start with a guess
-
 An assistant opened a change for review. Its summary says: “Prints the port the app uses. Keeps the 8080 default. All tests pass.”
 
 The change, summary and outputs are synthetic examples. Nothing calls a real AI model or runs on your computer.
-
-### Claims are not evidence
 
 An AI-made change arrives as a diff plus a summary. Treat each sentence of the summary as a claim. The diff is evidence of what changed: a line can support a claim, contradict it, or show that a check was weakened, such as a deleted test.
 
 Read every changed line, removed lines included. Removals hide the biggest surprises.
 
-### Run the acceptance criteria
-
 A supported claim is still unverified. Run the story's acceptance criteria and compare the output with the expected result. Only a matching run turns a proposal into a verified result.
 
 - AC1: given `PORT=5000`, running `sh start.sh` prints `Using port 5000`.
 - AC2: given no PORT, it prints `Using port 8080`.
-
-### Decide with evidence
 
 A review decision names its evidence: the line, the failed check, what to change. Who wrote the change does not decide it; the evidence does.
 
@@ -65,6 +57,14 @@ tests/test_start.sh
 Next topic: Practice: Foundations course review
 
 ## Cheat sheet
+
+Where to act: the diff lines in the model, starting from the outlined claim in the ledger.
+
+Next step: read removed lines as well as added ones, and ask which line would make this claim true or false.
+
+Where to act: the command line under the simulated terminal. Command help, below it, can also put a command in the prompt.
+
+Next step: take each command from its criterion in the teaching; for AC1, the given setting is part of the command line.
 
 |  |  |
 | --- | --- |
