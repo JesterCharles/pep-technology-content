@@ -30,9 +30,10 @@ These 5 topics are counted separately: they are not part of the original 243-top
 
 - F23 is a Project day: 120 minutes = Warm-up 5, Plan the work 10, Build 80, Timed without AI 15, Commit and walkthrough note 10.
 - This module's five pages total 50 minutes (8 + 11 + 11 + 12 + 8, each `ceil(max(estimator P50, modeled worst path))`) and are placed inside the Build block as its guided first part, because each page rehearses one Build step.
-- Exact tradeoff: the project brief (15) and the bridge (50) leave 15 minutes of the 80-minute Build block for the hands-on project lab, unless the brief is read during Plan the work. The intake planned the lab at the full 80 minutes; that is no longer possible inside F23. Options for the captain: (a) keep F23 at 120 and plan the project lab at the remaining Build minutes, moving the rest of the build to the F24 "Practice without AI" block (25); (b) shorten the bridge by making pages 2-4 optional rehearsal for learners who pass the topic GIFT; (c) add time elsewhere. This module does not decide it; the project lab's `lab.json` records the decision when it is authored.
+- Resolved schedule (captain decision 2026-11-09, option A): F23 stays at 120 minutes. In the 80-minute Build block, the five bridge pages use 50 minutes and the project brief uses 15; the remaining 15 minutes start the hands-on project lab. Learners continue and complete that same lab in F24's existing 25-minute "Practice without AI" block. The project lab is therefore planned at 40 minutes in total (15 on F23 plus 25 on F24), inside the approved 30-60 minute lab budget; the intake's 80-minute lab plan is superseded, and the lab's `lab.json` records 40 minutes when it is authored.
+- No course time or homework is added, no taught topic is cut, and no page becomes optional based on formative GIFT results.
 - Repository gate T14 counts topic budgets per day: F23 now totals 15 + 50 = 65 of 120.
-- Downstream: the F24 review and module check keep their calendar blocks (review pages 2 x 15, module check 45); the module check's coverage grows without adding items or minutes (below).
+- Downstream: the F24 review and module check keep their calendar blocks (review pages 2 x 15, module check 45); the module check's coverage grows without adding items or minutes (below). F24's Practice without AI block now hosts the second part of the project lab.
 
 ## Course review and graded-final coverage
 
