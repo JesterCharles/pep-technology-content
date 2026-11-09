@@ -1,0 +1,61 @@
+// Mastery check: Fetch and browser client (practice, ungraded).
+// One scenario set around the Trail Guides client and its Spring Boot API.
+// Titles name the topic and objective id each item practises. About 15 minutes.
+
+$CATEGORY: html-css-js/fetch-and-browser-client/mastery-check
+
+::fetching-data o2 the 500 that did not throw::The trails API answers 500, yet the client's catch block never runs and the code happily tries to use the body. Why did fetch not reject? {
+=fetch fulfils whenever an HTTP response arrives, even an error status; response.ok is how the code must notice #Correct. Only failures without an HTTP answer reject; statuses are checked on the response object.
+~The server hid the error from the browser #Not quite. The 500 arrived openly; the client just never looked at response.ok.
+~catch only works with then chains, not with await #Not quite. Both styles see rejections; there simply was no rejection here.
+~A 500 rejects only when the response body is empty #Not quite. The body never decides fulfilment; receiving an HTTP answer does.
+}
+
+::handling-http-errors-and-problemdetail-responses o1 two broken mornings::On Monday the trails request fails with ERR_CONNECTION_REFUSED in the console; on Tuesday it gets a 404 with a problem+json body. How do the two days differ in the fetch code? {
+=Monday rejects the fetch promise (no HTTP answer); Tuesday fulfils it with response.ok false #Correct. A refused connection is a network failure for catch; a 404 is an HTTP error read from the response.
+~Both days land in the catch block #Not quite. The 404 fulfils the promise; only Monday's refused connection rejects it.
+~Both days fulfil with response.ok false #Not quite. Monday produced no response object at all.
+~Monday's error carries the status 0 response body #Not quite. A rejected fetch has no response or status to read.
+}
+
+::fixing-cors-spring-security-config-vs-vite-dev-proxy o1 who gets a preflight::The client sends two requests to another origin: a plain GET for the trail list, and a POST with Content-Type application/json. Which one makes the browser send an OPTIONS preflight first? {
+=Only the JSON POST, because its content type falls outside the CORS-safelisted conditions #Correct. Simple GETs skip preflight; the application/json body type forces the browser to ask permission first.
+~Both, because every cross-origin request is preflighted #Not quite. Requests within the safelisted conditions go straight out.
+~Only the GET, because reads are checked more strictly #Not quite. It is the other way round: the plain GET is the simple one.
+~Neither, because preflights happen only over HTTPS #Not quite. The trigger is the request's shape, not the scheme.
+}
+
+::fixing-cors-spring-security-config-vs-vite-dev-proxy o2 two setups::During local development the Vite page on port 5173 calls the API on port 8080; in production the deployed page at app.example.com calls api.example.com. Which fix fits each setup? {
+=The Vite dev proxy locally, so requests look same-origin; a Spring Security CORS configuration for the deployed origins #Correct. The proxy exists only in the dev server; the real cross-origin pair needs the server to allow the app origin.
+~The Vite proxy in both, by shipping the dev server with the site #Not quite. The dev server is a development tool, never the production host.
+~Spring CORS locally and the proxy in production #Not quite. That reverses the tools; the proxy cannot run where Vite's dev server does not.
+~Neither: disabling the browser's security settings is simpler #Not quite. That protects no visitor and is no deployment strategy.
+}
+
+::fixing-cors-spring-security-config-vs-vite-dev-proxy o3 reading the panels::The console says the trails request was blocked: no Access-Control-Allow-Origin header. The network panel shows the OPTIONS request answered 403 and no GET at all. What happened? {
+=The server refused the preflight, so the browser never sent the real request #Correct. A rejected OPTIONS ends the exchange; the fix is server-side CORS allowing this origin and method.
+~The JavaScript has a syntax error near the fetch call #Not quite. A syntax error would not produce an OPTIONS exchange in the network panel.
+~The network is down between browser and server #Not quite. The 403 proves the server answered; it answered no.
+~The GET ran but its response was empty #Not quite. The panel shows the GET was never sent after the failed preflight.
+}
+
+::cookies-vs-localstorage-where-tokens-should-live o1 what the attacker reads::A cross-site-scripting payload runs on the dashboard for one visitor. Their session token sits either in localStorage or in an HttpOnly cookie. What can the payload do in each case? {
+=Read the localStorage token directly; the HttpOnly cookie value stays unreadable to scripts, though requests the script sends still carry it #Correct. HttpOnly removes the value from script reach; remaining risk comes from requests made as the victim.
+~Read both, because injected scripts run with browser privileges #Not quite. Injected script is still page script, and HttpOnly hides the cookie value from all page script.
+~Read neither, because tokens are encrypted at rest #Not quite. localStorage hands any script the stored string on request.
+~Read the cookie but not localStorage #Not quite. It is the reverse: localStorage is the script-readable store.
+}
+
+::cookies-vs-localstorage-where-tokens-should-live o2 one attribute::The session cookie must never travel over plain unencrypted HTTP. Which attribute enforces exactly that? {
+=Secure #Correct. A Secure cookie is only sent over HTTPS connections.
+~HttpOnly #Not quite. HttpOnly hides the cookie from scripts; it says nothing about the transport.
+~SameSite\=Strict #Not quite. SameSite limits cross-site sending, not the encryption of the connection.
+~Path\=/ #Not quite. Path scopes which URLs receive the cookie within the site.
+}
+
+::environment-settings-for-the-api-address o2 the key in the bundle::To call a paid map service, a teammate puts VITE_MAP_KEY in the .env file and ships the client. Why is the key not safe there? {
+=Every VITE_ value is compiled into the JavaScript sent to visitors, so anyone can read the key from the bundle #Correct. Client-side configuration is public by construction; paid secrets belong on a server that proxies the calls.
+~.env files are uploaded to the API server automatically #Not quite. The file stays local; the build inlines the values into the shipped code.
+~The key expires when the dev server restarts #Not quite. Nothing expires it; exposure is the problem.
+~It is safe, because visitors never see source files #Not quite. The bundle is delivered to every browser and is fully inspectable.
+}

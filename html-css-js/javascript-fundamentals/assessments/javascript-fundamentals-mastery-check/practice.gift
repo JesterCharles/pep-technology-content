@@ -1,0 +1,75 @@
+// Mastery check: JavaScript fundamentals (practice, ungraded).
+// One scenario set around the Trail Guides report code. Titles name the topic
+// and objective id each item practises. About 15-20 minutes.
+
+$CATEGORY: html-css-js/javascript-fundamentals/mastery-check
+
+::javascript-for-java-developers o1 one number type::A Java developer stores a trail distance as 5 and an average rating as 4.7 and expects an int and a double. What does JavaScript use for the two values? {
+=One Number type for both; JavaScript has no separate integer and floating-point primitives #Correct. Number covers both, with BigInt as the separate type only for huge whole numbers.
+~int for 5 and double for 4.7, chosen by the literal #Not quite. Those are Java's types; JavaScript keeps both values as Number.
+~Number for 5 and BigInt for 4.7 #Not quite. BigInt holds whole numbers only, and only when written with an n suffix.
+~It depends on whether var, let or const declares them #Not quite. The declaration keyword never changes a value's type.
+}
+
+::javascript-for-java-developers o2 what typeof says::The report code checks its inputs with typeof. What does typeof window.trailData return when trailData is the array of trail objects? {
+="object", because arrays are objects to typeof #Correct. typeof has no "array" answer; Array.isArray is the check that tells arrays apart.
+~"array" #Not quite. typeof never returns "array"; that is why Array.isArray exists.
+~"list" #Not quite. "list" is not a JavaScript type name at all.
+~"undefined", because the data lives in another file #Not quite. The file ran first and defined the global, so typeof sees an object.
+}
+
+::javascript-for-java-developers o3 reading the console::A teammate runs node main.mjs where main.mjs contains console.log("Total: " + 4 + 5). What appears in the terminal? {
+=Total: 45 #Correct. The string makes + concatenate left to right: "Total: 4" then "Total: 45".
+~Total: 9 #Not quite. Addition would need the numbers first; here the string forces concatenation from the left.
+~Total: 4 5 #Not quite. Concatenation inserts no spaces on its own.
+~A type error stops the program #Not quite. JavaScript converts the numbers to text and runs on.
+}
+
+::let-const-and-equals o2 const is not frozen::The report declares const featured \= \{ name: "Ridge Walk", distanceKm: 9 \}. Which line fails at run time? {
+=featured \= \{ name: "Lake Loop" \} #Correct. const locks the binding, so reassigning the variable throws; the object's own properties stay changeable.
+~featured.distanceKm \= 10 #Not quite. Property writes do not touch the binding, so const allows them.
+~featured.season \= "summer" #Not quite. Adding a property changes the object, not the binding.
+~delete featured.distanceKm #Not quite. Deleting a property is also an object change the const binding does not prevent.
+}
+
+::functions-as-values-arrow-functions-and-callbacks o3 when callbacks run::The dashboard code runs three lines: trails.sort(byDistance), button.addEventListener("click", onRefresh), setTimeout(tick, 1000). Which callback has already run by the time the third line finishes? {
+=byDistance, because sort calls its comparator immediately while sorting #Correct. sort is synchronous; the listener waits for a click and tick waits for the timer.
+~onRefresh, because addEventListener calls it once to register it #Not quite. Registration stores the function; it runs only when a click happens.
+~tick, because its delay started first #Not quite. Even a 0ms timer runs after the current code finishes; 1000ms is far later.
+~All three, because passing a function always runs it #Not quite. Passing hands the function over; each receiver decides when to call it.
+}
+
+::arrays-and-objects-map-filter-reduce o2 tracing the chain::The report runs trails.filter(function (t) \{ return t.distanceKm less than 6; \}).map(function (t) \{ return t.name; \}) over Lake Loop 5 km, Ridge Walk 9 km and Forest Path 4 km. What is the result? {
+=["Lake Loop", "Forest Path"] #Correct. filter keeps the two short trails, then map turns each kept trail into its name.
+~["Lake Loop", "Ridge Walk", "Forest Path"] #Not quite. filter removed Ridge Walk at 9 km before map ran.
+~[\{ name: "Lake Loop" \}, \{ name: "Forest Path" \}] #Not quite. The map callback returns t.name, a string, not an object.
+~["Forest Path", "Lake Loop"] #Not quite. filter and map both keep the original order.
+}
+
+::destructuring-and-spread o3 the shared inside::The code copies a trail with const copy \= \{ ...trail \} and then runs copy.tags.push("muddy"). What happened to the original trail's tags? {
+="muddy" is in the original's tags too, because the spread copy shares the nested array #Correct. Spread copies one level; both objects point at the same tags array.
+~Nothing: a spread copy duplicates everything it contains #Not quite. Spread is shallow; nested objects and arrays stay shared.
+~The push throws, because copies are read-only #Not quite. Spread copies are ordinary mutable objects.
+~The original loses its tags array to the copy #Not quite. Both keep a reference; neither loses it.
+}
+
+::modules-import-and-export o3 why type module::The finished report code is dropped into a plain script tag on the Trail Guides page, and the console shows "Cannot use import statement outside a module". What fixes it, and why? {
+=Add type\="module" to the script tag, because only module scripts may use import #Correct. The attribute makes the browser load the file as a module, enabling import and export.
+~Move the import lines to the bottom of the file #Not quite. Position does not matter; classic scripts reject import anywhere.
+~Rename the file so it ends in .mjs #Not quite. That convention guides Node.js; the browser follows the script tag's type.
+~Wrap the imports in a try block so the error is caught #Not quite. It is a syntax error at load time; no code runs to catch anything.
+}
+
+::scope-and-closures o1 who sees what::In report.mjs, a module-level const trails sits above function summary(), which declares let total and, inside an if block, const label. Which of the three can the line after the if block inside summary still read? {
+=trails and total, but not label, which ended with its block #Correct. Module and function scope stay visible; a const inside a block exists only there.
+~Only total, because functions are sealed off from the module #Not quite. Functions read outward into module scope, so trails is visible too.
+~All three, because summary contains the if block #Not quite. Containing the block does not extend the block-scoped label beyond its braces.
+~Only trails, because let dies at the end of the line #Not quite. let lasts to the end of the function body it is declared in.
+}
+
+::scope-and-closures o3 one counter each::For each of the trails Lake Loop, Ridge Walk and Forest Path, a loop declared with let trail wires a button: clicking logs that trail's name. After the loop, clicking the Ridge Walk button logs what, and why? {
+="Ridge Walk", because let gives each loop pass its own trail for the callback to close over #Correct. Each iteration's binding is captured separately, so every button remembers its own trail.
+~"Forest Path", because callbacks see the loop's final value #Not quite. That is var's behavior with one shared binding; let creates one per pass.
+~undefined, because trail no longer exists when the click happens #Not quite. The closure keeps its captured binding alive after the loop.
+~Whichever trail was clicked first, cached for all buttons #Not quite. The three callbacks hold three separate bindings; clicks do not share a cache.
+}
