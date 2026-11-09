@@ -106,7 +106,7 @@ Activity: four scenarios from A 100, B 20. Auto-commit, move 150: B +150 commits
 
 ### terminal
 
-Editor activity: make transfer atomic. Call conn.setAutoCommit(false) before the first executeUpdate, call conn.commit() after the second executeUpdate, and add catch (SQLException e) that calls conn.rollback() and rethrows e. Committing before the debit, or rolling back without a catch, leaves half a transfer; swallowing the exception hides the failure from the caller.
+Editor activity: make transfer atomic. Call conn.setAutoCommit(false) before the first executeUpdate, call conn.commit() after the second executeUpdate, and add catch (SQLException e) that calls conn.rollback() and rethrows e or wraps it as the cause of a new exception. Committing before the debit, or rolling back without a catch, leaves half a transfer; swallowing the exception hides the failure from the caller.
 
 ### mcq
 

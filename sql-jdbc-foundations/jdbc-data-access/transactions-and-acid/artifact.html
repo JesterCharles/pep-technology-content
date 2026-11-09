@@ -389,7 +389,7 @@ try (...) {
   </div>
 </div>
 <div data-step="3">
-  <div data-pep-workspace="code" data-interaction="terminal" data-steps="3" data-static-alt="Editor activity: make transfer atomic. Call conn.setAutoCommit(false) before the first executeUpdate, call conn.commit() after the second executeUpdate, and add catch (SQLException e) that calls conn.rollback() and rethrows e. Committing before the debit, or rolling back without a catch, leaves half a transfer; swallowing the exception hides the failure from the caller.">
+  <div data-pep-workspace="code" data-interaction="terminal" data-steps="3" data-static-alt="Editor activity: make transfer atomic. Call conn.setAutoCommit(false) before the first executeUpdate, call conn.commit() after the second executeUpdate, and add catch (SQLException e) that calls conn.rollback() and rethrows e or wraps it as the cause of a new exception. Committing before the debit, or rolling back without a catch, leaves half a transfer; swallowing the exception hides the failure from the caller.">
   <div class="pep-editor" data-ed="3">
     <div class="pep-editor__bar"><span class="pep-editor__file" id="ed-3-file">TransferService.java</span><span class="pep-editor__secondary">Practice editor · pattern checks, Java is not compiled</span><button type="button" class="pep-btn pep-btn--primary" id="ed-3-run" data-act="edrun" data-ed="3">Run checks</button><button type="button" class="pep-btn" id="ed-3-reset" data-act="edreset" data-ed="3">Reset code</button></div>
     <div class="pep-editor__code"><pre class="pep-editor__gutter" id="ed-3-gutter" aria-hidden="true">1</pre><textarea class="pep-editor__input" id="ed-3-input" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="TransferService.java editor" aria-describedby="task-3">void transfer(Connection conn, long from, long to, int amount) throws SQLException {
@@ -423,7 +423,7 @@ try (...) {
         credit.executeUpdate();
         debit.executeUpdate();
     }
-}</pre><p><strong>Supported in the practice editor:</strong> pattern checks on the text of this one method; Java is not compiled or run.</p><p><strong>How to compare:</strong> <code>setAutoCommit(false)</code> comes before the first <code>executeUpdate</code>; <code>commit()</code> comes after the second; a <code>catch (SQLException e)</code> calls <code>rollback()</code> and rethrows.</p></div></noscript>
+}</pre><p><strong>Supported in the practice editor:</strong> pattern checks on the text of this one method; Java is not compiled or run.</p><p><strong>How to compare:</strong> <code>setAutoCommit(false)</code> comes before the first <code>executeUpdate</code>; <code>commit()</code> comes after the second; a <code>catch (SQLException e)</code> calls <code>rollback()</code> and rethrows the exception or wraps it as the cause of a new one.</p></div></noscript>
   </div>
 </div>
 <div data-step="4">
@@ -484,9 +484,9 @@ function t3Check(text){var P=[],out=[],L=text.split('\n');
  else if(com<last){P.push({line:lineOf(/conn\.commit/),kind:'error',msg:'commit() runs before the second update, so a failing debit can no longer be undone. Commit after both updates.'});}
  if(cat<0){P.push({line:lastLine(/^\s*\}\s*$/),kind:'error',msg:'Catch the failure: } catch (SQLException e) { ... }'});}
  else{var body=text.slice(cat);if(rb<cat){P.push({line:lineOf(/catch\s*\(/),kind:'error',msg:'Roll back inside the catch: conn.rollback();'});}
-  else if(!/throw\s+\w+\s*;/.test(body)){P.push({line:lineOf(/catch\s*\(/),kind:'error',msg:'Rethrow after rollback (throw e;) so the caller knows the transfer failed.'});}}
+  else{var cv=body.match(/catch\s*\(\s*SQLException\s+(\w+)\s*\)/)[1],rt=new RegExp('throw\\s+(?:'+cv+'\\s*;|new\\s+[\\w.]+\\s*\\([^;]*\\b'+cv+'\\b[^;]*\\)\\s*;)');if(!rt.test(text.slice(rb))){P.push({line:lineOf(/catch\s*\(/),kind:'error',msg:'Rethrow after rollback so the caller knows the transfer failed: throw the caught exception, or wrap it in a new exception that keeps it as the cause.'});}}}
  out.push('Simulated transfer of 150 from A (100) to B (20):');
- if(!P.length){out.push('BEGIN (auto-commit off)');out.push('credit: UPDATE accounts ... B + 150  (1 row, not yet committed)');out.push('debit:  ERROR: new row for relation "accounts" violates check constraint "accounts_balance_check"');out.push('ROLLBACK');out.push('Committed balances: A 100 · B 20. SQLException rethrown to the caller.');}
+ if(!P.length){out.push('BEGIN (auto-commit off)');out.push('credit: UPDATE accounts ... B + 150  (1 row, not yet committed)');out.push('debit:  ERROR: new row for relation "accounts" violates check constraint "accounts_balance_check"');out.push('ROLLBACK');out.push('Committed balances: A 100 · B 20. The failure is rethrown to the caller.');}
  else{out.push('Fix the problems first; then the transfer timeline appears here.');}
  return {problems:P,output:out,ok:!P.length,summary:'Both updates commit together or roll back together.',note:!P.length?'The failing debit no longer leaves 150 extra in B.':''};}
 var TOPIC={
