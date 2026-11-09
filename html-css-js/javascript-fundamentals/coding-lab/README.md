@@ -48,7 +48,7 @@ This lab practises these topics: let, const and ===; Functions as values, arrow 
 
 ## Tasks
 
-Work only in `starter/report.mjs` and `starter/format.mjs`. Each task's comment in the starter marks where it happens. After each task, rerun `node --test --test-reporter=spec` from `coding-lab/`: that task's test changes from `✖` to `✔`. If you are stuck, open the hints one at a time; none of them gives the full code.
+Work only in `starter/report.mjs` and `starter/format.mjs`. Everything else is the lab's fixed support and stays as shipped: `starter/trails.mjs`, `starter/main.mjs`, the tests in `tests/` and `expected/on-completion.txt`. A task counts as done only when the shipped tests for it pass exactly as shipped. Each task's comment in the starter marks where it happens. After each task, rerun `node --test --test-reporter=spec` from `coding-lab/`: that task's test changes from `✖` to `✔`. If you are stuck, open the hints one at a time; none of them gives the full code.
 
 ### Task 1: strict comparisons, const and let
 

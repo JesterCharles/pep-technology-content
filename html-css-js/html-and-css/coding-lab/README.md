@@ -52,7 +52,7 @@ This lab practises these topics: Flexbox; Grid; Responsive, mobile-first layout 
 
 ## Tasks
 
-Work only in `starter/index.html` and `starter/styles.css`. Each `TODO` comment in `styles.css` marks where a layout task starts, and the `Tasks 7 to 10` comment in `index.html` marks the sign-up corner. After each task, run `node --test --test-reporter=spec` again from `coding-lab/`: the test for that task changes from `✖` to `✔`. If you are stuck, open the hints one at a time; none of them gives the full rule.
+Work only in `starter/index.html` and `starter/styles.css`. Everything else is the lab's fixed support and stays as shipped: `starter/badge.svg`, the starter's package files, the tests in `tests/` and `expected/on-completion.txt`. A task counts as done only when the shipped tests for it pass exactly as shipped. Each `TODO` comment in `styles.css` marks where a layout task starts, and the `Tasks 7 to 10` comment in `index.html` marks the sign-up corner. After each task, run `node --test --test-reporter=spec` again from `coding-lab/`: the test for that task changes from `✖` to `✔`. If you are stuck, open the hints one at a time; none of them gives the full rule.
 
 ### Task 1: phones use their own width
 

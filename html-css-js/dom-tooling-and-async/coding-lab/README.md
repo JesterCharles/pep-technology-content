@@ -51,7 +51,7 @@ This lab practises these topics: Selecting and changing the DOM; Events and even
 
 ## Tasks
 
-Work only in `starter/app.js`; its comments repeat each task's exact contract, including the status messages. `data.js` and `fake-api.js` are fixed. After each task, rerun `node --test --test-reporter=spec` from `coding-lab/`. If you are stuck, open the hints one at a time; none of them gives the full code.
+Work only in `starter/app.js`; its comments repeat each task's exact contract, including the status messages. Everything else is the lab's fixed support and stays as shipped: `starter/data.js`, `starter/fake-api.js`, `starter/index.html`, `starter/styles.css`, the starter's package files, the tests in `tests/` and `expected/on-completion.txt`. A task counts as done only when the shipped tests for it pass exactly as shipped. After each task, rerun `node --test --test-reporter=spec` from `coding-lab/`. If you are stuck, open the hints one at a time; none of them gives the full code.
 
 Open `starter/index.html` in your own browser alongside the tests. The starter page already shows the damage you will fix in Tasks 1 and 4: a broken image icon in Forest Path's note, put there by the payload in the untrusted visitor text.
 

@@ -50,7 +50,7 @@ This lab practises these topics: Fetching data; Handling HTTP errors and Problem
 
 ## Tasks
 
-Work only in `starter/api.mjs`, plus the new test file you create in Task 7. Each task's comment in `starter/api.mjs` states its exact contract. After each task, rerun `npm test` from `starter/`: that task's test turns green. If you are stuck, open the hints one at a time; none of them gives the full code.
+Work only in `starter/api.mjs`, plus the new test file you create in Task 7. Everything else is the lab's fixed support and stays as shipped: `starter/format-distance.mjs`, `starter/vitest.config.mjs`, the package files, the shipped tests in `tests/` and `expected/on-completion.txt`. A task counts as done only when the shipped tests for it pass exactly as shipped. Each task's comment in `starter/api.mjs` states its exact contract. After each task, rerun `npm test` from `starter/`: that task's test turns green. If you are stuck, open the hints one at a time; none of them gives the full code.
 
 ### Task 1: the API address comes from the environment
 
