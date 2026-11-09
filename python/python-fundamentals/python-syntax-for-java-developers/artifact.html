@@ -106,7 +106,7 @@ button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pe
 .nojs h2 { margin-bottom: 8px; }
 .nojs p { margin: 0 0 8px; }
 /* Topic bar */
-.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 0 0 12px; margin: 0 0 24px; border-bottom: 1px solid var(--pep-line-strong); }
+.pep-topicbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 16px; margin: 0 0 24px; border: 1px solid var(--pep-accent); border-block-start: 4px solid var(--pep-accent); border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
 .pep-topicbar h1 { flex: 1 1 240px; min-width: 0; }
 .pep-topicbar__progress { display: flex; flex: 1 1 260px; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); font-variant-numeric: tabular-nums; }
 .pep-progress { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; width: 96px; }
@@ -115,6 +115,24 @@ button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pe
 .pep-progress > .seg { height: 6px; border-radius: var(--pep-radius-pill); background: var(--pep-control); }
 .pep-progress > .seg.is-current, .pep-progress > .seg.is-done { background: var(--pep-accent); }
 .pep-progress > .seg.is-settled { background: var(--pep-warning); }
+/* DESIGN.md topic bar recipe: objectives disclosure, outlined progress, activity checks */
+.pep-topicbar__progress { color: var(--pep-text); }
+.pep-progress > .seg { height: 8px; border: 1px solid var(--pep-line-strong); background: var(--pep-page); }
+.pep-progress > .seg.is-current { border-color: var(--pep-accent); background: var(--pep-page); }
+.pep-progress > .seg.is-done { border-color: var(--pep-accent); background: var(--pep-accent); }
+.pep-progress > .seg.is-settled { border-color: var(--pep-warning); background: var(--pep-warning); }
+.pep-topicbar__actions { display: flex; flex: 1 1 100%; flex-wrap: wrap; align-items: flex-start; gap: 8px; min-width: 0; }
+.pep-objectives { position: relative; min-width: 0; max-width: 100%; break-inside: avoid; }
+.pep-objectives > summary { display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-accent); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-accent-text); font-weight: 600; cursor: pointer; list-style: none; }
+.pep-objectives > summary::-webkit-details-marker { display: none; }
+.pep-objectives > summary::after { content: "\25BE"; font-size: 13px; }
+.pep-objectives[open] > summary::after { content: "\25B4"; }
+.pep-objectives > div { width: 420px; max-width: calc(100vw - 64px); margin-top: 8px; padding: 4px 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); }
+.pep-objectives .pep-goals { padding: 0; border: 0; border-radius: 0; background: none; }
+.pep-activity-checks, [data-pep-activity-checks] { padding: 12px 16px; border: 1px solid var(--pep-accent); border-block-start-width: 4px; border-radius: var(--pep-radius-md); background: var(--pep-accent-soft); }
+[data-pep-activity-checks] h3 { margin: 0 0 4px; font-size: 16px; line-height: 24px; }
+@media print { .pep-objectives > div { display: block !important; width: auto; } .pep-topicbar, [data-pep-activity-checks] { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+@media (forced-colors: active) { .pep-topicbar, [data-pep-activity-checks] { border-color: CanvasText; border-block-start-color: Highlight; } }
 /* Regions */
 .pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
 @media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
@@ -377,18 +395,20 @@ html:not(.pep-js) .pep-js-only, html:not(.pep-js) [data-region="current-control"
   <header class="pep-topicbar">
     <h1>Python syntax for Java developers</h1>
     <div class="pep-topicbar__progress progress" data-pep-progress id="progress"><span id="prog-text">Activity 1 of 4 · 0 of 4 done · about 13 min</span><span class="pep-progress" aria-hidden="true"><span class="seg is-current"></span><span class="seg"></span><span class="seg"></span><span class="seg"></span></span></div>
-    <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
-    <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
-  </header>
-  <div class="stage" id="stage" data-step="1">
-    <section class="goals-panel" aria-labelledby="goals-h">
-        <p class="pep-label" id="goals-h">Goals</p>
-        <ul class="pep-goals" data-pep-objectives>
+    <div class="pep-topicbar__actions">
+      <details class="pep-objectives" data-pep-objectives>
+        <summary aria-controls="objectives-body">Objectives</summary>
+        <div id="objectives-body"><ul class="pep-goals">
           <li>Rewrite a short Java method body that uses variables, if/elif/else and for and while loops as Python, using indentation instead of braces and no type declarations</li>
           <li>Predict the output of short Python snippets that depend on dynamic typing, truthiness and true division (/) versus floor division (//)</li>
           <li>Compare values with == and test for None with `is None`, and explain how this differs from Java's equals(), == and null</li>
-        </ul>
-      </section>
+        </ul></div>
+      </details>
+      <button type="button" class="ghost" id="reset" data-pep-reset aria-describedby="reset-help">Restart activity</button>
+      <span class="vh" id="reset-help">Clears only the current activity; earlier activities keep their results.</span>
+    </div>
+  </header>
+  <div class="stage" id="stage" data-step="1">
   <section class="pep-regions pep-act" data-step="1" aria-labelledby="teach-1-h">
     <div class="pep-region reading" data-pep-instructions>
       <div class="teach" data-region="current-teaching">
@@ -447,8 +467,8 @@ print(half)</pre></div></div></div>
 </div>
       </div>
       <div class="task" data-region="current-task">
-<div data-step="2"><p class="pep-label">This activity</p>
-  <ul class="goals"><li data-goal="ok"><span>No problems: Run accepts the file</span><span class="st"></span></li><li data-goal="run"><span><code>describe(1)</code>, <code>describe(10)</code> and <code>describe(100)</code> match the Java</span><span class="st"></span></li></ul>
+<div data-step="2"><section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2-h"><h3 id="checks-2-h">Activity checks</h3>
+  <ul class="goals"><li data-goal="ok"><span>No problems: Run accepts the file</span><span class="st"></span></li><li data-goal="run"><span><code>describe(1)</code>, <code>describe(10)</code> and <code>describe(100)</code> match the Java</span><span class="st"></span></li></ul></section>
   <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Click in the <em>describe.py</em> editor (or Tab to it) and edit the code. Tab indents; Escape, then Tab, leaves the editor.</li><li><strong>What to do or type:</strong> Press <em>Run</em> (or Ctrl+Enter in the editor). The <em>Problems</em> panel lists each line Python would reject; press a problem to jump to its line.</li><li><strong>What to expect:</strong> Fix the lines and run again. Once nothing is flagged, <em>Output</em> compares each call's result with the Java's.</li><li><strong>How to know it's done:</strong> Each goal changes from <em>open</em> to <em>done</em>. If a result differs, the feedback points at the line to check; <em>Reset code</em> restores the start.</li></ol></div>
       </div>
     </div>
@@ -534,8 +554,8 @@ print(half)</pre></div></div></div>
 </div>
       </div>
       <div class="task" data-region="current-task">
-<div data-step="3"><p class="pep-label">This activity</p>
-  <ul class="goals"><li data-goal="for"><span>A Java counting loop translated with range, a colon and indentation</span><span class="st"></span></li><li data-goal="fl"><span>A <code>/</code> result that is a float</span><span class="st"></span></li><li data-goal="neg"><span><code>//</code> on a negative number</span><span class="st"></span></li><li data-goal="tru"><span>A non-empty value that looks false but counts as true</span><span class="st"></span></li></ul>
+<div data-step="3"><section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3-h"><h3 id="checks-3-h">Activity checks</h3>
+  <ul class="goals"><li data-goal="for"><span>A Java counting loop translated with range, a colon and indentation</span><span class="st"></span></li><li data-goal="fl"><span>A <code>/</code> result that is a float</span><span class="st"></span></li><li data-goal="neg"><span><code>//</code> on a negative number</span><span class="st"></span></li><li data-goal="tru"><span>A non-empty value that looks false but counts as true</span><span class="st"></span></li></ul></section>
   <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Start in <em>Translate the Java for loop</em>, then use the division and truthiness controls below it.</li><li><strong>What to do or type:</strong> Rewrite the shown counting loop with <code>range</code>, a colon and four-space indentation, then press <em>Check translation</em>.</li><li><strong>What to expect:</strong> The bounded checker names any missing loop structure; the other controls print real Python results for their listed inputs.</li><li><strong>How to know it's done:</strong> The four goals above read <em>done</em>, including the translated loop, and Continue appears.</li></ol></div>
       </div>
     </div>
