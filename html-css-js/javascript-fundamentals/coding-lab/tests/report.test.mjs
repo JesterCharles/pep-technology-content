@@ -27,7 +27,7 @@ const bareSource = reportSource.replace(
   (match, stringLiteral) => (stringLiteral ? "\"\"" : ""),
 );
 
-test("task 1: hasDifficulty matches only the exact difficulty, with const and ===", () => {
+test("task 1: hasDifficulty matches only the exact difficulty, without var or loose equality", () => {
   assert.equal(report.hasDifficulty(fixture[0], "easy"), true, "an easy trail matches \"easy\"");
   assert.equal(report.hasDifficulty(fixture[1], "easy"), false, "a moderate trail does not match \"easy\"");
   assert.equal(
@@ -35,7 +35,7 @@ test("task 1: hasDifficulty matches only the exact difficulty, with const and ==
     false,
     "an empty difficulty must not match the number 0: that is loose == coercion",
   );
-  assert.ok(!/\bvar\b/.test(bareSource), "report.mjs still declares a variable with var; use const or let");
+  assert.ok(!/\bvar\b/.test(bareSource), "report.mjs still declares a variable with var; keep a variable only as const (nothing here is reassigned)");
   assert.ok(
     !/[^=!<>]==[^=]/.test(bareSource) && !/[^=!<>]!=[^=]/.test(bareSource),
     "report.mjs still compares with loose == or !=; use === or !==",

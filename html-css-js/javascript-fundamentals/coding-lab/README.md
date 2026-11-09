@@ -53,8 +53,8 @@ Work only in `starter/report.mjs` and `starter/format.mjs`. Each task's comment 
 ### Task 1: strict comparisons, const and let
 
 - **Where:** `starter/report.mjs`, the `hasDifficulty` function.
-- **Outcome:** `hasDifficulty(trail, level)` is true only when the trail's difficulty is exactly `level`, and the function declares its variable with `const` rather than `var` (nothing here is reassigned, so `const` is the default choice). A trail whose difficulty is the empty string must not match the number `0`.
-- **Done when:** `task 1: hasDifficulty matches only the exact difficulty, with const and ===` passes.
+- **Outcome:** `hasDifficulty(trail, level)` is true only when the trail's difficulty is exactly `level`, and the function never uses `var` or loose `==`: keep the variable as `const` (nothing here is reassigned) or return the comparison directly. A trail whose difficulty is the empty string must not match the number `0`.
+- **Done when:** `task 1: hasDifficulty matches only the exact difficulty, without var or loose equality` passes.
 - **Hint 1:** the loose `==` converts values of different types before comparing, so `"" == 0` is true. Topic page: let, const and ===, step 3.
 - **Hint 2:** replace `var` with the declaration for a value that is never reassigned, and `==` with the comparison that never converts types.
 
@@ -121,7 +121,7 @@ While you work, failing tests show `✖` and a message naming what is missing. W
 When you are finished, the output matches `expected/on-completion.txt`, apart from the timings, which differ on every run (shown there as `<ms>`):
 
 ```text
-✔ task 1: hasDifficulty matches only the exact difficulty, with const and === (<ms>ms)
+✔ task 1: hasDifficulty matches only the exact difficulty, without var or loose equality (<ms>ms)
 ✔ task 2: byDistance is an arrow-function callback and sortTrails returns a new sorted array (<ms>ms)
 ✔ task 3: easyTrailNames keeps only easy trails and never mutates the input (<ms>ms)
 ✔ task 4: totalDistance uses reduce with an explicit initial value (<ms>ms)
