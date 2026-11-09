@@ -76,6 +76,18 @@ Next topic: Flexbox
 
 ## Cheat sheet
 
+Where to act: The Content, Padding, Border and Margin buttons.
+
+Next step: Count the rings from the inside out: the content, then the space the background still shows through, then the line, then the transparent space outside the line.
+
+Where to act: The two box-sizing buttons, the width field and Measure.
+
+Next step: Padding 24px and border 6px add 60px across the two sides. With content-box, width counts the content only; with border-box, width already includes padding and border.
+
+Where to act: The predicted gap field and the Measure button.
+
+Next step: In normal block layout, two touching positive vertical margins collapse to the larger one; flex and grid items keep both margins.
+
 |  |  |
 | --- | --- |
 | `box-sizing: content-box` | width + 2 × padding + 2 × border |
@@ -101,7 +113,7 @@ Prediction (practice, not scored): a card has width 200px, padding 20px and a 5p
 
 ### drag
 
-Steps: 1. Where to look: The box drawing in the model; the current ring has a blue outline, and its description appears above the buttons. 2. What to do: Press Content, Padding, Border or Margin. 3. What to expect: A right choice outlines the next ring; a wrong choice explains why and lets you choose again. 4. How to know it is done: The counter reads 4 of 4 named and Continue appears. Ring naming: four nested rings of a box. Worked answer: ring 4, the centre holding the text, is content; ring 3, just inside the line where the background shows, is padding; ring 2, the line, is border; ring 1, the outermost transparent space, is margin.
+Steps: 1. Where to look: The box drawing in the model; the current ring is outlined, and its description appears above the buttons. 2. What to do: Press Content, Padding, Border or Margin. 3. What to expect: A right choice outlines the next ring; a wrong choice explains why and lets you choose again. 4. How to know it is done: The counter reads 4 of 4 named and Continue appears. Ring naming: four nested rings of a box. Worked answer: ring 4, the centre holding the text, is content; ring 3, just inside the line where the background shows, is padding; ring 2, the line, is border; ring 1, the outermost transparent space, is margin.
 
 ### explore
 

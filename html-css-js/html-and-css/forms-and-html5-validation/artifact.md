@@ -57,6 +57,18 @@ Next topic: Accessibility basics
 
 ## Cheat sheet
 
+Where to act: The fix choices for each of the four controls, then Apply fixes.
+
+Next step: A placeholder disappears when someone types, and a for value with no matching id links nothing. A control with no room for visible text gets its name from an attribute instead.
+
+Where to act: The attribute buttons for Tickets and Postcode, then Check the rules.
+
+Next step: Work on one row that does not match. min and max only work on a number field, and pattern skips an empty value, so an empty value needs one more attribute to count as invalid.
+
+Where to act: The Browser only, Server only and Both buttons.
+
+Next step: Ask two questions about the check: does it help an honest user before they submit, and does it protect your data? A rule only the server can know cannot run in the browser.
+
 |  |  |
 | --- | --- |
 | `<label for="qty">` | names the control with `id="qty"` |

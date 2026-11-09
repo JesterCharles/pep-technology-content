@@ -69,6 +69,18 @@ This is the last topic in the module. Next, the HTML and CSS coding lab practise
 
 ## Cheat sheet
 
+Where to act: The media-query block buttons above the frames.
+
+Next step: The base styles give one column, and each min-width block adds columns from its width upward. When two blocks match, the later one wins, so order them from small to large.
+
+Where to act: The viewport meta element button, then the statement choices.
+
+Next step: Read the layout width in the phone's caption with and without the element. Without it, the phone lays out at about 980px, so the wide min-width queries match.
+
+Where to act: The fix buttons under the 400px container.
+
+Next step: Find what is wider than 400px: a fixed width, media at its natural size or a long unbroken string. overflow-x: hidden only cuts content off, so leave that rule off.
+
 |  |  |
 | --- | --- |
 | `<meta name="viewport" content="width=device-width, initial-scale=1">` | lay out at device width |
