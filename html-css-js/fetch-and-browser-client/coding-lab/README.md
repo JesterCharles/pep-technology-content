@@ -1,6 +1,6 @@
 # Fetch and browser client lab: Trail API client
 
-Standard track, S27 Lab day: about 55 minutes. Fast Track skips this lab; Fast learners build the same client logic in the course project, and can use this lab as optional remediation.
+Standard track, S26 Lab day: about 55 minutes. Fast Track skips this lab; Fast learners build the same client logic in the course project, and can use this lab as optional remediation.
 
 ## Goal
 

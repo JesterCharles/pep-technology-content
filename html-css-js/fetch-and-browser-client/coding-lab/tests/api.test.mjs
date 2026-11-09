@@ -34,17 +34,28 @@ test("task 2: trailsUrl builds the trails endpoint with encoded query filters", 
   const base = "http://localhost:8080";
   expect(trailsUrl(base)).toBe("http://localhost:8080/api/trails");
   expect(trailsUrl(base, {})).toBe("http://localhost:8080/api/trails");
-  expect(trailsUrl(base, { difficulty: "easy" })).toBe(
-    "http://localhost:8080/api/trails?difficulty=easy",
-  );
-  expect(trailsUrl(base, { difficulty: "easy", maxKm: 10 })).toBe(
-    "http://localhost:8080/api/trails?difficulty=easy&maxKm=10",
-  );
+  // Any valid URL encoding is accepted: the checks parse your URL back the
+  // way a server would, instead of demanding one exact byte sequence.
+  const parsed = (value) => {
+    const url = new URL(value);
+    return { path: url.origin + url.pathname, entries: [...url.searchParams.entries()] };
+  };
+  expect(parsed(trailsUrl(base, { difficulty: "easy" }))).toEqual({
+    path: "http://localhost:8080/api/trails",
+    entries: [["difficulty", "easy"]],
+  });
   expect(
-    trailsUrl(base, { difficulty: "short & easy" }),
-    "filter values must be URL-encoded, not pasted into the string",
-  ).toBe("http://localhost:8080/api/trails?difficulty=short+%26+easy");
-  expect(trailsUrl(base, { maxKm: 10 })).toBe("http://localhost:8080/api/trails?maxKm=10");
+    parsed(trailsUrl(base, { difficulty: "easy", maxKm: 10 })).entries,
+    "both filters appear, difficulty first",
+  ).toEqual([
+    ["difficulty", "easy"],
+    ["maxKm", "10"],
+  ]);
+  expect(
+    parsed(trailsUrl(base, { difficulty: "short & easy" })).entries,
+    "a filter value must be URL-encoded (URLSearchParams does this), so the server decodes it back intact",
+  ).toEqual([["difficulty", "short & easy"]]);
+  expect(parsed(trailsUrl(base, { maxKm: 10 })).entries).toEqual([["maxKm", "10"]]);
 });
 
 test("task 3: createTrailRequest posts JSON with the right method, header and body", () => {
@@ -53,7 +64,7 @@ test("task 3: createTrailRequest posts JSON with the right method, header and bo
   expect(url).toBe("http://localhost:8080/api/trails");
   expect(init.method).toBe("POST");
   expect(
-    init.headers?.["Content-Type"],
+    new Headers(init.headers ?? {}).get("content-type"),
     "the server only parses the body as JSON when the Content-Type header says so",
   ).toBe("application/json");
   expect(JSON.parse(init.body)).toEqual(trail);

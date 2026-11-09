@@ -25,13 +25,13 @@ test("task 7: the sign-up corner is a section whose heading fits the page outlin
   assert.equal(
     result.tag,
     "SECTION",
-    "The sign-up region is still a generic div. A standalone page region with its own heading is a section.",
+    "The sign-up wrapper is still a generic element; pick the semantic element for a standalone region with its own heading (task 7's hints point at the topic page).",
   );
   assert.ok(result.holdsForm, "The sign-up section must still contain the sign-up form.");
   assert.equal(
     result.headingTag,
     "H2",
-    "The sign-up heading does not fit the outline yet: after the page's h1, the next level is h2.",
+    "The sign-up heading still skips levels in the page outline; headings step down one level at a time.",
   );
   let previous = 0;
   for (const level of result.levels) {
@@ -118,8 +118,14 @@ test("task 10: the badge has alt text and the submit control is a real button", 
       let focusable = false;
       if (submit) {
         submit.focus();
-        focusable = document.activeElement === submit;
+        focusable = document.activeElement === submit && submit.tabIndex >= 0;
       }
+      const unreachable = [...document.querySelectorAll(".signup-form input, .signup-form button")]
+        .filter((control) => {
+          control.focus();
+          return document.activeElement !== control || control.tabIndex < 0;
+        })
+        .map((control) => control.id || control.tagName.toLowerCase());
       return {
         alt: badge?.getAttribute("alt"),
         fakes,
@@ -127,6 +133,7 @@ test("task 10: the badge has alt text and the submit control is a real button", 
         submitType: submit?.type ?? null,
         submitText: submit?.textContent?.trim() || submit?.value || "",
         focusable,
+        unreachable,
       };
     }),
   );
@@ -148,6 +155,11 @@ test("task 10: the badge has alt text and the submit control is a real button", 
   assert.ok(result.submitText.length > 0, "The button must keep its visible text.");
   assert.ok(
     result.focusable,
-    "The submit control must take keyboard focus; native buttons do this with no extra attributes.",
+    "The submit control must take keyboard focus (and sit in the tab order); native buttons do this with no extra attributes.",
+  );
+  assert.deepEqual(
+    result.unreachable,
+    [],
+    "Every control in the sign-up form must be reachable and operable with the keyboard alone.",
   );
 });

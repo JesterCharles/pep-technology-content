@@ -7,18 +7,18 @@ It records coverage locations only: no graded item text, key, rubric or solution
 Column meanings:
 
 - **demand**: production (the learner builds or operates something) or reasoning (the learner predicts, explains or decides). Production objectives are always demonstrated by a lab task or the graded practical, never by multiple choice alone.
-- **module lab task**: the task in `<module>/coding-lab/` whose public test evidences the objective.
+- **module lab task**: the task in `<module>/coding-lab/` whose public test evidences the objective (only test-evidenced objectives are claimed in `lab.json`).
 - **mastery item**: the practice item in the module's `assessments/<module>-mastery-check/practice.gift` titled with this objective id.
 - **graded practical / graded MCQ**: the objective is listed in `assessments/web-client-practical/blueprint.json` or `assessments/web-client-mcq/blueprint.json`.
-- Every topic keeps its own formative practice (page activities and `artifact.gift`) from the accepted 243-topic baseline; this ledger adds the module- and course-level locations.
+- Every topic keeps its own formative practice (page activities and `artifact.gift`) from the accepted 243-topic baseline; this ledger adds the module- and course-level locations, and the status column records where a hands-on topic-page activity is the primary practice.
 
-Standard track schedules each module lab on its lab day (S21, S23, S25, S27). Fast Track demonstrates the same objective checklist through the FT12-FT15 project increments of the one course project, and uses these canonical labs only as optional remediation; no lab content is duplicated into a Fast tree.
+Standard track schedules each module lab on its lab block (S21, S23, S25, S26) with the mastery checks closing each module (S21, S23, S25, S27). Fast Track demonstrates the same objective checklist through the FT12-FT15 project increments of the one course project, and uses these canonical labs only as optional remediation; no lab content is duplicated into a Fast tree.
 
 ## HTML and CSS (`html-and-css`)
 
 | topic | objective | demand | module lab task | mastery item | graded practical | graded MCQ | status |
 |---|---|---|---|---|---|---|---|
-| semantic-html-page-structure | o1 | production | task 7 | yes | yes | yes | covered |
+| semantic-html-page-structure | o1 | production | - | yes | yes | yes | element choice exercised in lab task 7 for one region; full choice set sampled by the graded practical and a mastery item |
 | semantic-html-page-structure | o2 | production | task 7 | yes | - | yes | covered |
 | semantic-html-page-structure | o3 | production | task 7 | yes | yes | - | covered |
 | forms-and-html5-validation | o1 | production | task 8 | - | yes | - | covered |
@@ -70,14 +70,14 @@ Standard track schedules each module lab on its lab day (S21, S23, S25, S27). Fa
 
 | topic | objective | demand | module lab task | mastery item | graded practical | graded MCQ | status |
 |---|---|---|---|---|---|---|---|
-| project-setup-with-npm-and-vite | o1 | production | - | - | yes | - | hands-on in the S27 browser-client project (topic page terminal rehearsal); sampled by the graded practical |
+| project-setup-with-npm-and-vite | o1 | production | - | - | yes | - | hands-on in the S27 browser-client project (topic-page terminal rehearsal); the graded practical opens by scaffolding and starting a Vite project |
 | project-setup-with-npm-and-vite | o2 | reasoning | - | - | - | yes | covered |
 | project-setup-with-npm-and-vite | o3 | reasoning | - | yes | - | yes | covered |
 | selecting-and-changing-the-dom | o1 | production | task 1 | - | yes | - | covered |
 | selecting-and-changing-the-dom | o2 | production | task 1 | - | yes | - | covered |
 | selecting-and-changing-the-dom | o3 | reasoning | - | - | - | yes | covered |
 | events-and-event-bubbling | o1 | production | task 2 | - | yes | - | covered |
-| events-and-event-bubbling | o2 | production | task 3 | yes | - | yes | covered |
+| events-and-event-bubbling | o2 | reasoning | - | yes | - | yes | covered |
 | events-and-event-bubbling | o3 | production | task 3 | - | yes | - | covered |
 | preventing-cross-site-scripting | o1 | reasoning | - | yes | - | yes | covered |
 | preventing-cross-site-scripting | o2 | production | task 4 | - | yes | - | covered |
@@ -109,7 +109,7 @@ Standard track schedules each module lab on its lab day (S21, S23, S25, S27). Fa
 | fixing-cors-spring-security-config-vs-vite-dev-proxy | o3 | reasoning | - | yes | - | - | covered |
 | cookies-vs-localstorage-where-tokens-should-live | o1 | reasoning | - | yes | - | yes | covered |
 | cookies-vs-localstorage-where-tokens-should-live | o2 | reasoning | - | yes | - | yes | covered |
-| calling-your-spring-boot-api-from-the-browser | o1 | production | tasks 2, 3 | - | yes | - | covered |
+| calling-your-spring-boot-api-from-the-browser | o1 | production | - | - | yes | - | request construction practised in lab task 3; sent end-to-end in the S27 course project and the graded practical |
 | calling-your-spring-boot-api-from-the-browser | o2 | production | task 6 | - | yes | - | covered |
 | environment-settings-for-the-api-address | o1 | production | task 1 | - | yes | - | covered |
 | environment-settings-for-the-api-address | o2 | reasoning | - | yes | - | yes | covered |
@@ -120,7 +120,7 @@ Standard track schedules each module lab on its lab day (S21, S23, S25, S27). Fa
 ## Totals
 
 - Objectives mapped: 83 across 4 modules and 29 topics.
-- Module lab coverage: 50 objectives evidenced by public lab tests.
+- Module lab coverage: 47 objectives evidenced by public lab tests.
 - Mastery-check coverage: 38 objectives with practice items.
 - Graded practical blueprint samples 39 objectives; graded MCQ blueprint samples 35 objectives; both span all four modules.
 - No production objective is assessed by multiple choice alone.

@@ -53,7 +53,7 @@ Work only in `starter/report.mjs` and `starter/format.mjs`. Each task's comment 
 ### Task 1: strict comparisons, const and let
 
 - **Where:** `starter/report.mjs`, the `hasDifficulty` function.
-- **Outcome:** `hasDifficulty(trail, level)` is true only when the trail's difficulty is exactly `level`, and the function declares its variable with `const`, not `var`. A trail whose difficulty is the empty string must not match the number `0`.
+- **Outcome:** `hasDifficulty(trail, level)` is true only when the trail's difficulty is exactly `level`, and the function declares its variable with `const` rather than `var` (nothing here is reassigned, so `const` is the default choice). A trail whose difficulty is the empty string must not match the number `0`.
 - **Done when:** `task 1: hasDifficulty matches only the exact difficulty, with const and ===` passes.
 - **Hint 1:** the loose `==` converts values of different types before comparing, so `"" == 0` is true. Topic page: let, const and ===, step 3.
 - **Hint 2:** replace `var` with the declaration for a value that is never reassigned, and `==` with the comparison that never converts types.

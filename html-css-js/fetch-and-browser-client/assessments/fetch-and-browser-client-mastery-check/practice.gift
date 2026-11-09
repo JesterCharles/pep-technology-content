@@ -2,7 +2,7 @@
 // One scenario set around the Trail Guides client and its Spring Boot API.
 // Titles name the topic and objective id each item practises. About 15 minutes.
 
-$CATEGORY: html-css-js/fetch-and-browser-client/mastery-check
+$CATEGORY: html-css-js/fetch-and-browser-client
 
 ::fetching-data o2 the 500 that did not throw::The trails API answers 500, yet the client's catch block never runs and the code happily tries to use the body. Why did fetch not reject? {
 =fetch fulfils whenever an HTTP response arrives, even an error status; response.ok is how the code must notice #Correct. Only failures without an HTTP answer reject; statuses are checked on the response object.
@@ -18,11 +18,11 @@ $CATEGORY: html-css-js/fetch-and-browser-client/mastery-check
 ~Monday's error carries the status 0 response body #Not quite. A rejected fetch has no response or status to read.
 }
 
-::fixing-cors-spring-security-config-vs-vite-dev-proxy o1 who gets a preflight::The client sends two requests to another origin: a plain GET for the trail list, and a POST with Content-Type application/json. Which one makes the browser send an OPTIONS preflight first? {
-=Only the JSON POST, because its content type falls outside the CORS-safelisted conditions #Correct. Simple GETs skip preflight; the application/json body type forces the browser to ask permission first.
-~Both, because every cross-origin request is preflighted #Not quite. Requests within the safelisted conditions go straight out.
-~Only the GET, because reads are checked more strictly #Not quite. It is the other way round: the plain GET is the simple one.
-~Neither, because preflights happen only over HTTPS #Not quite. The trigger is the request's shape, not the scheme.
+::fixing-cors-spring-security-config-vs-vite-dev-proxy o1 the header that changed everything::A cross-origin GET for the trail list has worked for weeks with no OPTIONS request in the network panel. The team then adds an Authorization header to the same GET, and the browser now sends OPTIONS first. Why? {
+=The custom header takes the request outside the CORS-safelisted conditions, so the browser must ask permission before sending it #Correct. Preflights are triggered by the request's shape; a plain GET was simple, the Authorization header is not.
+~GET requests always preflight once per day and the timer expired #Not quite. Preflighting is not periodic; it follows the request's method, headers and body type.
+~The server demanded the preflight in its previous response #Not quite. The browser decides to preflight on its own, from the request it is about to send.
+~Authorization headers are only allowed on POST requests #Not quite. Any method may carry it; it just stops the request from being simple.
 }
 
 ::fixing-cors-spring-security-config-vs-vite-dev-proxy o2 two setups::During local development the Vite page on port 5173 calls the API on port 8080; in production the deployed page at app.example.com calls api.example.com. Which fix fits each setup? {
@@ -46,16 +46,16 @@ $CATEGORY: html-css-js/fetch-and-browser-client/mastery-check
 ~Read the cookie but not localStorage #Not quite. It is the reverse: localStorage is the script-readable store.
 }
 
-::cookies-vs-localstorage-where-tokens-should-live o2 one attribute::The session cookie must never travel over plain unencrypted HTTP. Which attribute enforces exactly that? {
-=Secure #Correct. A Secure cookie is only sent over HTTPS connections.
-~HttpOnly #Not quite. HttpOnly hides the cookie from scripts; it says nothing about the transport.
-~SameSite\=Strict #Not quite. SameSite limits cross-site sending, not the encryption of the connection.
-~Path\=/ #Not quite. Path scopes which URLs receive the cookie within the site.
+::cookies-vs-localstorage-where-tokens-should-live o2 the missing attribute::The session cookie is set with Set-Cookie: session\=abc123; Secure; HttpOnly. Security review then finds the browser still attaches it to requests that another site's page triggers against the API. Which missing attribute addresses exactly that finding? {
+=SameSite, because it controls whether the cookie accompanies cross-site requests #Correct. Secure covers the transport and HttpOnly covers script access; neither limits cross-site sending.
+~A second Secure attribute with a stronger value #Not quite. Secure has no values; it only restricts the cookie to HTTPS.
+~HttpOnly, declared before Secure #Not quite. Attribute order is meaningless, and HttpOnly concerns script reads, not cross-site sending.
+~Path, set to the API's URL #Not quite. Path scopes URLs within the site and does nothing about which site triggered the request.
 }
 
-::environment-settings-for-the-api-address o2 the key in the bundle::To call a paid map service, a teammate puts VITE_MAP_KEY in the .env file and ships the client. Why is the key not safe there? {
-=Every VITE_ value is compiled into the JavaScript sent to visitors, so anyone can read the key from the bundle #Correct. Client-side configuration is public by construction; paid secrets belong on a server that proxies the calls.
-~.env files are uploaded to the API server automatically #Not quite. The file stays local; the build inlines the values into the shipped code.
-~The key expires when the dev server restarts #Not quite. Nothing expires it; exposure is the problem.
-~It is safe, because visitors never see source files #Not quite. The bundle is delivered to every browser and is fully inspectable.
+::environment-settings-for-the-api-address o2 sorting the env file::A teammate drafts a .env file with three entries: VITE_API_URL (the public API address), VITE_WEATHER_KEY (a paid weather-service key) and VITE_THEME (a display setting). Which entries are placed correctly, and what happens to the rest? {
+=VITE_API_URL and VITE_THEME are fine; the paid key must lose its VITE_ prefix and be used only by a server that proxies the weather calls #Correct. Everything VITE_-prefixed is compiled into the public bundle, so only values safe to publish may carry the prefix.
+~All three are fine, because .env files are never shipped to browsers #Not quite. The file is not shipped, but every VITE_ value is inlined into the JavaScript that is.
+~None are fine: .env files must never hold URLs or settings #Not quite. Public configuration such as an API address is exactly what client env values are for.
+~Only the key is fine, because keys are meant for the client #Not quite. The paid key is the one value that must stay off the client entirely.
 }

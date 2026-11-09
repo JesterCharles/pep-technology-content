@@ -2,27 +2,27 @@
 // One scenario set around the Trail Guides dashboard. Titles name the topic
 // and objective id each item practises. About 15-20 minutes.
 
-$CATEGORY: html-css-js/dom-tooling-and-async/mastery-check
+$CATEGORY: html-css-js/dom-tooling-and-async
 
-::project-setup-with-npm-and-vite o3 reproducing an install::That teammate now wants node_modules to match the lockfile exactly, deleting anything stale, before running the dev server. Which command is made for that? {
+::project-setup-with-npm-and-vite o3 reproducing an install::A teammate who just cloned the dashboard project wants node_modules to match package-lock.json exactly, deleting anything stale, before running the dev server. Which command is made for that? {
 =npm ci #Correct. npm ci installs exactly what the lockfile records, from a clean slate; it is the reproducible-install command.
 ~npm install #Not quite. npm install may re-resolve ranges and update the lockfile; it is for changing dependencies.
 ~npm run dev #Not quite. That starts Vite's dev server; it installs nothing.
 ~npm audit #Not quite. That reports known vulnerabilities; it does not install packages.
 }
 
-::events-and-event-bubbling o2 target and currentTarget::One click listener sits on the ul trail list. A visitor clicks the span holding a trail's name inside an li. Inside the handler, what are event.target and event.currentTarget? {
-=target is the span that was clicked; currentTarget is the ul the handler is attached to #Correct. target marks where the event started, currentTarget where this listener lives on the bubbling path.
-~Both are the ul, because the listener is attached there #Not quite. currentTarget is the ul, but target keeps pointing at the clicked span.
-~Both are the span, because that is what was clicked #Not quite. target is the span, but currentTarget is always the listener's own element.
-~target is the li, as the nearest list item #Not quite. target is the deepest element clicked; finding the li is what closest() is for.
+::events-and-event-bubbling o2 two listeners, one click::Both an li and the ul around it have their own click listener, and a visitor clicks text inside the li. Both handlers run. How do their event.target and event.currentTarget compare? {
+=target is the same clicked element in both handlers; currentTarget differs, naming the li in one and the ul in the other #Correct. target is fixed where the click started; currentTarget follows whichever listener is currently handling the bubbling event.
+~Both values are identical in both handlers #Not quite. currentTarget changes as the event bubbles from li to ul.
+~target changes as the event bubbles; currentTarget stays fixed #Not quite. It is the reverse: target is fixed, currentTarget moves.
+~The ul handler sees no target because the click missed it #Not quite. Bubbling delivers the same event, target included, to ancestors.
 }
 
-::preventing-cross-site-scripting o1 why the note ran code::A visitor note stored as text contains an img tag with an onerror attribute. The dashboard inserts the note with innerHTML and the attribute's code runs. Why? {
-=innerHTML parses the text as HTML, creating the element, whose failing load fires its onerror handler #Correct. The sink turned data into markup; parsing plus the error event executed attacker-chosen code.
-~The database executed the note when it was saved #Not quite. Storage kept it as text; the page executed it at render time through innerHTML.
-~Browsers run any text that mentions a tag name #Not quite. Text stays text until something parses it as HTML; textContent would have kept it inert.
-~The note ran because it was inside a list element #Not quite. The container element is irrelevant; the parsing sink is what mattered.
+::preventing-cross-site-scripting o1 the filter that was not enough::To "sanitize" visitor notes, the dashboard deletes the word script from each note, then inserts the note with innerHTML. A note containing an img tag with an onerror attribute still ran attacker code. Why did the filter fail? {
+=innerHTML parses any markup in the text, and event-handler attributes on ordinary tags execute without any script tag #Correct. Blocklists miss whole vectors; the fix is not parsing visitor text at all, with textContent.
+~The word filter ran after innerHTML instead of before #Not quite. Order is irrelevant; the img vector never contained the filtered word.
+~Browsers only block script tags from file downloads, not notes #Not quite. The browser blocked nothing; the page itself asked for the markup to be parsed.
+~The attacker guessed the admin password #Not quite. No credentials are involved; the page turned untrusted text into live HTML.
 }
 
 ::promises o1 three states::The dashboard calls trailApi.fetchConditions("Ridge Walk"), which answers after a delay. Immediately after the call, and then after the report arrives, which states is the promise in? {
@@ -39,11 +39,11 @@ $CATEGORY: html-css-js/dom-tooling-and-async/mastery-check
 ~It fulfils, because most of the promises fulfilled #Not quite. One rejection outweighs any number of fulfilments in Promise.all.
 }
 
-::async-and-await o3 what the caller receives::refreshDashboard is an async function whose body ends with return count, where count is 3. What does const result \= refreshDashboard() put in result? {
-=A promise that will fulfil with 3 #Correct. An async function always returns a promise; the return value becomes its fulfilment value.
-~The number 3 itself #Not quite. Only await or a then handler can unwrap the 3 from the returned promise.
-~undefined, because async functions cannot return values #Not quite. They can; the value arrives wrapped in the promise.
-~A promise only when the body contains await #Not quite. The async keyword alone guarantees a promise, with or without await inside.
+::async-and-await o3 the missing await::refreshDashboard is an async function that returns \{ count: 3 \}. A caller writes const summary \= refreshDashboard(); console.log(summary.count); and the console prints undefined. Why, and what is the fix? {
+=summary holds a promise, not the object; reading .count on a promise gives undefined, so the caller must await refreshDashboard() #Correct. An async function always hands back a promise; the object is its future fulfilment value.
+~The function ran too slowly, so count was empty #Not quite. Speed is irrelevant; even an instant async function returns a promise.
+~Returning objects from async functions is not allowed #Not quite. Any value can be returned; it arrives wrapped in the promise.
+~console.log cannot print numbers from other functions #Not quite. console.log prints anything; the read happened on the wrong kind of value.
 }
 
 ::debugging-with-devtools-breakpoints o1 stopping on the bad trail::The dashboard's render loop handles six trails but draws only Canyon Route wrongly. You want the debugger to pause only on that pass of the loop. Which breakpoint does that? {

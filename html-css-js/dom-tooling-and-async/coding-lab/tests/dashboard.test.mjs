@@ -8,10 +8,12 @@ import { launchDashboard } from "./browser.mjs";
 import { starterDir } from "./paths.mjs";
 
 const appSource = readFileSync(path.join(starterDir, "app.js"), "utf8");
-const bareSource = appSource
-  .replace(/\/\/[^\n]*/g, "")
-  .replace(/\/\*[\s\S]*?\*\//g, "")
-  .replace(/(["'`])(?:\\.|(?!\1)[^\\\n])*\1/g, "\"\"");
+// Strings are stripped before comment markers so a "//" inside a string never
+// truncates the line, and multi-line template literals are stripped too.
+const bareSource = appSource.replace(
+  /("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)|\/\/[^\n]*|\/\*[\s\S]*?\*\//g,
+  (match, stringLiteral) => (stringLiteral ? "\"\"" : ""),
+);
 
 const session = await launchDashboard();
 test.after(() => session.close());
@@ -56,8 +58,10 @@ test("task 2: the search box filters the list as you type", async () => {
 
 test("task 3: one delegated click listener marks trails hiked without navigating", async () => {
   assert.ok(
-    /trailList\s*\.addEventListener\s*\(/.test(bareSource),
-    "attach the click listener to the trailList element itself (event delegation)",
+    /(?:trailList|querySelector\s*\(\s*""\s*\)|getElementById\s*\(\s*""\s*\))\s*\.addEventListener\s*\(/.test(
+      bareSource,
+    ),
+    "attach the click listener to the trail list element itself (event delegation)",
   );
   const page = await session.open();
   await page.click('#trail-list li[data-name="Lake Loop"] .mark-hiked');

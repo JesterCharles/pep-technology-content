@@ -19,11 +19,13 @@ const fixture = Object.freeze([
   freezeTrail({ id: 4, name: "Summit Climb", distanceKm: 14, difficulty: "hard", tags: ["steep"] }),
 ]);
 
-// Strips comments and string contents so source checks cannot be fooled by text.
-const bareSource = reportSource
-  .replace(/\/\/[^\n]*/g, "")
-  .replace(/\/\*[\s\S]*?\*\//g, "")
-  .replace(/(["'`])(?:\\.|(?!\1)[^\\\n])*\1/g, "\"\"");
+// Strips string contents and comments so source checks cannot be fooled by
+// text. Strings are stripped before comment markers so a "//" inside a string
+// never truncates the line, and multi-line template literals are stripped too.
+const bareSource = reportSource.replace(
+  /("(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`)|\/\/[^\n]*|\/\*[\s\S]*?\*\//g,
+  (match, stringLiteral) => (stringLiteral ? "\"\"" : ""),
+);
 
 test("task 1: hasDifficulty matches only the exact difficulty, with const and ===", () => {
   assert.equal(report.hasDifficulty(fixture[0], "easy"), true, "an easy trail matches \"easy\"");

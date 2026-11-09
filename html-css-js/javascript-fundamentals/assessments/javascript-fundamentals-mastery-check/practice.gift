@@ -2,7 +2,7 @@
 // One scenario set around the Trail Guides report code. Titles name the topic
 // and objective id each item practises. About 15-20 minutes.
 
-$CATEGORY: html-css-js/javascript-fundamentals/mastery-check
+$CATEGORY: html-css-js/javascript-fundamentals
 
 ::javascript-for-java-developers o1 one number type::A Java developer stores a trail distance as 5 and an average rating as 4.7 and expects an int and a double. What does JavaScript use for the two values? {
 =One Number type for both; JavaScript has no separate integer and floating-point primitives #Correct. Number covers both, with BigInt as the separate type only for huge whole numbers.
@@ -11,11 +11,11 @@ $CATEGORY: html-css-js/javascript-fundamentals/mastery-check
 ~It depends on whether var, let or const declares them #Not quite. The declaration keyword never changes a value's type.
 }
 
-::javascript-for-java-developers o2 what typeof says::The report code checks its inputs with typeof. What does typeof window.trailData return when trailData is the array of trail objects? {
-="object", because arrays are objects to typeof #Correct. typeof has no "array" answer; Array.isArray is the check that tells arrays apart.
-~"array" #Not quite. typeof never returns "array"; that is why Array.isArray exists.
-~"list" #Not quite. "list" is not a JavaScript type name at all.
-~"undefined", because the data lives in another file #Not quite. The file ran first and defined the global, so typeof sees an object.
+::javascript-for-java-developers o2 two surprising answers::In a Node script, const tags \= ["views", "steep"] and const missing \= null. What do typeof tags and typeof missing return? {
+="object" for both: typeof has no answer for arrays, and null reports "object" as a long-standing language quirk #Correct. Array.isArray tells arrays apart, and a null check must compare against null itself.
+~"array" and "null", matching what the values are #Not quite. typeof returns neither of those strings; both values report "object".
+~"object" and "undefined" #Not quite. typeof undefined is "undefined", but typeof null is "object".
+~"list" and "void" #Not quite. Neither is a typeof result in JavaScript.
 }
 
 ::javascript-for-java-developers o3 reading the console::A teammate runs node main.mjs where main.mjs contains console.log("Total: " + 4 + 5). What appears in the terminal? {
@@ -25,11 +25,11 @@ $CATEGORY: html-css-js/javascript-fundamentals/mastery-check
 ~A type error stops the program #Not quite. JavaScript converts the numbers to text and runs on.
 }
 
-::let-const-and-equals o2 const is not frozen::The report declares const featured \= \{ name: "Ridge Walk", distanceKm: 9 \}. Which line fails at run time? {
-=featured \= \{ name: "Lake Loop" \} #Correct. const locks the binding, so reassigning the variable throws; the object's own properties stay changeable.
-~featured.distanceKm \= 10 #Not quite. Property writes do not touch the binding, so const allows them.
-~featured.season \= "summer" #Not quite. Adding a property changes the object, not the binding.
-~delete featured.distanceKm #Not quite. Deleting a property is also an object change the const binding does not prevent.
+::let-const-and-equals o2 const versus freeze::The report declares const featured \= \{ name: "Ridge Walk" \} in a module, and later code calls Object.freeze(featured). Which statement about the two protections is right? {
+=Before the freeze, featured.name could be changed despite const; after it, that write throws in the module's strict mode #Correct. const only locks the binding; freezing is what makes the object's own properties read-only.
+~const had already made the properties read-only, so the freeze changes nothing #Not quite. const never protects property values, only the variable binding.
+~The freeze also blocks featured from being reassigned, which const alone did not #Not quite. const already blocked reassignment; freeze works on the object, not the binding.
+~The freeze protects nested objects inside featured too #Not quite. Object.freeze is shallow; nested objects stay changeable.
 }
 
 ::functions-as-values-arrow-functions-and-callbacks o3 when callbacks run::The dashboard code runs three lines: trails.sort(byDistance), button.addEventListener("click", onRefresh), setTimeout(tick, 1000). Which callback has already run by the time the third line finishes? {
@@ -39,25 +39,25 @@ $CATEGORY: html-css-js/javascript-fundamentals/mastery-check
 ~All three, because passing a function always runs it #Not quite. Passing hands the function over; each receiver decides when to call it.
 }
 
-::arrays-and-objects-map-filter-reduce o2 tracing the chain::The report runs trails.filter(function (t) \{ return t.distanceKm less than 6; \}).map(function (t) \{ return t.name; \}) over Lake Loop 5 km, Ridge Walk 9 km and Forest Path 4 km. What is the result? {
+::arrays-and-objects-map-filter-reduce o2 tracing the chain::The report keeps the trails shorter than 6 km with filter, then turns each kept trail into its name with map, over Lake Loop 5 km, Ridge Walk 9 km and Forest Path 4 km. What is the result? {
 =["Lake Loop", "Forest Path"] #Correct. filter keeps the two short trails, then map turns each kept trail into its name.
 ~["Lake Loop", "Ridge Walk", "Forest Path"] #Not quite. filter removed Ridge Walk at 9 km before map ran.
-~[\{ name: "Lake Loop" \}, \{ name: "Forest Path" \}] #Not quite. The map callback returns t.name, a string, not an object.
+~[\{ name: "Lake Loop" \}, \{ name: "Forest Path" \}] #Not quite. The map callback returns the name, a string, not an object.
 ~["Forest Path", "Lake Loop"] #Not quite. filter and map both keep the original order.
 }
 
-::destructuring-and-spread o3 the shared inside::The code copies a trail with const copy \= \{ ...trail \} and then runs copy.tags.push("muddy"). What happened to the original trail's tags? {
-="muddy" is in the original's tags too, because the spread copy shares the nested array #Correct. Spread copies one level; both objects point at the same tags array.
-~Nothing: a spread copy duplicates everything it contains #Not quite. Spread is shallow; nested objects and arrays stay shared.
-~The push throws, because copies are read-only #Not quite. Spread copies are ordinary mutable objects.
-~The original loses its tags array to the copy #Not quite. Both keep a reference; neither loses it.
+::destructuring-and-spread o3 the safe copy::Two candidate copies of a trail must let copy.tags.push("muddy") run without touching the original. A: const copy \= \{ ...trail \}. B: const copy \= \{ ...trail, tags: [...trail.tags] \}. Which candidate is safe, and why? {
+=Only B: the outer spread copies one level, so the inner spread is what gives the copy its own tags array #Correct. Spread is shallow; nested arrays stay shared unless copied themselves.
+~Only A: a spread already duplicates everything inside the object #Not quite. A's copy shares the original tags array, so the push would change both.
+~Both: any copy made with spread is independent #Not quite. A is a shallow copy; its nested array is shared.
+~Neither: push always changes every copy of an array #Not quite. push changes one array object; B's copy has its own.
 }
 
-::modules-import-and-export o3 why type module::The finished report code is dropped into a plain script tag on the Trail Guides page, and the console shows "Cannot use import statement outside a module". What fixes it, and why? {
-=Add type\="module" to the script tag, because only module scripts may use import #Correct. The attribute makes the browser load the file as a module, enabling import and export.
-~Move the import lines to the bottom of the file #Not quite. Position does not matter; classic scripts reject import anywhere.
-~Rename the file so it ends in .mjs #Not quite. That convention guides Node.js; the browser follows the script tag's type.
-~Wrap the imports in a try block so the error is caught #Not quite. It is a syntax error at load time; no code runs to catch anything.
+::modules-import-and-export o3 module scope stays private::A page loads report.mjs with script type\="module" (it imports helpers and defines function summary()), and a second, classic inline script calls summary(). The console shows "summary is not defined". Why? {
+=Module top-level names stay inside the module's own scope; unlike a classic script, they never become globals for other scripts #Correct. The module keyword buys import support and module scope together; sharing needs an export plus an import, not a global.
+~The module has not finished downloading when the inline script runs #Not quite. Even after the module runs, its top-level names remain invisible to other scripts.
+~type module disables function declarations #Not quite. The function exists; it is scoped to the module.
+~The inline script also needs an import statement, which classic scripts write with require #Not quite. Classic scripts have no import or require in the browser; the fix is making the caller a module that imports summary.
 }
 
 ::scope-and-closures o1 who sees what::In report.mjs, a module-level const trails sits above function summary(), which declares let total and, inside an if block, const label. Which of the three can the line after the if block inside summary still read? {
@@ -67,9 +67,9 @@ $CATEGORY: html-css-js/javascript-fundamentals/mastery-check
 ~Only trails, because let dies at the end of the line #Not quite. let lasts to the end of the function body it is declared in.
 }
 
-::scope-and-closures o3 one counter each::For each of the trails Lake Loop, Ridge Walk and Forest Path, a loop declared with let trail wires a button: clicking logs that trail's name. After the loop, clicking the Ridge Walk button logs what, and why? {
-="Ridge Walk", because let gives each loop pass its own trail for the callback to close over #Correct. Each iteration's binding is captured separately, so every button remembers its own trail.
-~"Forest Path", because callbacks see the loop's final value #Not quite. That is var's behavior with one shared binding; let creates one per pass.
-~undefined, because trail no longer exists when the click happens #Not quite. The closure keeps its captured binding alive after the loop.
-~Whichever trail was clicked first, cached for all buttons #Not quite. The three callbacks hold three separate bindings; clicks do not share a cache.
+::scope-and-closures o3 from symptom to fix::A loop written with var trail wires one button per trail; clicking ANY button logs "Forest Path", the last trail. Which smallest change makes each button log its own trail, and why does it work? {
+=Declare the loop variable with let, because let creates one binding per loop pass for each callback to close over #Correct. var made one shared binding that finished at "Forest Path"; let gives every iteration its own.
+~Call the logging function once before the loop ends #Not quite. That changes when logging happens; the buttons' callbacks would still share the one var binding.
+~Move the loop into another file #Not quite. File boundaries do not change how the loop binds its variable.
+~Replace the buttons with links #Not quite. The element type has nothing to do with which variable the callbacks captured.
 }
