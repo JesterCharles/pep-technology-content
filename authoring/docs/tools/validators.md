@@ -77,6 +77,13 @@ ASCII, contain no `<` or `>`, use `$CATEGORY: course/module/topic`, title every 
 correct option, and give every option `#` feedback beginning `Correct.` or `Not quite.`. Escape literal GIFT
 control characters with a backslash.
 
+The four course-final MCQ banks (`<course>/assessments/<module-check>/final-mcq.gift`) that use Moodle's `[html]`
+text format are checked with `--html` (`validateGift(bytes, category, { html: true })`), not by T16. After GIFT
+unescaping, every stem must start with `[html]`. Stems, options and feedback may use only bare, balanced `<p>`,
+`<pre>` and `<code>` tags. A literal `<` or `>` in code must be written as `&lt;` or `&gt;`. Any entity must be one
+of `&lt;`, `&gt;`, `&amp;`, `&quot;` or `&nbsp;`, or a numeric reference. Titles stay free of `<` and `>`.
+Topic quizzes keep the plain-text rule. `authoring/tests/course-final-gift.test.mjs` validates the four shipped files as they are.
+
 ## Source link receipts (T15)
 
 Create `authoring/evidence/<course>/<module>/<topic>/sources.json` with source URLs and non-empty `sectionsUsed` arrays,

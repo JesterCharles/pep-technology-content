@@ -112,13 +112,49 @@ function parseQuestion(block, category) {
   return { category, title, stem, options };
 }
 
-export function parseGift(bytes) {
+// Opt-in [html] mode for course-final MCQ banks; topic quizzes stay plain text.
+// Moodle removes GIFT backslash escapes and then reads [html] text as HTML, so these
+// checks run on each question's unescaped stem, option and feedback text. Comment
+// lines are never imported. Only bare <p>, <pre> and <code> tags are allowed; literal
+// code characters must be entities, so no other < or > may remain once the allowed
+// tags are removed, and every &name; reference must be a known entity.
+const HTML_TAG = /<(\/?)(p|pre|code)>/g;
+const HTML_ENTITY = /&(?:lt|gt|amp|quot|nbsp|#[0-9]+|#x[0-9A-Fa-f]+);/g;
+
+function checkHtmlText(text, where) {
+  const rest = text.replace(HTML_TAG, "");
+  if (rest.includes("<") || rest.includes(">")) {
+    throw new Error(
+      `${where} may use only bare <p>, <pre> and <code> tags; write literal < and > as &lt; and &gt;`,
+    );
+  }
+  if (/&[A-Za-z0-9#]+;/.test(rest.replace(HTML_ENTITY, ""))) {
+    throw new Error(`${where} uses an entity other than lt, gt, amp, quot, nbsp or a numeric reference`);
+  }
+}
+
+function checkHtmlBalance(text, where) {
+  const open = [];
+  for (const match of text.matchAll(HTML_TAG)) {
+    const [, closing, name] = match;
+    if (!closing) {
+      open.push(name);
+    } else if (open.pop() !== name) {
+      throw new Error(`${where} has unbalanced <${name}> markup`);
+    }
+  }
+  if (open.length) {
+    throw new Error(`${where} leaves <${open.at(-1)}> unclosed`);
+  }
+}
+
+export function parseGift(bytes, { html = false } = {}) {
   const buffer = Buffer.isBuffer(bytes) ? bytes : Buffer.from(bytes);
   if ([...buffer].some((byte) => byte > 0x7f)) {
     throw new Error("GIFT must contain ASCII bytes only");
   }
   const text = buffer.toString("ascii");
-  if (text.includes("<") || text.includes(">")) {
+  if (!html && (text.includes("<") || text.includes(">"))) {
     throw new Error("GIFT must not contain < or >");
   }
 
@@ -149,11 +185,31 @@ export function parseGift(bytes) {
   if (!questions.length) {
     throw new Error("GIFT contains no questions");
   }
+  if (html) {
+    for (const [index, question] of questions.entries()) {
+      const where = `question ${index + 1}`;
+      if (/[<>]/.test(question.title)) {
+        throw new Error(`${where} title must not contain < or >`);
+      }
+      if (!question.stem.startsWith("[html]")) {
+        throw new Error(`${where} stem must start with the [html] format marker`);
+      }
+      const parts = [[question.stem, `${where} stem`]];
+      for (const [optionIndex, option] of question.options.entries()) {
+        parts.push([option.answer, `${where} option ${optionIndex + 1}`]);
+        parts.push([option.feedback, `${where} option ${optionIndex + 1} feedback`]);
+      }
+      for (const [part, label] of parts) {
+        checkHtmlText(part, label);
+        checkHtmlBalance(part, label);
+      }
+    }
+  }
   return questions;
 }
 
-export function validateGift(bytes, expectedCategory) {
-  const questions = parseGift(bytes);
+export function validateGift(bytes, expectedCategory, options = {}) {
+  const questions = parseGift(bytes, options);
   for (const [index, question] of questions.entries()) {
     if (question.category !== expectedCategory) {
       throw new Error(
@@ -166,14 +222,17 @@ export function validateGift(bytes, expectedCategory) {
 }
 
 async function main() {
-  const [file, expectedCategory] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const html = args.includes("--html");
+  const [file, expectedCategory] = args.filter((arg) => arg !== "--html");
   if (!file || !expectedCategory || process.argv.includes("--help")) {
     console.log(
-      "Usage: node authoring/tools/gift/validate.mjs <artifact.gift> <course/module/topic>",
+      "Usage: node authoring/tools/gift/validate.mjs [--html] <file.gift> <category>\n" +
+        "  --html  course-final [html] banks: bare <p>/<pre>/<code> only, literal < and > as entities",
     );
     return;
   }
-  const questions = validateGift(await readFile(file), expectedCategory);
+  const questions = validateGift(await readFile(file), expectedCategory, { html });
   console.log(`${file}: ${questions.length} question(s) valid`);
 }
 
