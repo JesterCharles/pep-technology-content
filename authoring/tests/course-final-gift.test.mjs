@@ -49,6 +49,12 @@ for (const [file, { category, html }] of Object.entries(BANKS)) {
     }
     const questions = validateGift(bytes, category, { html });
     assert.equal(questions.length, 30);
+    const comments = bytes
+      .toString("ascii")
+      .split("\n")
+      .filter((line) => line.trimStart().startsWith("//"));
+    for (const line of comments)
+      assert.doesNotMatch(line, /PROTECTED|never commit|not for learners|private route/i, "obsolete private-bank header");
     const positions = {};
     let previous;
     let run = 0;
