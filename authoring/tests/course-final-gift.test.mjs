@@ -49,12 +49,17 @@ for (const [file, { category, html }] of Object.entries(BANKS)) {
     }
     const questions = validateGift(bytes, category, { html });
     assert.equal(questions.length, 30);
-    const comments = bytes
-      .toString("ascii")
-      .split("\n")
-      .filter((line) => line.trimStart().startsWith("//"));
+    const lines = bytes.toString("ascii").split("\n");
+    const comments = lines.filter((line) => line.trimStart().startsWith("//"));
     for (const line of comments)
       assert.doesNotMatch(line, /PROTECTED|never commit|not for learners|private route/i, "obsolete private-bank header");
+    // GIFT import drops every line that starts with //, so only the leading header may use one;
+    // a code comment inside a question must start with &\#47;/ to survive import.
+    const header = lines.findIndex((line) => !line.startsWith("//"));
+    const dropped = lines
+      .map((line, index) => (index >= header && line.trimStart().startsWith("//") ? index + 1 : 0))
+      .filter(Boolean);
+    assert.deepEqual(dropped, [], "question lines that GIFT import would drop as comments");
     const positions = {};
     let previous;
     let run = 0;
