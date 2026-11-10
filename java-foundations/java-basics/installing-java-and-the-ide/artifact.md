@@ -14,7 +14,7 @@ Practice prediction, not scored.
 
 ### The JDK, and how the shell finds it
 
-The JDK (Java Development Kit) holds the compiler `javac`, the launcher `java` and other tools. A JRE (runtime) could only run programs, never compile them; OpenJDK and Oracle no longer ship one, so install a full JDK 25, the current long-term support (LTS) release.
+The JDK (Java Development Kit) holds the compiler `javac`, the launcher `java` and other tools. A JRE (runtime) can only run programs, never compile them, and some download pages still offer one, so always pick the full JDK 25, the current long-term support (LTS) release.
 
 When you type a command, the shell searches the folders in `PATH` from left to right and runs the first match. To install Maven, extract its archive and add its `bin` folder to `PATH`. Maven then runs Java from `JAVA_HOME` if it is set, otherwise the `java` found on `PATH`.
 
@@ -56,13 +56,13 @@ JAVA_HOME
 - The shell runs the first match it finds in `PATH`, left to right; put the JDK's and Maven's `bin` folders there, then confirm with `java -version`, `javac -version` and `mvn -v` in a new terminal.
 - In the IDE, open the project's `pom.xml` as a project and select JDK 25 as the project SDK.
 
-### Now set up your own computer
+### Now install on your own computer
 
-Install on your coding lab computer by following each vendor's official guide, linked below; those pages keep their steps current. Opening them and downloading needs network access.
+These lesson pages run in your browser and need nothing installed. The coding labs run as real Java projects on your own computer, so they need JDK 25 and Maven, and you edit them in the IDE. Install on your coding lab computer by following each vendor's official guide, linked below; those pages keep their steps current. Opening them and downloading needs network access.
 
-1. Find your architecture. macOS: Apple menu | About This Mac shows Chip on Apple silicon (choose aarch64) or Processor on Intel (choose x64). Windows: Settings | System | About, then System type: x64-based means x64, ARM-based means aarch64. Linux: `uname -m` prints `x86_64` (x64) or `aarch64`.
-2. Install JDK 25. On the Eclipse Temurin releases page, choose your system, your architecture and JDK 25 - LTS. Then follow the guide for your system: macOS .pkg, Windows .msi (keep the PATH feature and also turn on the `JAVA_HOME` feature) or Linux packages (the package is `temurin-25-jdk`). Done when the installer finishes without an error.
-3. Install Maven. Follow Installing Apache Maven: download the binary archive from the Maven download page, extract it, and add its `bin` folder to `PATH`.
+1. Find your architecture. macOS: Apple menu | About This Mac shows Chip on Apple silicon (choose aarch64) or Processor on Intel (choose x64). Windows: Settings | System | About, then System type: x64-based means x64. The Temurin Windows installer supports only x64 Windows, so if it says ARM-based, ask your instructor before you continue. Linux: `uname -m` prints `x86_64` (x64) or `aarch64`.
+2. Install JDK 25. On the Eclipse Temurin releases page (adoptium.net/temurin/releases), choose your system, your architecture, JDK 25 - LTS and the package type JDK, not JRE. Then follow the guide for your system: macOS .pkg, Windows .msi (keep the PATH feature and also turn on the `JAVA_HOME` feature) or Linux packages (the package is `temurin-25-jdk`). Done when the installer finishes without an error.
+3. Install Maven. Follow Installing Apache Maven (maven.apache.org/install.html): download the binary archive from the Maven download page, extract it, and add its `bin` folder to `PATH`. Done when `mvn -v` prints a Maven version in the next step.
 4. Check in a new terminal. Open a new terminal window, so it reads the new `PATH`, and run the three checks below.
 
 You are ready when all three checks show 25. Your exact numbers may differ:
@@ -79,7 +79,7 @@ mvn -v
 
 If a check fails: `command not found` (Windows: `is not recognized`) means that tool's `bin` folder is not on `PATH`; repeat the guide's PATH step, then open a new terminal. An older version means another Java comes first on `PATH`, as in Activity 2: put the JDK 25 `bin` folder first, and for Maven set `JAVA_HOME` to the JDK 25 folder. If an installer shows an error, asks for an administrator password you do not have, or a check still fails after that, stop and ask your instructor rather than removing other Java versions.
 
-Last, the IDE. Install IntelliJ IDEA with the JetBrains installation guide. Open the coding lab's `starter/pom.xml` as a project, then set JDK 25 as the project SDK, as in IntelliJ IDEA: SDKs. It is set when File | Project Structure | Project shows SDK 25.
+Last, the IDE. Install IntelliJ IDEA with the JetBrains installation guide (jetbrains.com/help/idea/installation-guide.html). Open the coding lab's `starter/pom.xml` as a project, then set JDK 25 as the project SDK, as in IntelliJ IDEA: SDKs. It is set when File | Project Structure | Project shows SDK 25.
 
 Next topic: Running a first program
 
@@ -102,7 +102,7 @@ Next step: A Maven project is described by its `pom.xml`, so open the item that 
 | `export PATH="/opt/jdk-25/bin:$PATH"` | put a folder first for this terminal session |
 | File \| Project Structure \| Project | set the project SDK in IntelliJ IDEA |
 
-The `export` line lasts for the current terminal only; add it to your shell's startup file (for example `~/.bashrc` or `~/.zshrc`) to keep it. On Windows, the Temurin installer and the Maven guide's PATH step set `PATH` and `JAVA_HOME`, and the checks above work the same in a new Command Prompt or PowerShell window. Version numbers on your machine will differ from this practice terminal.
+The `export` line lasts for the current terminal only; add it to your shell's startup file (for example `~/.bashrc` or `~/.zshrc`) to keep it. On Windows, the Temurin installer can set `PATH` and `JAVA_HOME` for the JDK; you add Maven's `bin` folder to `Path` yourself, and the checks above work the same in a new Command Prompt or PowerShell window. Version numbers on your machine will differ from this practice terminal.
 
 ## Sources
 

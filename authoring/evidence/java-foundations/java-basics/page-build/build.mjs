@@ -28,6 +28,8 @@ for (const topicId of moduleManifest.topicOrder) {
   const body = await read(`src/${topicId}.body.html`).catch(() => null);
   if (body === null) { console.log(`skip ${topicId}: no source yet`); continue; }
   const data = await read(`src/${topicId}.topic.js`);
+  // Optional topic-only CSS, appended after the shared engine block so sibling pages keep their bytes.
+  const topicCss = await read(`src/${topicId}.topic.css`).catch(() => null);
   const metas = [
     ["pep:course", course], ["pep:module", moduleId], ["pep:topic", topic.title], ["pep:topic-id", topic.id],
     ["pep:budget-minutes", String(topic.minutes.budget)], ["pep:source", topic.freshness.sourcesRef],
@@ -43,7 +45,7 @@ ${metas}
 <title>${escAttr(topic.title)} · ${escAttr(moduleManifest.title)}</title>
 <script>document.documentElement.classList.add('pep-js');</script>
 <style>
-${block("engine.css", "/*", "*/")}
+${block("engine.css", "/*", "*/")}${topicCss === null ? "" : `\n${topicCss.trim()}`}
 </style>
 </head>
 <body>
