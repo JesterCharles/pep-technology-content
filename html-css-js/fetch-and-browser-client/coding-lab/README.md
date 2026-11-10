@@ -1,6 +1,6 @@
 # Fetch and browser client lab: Trail API client
 
-Standard track, S26 Lab day: one 30-minute lab block. Tasks 1 to 6 are the core path, sized to finish inside the block with a buffer left over; Task 7 is a stretch task for time remaining, and finishing it completes the lab. The block is a planning allowance, not a timer. Fast Track skips this lab; Fast learners build the same client logic in the course project, and can use this lab as optional remediation.
+Standard track, S26 Lab day: one 35-minute lab block. All seven tasks are required; each is one small function or one short test file, with its contract stated inline, sized to finish in about 30 minutes with a buffer left over inside the block. The block is a planning allowance, not a timer. Fast Track skips this lab; Fast learners build the same client logic in the course project, and can use this lab as optional remediation.
 
 ## Goal
 
@@ -13,7 +13,7 @@ This lab practises these topics: Fetching data; Handling HTTP errors and Problem
 ## What the tests check, and what they do not
 
 - Tasks 1 to 6 are checked by behavior: the tests call your functions with their own data, fake fetch functions and frozen model objects that throw if your code mutates them.
-- Task 7 checks the test file you write yourself: it must exist, import the function it tests and use `test`, `expect`, `toBe` and `toEqual`. Vitest also runs your file, so a wrong assertion fails the run with output for you to read.
+- Task 7 checks the test file you write yourself by running it: it must hold exactly two tests that pass against the shipped `formatDistance`, and that fail when the check swaps in a copy with a wrong label or a wrong `km`. Vitest also runs your file directly, so a wrong assertion fails the run with output for you to read.
 - The tests do not make real network requests, and they do not check code layout or variable names inside your functions.
 
 ## Prerequisites
@@ -50,7 +50,7 @@ This lab practises these topics: Fetching data; Handling HTTP errors and Problem
 
 ## Tasks
 
-Work only in `starter/api.mjs`, plus the new test file you create in Task 7 (the stretch task: do it with the time the block leaves over, or whenever you return to the lab). Everything else is the lab's fixed support and stays as shipped: `starter/format-distance.mjs`, `starter/vitest.config.mjs`, the package files, the shipped tests in `tests/` and `expected/on-completion.txt`. A task counts as done only when the shipped tests for it pass exactly as shipped. Each task's comment in `starter/api.mjs` states its exact contract. After each task, rerun `npm test` from `starter/`: that task's test turns green. If you are stuck, open the hints one at a time; none of them gives the full code.
+Work only in `starter/api.mjs`, plus the new test file you create in Task 7. Every task is required to complete the lab. Everything else is the lab's fixed support and stays as shipped: `starter/format-distance.mjs`, `starter/vitest.config.mjs`, the package files, `tests/your-test.vitest.config.mjs`, the shipped tests in `tests/` and `expected/on-completion.txt`. A task counts as done only when the shipped tests for it pass exactly as shipped. Each task's comment in `starter/api.mjs` states its exact contract. After each task, rerun `npm test` from `starter/`: that task's test turns green. If you are stuck, open the hints one at a time; none of them gives the full code.
 
 ### Task 1: the API address comes from the environment
 
@@ -104,7 +104,7 @@ Work only in `starter/api.mjs`, plus the new test file you create in Task 7 (the
 
 - **Where:** a new file you create: `starter/format-distance.test.mjs`.
 - **Outcome:** your file imports `formatDistance` from `./format-distance.mjs` (a finished function; read it first) and declares exactly two tests with `test` and `expect`: one asserting the `label` string with `toBe`, one asserting the whole result object with `toEqual`.
-- **Done when:** `task 7: your format-distance.test.mjs exists and uses test, expect, toBe and toEqual` passes, and your own two tests pass with it.
+- **Done when:** `task 7: your format-distance.test.mjs has exactly two passing tests that catch a broken formatDistance` passes, and your own two tests pass with it.
 - **Hint 1:** start from `import { expect, test } from "vitest";` — the same first line as any Vitest file. Topic page: Testing a plain function with Vitest, step 1.
 - **Hint 2:** `toBe` compares primitives by identity; `toEqual` compares objects by structure. Assert `formatDistance(5).label` with one and `formatDistance(11.5)` with the other. To see what a failing assertion looks like, make one expectation wrong on purpose, read the output, then fix it.
 
@@ -145,3 +145,4 @@ Delete `starter/node_modules/` to remove the test runner; the tests create nothi
 - No tests found: run `npm test` from the `starter/` folder, the one that holds `package.json`.
 - Task 5 reports the wrong result kind: check what you wrapped in `try`/`catch`; only a rejected `fetchFn` call is a network error, while a response with `ok: false` is an HTTP error.
 - Your Task 7 file fails: read the printed assertion diff; it shows the expected and received values your test compared.
+- Task 7's check says a broken copy was not caught: each of your tests must call `formatDistance` imported from `./format-distance.mjs` and compare its result with fixed expected values, not with values computed by `formatDistance` itself.

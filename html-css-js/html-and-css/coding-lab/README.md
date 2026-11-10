@@ -1,6 +1,6 @@
 # HTML and CSS lab: Trail Guides
 
-Standard track, S21 Lab day: one 30-minute lab block. Tasks 1 to 6 are the core path, sized to finish inside the block with a buffer left over; tasks 7 to 10 (the sign-up corner) are stretch tasks for time remaining, and finishing them completes the lab. The block is a planning allowance, not a timer. Fast Track skips this lab; Fast learners practise the same rules in the course project, and can use this lab as optional remediation.
+Standard track, S21 Lab day: one 40-minute lab block. All ten tasks are required; they are small single-rule or single-element edits, each marked by a `TODO` comment in the starter, sized to finish in about 35 minutes with a buffer left over inside the block. The block is a planning allowance, not a timer. Fast Track skips this lab; Fast learners practise the same rules in the course project, and can use this lab as optional remediation.
 
 ## Goal
 
@@ -52,7 +52,7 @@ This lab practises these topics: Flexbox; Grid; Responsive, mobile-first layout 
 
 ## Tasks
 
-Work only in `starter/index.html` and `starter/styles.css`. Tasks 7 to 10 are the stretch tasks: do them with the time the block leaves over, or whenever you return to the lab. Everything else is the lab's fixed support and stays as shipped: `starter/badge.svg`, the starter's package files, the tests in `tests/` and `expected/on-completion.txt`. A task counts as done only when the shipped tests for it pass exactly as shipped. Each `TODO` comment in `styles.css` marks where a layout task starts, and the `Tasks 7 to 10` comment in `index.html` marks the sign-up corner. After each task, run `node --test --test-reporter=spec` again from `coding-lab/`: the test for that task changes from `✖` to `✔`. If you are stuck, open the hints one at a time; none of them gives the full rule.
+Work only in `starter/index.html` and `starter/styles.css`. Every task is required to complete the lab. Everything else is the lab's fixed support and stays as shipped: `starter/badge.svg`, the starter's package files, the tests in `tests/` and `expected/on-completion.txt`. A task counts as done only when the shipped tests for it pass exactly as shipped. Each `TODO` comment in `styles.css` marks where a layout task starts, and each `TODO task` comment in the sign-up corner of `index.html` marks the element that task changes. After each task, run `node --test --test-reporter=spec` again from `coding-lab/`: the test for that task changes from `✖` to `✔`. If you are stuck, open the hints one at a time; none of them gives the full rule.
 
 ### Task 1: phones use their own width
 
