@@ -9,6 +9,10 @@ import { fileURLToPath } from "node:url";
 const labDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const starterDir = path.join(labDir, "starter");
 const realModule = path.join(starterDir, "format-distance.mjs");
+// Windows paths may differ only in drive-letter or other letter case, so the
+// comparison folds case there; elsewhere paths compare exactly.
+const fold = (value) => (process.platform === "win32" ? value.toLowerCase() : value);
+const isRealModule = (id) => fold(path.resolve(id)) === fold(realModule);
 const variant = process.env.TASK7_VARIANT ?? "real";
 const brokenId = "\0task7-broken-format-distance";
 
@@ -23,7 +27,7 @@ const swapFormatDistance = {
   async resolveId(source, importer, options) {
     if (variant === "real" || !importer || !source.includes("format-distance")) return null;
     const resolved = await this.resolve(source, importer, { ...options, skipSelf: true });
-    if (resolved && path.normalize(resolved.id.split("?")[0]) === realModule) return brokenId;
+    if (resolved && isRealModule(resolved.id.split("?")[0])) return brokenId;
     return null;
   },
   load(id) {

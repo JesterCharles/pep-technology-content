@@ -76,8 +76,8 @@ test("task 4: the trail cards are one column on phones and two columns from 600p
 });
 
 test("task 5: from 1000px, the header and footer span the page and the gear checklist sits beside the trails", async () => {
-  assert.deepEqual(areaRows(valueOf(rules, ".page", "grid-template-areas", MQ1000)),
-    [["header", "header"], ["main", "aside"], ["footer", "footer"]],
+  const areaMap = JSON.stringify(areaRows(valueOf(rules, ".page", "grid-template-areas", MQ1000)));
+  assert.ok(areaMap === JSON.stringify([["header", "header"], ["main", "aside"], ["footer", "footer"]]),
     "From 1000px wide, the named regions do not yet form the required page layout.");
   for (const [selector, area] of [[".site-header", "header"], [".site-main", "main"], [".site-aside", "aside"], [".site-footer", "footer"]]) {
     const got = valueOf(rules, selector, "grid-area") ?? valueOf(rules, selector, "grid-area", MQ1000);

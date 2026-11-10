@@ -1,6 +1,6 @@
 # Fetch and browser client lab: Trail API client
 
-Standard track, S26 Lab day: one 35-minute lab block. All seven tasks are required; each is one small function or one short test file, with its contract stated inline, sized to finish in about 30 minutes with a buffer left over inside the block. The block is a planning allowance, not a timer. Fast Track skips this lab; Fast learners build the same client logic in the course project, and can use this lab as optional remediation.
+Standard track, S26 Lab day, inside the Guided lab block. All seven tasks are required; each is one small function or one short test file, with its contract stated inline. Authoring estimate, not a measured learner pilot: about 38 minutes for an average learner to read this README and finish all seven tasks, with a 45-minute cap that leaves a buffer. Do the one-time Setup below before the block; it is not counted in those minutes. The cap is a planning allowance, not a timer. Fast Track skips this lab; Fast learners build the same client logic in the course project, and can use this lab as optional remediation.
 
 ## Goal
 
@@ -106,7 +106,7 @@ Work only in `starter/api.mjs`, plus the new test file you create in Task 7. Eve
 - **Outcome:** your file imports `formatDistance` from `./format-distance.mjs` (a finished function; read it first) and declares exactly two tests with `test` and `expect`: one asserting the `label` string with `toBe`, one asserting the whole result object with `toEqual`.
 - **Done when:** `task 7: your format-distance.test.mjs has exactly two passing tests that catch a broken formatDistance` passes, and your own two tests pass with it.
 - **Hint 1:** start from `import { expect, test } from "vitest";` — the same first line as any Vitest file. Topic page: Testing a plain function with Vitest, step 1.
-- **Hint 2:** `toBe` compares primitives by identity; `toEqual` compares objects by structure. Assert `formatDistance(5).label` with one and `formatDistance(11.5)` with the other. To see what a failing assertion looks like, make one expectation wrong on purpose, read the output, then fix it.
+- **Hint 2:** `toBe` compares primitives by identity; `toEqual` compares objects by structure. Pick one input from the comment in `format-distance.mjs` for each test: assert only its `label` in one test and its whole result object in the other. To see what a failing assertion looks like, make one expectation wrong on purpose, read the output, then fix it.
 
 ## How to test
 

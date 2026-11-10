@@ -1,6 +1,6 @@
 # HTML and CSS lab: Trail Guides
 
-Standard track, S21 Lab day: one 40-minute lab block. All ten tasks are required; they are small single-rule or single-element edits, each marked by a `TODO` comment in the starter, sized to finish in about 35 minutes with a buffer left over inside the block. The block is a planning allowance, not a timer. Fast Track skips this lab; Fast learners practise the same rules in the course project, and can use this lab as optional remediation.
+Standard track, S21 Lab day, inside the Guided lab block. All ten tasks are required; they are small single-rule or single-element edits, each marked by a `TODO` comment in the starter. Authoring estimate, not a measured learner pilot: about 45 minutes for an average learner to read this README and finish all ten tasks, with a 55-minute cap that leaves a buffer. Do the one-time Setup below before the block; it is not counted in those minutes. The cap is a planning allowance, not a timer. Fast Track skips this lab; Fast learners practise the same rules in the course project, and can use this lab as optional remediation.
 
 ## Goal
 

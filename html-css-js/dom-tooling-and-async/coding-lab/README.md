@@ -1,6 +1,6 @@
 # DOM, tooling and async lab: Trail Guides live dashboard
 
-Standard track, S25 Lab day: one 35-minute lab block. All six tasks are required; each has its exact contract in a `starter/app.js` comment, and together they are sized to finish in about 31 minutes with a small buffer left over inside the block. The block is a planning allowance, not a timer. Fast Track skips this lab; Fast learners build the same dashboard behavior in the course project, and can use this lab as optional remediation.
+Standard track, S25 (a Concept day), in its 40-minute Faded then fresh coding-practice block. All six tasks are required; each has its exact contract in a `starter/app.js` comment. Authoring estimate, not a measured learner pilot: about 34 minutes for an average learner to read this README and finish all six tasks, with a 40-minute cap that leaves a buffer. Do the one-time Setup below before the block; it is not counted in those minutes. The cap is a planning allowance, not a timer. Fast Track skips this lab; Fast learners build the same dashboard behavior in the course project, and can use this lab as optional remediation.
 
 ## Goal
 

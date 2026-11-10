@@ -46,7 +46,9 @@ test("task 7: the sign-up corner is a section whose heading fits the page outlin
 test("task 8: every sign-up input has a label the browser connects to it", async () => {
   const fields = await withPage((page) =>
     page.evaluate(() =>
-      [...document.querySelectorAll(".signup-form input")].map((input) => ({
+      [...document.querySelectorAll(
+        ".signup-form input:not([type=\"submit\"]):not([type=\"button\"]):not([type=\"reset\"]):not([type=\"image\"])",
+      )].map((input) => ({
         id: input.id,
         labelTexts: [...(input.labels ?? [])].map((label) => label.textContent.trim()),
         ariaLabel: (input.getAttribute("aria-label") ?? "").trim(),
