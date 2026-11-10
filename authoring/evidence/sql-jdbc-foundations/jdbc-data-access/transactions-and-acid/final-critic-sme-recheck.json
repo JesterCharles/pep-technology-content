@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "claude fresh independent technology SME final recheck critic (jdbc-data-access 2026-11-09)",
+  "reviewedPath": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+  "reviewedSha256": "a4799db593d8453fa79dda33b27c52872320fbd018f89bf3f1bf17ac5a52b6f9",
+  "artifactHashes": {
+    "artifact.html": "a4799db593d8453fa79dda33b27c52872320fbd018f89bf3f1bf17ac5a52b6f9",
+    "artifact.gift": "87d7fe967f307fa40293ee50d3ce7cb53a85967753e74c9a86e3e9a8e2b4b77d"
+  },
+  "findings": [
+    {
+      "id": "tx-sme-f-001",
+      "severity": "low",
+      "location": {
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "line": 482
+      },
+      "claim": "The reworded first setAutoCommit(true) branch fires for any placement before the last executeUpdate, including between credit.executeUpdate() and debit.executeUpdate(), but now says auto-commit is turned back on 'before the updates run'. In that placement the credit has already run inside the transaction; per the Connection.setAutoCommit NOTE, enabling auto-commit there commits the open transaction (the credit alone), and the debit then runs in auto-commit. The outcome 'each update is saved on its own' is right, but 'before the updates run' contradicts the learner's code, where the credit is visibly above the call. The previous wording ('before the transfer is committed') was accurate for this placement; the edit introduced the imprecision.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/Connection.html",
+          "section": "setAutoCommit(boolean) NOTE",
+          "retrievedAt": "2026-11-09T19:33:39Z",
+          "textSha256": "ba7db6d18089f56a641263235fbc996511deb02efd12b08835b9f0d99fb8331b"
+        }
+      ],
+      "recommendation": "Use wording true for both placements, e.g. 'setAutoCommit(true) here turns auto-commit back on before both updates have run, so each update is saved on its own.' Or split on first: before first update keep 'before the updates run'; between them say 'commits the credit on its own, and the debit is then saved separately'.",
+      "reviewedSha256": "a4799db593d8453fa79dda33b27c52872320fbd018f89bf3f1bf17ac5a52b6f9"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/critic-sme.json",
+    "items": [
+      {
+        "findingId": "tx-sme-001",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "reviewedSha256": "a4799db593d8453fa79dda33b27c52872320fbd018f89bf3f1bf17ac5a52b6f9",
+        "note": "Resolved on current bytes. Extracted t3Check (function t3Check .. var TOPIC=) and ran it in node: the correct transfer passes, and also passes with finally { conn.setAutoCommit(true); } after the catch (Oracle Using Transactions pattern). setAutoCommit(true) before the updates or between them is rejected (wording issue for the between case raised as tx-sme-f-001). tx-sme-r-001 verified resolved: setAutoCommit(true) between the last executeUpdate and commit(), and inside the catch before rollback(), now get 'Turning auto-commit back on here commits the open transaction at once, so a later commit() or rollback() has nothing to finish and fails.' This matches the Java SE 25 Connection.setAutoCommit NOTE (changing auto-commit during a transaction commits it), the commit()/rollback() Throws clauses (SQLException when in auto-commit mode) and pgJDBC PgConnection (setAutoCommit calls commit() when leaving manual mode; commit()/rollback() throw 'Cannot commit/rollback when autoCommit is enabled.'). Non-blocking nuance: in the catch placement after a server error, the PostgreSQL transaction is already aborted, so the COMMIT pgJDBC sends ends it as a rollback on the server; the message follows the JDBC contract and correctly predicts the rollback() failure. Missing setAutoCommit(false) and early commit() are still rejected with accurate messages."
+      },
+      {
+        "findingId": "tx-sme-002",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "reviewedSha256": "a4799db593d8453fa79dda33b27c52872320fbd018f89bf3f1bf17ac5a52b6f9",
+        "note": "Still resolved on current bytes. In node: throw e;, throw new RuntimeException(e);, throw new RuntimeException(\"transfer failed\", e); and a '+'-concatenated message with e as cause pass; throw new RuntimeException(e.getMessage());, throw new IllegalStateException(\"bad e\"); and a swallowed exception are rejected with the keeps-it-as-the-cause message. The rethrow regex and its message are unchanged by this edit."
+      }
+    ]
+  }
+}

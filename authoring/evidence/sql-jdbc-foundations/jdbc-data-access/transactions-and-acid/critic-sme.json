@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "claude independent technology SME critic (jdbc-data-access recheck 2026-11-09)",
+  "reviewedPath": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+  "reviewedSha256": "b79d6bc7ce1ce46125dd3df5031778b1acafe9ca46040e31d5847108b5826454",
+  "artifactHashes": {
+    "artifact.html": "b79d6bc7ce1ce46125dd3df5031778b1acafe9ca46040e31d5847108b5826454",
+    "artifact.gift": "87d7fe967f307fa40293ee50d3ce7cb53a85967753e74c9a86e3e9a8e2b4b77d"
+  },
+  "findings": [
+    {
+      "id": "tx-sme-001",
+      "severity": "medium",
+      "location": {
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "line": 480
+      },
+      "claim": "t3Check rejects any occurrence of setAutoCommit(true), so a correct transfer that restores auto-commit in a finally block (the pattern in Oracle's own Using Transactions tutorial) fails with 'true keeps auto-commit on, so each update is saved on its own'. That message is false for a finally placed after commit/rollback.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/tutorial/jdbc/basics/transactions.html",
+          "section": "Using Transactions: modifyPricesByPercentage finally block",
+          "retrievedAt": "2026-11-09T12:00:00Z",
+          "textSha256": "445dd21678257a112ce93e658477bef199a7ff75f253de0e80f8e317ceecd57f"
+        },
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/Connection.html",
+          "section": "setAutoCommit(boolean) NOTE",
+          "retrievedAt": "2026-11-09T12:00:00Z",
+          "textSha256": "d4da5e966a577f948b64e289b0adaee514309896e23debeafc9c9c89248e4813"
+        }
+      ],
+      "recommendation": "Only flag setAutoCommit(true) when it appears before the last executeUpdate or before conn.commit(); accept it after the catch (for example in a finally block) and optionally mention restoring auto-commit as good practice for pooled connections.",
+      "reviewedSha256": "b79d6bc7ce1ce46125dd3df5031778b1acafe9ca46040e31d5847108b5826454"
+    },
+    {
+      "id": "tx-sme-002",
+      "severity": "low",
+      "location": {
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "line": 487
+      },
+      "claim": "The rethrow regex only requires the catch variable as a whole word somewhere inside new X(...), so it accepts wrappers that drop the cause, e.g. throw new RuntimeException(e.getMessage()); or throw new IllegalStateException(\"bad e\");, contradicting the page's own rule 'wrap it in a new exception that keeps it as the cause'.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/RuntimeException.html",
+          "section": "Constructor RuntimeException(String message)",
+          "retrievedAt": "2026-11-09T12:00:00Z",
+          "textSha256": "0fef7f624ae34b4a881a5af173faabd7d5d4cbe92f4160a1783ec96263247ab6"
+        }
+      ],
+      "recommendation": "Require the bare catch variable as a constructor argument (e.g. new X(e) or new X(\"...\", e): match [(,]\\s*e\\s*\\) ), not e.getMessage() or e inside a string literal; keep accepting throw e; and throw new RuntimeException(e);.",
+      "reviewedSha256": "b79d6bc7ce1ce46125dd3df5031778b1acafe9ca46040e31d5847108b5826454"
+    }
+  ]
+}

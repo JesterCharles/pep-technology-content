@@ -1,0 +1,39 @@
+// Practice quiz: Transactions and ACID
+// Formative, low-stakes retention practice. Titles name the objective id each item practises.
+
+$CATEGORY: sql-jdbc-foundations/jdbc-data-access/transactions-and-acid
+
+::o1 atomicity::An order inserts a row in orders and then reduces stock. The stock update fails. Which ACID property makes sure the order row is not kept either? {
+=Atomicity #Correct. A transaction keeps all of its changes or none of them.
+~Durability #Not quite. Durability is about committed changes surviving a crash.
+~Isolation #Not quite. Isolation is about what other sessions see before a commit.
+~Consistency #Not quite. Consistency is about constraints holding, not undoing the first step.
+}
+
+::o1 consistency::A CHECK constraint that forbids a negative balance stops an update that would make a balance negative. Which property does this show? {
+~Atomicity #Not quite. Atomicity is all or nothing across statements.
+=Consistency #Correct. Every committed state still satisfies the constraints.
+~Isolation #Not quite. Isolation is about other sessions' view.
+~Durability #Not quite. Durability is about surviving a crash.
+}
+
+::o2 auto-commit default::With a new JDBC connection, a program runs two executeUpdate calls and the second throws. What happened to the first change? {
+~It was undone automatically #Not quite. Nothing undoes it; it was already committed.
+~It waits for commit() #Not quite. Auto-commit is on, so there is nothing to wait for.
+=It was already committed, because new connections are in auto-commit mode #Correct. Call setAutoCommit(false) before the first statement.
+~It was never sent to the database #Not quite. It ran and was committed at once.
+}
+
+::o2 rollback place::Where does conn.rollback() belong when a transfer runs two updates with auto-commit off? {
+~Right after setAutoCommit(false) #Not quite. That would undo nothing and leave the transaction open.
+~Between the two updates #Not quite. That would undo the first update even when the second succeeds.
+~After conn.commit() #Not quite. After a commit there is nothing left to roll back.
+=In the catch block for SQLException, before rethrowing #Correct. A failure in either update undoes both.
+}
+
+::o3 before commit::Session 1 has updated a balance but not committed. Under PostgreSQL's default isolation, what does session 2 see when it reads that balance? {
+~The new, uncommitted value #Not quite. Read Committed never shows uncommitted data.
+~An error until session 1 commits #Not quite. A plain read does not fail; it sees the committed value.
+=The old, committed value #Correct. Other sessions see the change only after it commits.
+~Nothing, because the row is hidden #Not quite. The row is visible with its last committed value.
+}

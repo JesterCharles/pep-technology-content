@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "claude fresh independent education recheck critic (jdbc-data-access 2026-11-09)",
+  "reviewedPath": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+  "reviewedSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46",
+  "artifactHashes": {
+    "artifact.html": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46",
+    "artifact.gift": "87d7fe967f307fa40293ee50d3ce7cb53a85967753e74c9a86e3e9a8e2b4b77d"
+  },
+  "findings": [
+    {
+      "id": "tx-edu-recheck-001",
+      "severity": "low",
+      "location": {
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "line": 481
+      },
+      "claim": "The tx-edu-001 fix only rejects setAutoCommit(true) when it appears before the last executeUpdate or before conn.commit(). A catch block that restores auto-commit before rolling back, catch (SQLException e) { conn.setAutoCommit(true); conn.rollback(); throw e; }, now passes every check (verified by running the extracted t3Check in node), although the page's own Problems message says to restore it only after commit() and rollback(). Per the java.sql.Connection contract, changing auto-commit during a transaction commits it, and rollback() in auto-commit mode throws, so the accepted code would replace the original failure with a different exception.",
+      "evidence": [],
+      "recommendation": "Also flag setAutoCommit(true) when it appears inside the catch before conn.rollback() (for example, reject when on > cat && on < rb), keeping the finally-block restore accepted.",
+      "reviewedSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/critic-education.json",
+    "items": [
+      {
+        "findingId": "tx-edu-001",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "reviewedSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46",
+        "note": "Ran extracted t3Check in node: the correct transfer passes; adding finally { conn.setAutoCommit(true); } after the catch now passes; setAutoCommit(true) before the updates or before commit() is still rejected with a corrected message. A residual gap introduced by this fix (setAutoCommit(true) placed inside the catch before rollback() passes) is raised separately as tx-edu-recheck-001 (low)."
+      },
+      {
+        "findingId": "tx-edu-002",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "reviewedSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46",
+        "note": "Verified on current bytes: step 2 adds a labelled radio fieldset s2p (old vs new balances, with legend) and goals[2] = auto, rb, iso, commit. Ran TOPIC.act in node with a stubbed document: iso or commit with no prediction is blocked (First choose what session 2 will read); iso with new and commit with old show prediction missed and do not set the goal; iso with old and commit with new set iso and commit. Both before- and after-commit visibility are now required and predicted before the reveal, so o3 (timeline) is credited by a real prediction. Budget 12 min (P50 9.37, worst 11.04) is plausible."
+      },
+      {
+        "findingId": "tx-edu-003",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "reviewedSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46",
+        "note": "Ran t3Check in node: throw e;, throw ex; (other catch variable name), throw new RuntimeException(e); and throw new RuntimeException(\"transfer failed\", e); pass; throw new RuntimeException(e.getMessage()); and a throw of an unrelated variable named e are rejected with the rethrow-with-cause message. Task text, noscript and static alt now say rethrow or wrap as the cause, consistent with the checker."
+      },
+      {
+        "findingId": "tx-edu-004",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/jdbc-data-access/transactions-and-acid/artifact.html",
+        "reviewedSha256": "bfde82d589998e16de644b0c0e89892acdbd0aacb1a416c6f9bcdc4483ed8e46",
+        "note": "render() for step 4 onward now labels the card: session 2 reads A 50 · B 70 (after commit) and the log says Step 2 commit scenario: the transfer of 50 committed, so every session reads A 50 · B 70. The state is tied to the step-2 committed transfer rather than appearing unexplained after the step-3 rollback, and the card does not reveal either apply answer (durability, or isolation on retry)."
+      }
+    ]
+  }
+}
