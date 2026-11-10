@@ -4,7 +4,7 @@ Course intake for `html-css-js` (calendar technology `web`, Standard days S20-S2
 This intake ships the course, module and topic manifests and evidence only; it authors no learner artifact.
 Every topic artifact is recorded absent: applicable companions with the reason "authored in the <module> module PR", inapplicable ones with their applicability reason.
 It closes the two sequenced category-A records of the confirmed coverage matrix v3: `source-gap-html-css-js-modules` (section Module map) and `source-gap-html-css-js-official-evidence` (section Official sources per topic).
-Superseded for labs and assessments: this historical intake is not current for either; [`assessment-coverage-ledger.md`](assessment-coverage-ledger.md) and the catalog [`course.json`](../../catalog/html-css-js/course.json) own the delivered module labs, mastery checks and course assessments.
+Superseded only for the delivered module labs, mastery checks and course assessments: [`assessment-coverage-ledger.md`](assessment-coverage-ledger.md) maps their coverage, each module's catalog `module.json` (`moduleLabs`, `assessments`) owns its module lab and mastery check, and the catalog [`course.json`](../../catalog/html-css-js/course.json) (`assessments`) owns the course assessments; the course-level project plan in Project brief (S27) and Fast project increments below stays authoritative here until a course-level change delivers it.
 
 ## Inputs
 
