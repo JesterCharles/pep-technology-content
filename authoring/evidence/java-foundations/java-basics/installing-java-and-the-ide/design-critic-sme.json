@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "independent SME critic, fresh Claude subagent with no authoring context, launched by crewmate pep-java-installing-design-followup; not the page author",
+  "reviewedPath": "java-foundations/java-basics/installing-java-and-the-ide/artifact.html",
+  "reviewedSha256": "3636bd5c9658cc99c809f05535aa3f8d8436abf1cfd62e0fa46ccd0077d8d914",
+  "artifactHashes": {
+    "artifact.html": "3636bd5c9658cc99c809f05535aa3f8d8436abf1cfd62e0fa46ccd0077d8d914",
+    "artifact.md": "6ccf968c2146bf9578becc6668a6421395aef3a34f061019422087a99cbe70bc"
+  },
+  "findings": [
+    {
+      "id": "sme-install-design-001",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/java-basics/installing-java-and-the-ide/artifact.html",
+        "line": 626
+      },
+      "claim": "The architecture step tells Windows learners that an ARM-based System type means they should choose aarch64, and step 2 then sends them to the Temurin releases page for JDK 25 and to the Windows .msi guide. Eclipse Temurin publishes no JDK 25 Windows aarch64 build (the Adoptium API returns 404 for feature release 25, os=windows, architecture=aarch64, while it returns builds for JDK 21), and the linked Adoptium Windows MSI guide states that Windows installer packages are supported only on Windows x64 systems. A Windows-on-ARM learner who follows the page reaches a dead end that the troubleshooting paragraph does not cover (it covers installer errors and failed checks, not a missing download). The same text is in artifact.md line 63.",
+      "evidence": [
+        {
+          "url": "https://adoptium.net/installation/windows/",
+          "section": "Windows MSI installer packages, introduction: 'Note: Windows installer packages are supported only on Windows x64 systems.'",
+          "retrievedAt": "2026-11-10T02:43:16Z"
+        },
+        {
+          "url": "https://api.adoptium.net/v3/assets/feature_releases/25/ga?os=windows&architecture=aarch64&image_type=jdk&page_size=20",
+          "section": "Adoptium API v3 assets: HTTP 404, no JDK 25 GA asset for windows/aarch64 (same query for feature release 21 returns aarch64 binaries with an installer; latest 25 for windows/x64 is jdk-25.0.5+8 with an .msi)",
+          "retrievedAt": "2026-11-10T02:45:16Z"
+        }
+      ],
+      "recommendation": "Do not map ARM-based Windows to an aarch64 Temurin download. Either state that the Windows .msi guide covers x64 only and that a Windows on ARM computer should stop and ask the instructor, or name a verified alternative after checking it against an official source. Keep the macOS and Linux aarch64 guidance, which Temurin JDK 25 does publish (for example the mac aarch64 .pkg).",
+      "reviewedSha256": "3636bd5c9658cc99c809f05535aa3f8d8436abf1cfd62e0fa46ccd0077d8d914"
+    },
+    {
+      "id": "sme-install-design-002",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/java-basics/installing-java-and-the-ide/artifact.html",
+        "line": 627
+      },
+      "claim": "Step 2 tells learners to choose only system, architecture and 'JDK 25 - LTS' on the Temurin releases page. That page asks the visitor to 'Pick a version, package type, JDK/JRE', and Temurin publishes JRE 25 builds (for example OpenJDK25U-jre_x64_linux_hotspot_25.0.5_8.tar.gz, and temurin-<version>-jre Linux packages). The page does not tell the learner to choose JDK, not JRE. The teaching text (line 481) and the prediction feedback for option b (TOPIC line 658: 'OpenJDK and Oracle no longer ship a separate runtime') present a runtime-only download as unlikely. That is true for OpenJDK and Oracle builds, but not for the Temurin vendor this page sends learners to, so a learner can install a JRE and then see 'javac: command not found', the failure Activity 4 describes. The same gap is in artifact.md lines 17 and 64.",
+      "evidence": [
+        {
+          "url": "https://adoptium.net/temurin/releases/",
+          "section": "Download Temurin JDK: 'Pick a version, package type, JDK/JRE, and download the binaries.'",
+          "retrievedAt": "2026-11-10T02:43:16Z"
+        },
+        {
+          "url": "https://api.adoptium.net/v3/assets/latest/25/hotspot?os=linux&architecture=x64&image_type=jre",
+          "section": "Adoptium API v3: HTTP 200, JRE asset jdk-25.0.5+8 OpenJDK25U-jre_x64_linux_hotspot_25.0.5_8.tar.gz",
+          "retrievedAt": "2026-11-10T02:45:16Z"
+        },
+        {
+          "url": "https://adoptium.net/installation/linux/",
+          "section": "Eclipse Temurin Package Names: temurin-<version>-jdk and temurin-<version>-jre",
+          "retrievedAt": "2026-11-10T02:43:16Z"
+        },
+        {
+          "url": "https://dev.java/learn/first-steps/first-java-code/getting-started/",
+          "section": "JRE: 'a subset of the JDK that is not distributed by the OpenJDK or Oracle anymore'; 'You cannot compile your code with the tools provided in the JRE.'",
+          "retrievedAt": "2026-11-10T02:43:16Z"
+        }
+      ],
+      "recommendation": "In step 2, say to choose the JDK package (not JRE), and the .pkg or .msi installer type, on the Temurin releases page. Reword the line 481 sentence and the option b feedback so that they do not imply a runtime-only Temurin 25 download cannot happen. For example: 'some vendors, including Temurin, still offer a JRE download; choose JDK'.",
+      "reviewedSha256": "3636bd5c9658cc99c809f05535aa3f8d8436abf1cfd62e0fa46ccd0077d8d914"
+    },
+    {
+      "id": "sme-install-design-003",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/java-basics/installing-java-and-the-ide/artifact.html",
+        "line": 698
+      },
+      "claim": "The simulated 'mvn -v' output for Apache Maven 3.10.0 prints 'Default locale: en_US, platform encoding: UTF-8'. The official Maven 3.10.0 sample output also prints a time zone on that line ('Default locale: en, platform encoding: UTF-8, time zone: Etc/UTC'). The version line, commit hash c43a36b8d67be7e0805a411bc0898af1a51f5472, Maven home, Java version/vendor/runtime and OS lines match the real format. The bad-JAVA_HOME error text matches the real 3.10.0 bin/mvn launcher exactly.",
+      "evidence": [
+        {
+          "url": "https://maven.apache.org/install.html",
+          "section": "Binary distribution, 'Confirm with mvn -v in a new shell. The result should look similar to:' sample output for Apache Maven 3.10.0",
+          "retrievedAt": "2026-11-10T02:43:16Z"
+        },
+        {
+          "url": "https://archive.apache.org/dist/maven/maven-3/3.10.0/binaries/apache-maven-3.10.0-bin.tar.gz",
+          "section": "bin/mvn lines 119-129: JAVA_HOME takes priority, otherwise command -v java; error text 'The JAVA_HOME environment variable is not defined correctly,' / 'this environment variable is needed to run this program.'",
+          "retrievedAt": "2026-11-10T02:45:16Z"
+        }
+      ],
+      "recommendation": "Append ', time zone: Etc/UTC' (or another realistic zone) to the simulated Default locale line so that it matches Maven 3.10.0 output.",
+      "reviewedSha256": "3636bd5c9658cc99c809f05535aa3f8d8436abf1cfd62e0fa46ccd0077d8d914"
+    },
+    {
+      "id": "sme-install-design-004",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/java-basics/installing-java-and-the-ide/artifact.html",
+        "line": 692
+      },
+      "claim": "The practice terminal accepts 'java --version' and prints the same text as 'java -version' ('openjdk version \"25.0.4.1\" 2026-08-18 LTS ...'). The real launcher prints a different first line for --version ('openjdk 25.0.4.1 2026-08-18 LTS', with no word 'version' and no quotes), and it writes to stdout instead of stderr. The 'java -version' output itself is realistic: jdk-25.0.4.1+1 is a real Temurin release (Adoptium build timestamp 2026-08-19), and the Corretto 17.0.12 strings match that vendor's format.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/specs/man/java.html",
+          "section": "Standard Options for Java: '--version Prints product version to the output stream and exits.' / '-version Prints product version to the error stream and exits.' (This manual does not print the first-line wording of either form; the reviewer gives that from JDK launcher behaviour, and it is unverified here.)",
+          "retrievedAt": "2026-11-10T02:45:16Z"
+        },
+        {
+          "url": "https://api.adoptium.net/v3/assets/release_name/eclipse/jdk-25.0.4.1%2B1?os=linux&architecture=x64&image_type=jdk",
+          "section": "Adoptium API v3: HTTP 200, openjdk_version 25.0.4.1+1-LTS, timestamp 2026-08-19T14:49:26Z",
+          "retrievedAt": "2026-11-10T02:45:16Z"
+        }
+      ],
+      "recommendation": "Either print the --version form ('openjdk 25.0.4.1 2026-08-18 LTS' plus the same two following lines) when arg is '--version', or accept only '-version', which is what the page teaches. If the --version branch is kept, record the JDK 25 java tool reference in sources.json.",
+      "reviewedSha256": "3636bd5c9658cc99c809f05535aa3f8d8436abf1cfd62e0fa46ccd0077d8d914"
+    }
+  ]
+}

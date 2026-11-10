@@ -4,7 +4,7 @@ prompt:function(S){return 'ana@pep:~$';},
 init:function(){return {path:['/usr/lib/jvm/java-17/bin','/opt/jdk-25/bin','/usr/bin','/bin'],jhome:null,g:{},look:null,ide:{}};},
 predict:{correct:'a',why:{
  a:'the shell runs the first java it finds in PATH order, and it cannot find mvn until Maven\'s bin folder is on PATH.',
- b:'a runtime-only download could not explain mvn being missing, and OpenJDK and Oracle no longer ship a separate runtime.',
+ b:'a runtime-only download would lack javac, but it could not explain mvn being missing or java reporting 17.',
  c:'Maven is a command-line tool; the shell must find mvn on PATH, the same as any other command.',
  d:'JAVA_HOME tells Maven which Java to use, but the shell still needs mvn on PATH to start it.'}},
 apply:{A:{fs:'apply-a',correct:'a',okNote:'<p>The <code>java</code> Raj runs comes from a folder without <code>javac</code>. Install the full JDK 25 and put its <code>bin</code> folder first on <code>PATH</code>.</p>',
@@ -38,13 +38,13 @@ run:function(line,term,S,api){
  else if((m=s.match(/^which\s+(\S+)$/))){var w=me.find(t,m[1]);t.look={cmd:m[1],dir:w};if(w){o('o',w+'/'+m[1]);}else{o('h','(which prints nothing: '+m[1]+' is not in any PATH folder)');}}
  else if(/^(java|javac|mvn|jshell)(\s|$)/.test(s)){var cmd=s.split(/\s+/)[0],arg=s.slice(cmd.length).trim(),dir=me.find(t,cmd);t.look={cmd:cmd,dir:dir};
   if(!dir){o('e','bash: '+cmd+': command not found');msg=cmd==='mvn'?'No PATH folder holds mvn. Add Maven\'s bin folder to PATH.':'No PATH folder holds '+cmd+'.';}
-  else if(cmd==='java'&&(arg==='-version'||arg==='--version')){var v=me.VER[dir];
+  else if(cmd==='java'&&arg==='-version'){var v=me.VER[dir];
    if(v==='25'){o('o','openjdk version "25.0.4.1" 2026-08-18 LTS\nOpenJDK Runtime Environment Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS)\nOpenJDK 64-Bit Server VM Temurin-25.0.4.1+1 (build 25.0.4.1+1-LTS, mixed mode, sharing)');t.g.java=1;msg='Java 25 runs: '+dir+' is the first PATH folder that holds java.';}
    else{o('o','openjdk version "17.0.12" 2024-07-16 LTS\nOpenJDK Runtime Environment Corretto-17.0.12.7.1 (build 17.0.12+7-LTS)\nOpenJDK 64-Bit Server VM Corretto-17.0.12.7.1 (build 17.0.12+7-LTS, mixed mode, sharing)');msg='That is Java 17: '+dir+' comes before /opt/jdk-25/bin in PATH.';}}
   else if(cmd==='javac'&&arg==='-version'){var v2=me.VER[dir];o('o','javac '+(v2==='25'?'25.0.4.1':'17.0.12'));if(v2==='25'){t.g.javac=1;msg='The JDK 25 compiler is found first.';}else{msg='That is the JDK 17 compiler. The JDK 25 bin folder must come first.';}}
   else if(cmd==='mvn'&&(arg==='-v'||arg==='--version'||arg==='-version')){var jdir=t.jhome?t.jhome+'/bin':me.find(t,'java'),jv=me.VER[jdir];
    if(!jv){o('e','The JAVA_HOME environment variable is not defined correctly,\nthis environment variable is needed to run this program.');msg='JAVA_HOME points to a folder without Java. Fix it or unset it.';}
-   else{o('o','Apache Maven 3.10.0 (c43a36b8d67be7e0805a411bc0898af1a51f5472)\nMaven home: /home/ana/tools/apache-maven-3.10.0\nJava version: '+(jv==='25'?'25.0.4.1, vendor: Eclipse Adoptium, runtime: /opt/jdk-25':'17.0.12, vendor: Amazon.com Inc., runtime: /usr/lib/jvm/java-17')+'\nDefault locale: en_US, platform encoding: UTF-8\nOS name: "linux", version: "6.8.0", arch: "amd64", family: "unix"');
+   else{o('o','Apache Maven 3.10.0 (c43a36b8d67be7e0805a411bc0898af1a51f5472)\nMaven home: /home/ana/tools/apache-maven-3.10.0\nJava version: '+(jv==='25'?'25.0.4.1, vendor: Eclipse Adoptium, runtime: /opt/jdk-25':'17.0.12, vendor: Amazon.com Inc., runtime: /usr/lib/jvm/java-17')+'\nDefault locale: en_US, platform encoding: UTF-8, time zone: Etc/UTC\nOS name: "linux", version: "6.8.0", arch: "amd64", family: "unix"');
     if(jv==='25'){t.g.mvn=1;msg='Maven runs, using Java 25.';}else{msg='Maven runs, but with Java 17: it uses '+(t.jhome?'JAVA_HOME':'the first java on PATH')+'.';}}}
   else{o('e','Only java -version, javac -version and mvn -v are available for '+cmd+' in this practice terminal.');}}
  else if(/^ls(\s|$)/.test(s)){var d=s.slice(2).trim().replace(/^~(?=\/|$)/,HOME).replace(/\/+$/,'');
