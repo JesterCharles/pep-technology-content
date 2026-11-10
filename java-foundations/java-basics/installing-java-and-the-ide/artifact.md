@@ -56,73 +56,16 @@ JAVA_HOME
 - The shell runs the first match it finds in `PATH`, left to right; put the JDK's and Maven's `bin` folders there, then confirm with `java -version`, `javac -version` and `mvn -v` in a new terminal.
 - In the IDE, open the project's `pom.xml` as a project and select JDK 25 as the project SDK.
 
-### Now install on your own computer
+### Now set up your own computer
 
-Now do it for real, on your coding lab computer.
+Install on your coding lab computer by following each vendor's official guide, linked below; those pages keep their steps current. Opening them and downloading needs network access.
 
-macOS
+1. Find your architecture. macOS: Apple menu | About This Mac shows Chip on Apple silicon (choose aarch64) or Processor on Intel (choose x64). Windows: Settings | System | About, then System type: x64-based means x64, ARM-based means aarch64. Linux: `uname -m` prints `x86_64` (x64) or `aarch64`.
+2. Install JDK 25. On the Eclipse Temurin releases page, choose your system, your architecture and JDK 25 - LTS. Then follow the guide for your system: macOS .pkg, Windows .msi (keep the PATH feature and also turn on the `JAVA_HOME` feature) or Linux packages (the package is `temurin-25-jdk`). Done when the installer finishes without an error.
+3. Install Maven. Follow Installing Apache Maven: download the binary archive from the Maven download page, extract it, and add its `bin` folder to `PATH`.
+4. Check in a new terminal. Open a new terminal window, so it reads the new `PATH`, and run the three checks below.
 
-1. Open the Eclipse Temurin releases page (linked under Sources). Choose macOS, your chip (aarch64 for Apple silicon, x64 for Intel) and JDK 25 - LTS, then download the `.pkg` file.
-2. Open the `.pkg` file. Select Continue, accept the license, then Install. The JDK goes into `/Library/Java/JavaVirtualMachines/`.
-3. Download the Maven binary `.tar.gz` archive from the Apache Maven download page; this assumes your browser saved it in `~/Downloads`. In a terminal, run these three lines, with your Maven version in place of `<version>` each time:
-   ```
-   mkdir -p ~/tools
-   tar -xzf ~/Downloads/apache-maven-<version>-bin.tar.gz -C ~/tools
-   echo 'export PATH="$HOME/tools/apache-maven-<version>/bin:$PATH"' >> ~/.zshrc
-   ```
-   The first makes the folder, the second extracts Maven into it, and the third adds Maven's `bin` folder to `PATH` in `~/.zshrc`.
-4. Open a new Terminal window and run the three checks below. If `java -version` shows an older Java, add `export JAVA_HOME=$(/usr/libexec/java_home -v 25)` to `~/.zshrc` and open a new window.
-
-Linux (Debian, Ubuntu, Fedora or RHEL)
-
-1. Open a terminal and run the commands for your system. Type your password when `sudo` asks (nothing shows as you type). Answer `y` to the package install confirmation and to the key import prompt that names Adoptium. Stop and ask for help if you see any other prompt.
-   Debian or Ubuntu:
-   ```
-   sudo apt install -y wget apt-transport-https gpg
-   wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/adoptium.gpg > /dev/null
-   echo "deb https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | sudo tee /etc/apt/sources.list.d/adoptium.list
-   sudo apt update
-   sudo apt install temurin-25-jdk
-   ```
-   Fedora or RHEL:
-   ```
-   sudo tee /etc/yum.repos.d/adoptium.repo > /dev/null <<EOF
-   [Adoptium]
-   name=Adoptium
-   baseurl=https://packages.adoptium.net/artifactory/rpm/$(. /etc/os-release; echo $ID)/\$releasever/\$basearch
-   enabled=1
-   gpgcheck=1
-   gpgkey=https://packages.adoptium.net/artifactory/api/gpg/key/public
-   EOF
-   sudo dnf install temurin-25-jdk
-   ```
-   It is done when the prompt returns with no error.
-2. Download the Maven binary `.tar.gz` from the Apache Maven download page into `~/Downloads`. Run these lines, with your Maven version in place of `<version>`:
-   ```
-   mkdir -p ~/tools
-   tar -xzf ~/Downloads/apache-maven-<version>-bin.tar.gz -C ~/tools
-   echo 'export PATH="$HOME/tools/apache-maven-<version>/bin:$PATH"' >> ~/.bashrc
-   ```
-   Expect no output; it is done when the prompt returns with no error.
-3. Open a new terminal and run the three checks below. If either Java check shows an older version, run these and type the number of the `temurin-25` line. Debian or Ubuntu:
-   ```
-   sudo update-alternatives --config java
-   sudo update-alternatives --config javac
-   ```
-   Fedora or RHEL:
-   ```
-   sudo alternatives --config java
-   sudo alternatives --config javac
-   ```
-
-Windows
-
-1. Open the Eclipse Temurin releases page, choose Windows, x64 and JDK 25 - LTS, and download the `.msi` file. Alternatively, run `winget install EclipseAdoptium.Temurin.25.JDK` in a terminal.
-2. Open the `.msi` file and accept the license. On the Custom Setup screen, keep the feature that adds Temurin to `PATH` and also turn on the feature that sets `JAVA_HOME`, then select Install.
-3. Download the Maven binary `.zip` archive and extract it into a folder such as `C:\tools`. Open System Properties | Environment Variables, edit `Path`, and add the `bin` folder inside the Maven folder.
-4. Open a new Command Prompt or PowerShell window and run the three checks below.
-
-You are ready when, in a new terminal, all three checks show 25. Your numbers may differ:
+You are ready when all three checks show 25. Your exact numbers may differ:
 
 ```
 java -version
@@ -134,11 +77,21 @@ mvn -v
   Java version: 25.0.x ...
 ```
 
-Last, install IntelliJ IDEA with the JetBrains installation guide, open the coding lab's `starter/pom.xml` as a project, and set JDK 25 as the project SDK. It is set when File | Project Structure | Project shows 25.
+If a check fails: `command not found` (Windows: `is not recognized`) means that tool's `bin` folder is not on `PATH`; repeat the guide's PATH step, then open a new terminal. An older version means another Java comes first on `PATH`, as in Activity 2: put the JDK 25 `bin` folder first, and for Maven set `JAVA_HOME` to the JDK 25 folder. If an installer shows an error, asks for an administrator password you do not have, or a check still fails after that, stop and ask your instructor rather than removing other Java versions.
+
+Last, the IDE. Install IntelliJ IDEA with the JetBrains installation guide. Open the coding lab's `starter/pom.xml` as a project, then set JDK 25 as the project SDK, as in IntelliJ IDEA: SDKs. It is set when File | Project Structure | Project shows SDK 25.
 
 Next topic: Running a first program
 
 ## Cheat sheet
+
+Where to act: The command line of Ana’s practice terminal.
+
+Next step: Run `echo $PATH` and compare its first folders with where JDK 25 and Maven live. A new `PATH` that lists their `bin` folders before `$PATH` puts them first and keeps the old folders.
+
+Where to act: The two option groups: what to open, and the project SDK.
+
+Next step: A Maven project is described by its `pom.xml`, so open the item that contains it. Then match the SDK to the Java version the lab needs.
 
 |  |  |
 | --- | --- |
@@ -149,21 +102,19 @@ Next topic: Running a first program
 | `export PATH="/opt/jdk-25/bin:$PATH"` | put a folder first for this terminal session |
 | File \| Project Structure \| Project | set the project SDK in IntelliJ IDEA |
 
-The `export` line lasts for the current terminal only; add it to your shell's startup file (for example `~/.bashrc` or `~/.zshrc`) to keep it. On Windows, the JDK and Maven installers or System Properties | Environment Variables set `PATH` and `JAVA_HOME`, and the checks above work the same in a new Command Prompt. Version numbers on your machine will differ from this practice terminal.
+The `export` line lasts for the current terminal only; add it to your shell's startup file (for example `~/.bashrc` or `~/.zshrc`) to keep it. On Windows, the Temurin installer and the Maven guide's PATH step set `PATH` and `JAVA_HOME`, and the checks above work the same in a new Command Prompt or PowerShell window. Version numbers on your machine will differ from this practice terminal.
 
 ## Sources
 
-Checked against these live official sources on 2026-10-13.
+Checked against these live official sources on 2026-11-09.
 
 - Oracle Java SE Support Roadmap
 - OpenJDK: JDK 25
 - JDK 25 Installation Guide: overview
 - Eclipse Temurin releases
-- Adoptium: Installation overview (winget)
 - Adoptium: macOS PKG installer packages
 - Adoptium: Linux installer packages
 - Adoptium: Windows MSI installer packages
-- JDK 25 Installation Guide: macOS (default JDK, java_home)
 - Dev.java: Getting started with Java (JDK, JRE and PATH)
 - Apache Maven: Installing Apache Maven
 - Apache Maven: Download
@@ -172,6 +123,9 @@ Checked against these live official sources on 2026-10-13.
 - IntelliJ IDEA: SDKs (project SDK)
 - Dev.java: Building a Java application in IntelliJ IDEA
 - Dev.java: Building a Java application in VS Code
+- Apple: Mac computers with Apple silicon (About This Mac)
+- Microsoft: 32-bit and 64-bit Windows (System type)
+- uname(1) manual page
 
 The practice terminal is a simulation of bash on Linux. Its version strings and folder paths are examples; real installers choose their own folders.
 
