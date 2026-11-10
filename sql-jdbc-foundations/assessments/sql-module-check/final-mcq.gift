@@ -1,0 +1,213 @@
+// Graded course final MCQ: SQL & JDBC Foundations. PROTECTED. Never commit.
+$CATEGORY: sql-jdbc-foundations/assessments/sql-module-check
+
+::sql-jdbc-final-mcq-01::[html]<p>A teammate created the bike-share tables yesterday. Today they open a terminal and run <code>psql rentals</code>. The prompt shows <code>rentals\=&gt;</code>. <code>\\l</code> lists <code>postgres</code>, <code>rentals</code>, <code>rentals_dev</code>, <code>template0</code> and <code>template1</code>. <code>\\dt</code> then lists no tables at all</p><p>Which explanation and next step fit what the output shows?</p> {
+~The server stopped after <code>\\l</code> ran. Start PostgreSQL again, then repeat <code>\\dt</code>. #Not quite. <code>\\dt</code> printed a reply from the server, so it is running; a stopped server gives <code>Connection refused</code> when psql connects.
+=The server is running and psql is connected to <code>rentals</code>, but the tables were created in another database in the same server, such as <code>rentals_dev</code>. Quit with <code>\\q</code>, run <code>psql rentals_dev</code>, then <code>\\dt</code>. #Correct. <code>\\l</code> answered, so the server is up; <code>\\dt</code> lists only the tables of the one database psql is connected to, and a server holds many databases.
+~<code>\\dt</code> lists only tables created during the current psql session. Run <code>\\d rentals</code> to see every table in the server. #Not quite. <code>\\dt</code> lists every table in the connected database, whenever it was created; <code>\\d rentals</code> describes one relation named rentals, not a database.
+~Backslash commands need a closing semicolon, so <code>\\dt</code> did not run. Type <code>\\dt;</code> instead. #Not quite. Commands that start with a backslash belong to psql and need no semicolon; <code>\\dt</code> ran and printed its result.
+}
+
+::sql-jdbc-final-mcq-02::[html]<p>A seed script for an empty bike-share database is run in psql as a script file, so an ERROR stops only its own statement. <code>bikes.station_id</code> is <code>NOT NULL REFERENCES stations (id)</code>, and no foreign key uses <code>ON DELETE CASCADE</code>.</p><pre><code>1  INSERT INTO stations (id, name) VALUES (1, 'Quay'), (2, 'Mill');&\#10;2  INSERT INTO bikes (id, station_id) VALUES (10, 1), (11, 3);&\#10;3  INSERT INTO stations (id, name) VALUES (3, 'Park');&\#10;4  INSERT INTO bikes (id, station_id) VALUES (12, 3);&\#10;5  DELETE FROM stations WHERE id \= 1;</code></pre><p>Which rows remain after all five statements have run?</p> {
+=stations 2 and 3; bike 12 only #Correct. Statement 2 is rejected as a whole because station 3 does not exist yet, so bike 10 is never stored either; with no bike pointing at station 1, statement 5 is accepted.
+~stations 1, 2 and 3; bikes 10 and 12 #Not quite. One rejected row cancels the whole INSERT, so bike 10 was not stored; and with bike 10 present, deleting station 1 would have been rejected, not kept.
+~stations 2 and 3; bikes 10, 11 and 12 #Not quite. Statement 2 failed its foreign key check, so neither of its rows exists; a later parent row does not bring back a rejected child row.
+~stations 1, 2 and 3; bike 12 only #Not quite. The delete of station 1 is only rejected while a child still references it; bike 10 was never stored, so nothing references station 1.
+}
+
+::sql-jdbc-final-mcq-03::[html]<p>Story\: As a tool-library volunteer, I want to record which member borrows which tool and when it is due back, so that I can chase late returns. Criteria\: (1) each member has a name and a phone number; (2) each tool has a name and a condition note; (3) over time a member borrows many tools, a tool is lent to many members, and the same member may borrow the same tool again later; (4) every loan records its start date and its due date.</p><p>Draft design\: <code>members (id PK, name, phone)</code>, <code>tools (id PK, name, condition_note, due_on)</code>, <code>loans (member_id FK to members, tool_id FK to tools, started_on, PRIMARY KEY (member_id, tool_id))</code>.</p><p>Which revision meets all four criteria and gives every table a proper key?</p> {
+=Give <code>loans</code> its own <code>id</code> primary key, keep <code>member_id</code> and <code>tool_id</code> as foreign keys, and move <code>due_on</code> from <code>tools</code> into <code>loans</code>. #Correct. A key of (member_id, tool_id) allows each pair once, so a later loan of the same tool to the same member would be refused; and a due date is a fact about one loan, not about the tool.
+~Move <code>due_on</code> from <code>tools</code> into <code>loans</code>; the key <code>(member_id, tool_id)</code> already identifies every loan. #Not quite. Moving the date is right, but criterion 3 lets the same pair repeat, so that pair cannot be the key of a loan\: the repeat would be refused as a duplicate.
+~Add a <code>member_id</code> foreign key to <code>tools</code> and drop <code>loans</code>, since a tool is with one member at a time. #Not quite. A column on tools keeps only the current borrower, so the loan history in criterion 3 and each loan's start date in criterion 4 are lost.
+~Nothing\: every criterion has a column, and the composite key already stops duplicate loans. #Not quite. Refusing a repeat of the same pair is what criterion 3 rules out, and one due date stored on the tool cannot differ from loan to loan.
+}
+
+::sql-jdbc-final-mcq-04::[html]<p>A food bank keeps one table\: <code>shift_log (shift_id, site_name, site_address, starts_at, volunteer_emails)</code>. Each site's name and address repeat on every one of its shifts, and <code>volunteer_emails</code> holds text such as <code>kim@example.com, raj@example.com</code>.</p><p>Which split stores each fact once, keeps one value per cell and loses nothing?</p> {
+~Keep <code>shift_log</code> and replace <code>volunteer_emails</code> with <code>volunteer_email_1</code>, <code>volunteer_email_2</code> and <code>volunteer_email_3</code>. #Not quite. Numbered columns are a repeating group\: they cap the list and leave the repeated site name and address, so the update anomaly stays.
+=<code>sites (id, name, address)</code>; <code>shifts (id, site_id FK, starts_at)</code>; <code>shift_volunteers (shift_id FK, volunteer_email)</code> with one row per volunteer per shift. #Correct. Site facts live once in sites, each shift points at its site, and the repeating list of emails becomes one row per pairing.
+~<code>sites (id, name, address, volunteer_emails)</code>; <code>shifts (id, site_id FK, starts_at)</code>. #Not quite. The multi-valued cell moves to sites, and a volunteer list belongs to one shift, not to a whole site, so which shift a volunteer covers is lost.
+~<code>shifts (id, site_name, site_address, starts_at)</code>; <code>volunteers (email)</code>. #Not quite. The site's name and address still repeat on every shift, and nothing links a volunteer to a shift any more.
+}
+
+::sql-jdbc-final-mcq-05::[html]<p>Stations 1 and 2 exist. The table below is created, then this statement runs\:</p><p><code>INSERT INTO bikes (id, serial, station_id) VALUES (7, 'SN-7', NULL);</code></p><pre><code>CREATE TABLE bikes (&\#10;  id          integer PRIMARY KEY,&\#10;  serial      text NOT NULL UNIQUE,&\#10;  station_id  integer REFERENCES stations (id),&\#10;  in_service  boolean NOT NULL DEFAULT true,&\#10;  daily_rate  numeric(5,2) CHECK (daily_rate &gt; 0)&\#10;);</code></pre><p>What happens?</p> {
+=The row is stored with <code>station_id</code> NULL, <code>in_service</code> true and <code>daily_rate</code> NULL. #Correct. A null foreign key value is not checked, a CHECK rejects only a false condition and a NULL makes it unknown, the DEFAULT fills in_service, and a column without a DEFAULT gets NULL.
+~It is rejected by the foreign key, because NULL does not match any <code>stations.id</code>. #Not quite. Only non-null foreign key values must match a parent; add NOT NULL to make the link mandatory.
+~It is rejected by the CHECK, because a missing <code>daily_rate</code> is not greater than 0. #Not quite. A CHECK fails only when its condition is false; with NULL the condition is unknown, so the row passes.
+~The row is stored with <code>daily_rate</code> 0.00 and <code>in_service</code> false. #Not quite. Without a DEFAULT the column is NULL, never 0; and in_service has DEFAULT true, so it is true.
+}
+
+::sql-jdbc-final-mcq-06::[html]<p>A support engineer must close only bike 12's open rental. They preview it, see exactly one row, and then run the update\:</p><pre><code>SELECT * FROM rentals WHERE returned_on IS NULL AND bike_id \= 12;&\#10;-- 1 row&\#10;UPDATE rentals SET returned_on \= '2026-11-09' WHERE returned_on IS NULL;&\#10;-- UPDATE 4</code></pre><p>Which statement is true?</p> {
+~The update changed one row; <code>UPDATE 4</code> reports how many rows PostgreSQL read while searching. #Not quite. The command tag reports the rows the statement changed, so four rentals were closed.
+=The update changed every open rental, 4 rows, because its WHERE dropped <code>bike_id \= 12</code>; reusing the preview's exact WHERE, plus <code>RETURNING id</code>, would have changed and listed only bike 12's rental. #Correct. UPDATE changes every row its own WHERE matches; the preview only protects you when it uses the same condition, and RETURNING shows the changed rows.
+~Nothing changed, because a column that is NULL cannot be updated. #Not quite. SET can give a NULL column a value; <code>IS NULL</code> in WHERE matched the four open rentals.
+~The update changed 4 rows because the preview SELECT selected them first; without the preview it would have changed only bike 12's row. #Not quite. A SELECT changes nothing and does not pick rows for a later statement; the UPDATE used only its own WHERE.
+}
+
+::sql-jdbc-final-mcq-07::[html]<p><code>authors.csv</code> and <code>books.csv</code> are on your laptop, and each starts with a header line. The course database runs on a hosted server; your role is not a superuser and has no file-reading role. <code>authors.id</code> is an integer key, <code>books.author_id</code> is <code>NOT NULL REFERENCES authors (id)</code>, and both tables are empty.</p><p>Which plan loads both files?</p> {
+~<code>COPY authors FROM '/Users/me/authors.csv' WITH (FORMAT csv, HEADER);</code>, then the same for books. #Not quite. A full path does not help\: server-side COPY opens the path on the server's own disk and needs superuser or a file-reading role.
+~In psql\: <code>\\copy books ...</code> first, then <code>\\copy authors ...</code>, because the foreign key is checked once both files are in. #Not quite. Rows are checked as they arrive, so books that point at authors not loaded yet are refused.
+=In psql\: <code>\\copy authors FROM 'authors.csv' WITH (FORMAT csv, HEADER)</code>, then <code>\\copy books FROM 'books.csv' WITH (FORMAT csv, HEADER)</code>. #Correct. psql reads each file on your laptop and sends the rows over the connection, so the server never opens a file; authors go in first, so every book finds its author.
+~In psql\: <code>\\copy authors FROM 'authors.csv' WITH (FORMAT csv)</code>, then the same for books. #Not quite. Client side and order are right, but without HEADER the header line is read as data; its text does not fit the integer id column, so the load fails.
+}
+
+::sql-jdbc-final-mcq-08::[html]<p><code>riders</code> holds (id, name, city)\: (1, Ana, York), (2, Ben, NULL), (3, Cy, Hull), (4, Dee, York), (5, Eli, Leeds).</p><pre><code>SELECT id, name, city&\#10;FROM riders&\#10;WHERE city IN ('Hull', 'York') OR city IS NULL&\#10;ORDER BY city DESC, id;</code></pre><p>In what order does this query return rider ids?</p> {
+~1, 4, 3, 2 #Not quite. That puts NULL last, which is where ascending order or NULLS LAST would put it; DESC puts it first.
+~4, 1, 3, 2 #Not quite. DESC applies only to city; the tie-breaker id is ascending by default, and the NULL row comes first under DESC.
+~1, 4, 3 #Not quite. <code>OR city IS NULL</code> keeps Ben's row; only Eli, in Leeds, is filtered out.
+=2, 1, 4, 3 #Correct. NULL sorts as if larger than every value, so DESC puts Ben first; then York before Hull, and id breaks the York tie ascending.
+}
+
+::sql-jdbc-final-mcq-09::[html]<p><code>shipments.courier</code> holds 'Fast', 'Eco', NULL, 'Fast', 'Eco', 'Prime' and NULL in seven rows; NULL means no courier is booked yet. A dispatcher wants the number of shipments Eco is not handling, unbooked ones included, which is 5.</p><p>Which query returns 5?</p> {
+~<code>SELECT COUNT(*) FROM shipments WHERE courier &lt;&gt; 'Eco';</code> #Not quite. NULL compared with 'Eco' is unknown, so WHERE drops the unbooked shipments and the count is 3.
+=<code>SELECT COUNT(*) FROM shipments WHERE COALESCE(courier, 'none') &lt;&gt; 'Eco';</code> #Correct. COALESCE gives each unbooked shipment the text 'none' before the test, so the two of them count along with two Fast and one Prime.
+~<code>SELECT COUNT(*) FROM shipments WHERE courier NOT IN ('Eco', NULL);</code> #Not quite. A NULL in the list leaves NOT IN unknown for every row that is not 'Eco', so the count is 0.
+~<code>SELECT COUNT(*) FROM shipments WHERE COALESCE(courier, 'Eco') &lt;&gt; 'Eco';</code> #Not quite. This fallback turns each unbooked shipment into 'Eco', so they fail the test and the count is 3.
+}
+
+::sql-jdbc-final-mcq-10::[html]<p>A ticket queue labels each ticket with this expression. Three tickets have <code>priority</code> 5, 3 and NULL.</p><pre><code>CASE&\#10;  WHEN priority &gt;\= 2 THEN 'High'&\#10;  WHEN priority &gt;\= 4 THEN 'Urgent'&\#10;  ELSE 'Low'&\#10;END AS label</code></pre><p>Which labels do they get, in that order?</p> {
+~Urgent, High, Low #Not quite. CASE does not look for the best match; 5 &gt;\= 2 is already true in the first WHEN, so it returns High.
+~High, High, NULL #Not quite. A NULL priority fails every comparison WHEN and lands in ELSE, which returns Low; CASE gives NULL only when there is no ELSE.
+=High, High, Low #Correct. CASE returns the first true WHEN, so 5 stops at the first branch and Urgent is never reached; NULL makes both comparisons unknown and falls to ELSE.
+~Urgent, High, NULL #Not quite. Both parts are off\: WHEN order decides 5's label, and the ELSE branch labels the NULL priority.
+}
+
+::sql-jdbc-final-mcq-11::[html]<p><code>survey.score</code> is an integer column with six rows\: 6, NULL, 3, NULL, NULL, 4.</p><pre><code>SELECT COUNT(*), COUNT(score), MAX(score),&\#10;       SUM(score) * 1.0 / COUNT(*)&\#10;FROM survey;</code></pre><p>What does this query return?</p> {
+~6, 3, 6, about 4.33 #Not quite. 13 / 3 is the average of the known scores; this query divides by COUNT(*), which counts the rows whose score is NULL too.
+=6, 3, 6, about 2.17 #Correct. COUNT(*) counts all six rows, COUNT(score) the three known scores, and SUM skips NULLs to give 13; multiplying by 1.0 makes the division numeric, so 13 / 6 is about 2.17.
+~6, 6, 6, about 2.17 #Not quite. COUNT(score) counts only the non-NULL values, so it is 3.
+~6, 3, 6, 2 #Not quite. The sum is multiplied by 1.0 before dividing, so the division is numeric and keeps its decimal part.
+}
+
+::sql-jdbc-final-mcq-12::[html]<p><code>orders (customer_id, total)</code> holds (1, 30), (1, 15), (1, 25), (2, 60), (2, 10), (3, 20), (3, 20), (4, 45).</p><pre><code>SELECT customer_id, SUM(total) AS big_spend&\#10;FROM orders&\#10;WHERE total &gt;\= 20&\#10;GROUP BY customer_id&\#10;HAVING SUM(total) &gt; 50&\#10;ORDER BY customer_id;</code></pre><p>What does this query return?</p> {
+~(1, 70) and (2, 70) #Not quite. Those sums still include the 15 and 10 orders; WHERE removes those rows before any group is summed.
+~(1, 55), (2, 60), (3, 40) and (4, 45) #Not quite. That is every group after WHERE; HAVING then removes customers 3 and 4, whose sums are not over 50.
+~(2, 60) only #Not quite. HAVING tests each group's sum, not single orders, so customer 1 qualifies with 30 + 25 although no one order is over 50.
+=(1, 55) and (2, 60) #Correct. WHERE first drops the orders under 20, the group sums are then 55, 60, 40 and 45, and HAVING keeps the customers whose sum is over 50.
+}
+
+::sql-jdbc-final-mcq-13::[html]<p><code>stations</code> holds (1, North), (2, South), (3, East). <code>rentals (station_id, minutes)</code> holds (1, 90), (1, 30), (2, 20). A report is meant to list every station beside its long rentals.</p><pre><code>SELECT s.name, r.minutes&\#10;FROM stations AS s&\#10;LEFT JOIN rentals AS r ON r.station_id \= s.id&\#10;WHERE r.minutes &gt; 60;</code></pre><p>Which rows does this query return?</p> {
+~(North, 90), (South, NULL) and (East, NULL) #Not quite. The LEFT JOIN alone would keep East, but the WHERE test on r.minutes then removes every row that is not a long rental, including the NULL row.
+~(North, 90) and (East, NULL) #Not quite. East's minutes are NULL, and a comparison with NULL is unknown, so WHERE drops that row too.
+=(North, 90) only #Correct. The LEFT JOIN keeps East with NULL minutes, but WHERE runs after it\: NULL &gt; 60 is unknown and 20 &gt; 60 is false, so only North's 90 survives.
+~(North, 90), (North, 30), (South, 20) and (East, NULL) #Not quite. That is the join without the WHERE; the filter keeps only rows whose minutes are greater than 60.
+}
+
+::sql-jdbc-final-mcq-14::[html]<p>A kayak club's report should list the kayaks that have never been booked. Kayaks 1 to 4 exist, and only kayaks 1 and 3 have bookings, yet the report returns no rows. <code>bookings.kayak_id</code> is nullable\: walk-in bookings leave it NULL.</p><pre><code>SELECT id FROM kayaks&\#10;WHERE id NOT IN (SELECT kayak_id FROM bookings);</code></pre><p>Why is the report empty, and which rewrite lists kayaks 2 and 4?</p> {
+~A walk-in booking puts NULL in the subquery's result; writing the test as <code>WHERE NOT (id IN (SELECT kayak_id FROM bookings))</code> lists them. #Not quite. Wrapping IN inside NOT still performs the NOT IN test; while the NULL remains in the list the result is unknown, so the report stays empty.
+~NULL matches every kayak id, so every kayak counts as booked; <code>... LEFT JOIN bookings b ON b.kayak_id \= k.id WHERE b.kayak_id IS NOT NULL</code> lists them. #Not quite. NULL matches nothing, it makes the comparison unknown; and IS NOT NULL keeps the booked kayaks, 1 and 3.
+~A walk-in booking puts NULL in the subquery's result; <code>SELECT k.id FROM kayaks k JOIN bookings b ON b.kayak_id \= k.id WHERE b.kayak_id IS NULL</code> lists them. #Not quite. The diagnosis is right, but an inner join keeps only kayaks with a matching booking, so no joined row has a NULL kayak_id.
+=A walk-in booking puts NULL in the subquery's result, so <code>id NOT IN (...)</code> is never true for kayaks 2 and 4; <code>SELECT k.id FROM kayaks k LEFT JOIN bookings b ON b.kayak_id \= k.id WHERE b.kayak_id IS NULL</code> lists them. #Correct. Against a list holding a NULL, a non-match is unknown rather than true; the LEFT JOIN keeps every kayak, and the unbooked ones are the rows where the joined column is NULL.
+}
+
+::sql-jdbc-final-mcq-15::[html]<p><code>riders (id, name, referred_by)</code> holds (1, Ana, NULL), (2, Ben, 1), (3, Cy, 1), (4, Dee, 3), where <code>referred_by</code> references <code>riders.id</code>.</p><pre><code>SELECT r.name AS rider, ref.name AS referrer&\#10;FROM riders AS r&\#10;JOIN riders AS ref ON ref.id \= r.referred_by;</code></pre><p>Which rows does this query return?</p> {
+~(Ana, NULL), (Ben, Ana), (Cy, Ana) and (Dee, Cy) #Not quite. Keeping Ana with a NULL referrer needs a LEFT JOIN; JOIN keeps matched pairs only.
+~(Ana, Ben), (Ana, Cy) and (Cy, Dee) #Not quite. That reverses the roles\: the ON condition takes the referrer's id from the rider's referred_by, so the rider is on the left.
+=(Ben, Ana), (Cy, Ana) and (Dee, Cy) #Correct. Each rider row is matched to the row whose id equals its referred_by; the inner join drops Ana, who has no referrer.
+~An error, because one table cannot appear twice in FROM. #Not quite. A self-join is allowed when each occurrence has its own alias, as r and ref do here.
+}
+
+::sql-jdbc-final-mcq-16::[html]<p>A library report should list members whose fine is higher than the average fine at their own branch. It worked while the library had one branch. Since branch 2 opened it fails with\: more than one row returned by a subquery used as an expression.</p><pre><code>SELECT m.name&\#10;FROM members AS m&\#10;WHERE m.fine &gt; (SELECT AVG(fine) FROM members GROUP BY branch_id);</code></pre><p>Which rewrite removes the error and still answers the report's question?</p> {
+~Remove <code>GROUP BY branch_id</code>. #Not quite. It runs, but the subquery then gives one average over all branches, so members are compared with the library-wide average instead of their branch's.
+=Replace <code>GROUP BY branch_id</code> with <code>WHERE branch_id \= m.branch_id</code>, so the subquery returns the one average of the outer member's branch. #Correct. Tied to the outer row, the subquery yields a single value per member, the average at that member's branch, which is what the report compares with.
+~Replace <code>&gt;</code> with <code>IN</code>. #Not quite. It runs, but it lists members whose fine equals one of the branch averages, a different question.
+~Add <code>LIMIT 1</code> to the subquery. #Not quite. It runs, but every member is compared with the average of whichever branch comes back first, not with their own branch's.
+}
+
+::sql-jdbc-final-mcq-17::[html]<p><code>stations</code> holds (1, North), (2, South), (3, East). <code>rentals (station_id, minutes)</code> holds (1, 90), (1, 30), (1, 75), (2, 20).</p><pre><code>WITH long_rides AS (&\#10;  SELECT station_id FROM rentals WHERE minutes &gt; 60&\#10;), per_station AS (&\#10;  SELECT station_id, COUNT(*) AS n FROM long_rides GROUP BY station_id&\#10;)&\#10;SELECT s.name, COALESCE(p.n, 0) AS long_count&\#10;FROM stations AS s&\#10;LEFT JOIN per_station AS p ON p.station_id \= s.id&\#10;ORDER BY s.id;</code></pre><p>What does this query return?</p> {
+~(North, 3), (South, 1), (East, 0) #Not quite. per_station counts rows of long_rides, not of rentals, so only rides over 60 minutes are counted.
+~(North, 2) only #Not quite. That would be an inner join; the LEFT JOIN keeps South and East with no matching count.
+~(North, 2), (South, NULL), (East, NULL) #Not quite. The unmatched counts are NULL after the join, but COALESCE replaces them with 0.
+=(North, 2), (South, 0), (East, 0) #Correct. The first step keeps North's two long rides, the second counts them per station, the LEFT JOIN keeps every station and COALESCE shows 0 where no count matched.
+}
+
+::sql-jdbc-final-mcq-18::[html]<p>A report should list the longest rental at each station and keep every rental tied for that top spot. Station 1 has two 90-minute rentals, but the report shows only one of them.</p><pre><code>WITH ranked AS (&\#10;  SELECT station_id, id, minutes,&\#10;         ROW_NUMBER() OVER (PARTITION BY station_id ORDER BY minutes DESC) AS pos&\#10;  FROM rentals&\#10;)&\#10;SELECT station_id, id, minutes FROM ranked WHERE pos \= 1;</code></pre><p>Which change makes the report keep both tied rentals?</p> {
+~Add <code>, id</code> to the window's ORDER BY. #Not quite. That makes the choice between ties repeatable, but ROW_NUMBER still numbers them 1 and 2, so one is still dropped.
+~Filter in the same SELECT with <code>WHERE ROW_NUMBER() OVER (...) \= 1</code> and drop the WITH step. #Not quite. A window function cannot be used in WHERE of the query that computes it; that is why the number is filtered in an outer query or CTE.
+~Remove <code>PARTITION BY station_id</code>. #Not quite. The numbering would then run across all stations, so the report would show one rental overall instead of one per station.
+=Replace <code>ROW_NUMBER()</code> with <code>RANK()</code> and keep <code>WHERE pos \= 1</code>. #Correct. ROW_NUMBER gives tied rows different numbers; RANK gives both 90-minute rentals place 1, so the filter keeps them both.
+}
+
+::sql-jdbc-final-mcq-19::[html]<p><code>rentals (id, station_id, minutes)</code> holds (1, 1, 90), (2, 1, 30), (3, 2, 50).</p><pre><code>SELECT id,&\#10;       100.0 * minutes / SUM(minutes) OVER (PARTITION BY station_id) AS pct&\#10;FROM rentals&\#10;ORDER BY id;</code></pre><p>What does this query return?</p> {
+~Two rows, one per station, because SUM collapses each station into one row. #Not quite. With OVER, SUM is computed across the partition but every input row is kept.
+~Three rows\: about 52.9, 17.6 and 29.4. #Not quite. Those divide by the total of all rentals, 170; PARTITION BY station_id restarts the sum for each station.
+=Three rows\: id 1 is 75, id 2 is 25, id 3 is 100 (shown with decimal places). #Correct. The window sums minutes per station without collapsing rows\: 90 + 30 \= 120 for station 1 and 50 for station 2, and each row is divided by its own station's total.
+~An error, because SUM needs a GROUP BY clause. #Not quite. An aggregate followed by OVER is a window function and needs no GROUP BY.
+}
+
+::sql-jdbc-final-mcq-20::[html]<p><code>riders</code> has <code>id integer PRIMARY KEY</code> and <code>email text NOT NULL UNIQUE</code>. <code>rentals.rider_id</code> is <code>REFERENCES riders (id)</code>. A developer adds <code>CREATE INDEX riders_email_idx ON riders (email);</code> "so email lookups are fast", and no other index has been created.</p><p>Which statement is true?</p> {
+~The new index is needed, because UNIQUE checks duplicates by reading every row. #Not quite. A UNIQUE constraint is enforced through the unique index PostgreSQL creates for it.
+=The new index duplicates the unique index PostgreSQL already created for <code>email</code>, adding write and storage cost for no lookup gain; <code>rentals.rider_id</code> has no index until one is created. #Correct. PRIMARY KEY and UNIQUE each create a unique B-tree index automatically; a foreign key does not.
+~Declaring <code>rentals.rider_id</code> as a foreign key also created an index on it. #Not quite. PostgreSQL creates indexes for PRIMARY KEY and UNIQUE, not for the referencing column of a foreign key.
+~Extra indexes cost nothing on writes; they only use disk space. #Not quite. Every INSERT, UPDATE and DELETE must also update each index on the table.
+}
+
+::sql-jdbc-final-mcq-21::[html]<p><code>dock_events (id PK, station_id, event_type, logged_at)</code> has no index except its primary key. A developer runs plain <code>EXPLAIN</code> on the station jam report and gets\:</p><pre><code>EXPLAIN SELECT * FROM dock_events&\#10;WHERE logged_at &gt;\= '2026-11-01' AND station_id \= 7;&\#10;&\#10;Seq Scan on dock_events  (cost\=0.00..1834.00 rows\=120 width\=36)&\#10;  Filter\: ((logged_at &gt;\= '2026-11-01 00\:00\:00'\:\:timestamp without time zone) AND (station_id \= 7))</code></pre><p>Which statement about this output is true?</p> {
+=No index is used\: every row of <code>dock_events</code> would be read and tested by the Filter, and since EXPLAIN without ANALYZE only plans the query, <code>rows\=120</code> is the planner's estimate. #Correct. Seq Scan means the whole table is read and Filter tests each row; plain EXPLAIN only plans, so its row count and cost are estimates.
+~The plan already uses the primary-key index, because <code>id</code> is indexed and <code>SELECT *</code> returns <code>id</code>. #Not quite. An index is used only for conditions on its columns; the node is a Seq Scan, and an index use would show as Index Scan, Index Only Scan or Bitmap Index Scan.
+~An index on <code>(logged_at, station_id)</code> fits this query best, because its first column matches the first condition in WHERE. #Not quite. The order of conditions in WHERE does not matter; put the equality-tested station_id first and the range-tested logged_at second.
+~<code>EXPLAIN ANALYZE</code> would give the same estimates without reading the table. #Not quite. EXPLAIN ANALYZE actually executes the statement and adds the measured rows and times beside the estimates.
+}
+
+::sql-jdbc-final-mcq-22::[html]<p>The repository builds its JDBC URL from <code>PGHOST</code>, <code>PGPORT</code> and <code>PGDATABASE</code>, as the project does. On a colleague's laptop it fails with <code>Connection to db.lab.internal\:5432 refused</code>. On that laptop <code>pg_isready -h localhost -p 5432</code> prints <code>accepting connections</code>, and psql shows the project's database on that local server.</p><p>What is the right fix?</p> {
+~Set <code>PGPORT\=5433</code>, because a refused connection means the port is wrong. #Not quite. The local server accepts connections on 5432; the refusal came from another host, the one PGHOST names.
+~Reset the database user's password. #Not quite. A wrong password gives password authentication failed after a server answers; here the named host refused the connection.
+=Set <code>PGHOST\=localhost</code> in that laptop's environment and run again; the code stays unchanged. #Correct. The message names the host the driver tried, and the local server answers on 5432, so only the host setting is wrong on this machine.
+~Replace the <code>PGHOST</code> lookup with the text <code>localhost</code> in the code and commit it. #Not quite. It fixes this laptop only and hard-codes a setting that other machines and the test setup supply through the environment.
+}
+
+::sql-jdbc-final-mcq-23::[html]<p><code>findAll</code> maps rows into <code>members</code>, a new, empty list. The test database is seeded with four members, and psql shows all four rows. The test fails with <code>expected\: &lt;4&gt; but was\: &lt;2&gt;</code>.</p><pre><code>try (ResultSet rs \= ps.executeQuery()) \{&\#10;    while (rs.next()) \{&\#10;        members.add(new Member(rs.getLong("id"), rs.getString("name")));&\#10;        rs.next();&\#10;    \}&\#10;\}&\#10;return members;</code></pre><p>Which line causes the failure?</p> {
+=The extra <code>rs.next()</code> inside the loop\: each pass moves the cursor twice, so rows 2 and 4 are passed over without being mapped. #Correct. The seed is right and the actual count is half the expected one; only the loop condition should move the cursor.
+~<code>while (rs.next())</code>\: the cursor starts on row 1, so the first call skips it. #Not quite. The cursor starts before the first row; the first next() moves onto row 1, which is then mapped.
+~<code>rs.getLong("id")</code>\: reading a column also moves the cursor on to the next row. #Not quite. Getters read the current row and never move the cursor.
+~The seed\: the test database must hold two members, so the mapping is right. #Not quite. psql shows four rows in the test database, so the seed is fine and rows are lost while they are read.
+}
+
+::sql-jdbc-final-mcq-24::[html]<p><code>tickets.screening_id</code> is <code>REFERENCES screenings (id)</code>. Screenings 1 to 5 exist, and tickets 3 and 410 exist. Support wants ticket 410 moved to screening 3, but the call below throws an <code>SQLException</code> saying the update on table "tickets" violates a foreign key constraint.</p><pre><code>void moveTicket(long ticketId, long screeningId) throws SQLException \{&\#10;    String sql \= "UPDATE tickets SET screening_id \= ? WHERE id \= ?";&\#10;    try (PreparedStatement ps \= conn.prepareStatement(sql)) \{&\#10;        ps.setLong(1, screeningId);&\#10;        ps.setLong(2, ticketId);&\#10;        ps.executeUpdate();&\#10;    \}&\#10;\}&\#10;&\#10;moveTicket(3, 410);</code></pre><p>What is wrong?</p> {
+=The call passes its arguments in the wrong order. The method binds them correctly, so it tried to put ticket 3 at screening 410, which does not exist; the call should be <code>moveTicket(410, 3)</code>. #Correct. The first ? is screening_id and the second is id, matching setters 1 and 2; the values were swapped before they reached the method.
+~The setter indexes are swapped\: parameter 1 is the ticket id, so the two setters should be exchanged. #Not quite. Parameters are numbered by the order of the ? marks, and the first ? is screening_id; the setters already match.
+~<code>executeUpdate</code> cannot run an UPDATE that has parameters; it needs <code>executeQuery</code>. #Not quite. executeUpdate runs INSERT, UPDATE and DELETE, with or without parameters, and returns the changed-row count; executeQuery is for SELECT.
+~The WHERE looked up 410 as a ticket that has no row, and <code>executeUpdate</code> throws when it changes 0 rows. #Not quite. A WHERE that matches no row makes executeUpdate return 0 without an error; the foreign key error comes from the new screening_id value.
+}
+
+::sql-jdbc-final-mcq-25::[html]<p><code>sessions</code> holds 57 rows. A logout handler runs the code below with the token a user sent\: <code>x' OR 'a'\='a</code>.</p><pre><code>String sql \= "DELETE FROM sessions WHERE token \= '" + token + "'";&\#10;try (PreparedStatement ps \= conn.prepareStatement(sql)) \{&\#10;    int n \= ps.executeUpdate();&\#10;\}</code></pre><p>What does <code>n</code> hold, and why?</p> {
+~0\: no session has that exact token. #Not quite. That would be the result with <code>token \= ?</code> and setString; here the typed text became part of the SQL.
+=57\: the quote ends the literal, <code>OR 'a'\='a'</code> becomes SQL that is true for every row, and every session is deleted. #Correct. The value was concatenated into the text before preparing, so it changed the statement; executeUpdate reports every deleted row.
+~Nothing\: PostgreSQL rejects a statement whose value contains a quote. #Not quite. The quotes balance, so the text parses as valid SQL with an extra OR condition.
+~0, because <code>prepareStatement</code> turns the concatenated value into a bound parameter. #Not quite. prepareStatement keeps the text it receives; with no ? placeholder, nothing is bound and the injection is already in the text.
+}
+
+::sql-jdbc-final-mcq-26::[html]<p><code>accounts (id PK, balance)</code> holds (1, 200) and (2, 50). <code>transfer_log (id PK, account_id REFERENCES accounts (id), amount)</code> is empty, and no foreign key cascades. A method moves account 2's money to account 1 and then closes account 2, using a fresh connection\:</p><pre><code>conn.setAutoCommit(false);&\#10;try \{&\#10;    credit.executeUpdate();   // account 1\: balance + 50&\#10;    debit.executeUpdate();    // account 2\: balance - 50&\#10;    log.executeUpdate();      // INSERT INTO transfer_log (account_id, amount) VALUES (2, -50)&\#10;    conn.commit();&\#10;    close.executeUpdate();    // DELETE FROM accounts WHERE id \= 2&\#10;    conn.commit();&\#10;\} catch (SQLException e) \{&\#10;    conn.rollback();&\#10;    throw e;&\#10;\}</code></pre><p>What do the committed tables hold after the call throws?</p> {
+=Account 1 has 250, account 2 still exists with 0, and <code>transfer_log</code> has one row, for account 2. #Correct. The delete is refused because a log row still references account 2; the rollback can undo only work since the last commit, and the move and its log row were already committed.
+~Account 1 has 200, account 2 has 50, and <code>transfer_log</code> is empty. #Not quite. The rollback undoes only what came after the first commit; the credit, debit and log insert were committed before the delete failed.
+~Account 1 has 250, account 2 is gone, and <code>transfer_log</code> still has its row for account 2. #Not quite. A foreign key also guards deletes\: a parent row that a child row still references cannot be deleted.
+~Account 1 has 250, and account 2 and its <code>transfer_log</code> row are both gone. #Not quite. Child rows are removed with their parent only under ON DELETE CASCADE; without it the delete is refused.
+}
+
+::sql-jdbc-final-mcq-27::[html]<p><code>rentals</code> holds 5 committed rows. Session 1 is a JDBC connection with auto-commit off; session 2 is psql with default settings. They run in this order\:</p><pre><code>S1\: INSERT two rentals&\#10;S2\: SELECT COUNT(*) FROM rentals;   -- count 1&\#10;S1\: conn.commit();&\#10;S2\: SELECT COUNT(*) FROM rentals;   -- count 2&\#10;S1\: DELETE one rental, then conn.rollback();&\#10;S2\: SELECT COUNT(*) FROM rentals;   -- count 3</code></pre><p>What do session 2's three counts show?</p> {
+~7, 7, 6 #Not quite. Uncommitted inserts are not visible to another session, and a rolled-back delete never takes effect.
+~5, 7, 6 #Not quite. The first two are right, but the delete was rolled back, so the count stays 7.
+~7, 7, 7 #Not quite. Before the commit, session 2 still sees the 5 committed rows.
+=5, 7, 7 #Correct. Session 2 sees only committed data\: the inserts after the commit, and never the delete, which was rolled back.
+}
+
+::sql-jdbc-final-mcq-28::[html]<p><code>LoanService</code> receives a <code>LoanRepository</code> interface. <code>App</code> builds it with <code>new LoanService(new InMemoryLoanRepository())</code>, and the service's unit tests pass the in-memory repository too. The team adds <code>JdbcLoanRepository</code>, whose JDBC calls throw the checked <code>SQLException</code>.</p><p>Which plan swaps the storage with the smallest change to the rest of the code and leaks no resources?</p> {
+~<code>JdbcLoanRepository implements LoanRepository</code> and wraps <code>SQLException</code> in an unchecked exception; each method ends with <code>rs.close()</code>, <code>ps.close()</code> and <code>conn.close()</code>. #Not quite. The boundary is right, but if a statement throws, the close calls at the end never run and the connection leaks; try-with-resources closes on every path.
+~Add <code>throws SQLException</code> to each <code>LoanRepository</code> method so callers can handle database errors. #Not quite. It compiles, but the checked exception then reaches the interface, the service, its tests and every caller, far more change than the swap needs.
+=<code>JdbcLoanRepository implements LoanRepository</code>; each method opens its Connection, PreparedStatement and ResultSet in try-with-resources and turns an <code>SQLException</code> into an unchecked exception; <code>App</code> changes only its construction line. #Correct. The interface is unchanged, so the service and its unit tests are untouched; the checked exception stays inside the JDBC class, and every resource is closed even when a call fails.
+~Change <code>LoanService</code> to take a <code>JdbcLoanRepository</code>, and point its unit tests at the development database. #Not quite. The service then depends on one implementation and changes; and tests that share the development database depend on and alter its data.
+}
+
+::sql-jdbc-final-mcq-29::[html]<p>A helper was written so callers could read the rows themselves. Every call fails at the caller's first <code>rs.next()</code> with <code>This ResultSet is closed.</code></p><pre><code>public ResultSet findOverdue() throws SQLException \{&\#10;    try (Connection conn \= Db.connect();&\#10;         PreparedStatement ps \= conn.prepareStatement(&\#10;             "SELECT id, title, due_on FROM loans WHERE due_on &lt; CURRENT_DATE");&\#10;         ResultSet rs \= ps.executeQuery()) \{&\#10;        return rs;&\#10;    \}&\#10;\}</code></pre><p>What explains it, and in what order were the resources closed?</p> {
+~They close in the order they were opened, <code>conn</code>, <code>ps</code>, <code>rs</code>, and closing the connection first is what breaks <code>rs</code>; reorder the header so <code>rs</code> is opened first. #Not quite. Resources close in reverse order, rs first; and rs cannot be opened before the statement that produces it.
+~A returned ResultSet stays open until the caller is done, so the error means the query found no overdue loans. #Not quite. Returning a declared resource does not keep it open; an empty result makes next() return false rather than throw.
+~Only <code>rs</code> is closed, because it was opened last; return <code>ps</code> instead so the caller can run <code>executeQuery</code> again. #Not quite. All three declared resources close as the block exits, in reverse order, so a returned statement would be closed too.
+=The <code>return</code> leaves the try block, so all three close before the caller gets <code>rs</code>, in the order <code>rs</code>, <code>ps</code>, <code>conn</code>; map each row into a <code>Loan</code> inside the block and return the list instead. #Correct. try-with-resources closes every declared resource as the block exits, by return too, in reverse order of opening; objects mapped inside the block outlive the close.
+}
+
+::sql-jdbc-final-mcq-30::[html]<p>A test-database helper runs\: create <code>rentals_test_9c2e</code>; run the repository tests; apply <code>schema.sql</code> and the seed rows; drop the database while the repository still holds an open connection. Two different errors appear during the run.</p><p>Which corrected order fixes both errors?</p> {
+=Create the database, apply the schema and seed rows, run the tests, close the repository's connections, then drop the database. #Correct. Tests need the tables first, or they fail with relation ... does not exist, and PostgreSQL refuses to drop a database that is still being accessed by other users.
+~Create the database, run the tests, apply the schema and seed, then drop the database with no connection closed. #Not quite. That is the failing order\: the tests run before any table exists, and the drop happens while a connection is open.
+~Apply the schema and seed, create the database, run the tests, close connections, then drop it. #Not quite. A schema cannot be applied to a database that does not exist yet.
+~Skip the create and drop and run the tests against the development database, which already has the schema. #Not quite. Tests would then depend on and change development data, so results differ between machines and runs.
+}
+
