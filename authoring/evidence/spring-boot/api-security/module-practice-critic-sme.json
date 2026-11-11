@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "pep-spring-practice-critic-sme (independent Claude subagent, 2026-11-11)",
+  "reviewedPath": "spring-boot/api-security/coding-lab/lab.json",
+  "reviewedSha256": "99f110e554f7ac1855f4755442eba494ddcbf3ca4881308a169006b6049601a6",
+  "artifactHashes": {
+    "coding-lab/lab.json": "99f110e554f7ac1855f4755442eba494ddcbf3ca4881308a169006b6049601a6",
+    "coding-lab/README.md": "c2e81a52688465563ff7a2105d73470f6c0b60e720714d7fe88ebf291e2c3ce9",
+    "assessments/api-security-mastery-check/blueprint.json": "07a0a1bc8c4005f9a9c788037dc52c5c8426e606539ac1dab370473c591ce10c",
+    "assessments/api-security-mastery-check/practice.gift": "348ddccbabbe5125abb2d29e7611e0d566239fddfdf0dde70ca0a09bc9031ff1"
+  },
+  "findings": [
+    {
+      "id": "spring-practice-sme-006",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "line": 92
+      },
+      "claim": "task4 tampers the token by replacing its last two characters ('xx', or 'yy' when it already ends in 'xx'). The last base64url character of a 43-character HS256 signature carries only 4 significant bits, and Nimbus decodes leniently, so when a token happens to end in 'xw' the replacement 'xx' decodes to the byte-identical signature ('w'=110000 and 'x'=110001 differ only in the 2 discarded trailing bits): the 'tampered' token is then still valid and the expected 401 becomes 200. Tokens vary per run via issuedAt, so this is a genuine (if rare, roughly 1 in 1024 runs) flake in which a fully correct implementation fails.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+          "section": "line 92 of the reviewed bytes",
+          "retrievedAt": "2026-11-11T16:35:02Z",
+          "textSha256": "95ee9dd64f46f8067c5b7b160ad1310ad2e72221748b697666b13d9d7028eea0"
+        }
+      ],
+      "recommendation": "Tamper a fully significant position instead, e.g. flip a character in the middle of the payload (second JWT segment) or in the middle of the signature, or append an extra character; any of these always invalidates the signature.",
+      "reviewedSha256": "95ee9dd64f46f8067c5b7b160ad1310ad2e72221748b697666b13d9d7028eea0"
+    }
+  ]
+}
