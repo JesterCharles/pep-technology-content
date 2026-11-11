@@ -74,7 +74,7 @@ Done when `task4DemoProfileOverridesTheGreeting` no longer fails.
 
 `application.properties` commits an admin token: exactly what the secrets topic forbids (treat `letmein` as burned and rotated).
 Replace the literal value with the placeholder `${ADMIN_TOKEN}`, so the value comes from the `ADMIN_TOKEN` environment variable instead of the committed file.
-It does not fail fast: Boot binds `@ConfigurationProperties` records through a resolver that leaves unresolvable placeholders alone, so without `ADMIN_TOKEN` the app still starts and `catalog.admin-token` binds to the literal string `${ADMIN_TOKEN}`; `/admin/ping` then answers 401 unless a client sends that literal text as the header.
+Do not add a default (`${ADMIN_TOKEN:...}`): `AdminController` reads the token with `@Value("${catalog.admin-token}")`, a required property, so when the variable is missing the app refuses to start with `Could not resolve placeholder 'ADMIN_TOKEN'` instead of running with a guessable token. That is the fail-fast the test checks, by starting the app once more without any environment variables.
 The build sets `ADMIN_TOKEN=test-only-token` for the tests; in a real deployment the variable would be set by the platform, and with relaxed binding the environment variable `CATALOG_ADMINTOKEN` (uppercase, dots to underscores, dashes removed) could even map to `catalog.admin-token` without a placeholder.
 Done when `task5ReadsTheAdminTokenFromTheEnvironment` no longer fails.
 
@@ -93,10 +93,10 @@ mvn -q -o test
 
 from the `starter` folder.
 Before you start, six tests fail; when you finish, the command prints nothing and exits with status 0.
-The tests check responses and database rows only, not how your code is written.
+The tests check responses, startup behaviour and database rows only, not how your code is written.
 Full output stays under `starter/target/surefire-reports/`.
 
-To run the app itself: `ADMIN_TOKEN=anything mvn -q -o spring-boot:run` from `starter/` (after Task 5 the app still starts without the variable, but the admin token is then the literal text `${ADMIN_TOKEN}`, so set it), then `curl localhost:8080/items`.
+To run the app itself: `ADMIN_TOKEN=anything mvn -q -o spring-boot:run` from `starter/` (after Task 5 the app refuses to start without the variable - that is the fail-fast working), then `curl localhost:8080/items`.
 
 ## Expected output
 
@@ -117,5 +117,5 @@ The lab writes only `starter/target` (the H2 database lives in memory and vanish
 
 - **`mvn -v` shows a Java version other than 25**: set `JAVA_HOME` to your JDK 25 folder and open a new terminal.
 - **`FlywayValidateException` / checksum mismatch**: you edited an applied migration. Restore `V1` exactly and put your change in a new `V2` (the test database is recreated per run, so restoring the file is enough).
-- **`/admin/ping` answers 401 with the token you expected** when running the app: `ADMIN_TOKEN` is not set in that terminal, so the token bound to the literal text `${ADMIN_TOKEN}`. Set it and rerun.
+- **`Could not resolve placeholder 'ADMIN_TOKEN'`** when running the app: the environment variable is not set in that terminal; that is Task 5's fail-fast. Set it and rerun.
 - **`Cannot access central in offline mode`**: run the setup command once more while online.
