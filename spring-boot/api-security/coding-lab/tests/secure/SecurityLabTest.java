@@ -89,8 +89,14 @@ class SecurityLabTest {
         assertNotNull(admin, "Task 3 must be done first: issue returned null");
         mvc.perform(get("/admin/stats").header("Authorization", "Bearer " + admin))
                 .andExpect(status().isOk());
-        String tampered = admin.substring(0, admin.length() - 2)
-                + (admin.endsWith("xx") ? "yy" : "xx");
+        // Flip a character in the middle of the payload segment, which always
+        // invalidates the signature over header.payload.
+        String[] parts = admin.split("\\.");
+        int mid = parts[1].length() / 2;
+        char flipped = parts[1].charAt(mid) == 'A' ? 'B' : 'A';
+        String tampered = parts[0] + "."
+                + parts[1].substring(0, mid) + flipped + parts[1].substring(mid + 1)
+                + "." + parts[2];
         mvc.perform(get("/admin/stats").header("Authorization", "Bearer " + tampered))
                 .andExpect(status().isUnauthorized());
     }

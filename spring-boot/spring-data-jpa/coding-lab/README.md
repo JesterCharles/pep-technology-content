@@ -15,7 +15,7 @@ Five linked tasks: map the entity, add a derived query and a JPQL `@Query`, page
 | `starter/src/main/java/workshops/WorkshopResponse.java` (you create it) | 5 |
 | `starter/src/main/java/workshops/WorkshopController.java` | 5 |
 
-The application class, `application.properties` and `data.sql` are complete and stay as shipped.
+The application class, `application.properties` and `data.sql` are complete and stay as shipped (except the optional `show-sql` toggle the SQL-watching step below uncomments).
 
 ## Prerequisites
 

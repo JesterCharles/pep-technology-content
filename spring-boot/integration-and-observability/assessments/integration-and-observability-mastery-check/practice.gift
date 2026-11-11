@@ -1,0 +1,65 @@
+$CATEGORY: spring-boot/integration-and-observability
+
+::Q1 Choosing the test type::
+A test must prove that a request flows through security, the controller, the service and the repository against the embedded database. Which annotation fits?{
+~A WebMvcTest, because the request enters through the web layer.#Not quite. The web slice stops at the controller; services and repositories are not loaded.
+~A DataJpaTest, because the repository is involved.#Not quite. The persistence slice loads no controllers or security.
+=A SpringBootTest, because only the full context exercises the real wiring end to end.#Correct. End-to-end flow needs the whole application context, which SpringBootTest starts.
+~A plain JUnit test with mocks for every layer.#Not quite. All-mock tests prove wiring of nothing.
+}
+
+::Q2 Independent integration tests::
+What keeps integration tests independent of each other?{
+=A known database state per test, by reseeding or rolling back between tests.#Correct. Each test starts from the same data, so order and leftovers cannot change outcomes.
+~Running them in alphabetical order.#Not quite. Fixed order hides coupling instead of removing it.
+~Sharing one long-lived test that asserts everything.#Not quite. One giant test is the opposite of independence.
+~Giving every test its own copy of the application sources.#Not quite. Copies of code do not isolate data.
+}
+
+::Q3 Timeouts are ours::
+Why do we set connect and read timeouts on an outbound HTTP client?{
+~To make responses arrive faster.#Not quite. Timeouts cap waiting; they speed nothing up.
+~Because the server rejects clients without timeout headers.#Not quite. Timeouts are client-side; no header announces them.
+=So a hung partner frees our threads after a bounded wait and we can answer with our own clear error.#Correct. Without timeouts a stuck dependency pins our threads and our API hangs with it.
+~To retry automatically until the partner recovers.#Not quite. Retries are a separate mechanism; a timeout just ends one attempt.
+}
+
+::Q4 Testing without the partner::
+What does MockRestServiceServer do in a client test?{
+~It starts a lightweight HTTP server on a random port.#Not quite. Nothing listens on any port; interception happens inside the client.
+=It intercepts the client's requests in the JVM and answers with scripted responses.#Correct. The client's requests never leave the process; expectations define the answers.
+~It records live partner traffic for replay.#Not quite. There is no recording of live calls.
+~It generates client code from an OpenAPI document.#Not quite. Code generation is a different tool entirely.
+}
+
+::Q5 Logging levels per package::
+How do you silence a chatty library but keep your own debug logs?{
+~Set the root level to debug and filter the console by eye.#Not quite. That drowns you in the library's output.
+~Delete the library's logback configuration from its jar.#Not quite. Never patch dependency jars for logging.
+=Set logging.level properties per package: warn for the library's package, debug for your own.#Correct. Per-package levels are exactly what the logging.level properties are for.
+~Replace the library's logger with System.out calls.#Not quite. That removes levels and configuration entirely.
+}
+
+::Q6 Reading a log line::
+In Boot's default console format, what does one log line show between the timestamp and the message?{
+~Only the thread name.#Not quite. More parts sit between them.
+~The request URL and the session id.#Not quite. HTTP details appear only if you log them yourself.
+~The heap usage at the moment of logging.#Not quite. Memory stats are not part of the line.
+=The level, the process id, the application name, the thread and the shortened logger name.#Correct. Level, pid, the application name when set, thread and logger come between timestamp and message in the default pattern.
+}
+
+::Q7 Secrets in logs::
+A debug log statement prints the full partner request including its bearer token. What is the verdict?{
+~Fine at debug level, because production runs at info.#Not quite. Levels change at runtime; a secret in any statement is one config flip from exposure.
+=Remove or mask the token: credentials never belong in log messages at any level.#Correct. Logs spread far and live long; secrets and personal data stay out of them entirely.
+~Fine if the log file is readable only by the application user.#Not quite. File permissions do not follow logs into aggregators and backups.
+~Hash the token before logging so it can be verified later.#Not quite. Even transformed credentials invite correlation; leave them out.
+}
+
+::Q8 What stays unexposed::
+Beyond health, why do most Actuator endpoints stay unexposed over HTTP by default?{
+~They are slow and would hurt response times.#Not quite. Performance is not the reason.
+~They only work over JMX transport.#Not quite. They can be exposed over HTTP; the default just does not.
+=They reveal operational internals such as environment values and mappings, so exposure is an explicit decision.#Correct. Endpoints like env and mappings are sensitive; you opt in deliberately per endpoint.
+~They require a paid Spring subscription.#Not quite. Actuator is free and open source.
+}

@@ -1,0 +1,65 @@
+$CATEGORY: spring-boot/spring-data-jpa
+
+::Q1 Division of labor::
+In a Boot project using Spring Data JPA with Hibernate, which statement describes the division of labor?{
+~Spring Data generates the SQL dialect and Hibernate declares the repository interfaces.#Not quite. It is the other way round: you declare repositories, Hibernate speaks SQL.
+~Hibernate defines the repository interfaces and Jakarta Persistence implements them.#Not quite. Jakarta Persistence is the API standard, not an implementation of repositories.
+=You declare repository interfaces, Spring Data implements them, and Hibernate executes the mapping and SQL underneath.#Correct. Repositories are yours, their implementation is Spring Data's, and Hibernate is the persistence provider underneath.
+~Each layer keeps its own copy of the entity classes.#Not quite. One set of entity classes is shared by the whole stack.
+}
+
+::Q2 Auto-configured datasource::
+A Boot project declares the Data JPA starter and H2, and sets no datasource properties. What happens at startup?{
+=Boot auto-configures an in-memory H2 datasource and Hibernate uses it.#Correct. With an embedded database on the classpath and no configuration, Boot wires an in-memory datasource.
+~Startup fails because spring.datasource.url is required.#Not quite. The URL is only required when no embedded database can be auto-configured.
+~Boot connects to a default PostgreSQL server on localhost.#Not quite. Boot never guesses at an external server.
+~Hibernate starts without any datasource and buffers writes in memory.#Not quite. Hibernate always works through a real datasource.
+}
+
+::Q3 ID before and after save::
+An entity uses a generated identity ID. What is the ID before and after repository.save on a new object?{
+~Zero before, zero after; the database only sets it on commit.#Not quite. The persisted object carries its generated ID after save.
+~Null before, null after; you must query for the ID separately.#Not quite. Save returns the entity with its ID set.
+~A temporary negative value before, the real value after.#Not quite. JPA does not assign temporary negative IDs.
+=Null before save, the database-assigned value after.#Correct. The ID stays null until the insert runs and the generated key comes back.
+}
+
+::Q4 Insert or update::
+How does Spring Data decide whether save performs an insert or an update?{
+~It always runs an update and falls back to insert on failure.#Not quite. There is no such fallback order.
+=A new entity, one whose generated ID is still null, is inserted; an entity with an existing ID is merged as an update.#Correct. The ID is the newness signal for generated-ID entities.
+~It checks whether any field changed since the last query.#Not quite. Change detection matters for flushing managed entities, not for the insert-or-update decision in save.
+~The repository method name chooses: saveNew inserts, save updates.#Not quite. There is one save method; no saveNew exists.
+}
+
+::Q5 Derived query::
+What query does the method name findByTitleContainingIgnoreCase(String part) produce?{
+~An exact title match after trimming spaces.#Not quite. Containing produces a substring match, not an exact one.
+=A case-insensitive substring match on title, like a lowercased LIKE with wildcards on both sides.#Correct. Containing adds the wildcards and IgnoreCase lowers both sides.
+~A full-text search across every string column.#Not quite. Derived queries touch only the named property.
+~A startswith match, case-sensitive.#Not quite. That would be StartingWith without IgnoreCase.
+}
+
+::Q6 When @Query::
+When is a JPQL @Query the better choice over a derived method name?{
+~Whenever the query filters on more than one field.#Not quite. Method names handle several fields with And and Or.
+~Always; derived names are only for prototypes.#Not quite. Derived queries are production features for simple lookups.
+=When the method name cannot express the query clearly, such as joins or computed conditions.#Correct. Where a name would become unreadable or impossible, spell the JPQL out.
+~Only when the query must bypass the entity mapping.#Not quite. JPQL still works through the entity mapping; native SQL is the bypass.
+}
+
+::Q7 Page metadata::
+A table holds 5 workshops. A request asks for page 1 with size 2, sorted by title ascending. What comes back?{
+=The third and fourth workshops by title, with totalElements 5 and totalPages 3.#Correct. Pages are zero-based, so page 1 holds elements 3 and 4 of 5, and 5 elements at size 2 make 3 pages.
+~The first two workshops, because pages are one-based.#Not quite. Spring Data pages start at 0, so page 1 is the second page.
+~The last workshop alone, with totalPages 5.#Not quite. Size 2 puts the fifth element alone on page 2, not page 1.
+~An empty page, because page 1 times size 2 exceeds 5.#Not quite. Elements 3 and 4 exist, so the page is full.
+}
+
+::Q8 Returning entities directly::
+Why can returning JPA entities straight from controllers go wrong?{
+~Entities serialize faster than records, hiding slow endpoints.#Not quite. Serialization speed is not the issue.
+~Jackson refuses to serialize classes annotated as entities.#Not quite. Jackson serializes entities happily, which is exactly the danger.
+~Entities cannot carry validation annotations.#Not quite. They can; validation is unrelated to the leak.
+=Serialization can expose internal fields and trigger lazy loading outside the transaction.#Correct. Every mapped field leaks by default, and touching lazy associations during serialization fails or floods the database.
+}

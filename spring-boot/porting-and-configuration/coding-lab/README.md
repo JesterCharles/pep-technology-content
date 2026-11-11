@@ -74,7 +74,7 @@ Done when `task4DemoProfileOverridesTheGreeting` no longer fails.
 
 `application.properties` commits an admin token: exactly what the secrets topic forbids (treat `letmein` as burned and rotated).
 Replace the literal value with the placeholder `${ADMIN_TOKEN}`, so the value comes from the `ADMIN_TOKEN` environment variable and startup fails fast when it is missing.
-The build sets `ADMIN_TOKEN=test-only-token` for the tests; in a real deployment the variable would be set by the platform, and with a `CATALOG_ADMIN_TOKEN`-style name relaxed binding could even map it without a placeholder.
+The build sets `ADMIN_TOKEN=test-only-token` for the tests; in a real deployment the variable would be set by the platform, and with relaxed binding the environment variable `CATALOG_ADMINTOKEN` (uppercase, dots to underscores, dashes removed) could even map to `catalog.admin-token` without a placeholder.
 Done when `task5ReadsTheAdminTokenFromTheEnvironment` no longer fails.
 
 ### Task 6: seed the table with a new migration

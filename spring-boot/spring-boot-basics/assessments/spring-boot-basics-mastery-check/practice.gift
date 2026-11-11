@@ -1,0 +1,65 @@
+$CATEGORY: spring-boot/spring-boot-basics
+
+::Q1 What Boot adds::
+A team moves a plain Spring MVC application to Spring Boot. Which of these does Boot itself add?{
+~Boot replaces the Spring IoC container with its own dependency injection engine.#Not quite. Boot runs the same Spring container; injection behaves exactly as in plain Spring.
+~Boot generates the controllers and services for you from the database schema.#Not quite. Boot generates no application code; you still write controllers and services.
+=Boot adds starter dependencies, auto-configuration and an embedded server with curated versions.#Correct. Boot layers starters, auto-configuration and an embedded server on top of the Spring Framework.
+~Boot removes the need for a build tool such as Maven or Gradle.#Not quite. Boot projects are ordinary Maven or Gradle builds with a Boot parent or plugin.
+}
+
+::Q2 Where configuration lives::
+In a generated Maven Boot project, where does application.properties live?{
+=In src/main/resources, next to the code on the runtime classpath.#Correct. Resources in src/main/resources are packaged onto the classpath, where Boot looks for configuration.
+~In the project root, next to pom.xml.#Not quite. Boot reads configuration from the classpath; the project root is not packaged.
+~In src/main/java, inside the base package.#Not quite. src/main/java holds sources; properties belong in src/main/resources.
+~Inside target/classes, written there by hand.#Not quite. target is generated output; hand-written files there are overwritten by every build.
+}
+
+::Q3 Two matching beans::
+Two beans of the same type match one constructor injection point and nothing disambiguates them. What happens?{
+~Spring injects the bean that was defined first.#Not quite. Spring refuses to guess between equal candidates.
+=Startup fails with an error naming both candidate beans.#Correct. An ambiguous injection point stops the application at startup until a qualifier or primary bean resolves it.
+~Spring injects a proxy that delegates to both beans.#Not quite. There is no delegating proxy for ambiguous injection.
+~The field stays null and fails later on first use.#Not quite. The container fails fast at startup, not lazily at first use.
+}
+
+::Q4 Why constructor injection::
+Why does constructor injection keep a service testable without Spring?{
+~Because Spring can only autowire constructors in test classes.#Not quite. Spring injects fields and setters too; that is not the reason.
+~Because constructor parameters are faster to resolve than fields.#Not quite. Resolution speed is irrelevant to testability.
+~Because the constructor hides the dependencies from the test.#Not quite. The constructor exposes dependencies instead of hiding them.
+=Because a unit test can call new with a hand-written fake for each dependency.#Correct. The dependencies are plain constructor arguments, so a test builds the object directly with fakes.
+}
+
+::Q5 Singleton scope::
+A service bean has the default singleton scope and is injected into two controllers. What do the controllers receive?{
+~Two separate instances, one per injection point.#Not quite. That is prototype behavior, not singleton.
+=The same single instance in both controllers.#Correct. The container creates one singleton instance and shares it across every injection point.
+~A new instance per HTTP request.#Not quite. That would be request scope, which must be declared explicitly.
+~One real instance and one serialized copy.#Not quite. Spring never injects serialized copies.
+}
+
+::Q6 Auto-configuration conditions::
+When does Boot auto-configure an embedded H2 DataSource bean?{
+~Whenever the application declares any repository interface.#Not quite. Repositories do not create a datasource by themselves.
+~Always; every Boot application gets an H2 datasource.#Not quite. Auto-configuration is conditional, not unconditional.
+=When H2 is on the classpath and no other DataSource bean or URL is configured.#Correct. The auto-configuration applies because its conditions hold: the class is present and the user supplied no datasource.
+~Only when spring.datasource.auto is set to true.#Not quite. There is no such property; conditions evaluate the classpath and existing beans.
+}
+
+::Q7 Missing required parameter::
+A handler declares a required query parameter and a request arrives without it. What does the client receive?{
+=A 400 Bad Request produced by Spring MVC before the handler runs.#Correct. Binding fails for a missing required parameter, so Spring answers 400 without calling your code.
+~A 404 Not Found because the URL did not match.#Not quite. The path matched; only the parameter binding failed, which is 400.
+~A 200 response with the parameter bound to null.#Not quite. Null binding happens only when the parameter is declared optional.
+~A 500 Internal Server Error from inside the handler.#Not quite. The handler never runs; Spring rejects the request first.
+}
+
+::Q8 Status for creation::
+A POST handler stores a new workshop and returns it. Which status code and extra header fit the HTTP meaning best?{
+~200 OK with no extra headers, because the request succeeded.#Not quite. 200 works, but it says nothing about creation; HTTP has a more precise answer.
+~204 No Content with a Location header.#Not quite. 204 forbids a response body, and the handler returns the created workshop.
+~302 Found pointing at the new resource.#Not quite. 302 is a redirect for browsers, not a creation answer for an API.
+=201 Created with a Location header naming the new resource.#Correct. 201 states that a resource was created and Location says where it now lives.
+}
