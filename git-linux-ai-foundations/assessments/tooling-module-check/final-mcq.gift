@@ -1,0 +1,218 @@
+// Git/Linux/AI Foundations - cumulative final MCQ (graded course final).
+// Authored privately; published in this repository by captain decision (2026-11-10).
+// 30 items implementing the value-free plan final-mcq-coverage.md (glaf-final-q01..q30).
+// Each title is the planned question id. Exactly one correct answer per item,
+// feedback on every option, 2-minute allotment per question, 60-minute quiz.
+// Correct-answer positions are balanced across options (7/7/8/8).
+
+$CATEGORY: git-linux-ai-foundations/assessments/tooling-module-check
+
+::glaf-final-q01::Ana is in /home/ana. The file server.log is inside /home/ana/projects/api. She runs cd projects/api and then cat server.log | grep refused. What happens? {
+~The cd fails because cd needs an absolute path starting with / #Not quite. A relative path works: it starts from where you are, and projects/api exists under /home/ana.
+=The cd works because projects/api is relative to /home/ana, and the pipe passes cat's output text to grep, which prints only the lines containing refused #Correct. A relative path is read from the current directory, and a pipe connects cat's standard output to grep's standard input.
+~The pipe passes the file name server.log to grep, so grep opens the file itself #Not quite. A pipe passes output text between commands, never a file name; here grep reads the text cat already printed.
+~grep runs first and feeds its matches to cat #Not quite. Data in a pipeline flows left to right: cat writes, grep reads.
+}
+
+::glaf-final-q02::A folder in the current directory is named client reports (with a space). Which command moves into it? {
+~cd client reports #Not quite. The shell splits on the space and treats client and reports as two separate arguments.
+~cd client,reports #Not quite. The comma is just a character; there is no folder with that name.
+~cd client-reports #Not quite. That is a different name; the folder's name contains a space, not a hyphen.
+=cd "client reports" #Correct. Quoting keeps the space inside one folder name. Escaping the space with a backslash also works.
+}
+
+::glaf-final-q03::app.log mixes debug, Debug and DEBUG lines. The goal is to show every line that is NOT a debug line, whatever its case. Ana ran grep -v debug app.log but DEBUG lines still appear. Which command meets the goal? {
+=grep -iv debug app.log #Correct. -i ignores case and -v inverts the match, so every spelling of debug is removed and the rest stays.
+~grep -i debug app.log #Not quite. Without -v this keeps exactly the debug lines, the opposite of the goal.
+~grep -v DEBUG app.log #Not quite. -v inverts, but the match is still case-sensitive, so debug and Debug lines remain.
+~grep debug app.log | grep -v DEBUG #Not quite. The first grep already narrows the output to lowercase debug lines, so the result is not the non-debug remainder.
+}
+
+::glaf-final-q04::Ana's prompt shows she is in /home/ana, where ls lists notes.txt. The file's four lines are\: Error\: disk full / all ok / ERROR retry / no issues today. What does grep -i error notes.txt | wc -l print? {
+~1 #Not quite. -i ignores case, so both Error and ERROR lines match.
+~3 #Not quite. Only two lines contain the word error in any case; wc -l counts lines, not words.
+=2 #Correct. grep -i matches Error\: disk full and ERROR retry; wc -l counts the two lines grep passes on.
+~The two matching lines, followed by the number 2 #Not quite. The pipe sends grep's lines into wc, so only wc's count reaches the screen.
+}
+
+::glaf-final-q05::On a shared server, ls -l shows -rwxr-x--- 1 ana dev ... deploy.sh. Who can run ./deploy.sh directly? {
+~Everyone on the server, because the x bit is set #Not quite. Each x applies only to its own class; others have --- and can do nothing with the file.
+=Ana and members of the dev group; everyone else cannot even read the file #Correct. Owner rwx lets ana read, change and run it; group r-x lets dev members read and run it; others --- have no access.
+~Only ana; the group can read the script but never run it #Not quite. The group section is r-x, so dev members can run it too.
+~Members of dev can also edit the file, since they can run it #Not quite. Group has no w bit; running does not imply writing.
+}
+
+::glaf-final-q06::Ana runs API_MODE\=test, then bash run.sh, and the script reports API_MODE is unset. Running ./run.sh instead prints Permission denied. ls -l shows -rw-r--r-- for run.sh. Which explanation covers both symptoms? {
+~Adding execute permission with chmod would also make API_MODE visible to the script #Not quite. Permissions and environment are separate: chmod fixes only the Permission denied.
+~bash run.sh also needs the x bit, so both failures are permission problems #Not quite. bash run.sh works without x: the interpreter only reads the file. It did run, which is why the script could report the variable missing.
+=run.sh lacks the x bit, so direct execution is refused, while bash run.sh only reads the file; and API_MODE was set but never exported, so child processes do not receive it #Correct. ./run.sh needs execute permission on the file; bash run.sh needs only read. A variable without export stays in the current shell and is invisible to programs it starts.
+~Variables are only passed to scripts started with an absolute path #Not quite. How the path is written does not matter; only exported variables reach child processes.
+}
+
+::glaf-final-q07::A local app reads its port from the environment. Which sequence makes PORT visible to python app.py started from the same shell? {
+=export PORT\=8080 and then python app.py #Correct. export marks the variable for child processes, and the app started afterwards inherits it. The one-line form PORT\=8080 python app.py also works for a single run.
+~PORT\=8080 on its own line, then python app.py #Not quite. Without export the variable exists only in the shell itself; the child process does not receive it.
+~echo PORT\=8080 and then python app.py #Not quite. echo only prints text; it does not set anything.
+~python app.py PORT\=8080 #Not quite. That passes PORT\=8080 as a command-line argument, not as an environment variable.
+}
+
+::glaf-final-q08::A new .env file holds the database password, and Ana is about to run git add . in the repository. Which choice keeps the secret safe, now and later? {
+~Run git add . now and delete .env in the next commit #Not quite. Deleting later does not help: every commit that contained the file stays in history.
+~Rely on the repository being private, so the password can stay in the code #Not quite. The rules are stricter: secrets never go into commits, and access to the repository can change.
+~Add .env to .gitignore after committing it once, so Git stops tracking it #Not quite. .gitignore only affects untracked files; a file that was already committed stays tracked and stays in history.
+=Add .env to .gitignore before any git add, commit the .gitignore, and if the password ever did land in a commit, revoke or rotate it #Correct. Ignoring the file before it is ever added keeps it out of Git, and a secret that reached history must be treated as leaked and rotated.
+}
+
+::glaf-final-q09::The web app should be at http\://localhost\:3000. The browser says connection refused. Starting the API on port 8080 fails with address already in use. What do the two messages mean? {
+~The refused connection means a wrong password, and the in-use error means the firewall blocks 8080 #Not quite. Neither message is about authentication or a firewall; both are about which processes are listening on which ports.
+=Nothing is listening on port 3000 of this machine, and some process already holds port 8080 #Correct. localhost is this machine; refused means no program is accepting connections on that port, while address already in use means another process is bound to it.
+~localhost refers to the staging server, which is down #Not quite. localhost (127.0.0.1) always refers to the machine you are on.
+~Port 3000 in the URL is the host name and 8080 is optional #Not quite. In http\://localhost\:3000, localhost is the host and 3000 is the port after the colon.
+}
+
+::glaf-final-q10::Starting on main, Ana edits app.py, runs git add app.py, then git switch -c hotfix, then git commit -m "fix". Where does the change end up? {
+~On main, because the edit and git add happened while main was checked out #Not quite. A change belongs to no branch until it is committed; the commit happened on hotfix.
+~Nowhere; switching branches discards staged changes #Not quite. git switch -c carries uncommitted and staged work onto the new branch.
+~On both main and hotfix #Not quite. Only the branch the commit was made on moves; main still points where it did.
+=In a commit on hotfix; main did not move, because switch -c brought the staged change along and the commit moved only hotfix #Correct. Committing moves the branch HEAD is on; the staged edit travelled with the switch and became a commit on hotfix.
+}
+
+::glaf-final-q11::Sam adds a debug print to status_message.py and runs git add status_message.py. To double-check before committing, Sam runs git diff. It prints nothing, so Sam commits, and the commit contains the debug print. Why was the git diff output empty, and what would have shown the debug line before the commit? {
+=git diff compares the working copy with the staging area, which already held the debug line; git diff --staged would have shown it#Correct. An empty git diff only means nothing is left unstaged. The next commit is the staging area, and git diff --staged compares it with the last commit, so it would have shown the debug line.
+~git diff only reports untracked files, and status_message.py was already tracked; git status would have shown the line itself#Not quite. git diff shows content changes in tracked files, and git status names files without showing their lines. The line was invisible to git diff because it was already staged.
+~Nothing was staged, so git commit picked up the modified file on its own after git diff ran#Not quite. Git never commits a change on its own. A commit records only the staging area, and git add had already copied the debug line there.
+~git diff compares the staging area with the last commit, so the empty output means the debug line was typed after the commit#Not quite. That comparison is git diff --staged. Plain git diff compares the working copy with the staging area, and the commit already contained the line.
+}
+
+::glaf-final-q12::Branches main and feature both point at commit C1, and Ana is on feature. She makes commit C2. Where does everything point now? {
+~main and feature both point at C2 #Not quite. Only the branch you are on moves when you commit.
+~feature points at C2 and HEAD now points at main #Not quite. HEAD still points at feature; committing does not switch branches.
+=feature points at C2, main still points at C1, and HEAD points at feature #Correct. A branch is a movable name; the commit moved feature because HEAD was on it, and main stayed put.
+~HEAD points directly at C1 #Not quite. HEAD follows the checked-out branch, which now sits at C2.
+}
+
+::glaf-final-q13::Ana is on main with uncommitted edits and must start the work properly on a new branch called payment-fix, keeping her edits. Which single command does it? {
+~git switch payment-fix #Not quite. The branch does not exist yet, so this errors; switch without -c only moves to existing branches.
+=git switch -c payment-fix #Correct. -c creates the branch and switches to it, and uncommitted changes come along.
+~git commit -m "wip" on main first, then switch #Not quite. That records a half-done commit on main, exactly what the new branch was meant to avoid.
+~Copy the project folder and run git init in the copy #Not quite. That creates an unrelated repository; branching inside the existing one is the Git way to split work.
+}
+
+::glaf-final-q14::HEAD is on main at commit C3 with a clean working copy. Compare git reset --soft C2 with git reset --hard C2. {
+~Both move main to C2 and both erase C3's changes from the working copy #Not quite. --soft never touches the working copy; C3's changes survive there.
+~--soft only moves HEAD's branch; --hard also deletes the commit C3 from the repository immediately #Not quite. Neither deletes the commit object right away; --hard resets the staging area and working copy to C2.
+~--soft keeps C3 as the branch tip and only unstages files #Not quite. Both forms move the branch to C2; the difference is what happens to staging and working copy.
+=Both move main to C2; --soft keeps C3's changes staged with the working copy untouched, while --hard makes staging area and working copy match C2 #Correct. reset moves the branch; --soft stops there (changes stay staged), --hard also overwrites staging and working copy.
+}
+
+::glaf-final-q15::Two bad commits exist\: B1 was pushed and teammates already pulled it; B2 exists only in Ana's local history and was never pushed. Following the course rule for undoing, what should she do? {
+~git reset --hard away both B1 and B2 #Not quite. Resetting away B1 rewrites history others already have, which breaks their repositories' shared view.
+~git revert both B1 and B2 #Not quite. Reverting B1 is right by itself, but B2 exists only in local history, so the taught rule says reset it away instead of adding an undo commit nobody needs.
+=git revert B1 (a new commit that undoes it) and git reset to drop B2 from her local history #Correct. Revert what others already have, because it adds history instead of rewriting it; reset only commits that exist nowhere but your own machine.
+~Leave B1 and reset B2; pushed mistakes cannot be undone #Not quite. Pushed mistakes are exactly what git revert is for.
+}
+
+::glaf-final-q16::Mid-edit on branch feature, Ana must immediately check something on main. Her changes are not ready to commit. Which flow fits, and what should she remember about stash? {
+=git stash, git switch main, look, git switch feature, git stash pop; remembering that a plain stash saves tracked modified files but leaves untracked new files behind #Correct. stash sets tracked changes aside and restores them with pop; by default a brand-new untracked file is not stashed.
+~git stash discards the edits, so she must commit them first #Not quite. stash saves the changes; pop brings them back. Nothing is discarded.
+~Just git switch main; Git always refuses to switch with changes, so nothing can be lost #Not quite. Git often carries changes across a switch or blocks it; relying on that instead of stash mixes the edits into unrelated work.
+~git stash pop first, then git stash after coming back #Not quite. pop restores a stash; there is nothing to restore yet. The order is stash first, pop after returning.
+}
+
+::glaf-final-q17::A teammate pushes commit C5 to main on GitHub. Ana does nothing yet, then runs git fetch origin. What do her refs show before and after the fetch? {
+~origin/main shows C5 even before the fetch, because it tracks GitHub live #Not quite. origin/main is a local record; it only updates when you fetch or pull.
+~After the fetch, both main and origin/main point at C5 #Not quite. fetch never moves your local main; that is what merge or pull does.
+~fetch fails because her main is behind #Not quite. fetch always just downloads what is new; being behind is normal.
+=Before the fetch both her main and origin/main still point at C4; after it origin/main points at C5 while her main stays at C4 until she merges or pulls #Correct. origin/main is the remote-tracking ref: fetch updates it, and the local branch only moves when you integrate.
+}
+
+::glaf-final-q18::Pick the description that gets all four right\: clone, fetch, pull, push. {
+~clone copies only the latest files; fetch merges; pull uploads; push downloads #Not quite. This scrambles all four: clone copies the whole repository and push is the only uploader.
+=clone copies the repository to your machine; fetch updates your remote-tracking refs without touching your branches; pull is fetch plus merge into the current branch; push uploads your new commits to the remote #Correct. That is exactly the division of labour: fetch looks, pull integrates, push shares.
+~fetch and pull are identical; push is pull in the other direction #Not quite. pull does everything fetch does plus a merge; that difference is the point.
+~push sends your working copy files; the remote keeps no history #Not quite. push transfers commits, and the remote holds the same kind of history your machine does.
+}
+
+::glaf-final-q19::Setting up a new laptop, Ana generates an SSH key pair for GitHub. What goes where? {
+=The public key (the .pub file) is added to her GitHub account; the private key stays on the laptop and is never shared with anyone #Correct. The server gets the public half; whoever holds the private half can authenticate as her, so it never leaves the machine.
+~The private key is uploaded so GitHub can verify it #Not quite. Uploading the private key would hand out her identity; servers only ever receive the public half.
+~Both halves go to GitHub so they can be matched #Not quite. Matching happens cryptographically; the private half must remain only with her.
+~The pair is emailed to the team lead for backup #Not quite. A private key shared by email is no longer private; anyone holding it can act as her.
+}
+
+::glaf-final-q20::git merge feature stops, and status_message.py now contains the three conflict marker lines\: one of seven less-than signs naming HEAD, a separator of seven equals signs, and one of seven greater-than signs naming feature, around two versions of the same lines. Why did Git stop, and which side is which? {
+~The markers are damage from the other developer's editor and can be deleted blindly #Not quite. Git wrote the markers on purpose; the content between them must be resolved, not deleted blindly.
+~Git stopped because of file permissions; HEAD marks the newer version #Not quite. Permissions are not involved, and HEAD marks your current branch, not the newer change.
+=Both branches changed the same lines, so Git cannot pick a side; the part above the equals-signs separator is the current branch's (HEAD) version and the part below is feature's #Correct. A conflict means overlapping edits; the markers label your side (HEAD) first and the incoming branch's side second.
+~The merge failed permanently and must be restarted from a fresh clone #Not quite. The merge is paused, not broken; resolving the file and committing finishes it.
+}
+
+::glaf-final-q21::Ana resolves the conflict and a teammate suggests\: "next time just git rebase main on your branch, it is cleaner". The branch's commits are already pushed and shared. What is the right way to finish now, and what about the suggestion? {
+~Commit immediately; Git removes leftover markers on its own #Not quite. Git commits whatever is in the file; markers left behind become part of the code.
+~Keep the markers as a comment trail and rebase next time for cleanliness #Not quite. Markers must go, and rebasing shared commits rewrites history others already have.
+~Finish the merge, then rebase the branch afterwards to tidy the history #Not quite. The branch is shared: rebasing replays its commits as new ones, and teammates' copies still have the old ones.
+=Edit the file to its final text, remove all three marker lines, git add the file and commit; and decline the rebase, because the branch's commits are shared and a rebase would replay them as new commits others do not have #Correct. That is the resolve-add-commit flow, and the course rule is never to rebase commits other people already have.
+}
+
+::glaf-final-q22::main gained commit C4 while branch feature holds F1 and F2 branched from C3. Compare what git merge feature (run on main) and a rebase of feature onto main would each produce. {
+~The merge fast-forwards main to F2 #Not quite. A fast-forward is only possible when the target branch has not moved; main has C4, so histories diverged.
+=The merge creates a merge commit joining C4 and F2's lines of history; a rebase would instead replay F1 and F2 as new commits on top of C4 #Correct. Diverged histories merge with a merge commit; rebase copies the branch's commits onto the new base as fresh commits.
+~The rebase moves F1 and F2 unchanged, keeping their identities #Not quite. Replayed commits are new commits with new identities; that is why rebasing shared work is dangerous.
+~Both produce exactly the same history #Not quite. One history keeps a visible join; the other is rewritten to look linear.
+}
+
+::glaf-final-q23::A reviewer comments on Ana's open pull request\: "please rename this function". What is the right way to answer the comment? {
+=Commit the rename on the same branch and push; the pull request updates itself, and she replies on the comment thread #Correct. A PR follows its head branch: new commits pushed there appear in the PR, which is how review comments are answered.
+~Open a second pull request containing only the rename #Not quite. The fix belongs to the change under review; a second PR splits the discussion and leaves the first one unresolved.
+~Push the rename directly to main so the reviewer sees it immediately #Not quite. The whole point of the PR is that nothing lands on main before review and approval.
+~Close the pull request and reopen it after renaming locally #Not quite. Closing is unnecessary; the open PR picks up new commits on its branch.
+}
+
+::glaf-final-q24::Ana's pull request has an approval, one required check failing, and one unresolved comment. Meanwhile a teammate runs git fetch origin. What is true? {
+~The teammate's checkout now contains Ana's branch merged into main #Not quite. fetch only updates remote-tracking refs; it merges nothing anywhere.
+~The approval means the PR can merge now; checks are advisory #Not quite. A required check must pass; approval alone does not satisfy the merge conditions.
+=The fetch only updated the teammate's remote-tracking refs, and the PR still cannot merge until the required check passes and the comment is resolved #Correct. Merging needs approval, passing required checks and resolved comments together; and fetch never changes anyone's working branches.
+~The failing check blocks teammates from fetching the branch #Not quite. Checks gate the merge, not fetching; anyone can still fetch the branch.
+}
+
+::glaf-final-q25::Ana sets up an AI assistant to help fix a bug in payments-service. Available material\: the stack trace (it contains customer email addresses), the service README, and .env with the live API key. What is the right setup? {
+~Give the assistant the whole company workspace so it has maximum context #Not quite. Scope should cover the project it needs and nothing beyond it; the whole company is far beyond the task.
+~Share everything including .env, since the assistant session is private #Not quite. Secrets are never-share material regardless of how private the session feels.
+~Share nothing at all and describe the bug from memory #Not quite. The redacted stack trace and README are shareable and exactly what makes the help useful; the rules sort material, they do not forbid all of it.
+=Scope the workspace to payments-service only; share the README and the stack trace with the customer emails redacted; never share the API key #Correct. Scope gives the assistant the project it needs and nothing more; personal data is redacted first, and secrets are never shared.
+}
+
+::glaf-final-q26::A support message reads\: order 4821 failed, error "card declined at step 3", customer Maria Jensen, maria.j@example.com, session token sk-998271. What may reach the assistant's prompt? {
+~The whole message, so nothing useful is lost #Not quite. The name, email and token are personal or secret; they must not reach the prompt.
+=The error text and the order number, with the customer's name, email and the session token removed #Correct. The helpful part is the failure itself and a neutral reference; personal details are redacted and the token is never-share secret material.
+~Nothing; support messages can never be used #Not quite. Redaction exists precisely so the useful, harmless part can be shared.
+~Everything except the order number, which identifies the customer #Not quite. The order number alone is a neutral reference; the name, email and token are the parts that identify or unlock.
+}
+
+::glaf-final-q27::The team runs one-week sprints on the password-reset work. Which sequence of Scrum events is right for one sprint? {
+~Sprint review each morning, daily scrum at the end of the week #Not quite. The daily event is the daily scrum; the review happens once, at the sprint's end.
+~Sprint planning, sprint retrospective, sprint review, then daily scrums #Not quite. The retrospective is the last event, after the review, not before the dailies.
+=Sprint planning first, a daily scrum every day, then the sprint review, then the sprint retrospective #Correct. Plan the sprint, inspect daily, show the result in the review, and improve the process in the retrospective.
+~Planning happens whenever a story finishes during the sprint #Not quite. Planning opens the sprint; stories finishing mid-sprint are discussed at the daily scrum and shown at the review.
+}
+
+::glaf-final-q28::Which option pairs a properly formed user story with a testable acceptance criterion? {
+=As a shopper, I want to reset my password, so that I can regain access - with the criterion\: a reset link arrives by email within 1 minute and expires after 30 minutes #Correct. The story has role, want and reason, and the criterion names observable, checkable facts.
+~Fix password reset as soon as possible - with the criterion\: it works well #Not quite. That is a task, not a story (no role or reason), and "works well" cannot be tested.
+~As a shopper, I want to reset my password, so that I can regain access - with the criterion\: the flow should feel easy #Not quite. The story is fine, but "feel easy" names no observable fact to check.
+~We want fewer support tickets - with the criterion\: resets succeed in under a second #Not quite. The criterion is testable, but the story names no user role or need; it is a company wish.
+}
+
+::glaf-final-q29::An assistant's summary says\: "Adds rate limiting to the reset endpoint and updates the email template." The diff only touches the email template. The story's criterion says\: after 5 attempts within 10 minutes, further resets are blocked for an hour. What does checking the change properly look like? {
+~Accept the summary; an assistant's own description of its diff counts as evidence #Not quite. The summary is a claim; only diff lines and check results are evidence.
+~The template change indirectly provides rate limiting, so the claim is supported #Not quite. Nothing in a template edit limits attempts; the claim has no supporting diff line.
+~Skip the check because the criterion is about timing, which cannot be tested #Not quite. The criterion is concrete and checkable: make 5 rapid attempts and observe the block.
+=Match each claim to diff lines - the rate-limiting claim has none - then run the acceptance check (5 rapid attempts) and watch it fail, which turns the proposal into a rejected, unverified result #Correct. Claims are checked against the diff, and the acceptance criterion is executed; a claim without supporting lines and a failing check mean the change is not verified.
+}
+
+::glaf-final-q30::An AI-made pull request implements the requested feature, but its diff also adds a .env file containing a real database password. All checks are green and the summary says "no configuration changes". What is the right review decision? {
+~Approve; the checks are green and the feature works #Not quite. Checks did not test secret hygiene, and a committed password is a leak regardless of green checks.
+~Merge now and delete .env in a follow-up commit #Not quite. History keeps the file after deletion, and the secret is exposed from the moment it lands on the shared remote.
+=Request changes, citing the .env lines in the diff\: the summary is contradicted by the diff, the file must be git-ignored instead of committed, and because the password reached a commit it must be revoked or rotated #Correct. The decision cites specific diff evidence, the summary-versus-diff contradiction, and the course's secret rule: ignore before add, rotate anything that leaked.
+~Approve but leave a comment asking about the .env file #Not quite. Approval lets the secret merge; a blocking request for changes is what the evidence demands.
+}

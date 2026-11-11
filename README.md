@@ -12,6 +12,7 @@ components/                         reusable learner-interface fragments
 <course>/                           learner content; absent while a course is wholly pending
   assessments/<assessment>/
     blueprint.json                  learner-safe blueprint; never keys or rubrics
+    final-mcq.gift                  Foundation course-final MCQ bank (approved exception)
   coding-lab/                       optional course-wide lab
   <module>/
     assessments/<assessment>/       optional module assessment blueprints
@@ -64,7 +65,7 @@ A topic still has one `authoring/catalog/<course>/<module>/<topic>/topic.json`. 
 2. **Add modules in the catalog.** Create `authoring/catalog/<course>/<module>/module.json` and list module ids in `course.json` `moduleOrder`. Ordering belongs in manifests, not directory-name prefixes.
 3. **Add topics directly under each catalog module.** Create `authoring/catalog/<course>/<module>/<topic>/topic.json`, list topic ids in `module.json` `topicOrder`, and put the primary `artifact.html` plus declared companions at `<course>/<module>/<topic>/` only when authored. Use `authoring/tools/pep new-topic <course>/<module>/<topic>` to create an absent-artifact catalog manifest without a learner directory or placeholder.
 4. **Add labs only where they earn their setup cost.** A lab may live under a topic, module or course as `coding-lab/`. It uses one language-native test command and no container engine; see `authoring/docs/lab-contract.md`.
-5. **Add assessments without secrets.** Put learner-safe blueprints under `<course>/assessments/` or `<course>/<module>/assessments/`. Never commit answer keys, rubrics, hidden tests, scoring secrets or reference solutions.
+5. **Add assessments without secrets.** Put learner-safe blueprints under `<course>/assessments/` or `<course>/<module>/assessments/`. Never commit answer keys, rubrics, hidden tests, scoring secrets or reference solutions; the one exception is listed under "Never commit" in `authoring/AGENTS.md`.
 6. **Reuse shared components.** Copy versioned fragments from `components/<name>/` into standalone learner HTML using the declared markers and record the component version in `topic.json`. Components are authoring references, not runtime dependencies.
 7. **Record review evidence.** Source receipts and independent critic records live under `authoring/evidence/<course>/...`; the mirrored course/module/topic path shows what they support.
 8. **Generate locks.** Run `authoring/tools/pep lock <course>` after catalog, content or evidence changes. Locks are written under `authoring/catalog/<course>/`; never hand-edit them. Old-layout branches can run `authoring/tools/pep migrate-catalog` after rebasing.

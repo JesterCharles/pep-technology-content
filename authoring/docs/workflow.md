@@ -87,6 +87,7 @@ The tooling under `authoring/tools/` implements these gates behind `npm run chec
 
 - Formative practice quizzes and MCQs may be committed, because they are low-stakes.
 - Assessment answer keys, rubrics, reference solutions, hidden tests and scoring secrets never enter the repository, not even as hashes of short keys.
+  The one captain-approved exception (2026-11-10) is the four Foundation course-final MCQ banks at `<course>/assessments/<module-check>/final-mcq.gift`, whose intrinsic GIFT keys are tracked; it does not extend to key or source files, practical keys, rubrics, solutions or hidden tests.
 - Assessment blueprints may hold identity, objectives covered, item counts, durations and learner-facing instructions only.
 - Temporary uncommitted private staging outside the repository is allowed for validation and platform handoff, and is retired after confirmed upload.
 
