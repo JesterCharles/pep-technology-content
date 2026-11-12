@@ -235,7 +235,8 @@ Value-free rules the private author must follow so every key holds on Java SE 25
   - again at `6ca532cf`, run `cs-final-jdk25-20261110-r6` on Temurin 25.0.5+8. The bank was unchanged since r3.
 - Delivery: under the captain-approved exception of 2026-11-10 (`authoring/AGENTS.md`, "Never commit"), PR 92 committed the bank as `collections-streams/assessments/collections-module-check/final-mcq.gift`.
   - Its sha256 is `df0e8ada6777c22acaa898babe9b3ae3b73145094de1a64a669fa5ae8b9b9011`. The private canonical copy (sha256 `7ef0a2d790aa69e39f0aa32264e76445a7984a776178feb33736afc167fd240e`) differs from it only in the line-1 comment header.
-  - The delivered Downloads copy is byte-identical to the committed file. The private workbook-link sidecar still binds the private canonical copy.
+  - The delivered Downloads copy is byte-identical to the committed file: sha256 `df0e8ada6777c22acaa898babe9b3ae3b73145094de1a64a669fa5ae8b9b9011`.
+  - The private workbook-link sidecar still binds the private canonical copy. Its file sha256 is `e50c8546f8cc0eaffb876dd2d3d90ed7ae3a9d5dc7872efac65f9b3ed6b513c9`. It was rewritten on 2026-11-12 with its 2026-11-10 content, and no earlier hash of its bytes was recorded, so its unchanged state rests on its content, not on a prior hash.
   - This successor changes none of these bytes, hashes or records. The PR 92 byte-identity and workbook-link proof covers only these delivered bytes.
 - Intent audit, 2026-11-12, value-free counts. The delivered bank fails two of the Captain's course-final intent checks:
   - the correct option is strictly the longest option in 20 of 30 items, where chance is about 7.5, so a test-wise learner gains from picking the longest option;
