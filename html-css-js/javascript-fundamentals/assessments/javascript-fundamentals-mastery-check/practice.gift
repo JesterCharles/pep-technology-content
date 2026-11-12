@@ -1,0 +1,75 @@
+// Mastery check: JavaScript fundamentals (practice, ungraded).
+// One scenario set around the Trail Guides report code. Titles name the topic
+// and objective id each item practises. About 15 minutes.
+
+$CATEGORY: html-css-js/javascript-fundamentals
+
+::javascript-for-java-developers o1 one number type::A Java developer stores a trail distance as 5 and an average rating as 4.7 and expects an int and a double. What does JavaScript use for the two values? {
+=One Number type for both; JavaScript has no separate integer and floating-point primitives #Correct. Number covers both, with BigInt as the separate type only for huge whole numbers.
+~int for 5 and double for 4.7, chosen by the literal #Not quite. Those are Java's types; JavaScript keeps both values as Number.
+~Number for 5 and BigInt for 4.7 #Not quite. BigInt holds whole numbers only, and only when written with an n suffix.
+~It depends on whether var, let or const declares them #Not quite. The declaration keyword never changes a value's type.
+}
+
+::javascript-for-java-developers o2 two surprising answers::In a Node script, const tags \= ["views", "steep"] and const missing \= null. What do typeof tags and typeof missing return? {
+="object" for both: typeof has no answer for arrays, and null reports "object" as a long-standing language quirk #Correct. Array.isArray tells arrays apart, and a null check must compare against null itself.
+~"array" and "null", matching what the values are #Not quite. typeof returns neither of those strings; both values report "object".
+~"object" and "undefined" #Not quite. typeof undefined is "undefined", but typeof null is "object".
+~"list" and "void" #Not quite. Neither is a typeof result in JavaScript.
+}
+
+::javascript-for-java-developers o3 reading the console::A teammate runs node main.mjs where main.mjs contains console.log("Total: " + 4 + 5). What appears in the terminal? {
+=Total: 45 #Correct. The string makes + concatenate left to right: "Total: 4" then "Total: 45".
+~Total: 9 #Not quite. Addition would need the numbers first; here the string forces concatenation from the left.
+~Total: 4 5 #Not quite. Concatenation inserts no spaces on its own.
+~A type error stops the program #Not quite. JavaScript converts the numbers to text and runs on.
+}
+
+::let-const-and-equals o2 const versus freeze::The report declares const featured \= \{ name: "Ridge Walk" \} in a module, and later code calls Object.freeze(featured). Which statement about the two protections is right? {
+=Before the freeze, featured.name could be changed despite const; after it, that write throws in the module's strict mode #Correct. const only locks the binding; freezing is what makes the object's own properties read-only.
+~const had already made the properties read-only, so the freeze changes nothing #Not quite. const never protects property values, only the variable binding.
+~The freeze also blocks featured from being reassigned, which const alone did not #Not quite. const already blocked reassignment; freeze works on the object, not the binding.
+~The freeze protects nested objects inside featured too #Not quite. Object.freeze is shallow; nested objects stay changeable.
+}
+
+::functions-as-values-arrow-functions-and-callbacks o3 when callbacks run::The dashboard code runs three lines: trails.sort(byDistance), button.addEventListener("click", onRefresh), setTimeout(tick, 1000). Which callback has already run by the time the third line finishes? {
+=byDistance, because sort calls its comparator immediately while sorting #Correct. sort is synchronous; the listener waits for a click and tick waits for the timer.
+~onRefresh, because addEventListener calls it once to register it #Not quite. Registration stores the function; it runs only when a click happens.
+~tick, because its delay started first #Not quite. Even a 0ms timer runs after the current code finishes; 1000ms is far later.
+~All three, because passing a function always runs it #Not quite. Passing hands the function over; each receiver decides when to call it.
+}
+
+::arrays-and-objects-map-filter-reduce o2 tracing the chain::The report keeps the trails shorter than 6 km with filter, then turns each kept trail into its name with map, over Lake Loop 5 km, Ridge Walk 9 km and Forest Path 4 km. What is the result? {
+=["Lake Loop", "Forest Path"] #Correct. filter keeps the two short trails, then map turns each kept trail into its name.
+~["Lake Loop", "Ridge Walk", "Forest Path"] #Not quite. filter removed Ridge Walk at 9 km before map ran.
+~[\{ name: "Lake Loop" \}, \{ name: "Forest Path" \}] #Not quite. The map callback returns the name, a string, not an object.
+~["Forest Path", "Lake Loop"] #Not quite. filter and map both keep the original order.
+}
+
+::destructuring-and-spread o3 the safe copy::Two candidate copies of a trail must let copy.tags.push("muddy") run without touching the original. A: const copy \= \{ ...trail \}. B: const copy \= \{ ...trail, tags: [...trail.tags] \}. Which candidate is safe, and why? {
+=Only B: the outer spread copies one level, so the inner spread is what gives the copy its own tags array #Correct. Spread is shallow; nested arrays stay shared unless copied themselves.
+~Only A: a spread already duplicates everything inside the object #Not quite. A's copy shares the original tags array, so the push would change both.
+~Both: any copy made with spread is independent #Not quite. A is a shallow copy; its nested array is shared.
+~Neither: push always changes every copy of an array #Not quite. push changes one array object; B's copy has its own.
+}
+
+::modules-import-and-export o3 module scope stays private::A page loads report.mjs with script type\="module" (it imports helpers and defines function summary()), and a second, classic inline script calls summary(). The console shows "summary is not defined". Why? {
+=Module top-level names stay inside the module's own scope; unlike a classic script, they never become globals for other scripts #Correct. The module keyword buys import support and module scope together; sharing needs an export plus an import, not a global.
+~The module has not finished downloading when the inline script runs #Not quite. Even after the module runs, its top-level names remain invisible to other scripts.
+~type module disables function declarations #Not quite. The function exists; it is scoped to the module.
+~The inline script also needs an import statement, which classic scripts write with require #Not quite. Classic scripts have no import or require in the browser; the fix is making the caller a module that imports summary.
+}
+
+::scope-and-closures o1 who sees what::In report.mjs, a module-level const trails sits above function summary(), which declares let total and, inside an if block, const label. Which of the three can the line after the if block inside summary still read? {
+=trails and total, but not label, which ended with its block #Correct. Module and function scope stay visible; a const inside a block exists only there.
+~Only total, because functions are sealed off from the module #Not quite. Functions read outward into module scope, so trails is visible too.
+~All three, because summary contains the if block #Not quite. Containing the block does not extend the block-scoped label beyond its braces.
+~Only trails, because let dies at the end of the line #Not quite. let lasts to the end of the function body it is declared in.
+}
+
+::scope-and-closures o3 from symptom to fix::A loop written with var trail wires one button per trail; clicking ANY button logs "Forest Path", the last trail. Which smallest change makes each button log its own trail, and why does it work? {
+=Declare the loop variable with let, because let creates one binding per loop pass for each callback to close over #Correct. var made one shared binding that finished at "Forest Path"; let gives every iteration its own.
+~Call the logging function once before the loop ends #Not quite. That changes when logging happens; the buttons' callbacks would still share the one var binding.
+~Move the loop into another file #Not quite. File boundaries do not change how the loop binds its variable.
+~Replace the buttons with links #Not quite. The element type has nothing to do with which variable the callbacks captured.
+}

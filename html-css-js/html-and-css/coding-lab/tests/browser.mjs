@@ -63,3 +63,20 @@ export async function measureManyAt(widths) {
 export async function measureAt(width) {
   return (await measureManyAt([width]))[0];
 }
+
+export async function withPage(fn, width = 900) {
+  process.env.PLAYWRIGHT_BROWSERS_PATH = "0";
+  const manifest = path.join(starterDir, "node_modules", "playwright", "package.json");
+  if (!existsSync(manifest)) throw new Error("The test browser is not installed yet: run npm ci in starter/ once (README, Setup).");
+  const require = createRequire(path.join(starterDir, "package.json"));
+  const { chromium } = require("playwright");
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage({ viewport: { width, height: 800 } });
+    await page.route(/^(?!file:)/, (route) => route.abort());
+    await page.goto(pathToFileURL(path.join(starterDir, "index.html")).href);
+    return await fn(page);
+  } finally {
+    await browser.close();
+  }
+}

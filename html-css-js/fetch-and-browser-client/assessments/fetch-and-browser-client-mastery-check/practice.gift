@@ -1,0 +1,61 @@
+// Mastery check: Fetch and browser client (practice, ungraded).
+// One scenario set around the Trail Guides client and its Spring Boot API.
+// Titles name the topic and objective id each item practises. About 15 minutes.
+
+$CATEGORY: html-css-js/fetch-and-browser-client
+
+::fetching-data o2 the 500 that did not throw::The trails API answers 500, yet the client's catch block never runs and the code happily tries to use the body. Why did fetch not reject? {
+=fetch fulfils whenever an HTTP response arrives, even an error status; response.ok is how the code must notice #Correct. Only failures without an HTTP answer reject; statuses are checked on the response object.
+~The server hid the error from the browser #Not quite. The 500 arrived openly; the client just never looked at response.ok.
+~catch only works with then chains, not with await #Not quite. Both styles see rejections; there simply was no rejection here.
+~A 500 rejects only when the response body is empty #Not quite. The body never decides fulfilment; receiving an HTTP answer does.
+}
+
+::handling-http-errors-and-problemdetail-responses o1 two broken mornings::On Monday the trails request fails with ERR_CONNECTION_REFUSED in the console; on Tuesday it gets a 404 with a problem+json body. How do the two days differ in the fetch code? {
+=Monday rejects the fetch promise (no HTTP answer); Tuesday fulfils it with response.ok false #Correct. A refused connection is a network failure for catch; a 404 is an HTTP error read from the response.
+~Both days land in the catch block #Not quite. The 404 fulfils the promise; only Monday's refused connection rejects it.
+~Both days fulfil with response.ok false #Not quite. Monday produced no response object at all.
+~Monday's error carries the status 0 response body #Not quite. A rejected fetch has no response or status to read.
+}
+
+::fixing-cors-spring-security-config-vs-vite-dev-proxy o1 the header that changed everything::A cross-origin GET for the trail list has worked for weeks with no OPTIONS request in the network panel. The team then adds an Authorization header to the same GET, and the browser now sends OPTIONS first. Why? {
+=The custom header takes the request outside the CORS-safelisted conditions, so the browser must ask permission before sending it #Correct. Preflights are triggered by the request's shape; a plain GET was simple, the Authorization header is not.
+~GET requests always preflight once per day and the timer expired #Not quite. Preflighting is not periodic; it follows the request's method, headers and body type.
+~The server demanded the preflight in its previous response #Not quite. The browser decides to preflight on its own, from the request it is about to send.
+~Authorization headers are only allowed on POST requests #Not quite. Any method may carry it; it just stops the request from being simple.
+}
+
+::fixing-cors-spring-security-config-vs-vite-dev-proxy o2 two setups::During local development the Vite page on port 5173 calls the API on port 8080; in production the deployed page at app.example.com calls api.example.com. Which fix fits each setup? {
+=The Vite dev proxy locally, so requests look same-origin; a Spring Security CORS configuration for the deployed origins #Correct. The proxy exists only in the dev server; the real cross-origin pair needs the server to allow the app origin.
+~The Vite proxy in both, by shipping the dev server with the site #Not quite. The dev server is a development tool, never the production host.
+~Spring CORS locally and the proxy in production #Not quite. That reverses the tools; the proxy cannot run where Vite's dev server does not.
+~Neither: disabling the browser's security settings is simpler #Not quite. That protects no visitor and is no deployment strategy.
+}
+
+::fixing-cors-spring-security-config-vs-vite-dev-proxy o3 reading the panels::The console says the trails request was blocked: no Access-Control-Allow-Origin header. The network panel shows the OPTIONS request answered 403 and no GET at all. What happened? {
+=The server refused the preflight, so the browser never sent the real request #Correct. A rejected OPTIONS ends the exchange; the fix is server-side CORS allowing this origin and method.
+~The JavaScript has a syntax error near the fetch call #Not quite. A syntax error would not produce an OPTIONS exchange in the network panel.
+~The network is down between browser and server #Not quite. The 403 proves the server answered; it answered no.
+~The GET ran but its response was empty #Not quite. The panel shows the GET was never sent after the failed preflight.
+}
+
+::cookies-vs-localstorage-where-tokens-should-live o1 what the attacker reads::A cross-site-scripting payload runs on the dashboard for one visitor. Their session token sits either in localStorage or in an HttpOnly cookie. What can the payload do in each case? {
+=Read the localStorage token directly; the HttpOnly cookie value stays unreadable to scripts, though requests the script sends still carry it #Correct. HttpOnly removes the value from script reach; remaining risk comes from requests made as the victim.
+~Read both, because injected scripts run with browser privileges #Not quite. Injected script is still page script, and HttpOnly hides the cookie value from all page script.
+~Read neither, because tokens are encrypted at rest #Not quite. localStorage hands any script the stored string on request.
+~Read the cookie but not localStorage #Not quite. It is the reverse: localStorage is the script-readable store.
+}
+
+::cookies-vs-localstorage-where-tokens-should-live o2 the missing attribute::The session cookie is set with Set-Cookie: session\=abc123; Secure; HttpOnly. Security review then finds the browser still attaches it to requests that another site's page triggers against the API. Which missing attribute addresses exactly that finding? {
+=SameSite, because it controls whether the cookie accompanies cross-site requests #Correct. Secure covers the transport and HttpOnly covers script access; neither limits cross-site sending.
+~A second Secure attribute with a stronger value #Not quite. Secure has no values; it only restricts the cookie to HTTPS.
+~HttpOnly, declared before Secure #Not quite. Attribute order is meaningless, and HttpOnly concerns script reads, not cross-site sending.
+~Path, set to the API's URL #Not quite. Path scopes URLs within the site and does nothing about which site triggered the request.
+}
+
+::environment-settings-for-the-api-address o2 sorting the env file::A teammate drafts a .env file with three entries: VITE_API_URL (the public API address), VITE_WEATHER_KEY (a paid weather-service key) and VITE_THEME (a display setting). Which entries are placed correctly, and what happens to the rest? {
+=VITE_API_URL and VITE_THEME are fine; the paid key must lose its VITE_ prefix and be used only by a server that proxies the weather calls #Correct. Everything VITE_-prefixed is compiled into the public bundle, so only values safe to publish may carry the prefix.
+~All three are fine, because .env files are never shipped to browsers #Not quite. The file is not shipped, but every VITE_ value is inlined into the JavaScript that is.
+~None are fine: .env files must never hold URLs or settings #Not quite. Public configuration such as an API address is exactly what client env values are for.
+~Only the key is fine, because keys are meant for the client #Not quite. The paid key is the one value that must stay off the client entirely.
+}

@@ -1,0 +1,75 @@
+// Mastery check: DOM, tooling and async (practice, ungraded).
+// One scenario set around the Trail Guides dashboard. Titles name the topic
+// and objective id each item practises. About 15 minutes.
+
+$CATEGORY: html-css-js/dom-tooling-and-async
+
+::project-setup-with-npm-and-vite o3 reproducing an install::A teammate who just cloned the dashboard project wants node_modules to match package-lock.json exactly, deleting anything stale, before running the dev server. Which command is made for that? {
+=npm ci #Correct. npm ci installs exactly what the lockfile records, from a clean slate; it is the reproducible-install command.
+~npm install #Not quite. npm install may re-resolve ranges and update the lockfile; it is for changing dependencies.
+~npm run dev #Not quite. That starts Vite's dev server; it installs nothing.
+~npm audit #Not quite. That reports known vulnerabilities; it does not install packages.
+}
+
+::events-and-event-bubbling o2 two listeners, one click::Both an li and the ul around it have their own click listener, and a visitor clicks text inside the li. Both handlers run. How do their event.target and event.currentTarget compare? {
+=target is the same clicked element in both handlers; currentTarget differs, naming the li in one and the ul in the other #Correct. target is fixed where the click started; currentTarget follows whichever listener is currently handling the bubbling event.
+~Both values are identical in both handlers #Not quite. currentTarget changes as the event bubbles from li to ul.
+~target changes as the event bubbles; currentTarget stays fixed #Not quite. It is the reverse: target is fixed, currentTarget moves.
+~The ul handler sees no target because the click missed it #Not quite. Bubbling delivers the same event, target included, to ancestors.
+}
+
+::preventing-cross-site-scripting o1 the filter that was not enough::To "sanitize" visitor notes, the dashboard deletes the word script from each note, then inserts the note with innerHTML. A note containing an img tag with an onerror attribute still ran attacker code. Why did the filter fail? {
+=innerHTML parses any markup in the text, and event-handler attributes on ordinary tags execute without any script tag #Correct. Blocklists miss whole vectors; the fix is not parsing visitor text at all, with textContent.
+~The word filter ran after innerHTML instead of before #Not quite. Order is irrelevant; the img vector never contained the filtered word.
+~Browsers only block script tags from file downloads, not notes #Not quite. The browser blocked nothing; the page itself asked for the markup to be parsed.
+~The attacker guessed the admin password #Not quite. No credentials are involved; the page turned untrusted text into live HTML.
+}
+
+::promises o1 three states::The dashboard calls trailApi.fetchConditions("Ridge Walk"), which answers after a delay. Immediately after the call, and then after the report arrives, which states is the promise in? {
+=pending first, then fulfilled with the report #Correct. A promise starts pending and settles once, here into the fulfilled state carrying the value.
+~fulfilled first, then pending while the page uses the value #Not quite. The order is the other way round, and a settled promise never returns to pending.
+~rejected first, until a then handler is attached #Not quite. Attaching handlers never changes state; it only subscribes to it.
+~pending first, then both fulfilled and rejected, one per handler #Not quite. A promise settles into exactly one of the two states.
+}
+
+::promises o3 one bad report::The dashboard runs Promise.all over conditions for Lake Loop, Ridge Walk and Canyon Route; Canyon Route's promise rejects while the other two fulfil. What does the combined promise do? {
+=It rejects with Canyon Route's error, and the two fulfilled values are not delivered through it #Correct. Promise.all is all-or-nothing: the first rejection rejects the whole combination.
+~It fulfils with the two good reports and a gap for the third #Not quite. That partial behavior belongs to Promise.allSettled, not Promise.all.
+~It stays pending until Canyon Route is retried #Not quite. The rejection settles it immediately; nothing retries on its own.
+~It fulfils, because most of the promises fulfilled #Not quite. One rejection outweighs any number of fulfilments in Promise.all.
+}
+
+::async-and-await o3 the missing await::refreshDashboard is an async function that returns \{ count: 3 \}. A caller writes const summary \= refreshDashboard(); console.log(summary.count); and the console prints undefined. Why, and what is the fix? {
+=summary holds a promise, not the object; reading .count on a promise gives undefined, so the caller must await refreshDashboard() #Correct. An async function always hands back a promise; the object is its future fulfilment value.
+~The function ran too slowly, so count was empty #Not quite. Speed is irrelevant; even an instant async function returns a promise.
+~Returning objects from async functions is not allowed #Not quite. Any value can be returned; it arrives wrapped in the promise.
+~console.log cannot print numbers from other functions #Not quite. console.log prints anything; the read happened on the wrong kind of value.
+}
+
+::debugging-with-devtools-breakpoints o1 stopping on the bad trail::The dashboard's render loop handles six trails but draws only Canyon Route wrongly. You want the debugger to pause only on that pass of the loop. Which breakpoint does that? {
+=A conditional breakpoint on the loop body with the condition trail.name \=\=\= "Canyon Route" #Correct. The condition is checked each pass, and the debugger pauses only when it is true.
+~A line-of-code breakpoint on the loop body #Not quite. That pauses on all six passes; you would step through five good trails first.
+~A breakpoint on the function's closing line #Not quite. By then the loop has finished and the per-trail state is gone.
+~Pressing pause while the page is idle #Not quite. Pausing outside the render leaves you nowhere near the loop's state.
+}
+
+::debugging-with-devtools-breakpoints o3 reading the evidence::Paused in addDistances, Scope shows base is the number 5 and extra is the string "7". Step over the line total \= base + extra and Scope shows total is "57". Which line is faulty, and what is the fix? {
+=The line that read extra from the input field: convert it with Number before adding #Correct. The + saw a string and concatenated; the evidence points at the unconverted input, not the addition.
+~The total line: replace + with a stronger addition operator #Not quite. + already adds numbers; the string operand is the problem, and there is no other addition operator.
+~The console: it displays numbers as text while paused #Not quite. Scope showed the quote marks because extra really is a string.
+~Nothing is faulty: "57" is the correct sum #Not quite. 5 + 7 should be 12; "57" is concatenation evidence.
+}
+
+::the-event-loop o1 output order::The dashboard script runs: console.log("A"); Promise.resolve().then(function () \{ console.log("B"); \}); setTimeout(function () \{ console.log("C"); \}, 0); console.log("D"). In what order do the letters appear? {
+=A, D, B, C #Correct. Synchronous code finishes first, then the microtask queue (the promise callback), then the timer callback.
+~A, B, C, D #Not quite. The then and timer callbacks wait until the synchronous code has finished.
+~A, D, C, B #Not quite. Promise callbacks are microtasks and run before a 0ms timer.
+~A, B, D, C #Not quite. B cannot run between two synchronous lines; the script finishes before any callback runs.
+}
+
+::debugging-with-devtools-breakpoints o2 stepping and watching::Paused on the line const total \= base + extra, with base 5 and extra 7 shown in Scope, you press step over. What does Scope show for total right after? {
+=12, because step over ran the whole line and its assignment #Correct. Step over executes the current line, so the computed value is now visible.
+~Still undefined, because step over skips the line #Not quite. Step over runs the line; it only declines to descend into called functions.
+~5, because total copies base first #Not quite. The whole expression is evaluated and assigned as one step.
+~The debugger cannot show const values #Not quite. Scope shows const bindings like any other local.
+}

@@ -1,18 +1,19 @@
-# HTML and CSS layout lab: Trail Guides
+# HTML and CSS lab: Trail Guides
 
-Standard track, S21 Lab day: about 62 minutes. Fast Track skips this lab; Fast learners practise the same layout rules in the course project.
+Standard track, S21 Lab day, inside the Guided lab block. All ten tasks are required; they are small single-rule or single-element edits, each marked by a `TODO` comment in the starter. Authoring estimate, not a measured learner pilot: about 45 minutes for an average learner to read this README and finish all ten tasks, with a 55-minute cap that leaves a buffer. Do the one-time Setup below before the block; it is not counted in those minutes. The cap is a planning allowance, not a timer. Fast Track skips this lab; Fast learners practise the same rules in the course project, and can use this lab as optional remediation.
 
 ## Goal
 
-Turn the Trail Guides page in `starter/` into a responsive, mobile-first layout. You decide which Flexbox, Grid and media-query rules produce each outcome below. When you finish, the page works from a 400px phone to a wide desktop screen with no sideways scrolling.
+Turn the Trail Guides page in `starter/` into a responsive, mobile-first layout, then repair its sign-up corner: semantic structure, labelled inputs, built-in validation and accessible controls. You decide which rule or element produces each outcome below. When you finish, the page works from a 400px phone to a wide desktop screen with no sideways scrolling, and the sign-up form is one a browser, a keyboard and a screen reader all understand.
 
-This lab practises these topics: Flexbox, Grid, and Responsive, mobile-first layout. Read those three topic pages first; each task names the page section that teaches what it needs.
+This lab practises these topics: Flexbox; Grid; Responsive, mobile-first layout (tasks 1 to 6); Semantic HTML page structure; Forms and HTML5 validation; Accessibility basics (tasks 7 to 10). Read those topic pages first; each task names the page section that teaches what it needs.
 
 ## What the tests check, and what they do not
 
 - Tasks 1 to 3 read `starter/index.html` and `starter/styles.css` and check that each outcome is set up with the layout tool named in the task.
 - Tasks 4 and 5 also open your page in the pinned headless Chromium at the breakpoint boundaries and at the documented 700px and 1100px checks. They measure the card columns and page regions, so valid custom-property indirection is welcome when it produces the required layout.
 - Task 6 measures the page at 400px: it must not scroll sideways, and the hero picture must stay inside its box. Hiding the overflow does not count; the test measures the content with nothing hidden.
+- Tasks 7 to 10 inspect the rendered sign-up corner in the same pinned Chromium: the element and heading structure, whether the browser itself associates each label with its input, what `checkValidity` blocks and accepts, and whether the submit control takes keyboard focus.
 - The tests do not assess colours and spacing. Section "Check it in a browser" lists what to inspect yourself.
 
 ## Prerequisites
@@ -47,11 +48,11 @@ This lab practises these topics: Flexbox, Grid, and Responsive, mobile-first lay
    node --test --test-reporter=spec
    ```
 
-   All seven tests fail, and each message names the outcome that is still missing. This is the expected start.
+   All eleven tests fail, and each message names the outcome that is still missing. This is the expected start.
 
 ## Tasks
 
-Work only in `starter/index.html` and `starter/styles.css`. Each `TODO` comment in `styles.css` marks where a task starts. After each task, run `node --test --test-reporter=spec` again from `coding-lab/`: the test for that task changes from `✖` to `✔`. If you are stuck, open the hints one at a time; none of them gives the full rule.
+Work only in `starter/index.html` and `starter/styles.css`. Every task is required to complete the lab. Everything else is the lab's fixed support and stays as shipped: `starter/badge.svg`, the starter's package files, the tests in `tests/` and `expected/on-completion.txt`. A task counts as done only when the shipped tests for it pass exactly as shipped. Each `TODO` comment in `styles.css` marks where a layout task starts, and each `TODO task` comment in the sign-up corner of `index.html` marks the element that task changes. After each task, run `node --test --test-reporter=spec` again from `coding-lab/`: the test for that task changes from `✖` to `✔`. If you are stuck, open the hints one at a time; none of them gives the full rule.
 
 ### Task 1: phones use their own width
 
@@ -101,6 +102,38 @@ Work only in `starter/index.html` and `starter/styles.css`. Each `TODO` comment 
 - **Hint 1:** two things are wider than a phone: a fixed page width and a picture drawn at its natural 800px. Topic page: Responsive, mobile-first layout, step 4.
 - **Hint 2:** let the page be narrower than its widest size instead of fixed, and give the picture an upper limit relative to its container that keeps its proportions.
 
+### Task 7: the sign-up corner joins the page structure
+
+- **Where:** `starter/index.html`, the sign-up corner below the trail cards.
+- **Outcome:** the sign-up corner is a standalone page region with its own heading: its wrapper is the matching semantic element (keep `class="signup"` and the form inside it), and its heading continues the page outline from the `h1` without skipping levels.
+- **Done when:** `task 7: the sign-up corner is a section whose heading fits the page outline` passes.
+- **Hint 1:** a region with its own heading that stands on its own is one specific semantic element, not a `div`. Topic page: Semantic HTML page structure, step 2.
+- **Hint 2:** the page's outline is `h1` then one level deeper; the pasted-in heading jumped two levels too far.
+
+### Task 8: labels the browser understands
+
+- **Where:** `starter/index.html`, the three fields in the sign-up form.
+- **Outcome:** each input's loose text becomes a visible label element that the browser programmatically associates with that input, so clicking the label focuses the field and a screen reader announces it.
+- **Done when:** `task 8: every sign-up input has a label the browser connects to it` passes.
+- **Hint 1:** looking labelled is not being labelled: the association is made in markup, not by nearness. Topic page: Forms and HTML5 validation, step 1.
+- **Hint 2:** a `label` points at an input's `id` with one attribute; each input already has its `id`.
+
+### Task 9: the browser blocks an invalid sign-up
+
+- **Where:** `starter/index.html`, the same three inputs.
+- **Outcome:** an empty name, an empty or malformed email, or a group size outside 1 to 6 is blocked by the browser itself before anything is sent: name required; email required with the address-checking type; group size required with its stated bounds.
+- **Done when:** `task 9: the browser blocks an empty or invalid sign-up before it is sent` passes.
+- **Hint 1:** these are attributes on the inputs, no JavaScript involved. Topic page: Forms and HTML5 validation, steps 2 and 3.
+- **Hint 2:** the group size already has `type="number"`; it still needs `required` and its two bounds. Remember the topic page's caution: the server must validate again even when the browser blocks bad input first.
+
+### Task 10: a real button and a described badge
+
+- **Where:** `starter/index.html`, the badge image and the fake button.
+- **Outcome:** the badge image carries alt text that says what it shows, and the "Request a spot" control is a native submit button that takes keyboard focus, instead of a `div` with a `button` role.
+- **Done when:** `task 10: the badge has alt text and the submit control is a real button` passes.
+- **Hint 1:** when a native element gives the behavior, prefer it over ARIA on a generic one: the native button is focusable and announceable with no extra attributes. Topic page: Accessibility basics, step 2.
+- **Hint 2:** inside a form, give the button its explicit `type`. Then press Tab through the page: the button now takes focus, which the `div` never did.
+
 ## How to test
 
 From `coding-lab/`, run the one test command:
@@ -109,7 +142,7 @@ From `coding-lab/`, run the one test command:
 node --test --test-reporter=spec
 ```
 
-While you work, failing tests show `✖` and a message naming the missing outcome. Tasks 4 to 6 open the test browser, so the command takes a few seconds. When every task is done, all seven show `✔`.
+While you work, failing tests show `✖` and a message naming the missing outcome. Tasks 4 to 10 open the test browser, so the command takes a few seconds. When every task is done, all eleven show `✔`.
 
 ## Expected output
 
@@ -123,8 +156,12 @@ When you are finished, the output matches `expected/on-completion.txt`, apart fr
 ✔ task 5: from 1000px, the header and footer span the page and the gear checklist sits beside the trails (<ms>ms)
 ✔ task 4 and 5: the stylesheet is mobile-first, adding wider-screen rules from small to large (<ms>ms)
 ✔ task 6: at 400px wide the page does not scroll sideways, and the hero picture stays inside its box (<ms>ms)
-ℹ tests 7
-ℹ pass 7
+✔ task 7: the sign-up corner is a section whose heading fits the page outline (<ms>ms)
+✔ task 8: every sign-up input has a label the browser connects to it (<ms>ms)
+✔ task 9: the browser blocks an empty or invalid sign-up before it is sent (<ms>ms)
+✔ task 10: the badge has alt text and the submit control is a real button (<ms>ms)
+ℹ tests 11
+ℹ pass 11
 ℹ fail 0
 ```
 
@@ -136,6 +173,7 @@ Open `starter/index.html` in your browser (double-click it, or drag it onto a br
 - At 700px wide: the cards are in two columns.
 - At 1100px wide: the gear checklist sits to the right of the trails, and the header and footer span the full width.
 - At every width: the site name and nav are at opposite ends of the header, and the nav links are in one row.
+- In the sign-up corner: clicking each label focuses its input; pressing Tab reaches every field and the button; submitting with an empty or wrong field shows the browser's own message bubble at the first invalid input.
 
 ## Offline note
 
@@ -153,4 +191,6 @@ Delete `starter/node_modules/` to remove the test tool and its browser; the test
 - No tests run, or `Could not find`: run the test command from the `coding-lab/` folder, the one that holds this README.
 - A test still fails after your change: read its message, then the task's hints. Check that the selector is spelled as in the starter (for example `.site-nav ul`) and that wider layouts begin at the stated breakpoint.
 - Task 6 still says the page scrolls sideways: look for anything with a fixed width wider than 400px in the base styles, including the picture.
+- Task 8 still finds no label: the `for` attribute must match the input's `id` exactly, and the label needs visible text.
+- Task 9 accepts bad input: check each attribute is on the input element itself, spelled as the browser expects (`required`, `type`, `min`, `max`).
 - The page looks unstyled in the browser: keep `<link rel="stylesheet" href="styles.css">` in `index.html` and keep both files in `starter/`.
