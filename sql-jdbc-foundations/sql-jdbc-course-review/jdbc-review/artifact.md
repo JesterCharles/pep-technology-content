@@ -66,7 +66,7 @@ The model: each JDBC object comes from the one before it. `DriverManager` gives 
 - Concatenated input can change the SQL text; a `?` parameter is bound as a value and can never become SQL.
 - Use `setAutoCommit(false)`, `commit()` and `rollback()` when several changes must succeed or fail together.
 
-Module complete: reporting queries, indexes and JDBC review
+Next: the SQL & JDBC course final check
 
 ## Cheat sheet
 
