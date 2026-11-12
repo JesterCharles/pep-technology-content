@@ -1,0 +1,65 @@
+$CATEGORY: spring-boot/relationships-and-transactions
+
+::Q1 The owning side::
+Workshop has many Sessions, and the session table carries the workshop_id column. Which side owns the relationship?{
+=Session, because the owning side is the one holding the foreign key.#Correct. The foreign key column decides ownership; the collection side only mirrors it with mappedBy.
+~Workshop, because a parent always owns its children.#Not quite. Ownership follows the foreign key, not the parent role.
+~Both sides equally, because the mapping is bidirectional.#Not quite. Exactly one side owns a bidirectional relationship.
+~Neither; a join table always owns one-to-many relationships.#Not quite. A plain one-to-many with mappedBy uses the foreign key, not a join table.
+}
+
+::Q2 Changing only the inverse side::
+Code adds a Session to workshop.getSessions() but never sets session.setWorkshop, then saves. What does Hibernate write?{
+~The foreign key is written, because the collection is authoritative.#Not quite. The collection is the inverse side; it is ignored for the foreign key.
+~Both sides are written; Hibernate synchronizes them automatically.#Not quite. Keeping the sides in sync is the application's job, usually via a helper method.
+=Nothing links them: the inverse side alone does not persist the foreign key.#Correct. Only the owning side's reference reaches the database, which is why helper methods set both sides.
+~Hibernate throws an exception about an unsynchronized relationship.#Not quite. It saves silently without the link, which is worse than an error.
+}
+
+::Q3 Default fetch types::
+What are the default fetch types for a OneToMany collection and a ManyToOne reference?{
+~Both lazy.#Not quite. ManyToOne is eager by default.
+=The collection is lazy; the single reference is eager.#Correct. OneToMany defaults to lazy, ManyToOne to eager, which is why the course marks ManyToOne lazy explicitly.
+~Both eager.#Not quite. Collections default to lazy.
+~The collection is eager; the single reference is lazy.#Not quite. That is the reverse of the defaults.
+}
+
+::Q4 Reading the lazy exception::
+A stack trace says a collection could not be initialized lazily because there is no session. What happened?{
+~The database connection pool was exhausted.#Not quite. Pool exhaustion raises a different error while opening connections.
+~The entity was never saved, so the collection does not exist yet.#Not quite. Unsaved entities hold plain in-memory collections that need no session.
+=Code touched a lazy association after the Hibernate session closed, for example outside the transaction.#Correct. Lazy loading needs an open session; once it closes, the first access throws.
+~Two threads loaded the same entity at once.#Not quite. Concurrency is not what this exception reports.
+}
+
+::Q5 Cascade and orphans::
+A parent collection is mapped with cascade ALL and orphanRemoval true. A child is removed from the collection and the parent is saved. What happens to the child row?{
+~It stays, with its foreign key set to null.#Not quite. That is plain disassociation without orphanRemoval.
+=It is deleted: orphanRemoval removes children that lose their parent.#Correct. Orphan removal treats a child dropped from the collection as deleted.
+~It is archived into a Hibernate history table.#Not quite. Hibernate keeps no automatic history tables.
+~Nothing until the child is also explicitly deleted from its repository.#Not quite. With orphanRemoval the collection change itself is enough; no separate delete call is needed.
+}
+
+::Q6 Rollback rules::
+A method annotated as transactional throws, by default configuration, which exception causes a rollback?{
+~Any checked exception declared on the method.#Not quite. Checked exceptions commit by default unless rollbackFor says otherwise.
+~Only Spring's own DataAccessException.#Not quite. The rule covers all runtime exceptions, not one family.
+=An unchecked exception such as IllegalStateException.#Correct. Runtime exceptions and errors roll back by default; checked exceptions do not.
+~Every exception, checked or unchecked.#Not quite. The default distinguishes checked from unchecked.
+}
+
+::Q7 Recognizing N+1::
+A log shows one query loading 20 workshops, then 20 more queries each loading sessions for one workshop id. What is this?{
+=The N+1 pattern: one parent query plus one child query per parent row.#Correct. That 1 plus N shape is exactly the N+1 problem.
+~Normal batching: Hibernate splits large reads into pages.#Not quite. Batching would group many ids per query, not one.
+~Connection pool warm-up queries.#Not quite. Pool validation queries do not select your entities.
+~A deadlock retry loop.#Not quite. Retries would repeat the same statement, not iterate over ids.
+}
+
+::Q8 Join fetch and pagination::
+Why is a collection join fetch combined with database pagination a trap, and what is the usual way out?{
+~It is fine; Hibernate paginates the joined rows transparently at the database.#Not quite. The joined rows no longer map one-to-one to entities, so Hibernate cannot push limits down safely.
+~The trap is SQL syntax; fetch joins are illegal with limit clauses.#Not quite. The SQL runs; the problem is semantic, not syntactic.
+~The way out is switching the collection to eager loading.#Not quite. Eager loading reintroduces the overfetching the fetch join tried to control.
+=Joined child rows multiply parent rows, so Hibernate paginates in memory; paginate the parents first and fetch children separately.#Correct. Paginating the parent query and loading children in a second query keeps limits in the database.
+}

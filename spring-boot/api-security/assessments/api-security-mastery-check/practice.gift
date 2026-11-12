@@ -1,0 +1,65 @@
+$CATEGORY: spring-boot/api-security
+
+::Q1 Revoking access::
+Which statement about revoking a single user's access immediately is accurate?{
+~JWTs revoke instantly because every token is checked against the issuer.#Not quite. A self-contained JWT is valid until expiry unless extra infrastructure tracks it.
+=Server-side sessions revoke cleanly: delete the session and the cookie is worthless.#Correct. Session state lives on the server, so removing it ends access at once.
+~Both revoke the same way, by rotating the signing key.#Not quite. Key rotation logs out everyone, not one user.
+~Neither can revoke before the browser clears its storage.#Not quite. Sessions revoke server-side regardless of the client.
+}
+
+::Q2 Cookies and CSRF::
+Why does CSRF mainly threaten cookie-based authentication rather than bearer tokens?{
+~Cookies are stored unencrypted and bearer tokens are encrypted.#Not quite. Storage encryption is not the difference.
+~Bearer tokens expire faster than cookies.#Not quite. Lifetimes vary and are not the point.
+~Cookies can hold more data than an Authorization header.#Not quite. Size has nothing to do with CSRF.
+=The browser attaches cookies automatically to requests it is tricked into sending; a bearer header must be added by code.#Correct. Automatic cookie sending is what a cross-site forgery exploits; headers do not ride along.
+}
+
+::Q3 Why slow and salted::
+Why are passwords stored with a slow, salted hash such as bcrypt instead of a fast digest or encryption?{
+=Salting blocks precomputed tables and the cost factor makes mass guessing expensive; there is no key to steal as with encryption.#Correct. Slow plus salted defeats cracking at scale, and hashing is one-way by design.
+~Because fast digests produce outputs too short for databases.#Not quite. Output length is irrelevant; speed is the problem.
+~Because encryption cannot be applied to short strings.#Not quite. Encryption works on any length; its recoverable key is the flaw here.
+~Because bcrypt compresses the password for storage.#Not quite. Bcrypt hashes; it does not compress.
+}
+
+::Q4 The id prefix::
+A stored credential begins with a bcrypt marker in braces before the hash. What is that prefix for?{
+~It marks the row as migrated from a legacy system.#Not quite. The prefix describes the algorithm, not the data's origin.
+~It is the salt, stored separately from the hash.#Not quite. Bcrypt embeds its salt inside the hash itself.
+=It names the algorithm so the delegating encoder can verify old hashes and upgrade to new algorithms later.#Correct. The id tells the delegating encoder which algorithm to use per entry, enabling gradual upgrades.
+~It is a checksum protecting the hash from corruption.#Not quite. No checksum wraps the hash.
+}
+
+::Q5 Expired or tampered::
+A request carries an expired JWT. A second request carries a token whose payload was edited. What does the resource server answer?{
+=401 for both: expiry and signature verification both fail authentication.#Correct. Expired and tampered tokens are both rejected as unauthenticated, before any role check.
+~401 for the expired one, 403 for the tampered one.#Not quite. Tampering fails the signature check, which is authentication, not authorization.
+~403 for both, because the tokens were present.#Not quite. Invalid credentials give 401; 403 is for valid identity without permission.
+~400 for both, because the tokens are malformed input.#Not quite. Token validation failures answer 401, not a generic 400.
+}
+
+::Q6 401 versus 403::
+An anonymous request and an authenticated request without the required role both hit an admin endpoint. What do they receive?{
+~401 for both.#Not quite. The authenticated caller is known; the server refuses by permission with 403.
+~403 for both.#Not quite. The anonymous caller failed authentication, which is 401.
+=401 for the anonymous request, 403 for the authenticated one without the role.#Correct. 401 means prove who you are; 403 means we know you and the answer is no.
+~404 for both, to hide the endpoint.#Not quite. Hiding with 404 is a deliberate design choice, not the default status pair.
+}
+
+::Q7 The open profile risk::
+What is the risk of a dev-profile security chain that permits everything, and what contains it?{
+~No risk: profiles cannot reach production machines.#Not quite. Profiles are set by configuration and can absolutely be activated in production by mistake.
+=If the dev profile is ever active in production, every endpoint is public; containment is explicit profile activation plus tests proving the default stays locked.#Correct. The open chain is one property away, so activation is deliberate and the locked default is proven by tests on every run.
+~The open chain slows requests by skipping the security filters.#Not quite. Skipping checks costs nothing in speed; the risk is exposure.
+~CORS stops working in other profiles.#Not quite. CORS configuration is orthogonal to the open chain risk.
+}
+
+::Q8 Broken object level authorization::
+GET /bookings/123 returns any booking to any authenticated user who guesses an id. Which fix addresses this API1 risk?{
+~Rate-limit the endpoint so guessing is slower.#Not quite. Slower guessing still leaks other users' data.
+~Switch the id to a UUID so ids are harder to guess.#Not quite. Obscure ids reduce guessing but the authorization hole remains.
+~Require the ADMIN role for every booking read.#Not quite. Locking everyone out is not ownership; users must still read their own bookings.
+=Check ownership in the handler: the booking must belong to the authenticated caller or the request is refused.#Correct. Object-level authorization compares the resource's owner with the caller on every access.
+}

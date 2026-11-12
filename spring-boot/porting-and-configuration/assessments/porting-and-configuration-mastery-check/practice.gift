@@ -1,0 +1,65 @@
+$CATEGORY: spring-boot/porting-and-configuration
+
+::Q1 Porting a route::
+A Javalin app registers app.get("/items", handler). What is the closest Spring Boot equivalent?{
+~A servlet filter that matches the /items path.#Not quite. Filters wrap requests; they are not route handlers.
+=A handler method annotated with a GET mapping for /items inside a class annotated as a REST controller.#Correct. The route table becomes mapping annotations on controller methods.
+~A bean method named getItems in any configuration class.#Not quite. Bean methods define beans; they do not map HTTP routes.
+~An entry for /items in application.properties.#Not quite. Configuration files hold settings, not route definitions.
+}
+
+::Q2 Porting exception mapping::
+Javalin maps NoSuchElementException to a 404 with app.exception(...). What is the Spring port?{
+~A try/catch around every controller method that returns null on failure.#Not quite. That duplicates the mapping in every method instead of declaring it once.
+~A custom servlet error page registered in web.xml.#Not quite. Boot applications do not use web.xml error pages for this.
+~Throwing ResponseStatusException from the repository layer.#Not quite. That moves HTTP knowledge into the wrong layer.
+=An exception handler method annotated for NoSuchElementException that answers 404.#Correct. An ExceptionHandler method, local or in a controller advice, is the declarative Spring equivalent.
+}
+
+::Q3 Testing without Spring::
+How do you unit-test a service that receives its repository through its constructor, without starting Spring?{
+=Instantiate the service with new, passing a hand-written fake repository.#Correct. Constructor injection makes the service a plain object a test can build directly.
+~Annotate the test with SpringBootTest and inject the service.#Not quite. That starts the full context, which is exactly what the question avoids.
+~Use reflection to overwrite the repository field after construction.#Not quite. Reflection works but defeats the design; the constructor already accepts the fake.
+~Mock the service itself and verify its methods were called.#Not quite. Mocking the class under test tests nothing.
+}
+
+::Q4 Safe and idempotent::
+Which HTTP method is safe and idempotent?{
+~POST, because repeating it merges duplicates.#Not quite. POST is neither safe nor idempotent; repeats may create more resources.
+~DELETE, because deleting twice changes nothing the second time.#Not quite. DELETE is idempotent but not safe; it changes state.
+=GET, because it reads without changing state and repeats freely.#Correct. Safe methods change nothing, and repeating a GET gives the same effect.
+~PATCH, because it sends only the changed fields.#Not quite. PATCH changes state and need not be idempotent.
+}
+
+::Q5 Effective property value::
+The same property is set in application.properties, as an environment variable, and as a command-line argument. Which value wins?{
+~The application.properties value, because files are most specific.#Not quite. Packaged files sit near the bottom of the precedence order.
+=The command-line argument.#Correct. Command-line arguments outrank environment variables, which outrank the packaged properties file.
+~The environment variable.#Not quite. It outranks the file but loses to the command line.
+~Startup fails because the sources conflict.#Not quite. Overlapping sources are normal; precedence resolves them.
+}
+
+::Q6 Profile-specific files::
+With spring.profiles.active set to prod, which greeting applies when application.properties and application-prod.properties both set it?{
+=The value from application-prod.properties.#Correct. An active profile's file overrides the default file for the properties it sets.
+~The value from application.properties.#Not quite. The default file supplies only what the profile file leaves unset.
+~Both values are joined into a list.#Not quite. One value wins; properties are not merged into lists.
+~Neither; profile files need their own spring.config.name.#Not quite. The application-prod naming convention is picked up automatically.
+}
+
+::Q7 A committed secret::
+A real database password was committed to Git and then deleted in the next commit. What must happen?{
+~Nothing more; the deleting commit removed it.#Not quite. The password remains readable in the repository history.
+~Squash the history so the two commits merge.#Not quite. Rewriting history is unreliable cleanup and clones may keep the old history.
+~Encrypt the repository from now on.#Not quite. Encryption later does not unpublish what was exposed.
+=Rotate the password; the old value is burned because history still contains it.#Correct. Anything that reached Git history counts as exposed, so the credential itself must change.
+}
+
+::Q8 Editing an applied migration::
+A Flyway migration already ran. A developer edits its SQL file and restarts the application. What does Flyway do?{
+~It applies the edited file again on top of the old schema.#Not quite. Applied versions never rerun automatically.
+~It silently ignores the edit and starts normally.#Not quite. Flyway notices: the stored checksum no longer matches.
+=It fails validation with a checksum mismatch for that version.#Correct. Applied migrations are immutable; changes belong in a new versioned file.
+~It drops the schema and replays every migration from V1.#Not quite. Flyway never drops your schema on its own.
+}

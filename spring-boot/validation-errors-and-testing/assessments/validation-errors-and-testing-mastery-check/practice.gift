@@ -1,0 +1,65 @@
+$CATEGORY: spring-boot/validation-errors-and-testing
+
+::Q1 Which fields fail::
+A booking DTO requires a non-blank attendee, a well-formed email and at least 1 seat. The body sends an empty attendee, the email text at-example and 2 seats. Which fields fail validation?{
+~Only attendee; the email format is checked at the database.#Not quite. The Email constraint runs in validation, not in the database.
+=attendee and email fail; seats passes.#Correct. The blank attendee and malformed email violate their constraints; 2 seats satisfies the minimum.
+~All three fields fail.#Not quite. 2 meets the minimum of 1.
+~None; validation only runs for query parameters.#Not quite. Validation runs on the request body when the parameter is marked for validation.
+}
+
+::Q2 Validating a path variable::
+How do you validate that a path variable meets a constraint, such as a positive id?{
+~Path variables cannot be validated; move the id into the body.#Not quite. Method parameter validation covers path variables.
+~Wrap the handler body in an if statement and return 500 on failure.#Not quite. That hand-rolls what validation does, with the wrong status.
+~Declare the constraint on the entity class instead.#Not quite. Entity constraints run at persistence time, not at binding time.
+=Put the constraint annotation directly on the method parameter.#Correct. Spring MVC validates constrained handler parameters natively and rejects bad path and query values with a 400.
+}
+
+::Q3 Local and global handlers::
+A controller has its own ExceptionHandler for an exception, and a RestControllerAdvice handles the same exception globally. The controller throws it. Which handler runs?{
+=The controller's own handler; the local, more specific handler wins.#Correct. Spring prefers a handler in the throwing controller over a global advice.
+~The global advice; advices always outrank controllers.#Not quite. Advices are the fallback, not the override.
+~Both run, local first, then global.#Not quite. Exactly one handler answers a given exception.
+~Neither; the duplication is a startup error.#Not quite. The overlap is legal and resolved by specificity.
+}
+
+::Q4 What errors reveal::
+Why must an error response never include the exception stack trace?{
+~Stack traces are too large for HTTP bodies.#Not quite. Size is not the concern.
+~Clients cannot parse multi-line strings in JSON.#Not quite. JSON strings carry newlines fine.
+=It leaks internals such as class names and paths to the client; log it on the server instead.#Correct. The client gets a clean error shape; the details stay in the server log.
+~Stack traces make the response non-deterministic for tests.#Not quite. Determinism is a side point; the real issue is information leakage.
+}
+
+::Q5 The problem shape::
+Which fields form the core of an RFC 9457 problem details body?{
+~code, message and timestamp.#Not quite. That is an ad hoc error shape, not the standard one.
+~error, path and traceId.#Not quite. Those appear in Boot's legacy default body, not the standard.
+=type, title, status and detail.#Correct. Problem details centers on type, title, status and detail, plus optional extensions.
+~status, body and headers.#Not quite. Those are HTTP message parts, not problem fields.
+}
+
+::Q6 Built-in problem details::
+What does setting spring.mvc.problemdetails.enabled to true change?{
+~It converts every 2xx response into a problem body.#Not quite. Problem details is an error shape, not a success shape.
+=Framework-raised errors such as validation failures answer with problem detail bodies.#Correct. The built-in support formats Spring MVC's own exceptions as problem details.
+~It disables custom RestControllerAdvice classes.#Not quite. Your advices still run and can still override.
+~It turns validation failures into 500 responses.#Not quite. Validation failures stay 400; only the body shape changes.
+}
+
+::Q7 MockitoBean versus plain mock::
+How does a MockitoBean differ from a mock created directly with Mockito.mock?{
+~It cannot be stubbed; only verified.#Not quite. Stubbing works the same way.
+~It is faster because it skips proxy creation.#Not quite. Both are Mockito proxies.
+=It replaces the real bean inside the Spring test context, so everything wired to that bean gets the mock.#Correct. The override happens in the container, which a hand-made mock never touches.
+~It persists stubbing across test classes.#Not quite. Stubbing resets between tests as usual.
+}
+
+::Q8 Reading a MockMvc failure::
+A MockMvc test reports that status 200 was expected but 404 received. What does that tell you first?{
+~The JSON body had the wrong field values.#Not quite. Body assertions never ran; the status assertion failed first.
+=The request never reached a matching handler, so check the path and method mapping before any body logic.#Correct. A 404 at the status assertion points at routing, the earliest layer to check.
+~The service layer returned null.#Not quite. A null from the service with a matched route gives 200 with an empty body or a 500, not 404.
+~The test forgot to start the servlet container.#Not quite. MockMvc needs no container; requests are dispatched in-process.
+}
