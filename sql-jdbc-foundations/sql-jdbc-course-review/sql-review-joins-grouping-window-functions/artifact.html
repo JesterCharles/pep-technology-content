@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="pep:course" content="sql-jdbc-foundations">
-<meta name="pep:module" content="reporting-indexes-and-review">
-<meta name="pep:topic" content="Review: JDBC">
-<meta name="pep:topic-id" content="jdbc-review">
-<meta name="pep:budget-minutes" content="15">
-<meta name="pep:source" content="authoring/evidence/sql-jdbc-foundations/reporting-indexes-and-review/jdbc-review/sources.json">
-<title>Review: JDBC · Reporting Queries, Indexes and Review</title>
+<meta name="pep:module" content="sql-jdbc-course-review">
+<meta name="pep:topic" content="Review: Joins, grouping and window functions">
+<meta name="pep:topic-id" content="sql-review-joins-grouping-window-functions">
+<meta name="pep:budget-minutes" content="9">
+<meta name="pep:source" content="authoring/evidence/sql-jdbc-foundations/sql-jdbc-course-review/sql-review-joins-grouping-window-functions/sources.json">
+<title>Review: Joins, grouping and window functions · Course Review</title>
 <style>
 /* pep:component predict@1 css */
 fieldset{margin:0;padding:0;border:0;min-width:0}
@@ -404,284 +404,94 @@ legend { font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong)
   .pep-activity { break-before: auto; }
 }
 </style>
-<style>
-/* Page-specific: the injection explorer's text field */
-#x2 label[for="city"] { display: block; font-weight: 600; color: var(--pep-text-strong); margin-bottom: 4px; }
-#city { display: block; width: 100%; max-width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-sm); background: var(--pep-page); color: var(--pep-text-strong); font: 400 16px/24px var(--pep-font-mono); scroll-margin-block: 16px; }
-#inj-out { margin-top: 12px; }
-#inj-out pre { margin-top: 4px; }
-</style>
 <noscript><style>.pep-js-only{display:none!important}</style></noscript>
 </head>
 <body>
-<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="15">
+<main id="lesson" class="pep-main" data-pep-responsive data-pep-guidance-contract data-pep-complete="false" data-pep-current-activity="1" data-pep-unlocked-through="1" data-pep-required-minutes="9">
 <header class="pep-topicbar">
-  <h1 id="page-title">Review: JDBC</h1>
+  <h1 id="page-title">Review: Joins, grouping and window functions</h1>
   <div class="pep-topicbar__progress progress">
-    <p><span class="pep-js-only"><span id="pos-text">Activity 1 of 5</span> · <span id="prog-text">Activities done: 0 of 5</span> · </span>about 15 min</p>
-    <div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+    <p><span class="pep-js-only"><span id="pos-text">Activity 1 of 3</span> · <span id="prog-text">Activities done: 0 of 3</span> · </span>about 9 min</p>
+    <div class="pep-progress pep-js-only" aria-hidden="true"><span></span><span></span><span></span></div>
   </div>
   <details class="pep-objectives" data-pep-objectives>
     <summary aria-controls="objectives-body">Objectives</summary>
     <div id="objectives-body"><ul>
-      <li>Retrieve and apply the steps to query a database from Java: get a Connection, prepare a statement, execute it, read the ResultSet and close resources with try-with-resources</li>
-      <li>Explain why a PreparedStatement with ? parameters prevents SQL injection where string concatenation does not</li>
-      <li>Decide when to group statements in one transaction with setAutoCommit(false), commit and rollback</li>
+      <li>Retrieve which join keeps unmatched rows and where NULLs appear</li>
+      <li>Choose between WHERE, GROUP BY with HAVING, and a window function for a described report</li>
+      <li>Predict the rows a query that combines a join, grouping and a window function returns</li>
     </ul></div>
   </details>
   <button type="button" class="pep-btn pep-js-only" id="reset" data-pep-reset>Restart activity</button>
   <p class="vh" id="restart-status" role="status" aria-live="polite"></p>
 </header>
 <nav class="pep-nav" aria-label="Activities"><ol class="pep-steps">
-  <li><a class="pep-step" id="tl-1" href="#activity-1" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Closing</a></li>
-  <li><a class="pep-step" id="tl-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Steps</a></li>
-  <li><a class="pep-step" id="tl-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Injection</a></li>
-  <li><a class="pep-step" id="tl-4" href="#activity-4" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Why ? works</a></li>
-  <li><a class="pep-step" id="tl-5" href="#activity-5" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Transactions</a></li>
+  <li><a class="pep-step" id="tl-1" href="#activity-1" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Joins</a></li>
+  <li><a class="pep-step" id="tl-2" href="#activity-2" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>Which tool</a></li>
+  <li><a class="pep-step" id="tl-3" href="#activity-3" data-pep-activity-link><span class="pep-step__n" aria-hidden="true"></span>All together</a></li>
 </ol></nav>
-<noscript data-section-skip><p class="pep-nojs-note"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. All five activities follow in order, each with its expected results and why.</p></noscript>
+<noscript data-section-skip><p class="pep-nojs-note"><strong>Reading version.</strong> JavaScript is off, so the practice controls are hidden. All three activities follow in order, each with its expected results and why.</p></noscript>
 
 <section id="activity-1" class="pep-activity" data-pep-activity aria-labelledby="a1-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
-  <h2 id="a1-h" tabindex="-1">Activity 1: Recall the query steps</h2>
+  <h2 id="a1-h" tabindex="-1">Activity 1: Recall the joins</h2>
   <div class="pep-regions">
     <div class="pep-region" data-pep-instructions>
       <div class="teach" data-pep-teaching>
-        <p>Predict first. This is a first look at the shape of a JDBC query reading <code>customers(id, name, city)</code>:</p>
-<pre><code>String sql = "SELECT id, name FROM customers WHERE city = ?";
-try (Connection conn = DriverManager.getConnection(url, user, password);
-     PreparedStatement ps = conn.prepareStatement(sql)) {
-    ps.setString(1, city);
-    try (ResultSet rs = ps.executeQuery()) {
-        while (rs.next()) {
-            System.out.println(rs.getInt("id") + " " + rs.getString("name"));
-        }
-    }
-}</code></pre>
+        <p>Answer from memory first. <code>departments(id, name)</code> holds 1 sales, 2 support and 3 legal. <code>employees(name, dept_id, salary)</code> holds ana (1, 50), ben (1, 40), cy (2, 45) and dee, who has no department yet (<code>NULL</code>, 30).</p>
+<pre><code>SELECT d.name AS department, e.name AS employee
+FROM departments d
+LEFT JOIN employees e ON e.dept_id = d.id;</code></pre>
       </div>
     </div>
     <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
       <div id="task-1" class="task" data-pep-task>
         <h3>Your task</h3>
-        <p>Under <strong>Your prediction</strong>, choose when and in which order <code>conn</code>, <code>ps</code> and <code>rs</code> are closed and how sure you are, then press <strong>Check prediction</strong>.</p>
+        <p>Under <strong>Your prediction</strong>, choose the rows the query returns and how sure you are, then press <strong>Check prediction</strong>.</p>
       </div>
       <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1"><h3 id="checks-1">What success looks like</h3><p>You commit to an answer from memory, then read why each option is right or wrong.</p></section>
       <div class="pep-js-only">
-          <fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict data-static-alt="Retrieval prediction (practice, not scored): the try-with-resources blocks open conn, then ps, then rs. Options: rs, then ps, then conn, each as its block ends, even if an exception is thrown (correct: resources close in the opposite order of their creation); conn, then ps, then rs (wrong: that is the opening order); only conn, because closing it is enough (wrong: try-with-resources closes every declared resource); nothing until garbage collection (wrong: try-with-resources closes them when the block ends).">
+          <fieldset id="predict" data-interaction="predict" data-confidence data-pep-predict data-static-alt="Retrieval prediction (practice, not scored): departments LEFT JOIN employees. Options: 4 rows, with legal paired with NULL (correct: a LEFT JOIN keeps every row of the left table and fills the right side with NULL when nothing matches); 3 rows without legal (wrong: that is an inner join); 4 rows, with dee paired with a NULL department (wrong: that is employees LEFT JOIN departments); 5 rows with both legal and dee (wrong: that would need a FULL JOIN).">
             <legend>Your prediction</legend>
             <div class="opts">
-              <label class="opt"><input type="radio" name="predict" id="p-rev" value="rev" aria-describedby="task-1"><span class="ot"><code>rs</code>, then <code>ps</code>, then <code>conn</code>, even if an exception is thrown</span></label>
-              <label class="opt"><input type="radio" name="predict" id="p-fwd" value="fwd" aria-describedby="task-1"><span class="ot"><code>conn</code>, then <code>ps</code>, then <code>rs</code></span></label>
-              <label class="opt"><input type="radio" name="predict" id="p-conn" value="conn" aria-describedby="task-1"><span class="ot">Only <code>conn</code>; closing it is enough</span></label>
-              <label class="opt"><input type="radio" name="predict" id="p-gc" value="gc" aria-describedby="task-1"><span class="ot">None, until the garbage collector runs</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-left" value="left" aria-describedby="task-1"><span class="ot">4 rows; legal appears with <code>NULL</code> as employee</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-inner" value="inner" aria-describedby="task-1"><span class="ot">3 rows; legal does not appear</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-dee" value="dee" aria-describedby="task-1"><span class="ot">4 rows; dee appears with <code>NULL</code> as department</span></label>
+              <label class="opt"><input type="radio" name="predict" id="p-full" value="full" aria-describedby="task-1"><span class="ot">5 rows; both legal and dee appear</span></label>
             </div>
             <div class="row"><fieldset class="conf" id="conf0" data-pep-confidence aria-describedby="conf0-instr"><legend id="conf0-instr">How sure are you?</legend><label class="opt"><input type="radio" name="conf0" id="conf0-low" value="low"><span class="ot">Low</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-medium" value="medium"><span class="ot">Medium</span></label><label class="opt"><input type="radio" name="conf0" id="conf0-high" value="high"><span class="ot">High</span></label></fieldset><button type="button" class="primary" id="predict-check" data-pep-predict-check aria-describedby="conf0-instr" disabled>Check prediction</button></div>
           </fieldset>
       </div>
       <div class="feedback" id="fb-1" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
-      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> When are the resources closed?</p><ul><li><code>rs</code>, then <code>ps</code>, then <code>conn</code>: correct. Try-with-resources closes each resource when its block ends, in the opposite order of creation, even after an exception.</li><li><code>conn</code> first: wrong. That is the opening order.</li><li>Only <code>conn</code>: wrong. Every declared resource is closed.</li><li>Garbage collection: wrong. Closing happens when the block ends, not later.</li></ul></div></noscript>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> The query returns sales ana, sales ben, support cy and legal <code>NULL</code>.</p><ul><li>4 rows with legal and <code>NULL</code>: correct. A <code>LEFT JOIN</code> keeps every row of the left table, <code>departments</code>, and fills the right side with <code>NULL</code> when nothing matches.</li><li>3 rows: wrong. That is an inner <code>JOIN</code>, which drops unmatched rows.</li><li>dee with a <code>NULL</code> department: wrong. That is <code>employees LEFT JOIN departments</code>.</li><li>5 rows: wrong. Keeping unmatched rows from both sides needs a <code>FULL JOIN</code>.</li></ul></div></noscript>
     </div>
   </div>
 </section>
 
 <section id="activity-2" class="pep-activity" data-pep-activity aria-labelledby="a2-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
-  <h2 id="a2-h" tabindex="-1">Activity 2: The steps in order</h2>
+  <h2 id="a2-h" tabindex="-1">Activity 2: WHERE, HAVING or a window</h2>
   <div class="pep-regions">
     <div class="pep-region" data-pep-instructions>
-      <p data-pep-model>The model: each JDBC object comes from the one before it. <code>DriverManager</code> gives a <code>Connection</code>, the connection prepares a <code>PreparedStatement</code>, executing it gives a <code>ResultSet</code>, and the result set is a cursor you move with <code>next()</code>.</p>
+      <p data-pep-model>The model: a query works in stages. <code>FROM</code> and joins build the rows, <code>WHERE</code> removes single rows, <code>GROUP BY</code> folds rows into groups and <code>HAVING</code> removes groups; window functions then add a value to each surviving row without folding anything.</p>
       <div class="teach" data-pep-teaching>
-        <p>A <code>ResultSet</code> cursor starts before the first row. <code>next()</code> moves it to the next row and returns <code>false</code> when no rows remain; when it returns <code>true</code>, getters such as <code>getString("name")</code> read the current row. <code>executeQuery</code> returns a result set; <code>executeUpdate</code> returns the number of rows changed.</p>
+        <p>So a condition on one row belongs in <code>WHERE</code>; a condition on a group's total or count belongs in <code>HAVING</code> after <code>GROUP BY</code>; and a report that keeps every row but shows a group value, rank or running total beside it needs a window function.</p>
       </div>
     </div>
     <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
       <div id="task-2" class="task" data-pep-task data-pep-may-stall>
         <h3>Your task</h3>
-        <p>Under <strong>Which order</strong>, choose the correct sequence and your confidence, then press <strong>Check answer</strong>.</p>
+        <p>For each report shown after <strong>Report:</strong>, press the tool that does its main work.</p>
         <details class="pep-hint" data-pep-hint data-pep-hint-for="task-2" data-pep-hint-order="1" data-section-skip>
           <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 2</span></summary>
           <div class="pep-hint__body">
-            <p data-pep-hint-target><strong>Where to act:</strong> The first two steps of each option, then the step that reads columns.</p>
-            <p data-pep-hint-step><strong>Next step:</strong> Ask which object each method belongs to: a step can only run once the object it is called on exists, and a getter needs a current row.</p>
-          </div>
-        </details>
-        <div id="task-2a"><p class="pep-task-q">Which order queries the database correctly?</p></div>
-        <div id="task-2b" tabindex="-1" hidden><p class="pep-task-q">Retry: this code throws an <code>SQLException</code> on the second line, although the customer exists. What is missing?</p>
-<pre><code>ResultSet rs = ps.executeQuery();
-String name = rs.getString("name");</code></pre></div>
-      </div>
-      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>You pick the working order; a second miss settles the check.</p></section>
-      <div class="pep-js-only">
-          <fieldset id="apply1" data-interaction="mcq" data-confidence data-pep-apply data-static-alt="Apply question: the JDBC query steps in order. Correct: get a Connection from DriverManager, prepare the statement on it, set the ? parameters, executeQuery, move with rs.next() and read the columns, close with try-with-resources. Wrong: preparing the statement before getting the connection (prepareStatement is a Connection method); executing before setting parameters (each ? needs a value first); reading columns before rs.next() (the cursor starts before the first row). Retry form: a getter called straight after executeQuery fails because rs.next() was never called to move to the first row.">
-            <legend>Which order</legend>
-            <div class="opts one" id="g2a">
-              <label class="opt"><input type="radio" name="g2a" id="g2a-prep" value="prep" aria-describedby="task-2a"><span class="ot">Prepare the statement · get a connection · set parameters · execute · read rows · close</span></label>
-              <label class="opt"><input type="radio" name="g2a" id="g2a-right" value="right" aria-describedby="task-2a"><span class="ot">Get a connection · prepare the statement · set parameters · execute · move with <code>next()</code> and read · close</span></label>
-              <label class="opt"><input type="radio" name="g2a" id="g2a-exec" value="exec" aria-describedby="task-2a"><span class="ot">Get a connection · prepare the statement · execute · set parameters · read rows · close</span></label>
-              <label class="opt"><input type="radio" name="g2a" id="g2a-read" value="read" aria-describedby="task-2a"><span class="ot">Get a connection · prepare the statement · set parameters · execute · read columns, then call <code>next()</code> · close</span></label>
-            </div>
-            <div class="opts one" id="g2b" hidden>
-              <label class="opt"><input type="radio" name="g2b" id="g2b-close" value="close" aria-describedby="task-2b"><span class="ot">A call to <code>rs.close()</code> before reading</span></label>
-              <label class="opt"><input type="radio" name="g2b" id="g2b-right" value="right" aria-describedby="task-2b"><span class="ot">A call to <code>rs.next()</code> to move to the first row</span></label>
-              <label class="opt"><input type="radio" name="g2b" id="g2b-update" value="update" aria-describedby="task-2b"><span class="ot"><code>executeUpdate()</code> instead of <code>executeQuery()</code></span></label>
-              <label class="opt"><input type="radio" name="g2b" id="g2b-commit" value="commit" aria-describedby="task-2b"><span class="ot">A call to <code>conn.commit()</code> before reading</span></label>
-            </div>
-          </fieldset>
-          <div class="row">
-            <fieldset class="conf" id="conf2" data-pep-confidence aria-describedby="conf2-instr">
-              <legend id="conf2-instr">How sure are you?</legend>
-              <label class="opt"><input type="radio" name="conf2" id="conf2-low" value="low"><span class="ot">Low</span></label>
-              <label class="opt"><input type="radio" name="conf2" id="conf2-medium" value="medium"><span class="ot">Medium</span></label>
-              <label class="opt"><input type="radio" name="conf2" id="conf2-high" value="high"><span class="ot">High</span></label>
-            </fieldset>
-            <button type="button" class="primary" id="check-2" data-pep-apply-check aria-describedby="conf2-instr" disabled>Check answer</button>
-          </div>
-      </div>
-      <div class="feedback" id="fb-2" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
-      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> Get a connection, prepare the statement, set parameters, execute, move with <code>next()</code> and read, close.</p><ul><li>Prepare before connecting: wrong; <code>prepareStatement</code> is a method of the connection.</li><li>Execute before setting parameters: wrong; every <code>?</code> needs a value first.</li><li>Read before <code>next()</code>: wrong; the cursor starts before the first row.</li></ul><p><strong>Retry form:</strong> the missing step is <code>rs.next()</code>, which moves the cursor to the first row.</p></div></noscript>
-      <p class="pep-back"><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
-    </div>
-  </div>
-</section>
-
-<section id="activity-3" class="pep-activity" data-pep-activity aria-labelledby="a3-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
-  <h2 id="a3-h" tabindex="-1">Activity 3: What concatenation does to SQL</h2>
-  <div class="pep-regions">
-    <div class="pep-region" data-pep-instructions>
-      <div class="teach" data-pep-teaching>
-        <p>Two ways to put a city typed by a user into the query:</p>
-<pre><code>// Concatenation: the value becomes part of the SQL text
-String sql = "SELECT id, name FROM customers WHERE city = '" + city + "'";
-// Parameter: the SQL text is fixed; the value is bound separately
-PreparedStatement ps = conn.prepareStatement(
-    "SELECT id, name FROM customers WHERE city = ?");
-ps.setString(1, city);</code></pre>
-        <p>SQL injection happens when typed input changes the meaning of the SQL text itself.</p>
-      </div>
-      <details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
-        <summary><span>Another way to think about it</span><span class="pep-optional__cue">Optional example</span></summary>
-        <div class="pep-optional__body">
-          <p data-pep-anecdote-story>A clerk reads instructions aloud to a warehouse crew: "Send the parcel to" followed by whatever the customer wrote on the form. One customer writes an address that ends "and also open the safe". Another clerk instead hands the crew a fixed instruction card with a blank box, and staples the customer's form to it; whatever the form says, it is only ever an address.</p>
-          <p data-pep-anecdote-map>Reading input as part of the instructions lets it change them; attaching it as a separate value keeps it data.</p>
-        </div>
-      </details>
-    </div>
-    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
-      <div id="task-3" class="task" data-pep-task data-pep-may-stall>
-        <h3>Your task</h3>
-        <p>In <strong>City typed by the user</strong>, type the crafted value <code>x' OR '1'='1</code>, then press <strong>Build both queries</strong> and compare the two results under it.</p>
-        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
-          <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 3</span></summary>
-          <div class="pep-hint__body">
-            <p data-pep-hint-target><strong>Where to act:</strong> The <strong>City typed by the user</strong> field.</p>
-            <p data-pep-hint-step><strong>Next step:</strong> Use the crafted value shown in the task, then locate where its first quote closes the city literal and where its added condition begins.</p>
+            <p data-pep-hint-target><strong>Where to act:</strong> The report described after <strong>Report:</strong>.</p>
+            <p data-pep-hint-step><strong>Next step:</strong> Ask two questions: does the result have one row per employee or one row per department, and is the condition about one row or about a whole group?</p>
           </div>
         </details>
       </div>
-      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>You build both queries from the crafted task value, identify how concatenation adds an <code>OR</code> condition, and explain why the prepared SQL text stays fixed.</p></section>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2"><h3 id="checks-2">What success looks like</h3><p>All six reports sit in the right lanes; a second miss on any report settles the activity.</p></section>
       <div class="pep-js-only">
-          <fieldset id="x2" data-interaction="explore" data-pep-explore aria-describedby="task-3" data-static-alt="Injection explorer. The concatenated query puts the typed city inside quotes in the SQL text. For Lyon the text is SELECT id, name FROM customers WHERE city = 'Lyon'. For a value with a quote, such as O'Fallon, the quote ends the string literal early and the rest of the value is read as SQL, so the statement is malformed; a crafted value such as x' OR '1'='1 turns the condition into city = 'x' OR '1'='1', which is true for every customer. The prepared statement's SQL text is always SELECT id, name FROM customers WHERE city = ?, and parameter 1 is bound to the exact typed text as one string value.">
-            <legend>Build the query</legend>
-            <label for="city">City typed by the user</label>
-            <input id="city" type="text" autocomplete="off" spellcheck="false" value="Lyon">
-            <div class="row"><button type="button" class="primary" id="build">Build both queries</button></div>
-            <div class="pep-lists" id="inj-out" aria-live="polite"></div>
-          </fieldset>
-      </div>
-      <div class="feedback" id="fb-3" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
-      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> For <code>Lyon</code>, concatenation builds <code>SELECT id, name FROM customers WHERE city = 'Lyon'</code>. For <code>O'Fallon</code>, the quote ends the string literal after <code>O</code>, and <code>Fallon'</code> is read as SQL, so the statement breaks. A crafted value such as <code>x' OR '1'='1</code> builds <code>WHERE city = 'x' OR '1'='1'</code>, which is true for every row. The prepared statement's text stays <code>SELECT id, name FROM customers WHERE city = ?</code> for every input, and parameter 1 holds the typed text as one value.</p></div></noscript>
-      <p class="pep-back"><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
-    </div>
-  </div>
-</section>
-
-<section id="activity-4" class="pep-activity" data-pep-activity aria-labelledby="a4-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
-  <h2 id="a4-h" tabindex="-1">Activity 4: Why a parameter prevents injection</h2>
-  <div class="pep-regions">
-    <div class="pep-region" data-pep-instructions>
-      <div class="teach" data-pep-teaching>
-        <p>With a <code>PreparedStatement</code>, the SQL text with its <code>?</code> placeholders is fixed before any value arrives. Each <code>setString</code> or <code>setInt</code> binds a value to a placeholder, and the database treats it only as a value, never as SQL. The OWASP SQL Injection Prevention Cheat Sheet names this, parameterized queries, as the first defense.</p>
-      </div>
-    </div>
-    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
-      <div id="task-apply" class="task" data-pep-task>
-        <h3>Your task</h3>
-        <p>Under <strong>Which explanation</strong>, choose one and your confidence, then press <strong>Check answer</strong>.</p>
-        <div id="task-4"><p class="pep-task-q">Why can a value bound to <code>?</code> not change the query?</p></div>
-        <div id="task-4b" tabindex="-1" hidden><p class="pep-task-q">Retry: which of these is still open to SQL injection?</p></div>
-      </div>
-      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-4"><h3 id="checks-4">What success looks like</h3><p>You pick the accurate explanation; a second miss settles the check.</p></section>
-      <div class="pep-js-only">
-          <fieldset id="apply2" data-interaction="mcq" data-confidence data-pep-apply data-static-alt="Apply question: why a bound ? value cannot change the query. Correct: the SQL text is fixed with its placeholders, and the value is sent separately and treated only as data. Wrong: PreparedStatement deletes quote characters from values (it keeps the value exactly); it rejects values that contain SQL keywords (it does not inspect values); it is safe because prepared statements run faster (speed has nothing to do with it). Retry form: conn.prepareStatement with the city concatenated into the SQL text is still open to injection, because the value is part of the text before preparing.">
-            <legend>Which explanation</legend>
-            <div class="opts one" id="g4a">
-              <label class="opt"><input type="radio" name="g4a" id="g4a-strip" value="strip" aria-describedby="task-4"><span class="ot">The driver deletes quote characters from every value</span></label>
-              <label class="opt"><input type="radio" name="g4a" id="g4a-words" value="words" aria-describedby="task-4"><span class="ot">The driver rejects values that contain SQL keywords such as <code>OR</code></span></label>
-              <label class="opt"><input type="radio" name="g4a" id="g4a-right" value="right" aria-describedby="task-4"><span class="ot">The SQL text is fixed with its placeholders, and the value is sent separately and treated only as data</span></label>
-              <label class="opt"><input type="radio" name="g4a" id="g4a-fast" value="fast" aria-describedby="task-4"><span class="ot">Prepared statements run faster, so there is no time to inject anything</span></label>
-            </div>
-            <div class="opts one" id="g4b" hidden>
-              <label class="opt"><input type="radio" name="g4b" id="g4b-set" value="set" aria-describedby="task-4b"><span class="ot"><code>conn.prepareStatement("… WHERE city = ?")</code>, then <code>ps.setString(1, city)</code></span></label>
-              <label class="opt"><input type="radio" name="g4b" id="g4b-right" value="right" aria-describedby="task-4b"><span class="ot"><code>conn.prepareStatement("… WHERE city = '" + city + "'")</code></span></label>
-              <label class="opt"><input type="radio" name="g4b" id="g4b-int" value="int" aria-describedby="task-4b"><span class="ot"><code>conn.prepareStatement("… WHERE id = ?")</code>, then <code>ps.setInt(1, id)</code></span></label>
-              <label class="opt"><input type="radio" name="g4b" id="g4b-const" value="const" aria-describedby="task-4b"><span class="ot"><code>conn.prepareStatement("… WHERE city = 'Lyon'")</code>, with no user input</span></label>
-            </div>
-          </fieldset>
-          <div class="row">
-            <fieldset class="conf" id="conf4" data-pep-confidence aria-describedby="conf4-instr">
-              <legend id="conf4-instr">How sure are you?</legend>
-              <label class="opt"><input type="radio" name="conf4" id="conf4-low" value="low"><span class="ot">Low</span></label>
-              <label class="opt"><input type="radio" name="conf4" id="conf4-medium" value="medium"><span class="ot">Medium</span></label>
-              <label class="opt"><input type="radio" name="conf4" id="conf4-high" value="high"><span class="ot">High</span></label>
-            </fieldset>
-            <button type="button" class="primary" id="check-4" data-pep-apply-check aria-describedby="conf4-instr" disabled>Check answer</button>
-          </div>
-      </div>
-      <div class="feedback" id="fb-4" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
-      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> The SQL text is fixed with its placeholders, and the value is sent separately and treated only as data.</p><ul><li>Deleting quotes: wrong; the value is kept exactly, quotes included.</li><li>Rejecting keywords: wrong; the driver does not inspect values for SQL words.</li><li>Speed: wrong; safety comes from separating text and values, not from speed.</li></ul><p><strong>Retry form:</strong> <code>conn.prepareStatement("… WHERE city = '" + city + "'")</code> is still open to injection, because the value is concatenated into the text before it is prepared.</p></div></noscript>
-      <p class="pep-back"><a href="#activity-3" data-pep-back-link>Back to activity 3</a></p>
-    </div>
-  </div>
-</section>
-
-<section id="activity-5" class="pep-activity" data-pep-activity aria-labelledby="a5-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
-  <h2 id="a5-h" tabindex="-1">Activity 5: One transaction or auto-commit</h2>
-  <div class="pep-regions">
-    <div class="pep-region" data-pep-instructions>
-      <div class="teach" data-pep-teaching>
-        <p>A new connection is in auto-commit mode: each statement is committed as soon as it completes. When several statements must succeed or fail together, turn auto-commit off and end the transaction yourself:</p>
-<pre><code>conn.setAutoCommit(false);
-try {
-    debit.executeUpdate();   // take 50 from account A
-    credit.executeUpdate();  // add 50 to account B
-    conn.commit();
-} catch (SQLException e) {
-    conn.rollback();
-    throw e;
-}</code></pre>
-        <p>If the second update fails, <code>rollback()</code> undoes the first, so no money disappears.</p>
-      </div>
-      <section data-pep-where-fits aria-labelledby="where-fits-5">
-        <h2 id="where-fits-5">Where this fits</h2>
-        <p data-pep-fit-decision><strong>Decision:</strong> group statements in one transaction, or let auto-commit commit each one?</p>
-        <p data-pep-fit-good><strong>Good fit:</strong> several changes that only make sense together, such as an order row and its item rows, or a debit and its matching credit.</p>
-        <p data-pep-fit-boundary><strong>Choose something else when:</strong> the work is a single statement, or a read: auto-commit already makes one statement all or nothing, and holding a transaction open longer than needed only delays other work.</p>
-      </section>
-    </div>
-    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
-      <div id="task-5" class="task" data-pep-task data-pep-may-stall>
-        <h3>Your task</h3>
-        <p>For each piece of work shown after <strong>Work:</strong>, press whether it needs one explicit transaction or auto-commit is enough.</p>
-        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-5" data-pep-hint-order="1" data-section-skip>
-          <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 5</span></summary>
-          <div class="pep-hint__body">
-            <p data-pep-hint-target><strong>Where to act:</strong> The work described after <strong>Work:</strong>.</p>
-            <p data-pep-hint-step><strong>Next step:</strong> Count the changing statements, then imagine the program crashing between two of them: would the data be left half done?</p>
-          </div>
-        </details>
-      </div>
-      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-5"><h3 id="checks-5">What success looks like</h3><p>All five pieces of work sit in the right lanes; a second miss on any one settles the activity.</p></section>
-      <div class="pep-js-only">
-          <fieldset id="x3" data-interaction="drag" data-pep-explore aria-describedby="task-5" data-static-alt="Sorting activity. Move 50 from account A to account B with two updates: one transaction. Insert an order row and its three item rows: one transaction. Delete a user's sessions, then the user: one transaction. Read one customer's name: auto-commit is enough. Change one customer's email with a single UPDATE: auto-commit is enough, because one statement is already all or nothing.">
-            <legend id="ln-legend">Work: <span id="ln-name"></span></legend>
+          <fieldset id="x1" data-interaction="drag" data-pep-explore aria-describedby="task-2" data-static-alt="Sorting activity. Employees earning more than 40: WHERE, a condition on single rows. Only the employees of the sales department: WHERE. Departments whose salaries add up to more than 80: GROUP BY with HAVING, a condition on a group total. Departments with at least two employees: GROUP BY with HAVING. Every employee with their department's average salary beside them: a window function, because every row stays. Each employee's salary rank within their department: a window function.">
+            <legend id="ln-legend">Report: <span id="ln-name"></span></legend>
             <div class="lanebtns" id="ln-btns"></div>
             <p class="sub" id="ln-count"></p>
           </fieldset>
@@ -689,17 +499,87 @@ try {
             <div class="lanes" id="m-lanes"></div>
           </figure>
       </div>
-      <div class="feedback" id="fb-5" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
-      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong></p><ul><li>Move 50 from A to B: one transaction.</li><li>Insert an order and its three items: one transaction.</li><li>Delete a user's sessions, then the user: one transaction.</li><li>Read one customer's name: auto-commit is enough.</li><li>Change one email with a single <code>UPDATE</code>: auto-commit is enough.</li></ul></div></noscript>
+      <div class="feedback" id="fb-2" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong></p><ul><li>Employees earning more than 40: <code>WHERE</code>.</li><li>Only the employees of sales: <code>WHERE</code>.</li><li>Departments whose salaries add up to more than 80: <code>GROUP BY</code> with <code>HAVING</code>.</li><li>Departments with at least two employees: <code>GROUP BY</code> with <code>HAVING</code>.</li><li>Every employee with their department's average beside them: a window function.</li><li>Each employee's salary rank within their department: a window function.</li></ul></div></noscript>
+      <p class="pep-back"><a href="#activity-1" data-pep-back-link>Back to activity 1</a></p>
+    </div>
+  </div>
+</section>
+
+<section id="activity-3" class="pep-activity" data-pep-activity aria-labelledby="a3-h" data-pep-attempts="0" data-pep-settled="false" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" data-pep-continue="false">
+  <h2 id="a3-h" tabindex="-1">Activity 3: A join, a group and a window</h2>
+  <div class="pep-regions">
+    <div class="pep-region" data-pep-instructions>
+      <div class="teach" data-pep-teaching>
+        <p>Follow the stages for the same two tables. <code>COUNT(e.name)</code> counts only non-null values; <code>COUNT(*)</code> counts rows. The window function ranks the groups after grouping.</p>
+      </div>
+    </div>
+    <div class="pep-region pep-region--workspace" data-pep-workspace="activity">
+      <div id="task-apply" class="task" data-pep-task data-pep-may-stall>
+        <h3>Your task</h3>
+        <p>Under <strong>Which result</strong>, choose the rows the query returns and your confidence, then press <strong>Check answer</strong>.</p>
+        <details class="pep-hint" data-pep-hint data-pep-hint-for="task-apply" data-pep-hint-order="1" data-section-skip>
+          <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 1 for Activity 3</span></summary>
+          <div class="pep-hint__body">
+            <p data-pep-hint-target><strong>Where to act:</strong> The join line, then the <code>COUNT</code> inside the query.</p>
+            <p data-pep-hint-step><strong>Next step:</strong> Write down the joined rows first, including legal's row from the <code>LEFT JOIN</code>; then count what the <code>COUNT</code> counts in each department before ranking.</p>
+          </div>
+        </details>
+        <div id="task-3">
+<pre><code>SELECT d.name AS department,
+       COUNT(e.name) AS staff,
+       RANK() OVER (ORDER BY COUNT(e.name) DESC) AS place
+FROM departments d
+LEFT JOIN employees e ON e.dept_id = d.id
+GROUP BY d.name
+ORDER BY place;</code></pre></div>
+        <div id="task-3b" tabindex="-1" hidden><p class="pep-task-q">Retry: the same query with <code>COUNT(*)</code> in both places. Which result now?</p>
+<pre><code>SELECT d.name AS department,
+       COUNT(*) AS staff,
+       RANK() OVER (ORDER BY COUNT(*) DESC) AS place
+FROM departments d
+LEFT JOIN employees e ON e.dept_id = d.id
+GROUP BY d.name
+ORDER BY place, department;</code></pre></div>
+      </div>
+      <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3"><h3 id="checks-3">What success looks like</h3><p>You pick the returned rows; a second miss settles the check.</p></section>
+      <div class="pep-js-only">
+          <fieldset id="apply1" data-interaction="mcq" data-confidence data-pep-apply data-static-alt="Apply question: departments LEFT JOIN employees, grouped by department name, with COUNT(e.name) AS staff and RANK() OVER (ORDER BY COUNT(e.name) DESC) AS place, ordered by place. Result: sales 2 1; support 1 2; legal 0 3. Wrong: only sales and support (legal is kept by the LEFT JOIN); legal with 1 (COUNT(e.name) skips the NULL employee); dee in a NULL department (the join starts from departments). Retry form: with COUNT(*) the result is sales 2 1; legal 1 2; support 1 2, because legal's NULL row is counted and ties share rank 2.">
+            <legend>Which result</legend>
+            <div class="opts one" id="g3a">
+              <label class="opt"><input type="radio" name="g3a" id="g3a-inner" value="inner" aria-describedby="task-3"><span class="ot">sales 2 1 · support 1 2</span></label>
+              <label class="opt"><input type="radio" name="g3a" id="g3a-right" value="right" aria-describedby="task-3"><span class="ot">sales 2 1 · support 1 2 · legal 0 3</span></label>
+              <label class="opt"><input type="radio" name="g3a" id="g3a-star" value="star" aria-describedby="task-3"><span class="ot">sales 2 1 · legal 1 2 · support 1 2</span></label>
+              <label class="opt"><input type="radio" name="g3a" id="g3a-dee" value="dee" aria-describedby="task-3"><span class="ot">sales 2 1 · support 1 2 · <code>NULL</code> 1 2</span></label>
+            </div>
+            <div class="opts one" id="g3b" hidden>
+              <label class="opt"><input type="radio" name="g3b" id="g3b-zero" value="zero" aria-describedby="task-3b"><span class="ot">sales 2 1 · support 1 2 · legal 0 3</span></label>
+              <label class="opt"><input type="radio" name="g3b" id="g3b-right" value="right" aria-describedby="task-3b"><span class="ot">sales 2 1 · legal 1 2 · support 1 2</span></label>
+              <label class="opt"><input type="radio" name="g3b" id="g3b-gap" value="gap" aria-describedby="task-3b"><span class="ot">sales 2 1 · legal 1 2 · support 1 3</span></label>
+              <label class="opt"><input type="radio" name="g3b" id="g3b-inner" value="inner" aria-describedby="task-3b"><span class="ot">sales 2 1 · support 1 2</span></label>
+            </div>
+          </fieldset>
+          <div class="row">
+            <fieldset class="conf" id="conf3" data-pep-confidence aria-describedby="conf3-instr">
+              <legend id="conf3-instr">How sure are you?</legend>
+              <label class="opt"><input type="radio" name="conf3" id="conf3-low" value="low"><span class="ot">Low</span></label>
+              <label class="opt"><input type="radio" name="conf3" id="conf3-medium" value="medium"><span class="ot">Medium</span></label>
+              <label class="opt"><input type="radio" name="conf3" id="conf3-high" value="high"><span class="ot">High</span></label>
+            </fieldset>
+            <button type="button" class="primary" id="check-3" data-pep-apply-check aria-describedby="conf3-instr" disabled>Check answer</button>
+          </div>
+      </div>
+      <div class="feedback" id="fb-3" data-pep-feedback role="status" aria-live="polite" tabindex="-1"></div>
+      <noscript data-section-skip><div class="pep-expected"><p><strong>Expected results and why.</strong> The rows are sales 2 1, support 1 2 and legal 0 3 (department, staff, place).</p><ul><li>Only sales and support: wrong; the <code>LEFT JOIN</code> keeps legal.</li><li>legal 1: wrong; <code>COUNT(e.name)</code> skips legal's <code>NULL</code> employee.</li><li>A <code>NULL</code> department: wrong; the join starts from <code>departments</code>, so dee never appears.</li></ul><p><strong>Retry form:</strong> with <code>COUNT(*)</code> the rows are sales 2 1, legal 1 2 and support 1 2: legal's <code>NULL</code> row is counted, and the tie shares rank 2.</p></div></noscript>
       <details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
         <summary>Challenge (optional)</summary>
         <div class="pep-optional__body">
-          <p data-pep-optional-time><strong>Optional time:</strong> about 10 minutes, in addition to this topic's time.</p>
-          <p>In your JDBC project, add a repository method that saves an order and its items. Use only the steps on this page: one connection, prepared statements with <code>?</code> parameters, <code>setAutoCommit(false)</code>, <code>commit</code> and <code>rollback</code>, and try-with-resources.</p>
-          <p data-pep-success-criteria><strong>Success criteria:</strong> when an item insert fails, for example because of a constraint, neither the order nor any of its items remains in the database, and every resource is closed.</p>
+          <p data-pep-optional-time><strong>Optional time:</strong> about 5 minutes, in addition to this topic's time.</p>
+          <p>On your own PostgreSQL database, create the two tables from this page. Write one query that lists every employee, including dee, with their department name and the highest salary in that department beside them.</p>
+          <p data-pep-success-criteria><strong>Success criteria:</strong> the result has 4 rows; ana and ben show sales and 50, cy shows support and 45, and dee shows <code>NULL</code> for the department and 30 as the highest salary in that group.</p>
         </div>
       </details>
-      <p class="pep-back"><a href="#activity-4" data-pep-back-link>Back to activity 4</a></p>
+      <p class="pep-back"><a href="#activity-2" data-pep-back-link>Back to activity 2</a></p>
     </div>
   </div>
 </section>
@@ -713,101 +593,68 @@ try {
   <h2 id="recap-h" tabindex="-1">Recap</h2>
   <p id="complete" class="complete" data-pep-completion></p>
   <ul>
-    <li>Connection, then <code>prepareStatement</code>, then setters, then <code>executeQuery</code>, then <code>while (rs.next())</code> with getters; try-with-resources closes them in reverse order.</li>
-    <li>Concatenated input can change the SQL text; a <code>?</code> parameter is bound as a value and can never become SQL.</li>
-    <li>Use <code>setAutoCommit(false)</code>, <code>commit()</code> and <code>rollback()</code> when several changes must succeed or fail together.</li>
+    <li>An inner <code>JOIN</code> keeps matched rows only; a <code>LEFT JOIN</code> keeps every left row and puts <code>NULL</code> in the right side's columns when nothing matches.</li>
+    <li><code>WHERE</code> filters rows, <code>HAVING</code> filters groups after <code>GROUP BY</code>, and a window function adds a group value or rank to every row.</li>
+    <li><code>COUNT(column)</code> skips <code>NULL</code>; <code>COUNT(*)</code> counts rows, including a <code>LEFT JOIN</code>'s unmatched row.</li>
   </ul>
   <details data-section-skip data-pep-cheat-sheet>
     <summary>Cheat sheet</summary>
     <table>
-      <tr><td>Connect</td><td><code>DriverManager.getConnection(url, user, password)</code></td></tr>
-      <tr><td>Prepare and bind</td><td><code>conn.prepareStatement("… WHERE city = ?")</code>, <code>ps.setString(1, city)</code></td></tr>
-      <tr><td>Read rows</td><td><code>try (ResultSet rs = ps.executeQuery()) { while (rs.next()) { … } }</code></td></tr>
-      <tr><td>Change rows</td><td><code>int changed = ps.executeUpdate();</code></td></tr>
-      <tr><td>Transaction</td><td><code>conn.setAutoCommit(false); … conn.commit();</code> or <code>conn.rollback();</code></td></tr>
+      <tr><td>Keep unmatched left rows</td><td><code>FROM a LEFT JOIN b ON …</code></td></tr>
+      <tr><td>Filter rows</td><td><code>WHERE salary &gt; 40</code></td></tr>
+      <tr><td>Filter groups</td><td><code>GROUP BY dept_id HAVING COUNT(*) &gt;= 2</code></td></tr>
+      <tr><td>Group value on every row</td><td><code>AVG(salary) OVER (PARTITION BY dept_id)</code></td></tr>
     </table>
   </details>
   <details data-section-skip data-pep-sources class="sources">
     <summary>Sources and review date</summary>
-    <p>Claims on this page were checked against the live official documentation below on 7 November 2026 (UTC), for Java SE 25 and the PostgreSQL JDBC driver. Links open outside this lesson.</p>
+    <p>Claims on this page were checked against the live official PostgreSQL 18 documentation below on 7 November 2026 (UTC). Every query result was confirmed on PostgreSQL 17.5. Links open outside this lesson.</p>
     <ul>
-      <li><a href="https://docs.oracle.com/javase/tutorial/jdbc/basics/processingsqlstatements.html" rel="noopener">Processing SQL Statements with JDBC</a>: the steps, and closing with try-with-resources.</li>
-      <li><a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/tryResourceClose.html" rel="noopener">The try-with-resources Statement</a>: resources close in the opposite order of their creation.</li>
-      <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/ResultSet.html" rel="noopener">ResultSet (Java SE 25)</a>: the cursor starts before the first row; <code>next</code>.</li>
-      <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/PreparedStatement.html" rel="noopener">PreparedStatement (Java SE 25)</a>: setters, <code>executeQuery</code> and <code>executeUpdate</code>.</li>
-      <li><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.sql/java/sql/Connection.html" rel="noopener">Connection (Java SE 25)</a>: auto-commit by default, <code>setAutoCommit</code>, <code>commit</code> and <code>rollback</code>.</li>
-      <li><a href="https://docs.oracle.com/javase/tutorial/jdbc/basics/transactions.html" rel="noopener">Using Transactions</a>.</li>
-      <li><a href="https://jdbc.postgresql.org/documentation/query/" rel="noopener">pgJDBC: Issuing a Query and Processing the Result</a>.</li>
-      <li><a href="https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html" rel="noopener">OWASP SQL Injection Prevention Cheat Sheet</a>: prepared statements with parameterized queries.</li>
+      <li><a href="https://www.postgresql.org/docs/current/tutorial-join.html" rel="noopener">2.6 Joins Between Tables</a>: inner and left outer joins.</li>
+      <li><a href="https://www.postgresql.org/docs/current/queries-table-expressions.html" rel="noopener">7.2 Table Expressions</a>: joined tables, <code>WHERE</code>, <code>GROUP BY</code> and <code>HAVING</code>, and window function processing.</li>
+      <li><a href="https://www.postgresql.org/docs/current/tutorial-window.html" rel="noopener">3.5 Window Functions</a>.</li>
+      <li><a href="https://www.postgresql.org/docs/current/functions-aggregate.html" rel="noopener">9.21 Aggregate Functions</a>: <code>count(*)</code> and <code>count(value)</code> for non-null inputs.</li>
     </ul>
   </details>
-  <p class="next-topic">Module complete: reporting queries, indexes and JDBC review</p>
+  <p class="next-topic">Next: Review: JDBC</p>
 </section>
 </main>
 <script>
 window.PEP_PAGE={
-keys:['predict','apply1','x2','apply2','x3'],
-kinds:{predict:'predict',apply1:'check',x2:'explore',apply2:'check',x3:'lanes'},
-labels:{apply1:'Query steps',apply2:'Why parameters work',x3:'Transactions'},
-predict:{ok:'rev',lead:'Try-with-resources closes every declared resource when its block ends, in the opposite order of creation, even when an exception is thrown: first `rs` as the inner block ends, then `ps`, then `conn`.',expl:{
-  rev:'Right: reverse order of opening, at the end of each block, exception or not.',
-  fwd:'Not quite: that is the order they were opened. Closing runs the other way, so nothing is closed under an object still using it.',
-  conn:'Not quite: try-with-resources closes every resource declared in its header, not just one.',
-  gc:'Not quite: closing happens as soon as the block ends; waiting for garbage collection is what try-with-resources avoids.'}},
-lanesets:[{key:'x3',model:'#m-lanes',btns:'#ln-btns',name:'#ln-name',count:'#ln-count',legend:'ln-legend',
- lanes:[{id:'txn',label:'One transaction'},{id:'auto',label:'Auto-commit is enough'}],
- done:'Several changes that must stand or fall together need one transaction; a single statement or a read is already all or nothing.',
+keys:['predict','x1','apply1'],
+kinds:{predict:'predict',x1:'lanes',apply1:'check'},
+labels:{x1:'Choosing the tool',apply1:'Combined query'},
+predict:{ok:'left',lead:'A `LEFT JOIN` keeps every row of the left table, `departments`. Legal has no employee, so its row appears once with `NULL` in the employee column. dee has no department, so the join never reaches dee.',expl:{
+  left:'Right: sales ana, sales ben, support cy, and legal with `NULL`.',
+  inner:'Not quite: dropping legal is what an inner `JOIN` does.',
+  dee:'Not quite: that is `employees LEFT JOIN departments`, which keeps every employee instead.',
+  full:'Not quite: keeping unmatched rows from both tables needs a `FULL JOIN`.'}},
+lanesets:[{key:'x1',model:'#m-lanes',btns:'#ln-btns',name:'#ln-name',count:'#ln-count',legend:'ln-legend',
+ lanes:[{id:'where',label:'WHERE'},{id:'having',label:'GROUP BY and HAVING'},{id:'window',label:'Window function'}],
+ done:'One row per employee with a condition on that row: `WHERE`. One row per group with a condition on the group: `HAVING`. Every row kept with a group value beside it: a window function.',
  items:[
-  {n:'Move 50 from account A to account B: two updates',lane:'txn',ok:'If only the debit succeeded, 50 would vanish; commit both or roll both back.',w:{auto:'With auto-commit the debit is committed before the credit runs, so a failure in between loses money.'}},
-  {n:'Read one customer\'s name',lane:'auto',ok:'A single read changes nothing, so there is nothing to keep together.',w:{txn:'One read statement has no partner change to protect.'}},
-  {n:'Insert an order row and its three item rows',lane:'txn',ok:'An order without its items, or items without their order, would be half saved.',w:{auto:'Each insert would commit on its own, so a failure midway leaves a partial order.'}},
-  {n:'Change one customer\'s email with a single UPDATE',lane:'auto',ok:'One statement is already all or nothing under auto-commit.',w:{txn:'There is only one change, and auto-commit commits it as a unit.'}},
-  {n:'Delete a user\'s sessions, then the user',lane:'txn',ok:'Delete child sessions before the parent user so the foreign key is satisfied; both deletes still belong in one transaction.',w:{auto:'If the second delete fails, the first is already committed.'}}
+  {n:'Employees earning more than 40',lane:'where',ok:'The condition is about one employee row at a time: `WHERE salary > 40`.',w:{having:'No group is needed; each row is tested on its own.',window:'Nothing is computed across rows; rows are only removed.'}},
+  {n:'Departments whose salaries add up to more than 80',lane:'having',ok:'The condition is on a group total: `GROUP BY` the department, then `HAVING SUM(salary) > 80`.',w:{where:'`WHERE` sees single rows and cannot test a sum.',window:'The report wants one row per department, so the rows must be folded.'}},
+  {n:'Every employee with their department\'s average salary beside them',lane:'window',ok:'Every employee row stays and gains a group value: `AVG(salary) OVER (PARTITION BY dept_id)`.',w:{where:'No rows are removed; a value is added.',having:'`GROUP BY` would fold the employees into one row per department.'}},
+  {n:'Only the employees of the sales department',lane:'where',ok:'A condition on each row\'s department: `WHERE`.',w:{having:'The condition is about each row, not a group total.',window:'Nothing is computed across rows.'}},
+  {n:'Departments with at least two employees',lane:'having',ok:'Count per department, then keep the groups: `GROUP BY dept_id HAVING COUNT(*) >= 2`.',w:{where:'A count only exists after grouping.',window:'The report wants one row per department.'}},
+  {n:'Each employee\'s salary rank within their department',lane:'window',ok:'Every row stays and gains a rank: `RANK() OVER (PARTITION BY dept_id ORDER BY salary DESC)`.',w:{where:'A rank compares rows, which `WHERE` cannot do.',having:'Grouping would remove the individual employees.'}}
  ]}],
 checks:[
- {key:'apply1',fs:'#apply1',g1:'g2a',g2:'g2b',t1:'#task-2a',t2:'#task-2b',conf:'#conf2',confName:'conf2',btn:'#check-2',data:{
+ {key:'apply1',fs:'#apply1',g1:'g3a',g2:'g3b',t1:'#task-3',t2:'#task-3b',conf:'#conf3',confName:'conf3',btn:'#check-3',data:{
   r1:{ok:'right',expl:{
-    prep:'`prepareStatement` is a method of `Connection`, so the connection must exist first.',
-    right:'Each object comes from the previous one, and `next()` moves to a row before the getters read it.',
-    exec:'Every `?` needs a value before `executeQuery` runs.',
-    read:'The cursor starts before the first row, so a getter before `next()` has no row to read.'},
-    mis:{prep:'The statement comes from the connection.',exec:'Bind values before executing.',read:'Call next() before reading.'}},
-  r2:{ok:'right',answer:'`rs.next()` is missing: the cursor starts before the first row, so the getter has no current row until `next()` moves it.',expl:{
-    close:'Closing the result set would make reading impossible.',
-    right:'`next()` moves the cursor onto the first row and returns `true` when there is one.',
-    update:'`executeUpdate` is for statements that change rows; a `SELECT` needs `executeQuery`.',
-    commit:'Reading does not need a commit; the problem is the cursor position.'},
-    mis:{close:'Closing prevents reading.',update:'A SELECT needs executeQuery.',commit:'The cursor has not moved.'}}}},
- {key:'apply2',fs:'#apply2',g1:'g4a',g2:'g4b',t1:'#task-4',t2:'#task-4b',conf:'#conf4',confName:'conf4',btn:'#check-4',data:{
-  r1:{ok:'right',expl:{
-    strip:'The value is kept exactly, quotes included; O\'Fallon stays O\'Fallon.',
-    words:'The driver does not inspect values for SQL words; any text is allowed as data.',
-    right:'The SQL text is fixed first, and each bound value is only ever data, so it cannot add conditions or end a string.',
-    fast:'Speed has nothing to do with safety; separating text and values does.'},
-    mis:{strip:'Values are kept exactly.',words:'Values are not scanned.',fast:'Safety is not about speed.'}},
-  r2:{ok:'right',answer:'`conn.prepareStatement("… WHERE city = \'" + city + "\'")`: the city is concatenated into the SQL text before preparing, so it can still change the query.',expl:{
-    set:'A `?` placeholder bound with `setString` is safe.',
-    right:'Preparing does not help when the value is already part of the SQL text.',
-    int:'A `?` bound with `setInt` is safe.',
-    const:'With no user input in the text, there is nothing to inject.'},
-    mis:{set:'That one binds the value safely.',int:'That one binds the value safely.',const:'There is no input in it.'}}}}
+    inner:'The `LEFT JOIN` keeps legal, so legal forms its own group.',
+    right:'Joined rows: sales twice, support once, legal once with a `NULL` employee. `COUNT(e.name)` skips that `NULL`, giving 2, 1 and 0, ranked 1, 2 and 3.',
+    star:'That is `COUNT(*)`, which counts legal\'s unmatched row. `COUNT(e.name)` skips the `NULL`.',
+    dee:'The join starts from `departments`, so dee, who has no department, never appears.'},
+    mis:{inner:'The LEFT JOIN keeps legal.',star:'COUNT(e.name) skips NULL.',dee:'dee is not in this join.'}},
+  r2:{ok:'right',answer:'sales 2 1, legal 1 2, support 1 2: `COUNT(*)` counts legal\'s unmatched row, and legal and support tie, so both share rank 2.',expl:{
+    zero:'That was `COUNT(e.name)`. `COUNT(*)` counts every joined row, including legal\'s.',
+    right:'Counts 2, 1 and 1; the tie shares rank 2, and `ORDER BY place, department` puts legal before support.',
+    gap:'Tied counts share a rank, so support is also 2.',
+    inner:'The `LEFT JOIN` still keeps legal.'},
+    mis:{zero:'COUNT(*) counts the NULL row.',gap:'Ties share a rank.',inner:'The LEFT JOIN keeps legal.'}}}}
 ]};
-/* Injection explorer: builds the two SQL texts from the typed value; it runs no SQL */
-(function(){var P=window.PEP_PAGE,A,tried=false;
-var PREFIX="SELECT id, name FROM customers WHERE city = '",SUFFIX="'",PREPARED='SELECT id, name FROM customers WHERE city = ?';
-function box(title,text,note){var d=A.el('div','pep-list');d.appendChild(A.el('h3','',title));var pre=A.el('pre');pre.textContent=text;d.appendChild(pre);if(note)d.appendChild(A.el('p','sub',note));return d;}
-function build(){var v=A.$('#city').value,out=A.$('#inj-out'),n=A.stepOf('x2'),q=v.indexOf("'")>=0;A.attempt(n);
-  var cat=PREFIX+v+SUFFIX;
-  var crafted=v==="x' OR '1'='1",doubled=/^[^']*(?:''[^']*)+$/.test(v);
-  var note=crafted?'In this task example, the first quote closes the city literal and the added OR condition makes the WHERE clause true for every row.':doubled?'Each doubled quote is SQL escaping inside one string literal; it represents a quote character in the city and does not add a condition.':q?'A quote can close the city literal, making later text part of the SQL. PostgreSQL might reject that text or run a query with changed meaning; this bounded explorer does not classify other inputs.':'No quote in the value, so the city stays inside one string literal.';
-  out.textContent='';out.appendChild(box('Concatenated SQL text',cat,note));
-  out.appendChild(box('Prepared SQL text and parameter',PREPARED+'\nparameter 1 = '+JSON.stringify(v),'The SQL text never changes; the typed text is bound as one string value.'));
-  if(!crafted){A.say([{c:'verdict info',s:q?'Compare the two forms, then use the exact crafted value shown in the task to inspect its added condition.':'Both queries ask for the same city. Now use the exact crafted value shown in the task.'}]);return;}
-  var msg=[{c:'verdict ok',s:'The task example adds an OR condition to the concatenated SQL, while the prepared SQL stays fixed and binds the whole value as parameter 1.'}];
-  if(!A.S.done.x2){tried=true;A.S.results.x2='correct';A.say(msg,true);A.complete('x2');}else A.say(msg);}
-P.init=function(api){A=api;A.$('#build').addEventListener('click',build);};
-P.reset={x2:function(){tried=false;A.$('#city').value='Lyon';A.$('#inj-out').textContent='';}};
-})();
 </script>
 <script>
 (function(){
