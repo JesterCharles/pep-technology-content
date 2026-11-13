@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import {
@@ -249,6 +250,75 @@ function currentItemBinding(report, index) {
   );
 }
 
+function git(repoRoot, args) {
+  return spawnSync("git", args, {
+    cwd: repoRoot,
+    encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024,
+  });
+}
+
+// Recheck schema carries byte identity but no timestamp or sequence. Immutable
+// file introduction ancestry is therefore the authoritative record-level order.
+function reportIntroduction(repoRoot, report) {
+  const repository = git(repoRoot, ["rev-parse", "--is-inside-work-tree"]);
+  if (repository.status !== 0 || repository.stdout.trim() !== "true") {
+    return { error: "repository history is unavailable" };
+  }
+  const history = git(repoRoot, [
+    "log",
+    "--format=%H",
+    "--diff-filter=A",
+    "--",
+    report.evidencePath,
+  ]);
+  if (history.status !== 0) {
+    return { error: `cannot read repository history for ${report.evidencePath}` };
+  }
+  const commits = [...new Set(history.stdout.trim().split(/\s+/u).filter(Boolean))];
+  if (commits.length > 1) {
+    return { error: `${report.evidencePath} has multiple introduction commits` };
+  }
+  if (commits.length === 1) return { commit: commits[0] };
+
+  const head = git(repoRoot, ["rev-parse", "--verify", "HEAD"]);
+  if (head.status !== 0) return { workspace: true };
+  const atHead = git(repoRoot, ["cat-file", "-e", `HEAD:${report.evidencePath}`]);
+  if (atHead.status !== 0) return { workspace: true };
+  return { error: `${report.evidencePath} has no visible introduction commit` };
+}
+
+function newestCurrentRecheck(repoRoot, rechecks) {
+  if (rechecks.length <= 1) return { recheck: rechecks[0] };
+  if (new Set(rechecks.map(({ item }) => item.status)).size === 1) {
+    return { recheck: rechecks[0] };
+  }
+  const recencies = rechecks.map((recheck) => ({
+    recheck,
+    recency: reportIntroduction(repoRoot, recheck.report),
+  }));
+  const malformed = recencies.find(({ recency }) => recency.error);
+  if (malformed) return { error: malformed.recency.error };
+
+  const workspace = recencies.filter(({ recency }) => recency.workspace);
+  if (workspace.length === 1) return { recheck: workspace[0].recheck };
+  if (workspace.length > 1) return { error: "multiple current rechecks are uncommitted" };
+
+  const newest = recencies.filter((candidate) =>
+    recencies.every((other) => {
+      const ancestry = git(repoRoot, [
+        "merge-base",
+        "--is-ancestor",
+        other.recency.commit,
+        candidate.recency.commit,
+      ]);
+      return ancestry.status === 0;
+    }),
+  );
+  if (newest.length === 1) return { recheck: newest[0].recheck };
+  return { error: "current rechecks have tied or incomparable introduction history" };
+}
+
 async function checkScope(ctx, scope) {
   const errors = [];
   const reports = [];
@@ -412,11 +482,27 @@ async function checkScope(ctx, scope) {
       .filter((report) => report.isRecheck && report.role === finding.report.role)
       .flatMap((report) =>
         (report.data.recheck?.items ?? [])
-          .map((item, index) => ({ item, current: currentItemBinding(report, index) }))
+          .map((item, index) => ({
+            item,
+            report,
+            current: currentItemBinding(report, index),
+          }))
           .filter(({ item }) => item.findingId === finding.id),
       );
-    const latestCurrentRecheck = recheckItems.find(({ current }) => current);
-    const resolved = latestCurrentRecheck?.item.status === "resolved";
+    const latestCurrentRecheck = newestCurrentRecheck(
+      scope.repoRoot,
+      recheckItems.filter(({ current }) => current),
+    );
+    if (latestCurrentRecheck.error) {
+      errors.push(
+        error(
+          id,
+          ctx.display(finding.report.file),
+          `finding ${finding.id} recheck recency is ambiguous: ${latestCurrentRecheck.error}`,
+        ),
+      );
+    }
+    const resolved = latestCurrentRecheck.recheck?.item.status === "resolved";
     const accepted = findingDecisions.some((decision) => decision.decision === "accept");
     const closed = !escalated && (rejected || (accepted && resolved));
     if (!closed) {
