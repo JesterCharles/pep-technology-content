@@ -258,8 +258,9 @@ function git(repoRoot, args) {
   });
 }
 
-// Recheck schema carries byte identity but no timestamp or sequence. Immutable
-// file introduction ancestry is therefore the authoritative record-level order.
+// Immutable file introduction ancestry is the primary record-level order.
+// A canonical loopN filename supplies a squash-safe order only for records tied
+// at one introduction commit.
 function reportIntroduction(repoRoot, report) {
   const repository = git(repoRoot, ["rev-parse", "--is-inside-work-tree"]);
   if (repository.status !== 0 || repository.stdout.trim() !== "true") {
@@ -286,6 +287,26 @@ function reportIntroduction(repoRoot, report) {
   const atHead = git(repoRoot, ["cat-file", "-e", `HEAD:${report.evidencePath}`]);
   if (atHead.status !== 0) return { workspace: true };
   return { error: `${report.evidencePath} has no visible introduction commit` };
+}
+
+function reportReviewLoop(report) {
+  const match = path.basename(report.evidencePath).match(
+    /^(?:[a-z0-9]+(?:-[a-z0-9]+)*-)?loop(?<ordinal>[1-9][0-9]*)-critic-(?:education|sme)-recheck\.json$/u,
+  );
+  if (!match) return null;
+  return { ordinal: BigInt(match.groups.ordinal) };
+}
+
+function newestTiedReviewLoop(rechecks) {
+  const candidates = rechecks.map((recheck) => ({
+    recheck,
+    loop: reportReviewLoop(recheck.report),
+  }));
+  if (candidates.some(({ loop }) => !loop)) return null;
+  if (new Set(candidates.map(({ loop }) => loop.ordinal.toString())).size !== candidates.length) return null;
+  return candidates.reduce((newest, candidate) =>
+    candidate.loop.ordinal > newest.loop.ordinal ? candidate : newest
+  ).recheck;
 }
 
 function newestCurrentRecheck(repoRoot, rechecks) {
@@ -316,6 +337,13 @@ function newestCurrentRecheck(repoRoot, rechecks) {
     }),
   );
   if (newest.length === 1) return { recheck: newest[0].recheck };
+  if (
+    newest.length > 1 &&
+    new Set(newest.map(({ recency }) => recency.commit)).size === 1
+  ) {
+    const loopWinner = newestTiedReviewLoop(newest.map(({ recheck }) => recheck));
+    if (loopWinner) return { recheck: loopWinner };
+  }
   return { error: "current rechecks have tied or incomparable introduction history" };
 }
 
