@@ -5,6 +5,7 @@ import test from "node:test";
 import {
   candidateSequences,
   correctSequence,
+  isAnswerOrderPermutation,
   isBalanced,
   isRecurring,
   loadBanks,
@@ -19,8 +20,55 @@ const repo = path.resolve(import.meta.dirname, "../..");
 // Last commit whose topic banks predate the answer-order permutation.
 const baseline = "f2647727d35e331d92a85ac550280efd35f0f7f8";
 
+const agilePath = "git-linux-ai-foundations/ai-foundations/agile-scrum-user-stories/artifact.gift";
+
 function git(...args) {
   return spawnSync("git", args, { cwd: repo, encoding: "buffer" });
+}
+
+// Baseline questions are matched by durable identity (title) at their
+// original positions and must keep their full semantics and correct option;
+// a bank may only grow by appending questions with new titles.
+function baselineProblems(before, after) {
+  const problems = [];
+  if (after.length < before.length) problems.push(`${before.length - after.length} baseline question(s) removed`);
+  for (const [index, question] of before.entries()) {
+    const current = after[index];
+    if (!current || current.title !== question.title) {
+      problems.push(`${question.title} is not at position ${index + 1}`);
+      continue;
+    }
+    if (semanticDigest([current]) !== semanticDigest([question])) problems.push(`${question.title} changed`);
+    const correct = (entry) => JSON.stringify(entry.options.find((option) => option.correct));
+    if (correct(current) !== correct(question)) problems.push(`${question.title} changed its correct option`);
+  }
+  const titles = new Set(before.map((question) => question.title));
+  for (const question of after.slice(before.length)) {
+    if (titles.has(question.title)) problems.push(`appended ${question.title} reuses a baseline title`);
+  }
+  return problems;
+}
+
+// Task-owned fixture: append one four-option question whose correct option
+// sits at `letter`, without touching the learner bank on disk.
+function appendQuestion(text, letter, title = "agile-scrum-user-stories fixture - Appended question") {
+  const options = ["~Wrong one #Not quite. One.", "~Wrong two #Not quite. Two.", "~Wrong three #Not quite. Three."];
+  options.splice("ABCD".indexOf(letter), 0, "=Right #Correct. Right.");
+  return `${text.replace(/\n*$/, "\n")}\n::${title}::Which option is right? {\n${options.join("\n")}\n}\n`;
+}
+
+function grownBanks(banks, path, text, accepted) {
+  return banks.map((bank) =>
+    bank.path === path
+      ? { path, text, sequence: correctSequence(parseGift(Buffer.from(text, "ascii"))), ...(accepted && { accepted }) }
+      : bank,
+  );
+}
+
+function assertOthersStable(banks, plan, grownPath) {
+  for (const bank of banks) {
+    if (bank.path !== grownPath) assert.equal(plan.get(bank.path), bank.sequence, `${bank.path} was displaced`);
+  }
 }
 
 test("reorderBank moves whole option blocks and keeps feedback, escapes and layout", () => {
@@ -116,6 +164,81 @@ test("every topic GIFT bank has balanced, varied and non-recurring answer positi
   }
 });
 
+test("baseline comparison lets a bank append questions but not change, drop or reorder baseline ones", async () => {
+  const bank = (await loadBanks(repo)).find((entry) => entry.path === agilePath);
+  assert.ok(bank, agilePath);
+  const before = parseGift(Buffer.from(bank.text, "ascii"));
+  const parse = (text) => parseGift(Buffer.from(text, "ascii"));
+  assert.deepEqual(baselineProblems(before, before), []);
+  const grown = parse(appendQuestion(bank.text, "C"));
+  assert.equal(grown.length, before.length + 1);
+  assert.deepEqual(baselineProblems(before, grown), []);
+  assert.deepEqual(baselineProblems(before, parse(reorderBank(bank.text, [...correctSequence(before)].reverse().join("")))), []);
+  assert.notDeepEqual(baselineProblems(before, grown.slice(0, -2)), []);
+  assert.notDeepEqual(baselineProblems(before, [grown[1], grown[0], ...grown.slice(2)]), []);
+  assert.notDeepEqual(baselineProblems(before, parse(bank.text.replace("Which Scrum event comes next?", "Which event comes next?"))), []);
+  assert.notDeepEqual(baselineProblems(before, parse(appendQuestion(bank.text, "C", before[0].title))), []);
+});
+
+test("growing the Agile bank by one question keeps every other bank's plan byte-for-byte", async () => {
+  const banks = await loadBanks(repo);
+  const agile = banks.find((bank) => bank.path === agilePath);
+  assert.ok(agile, agilePath);
+  const length = agile.sequence.length + 1;
+  const pool = candidateSequences(length);
+  const claimed = new Set(banks.filter((bank) => bank.sequence.length === length).map((bank) => bank.sequence));
+  const exhausted = pool.every((candidate) => claimed.has(candidate));
+  const keepable = (sequence) => pool.includes(sequence) && (exhausted || !claimed.has(sequence));
+  const letters = [..."ABCD"];
+  // The appended question already sits at a position the planner can keep
+  // (unclaimed, or a valid duplicate once the pool is exhausted, as for the
+  // 3 -> 4 growth): the bank keeps it whether or not its HEAD sequence is known.
+  const keep = letters.find((letter) => keepable(agile.sequence + letter));
+  // The reported 3 -> 4 growth (DBA + C) must stay keepable; a later bank
+  // length may have every extension claimed, which the loop below covers.
+  if (agile.sequence.length === 3) assert.ok(keep, `${agile.sequence} has a keepable one-question extension`);
+  for (const accepted of keep ? [undefined, agile.sequence] : []) {
+    const grown = grownBanks(banks, agilePath, appendQuestion(agile.text, keep), accepted);
+    const plan = planSequences(grown);
+    assert.equal(plan.get(agilePath), agile.sequence + keep);
+    assertOthersStable(banks, plan, agilePath);
+  }
+  // The appended question needs moving (invalid or claimed position): the
+  // bank yields, the other banks keep their plans, only the appended question
+  // moves when a candidate keeps the existing positions, and the bank gets a
+  // valid balanced order.
+  for (const letter of letters.filter((value) => !keepable(agile.sequence + value))) {
+    const text = appendQuestion(agile.text, letter);
+    const plan = planSequences(grownBanks(banks, agilePath, text, agile.sequence));
+    const planned = plan.get(agilePath);
+    assert.ok(isBalanced(planned) && !isRecurring(planned), `${planned} is balanced and non-recurring`);
+    assertOthersStable(banks, plan, agilePath);
+    const output = reorderBank(text, planned);
+    assert.ok(isAnswerOrderPermutation(text, output));
+    if (pool.some((candidate) => candidate.startsWith(agile.sequence) && keepable(candidate))) {
+      assert.ok(planned.startsWith(agile.sequence), `${planned} keeps ${agile.sequence}`);
+      assert.equal(output.slice(0, agile.text.length), text.slice(0, agile.text.length));
+    }
+  }
+});
+
+test("a grown bank yields to accepted plans and keeps its existing positions when it can", () => {
+  // The grown bank sorts first by path, so a path-greedy planner would keep
+  // its DABDC and displace b/other; accepted plans now claim first.
+  const banks = [
+    { path: "a/grown/artifact.gift", sequence: "DABDC", accepted: "DAB" },
+    { path: "b/other/artifact.gift", sequence: "DABDC" },
+    { path: "c/third/artifact.gift", sequence: "CADBC" },
+  ];
+  const plan = planSequences(banks);
+  assert.equal(plan.get("b/other/artifact.gift"), "DABDC");
+  assert.equal(plan.get("c/third/artifact.gift"), "CADBC");
+  const grown = plan.get("a/grown/artifact.gift");
+  assert.ok(grown.startsWith("DAB") && grown !== "DABDC", grown);
+  assert.ok(isBalanced(grown) && !isRecurring(grown), grown);
+  assert.deepEqual(planSequences(banks), plan, "planning is deterministic");
+});
+
 test("topic GIFT banks keep the semantics they had before the answer-order permutation", async (t) => {
   if (git("cat-file", "-e", `${baseline}^{commit}`).status !== 0) {
     t.skip(`baseline ${baseline} is not in this clone`);
@@ -126,15 +249,6 @@ test("topic GIFT banks keep the semantics they had before the answer-order permu
     if (shown.status !== 0) continue;
     const before = parseGift(shown.stdout);
     const after = parseGift(Buffer.from(bank.text, "ascii"));
-    assert.equal(after.length, before.length, bank.path);
-    assert.equal(semanticDigest(after), semanticDigest(before), bank.path);
-    for (const [index, question] of after.entries()) {
-      assert.equal(question.title, before[index].title, bank.path);
-      assert.deepEqual(
-        question.options.find((option) => option.correct),
-        before[index].options.find((option) => option.correct),
-        `${bank.path} ${question.title}`,
-      );
-    }
+    assert.deepEqual(baselineProblems(before, after), [], bank.path);
   }
 });

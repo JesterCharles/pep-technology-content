@@ -188,13 +188,24 @@ function seededOrder(items, label) {
   return [...items].sort((a, b) => key(a).localeCompare(key(b)) || a.localeCompare(b));
 }
 
-// Deterministic plan: banks whose sequence is already balanced, non-recurring
-// and unique in their question-count group keep it; every other bank receives
-// an unused candidate, taking signatures round-robin so repeated positions vary.
+// Deterministic plan. A bank may carry `accepted`, the sequence it had when
+// last accepted (absent means its current sequence is the accepted one). Banks
+// whose sequence is still accepted claim first, then changed banks, each tier
+// in path order, so growing or editing one bank never displaces another bank's
+// accepted plan. A claimed sequence must be balanced, non-recurring and unique
+// in its question-count group; once every candidate of that length is in use,
+// a valid duplicate keeps its sequence. Every other bank receives an unused
+// candidate, taking signatures round-robin so repeated positions vary. When a
+// bank only appended questions to its accepted sequence, candidates that keep
+// the accepted positions of its existing questions are tried first.
 export function planSequences(banks) {
   const plan = new Map();
   const groups = new Map();
-  for (const bank of [...banks].sort((a, b) => a.path.localeCompare(b.path))) {
+  const changed = (bank) => (bank.accepted ?? bank.sequence) !== bank.sequence;
+  const ordered = [...banks].sort(
+    (a, b) => Number(changed(a)) - Number(changed(b)) || a.path.localeCompare(b.path),
+  );
+  for (const bank of ordered) {
     const group = groups.get(bank.sequence.length) ?? [];
     group.push(bank);
     groups.set(bank.sequence.length, group);
@@ -213,8 +224,9 @@ export function planSequences(banks) {
       }
     }
     if (!pending.length) continue;
+    const candidates = candidateSequences(length);
     const buckets = new Map();
-    for (const candidate of seededOrder(candidateSequences(length), `length-${length}`)) {
+    for (const candidate of seededOrder(candidates, `length-${length}`)) {
       const bucket = buckets.get(signature(candidate)) ?? [];
       bucket.push(candidate);
       buckets.set(signature(candidate), bucket);
@@ -224,21 +236,30 @@ export function planSequences(banks) {
       if (tally.has(signature(sequence))) tally.set(signature(sequence), tally.get(signature(sequence)) + 1);
     }
     for (const bank of pending) {
-      // Least-used signature first; reuse a full sequence only when every
-      // candidate of this length is already taken.
-      const pick = (allowReuse) => {
-        const keys = seededOrder([...buckets.keys()], bank.path).sort(
-          (a, b) => tally.get(a) - tally.get(b),
-        );
+      const keys = seededOrder([...buckets.keys()], bank.path).sort((a, b) => tally.get(a) - tally.get(b));
+      const prefix =
+        bank.accepted && bank.accepted.length < length && bank.sequence.startsWith(bank.accepted)
+          ? bank.accepted
+          : "";
+      const fits = (candidate) => candidate.startsWith(prefix);
+      // Least-used signature first, preferring candidates that keep the
+      // existing questions' accepted positions.
+      const fresh = (filter) => {
         for (const key of keys) {
-          const fresh = buckets.get(key).find((candidate) => !used.has(candidate));
-          if (fresh) return fresh;
+          const found = buckets.get(key).find((candidate) => filter(candidate) && !used.has(candidate));
+          if (found) return found;
         }
-        if (!allowReuse) return null;
-        const all = keys.flatMap((key) => buckets.get(key));
-        return all.sort((a, b) => used.get(a) - used.get(b))[0];
+        return null;
       };
-      const chosen = pick(false) ?? pick(true);
+      // Reuse a full sequence only when every candidate of this length is
+      // already taken.
+      const reuse = () => {
+        if (candidates.includes(bank.sequence)) return bank.sequence;
+        const all = keys.flatMap((key) => buckets.get(key));
+        const pool = all.some(fits) ? all.filter(fits) : all;
+        return pool.sort((a, b) => used.get(a) - used.get(b))[0];
+      };
+      const chosen = fresh(fits) ?? fresh(() => true) ?? reuse();
       used.set(chosen, (used.get(chosen) ?? 0) + 1);
       tally.set(signature(chosen), tally.get(signature(chosen)) + 1);
       plan.set(bank.path, chosen);
@@ -375,6 +396,37 @@ export async function loadBanks(repoRoot) {
   return banks;
 }
 
+// Record HEAD's sequence as `accepted` on each bank whose bytes differ from
+// HEAD ("" for a bank HEAD does not have), so the planner keeps every other
+// bank's committed plan and extends an appended bank's existing positions.
+export function withAcceptedSequences(repoRoot, banks) {
+  let changed = [];
+  try {
+    changed = execFileSync("git", ["diff", "--name-only", "HEAD", "--", ...banks.map((bank) => bank.path)], {
+      cwd: repoRoot,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).split("\n");
+  } catch {
+    return banks;
+  }
+  const changedPaths = new Set(changed.filter(Boolean));
+  return banks.map((bank) => {
+    if (!changedPaths.has(bank.path)) return bank;
+    let accepted = "";
+    try {
+      const bytes = execFileSync("git", ["show", `HEAD:${bank.path}`], {
+        cwd: repoRoot,
+        stdio: ["ignore", "pipe", "ignore"],
+      });
+      accepted = correctSequence(parseGift(bytes));
+    } catch {
+      accepted = "";
+    }
+    return { ...bank, accepted };
+  });
+}
+
 async function main() {
   const args = process.argv.slice(2);
   if (args.includes("--help") || !args.length) {
@@ -383,7 +435,7 @@ async function main() {
     return;
   }
   const repoRoot = path.resolve(import.meta.dirname, "../../..");
-  const banks = await loadBanks(repoRoot);
+  const banks = withAcceptedSequences(repoRoot, await loadBanks(repoRoot));
   const plan = planSequences(banks);
   const changes = banks.filter((bank) => plan.get(bank.path) !== bank.sequence);
   for (const bank of changes) {

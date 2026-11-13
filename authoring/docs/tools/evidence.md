@@ -70,7 +70,9 @@ and `authoring/tools/gift/answer-order.mjs` proves the current bank moves whole 
 answer blocks, layout, raw option blocks (marker, escaped text, attached feedback), question order and count must
 all be identical. Any other drift, a missing blob, a parse failure or an unsupported format stays stale. Locks still
 record the raw `current: false`; `node authoring/tools/gift/answer-order.mjs --check|--write` plans balanced,
-non-recurring correct-answer positions for topic banks.
+non-recurring correct-answer positions for topic banks. Banks unchanged from `HEAD` keep their plans first, so a bank
+that appends questions yields any collision and, where possible, keeps its existing questions' positions; once every
+candidate of a length is in use, a valid duplicate keeps its sequence.
 
 ### Solved-run evidence
 
