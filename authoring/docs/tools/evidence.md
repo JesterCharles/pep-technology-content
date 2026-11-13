@@ -113,5 +113,9 @@ coverage.
 
 Every finding needs a reconciliation decision made by someone other than the artifact author. A critical or high
 finding closes only when it is rejected with evidence, or when an accepted finding has a current same-role
-`resolved` recheck. Escalated findings, `open` rechecks and accepted findings without a resolved recheck remain
-open. When the repository has no reviewable files, T25 reports that fact and passes.
+`resolved` recheck. When several rechecks bind the same current bytes, T25 uses their immutable Git introduction
+history, not filename order, and selects the unique newest record. A single uncommitted addition is newer than
+committed records. Equal verdicts need no ordering; conflicting records introduced together, on incomparable
+branches, or without visible introduction history fail as ambiguous. Stale rechecks never mask the newest current
+record. Escalated findings, `open` rechecks and accepted findings without a resolved recheck remain open. When the
+repository has no reviewable files, T25 reports that fact and passes.
