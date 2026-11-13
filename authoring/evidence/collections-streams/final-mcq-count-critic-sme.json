@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "Independent Java technology SME critic subagent (claude-opus-5-5); did not author the reviewed artifacts",
+  "reviewedPath": "collections-streams/assessments/collections-streams-final-mcq/blueprint.json",
+  "reviewedSha256": "cc98e78beb44de3436d5c4a519956d3572cd4b4e290f89be583f4956183302e4",
+  "artifactHashes": {
+    "assessments/collections-streams-final-mcq/blueprint.json": "cc98e78beb44de3436d5c4a519956d3572cd4b4e290f89be583f4956183302e4"
+  },
+  "findings": [
+    {
+      "id": "sme-c1",
+      "severity": "medium",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "line": 180
+      },
+      "claim": "Section 8 scopes its unspecified-order and null rules to the first-plan items only, but new and existing items rest on the same traps. The hash-order rule names only q02 and q03, yet q05 and q28 (groupingBy results), q22 (a map of lists built in a loop) and q30 (dropping repeats by one field) all produce maps or sets whose print order is unspecified when they are HashMap/HashSet or the default groupingBy map. The null-in-sort rule names only q04, yet q24 sorts records by natural order 'when one entry is missing'. Collectors.groupingBy makes no guarantee of the Map type; HashMap makes no order guarantee; List.sort documents no NullPointerException, so a null element fails only through a compareTo call that dereferences null (and only if the list has two or more elements). Sources (not fetched in this review; cited for verification): https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/stream/Collectors.html#groupingBy(java.util.function.Function); https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/HashMap.html; https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html#sort(java.util.Comparator); https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Comparable.html.",
+      "evidence": [],
+      "recommendation": "Make the hash-order rule apply to every item: key HashMap/HashSet and default groupingBy results on contents and sizes only; key order only for LinkedHash*, Tree*, lists or a groupingBy with an explicit ordered map factory. Extend the q04 null rule to q24: use a list of at least two elements and a compareTo that dereferences its argument or field, or key the nullsFirst/nullsLast repair rather than the exact failure.",
+      "reviewedSha256": "52456e45b29465dcc97655e8368396030dd628f8f058512033a376364f67fc3b"
+    },
+    {
+      "id": "sme-c2",
+      "severity": "medium",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "line": 93
+      },
+      "claim": "The revised q07 context ('compares two counts ... behaves differently on a large log than on a small test') now rests on the Integer box cache, and q08 ('a stored key is changed in two ways') rests on mutating a stored key. Both are unspecified beyond narrow guarantees: Integer.valueOf caches only -128..127 and may cache others (JLS 5.1.7), so == on larger equal counts is not guaranteed false; Map and Set leave behavior unspecified after a key's equals-relevant state changes, so a failed lookup is not guaranteed. Section 8 has no rule for either, although the prompt-level contract ('every key holds on Java SE 25') and the course pages (wrapper page: 'Java promises neither result'; equals page: 'that false is one observed outcome, not a guarantee') both depend on it. Sources (not fetched in this review; cited for verification): https://docs.oracle.com/javase/specs/jls/se25/html/jls-5.html#jls-5.1.7; https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Integer.html#valueOf(int); https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Map.html; https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Set.html; collections-streams/collections-in-depth/wrapper-types-and-autoboxing/artifact.html (Activity 1 and 3 text); collections-streams/collections-in-depth/the-equals-and-hashcode-contract/artifact.html (Activity 3 and 'Not promised by Java' text).",
+      "evidence": [],
+      "recommendation": "Add value-free rules: q07 keys the cause as identity comparison that is guaranteed equal only from -128 to 127, never as '== is always false above 127', and the repair as equals or comparing unboxed values; q08 keys the mutated-field change as a contract break whose lookup result is unspecified (can fail), never as a guaranteed false or a guaranteed duplicate.",
+      "reviewedSha256": "52456e45b29465dcc97655e8368396030dd628f8f058512033a376364f67fc3b"
+    },
+    {
+      "id": "sme-c3",
+      "severity": "medium",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "line": 85
+      },
+      "claim": "q19 ('a removal from a list of integer codes ... locate the boxing') and q17 ('a loop meant to remove matching readings misses some') invite List<Integer>.remove with an int argument. Overload resolution picks remove(int index) in phase 1 with no boxing, not remove(Object); this changes both the result and where boxing happens. No course page teaches the remove(int)/remove(Object) overload (wrapper-types page has no remove example; lists page and bank show only remove(Object) on strings), so such an item would need untaught material, contradicting section 4 line 72. For q17, only an index-shifting counted loop gives a deterministic 'misses some'; a for-each removal falls under the best-effort CME rule. Sources (not fetched in this review; cited for verification): https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html#jls-15.12.2.2; https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html#remove(int); https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html#remove(java.lang.Object); sed -e 's/<[^>]*>//g' collections-streams/collections-in-depth/wrapper-types-and-autoboxing/artifact.html | perl -ne 'print if /remove\\(/'  (no taught remove call).",
+      "evidence": [],
+      "recommendation": "Add a rule: on a List<Integer> (or other wrapper list) never pass an int-typed argument to remove unless the item intends remove(int index) and the stem makes the index meaning explicit; prefer removeIf, an Integer-typed variable, or a non-integer element type. For q17, build the miss from a counted index loop that skips the shifted element.",
+      "reviewedSha256": "52456e45b29465dcc97655e8368396030dd628f8f058512033a376364f67fc3b"
+    },
+    {
+      "id": "sme-c4",
+      "severity": "medium",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "line": 92
+      },
+      "claim": "q18 ('legacy raw-type code hands data to a generic method; decide whether and where it fails') and q06 ('separate compile-time from run-time failure') key the location of a heap-pollution ClassCastException. The failure occurs only at a compiler-inserted checked cast; where the value flows to an Object-typed target (Object variable, println(Object)/valueOf(Object), equals, adding to another raw or Object collection) javac emits no cast and nothing fails. The JLS describes heap pollution and unchecked conversion but does not pin every cast site, so a key based on such a site is compiler-dependent. Section 8 has no rule for this; the generics page teaches only the unambiguous 'String s = names.get(0)' site. Sources (not fetched in this review; cited for verification): https://docs.oracle.com/javase/specs/jls/se25/html/jls-4.html#jls-4.12.2; https://docs.oracle.com/javase/specs/jls/se25/html/jls-5.html#jls-5.1.9; collections-streams/collections-in-depth/generics/artifact.html (Activity 4: 'ClassCastException at String s = names.get(0)').",
+      "evidence": [],
+      "recommendation": "Add a rule for q06 and q18: place the failing read only where the element must be a String (assignment to a String variable, a String-only method such as length()), never at a site whose target type is Object or a string concatenation; key 'compiles with an unchecked warning' for the raw call itself.",
+      "reviewedSha256": "52456e45b29465dcc97655e8368396030dd628f8f058512033a376364f67fc3b"
+    },
+    {
+      "id": "sme-c5",
+      "severity": "medium",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "line": 95
+      },
+      "claim": "q21 keys 'the repair that keeps the requirement' for a case-insensitive value class. The obvious repair (equals via equalsIgnoreCase, hashCode via name.toLowerCase()) is not contract-correct on Java SE 25: toLowerCase() uses the default locale (the String API's own example maps \"TITLE\" to \"t\\u0131tle\" in a Turkish locale while equalsIgnoreCase still returns true), and even toLowerCase(Locale.ROOT) disagrees with equalsIgnoreCase for characters such as U+0131, whose upper case is 'I'. A key built on that pairing would be technically false in general. Sources (not fetched in this review; cited for verification): https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html#toLowerCase(); https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html#equalsIgnoreCase(java.lang.String); https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html#hashCode().",
+      "evidence": [],
+      "recommendation": "Add a rule: key the repair as normalizing the value once (for example lower-casing with Locale.ROOT in the constructor or a record compact constructor) and then using plain equals plus Objects.hash on the normalized field; or state in the stem that values are ASCII letters only. Never key equalsIgnoreCase paired with default-locale toLowerCase() as the correct repair.",
+      "reviewedSha256": "52456e45b29465dcc97655e8368396030dd628f8f058512033a376364f67fc3b"
+    },
+    {
+      "id": "sme-c6",
+      "severity": "medium",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "line": 99
+      },
+      "claim": "q16 (drain a deque used as a stack; stop cleanly when work runs out; secondary stacks-and-queues#o3) is sound only on rules section 8 gives to q01 alone: poll()/peek() returning null means 'empty' only because ArrayDeque prohibits null elements. Its secondary objective also invites the legacy Stack class as a distractor or comparison, and Stack differs in ways no course page teaches: Stack.pop and Stack.peek both throw EmptyStackException (peek does not return null), not NoSuchElementException. Sources (not fetched in this review; cited for verification): https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/ArrayDeque.html; https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Stack.html#peek(); https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Deque.html#pop(); sed -e 's/<[^>]*>//g' collections-streams/collections-in-depth/stacks-and-queues/artifact.html | grep -c EmptyStack  (0).",
+      "evidence": [],
+      "recommendation": "Extend the q01 ArrayDeque rule to q16 (null-sentinel loop is valid because nulls are prohibited) and add: if Stack appears, use it only for the documented 'prefer Deque' reason; do not key or write feedback on Stack's empty-stack exceptions or claim Stack.peek returns null.",
+      "reviewedSha256": "52456e45b29465dcc97655e8368396030dd628f8f058512033a376364f67fc3b"
+    },
+    {
+      "id": "sme-c7",
+      "severity": "medium",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "line": 90
+      },
+      "claim": "q20's planned context ('predict the running time of a pairwise check when its input doubles') is the same shape as the big-o-basics page's own Activity 1 prediction (a nested-loop duplicate check, doubling n multiplies time by 4), so it is neither an unseen context nor harder than taught practice. Section 6 does not list the topic pages' in-page activities among the sources to differentiate from, so this collision is not caught. The secondary big-o-basics#o1 (classify ArrayList get, list contains, HashMap get, TreeMap get) does not fit a pure pairwise loop unless a collection operation's documented cost changes the growth class. Sources (not fetched in this review; cited for verification): collections-streams/collections-in-depth/big-o-basics/artifact.html (Activity 1: 'about 4 seconds ... comparing every pair is quadratic, so doubling n multiplies the work by 4'); authoring/evidence/collections-streams/course-final-mcq-coverage.md lines 148-152.",
+      "evidence": [],
+      "recommendation": "Rewrite the q20 context so the growth depends on a named collection operation's documented cost (which makes big-o#o1 a real secondary), and add the in-page activities and checks of all topic pages to the section 6 differentiation list with a q20 close-shape entry.",
+      "reviewedSha256": "52456e45b29465dcc97655e8368396030dd628f8f058512033a376364f67fc3b"
+    },
+    {
+      "id": "sme-c8",
+      "severity": "low",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "line": 107
+      },
+      "claim": "Two new single-best-answer items have objectives that themselves admit two correct fixes. q23 (ranked board loses ties): a sorted list with a comparator and a TreeSet/TreeMap with a tie-breaking thenComparing both keep every entry; and if the loss comes from a TreeSet whose comparator returns 0 on ties, that rule (TreeSet treats compare==0 as the same element) is taught on no course page, while a repeated TreeMap key replacing its value is taught. q28 (collector that keeps every value for repeated keys): grouping-with-streams#o3 lists both groupingBy and toMap with a merge function, and a merge that combines values (list concatenation or string join) also keeps every value. Sources (not fetched in this review; cited for verification): https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/TreeSet.html; https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/stream/Collectors.html#toMap(java.util.function.Function,java.util.function.Function,java.util.function.BinaryOperator); authoring/catalog/collections-streams/lambdas-and-streams/grouping-with-streams-and-optional/topic.json (o3 text).",
+      "evidence": [],
+      "recommendation": "Add rules: q23 builds the tie loss from a repeated map key (taught), and either the stem's constraints exclude the tie-breaker alternative or no option offers it; q28 distractor toMap merge functions must visibly drop values (keep first or last), or the stem fixes a Map<K, List<V>> result produced without a hand-written merge.",
+      "reviewedSha256": "52456e45b29465dcc97655e8368396030dd628f8f058512033a376364f67fc3b"
+    },
+    {
+      "id": "sme-c9",
+      "severity": "low",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "line": 98
+      },
+      "claim": "q26 ('the one lambda that cannot become a method reference') and q10 (which lambdas become which kind of reference; which interface a lambda can target) are only keyable if every 'convertible' lambda actually compiles as a reference and the functional-interface judgment follows JLS 9.8. Known traps: Integer::toString targeting Function<Integer,String> is ambiguous (static toString(int) vs instance toString()) and does not compile; an interface that redeclares a public Object method (as Comparator does with equals) or adds default methods is still functional. Section 8 has no rule for these. Sources (not fetched in this review; cited for verification): https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html#jls-15.13.1; https://docs.oracle.com/javase/specs/jls/se25/html/jls-9.html#jls-9.8; https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Comparator.html.",
+      "evidence": [],
+      "recommendation": "Add a rule: compile every method reference shown as convertible on JDK 25 and avoid overload-ambiguous references (such as Integer::toString for Function<Integer,String>); judge functional interfaces by JLS 9.8, not by counting every abstract method declaration.",
+      "reviewedSha256": "52456e45b29465dcc97655e8368396030dd628f8f058512033a376364f67fc3b"
+    },
+    {
+      "id": "sme-c10",
+      "severity": "low",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "line": 111
+      },
+      "claim": "q30's primary objective collections-and-streams-review#o1 is 'Retrieve, without notes, ...', and the planned context opens 'Without notes', but the blueprint's allowedResources defers to the platform and names notes, course pages and the Java API documentation as possible resources. If the platform allows notes, q30 measures choosing a collection and equality rule, not unaided retrieval, so the primary objective does not fit as reported. Sources (not fetched in this review; cited for verification): collections-streams/assessments/collections-streams-final-mcq/blueprint.json (allowedResources); authoring/catalog/collections-streams/lambdas-and-streams/collections-and-streams-review/topic.json (o1 text).",
+      "evidence": [],
+      "recommendation": "Either record that the platform must forbid notes for this quiz (and say so in allowedResources), or drop 'Without notes' from q30's context and report it against an objective it measures (for example choosing-the-right-collection#o1 with how-hashmap-works#o1 secondary), adjusting the blueprint objective lists if the set changes.",
+      "reviewedSha256": "52456e45b29465dcc97655e8368396030dd628f8f058512033a376364f67fc3b"
+    },
+    {
+      "id": "sme-c11",
+      "severity": "low",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "line": 188
+      },
+      "claim": "Section 9 is honest about scope (JDK 17.0.12 checks run; JDK 25 re-run and pilot timing listed as unverified; no critic saw protected values), but the JDK 17 validation is not traceable: it records no commit and run id, which authoring/AGENTS.md requires in place of key hashes ('validated at <commit> by run <id>'). Section 8 also promises keys that 'hold on Java SE 25' while the only executed checks ran on a different major release, and the plan does not say the bank is blocked from upload until the JDK 25 re-run passes. Sources (not fetched in this review; cited for verification): authoring/AGENTS.md ('Never commit' section: Record \"validated at <commit> by run <id>\"); authoring/evidence/collections-streams/course-final-mcq-coverage.md lines 176, 188-189.",
+      "evidence": [],
+      "recommendation": "Record the JDK 17 run as 'validated at <commit> by run <id>' (value-free), and state that the bank must not be uploaded until the JDK 25 re-run and the pilot timing are recorded the same way.",
+      "reviewedSha256": "52456e45b29465dcc97655e8368396030dd628f8f058512033a376364f67fc3b"
+    }
+  ]
+}

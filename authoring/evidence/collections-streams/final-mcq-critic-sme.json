@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "Independent Java technology SME critic subagent (claude-opus-5-5); did not author the reviewed artifacts",
+  "reviewedPath": "collections-streams/assessments/collections-streams-final-mcq/blueprint.json",
+  "reviewedSha256": "187f66210cc7a07505a9e9b5584f15268df7ab60b984aa1267b87af76c0ea673",
+  "artifactHashes": {
+    "assessments/collections-streams-final-mcq/blueprint.json": "187f66210cc7a07505a9e9b5584f15268df7ab60b984aa1267b87af76c0ea673"
+  },
+  "findings": [
+    {
+      "id": "sme-b1",
+      "severity": "medium",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "selector": "section 4, row cs-final-q13"
+      },
+      "claim": "Planned item q13 asks learners to 'predict when the pipeline runs or fails'. Two Java SE 25 specification traps make such an item easy to key wrongly: (1) Stream.count() may skip executing the pipeline entirely when the count is computable from the source, so a peek/map side effect before count() may print nothing (local JDK 17.0.12 run: new ArrayList<>(List.of(1,2,3)).stream().peek(print).count() and .map(print).count() print only 3, with no peek/map output, while a List.of(...) source happened to run peek; the result depends on the source, so an item keyed on side-effect output is unreliable); (2) stream reuse is specified as 'may throw IllegalStateException', so the observed message 'stream has already been operated upon or closed' is implementation behavior.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/stream/Stream.html",
+          "section": "count(): 'An implementation may choose to not execute the stream pipeline ... if it is capable of computing the count directly from the stream source. In such cases no source elements will be traversed and no intermediate operations will be evaluated.'; class description: 'may throw IllegalStateException if it detects that the stream is being reused'",
+          "retrievedAt": "2026-11-09T20:38:02Z",
+          "textSha256": "f6feb4beac995b2de4a2c463bb40ac66ddea3b494ea3fb67e0ea5d64ae03023a"
+        }
+      ],
+      "recommendation": "Brief the private author: demonstrate laziness with a terminal operation that must traverse elements (forEach, collect, findFirst on a filtered stream), never with peek + count(); key the reuse question on the exception type IllegalStateException, not on its message text, and verify the keyed output on a JDK 25 run.",
+      "reviewedSha256": "d377592630f1cb36cfd40cd175373b79b9df5a5349a330a346e87ae1753f5453"
+    },
+    {
+      "id": "sme-b2",
+      "severity": "low",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "selector": "section 4, rows cs-final-q02 and cs-final-q03"
+      },
+      "claim": "q02 ('failing removal over a collection whose origin decides whether it may change') and q03 ('ending at an empty-deque boundary') are technically sound and answerable from the taught objectives, but rest on edge behaviors an item can get wrong: ConcurrentModificationException is best-effort, and removing the second-to-last element inside a for-each over an ArrayList does not throw (verified locally: list [a,b,c] removing 'b' completes with [a, c]); List.of/Set.of/Map.of reject modification and nulls; ArrayDeque prohibits null elements (offer(null) throws NullPointerException), so poll()/peek() returning null on empty is unambiguous only because nulls cannot be stored.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/ConcurrentModificationException.html",
+          "section": "Class description: 'fail-fast behavior cannot be guaranteed ... Fail-fast operations throw ConcurrentModificationException on a best-effort basis'",
+          "retrievedAt": "2026-11-09T20:38:03Z",
+          "textSha256": "632239bdd8f5619a31cbc8207524b94a0575e6775987e0c039165898ce010013"
+        },
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/List.html",
+          "section": "Unmodifiable Lists: List.of collections throw UnsupportedOperationException on modification and disallow null elements",
+          "retrievedAt": "2026-11-09T20:38:03Z",
+          "textSha256": "b10d468a12ac9a482fbb269457f64705e568e78dcb1d54ee44d190d829fd1491"
+        },
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/ArrayDeque.html",
+          "section": "Class description: 'Null elements are prohibited.'",
+          "retrievedAt": "2026-11-09T20:38:02Z",
+          "textSha256": "f91cccaa669cd8b45391eb45d0015da67b0bd3e51970a5f03b1b1ef67e10d34e"
+        },
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Deque.html",
+          "section": "Class description: Comparison of Stack and Deque methods (push=addFirst, pop=removeFirst) and Queue methods (offer=offerLast); removeFirst/pop throw NoSuchElementException, poll/peek return null on empty",
+          "retrievedAt": "2026-11-09T20:38:02Z",
+          "textSha256": "7278e250d23e43fc795c7ac09c574355fd9bf888e285e91b2392cd856558b02b"
+        }
+      ],
+      "recommendation": "Brief the private author: in q02 remove an element that is not second-to-last (or use List.of so the cause is UnsupportedOperationException); in q03 do not offer/push null and key pop/remove/element on an empty deque as NoSuchElementException versus poll/peek as null.",
+      "reviewedSha256": "d377592630f1cb36cfd40cd175373b79b9df5a5349a330a346e87ae1753f5453"
+    },
+    {
+      "id": "sme-b3",
+      "severity": "low",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "selector": "section 4, rows cs-final-q01, cs-final-q08 and cs-final-q10"
+      },
+      "claim": "q01 traces 'add and put calls across two implementations with different order guarantees' and q08 follows 'bucket choice' and judges 'a claim about iteration order'. HashMap/HashSet iteration order is unspecified and may change over time, and the API does not specify how a bucket index is computed, so any option that keys a specific HashMap/HashSet print order or bucket number would be unverifiable against Java SE 25. q10's 'reversed key and missing values' is sound only if the item uses reversed() knowing it reverses the whole comparator composed so far, and wraps the key comparator with nullsFirst/nullsLast (Comparator.comparing(key, nullsFirst(naturalOrder()))), since comparing(key) alone throws NullPointerException on a null key.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/HashMap.html",
+          "section": "Class description: 'This class makes no guarantees as to the order of the map; in particular, it does not guarantee that the order will remain constant over time.'",
+          "retrievedAt": "2026-11-09T20:38:02Z",
+          "textSha256": "0f8d4137eb1d78ba855896feeb356dceecfd2501d3e189bfbf6babc6cc9dfd71"
+        },
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Comparator.html",
+          "section": "reversed(): 'Returns a comparator that imposes the reverse ordering of this comparator'; comparing(Function, Comparator); nullsFirst(Comparator)/nullsLast(Comparator)",
+          "retrievedAt": "2026-11-09T20:38:03Z",
+          "textSha256": "059807383ee293f9c90d3e0e70e34fa170ebb6c6e47092b26c1d475639bff39b"
+        }
+      ],
+      "recommendation": "Brief the private author: key HashMap/HashSet results on contents and size only (order only for LinkedHash*/Tree*); keep q08 at the documented level (hashCode selects the bucket, equals finds the entry), with no numeric bucket index; in q10 place reversed() deliberately and test the keyed order on a JDK 25 run.",
+      "reviewedSha256": "d377592630f1cb36cfd40cd175373b79b9df5a5349a330a346e87ae1753f5453"
+    },
+    {
+      "id": "sme-b4",
+      "severity": "low",
+      "location": {
+        "file": "authoring/evidence/collections-streams/course-final-mcq-coverage.md",
+        "line": 117
+      },
+      "claim": "All 36 blueprint objective references resolve to existing topic.json objectives, objectiveFormats matches objectives exactly, and no duplicates exist. However, section 5's list of 'Objectives not targeted by an MCQ' names only generics#o1, stacks-and-queues#o3 and timed-coding-screen-patterns#o2; three more taught objectives are also absent from the blueprint: choosing-the-right-collection#o2, the-equals-and-hashcode-contract#o1 and wrapper-types-and-autoboxing#o1. All three are MCQ-assessable technical facts (ArrayList vs LinkedList costs, equals contract properties, autoboxing points).",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/ArrayList.html",
+          "section": "Class description: 'The size, isEmpty, get, set, getFirst, getLast, removeLast, iterator, listIterator, and reversed operations run in constant time ... All of the other operations run in linear time'",
+          "retrievedAt": "2026-11-09T20:38:02Z",
+          "textSha256": "05236edd20a478b990f117622d5ef60ddd42143564138ba46b1a106602d50e6c"
+        }
+      ],
+      "recommendation": "Either list the three extra untargeted objectives with a reason in section 5, or add them to existing cross-topic rows (e.g. choosing-the-right-collection#o2 to q09, the-equals-and-hashcode-contract#o1 to q07, wrapper-types-and-autoboxing#o1 to q05) and to the blueprint objectives/objectiveFormats.",
+      "reviewedSha256": "d377592630f1cb36cfd40cd175373b79b9df5a5349a330a346e87ae1753f5453"
+    }
+  ]
+}
