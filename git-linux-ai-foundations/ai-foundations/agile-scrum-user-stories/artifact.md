@@ -8,7 +8,11 @@
 
 ## Teaching
 
-A team works in two-week sprints. On the first day, the team meets to decide what to work on.
+When an AI assistant changes your code, what does success mean? The user story and its acceptance criteria define it.
+
+Learners ask to save drafts, so a team writes: “As a learner, I want to save a draft note, so that I can finish it later.” Checks: Save puts it in Drafts; it is still there after a reload. An assistant's change passes the first check but loses the draft on reload. You test both and ask for a fix.
+
+First, the sprint. A team works in two-week sprints. On the first day, the team meets to decide what to work on.
 
 Scrum works in sprints: fixed periods of one month or less. Sprint Planning starts each sprint by choosing work from the ordered product backlog. During the sprint, Developers meet for a 15-minute Daily Scrum to adjust their plan. At the end, the Sprint Review inspects the result with stakeholders, then the Sprint Retrospective improves how the team works.
 
