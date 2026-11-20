@@ -683,8 +683,8 @@ window.PEP_ACTIVITIES=[{kind:'choice',key:0,confidence:false,why:["getBy queries
 {kind:'sim',reveal:"Use getByLabelText with the label text, and getByRole with the role button and the name option.",success:"These are the two queries you will use most.",setup:(root, api) => {
         const fix = root.querySelector('#p26-fix'), q = root.querySelector('#p26-q'), out = root.querySelector('#p26-out');
         const { screen } = window.PEP_KIT.rtl(fix);
-        let foundLabel, foundRole;
-        const init = () => { foundLabel = false; foundRole = false; out.textContent = 'Nothing has run yet.'; };
+        let foundLabel, foundRole, ran;
+        const init = () => { foundLabel = false; foundRole = false; ran = false; out.textContent = 'Nothing has run yet.'; };
         const parse = text => {
           const m = /^screen\.(getBy|queryBy)(Role|LabelText|Text)\(\s*(['"])([^'"]+)\3\s*(?:,\s*\{\s*name\s*:\s*(['"])([^'"]+)\5\s*\}\s*)?\)\s*;?$/.exec(text.trim());
           return m && { kind: m[1], by: m[2], first: m[4], name: m[6] };
@@ -692,6 +692,7 @@ window.PEP_ACTIVITIES=[{kind:'choice',key:0,confidence:false,why:["getBy queries
         const run = () => {
           const p = parse(q.value);
           if (!p) { out.textContent = 'Not supported in this playground. Try screen.getByRole(role, { name: text }) or screen.getByLabelText(text).'; api.announce(out.textContent); return; }
+          ran = true;
           try {
             const fn = screen[`${p.kind}${p.by}`];
             if (!fn) { out.textContent = 'That query is not part of this practice subset.'; return; }
@@ -710,7 +711,7 @@ window.PEP_ACTIVITIES=[{kind:'choice',key:0,confidence:false,why:["getBy queries
         init();
         return {
           reset: init,
-          check: () => (foundLabel && foundRole ? { ok: true, msg: 'Both queries found elements the way a person would.' } : { ok: false, msg: `Still to find: ${foundLabel ? '' : 'the field by its label. '}${foundRole ? '' : 'the button by role and name.'}` }),
+          check: () => (!ran ? { incomplete: true, msg: 'Run a query first, then check.' } : foundLabel && foundRole ? { ok: true, msg: 'Both queries found elements the way a person would.' } : { ok: false, msg: `Still to find: ${foundLabel ? '' : 'the field by its label. '}${foundRole ? '' : 'the button by role and name.'}` }),
         };
       }},
 {kind:'editor',reveal:"Query by label and role, await user.type and user.click, await findByText for the message, and use queryByRole to assert the button has gone.",success:"That test reads like what a person actually does.",evaluate:async (code, { kit, preview }) => {

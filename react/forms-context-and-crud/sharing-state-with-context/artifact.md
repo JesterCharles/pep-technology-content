@@ -48,7 +48,7 @@ Props pass hand to hand; context reaches those who choose to listen.
 
 Where to act: The tree after you press Change theme under Context.
 
-Next step: Compare which boxes mention the theme, and read the render notes on each.
+Next step: Compare which boxes mention the theme, and see which boxes highlight after the change.
 
 Without JavaScript the lab cannot run. On paper, draw App, Page, Toolbar and Button. Mark which components handle a theme value with prop drilling and with context. Then name what a changed context value re-renders.
 

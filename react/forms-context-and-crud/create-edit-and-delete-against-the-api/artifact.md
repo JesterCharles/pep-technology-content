@@ -43,7 +43,7 @@ Track an in-flight status and disable the submit control while it is true:
 
 Set it just before the request, and clear it in a `finally` block, so a failure does not leave the button stuck.
 
-A solid save handler has one shape: set saving, send the request, **check `res.ok`**, update the screen from the result, and clear saving in `finally`. Most bugs are a missing step in that order.
+A solid save handler has one shape: set saving, send the request, check `res.ok`, update the screen from the result, and clear saving in `finally`. Most bugs are a missing step in that order.
 
 ## Recap
 
@@ -71,7 +71,7 @@ Next step: No body is sent and none comes back, so there is nothing to parse. Af
 
 Without JavaScript the editor cannot run. Starter: addItem sends a raw object body and pushes to the list; removeItem is empty. On paper, rewrite both using the request shape from Activity 2, a res.ok check, and non-mutating updates. When scripted, the code runs against a fake fetch.
 
-Where to act: The Save button and the Requests sent line.
+Where to act: The Save button and the Requests waiting line.
 
 Next step: Press Save twice in a row before responding. Compare the count of requests and of records in each mode.
 
