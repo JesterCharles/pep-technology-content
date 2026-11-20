@@ -736,11 +736,14 @@ window.PEP_ACTIVITIES=[{kind:'choice',key:0,confidence:false,why:["text arrives 
           root.querySelector('#p2-out').textContent = out;
           api.announce('Output: ' + out);
         };
-        [name, pass, level].forEach(c => { c.addEventListener('input', draw); c.addEventListener('change', draw); });
+        let touched = false;
+        const edit = () => { touched = true; draw(); };
+        [name, pass, level].forEach(c => { c.addEventListener('input', edit); c.addEventListener('change', edit); });
         draw();
         return {
-          reset: draw,
+          reset: () => { touched = false; draw(); },
           check: () => {
+            if (!touched) return { incomplete: true, msg: 'Change the name or the checkbox first, then check.' };
             const v = root.querySelector('#p2-out').textContent;
             if (v === 'Grace (learner)' && !pass.checked) return { ok: true, msg: 'The parent supplied the name, and the child supplied the default level.' };
             return { ok: false, msg: `The output reads ${v}. Compare it with the target and see which prop should not be passed.` };
