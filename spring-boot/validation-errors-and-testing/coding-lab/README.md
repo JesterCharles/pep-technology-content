@@ -2,7 +2,7 @@
 
 ## Goal
 
-This is the required lab of the Standard track's error-handling day.
+This is the required lab of the Standard track's validation, errors and testing module.
 Eight linked tasks on one booking API: reject invalid bookings and ids with Bean Validation, turn exceptions into RFC 9457 problem details in one global handler and with Spring MVC's built-in support, reproduce a bug report in a MockMvc test before fixing it, and test the web layer with a fake service and with `@MockitoBean`.
 
 The lab is one sitting after all six Standard topics of the module are taught: it follows "Debugging a failing request" on S10, in its own lab slot before S11. Tasks 1 to 3 and 6 use the validation and error-handling pages (Bean Validation, global error handling, ProblemDetail); Tasks 4, 5, 7 and 8 use the testing pages (`@MockitoBean`, MockMvc, debugging a failing request).
@@ -76,7 +76,7 @@ The report: "`GET /bookings/0` answers 404 Booking not found. Booking ids start 
    Run the tests: `task5ReproducesTheZeroIdReport` must now fail on the status, because the bug is still there.
    That failure is your proof that the test sees the bug; a test that passes before the fix proves nothing. Nothing can check the order for you, so run it now.
 2. Predict. Once the fix is in, Spring itself will reject the id before your controller runs, and Task 6's setting turns that into a problem body. Write the `title` and the `detail` you expect in that body into `PREDICTED_TITLE` and `PREDICTED_DETAIL` at the top of the file. The ProblemDetail page shows how Spring builds these bodies, but its example is a request-body validation failure; this one comes from method validation on a path variable (the Bean Validation page names the exception), so predict what differs and why.
-3. Fix it with Bean Validation: in `BookingController.byId`, put a constraint on the `id` parameter that rejects zero and negative numbers. A constraint on a method parameter uses Spring's method validation, which answers 400 before the service runs; no `@Valid` is needed here.
+3. Fix it with Bean Validation: in `BookingController.byId`, put a constraint on the `id` parameter that rejects zero and negative numbers. A constraint on a method parameter uses Spring's method validation, which answers 400 before the service runs; no `@Valid` is needed here, and the controller class must not carry `@Validated`.
 
 After the fix, look at the real body: in your step 1 request, add `.andDo(print())` before `.andReturn()` (import `static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print`), run the tests, and open `starter/target/surefire-reports/bookings.BugReportTest-output.txt`, where the printed `MockHttpServletResponse` shows the body. Compare its `title` and `detail` with your prediction and work out why any value differs before you change your constants. No test checks your prediction: the shipped test checks only that the answer is a 400 problem body with a title and a detail, so this comparison is yours to make honestly.
 
@@ -186,8 +186,9 @@ The lab writes only `starter/target`:
 - **`task6` fails with `Content type not set`**: the Task 6 property is missing, so Spring answers 415 with no body.
 - **`Ambiguous @ExceptionHandler method`** and no context starts: `ApiErrors` extends `ResponseEntityExceptionHandler` and also has its own `MethodArgumentNotValidException` handler; use one route, not both (Task 6 step 3).
 - **`No interactions wanted here`** in `task8VerifiesTheCreateCall`: the `verify` call is missing; **`Argument(s) are different!`**: it names other values than the posted booking; **the controller's create call with the posted booking must remain recorded**: the mock was reset instead of verified.
-- **`No interactions wanted here`** in `task8ShowsThatAPlainMockIsOnlyCalledWhenYouPassItIn`: either a call on the plain mock is not verified, or your step 3 call reached the context's `@MockitoBean` instead of the plain mock (for example through MockMvc or a controller built with the context's mock).
+- **`No interactions wanted here`** in `task8ShowsThatAPlainMockIsOnlyCalledWhenYouPassItIn`: either a call on the plain mock is not verified, or something else also called the context's `@MockitoBean` during this test (for example an extra request through MockMvc); step 3 must leave the context mock untouched.
 - **`Wanted but not invoked`** in `task8ShowsThatAPlainMockIsOnlyCalledWhenYouPassItIn`: the call you verified never reached the plain mock - for example it went through MockMvc, whose controller the context built. Step 3 asks for a controller you build yourself.
 - **`ErrorSliceTest` says to start only the web layer, or that the fake must find nothing or not be a Mockito mock**: Task 7 step 1 or 2 is missing, the class starts the full application instead of the web-layer slice, or the service bean is a Mockito mock or still finds booking 1.
-- **`task5RejectsANonPositiveIdWith400` says to reject the id with a Bean Validation constraint**: the 400 comes from a check you wrote by hand; put the constraint on the `byId` parameter instead (Task 5 step 3).
+- **`task5RejectsANonPositiveIdWith400` says to reject the id with a Bean Validation constraint**: the 400 does not come from Spring MVC's own method validation. Either you wrote the check by hand, or a class-level `@Validated` on `BookingController` switched validation to a proxy; put the constraint on the `byId` parameter and remove any class-level `@Validated` (Task 5 step 3).
+- **`Request processing failed` caused by `ConstraintViolationException: byId.id: must be greater than 0`** in the Task 5 tests: `BookingController` carries a class-level `@Validated`, which switches to the older proxy-based method validation; remove it so Spring MVC's built-in method validation answers the 400.
 - **`mvn -v` shows a Java version other than 25**: set `JAVA_HOME` to your JDK 25 folder and open a new terminal.
