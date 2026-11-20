@@ -38,6 +38,8 @@ A run triggered from a fork receives no repository secrets, except `GITHUB_TOKEN
 
 A job checks out code and pushes an image to the GitHub Container Registry, signing in with `GITHUB_TOKEN`. It does nothing else.
 
+Pushing an image to the GitHub Container Registry with `GITHUB_TOKEN` needs `packages: write`.
+
 ## Recap
 
 You finished 0 of 4 activities and got 0 right. Any settled activity shows what to review; Restart activity lets you try it again.
@@ -54,7 +56,7 @@ Where to act: Start on the `REGISTRY_PASSWORD` line.
 
 Next step: Look at how the example reads a value through the secrets context.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Now look at the top level of the file, level with `jobs`.
 
@@ -80,7 +82,7 @@ Reading without JavaScript: decide first, then read on.
 
 ## Sources
 
-Status: minimum release, checked by the page author on 2026-11-08. Sources were fetched live on 2026-11-04 and the author checked the page against them; no independent education or technology review was performed.
+Status: Sources fetched on 2026-11-04 and checked by the page author on 2026-11-08; independent review pending.
 
 - Using secrets: secrets context, not passed to fork-triggered workflows except GITHUB_TOKEN
 - Secrets reference: redaction, structured data

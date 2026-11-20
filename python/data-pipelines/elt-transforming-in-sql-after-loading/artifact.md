@@ -16,7 +16,7 @@ This pipeline uses ELT. Raw rows sit in staging, so when transform logic turns o
 
 ### A CTE names each cleaning step
 
-`WITH name AS (SELECT ...)` names a temporary result that the next statement can read, and `INSERT INTO target SELECT ... FROM name` writes it. Staging columns are usually text, so cast them with `::int` and tidy text with `lower(trim(x))`.
+`WITH name AS (SELECT ...)` names a temporary result that the next statement can read, and `INSERT INTO target SELECT ... FROM name` writes it. Staging columns are usually text, so cast them with `::int` and tidy text with `lower(trim(x))`. `CREATE TABLE target AS SELECT ...` instead creates a new table from the rows.
 
 ```
 WITH cleaned AS (
@@ -57,7 +57,7 @@ Where to act: The ___ line inside the WITH parentheses.
 
 Next step: Write the columns first, then FROM, then the filter, following the staging_users example.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The filter on your SELECT.
 
@@ -85,7 +85,7 @@ CREATE TABLE report AS SELECT ...;   -- builds a new table
 
 ## Sources
 
-First draft, not reviewed. Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.
+Sources checked on 2026-11-04. The author checked this page against these official pages; independent review pending.
 
 - PostgreSQL: WITH queries (common table expressions)
 - PostgreSQL: CREATE TABLE AS

@@ -73,11 +73,10 @@ Reading without JavaScript: decide first, then read on.
 
 - `latest` is only a default name.
 - Pull by digest when you need the exact same image.
-- This reading is optional and has no lab.
 
 ## Sources
 
-Status: minimum release, checked by the page author on 2026-11-08. Sources were fetched live on 2026-11-04 and the author checked the page against them; no independent education or technology review was performed.
+Status: Sources fetched on 2026-11-04 and checked by the page author on 2026-11-08; independent review pending.
 
 - Jenkins Pipeline: declarative pipeline, stages and steps
 - Using a Jenkinsfile

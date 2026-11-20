@@ -59,7 +59,7 @@ Where to act: The ORDER BY of your query.
 
 Next step: List the key first, then the column that decides which row counts as first.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The sort direction on your time column.
 
@@ -83,7 +83,7 @@ SELECT k, v, ts FROM (
 
 ## Sources
 
-First draft, not reviewed. Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.
+Sources checked on 2026-11-04. The author checked this page against these official pages; independent review pending.
 
 - PostgreSQL: SELECT (DISTINCT ON)
 - PostgreSQL: Window functions

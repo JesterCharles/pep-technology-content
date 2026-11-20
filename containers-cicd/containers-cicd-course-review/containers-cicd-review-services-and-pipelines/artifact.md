@@ -80,7 +80,7 @@ Where to act: The host in each option's `DATABASE_URL`.
 
 Next step: Ask which container that host name reaches from inside reviews, and whether that database belongs to reviews or to another service.
 
-Another hint Another hint, 2 of 2 for Activity 1
+Another hint Hint 2 of 2 for Activity 1
 
 Where to act: The `CMD` line in each option.
 
@@ -90,7 +90,7 @@ Where to act: The value of `REGISTRY_PASSWORD` in each option, and any step that
 
 Next step: Ask where the value would be stored in each option, and whether log redaction can be relied on to hide a value a step prints.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: The `permissions` part of each option.
 
@@ -100,7 +100,7 @@ Where to act: The `needs` line in the image job, for run 1.
 
 Next step: Ask what happens to a job that needs another job when that job fails.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The `push` expression, for runs 2 and 3.
 

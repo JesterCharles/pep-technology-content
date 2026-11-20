@@ -75,7 +75,7 @@ Where to act: The first ___ line, above the def.
 
 Next step: Write the GET decorator with its path template, then add the argument that limits the returned fields.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The second ___ line, after the fetch.
 
@@ -98,7 +98,7 @@ app.dependency_overrides[get_db] = lambda: FakeDb()
 
 ## Sources
 
-First draft, not reviewed. Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.
+Sources checked on 2026-11-04. The author checked this page against these official pages; independent review pending.
 
 - FastAPI: Response model
 - FastAPI: Handling errors

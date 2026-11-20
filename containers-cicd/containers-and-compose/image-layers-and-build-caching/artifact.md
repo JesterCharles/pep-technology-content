@@ -56,8 +56,6 @@ Nothing built yet.
 - Dependency files, install, then source: a source change keeps the install cached.
 - `.dockerignore` keeps output, `.git` and secrets out of the context.
 
-Next topic: Multi-stage builds
-
 ## Cheat sheet
 
 ```

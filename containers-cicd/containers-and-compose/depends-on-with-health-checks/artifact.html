@@ -313,12 +313,13 @@ summary { display: flex; align-items: center; min-height: 44px; cursor: pointer;
 <div data-step="2" data-pep-teaching>
   <h2 id="teach-2-h" tabindex="-1">Started is not ready</h2>
 <p><code>depends_on: [db]</code> makes Compose create and start <code>db</code> before <code>api</code>. It waits only until the db container is <strong>running</strong>.</p>
-  <p>PostgreSQL then needs a few seconds to initialise before it accepts connections. An API that connects at startup can hit a refused connection and exit.</p>
+  <p>PostgreSQL then needs a few seconds to initialise before it accepts connections. An API that connects at startup can hit a refused connection and exit. A <code>healthcheck</code> on <code>db</code> plus <code>condition: service_healthy</code> makes Compose wait instead; the next activity shows how to write them.</p>
 </div>
 <div data-step="3" data-pep-teaching>
   <h2 id="teach-3-h" tabindex="-1">Wait for healthy</h2>
 <p>A <code>healthcheck</code> runs a test command inside the container. For PostgreSQL, <code>pg_isready</code> exits 0 once the server accepts connections.</p>
   <p>Then <code>depends_on</code> with <code>condition: service_healthy</code> makes Compose wait until <code>db</code> is healthy before starting <code>api</code>. Write <code>$$</code> in the test so the container, not Compose, expands the variable.</p>
+  <p>Both are nested maps. Under <code>db</code>, <code>healthcheck:</code> holds <code>test: ["CMD-SHELL", "pg_isready -U ... -d ..."]</code>. Under <code>api</code>, <code>depends_on:</code> holds <code>db:</code>, which holds <code>condition: service_healthy</code>.</p>
 </div>
 <div data-step="4" data-pep-teaching>
   <h2 id="teach-4-h" tabindex="-1">Read the health state</h2>
@@ -349,7 +350,6 @@ summary { display: flex; align-items: center; min-height: 44px; cursor: pointer;
       start_period: 30s</pre>
   </details>
   <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live official sources on 2026-10-14. Versions shown: Docker Compose 5.6, PostgreSQL 18, Spring Boot 4.1. Timings and log lines are simulated and shortened.</p><ul><li><a href="https://docs.docker.com/compose/how-tos/startup-order/" rel="noopener">Docker Docs: Control startup and shutdown order in Compose</a></li><li><a href="https://docs.docker.com/reference/compose-file/services/" rel="noopener">Compose file reference: depends_on and healthcheck</a></li><li><a href="https://docs.docker.com/reference/dockerfile/" rel="noopener">Dockerfile reference: HEALTHCHECK (starting, healthy, unhealthy)</a></li><li><a href="https://docs.docker.com/reference/cli/docker/compose/ps/" rel="noopener">Docker CLI reference: docker compose ps</a></li><li><a href="https://www.postgresql.org/docs/current/app-pg-isready.html" rel="noopener">PostgreSQL documentation: pg_isready (exit status 0 when accepting connections)</a></li><li><a href="https://docs.spring.io/spring-boot/reference/actuator/endpoints.html" rel="noopener">Spring Boot reference: Actuator endpoints (health)</a></li></ul></details>
-  <p class="next-topic">Next topic: <a href="../debugging-with-logs-and-exec/artifact.html" rel="noopener">Debugging with logs and exec</a></p>
 </div>
       </div>
       <div id="current-task" class="task">
@@ -373,7 +373,7 @@ summary { display: flex; align-items: center; min-height: 44px; cursor: pointer;
   <p id="task-apply-b" tabindex="-1" data-retry hidden>Same failure. What should you check first?</p>
 </div>
 <div data-step="6">
-<p>All activities finished.</p><div id="complete-msg" class="complete"></div>
+<div id="complete-msg" class="complete"></div>
 </div>
       </div>
       <p class="pep-summary" id="goal-summary" hidden></p>

@@ -28,6 +28,7 @@ The password value is disposable and only wires local development; production us
 - `docker compose ps` lists the stack's containers.
 - `docker compose down` stops and removes the containers and network. Named volumes stay, so the data stays.
 - `docker compose down -v` also removes the named volumes: the data is gone.
+- `docker volume ls` lists the volumes that still exist.
 
 ### Apply it: reset the database
 
@@ -52,8 +53,6 @@ Nothing created yet.
 - Services: the API with `build`, PostgreSQL with `image`; data in a declared named volume; ports on `127.0.0.1`.
 - Datasource settings through `environment`; the password as `${DB_PASSWORD}` from an untracked `.env`.
 - `up -d` starts, `ps` lists, `down` removes containers and network, `down -v` also deletes named volumes.
-
-Next topic: Service-name networking
 
 ## Cheat sheet
 
