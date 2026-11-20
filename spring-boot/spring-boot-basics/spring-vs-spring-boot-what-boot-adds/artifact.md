@@ -51,7 +51,7 @@ Next step: Ask whether the row describes running behavior or removed setup work.
 
 Where to act: Use the command box under the terminal log.
 
-Next step: The teaching panel shows the two commands in the order you need them.
+Next step: The task lists the five commands in the order you need them; type each one exactly as shown.
 
 Printed alternative: Package with `mvn -q package`, list the jar with `jar tf`, print `META-INF/MANIFEST.MF` with `unzip -p`, try running the file directly, then run it with `java -jar`. Your findings come from that output.
 
@@ -61,7 +61,7 @@ Printed alternative: Package with `mvn -q package`, list the jar with `jar tf`, 
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://spring.io/projects/spring-boot/
 - https://docs.spring.io/spring-boot/index.html

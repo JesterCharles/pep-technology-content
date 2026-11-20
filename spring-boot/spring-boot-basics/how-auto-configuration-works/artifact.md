@@ -10,7 +10,7 @@
 
 Your project has `spring-boot-starter-webmvc` and H2 on the classpath, and no bean of type `DataSource`. You add nothing else and start the app with `spring-boot-starter-data-jpa` present.
 
-`@SpringBootApplication` combines three annotations. `@SpringBootConfiguration` makes the class a source of bean definitions, `@ComponentScan` finds your components in and below its package, and `@EnableAutoConfiguration` applies auto-configuration classes. Given explicit base packages, `@ComponentScan` scans only those.
+`@SpringBootApplication` combines three annotations. `@SpringBootConfiguration` makes the class a source of bean definitions, `@ComponentScan` finds your components in and below its package, and `@EnableAutoConfiguration` applies auto-configuration classes. Given explicit base packages, as in `@ComponentScan({"com.example.a", "com.example.b"})`, `@ComponentScan` scans only those.
 
 Auto-configuration classes are normal configuration classes guarded by conditions. The common ones are:
 
@@ -62,7 +62,7 @@ Next step: A line under Positive matches means the feature applied.
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-boot/reference/using/auto-configuration.html
 - https://docs.spring.io/spring-boot/reference/using/using-the-springbootapplication-annotation.html

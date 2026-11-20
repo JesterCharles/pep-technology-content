@@ -51,7 +51,7 @@ Where to act: Start at the method signature.
 
 Next step: The framework fills one parameter from the three query values.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Then look at the return line.
 
@@ -71,7 +71,7 @@ Printed alternative: For 25 rows: size 10 gives 3 pages, and page 2 holds rows 2
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-data/jpa/reference/repositories/core-concepts.html
 - https://docs.spring.io/spring-data/jpa/reference/repositories/query-methods-details.html

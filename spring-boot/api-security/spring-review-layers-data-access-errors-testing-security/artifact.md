@@ -9,7 +9,7 @@
 
 This review uses no new material. Picture a request: `POST /workshops/3/bookings` with a bearer token and a JSON body.
 
-You will not learn anything new here. Use what you remember, then check yourself. Where would each defect surface, and which tool shows it?
+Where does each defect belong, and which tool shows it?
 
 This handler breaks several rules from this course. Recall each rule before you change anything: layers, DTOs, validation and status codes.
 
@@ -29,13 +29,13 @@ Every activity is answered, but this topic is not complete: 0 of 5 activities ea
 
 Where to act: Trace the request order from the first activity.
 
-Next step: Which layer can notice this problem first?
+Next step: Which layer should own the fix for this problem?
 
 Where to act: Start with the parameter.
 
 Next step: An entity should not bind from JSON. What replaces it, and what triggers its constraints?
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: Then fix the body.
 
@@ -51,7 +51,7 @@ Next step: Does the proof need security, web, persistence or just one class?
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-boot/reference/testing/spring-boot-applications.html
 - https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-rest-exceptions.html

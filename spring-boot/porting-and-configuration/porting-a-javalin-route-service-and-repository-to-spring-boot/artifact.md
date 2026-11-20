@@ -60,7 +60,7 @@ Where to act: Start with the repository and service TODOs, then the route, using
 
 Next step: The handler lambda becomes a method. What does a `ctx.json` call become there?
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Look at the parameter of the new method.
 
@@ -78,7 +78,7 @@ Printed alternative: Run curl -i for /items/abc on both ports. Both answer 400 w
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://spring.io/guides/gs/rest-service/
 - https://docs.spring.io/spring-boot/reference/web/servlet.html

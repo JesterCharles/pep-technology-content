@@ -10,7 +10,7 @@
 
 Two beans exist: `@Profile("dev") SecurityFilterChain open(...)`, which permits everything, and `@Profile("!dev") SecurityFilterChain real(...)`, which protects endpoints. The app starts with no active profile.
 
-A front-end developer needs the API open locally. Define a chain that exists only under the `dev` profile, and make the protected chain exist otherwise.
+A front-end developer needs the API open locally. Define a chain that exists only under the `dev` profile.
 
 ```
 @Bean
@@ -26,7 +26,7 @@ The browser also applies CORS: `http://localhost:5173` calling `http://localhost
 
 An open profile is a risk if it reaches production. The defense has three parts:
 
-- **Test without `dev`:** your security tests run with the default profile, and a protected endpoint must answer 401.
+- Test without `dev`: your security tests run with the default profile, and a protected endpoint must answer 401.
 - Activate deliberately: set `SPRING_PROFILES_ACTIVE=dev` only on developer machines.
 - Check at startup: a bean can refuse to start if `dev` is active in a production environment.
 
@@ -55,7 +55,7 @@ Where to act: Start at the annotation above the bean method.
 
 Next step: Which annotation makes a bean exist only under one profile?
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Then look at the CORS bean.
 
@@ -75,7 +75,7 @@ Printed alternative: dev on developer machines only, with the startup check: saf
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-boot/reference/features/profiles.html
 - https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html

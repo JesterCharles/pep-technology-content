@@ -25,7 +25,7 @@ Consistency across endpoints saves every client from special cases. Pick one JSO
 | DELETE | No | Yes |
 | POST | No | No |
 
-A timeout tells the client nothing about whether a write happened. Whether a retry is safe depends on the row above.
+A timeout tells the client nothing about whether a write happened. Whether a retry is safe depends on the method's Idempotent column in the table above.
 
 One endpoint returns `{"message":"not found"}` with status 404. Another returns `{"err":"no such thing"}` with status 200.
 
@@ -57,7 +57,7 @@ Printed alternative: GET: safe and idempotent, no change requested. PUT: not saf
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://spring.io/guides/gs/rest-service/
 - https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-requestmapping.html
