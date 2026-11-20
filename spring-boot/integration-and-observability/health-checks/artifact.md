@@ -44,7 +44,7 @@ Every activity is answered, but this topic is not complete: 0 of 4 activities ea
 
 Where to act: Use the command box under the log.
 
-Next step: The supported list shows the two start commands; read the health endpoint after each one.
+Next step: Run both starts from the task, then read the health endpoint once; its two labelled lines show what each start returns.
 
 Printed alternative: Default: {"groups":["liveness","readiness"],"status":"UP"}. With show-components=always: {"components":{"db":{"status":"UP"},"diskSpace":{"status":"UP"},"livenessState":{"status":"UP"},"ping":{"status":"UP"},"readinessState":{"status":"UP"},"ssl":{"status":"UP"}},"groups":["liveness","readiness"],"status":"UP"}.
 
@@ -60,7 +60,7 @@ Printed alternative: Database check in readiness only: traffic stops, with no re
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-boot/4.1/reference/actuator/endpoints.html
 - https://docs.spring.io/spring-boot/4.1/reference/actuator/enabling.html
