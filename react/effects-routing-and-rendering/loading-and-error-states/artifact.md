@@ -53,13 +53,13 @@ Where to act: Directly after the `await fetch` line.
 
 Next step: A failed status does not throw, so test it yourself and return early.
 
-Another hint Another hint, 2 of 3 for Activity 3
+Another hint Hint 2 of 3 for Activity 3
 
 Where to act: After the JSON is parsed.
 
 Next step: Now you know the request worked. Use the length to pick between two statuses.
 
-Another hint Another hint, 3 of 3 for Activity 3
+Another hint Hint 3 of 3 for Activity 3
 
 Where to act: The `catch` block.
 
@@ -81,7 +81,7 @@ anything else             -> success screen
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch: Handling the response
 - developer.mozilla.org/en-US/docs/Web/API/Response/ok: Value

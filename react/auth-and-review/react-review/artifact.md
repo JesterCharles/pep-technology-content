@@ -31,7 +31,7 @@ Where to act: Each case list.
 
 Next step: Read the code in the symptom, and ask what the data or identity is doing, not just what the screen shows.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Any case you are unsure about.
 
@@ -43,7 +43,7 @@ Where to act: The `key` prop on the `li`.
 
 Next step: Which property of a todo belongs to that item, however the list changes?
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The body of `toggle`.
 
@@ -65,7 +65,7 @@ const user = useContext(UserContext);            // widely needed value
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - developer.mozilla.org/en-US/docs/Web/API/Response/ok: Value
 - react.dev/learn/rendering-lists: Keeping list items in order with key

@@ -54,7 +54,7 @@ Where to act: The parameters and first line of `Panel`.
 
 Next step: Remove the state, and read two new props instead, one telling it whether it is open, and one to call for a change.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The `Accordion` return.
 
@@ -75,7 +75,7 @@ const total = items.reduce((sum, i) => sum + i.price, 0); // computed
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - react.dev/learn/sharing-state-between-components: Lifting state up by example; A single source of truth for each state
 

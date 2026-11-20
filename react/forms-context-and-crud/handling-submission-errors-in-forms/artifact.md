@@ -49,7 +49,7 @@ Where to act: The start of `submit`.
 
 Next step: Handle the empty email before any request, returning in the same shape as the teaching example.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: Around the `fetch`.
 
@@ -70,7 +70,7 @@ fetch rejected       -> form-level message, keep typed text
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - developer.mozilla.org/en-US/docs/Web/API/Response/ok: Value
 - www.rfc-editor.org/rfc/rfc9110.html: 15.5.1 400 Bad Request; 15.6 Server Error 5xx

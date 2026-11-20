@@ -37,7 +37,7 @@ Where to act: The body of `RequireAuth`.
 
 Next step: Test the user first and return early, as in the teaching text. Otherwise return what was nested inside it.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: The JSX of `Toolbar`.
 
@@ -70,7 +70,7 @@ function MembersOnly({ member, page }) {
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html: Authorizing an Endpoint; Authorizing Requests
 - reactrouter.com/api/components/Navigate: Summary; Props

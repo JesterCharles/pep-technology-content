@@ -54,7 +54,7 @@ Where to act: The first line inside `Likes`.
 
 Next step: Declare the state with a value and a setter, starting at 0, in the same shape as the `name` example.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The `onClick` on the button.
 
@@ -78,7 +78,7 @@ setN(x => x + 1);  // next depends on previous
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - react.dev/learn/state-a-components-memory: When a regular variable isn't enough; Adding a state variable; State is isolated and private
 - react.dev/learn/state-as-a-snapshot: Setting state triggers renders; State over time

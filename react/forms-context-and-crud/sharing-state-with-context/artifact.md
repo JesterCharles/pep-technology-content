@@ -56,7 +56,7 @@ Where to act: Above the components, and the return of `App`.
 
 Next step: Create the context with a default, then wrap what App returns in the context as a provider, passing the state as value.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: `ThemeLabel` and `Toolbar`.
 
@@ -83,7 +83,7 @@ const locale = useContext(LocaleContext);
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - react.dev/learn/passing-data-deeply-with-context: Context: an alternative to passing props; Before you use context; Use cases for context
 - react.dev/reference/react/useContext: Reference; Usage

@@ -63,7 +63,7 @@ Where to act: The options object of the `fetch` call in `addItem`.
 
 Next step: Compare it with the teaching example from Activity 2. Then parse the response and add that object to a new array.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: `removeItem`.
 
@@ -97,7 +97,7 @@ try {
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch: Making a request
 - developer.mozilla.org/en-US/docs/Web/API/RequestInit: Instance properties (method, headers, body)

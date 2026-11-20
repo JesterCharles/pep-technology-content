@@ -33,7 +33,7 @@ Where to act: The `map` callback parameter.
 
 Next step: You can destructure in the parameter itself, taking name and collecting the rest.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: The object returned from the callback.
 
@@ -72,7 +72,7 @@ import Page, { PI } from './page.js';
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules: Exporting module features; Importing features into your script; Default exports versus named exports
 - developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/map: Description
