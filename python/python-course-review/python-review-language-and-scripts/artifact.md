@@ -114,7 +114,7 @@ Where to act: The slice that builds `last_three` and the comprehension that buil
 
 Next step: Write out `last_three` as a list first, remembering that a negative start counts from the end. Then keep only its values over 10 and apply `//` to each one.
 
-Another hint Another hint, 2 of 2 for Activity 1
+Another hint Hint 2 of 2 for Activity 1
 
 Where to act: The `if` test on `stock["ink"]` and the `stock.get("pad")` call.
 
@@ -124,7 +124,7 @@ Where to act: The first call, `line(*args, "fragile", **opts)`.
 
 Next step: Rewrite the call the way Python sees it once `*` and `**` have spread `args` and `opts` into separate arguments, then give each value to a parameter from left to right.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: The expression `qty * 2` and the parameter `*notes`.
 
@@ -134,7 +134,7 @@ Where to act: `main` and the `parse_qty` call inside its `try` block.
 
 Next step: Follow `argv[1]`, which is `"abc"`, into `int()`, decide which exception that raises, then find the `except` clause and the `return` that handle it.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The last two lines of `order.py` and the parametrize list in `test_order.py`.
 

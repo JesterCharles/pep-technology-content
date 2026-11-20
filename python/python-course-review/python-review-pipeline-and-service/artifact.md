@@ -120,7 +120,7 @@ Where to act: The `ticket_id` values on the first two lines.
 
 Next step: For each one, decide whether lax mode can turn it into an `int` without losing anything, or must reject it.
 
-Another hint Another hint, 2 of 2 for Activity 1
+Another hint Hint 2 of 2 for Activity 1
 
 Where to act: The last two lines of the file and the final `list(replies)`.
 
@@ -130,7 +130,7 @@ Where to act: The SQL statement and the logging line in each option.
 
 Next step: For each option, ask what happens to a customer who is already in the table, and what text ends up in the log file.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: The option that calls `conn.commit()` inside its loop.
 
@@ -140,7 +140,7 @@ Where to act: Request 1 and the type of `customer_id`.
 
 Next step: Decide whether FastAPI can turn `abc` into an `int`, and which status it returns before your function runs when a path parameter fails validation.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: Request 3, the `timeout` on the client and the order of the `except` clauses.
 
