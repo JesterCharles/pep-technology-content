@@ -1,4 +1,4 @@
-# Porting a Javalin route, service and repository to Spring Boot
+# Applying Spring MVC: Controllers and Error Handling
 
 ## Objectives
 
