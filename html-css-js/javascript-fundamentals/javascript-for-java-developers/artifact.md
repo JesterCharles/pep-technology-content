@@ -65,7 +65,7 @@ Where to act: Line 5 of `numbers.js`, under the comment for step 2.
 
 Next step: Do not declare a new variable. Assign to the name that already exists, then copy the logging line.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: The `big` line.
 
@@ -114,7 +114,7 @@ Why did the printed value change by one?
 - MDN: Introduction to JavaScript, retrieved 2026-11-04
 - ECMAScript language specification, retrieved 2026-11-04
 
-First draft, retrieved 2026-11-04. These claims have not had independent review yet, so treat them as unverified until that review is recorded.
+Sources checked on 2026-11-04; independent review pending.
 
 ## Static interaction alternatives
 

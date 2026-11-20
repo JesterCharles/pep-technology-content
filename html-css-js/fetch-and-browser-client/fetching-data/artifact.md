@@ -116,7 +116,7 @@ async function getJson(url) {
 - MDN: Response.json, retrieved 2026-11-04
 - WHATWG Fetch standard, retrieved 2026-11-04
 
-First draft, retrieved 2026-11-04. These claims have not had independent review yet, so treat them as unverified until that review is recorded.
+Sources checked on 2026-11-04; independent review pending.
 
 ## Static interaction alternatives
 

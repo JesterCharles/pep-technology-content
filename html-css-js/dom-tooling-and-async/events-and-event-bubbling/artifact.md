@@ -87,7 +87,7 @@ Where to act: The first line inside your listener.
 
 Next step: Return early when the target is not the remove link, so clicks elsewhere in the list do nothing.
 
-Another hint Another hint, 2 of 2 for Activity 4
+Another hint Hint 2 of 2 for Activity 4
 
 Where to act: The line that removes the item.
 
@@ -118,7 +118,7 @@ parent.addEventListener("click", (event) => {
 - MDN: EventTarget.addEventListener, retrieved 2026-11-04
 - WHATWG DOM standard, retrieved 2026-11-04
 
-First draft, retrieved 2026-11-04. These claims have not had independent review yet, so treat them as unverified until that review is recorded.
+Sources checked on 2026-11-04; independent review pending.
 
 ## Static interaction alternatives
 

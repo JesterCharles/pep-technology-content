@@ -76,7 +76,7 @@ Where to act: The two fields and the Join control in the markup.
 
 Next step: For each, say what names it once someone has typed, what the browser can check about its value, and whether it can be reached with Tab.
 
-Another hint Another hint, 2 of 2 for Activity 1
+Another hint Hint 2 of 2 for Activity 1
 
 Where to act: One field and one control in each option.
 
@@ -86,7 +86,7 @@ Where to act: The `.card` rule and the 358 px column.
 
 Next step: Check which `box-sizing` the card uses when none is set, then decide whether the 358 px holds the content only or the whole box.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: The padding and border values on `.card`.
 
@@ -96,7 +96,7 @@ Where to act: The line that builds `backup` and the two lines that change it.
 
 Next step: Decide whether `backup[0]` is the same object as `shelf[0]` once `map` returns a spread copy of each book. Then decide whether the `tags` array inside that copy is a new array or the same one.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The `reduce` call and the second `console.log`.
 

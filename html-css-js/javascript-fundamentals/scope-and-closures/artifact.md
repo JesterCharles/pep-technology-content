@@ -88,7 +88,7 @@ Where to act: Inside `makeTally`, before anything is returned.
 
 Next step: Declare a variable for the running total here, so each `makeTally` call gets its own.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: After that variable, still inside `makeTally`.
 
@@ -123,7 +123,7 @@ function makeThing() {
 - MDN: Scope, retrieved 2026-11-04
 - MDN: Closures, retrieved 2026-11-04
 
-First draft, retrieved 2026-11-04. These claims have not had independent review yet, so treat them as unverified until that review is recorded.
+Sources checked on 2026-11-04; independent review pending.
 
 ## Static interaction alternatives
 
