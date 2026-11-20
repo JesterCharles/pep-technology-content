@@ -16,13 +16,15 @@ Practice prediction, not scored.
 
 `depends_on: [db]` makes Compose create and start `db` before `api`. It waits only until the db container is running.
 
-PostgreSQL then needs a few seconds to initialise before it accepts connections. An API that connects at startup can hit a refused connection and exit.
+PostgreSQL then needs a few seconds to initialise before it accepts connections. An API that connects at startup can hit a refused connection and exit. A `healthcheck` on `db` plus `condition: service_healthy` makes Compose wait instead; the next activity shows how to write them.
 
 ### Wait for healthy
 
 A `healthcheck` runs a test command inside the container. For PostgreSQL, `pg_isready` exits 0 once the server accepts connections.
 
 Then `depends_on` with `condition: service_healthy` makes Compose wait until `db` is healthy before starting `api`. Write `$$` in the test so the container, not Compose, expands the variable.
+
+Both are nested maps. Under `db`, `healthcheck:` holds `test: ["CMD-SHELL", "pg_isready -U ... -d ..."]`. Under `api`, `depends_on:` holds `db:`, which holds `condition: service_healthy`.
 
 ### Read the health state
 
@@ -45,8 +47,6 @@ Configuration: not chosen.
 - `depends_on` alone orders start; it does not wait for ready.
 - Add a `healthcheck` to `db` and `condition: service_healthy` to the service that needs it.
 - `ps` shows `health: starting`, `healthy` or `unhealthy`.
-
-Next topic: Debugging with logs and exec
 
 ## Cheat sheet
 

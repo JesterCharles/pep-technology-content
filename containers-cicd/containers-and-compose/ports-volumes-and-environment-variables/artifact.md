@@ -61,8 +61,6 @@ Your laptop and one container (simulated)
 - Named volume for database data, bind mount for files you edit. Both survive removing the container.
 - Pass configuration with `-e` or `--env-file`, never baked into the image.
 
-Next topic: Compose: the Spring Boot service and its database
-
 ## Cheat sheet
 
 |  |  |

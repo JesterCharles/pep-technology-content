@@ -51,8 +51,6 @@ No connection tried yet.
 - Services on one Compose network reach each other by service name and container port, such as `db:5432`.
 - Your laptop uses `localhost` and the published host port, such as `localhost:15432`.
 
-Next topic: depends_on with health checks
-
 ## Cheat sheet
 
 |  |  |
