@@ -21,11 +21,13 @@ A service can also send its own token, read from configuration:
 
 ```
 headers = {"Authorization": f"Bearer {settings.api_token}"}
-limits = httpx.Timeout(10.0, connect=60.0)
+limits = httpx.Timeout(10.0, connect=60.0, read=30.0)
 await client.get(url, headers=headers, timeout=limits)
 ```
 
 `connect` limits opening the connection. `read` limits waiting for data.
+
+When you forward a caller’s token instead, the incoming `authorization` value already includes `Bearer`: send it unchanged.
 
 Spring's `RestClient` sets timeouts on its request factory:
 
@@ -77,7 +79,7 @@ Where to act: Start with the arguments of `client.get`.
 
 Next step: The handler already receives the token as a parameter. Look at what the example passes for headers.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Now look at the timeout argument.
 
@@ -101,7 +103,7 @@ Reading without JavaScript: decide first, then read on.
 
 ## Sources
 
-Status: minimum release, checked by the page author on 2026-11-08. Sources were fetched live on 2026-11-04 and the author checked the page against them; no independent education or technology review was performed.
+Status: Sources fetched on 2026-11-04 and checked by the page author on 2026-11-08; independent review pending.
 
 - RFC 6750: Authorization Request Header Field (Bearer)
 - RFC 9110: 502, 503 and 504 status codes

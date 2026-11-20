@@ -72,11 +72,10 @@ Success criteria: For a system you know, name one part that would gain from bein
 
 - Failure isolation needs callers that handle a failed call.
 - Reading another service’s tables turns its schema into a public contract.
-- Next: add the FastAPI `reports` service and its own database to Compose.
 
 ## Sources
 
-Status: minimum release, checked by the page author on 2026-11-08. Sources were fetched live on 2026-11-04 and the author checked the page against them; no independent education or technology review was performed.
+Status: Sources fetched on 2026-11-04 and checked by the page author on 2026-11-08; independent review pending.
 
 - Microservices architecture style: independent deployment, fault isolation, challenges
 - Data considerations for microservices: two services should not share a data store, eventual consistency
