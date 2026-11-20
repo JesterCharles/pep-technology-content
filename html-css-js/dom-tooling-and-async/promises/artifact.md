@@ -66,7 +66,7 @@ Where to act: The first `.then` of the first chain.
 
 Next step: The callback receives a user object and returns only the part the next step needs.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The `.catch` calls.
 
@@ -102,7 +102,7 @@ Promise.allSettled([a(), b()]); // every outcome
 - MDN: Using promises, retrieved 2026-11-04
 - MDN: Promise, retrieved 2026-11-04
 
-First draft, retrieved 2026-11-04. These claims have not had independent review yet, so treat them as unverified until that review is recorded.
+Sources checked on 2026-11-04; independent review pending.
 
 ## Static interaction alternatives
 

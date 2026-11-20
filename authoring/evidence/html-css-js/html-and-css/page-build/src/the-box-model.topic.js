@@ -20,7 +20,7 @@ apply:{A:{fs:'apply-a',correct:'a',okNote:'<p>With <code>border-box</code>, the 
  B:{fs:'apply-b',correct:'a',reveal:'Under content-box, set <code>width: 276px</code>, because 276 + 20 + 20 + 2 + 2 = 320; or use <code>box-sizing: border-box; width: 320px;</code>.',
   why:{a:'content width 276, plus both paddings and both borders: 320.',b:'that is width 320 under content-box: 364.',c:'forgets both borders.',d:'counts padding and border on one side only.'}}},
 render:function(S,api){var t=S.t,st=S.step;
- api.$('bm-svg').style.display=(st===3||st===4)?'none':'';api.$('bm-legend').hidden=(st===3||st===4);
+ api.$('live-model').hidden=(st===1&&!S.done.predict);api.$('bm-svg').style.display=(st===3||st===4)?'none':'';api.$('bm-legend').hidden=(st===3||st===4);
  api.qa('#bm-svg rect').forEach(function(r){r.classList.remove('hl');});
  if(st===2&&t.ri<RINGS.length){var rc=api.qa('#bm-svg .r'+RINGS[t.ri].r)[0];if(rc){rc.classList.add('hl');}}
  var rn=api.$('ring-name');if(rn){rn.textContent=t.ri<RINGS.length?RINGS[t.ri].n:'all four named';api.$('ring-count').textContent=t.named.length+' of 4 named';}

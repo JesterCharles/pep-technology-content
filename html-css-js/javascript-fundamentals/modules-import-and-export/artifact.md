@@ -56,7 +56,7 @@ export default function clamp(n) { return Math.min(n, MAX); }
 
 ## Recap
 
-Modules keep names private unless exported. Named exports are imported in braces with their exact name, or renamed with `as`; a default is imported without braces under any name. Browsers need `type="module"` and a real origin, and In Node.js, mark modules with `.mjs` or `"type": "module"`; recent versions can also detect module syntax in a plain `.js` file, but an explicit marker is clearer.
+Modules keep names private unless exported. Named exports are imported in braces with their exact name, or renamed with `as`; a default is imported without braces under any name. Browsers need `type="module"` and a real origin. In Node.js, mark modules with `.mjs` or `"type": "module"`.
 
 ## Cheat sheet
 
@@ -81,7 +81,7 @@ Where to act: The first import line.
 
 Next step: The name after `import` can be anything for a default export, but it must not have braces.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The second import line.
 
@@ -119,7 +119,7 @@ import * as all from "./file.js";
 - MDN: import, retrieved 2026-11-04
 - Node.js: ECMAScript modules, retrieved 2026-11-04
 
-First draft, retrieved 2026-11-04. These claims have not had independent review yet, so treat them as unverified until that review is recorded.
+Sources checked on 2026-11-04; independent review pending.
 
 ## Static interaction alternatives
 

@@ -68,7 +68,7 @@ Where to act: The `result` line.
 
 Next step: Pass the name of your function without parentheses, because `applyTwice` is the one that calls it.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: The body of `applyTwice` near the top of the file.
 
@@ -116,7 +116,7 @@ list.map(f(1)); // bug: passes the result of calling it
 - MDN: Functions guide, retrieved 2026-11-04
 - MDN: Arrow function expressions, retrieved 2026-11-04
 
-First draft, retrieved 2026-11-04. These claims have not had independent review yet, so treat them as unverified until that review is recorded.
+Sources checked on 2026-11-04; independent review pending.
 
 ## Static interaction alternatives
 

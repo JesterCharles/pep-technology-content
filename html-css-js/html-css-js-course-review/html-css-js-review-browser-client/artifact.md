@@ -89,7 +89,7 @@ Where to act: The listener's `if` line and the `innerHTML` line.
 
 Next step: For the first bug, ask which element `event.target` is when someone clicks the word Like, and which when they click the heart icon. For the second, ask whether the review text is parsed as HTML or inserted as text.
 
-Another hint Another hint, 2 of 2 for Activity 1
+Another hint Hint 2 of 2 for Activity 1
 
 Where to act: How each option builds the item and how its listener finds the item.
 
@@ -99,7 +99,7 @@ Where to act: The line that calls `loadShelf()`.
 
 Next step: Say which of its lines run during the call itself, before the caller reaches `console.log("F")`, and which wait.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: The queues after the plain code ends.
 
@@ -109,7 +109,7 @@ Where to act: The line that reads the body with `res.json()`.
 
 Next step: Decide what `fetch` does when the server answers 400 or 502: does it reject and jump to `catch`, or fulfill with a response? Then ask what `res.json()` does with a body that is not JSON.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The branch each option takes when `res.ok` is `false`.
 
