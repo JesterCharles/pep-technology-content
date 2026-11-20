@@ -12,7 +12,7 @@ Requests fail in more than one way. Predict what this common code does when the 
 
 Model a request as one state at a time: loading, success, or error, plus empty when a successful answer has no items. Each state gets its own screen.
 
-`fetch` rejects only when the request itself fails, such as a network failure or an abort. A 404 or 500 still resolves, so **check `response.ok`**, which is true for statuses 200 to 299. Parsing can fail too, if the body is not valid JSON.
+`fetch` rejects only when the request itself fails, such as a network failure or an abort. A 404 or 500 still resolves, so check `response.ok`, which is true for statuses 200 to 299. Parsing can fail too, if the body is not valid JSON.
 
 Three separate checks handle all the failure kinds:
 
