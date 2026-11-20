@@ -28,7 +28,7 @@ Framework exceptions such as validation failures or a wrong method can use the s
 spring.mvc.problemdetails.enabled=true
 ```
 
-A validation failure then answers `400` with a body like `{"type":"about:blank","title":"Bad Request","status":400,"detail":"Invalid request content.","instance":"/workshops"}`.
+A validation failure then answers `400` with a body like `{"title":"Bad Request","status":400,"detail":"Invalid request content.","instance":"/workshops"}`. There is no `type` member: when it is left out, the type is `about:blank`.
 
 The default body names no fields. To add field errors, extend `ResponseEntityExceptionHandler` in your advice and override its handler.
 
@@ -60,7 +60,7 @@ Where to act: Use the command box under the log.
 
 Next step: The supported list shows a start command for each setting; send the request after each start.
 
-Printed alternative: Setting off: 400 with the default Boot error JSON. Setting on: 400 with application/problem+json, title Bad Request and detail Invalid request content.
+Printed alternative: Setting off: 400 with application/json and the default Boot error body (timestamp, status, error, path). Setting on: 400 with application/problem+json; title Bad Request, status 400, instance /workshops and detail Invalid request content.
 
 - `ProblemDetail.forStatusAndDetail(status, detail)`
 - Media type: `application/problem+json`.
@@ -91,7 +91,7 @@ Status: minimum release, November 2026. The author checked this page and re-fetc
 
 ### terminal
 
-**Printed alternative:** Setting off: 400 with the default Boot error JSON. Setting on: 400 with application/problem+json, title Bad Request and detail Invalid request content.
+**Printed alternative:** Setting off: 400 with application/json and the default Boot error body (timestamp, status, error, path). Setting on: 400 with application/problem+json; title Bad Request, status 400, instance /workshops and detail Invalid request content.
 
 ### mcq
 
