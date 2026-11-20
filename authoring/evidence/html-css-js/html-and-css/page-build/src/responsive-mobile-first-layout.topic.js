@@ -27,7 +27,7 @@ apply:{A:{fs:'apply-a',correct:'a',okNote:'<p>Base for phones, then <code>min-wi
  B:{fs:'apply-b',correct:'a',reveal:'Base styles first, then <code>@media (min-width: 600px)</code>, then <code>@media (min-width: 1000px)</code>.',
   why:{a:'small to large, so the widest matching rule comes last and wins.',b:'the 600px rule would come last and win at 1000px.',c:'that is desktop-first.',d:'base styles after the queries would override them at every width.'}}},
 render:function(S,api){var t=S.t,st=S.step;
- api.$('bp-svg').style.display=(st===1||st>=5)?'':'none';
+ api.$('live-model').hidden=(st===1&&!S.done.predict);api.$('bp-svg').style.display=(st===1||st>=5)?'':'none';
  var out=api.$('css-out');out.hidden=!(st===2||st===4);var ro=api.$('r-out');ro.textContent='';
  api.$('frames').hidden=(st!==2);api.$('phone').hidden=(st!==3);api.$('oframe').hidden=(st!==4);
  if(st===2){var parts=css1(t);out.textContent='.cards { display: grid; grid-template-columns: 1fr; }'+(parts.length?'\n'+parts.join('\n'):'');

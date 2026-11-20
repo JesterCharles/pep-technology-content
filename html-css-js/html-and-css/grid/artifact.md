@@ -81,8 +81,6 @@ footer
 - `grid-template-areas` names rectangular areas; children use `grid-area`.
 - Choose Grid when items must line up in two dimensions, Flexbox when items only need laying out along one axis; wrapped flex lines do not share columns.
 
-Next topic: Responsive, mobile-first layout
-
 ## Cheat sheet
 
 Where to act: The grid-template-columns buttons below the model.
@@ -122,15 +120,15 @@ Prediction (practice, not scored): a 600px grid has grid-template-columns 200px 
 
 ### explore
 
-Steps: 1. Where to look: The six cells in the model and the grid CSS shown above them. 2. What to do: Press a grid-template-columns value below the model. 3. What to expect: The cells move, and the measured line under them lists the first-row column widths. 4. How to know it is done: All three goals in the list show done and Continue appears. Track builder on a real 300px grid with six cells. Goal 1, three equal columns: repeat(3, 1fr) or 1fr 1fr 1fr, each 100px. Goal 2, a 100px sidebar column and a main column taking the rest: 100px 1fr, giving 100px and 200px. Goal 3, as many columns of at least 90px as fit: repeat(auto-fill, minmax(90px, 1fr)), which gives 3 columns of 100px at 300px and 2 columns of 100px at 200px. repeat(3, 90px) stays three fixed columns at any width.
+Steps: 1. Where to look: The six cells in the model and the grid CSS shown above them. 2. What to do: Press a grid-template-columns value below the model. 3. What to expect: The cells move, and the measured line under them lists the first-row column widths. 4. How to know it is done: All three goals in the list show done and Continue becomes available. Track builder on a real 300px grid with six cells. Goal 1, three equal columns: repeat(3, 1fr) or 1fr 1fr 1fr, each 100px. Goal 2, a 100px sidebar column and a main column taking the rest: 100px 1fr, giving 100px and 200px. Goal 3, as many columns of at least 90px as fit: repeat(auto-fill, minmax(90px, 1fr)), which gives 3 columns of 100px at 300px and 2 columns of 100px at 200px. repeat(3, 90px) stays three fixed columns at any width.
 
 ### explore
 
-Steps: 1. Where to look: The 3-row, 2-column area map in the model, and the grid under it. 2. What to do: Press a cell in the area map, then press a name for it; repeat for all six cells, then press Apply areas. 3. What to expect: The map shows your names; after Apply areas, the grid places header, side, main and footer, or reports that the browser rejected the map. 4. How to know it is done: Apply areas confirms the shell and Continue appears. Area map for a page shell in a real grid with columns 100px 1fr. Worked answer: grid-template-areas: "header header" "side main" "footer footer". Each child has grid-area set to its name. An L-shaped or split area, such as header in the top-left cell and the bottom-right cell, makes the browser reject the declaration.
+Steps: 1. Where to look: The 3-row, 2-column area map in the model, and the grid under it. 2. What to do: Press a cell in the area map, then press a name for it; repeat for all six cells, then press Apply areas. 3. What to expect: The map shows your names; after Apply areas, the grid places header, side, main and footer, or reports that the browser rejected the map. 4. How to know it is done: Apply areas confirms the shell and Continue becomes available. Area map for a page shell in a real grid with columns 100px 1fr. Worked answer: grid-template-areas: "header header" "side main" "footer footer". Each child has grid-area set to its name. An L-shaped or split area, such as header in the top-left cell and the bottom-right cell, makes the browser reject the declaration.
 
 ### drag
 
-Steps: 1. Where to look: The layout described above the two buttons; layouts appear one at a time. 2. What to do: Press Grid or Flexbox. 3. What to expect: A right choice shows the next layout; a wrong choice explains why and lets you choose again. 4. How to know it is done: The counter reads 5 of 5 sorted and Continue appears. Grid or Flexbox sorter. Worked answer: a page shell with header, sidebar, main and footer is Grid, because the regions line up in rows and columns; a set of tags of different widths that wraps is Flexbox, content-sized items along one axis whose wrapped lines need not share columns; a photo gallery whose photos line up in rows and columns is Grid; a nav bar with links on the left and a button on the right is Flexbox, items spaced along one axis; a form whose labels line up in one column and fields in another is Grid, because both columns must align across rows.
+Steps: 1. Where to look: The layout described above the two buttons; layouts appear one at a time. 2. What to do: Press Grid or Flexbox. 3. What to expect: A right choice shows the next layout; a wrong choice explains why and lets you choose again. 4. How to know it is done: The counter reads 5 of 5 sorted and Continue becomes available. Grid or Flexbox sorter. Worked answer: a page shell with header, sidebar, main and footer is Grid, because the regions line up in rows and columns; a set of tags of different widths that wraps is Flexbox, content-sized items along one axis whose wrapped lines need not share columns; a photo gallery whose photos line up in rows and columns is Grid; a nav bar with links on the left and a button on the right is Flexbox, items spaced along one axis; a form whose labels line up in one column and fields in another is Grid, because both columns must align across rows.
 
 ### mcq
 

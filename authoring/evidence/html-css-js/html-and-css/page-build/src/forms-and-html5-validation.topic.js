@@ -44,7 +44,7 @@ apply:{A:{fs:'apply-a',correct:'a',okNote:'<p>The number type makes <code>min</c
  B:{fs:'apply-b',correct:'a',reveal:'Use <code>&lt;input type="number" required min="1" max="8"&gt;</code>.',
   why:{a:'every part of the rule.',b:'an empty value passes without required.',c:'min and max are ignored on a text field.',d:'a placeholder is a hint, not a rule; nothing is checked.'}}},
 render:function(S,api){var t=S.t,st=S.step;
- api.qa('.ly').forEach(function(n){n.classList.toggle('hl',st===4||st===1);});
+ api.$('live-model').hidden=(st===1&&!S.done.predict);api.qa('.ly').forEach(function(n){n.classList.toggle('hl',st===4||st===1);});
  var pv=api.$('lab-preview');pv.hidden=(st!==2);pv.innerHTML='';
  if(st===2){var fx=t.applied||{name:'ok',email:'ok',sub:'ok',search:'ok'};var rs=names(fx);pv.appendChild(el('p','ph',t.applied?'Preview after your fixes, read from this browser':'Preview before fixes, read from this browser'));
   var ul=el('ul');rs.forEach(function(r){var li=el('li');li.appendChild(el('strong',null,r.c+': '));li.appendChild(document.createTextNode('linked labels '+r.labels+'; name '+(r.name?'"'+r.name+'"':'none')));ul.appendChild(li);});pv.appendChild(ul);}
