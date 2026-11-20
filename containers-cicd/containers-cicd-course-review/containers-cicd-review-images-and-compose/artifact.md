@@ -77,7 +77,7 @@ Where to act: The build stage of each option, up to its `RUN` that downloads dep
 
 Next step: List the files each option has copied before that `RUN`, and ask whether editing one file under `src` changes any of them.
 
-Another hint Another hint, 2 of 2 for Activity 1
+Another hint Hint 2 of 2 for Activity 1
 
 Where to act: The final stage of each option: its `FROM` line and its `COPY --from` line.
 
@@ -87,7 +87,7 @@ Where to act: The host and port in `SPRING_DATASOURCE_URL`, read from inside the
 
 Next step: Ask what `localhost` means inside a container, then find the name and port another service uses to reach db on the Compose network.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: The `depends_on` entry under api.
 
@@ -97,7 +97,7 @@ Where to act: The address part, `127.0.0.1`, of api's ports entry.
 
 Next step: Ask which network interface a port published on 127.0.0.1 listens on, and whether a request from another machine arrives on it.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The `pgdata` volume and the two `down` commands.
 
