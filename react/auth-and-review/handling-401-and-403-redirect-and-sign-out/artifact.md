@@ -17,7 +17,7 @@ This project's API contract then makes them simple: 401 means sign in again, and
 Send people back where they were. On a 401, pass the current location along, and read it after login:
 
 ```
-go('/sign-in', { state: { from: here }, replace: true });
+go('/sign-in', { state: { from: location }, replace: true });
 ```
 
 Note what clearing auth state means. Clearing the user from your app does not end the server's session: an HttpOnly cookie cannot be removed by JavaScript. Ending that session takes a logout request to the server. Here, the server has already said the session is not valid.

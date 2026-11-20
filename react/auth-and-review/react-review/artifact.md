@@ -35,7 +35,7 @@ Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Any case you are unsure about.
 
-Next step: Match the words: a stale screen after an update points to identity, a value on the wrong row points to keys, and a list of errors shown as data points to status handling.
+Next step: Match the words: a stale screen after an update points to identity, a value on the wrong row points to keys, and `undefined` or an error body shown as data points to status handling.
 
 Without JavaScript the clinic cannot run. On paper, name the bug family and fix for each: push and then set with the same array; notes jumping with index keys; a stale profile with an empty array; and an error body added to a list after a failed save.
 

@@ -40,7 +40,7 @@ Static version: a dev profile that permits all requests is active on a shared se
 
 Where to act: The command field.
 
-Next step: Copy the first start command from the teaching text, then the curl from the task. Then stop, and do it again with the other start command.
+Next step: Type the first start command from the teaching text without its `#` comment, then the curl from the task. Then run stop, and do it again with the other start command, again without its comment.
 
 Without JavaScript the terminal cannot run. On paper, write the commands to start with the dev profile, send a request, stop, start without the profile, and send it again. Say what you expect each request to return.
 
