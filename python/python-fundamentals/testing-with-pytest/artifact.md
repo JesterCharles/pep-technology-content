@@ -128,8 +128,6 @@ def test_left(taken, left):
 - In a failure, find the name, the `>` line and the `E` values.
 - `pytest.raises` for errors, fixtures for shared setup, `parametrize` for many inputs.
 
-This is the last topic in this module.
-
 ## Cheat sheet
 
 Optional time: about 5 minutes, in addition to the time above
@@ -139,33 +137,6 @@ Extend `test_seats.py` for the `seats.py` in this topic: write one `@pytest.mark
 Run it with real pytest in a virtual environment, as in the modules topic. No answer is shown here; the success criteria tell you when you are done.
 
 Success criteria: `python -m pytest -q` shows one dot per parametrized case plus one for the `raises` test, and changing one expected number makes exactly that case fail under its own test id.
-
-Use these same observable steps when working from the text alternative.
-
-1. Where to look: Read the code directly below these steps, inside this same workspace, at every screen width.
-2. What to do or type: Under Prediction, pick the result you expect.
-3. What to expect: Pick Low, Medium or High confidence, then press Check my prediction.
-4. How to know it's done: Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.
-
-1. Where to look: Click the terminal's input line (or Tab to it), type one command at a time and press Enter after each.
-2. What to do or type: Run `python -m pytest`, then `python -m pytest -q`, then `python -m pytest test_seats.py::test_some_taken`.
-3. What to expect: The terminal prints a dot for each pass, `F` for each failure, and the selected report.
-4. How to know it's done: Each check above changes from open to done when a run shows it. Continue appears when every check is done.
-
-1. Where to look: Read the three questions in the checks above.
-2. What to do or type: In Failure report, press the line that answers one of them.
-3. What to expect: Feedback below explains each line you press, and the lines that answer a question stay outlined.
-4. How to know it's done: Each check above changes from open to done when a run shows it. Continue appears when every check is done.
-
-1. Where to look: Use the test_seats.py editor in the workspace; seats.py and the example tests sit above it.
-2. What to do or type: Replace all four `___` placeholders: a plain `assert` in `test_some_taken`, `pytest.raises(ValueError)` in `test_bad_input`, `@pytest.fixture` above `capacity` and `@pytest.mark.parametrize("taken, left", [...])` above `test_left`. Press Run or Ctrl+Enter (Cmd+Enter on a Mac).
-3. What to expect: Problems names any placeholder, indentation or construct outside its supplied test; Output confirms the completed scaffold.
-4. How to know it's done: The author check reads done, then Continue appears. Reset code restores all four placeholders.
-
-1. Where to look: Read the question and the code it names in this workspace, below these steps.
-2. What to do or type: Pick one answer, pick your confidence, then press Check answer.
-3. What to expect: Feedback appears below. If the first answer is not right, a second question appears; answer it and press Check second try.
-4. How to know it's done: Either way, Continue then shows and takes you to the recap.
 
 |  |  |
 | --- | --- |

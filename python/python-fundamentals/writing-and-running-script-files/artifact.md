@@ -118,8 +118,6 @@ if __name__ == "__main__":
 - `sys.exit(main(sys.argv))` turns `main`'s return value into the exit status; 0 means success, read with `echo $?`.
 - `if __name__ == "__main__":` keeps run-only code from running on import.
 
-Next topic: Testing with pytest
-
 ## Cheat sheet
 
 A recipe card ends with the line: now cook it. When you pick up the card to make dinner, that last line is exactly what you want. When a friend borrows the card only to copy the ingredients onto a shopping list, nobody wants dinner cooked as a side effect, so the card adds one condition: do the last step only if you are the person cooking from this card.
@@ -133,33 +131,6 @@ Write `add.py`. Its `main(argv)` prints the sum of two whole-number arguments an
 Try it in any Python 3.10 or later interpreter, or trace it on paper. No answer is shown here; the success criteria tell you when you are done.
 
 Success criteria: `python3 add.py 2 3` prints `5` and `echo $?` then prints `0`; `python3 add.py 2` prints your usage message and `echo $?` prints `2`; importing `add` from another file prints nothing.
-
-Use these same observable steps when working from the text alternative.
-
-1. Where to look: Read the code directly below these steps, inside this same workspace, at every screen width.
-2. What to do or type: Under Prediction, pick the result you expect.
-3. What to expect: Pick Low, Medium or High confidence, then press Check my prediction.
-4. How to know it's done: Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.
-
-1. Where to look: Click the terminal's input line (or Tab to it), type one command at a time and press Enter after each.
-2. What to do or type: Run `python3 summary.py general`, then `python3 summary.py` with no session name.
-3. What to expect: The terminal prints the summary, then the usage message; the model shows `sys.argv` and the last exit status.
-4. How to know it's done: After the failed run, type `echo $?` to read its status. Each check above then reads done and Continue appears.
-
-1. Where to look: In Run or import greet.py, pick a version of `greet.py`.
-2. What to do or type: Press `python3 greet.py` to run it, or the `import greet` button to import it.
-3. What to expect: The output box shows what printed. Try both buttons with both versions.
-4. How to know it's done: Each check above changes from open to done when a run shows it. Continue appears when every check is done.
-
-1. Where to look: Use the summary.py editor in the workspace.
-2. What to do or type: Replace the first `___`: if `argv` has fewer than 2 items, print the usage line `Usage: python summary.py SESSION` to `sys.stderr` and return `2`. This check accepts `python`, `python3` or `py` as the interpreter, `Usage` in any letter case, ordinary spaces and `SESSION` or `<SESSION>`, with no other words on the line. Other messages are still valid Python; they only leave this lesson check incomplete. Replace the second `___` with the `__name__` guard that calls `sys.exit(main(sys.argv))`. Press Run or Ctrl+Enter (Cmd+Enter on a Mac).
-3. What to expect: Problems names any placeholder, indentation or misplaced guard; Output confirms the completed scaffold.
-4. How to know it's done: The author check reads done, then Continue appears. Reset code restores both placeholders.
-
-1. Where to look: Read the question and the code it names in this workspace, below these steps.
-2. What to do or type: Pick one answer, pick your confidence, then press Check answer.
-3. What to expect: Feedback appears below. If the first answer is not right, a second question appears; answer it and press Check second try.
-4. How to know it's done: Either way, Continue then shows and takes you to the recap.
 
 |  |  |
 | --- | --- |

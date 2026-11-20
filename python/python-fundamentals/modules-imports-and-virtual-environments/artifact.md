@@ -19,6 +19,7 @@ A virtual environment is a folder, usually `.venv`, with its own Python and its 
 - Create: `python3 -m venv .venv` (Windows: `py -m venv .venv`).
 - Activate on POSIX shells: `source .venv/bin/activate`. On Windows use `.venv\Scripts\activate.bat` in `cmd.exe`, or `.venv\Scripts\Activate.ps1` in PowerShell. The prompt gains `(.venv)`, and `python` now means the venv's Python.
 - Install a pinned version: `python -m pip install pytest==9.1.1`, or every pin in a file with `-r requirements.txt`.
+- Record what is installed: `python -m pip freeze > requirements.txt` writes each installed package as a `name==version` line.
 
 `python -m pip` runs the pip that belongs to the active Python.
 
@@ -97,35 +98,11 @@ pytest==9.1.1
 - One venv per project: create, activate, then `python -m pip install` pinned versions.
 - Commit `requirements.txt`; ignore `.venv/`.
 
-Next topic: Exceptions and logging
-
 ## Cheat sheet
 
 Each restaurant in a food hall has its own kitchen with its own pantry, so one chef's favourite flour never replaces another chef's. When a restaurant opens a second site, nobody trucks the stocked pantry across town. The chef sends a short shopping list with exact brands and sizes, the new kitchen restocks from it in an afternoon, and that list is what goes into the shared recipe binder.
 
 A virtual environment is one project's pantry; the pinned requirements file is the shopping list you share, never the stocked pantry itself.
-
-Use these same observable steps when working from the text alternative.
-
-1. Where to look: Read the code directly below these steps, inside this same workspace, at every screen width.
-2. What to do or type: Under Prediction, pick the result you expect.
-3. What to expect: Pick Low, Medium or High confidence, then press Check my prediction.
-4. How to know it's done: Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.
-
-1. Where to look: Click the terminal's input line (or Tab to it), type one command at a time, and press Enter after each command.
-2. What to do or type: Create the venv with `python3 -m venv .venv`, then activate it with `source .venv/bin/activate`; the prompt then starts with `(.venv)`.
-3. What to expect: Install with `python -m pip install -r requirements.txt`, then run `python -m pip --version` and look for `.venv` in the path it prints.
-4. How to know it's done: After the first install, run `python -m pip freeze > requirements.txt`, inspect it with `cat requirements.txt`, then reinstall with `python -m pip install -r requirements.txt`. Every check reads done.
-
-1. Where to look: In Run an import, pick which Python runs `app.py`.
-2. What to do or type: Press one of the `import` buttons.
-3. What to expect: The output box shows where Python found the module, or a `ModuleNotFoundError`. Try each import with both Pythons.
-4. How to know it's done: Each check above changes from open to done when a run shows it. Continue appears when every check is done.
-
-1. Where to look: Read the question and the code it names in this workspace, below these steps.
-2. What to do or type: Pick one answer, pick your confidence, then press Check answer.
-3. What to expect: Feedback appears below. If the first answer is not right, a second question appears; answer it and press Check second try.
-4. How to know it's done: Either way, Continue then shows and takes you to the recap.
 
 |  |  |
 | --- | --- |

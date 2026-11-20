@@ -76,35 +76,11 @@ list(prices.items())
 - `d[k]` raises `KeyError` when k is missing; `d.get(k, default)` does not.
 - `for k, v in d.items():` unpacks each key and value.
 
-Next topic: Slicing and comprehensions
-
 ## Cheat sheet
 
 Picture a small bakery on a busy morning. The queue at the counter keeps its order, the same customer can rejoin it, and people join and leave all day. The street address painted on the sign is written once and never edited. The register for a tasting evening only answers one question: is this name on it, once? The price board pairs each cake with its price, and staff find a cake by name to read or change what it costs.
 
 Python's four built-in collections each do one of these jobs: the ordered queue, the fixed record, the one-each register and the labeled board.
-
-Use these same observable steps when working from the text alternative.
-
-1. Where to look: Read the code directly below these steps, inside this same workspace, at every screen width.
-2. What to do or type: Under Prediction, pick the result you expect.
-3. What to expect: Pick Low, Medium or High confidence, then press Check my prediction.
-4. How to know it's done: Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.
-
-1. Where to look: In Which collection fits this need?, read the item on the card.
-2. What to do or type: Press the button for the group it belongs to: list, tuple, set or dict.
-3. What to expect: Right: the item moves to Sorted so far and the next item appears. Wrong: the feedback says Not this group and the card stays, so try another button.
-4. How to know it's done: Continue appears when every item is sorted.
-
-1. Where to look: In Run a statement, press a button under List queue or Dict stock.
-2. What to do or type: The result, the changed collection, or Python's error prints in the output box below the buttons.
-3. What to expect: Statements run in the order you press them, so the list and dict keep your earlier changes.
-4. How to know it's done: Each check above changes from open to done when a run shows it. Continue appears when every check is done.
-
-1. Where to look: Read the question and the code it names in this workspace, below these steps.
-2. What to do or type: Pick one answer, pick your confidence, then press Check answer.
-3. What to expect: Feedback appears below. If the first answer is not right, a second question appears; answer it and press Check second try.
-4. How to know it's done: Either way, Continue then shows and takes you to the recap.
 
 |  |  |
 | --- | --- |
