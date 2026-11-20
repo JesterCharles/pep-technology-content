@@ -35,7 +35,7 @@ A call enters through the transactional proxyA caller invokes the proxy, which s
 
 A this-call inside the bean skips the proxy.
 
-Two surprises follow. By default, rollback happens for unchecked exceptions and errors, not for checked exceptions. And a self-invocation through `this` skips the proxy, so its annotation has no effect.
+Two surprises follow. By default, rollback happens for unchecked exceptions and errors, not for checked exceptions. And a self-invocation through `this` skips the proxy, so its annotation has no effect. Setting `rollbackFor = Exception.class` makes checked exceptions roll back too.
 
 A class has `public void a() { this.b(); }` and `@Transactional public void b() { ... }`. A controller calls `a()`.
 
@@ -66,7 +66,7 @@ Printed alternative: Through the proxy, unchecked: rollback. Through the proxy, 
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/annotations.html
 - https://docs.spring.io/spring-framework/reference/data-access/transaction/declarative/tx-propagation.html
