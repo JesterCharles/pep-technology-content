@@ -62,7 +62,7 @@ Printed alternative: Command-line argument set: it wins. Otherwise the environme
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-boot/reference/features/external-config.html
 - https://docs.spring.io/spring-boot/reference/features/profiles.html
