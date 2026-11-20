@@ -48,7 +48,7 @@ Where to act: Start with the `___` in the first signature.
 
 Next step: Each placeholder is one whole annotated parameter. Look at the example request to see where each value lives.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Compare `min` and `sort` in the task.
 
@@ -65,7 +65,7 @@ Next step: Does it identify one thing, refine a list or carry new data?
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-requestmapping.html
 - https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-methods/requestparam.html

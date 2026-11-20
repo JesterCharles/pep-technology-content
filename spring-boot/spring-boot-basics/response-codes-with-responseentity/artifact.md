@@ -56,7 +56,7 @@ Where to act: Start at the `___` in `create`.
 
 Next step: Which factory on `ResponseEntity` takes a URI? It still needs a body after that.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Move on to `remove`.
 
@@ -72,7 +72,7 @@ Next step: Ask who needs to act next: a success, a client mistake or a missing r
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-requestmapping.html
 - https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-methods/responseentity.html

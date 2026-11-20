@@ -29,15 +29,13 @@ A Java record makes a concise response shape, and Spring serializes its componen
 record Workshop(long id, String title) {}
 ```
 
-Compared with Javalin: the route path moves into an annotation, the handler becomes a method, and `ctx.json(value)` becomes `return value`.
+Compared with Javalin: the route path moves into an annotation, the handler becomes a method, and `ctx.json(value)` becomes `return value`. `@RequestBody` on a parameter reads the JSON request body into that type, like Javalin's `ctx.bodyAsClass`.
 
 A request reaches a handler by method plus path. The same path can have a GET and a POST with different methods.
 
 ```
 curl localhost:8080/workshops
-curl -X POST localhost:8080/workshops \
-  -H "Content-Type: application/json" \
-  -d '{"id":2,"title":"Advanced"}'
+curl -X POST localhost:8080/workshops -H "Content-Type: application/json" -d '{"id":2,"title":"Advanced"}'
 ```
 
 A plain URL sends GET. Adding `-d` (`--data`) sends POST unless you choose another method, so `-X POST` is optional here. Without the JSON content type, the body is not treated as JSON.
@@ -58,7 +56,7 @@ Where to act: Start above the class, then fill the two TODO comments in order.
 
 Next step: Name the annotation that makes return values become the response body.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Inside the class, write the GET method first.
 
@@ -77,7 +75,7 @@ Printed alternative: Run the GET and see the JSON list, then run the POST with i
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://spring.io/guides/gs/rest-service/
 - https://docs.spring.io/spring-boot/reference/web/servlet.html
