@@ -53,7 +53,7 @@ Where to act: The first ___ line, in the success path.
 
 Next step: List the two values worth keeping for later debugging, then pass them as logging arguments.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The second ___ line, under except.
 
@@ -72,7 +72,7 @@ Success criteria: List every place one record from your own pipeline is written,
 
 ## Sources
 
-First draft, not reviewed. Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.
+Sources checked on 2026-11-04. The author checked this page against these official pages; independent review pending.
 
 - OWASP GenAI: LLM02 Sensitive Information Disclosure
 - Claude Code docs: Data usage

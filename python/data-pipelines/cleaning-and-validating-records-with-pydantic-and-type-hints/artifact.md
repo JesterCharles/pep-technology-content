@@ -73,7 +73,7 @@ Where to act: The ___ line inside the for loop.
 
 Next step: Start with try:, and in its block build the model from raw using keyword unpacking.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: Your except clause.
 
@@ -94,7 +94,7 @@ Success criteria: Add a required `price: float` field on paper and list which of
 
 ## Sources
 
-First draft, not reviewed. Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.
+Sources checked on 2026-11-04. The author checked this page against these official pages; independent review pending.
 
 - Pydantic: Models
 - Pydantic: Validators
