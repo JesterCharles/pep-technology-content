@@ -23,7 +23,7 @@ A network failure rejects the `fetch` promise. An HTTP error fulfills it with `o
 
 `title` summarizes the kind of problem, and `detail` explains this occurrence. Do not assume every error body is JSON: a gateway may send HTML.
 
-A robust loader separates three outcomes: success, a described failure, and everything else.
+A loader that handles three outcomes separates success, a described failure, and everything else.
 
 ```
 const type = res.headers.get("content-type") || "";
