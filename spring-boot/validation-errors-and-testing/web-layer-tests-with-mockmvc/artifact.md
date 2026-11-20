@@ -14,7 +14,6 @@ A test performs a request with no server running:
 @WebMvcTest(WorkshopController.class)
 class T {
   @Autowired MockMvc mvc;
-  // the controller needs a WorkshopService bean
 }
 ```
 
@@ -67,7 +66,7 @@ Next step: Is the failure about the status code or about a JSON value?
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-boot/reference/testing/spring-boot-applications.html
 - https://docs.spring.io/spring-framework/reference/testing/mockmvc.html
