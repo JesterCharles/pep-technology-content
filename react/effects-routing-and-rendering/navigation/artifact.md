@@ -57,7 +57,7 @@ Where to act: The first line inside `SaveButton`.
 
 Next step: Call the Hook to get the function, as in the teaching step of Activity 3.
 
-Another hint Another hint, 2 of 2 for Activity 4
+Another hint Hint 2 of 2 for Activity 4
 
 Where to act: Inside `save`.
 
@@ -79,7 +79,7 @@ go(-1);                               // back one entry
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - reactrouter.com/api/hooks/useNavigate: Summary; Signature; Examples
 - reactrouter.com/start/declarative/navigating: NavLink; Link; useNavigate

@@ -48,7 +48,7 @@ Props pass hand to hand; context reaches those who choose to listen.
 
 Where to act: The tree after you press Change theme under Context.
 
-Next step: Compare which boxes mention the theme, and read the render notes on each.
+Next step: Compare which boxes mention the theme, and see which boxes highlight after the change.
 
 Without JavaScript the lab cannot run. On paper, draw App, Page, Toolbar and Button. Mark which components handle a theme value with prop drilling and with context. Then name what a changed context value re-renders.
 
@@ -56,7 +56,7 @@ Where to act: Above the components, and the return of `App`.
 
 Next step: Create the context with a default, then wrap what App returns in the context as a provider, passing the state as value.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: `ThemeLabel` and `Toolbar`.
 
@@ -83,7 +83,7 @@ const locale = useContext(LocaleContext);
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - react.dev/learn/passing-data-deeply-with-context: Context: an alternative to passing props; Before you use context; Use cases for context
 - react.dev/reference/react/useContext: Reference; Usage
