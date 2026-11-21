@@ -35,7 +35,7 @@ A step runs a command (`run`) or a packaged action (`uses`); the long commit pin
       - run: npm pack
 ```
 
-`actions/checkout` copies your repository onto the fresh runner; build needs it first. Pin the build action the same way:
+`actions/checkout` copies your repository onto the fresh runner; the build needs it first. Pin the build action the same way:
 
 ```
 - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
