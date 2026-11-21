@@ -15,9 +15,9 @@ async with httpx.AsyncClient(timeout=None) as client:
     resp = await client.get(f"{API_URL}/users/me")
 ```
 
-A bearer token travels in a header: `Authorization: Bearer <token>`. Whoever holds it can use it, so it never goes in source code or logs.
+A bearer token travels in a header: `Authorization: Bearer <token>`. Anyone holding it can use it: keep it out of code and logs.
 
-A service can also send its own token, read from configuration:
+A service can also send its own token from configuration:
 
 ```
 headers = {"Authorization": f"Bearer {settings.api_token}"}
@@ -40,12 +40,12 @@ var client = RestClient.builder()
     .baseUrl(reportsUrl).requestFactory(factory).build();
 ```
 
-HTTPX has a five-second inactivity default that `timeout=None` turns off. A JDK-backed RestClient with nothing set has no read limit. Never rely on a default you have not read.
+HTTPX has a five-second inactivity default that `timeout=None` turns off. A JDK-backed RestClient has no read limit by default. Never rely on an unchecked default.
 
 Turn a failed call into a clear status:
 
-- 502 Bad Gateway: the downstream service sent an invalid response.
-- 503 Service Unavailable: you cannot handle this now, and it should pass.
+- 502 Bad Gateway: the downstream sent an invalid response.
+- 503 Service Unavailable: a temporary refusal that should pass.
 - 504 Gateway Timeout: no timely response arrived.
 
 ```
@@ -53,7 +53,7 @@ except httpx.TimeoutException:
     raise HTTPException(504, "api did not answer in time")
 ```
 
-For a refused connection, pick 502 or 503 and use it consistently.
+For a refused connection, pick 502 or 503 consistently.
 
 Whenever `api` hangs, requests to `reports` pile up and never finish. The handler:
 
@@ -68,8 +68,8 @@ async with httpx.AsyncClient(timeout=None) as client:
 You finished 0 of 5 activities and got 0 right. Any settled activity shows what to review; Restart activity lets you try it again.
 
 - Forward the request’s bearer token or read one from configuration; never hard-code it.
-- Set explicit connect and read limits on both HTTPX and RestClient; defaults differ, and off means no limit.
-- Turn a failed call into a clear response: 504 for a timeout, 502 for an invalid reply, 503 for temporarily refusing.
+- Set explicit connect and read limits on HTTPX and RestClient; defaults differ, and off means none.
+- Turn a failed call into a clear response: 504 timeout, 502 invalid reply, 503 temporary refusal.
 
 ## Cheat sheet
 

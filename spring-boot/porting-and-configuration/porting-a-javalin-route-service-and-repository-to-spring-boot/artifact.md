@@ -30,7 +30,7 @@ Port from the outside in. Each Javalin piece has a Spring home:
 | `new Service(new Repo())` in `main` | `@Service` and `@Repository` with constructor injection |
 | `app.exception(...)` | `@ExceptionHandler` |
 
-The service and repository method bodies stay as they were. Each exception mapping becomes a handler method in the controller:
+The service and repository method bodies stay unchanged. Each exception mapping becomes a handler method in the controller:
 
 ```
 @ExceptionHandler(ItemNotFound.class)
@@ -40,9 +40,9 @@ Err notFound(ItemNotFound e) { return new Err(e.getMessage()); }
 
 A non-numeric id fails path-variable conversion with `MethodArgumentTypeMismatchException`, which a 400 handler catches. Handlers in a controller cover only that controller.
 
-A port is only finished when clients see the same responses, including the error responses your handlers now produce.
+A port is only finished when clients see the same responses, including errors from your handlers.
 
-To verify, send the same request to both versions and compare the status code and JSON body, not just whether something came back.
+Send the same request to both versions and compare the status code and JSON body, not just whether something came back.
 
 After your port, a missing item returns status 200 with `{"error":"item 99 not found"}`. The old version returned 404 with the same body.
 

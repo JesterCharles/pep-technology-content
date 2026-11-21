@@ -10,14 +10,14 @@
 
 A repository secret is registered in GitHub. A step base64-encodes it and writes the encoded text to the run log.
 
-Store a credential as a repository secret, then reference it with the `secrets` context. Passing it through `env` keeps it out of the command text:
+Store a credential as a repository secret, then reference it with the `secrets` context. Passing it through `env` keeps it out of the command:
 
 ```
 env:
   DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 ```
 
-Each run also gets an automatic `GITHUB_TOKEN`. A `permissions` block sets what it can do, and any permission you do not list becomes `none`:
+Each run also gets an automatic `GITHUB_TOKEN`. A `permissions` block sets what it can do; any permission not listed becomes `none`:
 
 ```
 permissions:
@@ -26,19 +26,19 @@ permissions:
 
 Grant the least access the workflow needs.
 
-GitHub attempts to redact registered secrets from logs, but redaction relies on matching values. It is best effort, not a permission boundary. Anyone with write access to a repository can read its secrets through a workflow.
+GitHub attempts to redact registered secrets from logs by matching values: best effort, not a permission boundary. Anyone with write access can read the repository's secrets through a workflow.
 
-So never print a secret. Register other sensitive values, including derived ones, before they could appear:
+So never print a secret. Register other sensitive values, including derived ones, before they appear:
 
 ```
 echo "::add-mask::$DERIVED_VALUE"
 ```
 
-A run triggered from a fork receives no repository secrets, except `GITHUB_TOKEN`.
+A run from a fork gets no repository secrets, except `GITHUB_TOKEN`.
 
 A job checks out code and pushes an image to the GitHub Container Registry, signing in with `GITHUB_TOKEN`. It does nothing else.
 
-Pushing an image to the GitHub Container Registry with `GITHUB_TOKEN` needs `packages: write`.
+That push with `GITHUB_TOKEN` needs `packages: write`.
 
 ## Recap
 

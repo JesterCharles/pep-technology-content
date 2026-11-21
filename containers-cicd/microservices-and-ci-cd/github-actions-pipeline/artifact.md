@@ -10,7 +10,7 @@
 
 Jobs `test` and `build` never mention each other. On a push, `test` fails.
 
-A workflow is a YAML file in `.github/workflows/`, started by an event in `on`. It has jobs, each on a runner, and each job has ordered steps.
+A workflow is a YAML file in `.github/workflows/`, started by an event in `on`. It has jobs, each on a runner, with ordered steps.
 
 ```
 name: ci
@@ -23,9 +23,9 @@ jobs:
       - run: ./mvnw test
 ```
 
-A step runs a command (`run`) or uses a packaged action (`uses`). The long commit pins the exact action version.
+A step runs a command (`run`) or a packaged action (`uses`); the long commit pins its exact version.
 
-`needs` makes a job wait for another job. If that job fails or is skipped, this one is skipped too.
+`needs` makes a job wait for another; if that one fails or is skipped, so is this one.
 
 ```
   package:
@@ -35,7 +35,7 @@ A step runs a command (`run`) or uses a packaged action (`uses`). The long commi
       - run: npm pack
 ```
 
-`actions/checkout` copies your repository onto the runner, which starts without it, so the build needs it first. The image-build action is pinned the same way:
+`actions/checkout` copies your repository onto the fresh runner; build needs it first. Pin the build action the same way:
 
 ```
 - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -44,9 +44,9 @@ A step runs a command (`run`) or uses a packaged action (`uses`). The long commi
     push: false
 ```
 
-`docker/build-push-action` builds the image, and with `context: .` it reads the checked-out files.
+`docker/build-push-action` builds the image; with `context: .` it reads the checked-out files.
 
-The action pushes the image to a registry only when `push` is true. A common setting builds on every pull request and pushes only from `main`:
+It pushes to a registry only when `push` is true. A common setting builds every pull request, pushing only from `main`:
 
 ```
 push: ${{ github.event_name != 'pull_request' }}

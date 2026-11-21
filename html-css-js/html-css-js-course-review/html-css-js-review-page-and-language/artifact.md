@@ -10,7 +10,7 @@
 
 ### Activity 1 of 3: Repair the Book Swap sign-up form
 
-This page wraps up the first half of the course with new scenarios that mix its topics, all on Book Swap, a small site where neighbours lend each other books. Answer from memory first; every option explains itself after you check.
+These scenarios mix the course's first half, all on Book Swap, a small site where neighbours lend each other books. Answer from memory; every option explains itself after you check.
 
 A teammate built this sign-up page. It works with a mouse, but its structure, its form and its Join control have problems.
 

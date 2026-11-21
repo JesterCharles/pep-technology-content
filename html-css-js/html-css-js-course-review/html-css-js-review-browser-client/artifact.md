@@ -10,9 +10,9 @@
 
 ### Activity 1 of 3: Make the review list safe and clickable
 
-This page wraps up the second half of the course with new scenarios that mix its topics. On the Book Swap site, readers post short reviews of books they borrowed and like each other's reviews. Answer from memory first; every option explains itself after you check.
+These scenarios mix the course's second half. On the Book Swap site, readers review books they borrowed and like each other's reviews. Answer from memory; every option explains itself after you check.
 
-Two bugs were reported for this code. Clicking Like, on its word or on its heart icon, does nothing. And a review whose text is `<a href="#" onmouseover="stealData()">spoiler</a>` runs `stealData` for every reader who moves the mouse over it.
+Two bugs were reported. Clicking Like, on its word or on its heart icon, does nothing. And a review whose text is `<a href="#" onmouseover="stealData()">spoiler</a>` runs `stealData` for every reader who hovers over it.
 
 ```
 // <ul id="reviews"></ul>
@@ -31,7 +31,7 @@ list.addEventListener("click", (event) => {
 
 ### Activity 2 of 3: Predict the log order while the shelf loads
 
-The shelf loader below mixes plain code, an `async` function, a promise callback and a timer. Commit to an order before you check.
+The shelf loader mixes plain code, an `async` function, a promise callback and a timer. Commit to an order first.
 
 ```
 async function loadShelf() {
@@ -47,11 +47,11 @@ loadShelf().then((n) => console.log("E", n));
 console.log("F");
 ```
 
-One detail joins two topics: calling an `async` function runs its body at once, up to its first `await`, and then returns a promise to the caller.
+Calling an `async` function runs its body at once, up to its first `await`, then returns a promise.
 
 ### Activity 3 of 3: Diagnose the review that saved nothing
 
-Posting a review calls the Spring Boot API. In development, `VITE_API_URL` is `/api` and the Vite dev proxy forwards `/api` to Spring Boot, so the page and the API share one origin and CORS never blocks a response here. A tester reports two problems with the code below.
+Posting a review calls the Spring Boot API. In development, `VITE_API_URL` is `/api` and the Vite dev proxy forwards `/api` to Spring Boot, so the page and API share one origin and CORS never blocks a response here. A tester reports two problems with this code.
 
 ```
 const API = import.meta.env.VITE_API_URL;
@@ -79,7 +79,7 @@ async function saveReview(review) {
 ## Recap
 
 - Insert untrusted data as text with `textContent`, or with `setAttribute` on a harmless attribute such as a `data-` attribute (never an event handler, `href` or `src`); `innerHTML` and `insertAdjacentHTML` parse it as HTML.
-- In a delegated listener, `event.target` is where the click started and `event.currentTarget` is the element with the listener; `closest` walks up from the target to the item you need.
+- In a delegated listener, `event.target` is where the click started and `event.currentTarget` is the element with the listener; `closest` walks up from the target to the item.
 - Calling an `async` function runs it up to its first `await`; the rest waits as a microtask. Plain code finishes, then all microtasks, then the next task such as a timer.
 - `fetch` rejects when no response can be read: a network failure, or a cross-origin response that CORS blocks. Otherwise it fulfills, even on 400 or 502, so check `res.ok` before reading the body, read problem details only when the type says so, and show `detail` for what to fix.
 
