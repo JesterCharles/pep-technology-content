@@ -59,7 +59,7 @@ Where to act: The ___ line, directly after VALUES.
 
 Next step: Name the conflict column first, then say which action to take.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The SET list inside your clause.
 
@@ -84,7 +84,7 @@ with cur.copy("COPY t (k, v) FROM STDIN") as copy:
 
 ## Sources
 
-First draft, not reviewed. Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.
+Sources checked on 2026-11-04. The author checked this page against these official pages; independent review pending.
 
 - PostgreSQL: INSERT and ON CONFLICT
 - psycopg 3: Using COPY TO and COPY FROM

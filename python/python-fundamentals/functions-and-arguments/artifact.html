@@ -137,6 +137,7 @@ button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pe
 [data-pep-activity-checks] h3 { margin: 0 0 4px; font-size: 16px; line-height: 24px; }
 @media print { .pep-objectives > div { display: block !important; width: auto; } .pep-topicbar, [data-pep-activity-checks] { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
 @media (forced-colors: active) { .pep-topicbar, [data-pep-activity-checks] { border-color: CanvasText; border-block-start-color: Highlight; } }
+@media (forced-colors: active) { .pep-optional { border-color: CanvasText; } }
 /* DESIGN.md guidance contract: activity timeline, task heading, back link, Previous activity */
 .pep-topicbar nav { flex: 1 1 100%; min-width: 0; }
 .pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
@@ -152,7 +153,8 @@ html:not(.pep-js) .pep-step[aria-disabled="true"] { color: var(--pep-text); curs
 .pep-back { margin: 0 0 4px; }
 .pep-back a { display: inline-flex; align-items: center; min-height: 44px; color: var(--pep-accent-text); font-weight: 600; }
 .pep-next-row { display: flex; flex-wrap: wrap; gap: 8px; }
-@media print { .pep-topicbar nav, .pep-back, #prev { display: none !important; } }
+@media print { .pep-topicbar nav, .pep-back, #prev, [data-pep-back-link], [data-pep-previous], [data-pep-next] { display: none !important; } }
+@media print { section[data-pep-activity][hidden] { display: grid !important; } section[data-pep-activity] [data-step][hidden] { display: block !important; } section[data-pep-activity] .task { display: flex !important; } section.pep-act:not([data-pep-activity])[hidden] { display: block !important; } section.pep-act:not([data-pep-activity])[hidden] > .workspace { display: none !important; } section.pep-act:not([data-pep-activity])[hidden] .reading [data-step][hidden] { display: block !important; } }
 /* Regions */
 .pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
 @media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
@@ -171,7 +173,9 @@ html:not(.pep-js) .pep-step[aria-disabled="true"] { color: var(--pep-text); curs
 .pep-goals > li + li { border-top: 1px solid var(--pep-line-strong); }
 .pep-goals > li::after { content: "open"; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; }
 .pep-goals > li.is-done::after { content: "\2713\00a0 done"; color: var(--pep-success); }
-.task { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+.task { display: flex; flex-direction: column; gap: 12px; }
+.pep-region.workspace { padding: 24px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+@media (max-width: 480px) { .pep-region.workspace { padding: 16px; } }
 .task > div { display: flex; flex-direction: column; gap: 12px; }
 .task p { margin: 0; }
 .goals { list-style: none; margin: 0; padding: 0; }
@@ -248,12 +252,12 @@ select { font: 400 14px/20px var(--pep-font-mono); min-height: 44px; padding: 8p
 .opt > span { min-width: 0; overflow-wrap: anywhere; }
 .opt:hover { border-color: var(--pep-accent); }
 .opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
-.opt:has(input:disabled) { cursor: default; }
+.opt:has(input:disabled) { cursor: not-allowed; }
 .opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
 .opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
 .opt input { appearance: none; -webkit-appearance: none; flex: 0 0 auto; width: 44px; height: 44px; margin: -12px; border: 0; border-radius: 50%; background: radial-gradient(circle, var(--pep-page) 0 8px, var(--pep-line-strong) 8.5px 10px, transparent 10.5px); cursor: pointer; }
 .opt input:checked { background: radial-gradient(circle, var(--pep-accent-fill) 0 5px, var(--pep-page) 5.5px 7.5px, var(--pep-accent-fill) 8px 10px, transparent 10.5px); }
-.opt input:disabled { cursor: default; opacity: 0.7; }
+.opt input:disabled { cursor: not-allowed; }
 .opt input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -8px; }
 .opt .why { display: block; margin-top: 4px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
 .opt .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
@@ -347,7 +351,8 @@ html:not(.pep-js) .pep-js-only, html:not(.pep-js) [data-region="current-control"
 /* Optional Anecdote and Challenge disclosures (never required, never counted) */
 .extras { display: flex; flex-direction: column; gap: 8px; margin: 48px 0 0; padding: 16px 0 0; border-top: 1px solid var(--pep-line-strong); min-width: 0; }
 .extras > p { margin: 0; color: var(--pep-text-muted); font: 400 14px/20px var(--pep-font-sans); }
-.pep-optional { min-width: 0; border-block: 1px solid var(--pep-line-strong); background: transparent; break-inside: avoid; }
+.pep-optional { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line); border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
 .pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
 .pep-optional > summary::marker { color: var(--pep-accent-text); }
 .pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
@@ -380,7 +385,7 @@ html:not(.pep-js) .pep-js-only, html:not(.pep-js) [data-region="current-control"
 .le-actions{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center;padding:var(--s2) var(--s3);border-top:1px solid var(--line)}
 .le-keys{margin:0;font-size:13px;color:var(--muted)}
 .le-tabs{display:flex;gap:var(--s1);padding:0 var(--s3);border-top:1px solid var(--line)}
-.le [role=tab]{min-height:44px;padding:var(--s1) var(--s3);border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--muted);font:600 13px/1.2 var(--sans);letter-spacing:.04em;text-transform:uppercase;cursor:pointer}
+.le [role=tab]{min-height:44px;padding:var(--s1) var(--s3);border:0;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--muted);font:600 13px/1.2 var(--sans);cursor:pointer}
 .le [role=tab][aria-selected=true]{color:var(--ink);border-bottom-color:var(--teal)}
 .le [role=tabpanel]{max-height:13em;overflow:auto;padding:var(--s2) var(--s3);border-top:1px solid var(--line)}
 .le .le-problems ul{list-style:none;margin:0;padding:0}
@@ -442,13 +447,13 @@ html:not(.pep-js) .pep-js-only, html:not(.pep-js) [data-region="current-control"
   <p>Practice prediction, not scored. Java matches arguments by position only; Python can also match them by name.</p>
 </div>
       </div>
-      <div class="task" data-region="current-task">
-<div data-step="1"><div class="pep-task" id="activity-task-1" data-pep-task><h3 class="pep-task__h">Your task</h3>
-  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the code in the workspace on the right (below these steps on a narrow screen).</li><li><strong>What to do or type:</strong> Under <em>Prediction</em>, pick the result you expect.</li><li><strong>What to expect:</strong> Pick Low, Medium or High confidence, then press <em>Check my prediction</em>.</li><li><strong>How to know it's done:</strong> Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.</li></ol></div>
-  <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1-h"><h3 id="checks-1-h">What success looks like</h3><p>Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.</p></section></div>
-      </div>
     </div>
     <div class="pep-region workspace" data-pep-workspace="activity">
+      <div class="task" data-region="current-task">
+<div data-step="1"><div class="pep-task" id="activity-task-1" data-pep-task><h3 class="pep-task__h">Your task</h3>
+  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the code directly below these steps, inside this same workspace, at every screen width.</li><li><strong>What to do or type:</strong> Under <em>Prediction</em>, pick the result you expect, then pick Low, Medium or High confidence and press <em>Check my prediction</em>.</li><li><strong>What to expect:</strong> Feedback appears below. A wrong guess is fine: the feedback explains it and you still move on.</li><li><strong>How to know it's done:</strong> Continue shows.</li></ol></div>
+  <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1-h"><h3 id="checks-1-h">What success looks like</h3><p>Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.</p></section></div>
+      </div>
       <div class="ask" data-region="current-ask">
 <div data-step="1"><h2 class="ws-h" id="ws-1-h"><span class="vh">Workspace: </span>Start with a guess</h2>
   <p id="task-1">What does the call below print?</p></div>
@@ -477,7 +482,7 @@ print(greet(greeting="Hi", name="Ana"))</pre></div>
 </div>
       </div>
       <noscript data-section-skip><div class="nojs-static"><p class="pep-label">Without JavaScript: the result</p><p>Prediction (practice, not scored): def greet(name, greeting="Hello") returns greeting + ", " + name + "!". The call is greet(greeting="Hi", name="Ana"). Options: Hi, Ana!; Hello, Ana!; Ana, Hi!; an error because the arguments are in the wrong order. Answer: Hi, Ana!. Keyword arguments are matched by parameter name, so their order in the call does not matter, and the passed greeting replaces the default "Hello".</p></div></noscript>
-      <div class="feedback" data-region="current-feedback" aria-live="polite">
+      <div class="feedback" data-region="current-feedback" data-pep-feedback aria-live="polite">
 <div data-step="1" data-pep-predict-feedback></div>
       </div>
     </div>
@@ -493,14 +498,14 @@ print(greet(greeting="Hi", name="Ana"))</pre></div>
   <p>A call can pass arguments by position, <code>book("A12", 3)</code>, or by name, <code>book(nights=3, room="A12")</code>. Named (keyword) arguments may come in any order. In introductory calls without starred unpacking, put positional arguments before keywords, and never give one parameter two values.</p>
 </div>
       </div>
+    </div>
+    <div class="pep-region workspace" data-pep-workspace="activity">
       <div class="task" data-region="current-task">
 <div data-step="2"><div class="pep-task" id="activity-task-2" data-pep-task><h3 class="pep-task__h">Your task</h3>
   <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> In <em>Run a call</em>, read the <code>book(...)</code> buttons.</li><li><strong>What to do or type:</strong> Press a button to make that call.</li><li><strong>What to expect:</strong> The output box shows the tuple <code>book</code> returns, or Python's error message, and the model shows what each parameter received.</li><li><strong>How to know it's done:</strong> Each check below changes from <em>open</em> to <em>done</em> when a run shows it. Continue appears when every check is done.</li></ol></div>
   <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2-h"><h3 id="checks-2-h">Activity checks</h3>
   <ul class="goals"><li data-goal="dflt"><span>A call that leaves a default in place</span><span class="st"></span></li><li data-goal="kw"><span>Keyword arguments in a different order from the def</span><span class="st"></span></li><li data-goal="err"><span>A call Python rejects, and why</span><span class="st"></span></li></ul></section></div>
       </div>
-    </div>
-    <div class="pep-region workspace" data-pep-workspace="activity">
       <div class="ask" data-region="current-ask">
 <div data-step="2"><h2 class="ws-h" id="ws-2-h"><span class="vh">Workspace: </span>Positional, default and keyword arguments</h2>
   <p id="task-2">Run calls to <code>book</code> until all three checks are done.</p>
@@ -522,7 +527,7 @@ print(greet(greeting="Hi", name="Ana"))</pre></div>
   </fieldset></div>
       </div>
       <noscript data-section-skip><div class="nojs-static"><p class="pep-label">Without JavaScript: the result</p><p>Call activity for def book(room, nights=1, breakfast=False): return (room, nights, breakfast). Real Python 3 results: book("A12") gives ('A12', 1, False), defaults fill nights and breakfast. book("A12", 3) gives ('A12', 3, False). book(nights=2, room="A12") gives ('A12', 2, False): keyword order does not matter. book("A12", breakfast=True) gives ('A12', 1, True). book() raises TypeError: book() missing 1 required positional argument: 'room'. book("A12", 2, nights=3) raises TypeError: book() got multiple values for argument 'nights'. book(room="A12", 2) is rejected before running: SyntaxError: positional argument follows keyword argument.</p></div></noscript>
-      <div class="feedback" data-region="current-feedback" aria-live="polite">
+      <div class="feedback" data-region="current-feedback" data-pep-feedback aria-live="polite">
 <div data-step="2" data-pep-explore-feedback></div>
       </div>
     </div>
@@ -545,14 +550,14 @@ print(greet(greeting="Hi", name="Ana"))</pre></div>
 </details>
 </div>
       </div>
+    </div>
+    <div class="pep-region workspace" data-pep-workspace="activity">
       <div class="task" data-region="current-task">
 <div data-step="3"><div class="pep-task" id="activity-task-3" data-pep-task><h3 class="pep-task__h">Your task</h3>
-  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> In <em>Run a call</em>, press one of the <code>log(...)</code> buttons.</li><li><strong>What to do or type:</strong> The output box shows what <code>parts</code> (a tuple) and <code>fields</code> (a dict) received.</li><li><strong>What to expect:</strong> Press <code>log(values)</code> and <code>log(*values)</code> one after the other and compare the two lines.</li><li><strong>How to know it's done:</strong> Each check below changes from <em>open</em> to <em>done</em> when a run shows it. Continue appears when every check is done.</li></ol></div>
+  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> The <code>log(...)</code> buttons in <em>Run a call</em>, and the output box.</li><li><strong>What to do or type:</strong> Press the <code>log(...)</code> buttons, including <code>log(values)</code> and <code>log(*values)</code> one after the other.</li><li><strong>What to expect:</strong> The output box shows what <code>parts</code> (a tuple) and <code>fields</code> (a dict) received; compare the <code>log(values)</code> and <code>log(*values)</code> lines.</li><li><strong>How to know it's done:</strong> Each check below changes from <em>open</em> to <em>done</em> when a run shows it. Continue appears when every check is done.</li></ol></div>
   <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3-h"><h3 id="checks-3-h">Activity checks</h3>
   <ul class="goals"><li data-goal="tup"><span>Extra positional arguments collected as a tuple</span><span class="st"></span></li><li data-goal="star"><span>The difference between <code>log(values)</code> and <code>log(*values)</code></span><span class="st"></span></li><li data-goal="dict"><span>A dict spread into keyword arguments with <code>**</code></span><span class="st"></span></li></ul></section></div>
       </div>
-    </div>
-    <div class="pep-region workspace" data-pep-workspace="activity">
       <div class="ask" data-region="current-ask">
 <div data-step="3"><h2 class="ws-h" id="ws-3-h"><span class="vh">Workspace: </span>*args, **kwargs and unpacking</h2>
   <p id="task-3">Run calls to <code>log</code> and watch what <code>parts</code> and <code>fields</code> receive.</p></div>
@@ -574,7 +579,7 @@ opts = {"sep": "-", "end": "!"}</pre>
   </fieldset></div>
       </div>
       <noscript data-section-skip><div class="nojs-static"><p class="pep-label">Without JavaScript: the result</p><p>Call activity for def log(*parts, **fields): print(parts, fields), with values = [3, 4] and opts = {"sep": "-", "end": "!"}. Real Python 3 output: log(1, 2) prints (1, 2) {}. log(values) prints ([3, 4],) {}: the list arrives as one argument. log(*values) prints (3, 4) {}: the star spreads the list. log(level="info") prints () {'level': 'info'}. log(**opts) prints () {'sep': '-', 'end': '!'}. log(*values, **opts) prints (3, 4) {'sep': '-', 'end': '!'}.</p></div></noscript>
-      <div class="feedback" data-region="current-feedback" aria-live="polite">
+      <div class="feedback" data-region="current-feedback" data-pep-feedback aria-live="polite">
 <div data-step="3" data-pep-explore-feedback></div>
       </div>
     </div>
@@ -589,14 +594,14 @@ opts = {"sep": "-", "end": "!"}</pre>
   <p>Starred parameters keep their stars and can sit after the defaulted ones: <code>def log(level: str = "info", *parts, **fields):</code>. The return hint comes last, before the colon.</p>
 </div>
       </div>
+    </div>
+    <div class="pep-region workspace" data-pep-workspace="code">
       <div class="task" data-region="current-task">
 <div data-step="4"><div class="pep-task" id="activity-task-4" data-pep-task><h3 class="pep-task__h">Your task</h3>
-  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Use the <em>functions.py</em> editor in the workspace; the examples above it show the syntax.</li><li><strong>What to do or type:</strong> Replace all four <code>___</code> placeholders: annotate <code>room</code> as <code>str</code>, <code>nights</code> as <code>int</code> and the return as <code>tuple</code>, add <code>*parts</code> and <code>**fields</code>, and call <code>describe</code> with <code>*values</code> and <code>**options</code>. Press <em>Run</em> or Ctrl+Enter (Cmd+Enter on a Mac).</li><li><strong>What to expect:</strong> <em>Problems</em> names any placeholder or structure still out of place; <em>Output</em> confirms the completed scaffold.</li><li><strong>How to know it's done:</strong> The author check reads <em>done</em>, then Continue appears. <em>Reset code</em> restores the starter and its placeholders.</li></ol></div>
+  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Use the <em>functions.py</em> editor in the workspace; the examples above it show the syntax.</li><li><strong>What to do or type:</strong> Replace all four <code>___</code> placeholders: add both collectors the return line names, then call spreading <code>values</code> positionally and <code>options</code> by keyword. Type-hint <code>room</code>, <code>nights</code> and the return to match their values. Press <em>Run</em> or Ctrl+Enter (Cmd+Enter on a Mac).</li><li><strong>What to expect:</strong> <em>Problems</em> names any placeholder or structure still out of place; <em>Output</em> confirms the completed scaffold.</li><li><strong>How to know it's done:</strong> The check under <em>Activity checks</em> reads <em>done</em>, then Continue appears. <em>Reset code</em> restores the starter and its placeholders.</li></ol></div>
   <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-4-h"><h3 id="checks-4-h">Activity checks</h3>
   <ul class="goals"><li data-goal="author"><span>Write the annotated signature and the unpacked call in the editor</span><span class="st"></span></li></ul></section></div>
       </div>
-    </div>
-    <div class="pep-region workspace" data-pep-workspace="code">
       <div class="ask" data-region="current-ask">
 <div data-step="4"><h2 class="ws-h" id="ws-4-h"><span class="vh">Workspace: </span>Write the hints into a signature</h2>
   <p id="task-4">Complete <code>functions.py</code>: an annotated <code>describe</code> that collects extras, called by unpacking <code>values</code> and <code>options</code>.</p></div>
@@ -612,7 +617,7 @@ log(*values, **opts)</pre></div>
       </figure>
       <div class="control" data-region="current-control">
 <div data-step="4">
-  <fieldset class="le" id="fned" data-interaction="explore" data-pep-explore data-pep-activity data-pep-answer-sensitive="python-scaffold" data-pep-answer-targets="describe result" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" aria-describedby="task-4" data-lesson-editor="3" data-lesson-editor-adapter="python-scaffold@3" data-lesson-editor-source="head" data-le-state="loading" data-static-alt="Authoring activity: complete functions.py so describe has an annotated positional parameter, an annotated default parameter, *parts, **fields and a return annotation; then call it by unpacking values with * and options with **. Run checks only those required structures in this scaffold. Expected result: the checker reports the signature, annotations and both unpackings found.">
+  <fieldset class="le" id="fned" data-interaction="explore" data-pep-explore data-pep-answer-sensitive="python-scaffold" data-pep-answer-targets="describe result" data-pep-completed="false" data-pep-credit="0" data-pep-grade="0" aria-describedby="task-4" data-lesson-editor="3" data-lesson-editor-adapter="python-scaffold@3" data-lesson-editor-source="head" data-le-state="loading" data-static-alt="Authoring activity: complete functions.py so describe has an annotated positional parameter, an annotated default parameter, a parameter that collects extra positional arguments, one that collects extra keyword arguments and a return annotation; then call it so the items of values arrive as positional arguments and the entries of options as keyword arguments. Run checks only those required structures in this scaffold. Expected result: the checker reports the signature, annotations and both unpackings found.">
     <legend>Complete the function scaffold</legend>
     <div class="le-bar"><span class="le-file">functions.py</span><span class="le-badge">Lesson simulator: checks and runs only this exercise, not real Python</span></div>
     <div class="le-main">
@@ -635,14 +640,14 @@ log(*values, **opts)</pre></div>
     <details class="le-limits"><summary>What this simulator can and cannot do</summary><ul><li>Checks only the named structures in this supplied scaffold; it is not a Python parser or interpreter.</li><li>A missing required pattern is a <em>Lesson check</em>, not a claim that other Python is invalid.</li><li>Run is deterministic and bounded: it performs no network, file or arbitrary-code execution.</li></ul></details>
   </fieldset></div>
       </div>
-      <noscript data-section-skip><div class="nojs-static"><p class="pep-label">Without JavaScript: the result</p><p>Authoring activity: complete functions.py so describe has an annotated positional parameter, an annotated default parameter, *parts, **fields and a return annotation; then call it by unpacking values with * and options with **. Run checks only those required structures in this scaffold. Expected result: the checker reports the signature, annotations and both unpackings found.</p></div></noscript>
-      <noscript data-pep-no-js data-section-skip><section class="nojs le-fallback nojs-editor"><h2>Static editor exercise</h2><p>JavaScript is off, so Run is unavailable. In this exact starter, replace every <code>___</code>: add <code>*parts</code> and <code>**fields</code> to the annotated signature, then call <code>describe</code> with <code>*values</code> and <code>**options</code>.</p><pre class="code">def describe(room, nights=1, ___, ___):
+      <noscript data-section-skip><div class="nojs-static"><p class="pep-label">Without JavaScript: the result</p><p>Authoring activity: complete functions.py so describe has an annotated positional parameter, an annotated default parameter, a parameter that collects extra positional arguments, one that collects extra keyword arguments and a return annotation; then call it so the items of values arrive as positional arguments and the entries of options as keyword arguments. Run checks only those required structures in this scaffold. Expected result: the checker reports the signature, annotations and both unpackings found.</p></div></noscript>
+      <noscript data-pep-no-js data-section-skip><section class="nojs le-fallback nojs-editor"><h2>Static editor exercise</h2><p>JavaScript is off, so Run is unavailable. In this exact starter, replace every <code>___</code>: add the two parameters the return line names, one collecting extra positional arguments and one collecting extra keyword arguments; type-hint <code>room</code>, <code>nights</code> and the return; then call <code>describe</code> so <code>values</code> spreads into positional arguments and <code>options</code> into keyword arguments.</p><pre class="code">def describe(room, nights=1, ___, ___):
     return room, nights, parts, fields
 
 values = ["A12", 2]
 options = {"breakfast": True}
-result = describe(___, ___)</pre><p>Supported in the in-page editor: it checks only the named structures in this supplied scaffold and is not a Python parser or interpreter. To compare, check your completed file against the expected result below.</p><p>Expected result: the checker finds <code>room</code> annotated as <code>str</code>, <code>nights</code> as <code>int</code> with its default, <code>*parts</code>, <code>**fields</code> and a <code>tuple</code> return hint, plus a call that spreads the list positionally and the dict by keyword; annotations document intent but are not enforced.</p></section></noscript>
-      <div class="feedback" data-region="current-feedback" aria-live="polite">
+result = describe(___, ___)</pre><p>Supported in the in-page editor: it checks only the named structures in this supplied scaffold and is not a Python parser or interpreter. To compare, check your completed file against the expected result below.</p><p>Expected result: the checker finds a type hint on <code>room</code>, on <code>nights</code> before its default and on the return, each matching the value it describes, plus both collecting parameters and a call that spreads the list positionally and the dict by keyword; annotations document intent but are not enforced.</p></section></noscript>
+      <div class="feedback" data-region="current-feedback" data-pep-feedback aria-live="polite">
 <div data-step="4" data-pep-explore-feedback></div>
       </div>
 <details class="pep-optional pep-optional--challenge" data-pep-optional="challenge" data-section-skip>
@@ -668,13 +673,13 @@ result = describe(___, ___)</pre><p>Supported in the in-page editor: it checks o
   <p>Unlike Java types, these hints are not checked when the code runs. Python stores them in <code>__annotations__</code> and runs the body with whatever arguments arrive. Their value is for readers and for tools such as type checkers and editors, which can flag a mismatch before you run anything.</p>
 </div>
       </div>
-      <div class="task" data-region="current-task">
-<div data-step="5"><div class="pep-task" id="activity-task-5" data-pep-task><h3 class="pep-task__h">Your task</h3>
-  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the question and the code it names in the workspace on the right.</li><li><strong>What to do or type:</strong> Pick one answer, pick your confidence, then press <em>Check answer</em>.</li><li><strong>What to expect:</strong> Feedback appears below. If the first answer is not right, a second question appears; answer it and press <em>Check second try</em>.</li><li><strong>How to know it's done:</strong> Either way, Continue then shows and takes you to the recap.</li></ol></div>
-  <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-5-h"><h3 id="checks-5-h">What success looks like</h3><p>Either way, Continue then shows and takes you to the recap.</p></section></div>
-      </div>
     </div>
     <div class="pep-region workspace" data-pep-workspace="activity">
+      <div class="task" data-region="current-task">
+<div data-step="5"><div class="pep-task" id="activity-task-5" data-pep-task><h3 class="pep-task__h">Your task</h3>
+  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the question and the code it names in this workspace, below these steps.</li><li><strong>What to do or type:</strong> Pick one answer, pick your confidence, then press <em>Check answer</em>.</li><li><strong>What to expect:</strong> Feedback appears below. If the first answer is not right, a second question appears; answer it and press <em>Check second try</em>.</li><li><strong>How to know it's done:</strong> Either way, Continue then shows and takes you to the recap.</li></ol></div>
+  <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-5-h"><h3 id="checks-5-h">What success looks like</h3><p>Either way, Continue then shows and takes you to the recap.</p></section></div>
+      </div>
       <div class="ask" data-region="current-ask">
 <div data-step="5"><h2 class="ws-h" id="ws-5-h"><span class="vh">Workspace: </span>Type hints are not enforced</h2>
   <p id="task-apply">Given the hinted <code>double</code> below, what does <code>double("ab")</code> return?</p>
@@ -714,34 +719,31 @@ double.__annotations__
 </div>
       </div>
       <noscript data-section-skip><div class="nojs-static"><p class="pep-label">Without JavaScript: the result</p><p>Apply question: def double(x: int) -&gt; int: return x * 2. What does double("ab") return? Options: 'abab' (correct: the hint is not enforced, and str * 2 repeats the string); TypeError: x must be int (Python never checks the hint); 0; SyntaxError when the def runs (the hint syntax is valid). Retry: which statement about def seats_left(capacity: int, taken: int) -&gt; int: is true? Correct: the hints document intent for readers and tools such as type checkers; Python does not enforce them at run time. Python does not check types on each call, does not convert "10" to 10, and -&gt; int does not change what is returned.</p></div></noscript>
-      <div class="feedback" data-region="current-feedback" aria-live="polite">
+      <div class="feedback" data-region="current-feedback" data-pep-feedback aria-live="polite">
 <div data-step="5" data-pep-apply-feedback></div>
       </div>
     </div>
   </section>
   <section class="pep-regions pep-act" data-step="6" aria-labelledby="teach-6-h">
-    <div class="pep-region reading" data-pep-instructions>
+    <div class="pep-region reading">
       <div class="teach" data-region="current-teaching">
 <div data-step="6" data-pep-recap class="recap">
   <h2 id="teach-6-h" tabindex="-1">Recap</h2>
   <ul><li>Defaults fill parameters the call leaves out; keyword arguments match by name in any order, after any positional ones.</li><li><code>*args</code> gathers extra positional arguments into a tuple; <code>**kwargs</code> gathers extra keyword arguments into a dict.</li><li>In a call, <code>*list</code> and <code>**dict</code> spread values out.</li><li>Type hints document intent; Python does not enforce them at run time.</li></ul>
-  <details data-section-skip><summary>Activity procedures (text alternative)</summary><p>Use these same observable steps when working from the text alternative.</p><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the code in the workspace on the right (below these steps on a narrow screen).</li><li><strong>What to do or type:</strong> Under <em>Prediction</em>, pick the result you expect.</li><li><strong>What to expect:</strong> Pick Low, Medium or High confidence, then press <em>Check my prediction</em>.</li><li><strong>How to know it's done:</strong> Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.</li></ol><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> In <em>Run a call</em>, read the <code>book(...)</code> buttons.</li><li><strong>What to do or type:</strong> Press a button to make that call.</li><li><strong>What to expect:</strong> The output box shows the tuple <code>book</code> returns, or Python's error message, and the model shows what each parameter received.</li><li><strong>How to know it's done:</strong> Each check above changes from <em>open</em> to <em>done</em> when a run shows it. Continue appears when every check is done.</li></ol><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> In <em>Run a call</em>, press one of the <code>log(...)</code> buttons.</li><li><strong>What to do or type:</strong> The output box shows what <code>parts</code> (a tuple) and <code>fields</code> (a dict) received.</li><li><strong>What to expect:</strong> Press <code>log(values)</code> and <code>log(*values)</code> one after the other and compare the two lines.</li><li><strong>How to know it's done:</strong> Each check above changes from <em>open</em> to <em>done</em> when a run shows it. Continue appears when every check is done.</li></ol><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Use the <em>functions.py</em> editor in the workspace; the examples above it show the syntax.</li><li><strong>What to do or type:</strong> Replace all four <code>___</code> placeholders: annotate <code>room</code> as <code>str</code>, <code>nights</code> as <code>int</code> and the return as <code>tuple</code>, add <code>*parts</code> and <code>**fields</code>, and call <code>describe</code> with <code>*values</code> and <code>**options</code>. Press <em>Run</em> or Ctrl+Enter (Cmd+Enter on a Mac).</li><li><strong>What to expect:</strong> <em>Problems</em> names any placeholder or structure still out of place; <em>Output</em> confirms the completed scaffold.</li><li><strong>How to know it's done:</strong> The author check reads <em>done</em>, then Continue appears. <em>Reset code</em> restores the starter and its placeholders.</li></ol><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the question and the code it names in the workspace on the right.</li><li><strong>What to do or type:</strong> Pick one answer, pick your confidence, then press <em>Check answer</em>.</li><li><strong>What to expect:</strong> Feedback appears below. If the first answer is not right, a second question appears; answer it and press <em>Check second try</em>.</li><li><strong>How to know it's done:</strong> Either way, Continue then shows and takes you to the recap.</li></ol></details>
   <details data-section-skip>
     <summary>Cheat sheet</summary>
     <table><tr><td><code>def f(a, b=2):</code></td><td>a required, b defaulted</td></tr><tr><td><code>f(b=5, a=1)</code></td><td>keyword arguments, any order</td></tr><tr><td><code>def f(*args, **kwargs):</code></td><td>tuple and dict of extras</td></tr><tr><td><code>f(*items, **options)</code></td><td>spread a list and a dict</td></tr><tr><td><code>def f(n: int) -&gt; str:</code></td><td>type hints, not enforced</td></tr></table>
   </details>
   <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live official Python 3 documentation pages on 2026-10-13. Error text shown is from Python 3.14 and can differ slightly in older versions.</p><ul><li><a href="https://docs.python.org/3/tutorial/controlflow.html" rel="noopener">Python tutorial: Defining functions and more on defining functions</a></li><li><a href="https://docs.python.org/3/reference/compound_stmts.html" rel="noopener">Language reference: Function definitions</a></li><li><a href="https://docs.python.org/3/library/typing.html" rel="noopener">typing: Support for type hints</a></li></ul></details>
-  <p class="next-topic">Next topic: <a href="../lists-dicts-sets-and-tuples/artifact.html" rel="noopener">Lists, dicts, sets and tuples</a></p>
 </div>
       </div>
       <div class="task" data-region="current-task">
 <div data-step="6"></div>
       </div>
     </div>
-    <div class="pep-region workspace" data-pep-workspace="activity">
+    <div class="pep-region workspace">
       <div class="ask" data-region="current-ask">
 <div data-step="6"><h2 class="ws-h" id="ws-6-h"><span class="vh">Workspace: </span>Recap</h2>
-  <p class="pep-js-only">All activities finished.</p>
   <p id="complete-msg" class="complete"></p></div>
       </div>
       <figure class="model" data-pep-model data-region="live-model" aria-labelledby="ws-6-h">
@@ -1006,23 +1008,43 @@ render:function(S,api){var t=S.t;
 
 var EDITOR_CFG={"lesson":"functions","starter":"def describe(room, nights=1, ___, ___):\n    return room, nights, parts, fields\n\nvalues = [\"A12\", 2]\noptions = {\"breakfast\": True}\nresult = describe(___, ___)\n","successLines":["Found the defaulted and variadic parameters in the describe signature.","Found parameter and return annotations.","Found the unpacked list and dict call at top level."],"summary":"Signature, annotations and unpacked call found in their supplied structure."};
 var TOPIC_RENDER=TOPIC.render;
-TOPIC.render=function(S,api){if(TOPIC_RENDER){TOPIC_RENDER.call(TOPIC,S,api);}var root=api.$('fned');if(root){var passed=!!S.t.g.author;root.setAttribute('data-pep-completed',passed?'true':'false');root.setAttribute('data-pep-credit',passed?'1':'0');root.setAttribute('data-pep-grade',passed?'1':'0');}if(root&&!root._lessonEditor){var reopen=function(msg){var s=api.S,step=+Object.keys(TOPIC.need).filter(function(k){return TOPIC.need[k].indexOf('author')>=0;})[0];if(!s.t.g.author){return;}delete s.t.g.author;delete s.done[TOPIC.acts[step-1]];api.$('next').hidden=true;api.progress();api.hit(null,msg);};root._lessonEditor=LESSON_EDITOR.mount(root,{adapter:LESSON_EDITOR_SCAFFOLD.make(EDITOR_CFG),file:"functions.py",starter:EDITOR_CFG.starter,calls:{successLines:EDITOR_CFG.successLines,summary:EDITOR_CFG.summary},fallbackText:"Authoring activity: complete functions.py so describe has an annotated positional parameter, an annotated default parameter, *parts, **fields and a return annotation; then call it by unpacking values with * and options with **. Run checks only those required structures in this scaffold. Expected result: the checker reports the signature, annotations and both unpackings found.",onChange:function(){reopen('You changed the code after it passed, so this check is open again. Run it again when the file is complete.');},onRun:function(report){if(report.status==='pass'){api.hit('author','Your scaffold contains every required structure. The checker did not execute arbitrary Python.');}else{reopen('This run did not pass, so this check is open again.');}}});}};
+TOPIC.render=function(S,api){if(TOPIC_RENDER){TOPIC_RENDER.call(TOPIC,S,api);}var root=api.$('fned');if(root){var passed=!!S.t.g.author;root.setAttribute('data-pep-completed',passed?'true':'false');root.setAttribute('data-pep-credit',passed?'1':'0');root.setAttribute('data-pep-grade',passed?'1':'0');}if(root&&!root._lessonEditor){var reopen=function(msg){var s=api.S,step=+Object.keys(TOPIC.need).filter(function(k){return TOPIC.need[k].indexOf('author')>=0;})[0];if(!s.t.g.author){return;}delete s.t.g.author;delete s.done[TOPIC.acts[step-1]];api.$('next').hidden=true;api.progress();api.hit(null,msg);};root._lessonEditor=LESSON_EDITOR.mount(root,{adapter:LESSON_EDITOR_SCAFFOLD.make(EDITOR_CFG),file:"functions.py",starter:EDITOR_CFG.starter,calls:{successLines:EDITOR_CFG.successLines,summary:EDITOR_CFG.summary},fallbackText:"Authoring activity: complete functions.py so describe has an annotated positional parameter, an annotated default parameter, a parameter that collects extra positional arguments, one that collects extra keyword arguments and a return annotation; then call it so the items of values arrive as positional arguments and the entries of options as keyword arguments. Run checks only those required structures in this scaffold. Expected result: the checker reports the signature, annotations and both unpackings found.",onChange:function(){reopen('You changed the code after it passed, so this check is open again. Run it again when the file is complete.');},onRun:function(report){if(report.status==='pass'){api.hit('author','Your scaffold contains every required structure. The checker did not execute arbitrary Python.');}else{reopen('This run did not pass, so this check is open again.');}}});}};
 
 (function(){
 'use strict';
 var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
-var SNAP={},MIN=(d.querySelector('meta[name="pep:budget-minutes"]')||{}).content||'';
+var SNAP={},OWN={},LASTT=null,MIN=(d.querySelector('meta[name="pep:budget-minutes"]')||{}).content||'';
 function clone(o){return JSON.parse(JSON.stringify(o));}
 var LAST=TOPIC.steps,S;
 function $(id){return d.getElementById(id);}
 function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-function fresh(){var t=TOPIC.init();t.g=t.g||{};t.sort=t.sort||{};S={step:1,done:{},settled:{},conf:null,tries:0,t:t};}
+function fresh(){var t=TOPIC.init();t.g=t.g||{};t.sort=t.sort||{};S={step:1,done:{},settled:{},conf:null,tries:0,att:{},t:t};OWN={};LASTT=clone(t);}
 var api={$:$,qa:qa,esc:esc,checked:function(n){return checked(n);},say:say,complete:complete,hit:hit,out:out,progress:progress,get S(){return S;}};
 function fbFor(step){return qa('[data-region="current-feedback"] > [data-step="'+step+'"]')[0];}
 function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}}
 function out(id,lines){var o=$(id);if(!o){return;}o.innerHTML=lines.map(function(l){return l[0]?'<span class="'+l[0]+'">'+esc(l[1])+'</span>':esc(l[1]);}).join('\n');}
 function actFor(step){return TOPIC.acts[step-1];}
+/* DESIGN.md state model: each activity keeps its own attempts, settled state, completion, credit, grade and Continue
+   availability, mirrored on its section's stable QA hooks. Navigation never changes them. */
+function secs(){return qa('section[data-pep-activity][id^="activity-"]',stageEl);}
+function attempt(){var a=actFor(S.step);if(a){S.att[a]=(S.att[a]||0)+1;reflect();}}
+function reflect(){var ss=secs();TOPIC.acts.forEach(function(a,i){var sec=ss[i];if(!sec){return;}var c=!!S.done[a],st=c||!!S.settled[a];
+  sec.setAttribute('data-pep-attempts',String(S.att[a]||0));sec.setAttribute('data-pep-settled',String(st));sec.setAttribute('data-pep-completed',String(c));
+  sec.setAttribute('data-pep-credit',c?'1':'0');sec.setAttribute('data-pep-grade',c&&a!=='predict'?'1':'0');sec.setAttribute('data-pep-continue',String(st));});}
+/* Each activity owns the parts of the shared model it changed, so Restart returns only those parts to their
+   state when the activity was first shown; every other activity keeps its state. */
+function cl(v){return v===undefined?undefined:clone(v);}
+function paths(t){var p={};Object.keys(t).forEach(function(k){var v=t[k];
+  if(v&&typeof v==='object'&&!Array.isArray(v)){Object.keys(v).forEach(function(j){p[JSON.stringify([k,j])]=JSON.stringify(v[j]);});}
+  else{p[JSON.stringify([k])]=JSON.stringify(v);}});return p;}
+function track(){if(!LASTT){LASTT=clone(S.t);return;}var a=paths(LASTT),b=paths(S.t),own=OWN[S.step]||(OWN[S.step]={});
+  Object.keys(a).concat(Object.keys(b)).forEach(function(p){if(a[p]!==b[p]){own[p]=1;}});LASTT=clone(S.t);}
+function restoreOwn(step,from){var own=OWN[step]||{};Object.keys(own).forEach(function(p){var k=JSON.parse(p);
+  if(k.length===2){var dst=S.t[k[0]],src=from[k[0]];if(!dst||typeof dst!=='object'){return;}
+    if(src&&typeof src==='object'&&Object.prototype.hasOwnProperty.call(src,k[1])){dst[k[1]]=cl(src[k[1]]);}else{delete dst[k[1]];}}
+  else if(Object.prototype.hasOwnProperty.call(from,k[0])){S.t[k[0]]=cl(from[k[0]]);}else{delete S.t[k[0]];}});
+  OWN[step]={};LASTT=clone(S.t);}
 function hit(k,msg){var need=(TOPIC.need||{})[S.step]||[];if(k){S.t.g[k]=1;}
   var left=need.filter(function(n){return !S.t.g[n];}).length;
   say('<p>'+msg+'</p><p>'+(left?left+' of '+need.length+' checks still open.':'<strong>All checks done.</strong> Continue when ready.')+'</p>');
@@ -1034,6 +1056,7 @@ function progress(){
     p.className='seg'+(on?' is-done':(st?' is-settled':(i===S.step-1?' is-current':'')));});
   $('prog-text').textContent=(S.step<=acts.length?'Activity '+S.step+' of '+acts.length:'Recap')+' · '+n+' of '+acts.length+' done'+(set?' · '+set+' settled, not passed':'')+' · about '+MIN+' min';
   qa('[data-pep-objectives] li').forEach(function(li,i){var need=(TOPIC.obj||[])[i]||[],ok=need.length&&need.every(function(a){return !!S.done[a];});li.classList.toggle('is-done',!!ok);});
+  reflect();
 }
 function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
 /* A settled miss may continue but is not done: no credit, and the page completes only when every activity passed. */
@@ -1053,24 +1076,24 @@ function sortLane(lane){var cfg=(TOPIC.sort||{})[S.step];if(!cfg){return;}
     else{say(msg+'<p>Next item is shown above.</p>');}}
   else{say('<p class="verdict no">Not this group: '+esc(cfg.lanes[lane])+'.</p><p>'+it.w[lane]+'</p><p>Choose another group for the same item.</p>');}
   render();var c=sortBox();if(c){var card=c.querySelector('.card');card.setAttribute('tabindex','-1');}}
-function render(){renderSort();
+function render(){track();renderSort();
   var g=S.t.g;qa('[data-region="current-task"] > [data-step="'+S.step+'"] .goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!g[k]);li.querySelector('.st').textContent=g[k]?'done':'open';});
   var need=(TOPIC.need||{})[S.step]||[],gs=$('goal-sum'),left=need.filter(function(k){return !g[k];}).length;
   if(gs){gs.hidden=!need.length;gs.textContent=left?left+' of '+need.length+' checks still open':'All '+need.length+' checks done';}
   if(TOPIC.render){TOPIC.render(S,api);}}
 var MAXS=1;
-function nav(step){var n=TOPIC.acts.length;if(step>MAXS){MAXS=Math.min(step,n);}main.setAttribute('data-pep-current-activity',String(Math.min(step,n)));main.setAttribute('data-pep-unlocked-through',String(MAXS));qa('[data-pep-activity-link]').forEach(function(a,i){var k=i+1;if(k===step){a.setAttribute('aria-current','step');}else{a.removeAttribute('aria-current');}if(k>MAXS){a.setAttribute('aria-disabled','true');}else{a.removeAttribute('aria-disabled');}});var pv=$('prev');if(pv){pv.hidden=step<2;}}
-function go(k){if(k<1||k>TOPIC.acts.length){show(k);return;}if(location.hash!=='#activity-'+k){try{history.pushState(null,'','#activity-'+k);}catch(err){}}show(k);}
+function nav(step){var n=TOPIC.acts.length;if(step>MAXS){MAXS=Math.min(step,n);}main.setAttribute('data-pep-current-activity',String(step));main.setAttribute('data-pep-unlocked-through',String(MAXS));qa('[data-pep-activity-link]').forEach(function(a,i){var k=i+1;if(k===step){a.setAttribute('aria-current','step');}else{a.removeAttribute('aria-current');}if(k>MAXS){a.setAttribute('aria-disabled','true');}else{a.removeAttribute('aria-disabled');}});var pv=$('prev');if(pv){pv.hidden=step<2;}}
+function go(k){if(k<1||k>TOPIC.acts.length){show(k);return;}if(location.hash!=='#activity-'+k){try{history.pushState(null,'','#activity-'+k);}catch(err){NAVING='#activity-'+k;try{location.hash='activity-'+k;}catch(e2){NAVING='';}}}show(k);}
 function show(step,focus){
-  S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
+  track();S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
   qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
   if(!SNAP[step]){var h={};['current-ask','current-task','current-control','current-feedback'].forEach(function(c){var n=qa('[data-region="'+c+'"] > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
     SNAP[step]={html:h,t:clone(S.t)};}
   var rb=$('reset');rb.disabled=(step===LAST);
   var na=TOPIC.acts[step-1];$('next').hidden=!(na&&(S.done[na]||S.settled[na]));nav(step);
   if(step===LAST){var miss=TOPIC.acts.filter(function(a){return !S.done[a];}).length;main.setAttribute('data-pep-complete',miss?'false':'true');var c=$('complete-msg');if(c){
-    c.textContent=miss?'This page is not complete yet: '+miss+' of '+TOPIC.acts.length+' activities settled without passing. Review the explanations above; to finish, reload the page and work through it again.':'All '+TOPIC.acts.length+' activities finished.';}}
-  else{main.removeAttribute('data-pep-complete');}
+    c.textContent=miss?'This page is not complete yet: '+miss+' of '+TOPIC.acts.length+' activities settled without passing. Review the explanations above; to finish, go back to each one marked settled, choose Restart activity and try again.':'All '+TOPIC.acts.length+' activities finished.';}}
+  /* Leaving the recap keeps the page completion result: navigation never changes it. */
   render();progress();
   if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
 }
@@ -1100,7 +1123,7 @@ function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabl
 function checkApply(which){
   var A=TOPIC.apply.A,B=TOPIC.apply.B;
   if(which==='a'){
-    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}attempt();
     S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
     if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText());complete('apply');render();focusVerdict();return;}
     S.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
@@ -1108,7 +1131,7 @@ function checkApply(which){
     qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});render();
     var t=$('task-apply-b');if(t){t.focus();}
   } else {
-    var c2=checked('apply-b');if(!c2){return;}
+    var c2=checked('apply-b');if(!c2){return;}attempt();
     S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
     if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+firstDetails()+confText());}
     else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
@@ -1119,6 +1142,7 @@ function checkApply(which){
 function checkPredict(){
   var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
   if(!ch||!pc){return;}
+  attempt();
   qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
   qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
     if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
@@ -1131,13 +1155,13 @@ function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
 function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
   Object.keys(sn.html).forEach(function(c){var n=qa('[data-region="'+c+'"] > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
   qa('[data-region="current-control"] > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
-  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  track();restoreOwn(step,sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];delete S.att[act];if(main.getAttribute('data-pep-complete')==='true'){main.setAttribute('data-pep-complete','false');}
   if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
   show(step,false);syncPrompt();var h=$('teach-'+step+'-h');if(h){h.focus();}}
 var topicAct=TOPIC.act;
-TOPIC.act=function(a,b,st,ap){if(a.indexOf('lane:')===0){sortLane(a.slice(5));return;}if(topicAct){topicAct.call(TOPIC,a,b,st,ap);}};
+TOPIC.act=function(a,b,st,ap){attempt();if(a.indexOf('lane:')===0){sortLane(a.slice(5));track();return;}if(topicAct){topicAct.call(TOPIC,a,b,st,ap);}track();};
 var topicRun=TOPIC.run;
-if(topicRun){TOPIC.run=function(line,term,st,ap){topicRun.call(TOPIC,line,term,st,ap);render();};}
+if(topicRun){TOPIC.run=function(line,term,st,ap){attempt();topicRun.call(TOPIC,line,term,st,ap);render();};}
 d.addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b){return;}
   if(b.id==='reset'){restart();return;}
@@ -1157,10 +1181,17 @@ if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.
 d.addEventListener('click',function(e){var lk=e.target.closest('a[data-pep-activity-link],a[data-pep-back-link]');if(lk){e.preventDefault();e.stopPropagation();var lkn=+lk.getAttribute('href').replace('#activity-','');if(lkn>=1&&lkn<=MAXS){go(lkn);}return;}
   var b=e.target.closest('button');if(!b){return;}
   if(b.id==='prev'){e.stopPropagation();if(S.step>1){go(Math.min(S.step-1,TOPIC.acts.length));}return;}
-  if(b.id==='next'){var nk=S.step+1;if(nk<=TOPIC.acts.length&&location.hash!=='#activity-'+nk){try{history.pushState(null,'','#activity-'+nk);}catch(err){}}}
+  if(b.id==='next'){var nk=S.step+1;if(nk<=TOPIC.acts.length&&location.hash!=='#activity-'+nk){try{history.pushState(null,'','#activity-'+nk);}catch(err){NAVING='#activity-'+nk;try{location.hash='activity-'+nk;}catch(e2){NAVING='';}}}}
 },true);
-window.addEventListener('popstate',function(){var pm=/^#activity-(\d+)$/.exec(location.hash),pk=pm?+pm[1]:1;if(pk>=1&&pk<=MAXS&&pk!==S.step){show(pk,false);}});
-fresh();show(1,false);syncPrompt();
+/* Back/Forward and fragment changes select an unlocked activity; a locked activity fragment returns to the current one; any other fragment keeps it. */
+var NAVING='';
+function historyChanged(){if(NAVING&&location.hash===NAVING){NAVING='';return;}var pm=/^#activity-(\d+)$/.exec(location.hash);if(!pm&&location.hash){return;}var pk=pm?+pm[1]:1;if(pk>=1&&pk<=MAXS&&pk!==S.step){show(pk,false);}else if(pm&&location.hash!=='#activity-'+S.step){try{history.replaceState(null,'','#activity-'+S.step);}catch(err){NAVING='#activity-'+S.step;try{location.hash='activity-'+S.step;}catch(e2){NAVING='';}}}}
+window.addEventListener('popstate',historyChanged);window.addEventListener('hashchange',historyChanged);
+/* Each editor Run is one attempt for the activity that owns the editor. */
+if(typeof LESSON_EDITOR!=='undefined'&&LESSON_EDITOR&&typeof LESSON_EDITOR.mount==='function'){var leMount=LESSON_EDITOR.mount;
+  LESSON_EDITOR.mount=function(root,cfg){if(cfg&&typeof cfg.onRun==='function'){var leRun=cfg.onRun;cfg.onRun=function(){attempt();var r=leRun.apply(this,arguments);track();return r;};}return leMount.call(this,root,cfg);};}
+/* A fresh load never selects a future activity from the URL fragment. */
+fresh();if(/^#activity-\d+$/.test(location.hash)&&location.hash!=='#activity-1'){try{history.replaceState(null,'','#activity-1');}catch(err){}}show(1,false);syncPrompt();
 })();
 </script>
 <script>
@@ -1174,6 +1205,16 @@ fresh();show(1,false);syncPrompt();
       printOpened.forEach(details => { details.open = false; });
       printOpened = [];
     });
+    const objectives = document.querySelector('details[data-pep-objectives]');
+    if (objectives) {
+      const objectivesSummary = objectives.querySelector(':scope > summary');
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && objectives.open && !(event.target.closest && event.target.closest('[data-lesson-editor]'))) { objectives.open = false; objectivesSummary.focus(); }
+      });
+      document.addEventListener('click', (event) => {
+        if (objectives.open && !objectives.contains(event.target)) objectives.open = false;
+      });
+    }
   })();
 </script>
 </body>

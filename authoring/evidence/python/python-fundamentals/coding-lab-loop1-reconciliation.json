@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "author": "pep-standard-fast-labs-python-authoring crewmate (Claude Opus 5.5)",
+  "decidedBy": "python-fundamentals coding-lab reconciler, loop 1 (independent non-author Claude reconciler, 2026-11-18)",
+  "reviewedPath": "python/python-fundamentals/coding-lab/lab.json",
+  "reviewedSha256": "e8a109b7ddf10aa3afea321330f2a531b2bd3679e0c3836ebf301644c9a813bf",
+  "decisions": [
+    {
+      "findingId": "py-fund-lab-edu-003",
+      "decision": "accept",
+      "rationale": "Still open on the current bytes. The rest of the original fix is in place: README line 166 explains running with -m, Troubleshooting line 209 covers the error, and cleanup.notes records the unobservable terminal run. The definition my original decision required is missing. grep of README.md finds 'package' only at line 5 and line 166 ('cli.py is part of the signups package'), with no definition. grep of the nine python-fundamentals artifact.md pages finds no definition of a Python package; the only mentions are Java packages (modules page line 13) and \"'pricing' is not a package\" (line 156). Required fix: add one clause to README line 166 defining a package, e.g. 'a package is a folder of modules with an __init__.py file, so signups.records means records.py inside the signups folder'. It can be combined with the py-fund-lab-sme-r04 rewording of the same line."
+    },
+    {
+      "findingId": "py-fund-lab-edu-r01",
+      "decision": "accept",
+      "rationale": "Reproduced on a scratch copy of HEAD 62b8dc6f. README line 159 tells the learner to read the exit status and then go back to the lab folder (cd ..), and only line 165 then asks for the no-session run. From the lab folder, `python -m signups.cli` prints \"Error while finding module specification for 'signups.cli' (ModuleNotFoundError: No module named 'signups')\" and exits with status 1, so the learner never sees the usage line or status 2. Required fix: move the 'then go back to the lab folder (cd ..) before you run the tests again' clause after the no-session sentence. For example, line 159 ends after reading the exit status, and line 165 ends 'Run it with no session and check that the status is 2. Then go back to the lab folder (cd ..) before you run the tests again.'"
+    },
+    {
+      "findingId": "py-fund-lab-edu-r02",
+      "decision": "accept",
+      "rationale": "Verified: lab.json line 41 declares the single check `python3 --version` while `os` lists windows. README line 27 tells Windows learners to use `py --version`, and a python.org Windows install has no python3 command. The lab schema allows only one check string per prerequisite, and cleanup.notes does not mention the Windows check. Required fix: keep lab.json prerequisites[0].check as `python3 --version` (it matches README line 26 and the modules page, which teaches python3 on macOS/Linux and py on Windows), and add one sentence to lab.json cleanup.notes (or the module evidence) stating that the declared check is the macOS/Linux form and that Windows learners run `py --version`, as README line 27 says. Switching to `python --version` is not accepted, because before the venv exists `python` is often missing on macOS/Linux, which is the problem the edu-007 decision fixed. Per-OS checks would need a lab-schema change, which is tooling scope, not this module branch. This is the same decision as py-fund-lab-sme-r03."
+    },
+    {
+      "findingId": "py-fund-lab-sme-r01",
+      "decision": "accept",
+      "rationale": "Reproduced on a scratch copy of HEAD 62b8dc6f. Adding `logger = logging.getLogger(__name__)` to records.py without the import gives \"NameError: name 'logging' is not defined. Did you forget to import 'logging'\" at collection, and pytest exits with status 2 having run no check. This becomes possible because the modules#o1 fix removed the shipped import. Troubleshooting line 213 names only SyntaxError and IndentationError as errors that stop every test. Required fix: extend line 213 to cover NameError, e.g. 'A SyntaxError, IndentationError or NameError (for example a missing import) stops every test: fix the file and line that pytest names first; one broken file stops the whole run.'"
+    },
+    {
+      "findingId": "py-fund-lab-sme-r02",
+      "decision": "accept",
+      "rationale": "Reproduced on the shipped starter at HEAD 62b8dc6f. Task 9 fails with \"importing signups.cli must run nothing, but it raised NameError(\\\"name 'sys' is not defined\\\"); add the __name__ guard\" (tests/test_main.py line 252). The starter cli.py no longer imports sys, so the first cause is the missing import, and adding only the guard moves the NameError into the subprocess runs. The message's next action is therefore incomplete. Required fix: make the message cover both causes, e.g. 'Task 9: importing signups.cli must run nothing, but it raised {err!r}; import what cli.py uses (step 1) and put main behind the __name__ guard (step 3)'."
+    },
+    {
+      "findingId": "py-fund-lab-sme-r03",
+      "decision": "accept",
+      "rationale": "Verified: lab.json line 41 declares `python3 --version` for a lab whose os list includes windows. README line 27 gives `py --version` for Windows, where a python.org install provides no python3. The schema holds one check string per prerequisite. Required fix: keep lab.json prerequisites[0].check as `python3 --version` (it matches README line 26 and the modules page, which teaches python3 on macOS/Linux and py on Windows), and add one sentence to lab.json cleanup.notes (or the module evidence) stating that the declared check is the macOS/Linux form and that Windows learners run `py --version`, as README line 27 says. Switching to `python --version` is not accepted, because before the venv exists `python` is often missing on macOS/Linux, which is the problem the edu-007 decision fixed. Per-OS checks would need a lab-schema change, which is tooling scope, not this module branch. This is the same decision as py-fund-lab-edu-r02."
+    },
+    {
+      "findingId": "py-fund-lab-sme-r04",
+      "decision": "accept",
+      "rationale": "Verified by probe: running a script inside a signups/ folder prints the script's own folder as sys.path[0], and `import json` still succeeds. The standard library and site-packages are still searched, so README line 166's 'would search only the signups folder itself' is technically imprecise; its conclusion (ModuleNotFoundError: No module named 'signups') is correct. Required fix: reword it as '`python signups/cli.py general` puts the signups folder itself, not starter, first on the search path, so Python cannot find the signups package and fails with ModuleNotFoundError: No module named 'signups'.' It can be combined with the py-fund-lab-edu-003 package definition on the same line."
+    }
+  ]
+}

@@ -58,7 +58,7 @@ Where to act: Above `function Bulb()`.
 
 Next step: Copy the useState and the setter call into a new function, and take the initial value as a parameter.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The first line of each component.
 
@@ -80,7 +80,7 @@ const { step, next } = useStepper();
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - react.dev/learn/reusing-logic-with-custom-hooks: Custom Hooks: Sharing logic between components; When to use custom Hooks
 

@@ -129,8 +129,6 @@ Taken, in order: nothing yet
 - A comprehension is the value to keep, then a `for` part, then an optional `if` filter: square brackets build a list; curly braces build a set, or a dict with `key: value`.
 - Comprehensions build collections; loops do actions.
 
-Next topic: Mutability and aliasing
-
 ## Cheat sheet
 
 Where to act: The start, stop and step choices in Build a slice.
@@ -145,19 +143,19 @@ Where to act: The first placeholder, after `result =`.
 
 Next step: Name the value the loop appends on each qualifying pass. That expression is the collected value, and it comes first, right after the opening square bracket.
 
-Another hint Another hint, 2 of 4 for Activity 3
+Another hint Hint 2 of 4 for Activity 3
 
 Where to act: The same placeholder, straight after the collected value.
 
 Next step: Add the for part: it names the same loop variable and the same collection as the loop's own for line, without the colon.
 
-Another hint Another hint, 3 of 4 for Activity 3
+Another hint Hint 3 of 4 for Activity 3
 
 Where to act: The end of that placeholder, before the closing square bracket.
 
 Next step: Decide whether every price is kept. The loop's if line keeps only some, so add that same condition after the for part, again without a colon.
 
-Another hint Another hint, 4 of 4 for Activity 3
+Another hint Hint 4 of 4 for Activity 3
 
 Where to act: The second placeholder, after `doubled =`.
 

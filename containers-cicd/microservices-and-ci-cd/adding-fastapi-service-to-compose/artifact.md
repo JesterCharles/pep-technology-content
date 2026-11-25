@@ -63,7 +63,7 @@ Where to act: Start under the `TODO` in `services`, indented like `api` and `db`
 
 Next step: Copy the shape of the notifier example, then change every name that belongs to that other service.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Look at the host part of `DATABASE_URL`.
 
@@ -89,7 +89,7 @@ Success criteria: Add a health check to reports-db, and make reports wait for it
 
 ## Sources
 
-Status: minimum release, checked by the page author on 2026-11-08. Sources were fetched live on 2026-11-04 and the author checked the page against them; no independent education or technology review was performed.
+Status: Sources fetched on 2026-11-04 and checked by the page author on 2026-11-08; independent review pending.
 
 - Compose services: build, environment, ports, volumes
 - Compose top-level volumes

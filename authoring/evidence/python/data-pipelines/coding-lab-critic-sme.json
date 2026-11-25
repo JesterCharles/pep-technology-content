@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "Python + PostgreSQL SME critic (independent Claude subagent, 2026-11-18)",
+  "reviewedPath": "python/data-pipelines/coding-lab/lab.json",
+  "reviewedSha256": "658d4f05bb8da6ba3c6e0958f23245bbbc239c52f836e5ceb21a9e1cbba8369f",
+  "artifactHashes": {
+    "coding-lab/lab.json": "658d4f05bb8da6ba3c6e0958f23245bbbc239c52f836e5ceb21a9e1cbba8369f",
+    "coding-lab/README.md": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+  },
+  "findings": [
+    {
+      "id": "py-pipe-lab-sme-001",
+      "severity": "high",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/lab.json",
+        "line": 21
+      },
+      "claim": "Over-claimed objective. lab.json claims loading-into-a-staging-table-with-upserts#o1, whose first clause is 'Open a psycopg connection from an environment-variable connection string in a with block, then load ... in batches'. No check observes the learner opening a connection in a with block: every database check receives a connection opened by the test fixture (tests/test_main.py lines 63-68), and the only learner-written connection code is connect() returning psycopg.connect(...), which Task 2 opens and closes itself. The batching half is observed (executemany source check plus idempotent row counts); the with-block half is not. The lab correctly leaves connecting-to-postgres#o3 (with blocks, commit/rollback) unclaimed, so the same gap makes loading#o1 only half-evidenced.",
+      "evidence": [],
+      "recommendation": "Either remove loading-into-a-staging-table-with-upserts#o1 from objectives, or add a small observed step, e.g. a load_files(paths) function in database.py that does `with connect() as conn: load_staging(conn, extract(paths))`, checked by monkeypatching DATABASE_URL to the same URL plus `options=-csearch_path%3D<lab schema>` and then counting rows from a separate connection (which also proves the with block committed); this is an untested sketch.",
+      "reviewedSha256": "658d4f05bb8da6ba3c6e0958f23245bbbc239c52f836e5ceb21a9e1cbba8369f"
+    },
+    {
+      "id": "py-pipe-lab-sme-002",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 119
+      },
+      "claim": "The Task 4 transaction lesson is only true because the checks hand run_transform an autocommit connection, which the README never says. Reproduced with psycopg 3.3.9 / PostgreSQL 18.3 in my own schema: the starter-shaped run_transform (DELETE then a failing INSERT, no conn.transaction()) on a default non-autocommit connection inside `with psycopg.connect(...)` leaves the old row in place (1 row after DivisionByZero), and the same with no with block and close() without commit also leaves it. The taught ELT page (elt-transforming-in-sql-after-loading/artifact.md line 33-35) teaches exactly that: one `with psycopg.connect(...)` block, and that the failure mode is autocommit. conn.transaction() appears on none of the module's pages. Also verified: on a non-autocommit connection where an earlier statement (e.g. load_staging's executemany) already opened a transaction, `with conn.transaction():` is only a savepoint and closing without commit discards everything (1 row remained), so a learner who reuses the lab functions in their own script with connect() and no with block loses the whole night's load.",
+      "evidence": [],
+      "recommendation": "Add one sentence to Task 4: 'The checks pass an autocommit connection, where each statement commits on its own (as on the ELT page); conn.transaction() opens one transaction for both statements. In your own script, `with psycopg.connect(...) as conn:` commits on a clean exit.' Optionally name conn.transaction() as psycopg's explicit transaction block, since the pages only teach the connection block.",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    },
+    {
+      "id": "py-pipe-lab-sme-003",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "line": 383
+      },
+      "claim": "Task 10 mutation check does not force the learner's tests to observe the validate/reject behaviour. Both mutants are killed by a call-count assertion alone. Reproduced: a starter/test_enrich.py with test_calls (FakeModelClient(['not json', VALID]); enrich(...); assert len(client.prompts) == 2) and test_nothing (FakeModelClient([]); assert client.prompts == []) passes the full lab (12 passed): mutant 1 makes 1 call, mutant 2 makes 1 call. Neither test asserts what is enriched or rejected, and the second never calls enrich. This lets the lab's evidence for ai-enrichment-with-validated-outputs#o3 ('fixed valid and invalid responses') be satisfied without an assertion on the valid-vs-invalid outcome.",
+      "evidence": [],
+      "recommendation": "Add mutants that keep the call pattern but break the outcome, e.g. (a) a correct-retry enrich that loads the last answer unvalidated when all attempts fail (returns it in enriched, rejected []), and (b) a correct enrich whose rejected list is always empty. Build mutants from an independent reference implementation inside test_main.py rather than from learner code (see py-pipe-lab-sme-004). Also require that each test function calls enrich (AST check for a call named enrich).",
+      "reviewedSha256": "9cd18453931e8ea058bebdb1eb91052736971badecb76d10e42d9fdb3b8f066f"
+    },
+    {
+      "id": "py-pipe-lab-sme-004",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "line": 354
+      },
+      "claim": "Task 10 blames the learner's tests for a bug in the learner's enrich. The 'never retries' mutant wraps the learner's own enrich (`good(client, signups, max_attempts=1)`), so it only changes behaviour if the learner's enrich honours max_attempts. Task 9 never calls enrich with a non-default max_attempts, so an enrich hard-coded to two attempts (`for attempt in range(1, 3):`) passes Task 9. Reproduced: with that enrich and the README's two tests, Task 9 passes and Task 10 fails with 'your tests still pass when enrich never retries; add a test that catches it', which sends the learner to rewrite correct tests.",
+      "evidence": [],
+      "recommendation": "Make the mutant independent of learner code (a one-attempt reference enrich defined in test_main.py that uses e.Enrichment and e.minimize_for_prompt), and/or add a Task 9 assertion that enrich(client, signups, max_attempts=1) and max_attempts=3 change the number of calls, with the message 'Task 9: use max_attempts, do not hard-code the number of tries'.",
+      "reviewedSha256": "9cd18453931e8ea058bebdb1eb91052736971badecb76d10e42d9fdb3b8f066f"
+    },
+    {
+      "id": "py-pipe-lab-sme-005",
+      "severity": "high",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "line": 113
+      },
+      "claim": "Task 1 source checks are bound to literal spellings, so they reject correct code and accept the exact non-streaming code they claim to catch. False failures reproduced: `with Path(path).open(encoding=\"utf-8\", newline=\"\") as f:` fails 'open the file ... with an explicit encoding' (only a call spelled `open` counts); `from csv import DictReader` fails 'read the CSV with csv.DictReader'. False passes reproduced (all pass Task 1): `for line in fh.readlines():`, `for line in src.read().splitlines():`, and `for row in [*csv.DictReader(f)]:`, because the ban list is only the names f.read, f.readlines and list. These whole-file reads are what objective reading#o2 says breaks bounded memory.",
+      "evidence": [],
+      "recommendation": "Match on the attribute name regardless of receiver: reject any call whose func is an Attribute with attr in {read, readlines} and any list(...)/[*...]/sorted(...) over the reader; accept `open`, `*.open` and `io.open` with an encoding keyword, and accept csv.DictReader or a bare DictReader imported from csv.",
+      "reviewedSha256": "9cd18453931e8ea058bebdb1eb91052736971badecb76d10e42d9fdb3b8f066f"
+    },
+    {
+      "id": "py-pipe-lab-sme-006",
+      "severity": "high",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "line": 170
+      },
+      "claim": "Task 3 batch check requires the literal receiver name `cur`. Reproduced: the correct `with conn.cursor() as cursor: cursor.executemany(UPSERT_SQL, records)` fails with 'send the whole batch with cur.executemany (not one execute per row)', which tells a learner who did batch that they did not. Conversely a per-row `cur.execute` loop plus an unreachable `cur.executemany(...)` line passes (contrived, low risk). Behaviour and SQL text checks for the upsert are otherwise sound: DO NOTHING, partial SET lists and plain INSERT all fail; records carrying extra keys (phone, comment, as Signup.model_dump() gives) load fine with %(name)s placeholders.",
+      "evidence": [],
+      "recommendation": "Accept any `<name>.executemany` or `<name>.copy` call (check ast.Attribute attr), and reject an `execute` call inside a for loop; or observe batching behaviourally by wrapping the connection's cursor() to count execute vs executemany calls.",
+      "reviewedSha256": "9cd18453931e8ea058bebdb1eb91052736971badecb76d10e42d9fdb3b8f066f"
+    },
+    {
+      "id": "py-pipe-lab-sme-007",
+      "severity": "high",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/starter/requirements.txt",
+        "line": 7
+      },
+      "claim": "The lock is incomplete on Windows. psycopg 3.3.9 metadata declares `Requires-Dist: tzdata; sys_platform == \"win32\"` (read from the installed psycopg-3.3.9.dist-info/METADATA; not reproduced on Windows, inferred from that metadata). requirements.txt pins colorama for win32 but not tzdata, so on Windows `pip install -r starter/requirements.txt` resolves the latest tzdata, unpinned. lab.json cleanup.notes calls this file 'the lab's lock of every installed package', and lab-contract section 5 requires pinned versions with committed lockfiles. (typing_extensions is pinned unconditionally although psycopg only needs it below 3.13; harmless because pydantic needs it.)",
+      "evidence": [],
+      "recommendation": "Add `tzdata==<current pinned version> ; sys_platform == \"win32\"` and regenerate the lock per platform marker (e.g. pip-compile or `uv pip compile --universal`), then re-record the solved run.",
+      "reviewedSha256": "9cc8925f413fd5d78e4b86c26fd8457d21170b4ec060ae7dcf6c2a09c04b2550"
+    },
+    {
+      "id": "py-pipe-lab-sme-008",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 152
+      },
+      "claim": "The pseudonym is a deterministic, unkeyed hash of the email, which contradicts the taught method and the README/docstring claims. enrich.py lines 18-21 compute 'p-' + sha256('signups-lab:' + email)[:10]; the prefix is a public constant in the learner's code, so anyone holding a candidate email list re-derives the ref (reproduced: the ref p-8235c45289 re-identifies ben.okafor@example.com from a three-address list). The same person also gets the same ref across every run, file and AI vendor, which enables linkage. The taught page keeping-sensitive-data-out-of-prompts/artifact.md line 15 teaches 'swapping an internal key for a random token and keeping the mapping on your side'. The README says the model never sees 'who it is' and the docstring says 'without revealing it'; both overstate an unkeyed hash.",
+      "evidence": [],
+      "recommendation": "Match the taught page: either (a) pseudonym = HMAC-SHA256 with a secret key read from an environment variable that never ships in code, or (b) a random token (secrets.token_hex) with a dict mapping kept on the pipeline side and returned alongside the enriched rows. If the unkeyed hash stays for simplicity, say so in the README ('a lab shortcut; production uses a keyed hash or a random token kept on your side') and soften the docstring.",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    },
+    {
+      "id": "py-pipe-lab-sme-009",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 150
+      },
+      "claim": "Free text is sent to the model unmasked while the lab claims no personal data is sent. minimize_for_prompt keeps 'every key of signup that is not in PERSONAL_FIELDS', which includes the free-text comment, and Task 8's check requires the comment verbatim. The taught page (keeping-sensitive-data-out-of-prompts/artifact.md lines 13, 37, 69) says free text can contain personal data and should be masked. README line 6 promises enrichment 'without sending anyone's personal data', and Task 9's prompt check only looks for the exact fixture email/name/phone values, so a comment such as 'bringing my colleague jo@example.com' would reach the prompt and the check would still pass.",
+      "evidence": [],
+      "recommendation": "Either add a one-line mask step (replace email-shaped and phone-shaped substrings in comment with [email]/[phone]) with one fixture comment that contains an address and a check that it is masked, or at minimum add a README sentence that free text can carry personal data and would need masking in production, and soften line 6.",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    },
+    {
+      "id": "py-pipe-lab-sme-010",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 196
+      },
+      "claim": "Cleanup step 1 gives only the POSIX form `psql \"$DATABASE_URL\" ...`, while lab.json declares Windows support and Setup step 3 gives the PowerShell form `psql $env:DATABASE_URL`. In PowerShell, \"$DATABASE_URL\" expands the (unset) PowerShell variable $DATABASE_URL to an empty string, so psql connects with libpq defaults (Windows user name, its same-named database) and either fails or lists/drops schemas in the wrong database. Not reproduced on Windows (macOS host); the expansion rule is standard PowerShell variable interpolation. The same POSIX-only form is the lab.json prerequisite check (line 47). The POSIX commands themselves were reproduced and work (\\dn pipeline_lab_* lists a leftover; DROP SCHEMA ... CASCADE removes it).",
+      "evidence": [],
+      "recommendation": "Add the PowerShell forms: `psql $env:DATABASE_URL -c \"\\dn pipeline_lab_*\"` and `psql $env:DATABASE_URL -c \"DROP SCHEMA pipeline_lab_<hex> CASCADE\"`.",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    },
+    {
+      "id": "py-pipe-lab-sme-011",
+      "severity": "low",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 22
+      },
+      "claim": "'Each failing check names its task and the next action' is not true for the shipped starter or for some wrong solutions. Starter Task 4 and Task 7 fail with the raw server error `psycopg.errors.SyntaxError: syntax error at or near \"TODO\"` (the task number shows only because the placeholder SQL contains it; the text also depends on the server's lc_messages). Other un-labelled failures reproduced: connect() using os.getenv gives `AttributeError: 'NoneType' object has no attribute 'encode'`; validate_all storing str(err) gives `TypeError: string indices must be integers`; run_transform with the SQL inlined gives `Failed: DID NOT RAISE Error`. Messages are stable across runs, so contract section 6 stability holds.",
+      "evidence": [],
+      "recommendation": "Wrap the database calls in Tasks 4 and 7 with `except psycopg.Error as err: pytest.fail(f\"Task 4: TRANSFORM_SQL failed: {err}\")` (same for Task 7), wrap the KeyError check with a Task 2 message, and use pytest.raises(..., match=...) with a fail message for the Task 4 injection; or soften README line 22.",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    },
+    {
+      "id": "py-pipe-lab-sme-012",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "line": 189
+      },
+      "claim": "Further shape-bound checks reject correct code: (a) Task 4 `TRANSFORM_SQL.strip().upper().startswith(\"WITH\")` fails a CTE preceded by a SQL comment (reproduced); (b) the Task 4 failure injection only works if run_transform reads the module global TRANSFORM_SQL at call time, so an inlined or default-argument SQL gives 'DID NOT RAISE' (reproduced); (c) Task 6 requires an ast.Dict/DictComp node, so `kept = dict()` fails 'key a dict on the email' (reproduced, line 248); (d) Task 9 requires exactly 3 WARNING records (line 333), so also logging a WARNING when a ref is finally rejected fails 'log one WARNING for each invalid or failed answer' (reproduced; an ERROR-level reject log passes). Rated medium rather than high like 005/006 because the README prescribes the exact form for each and these alternatives are less likely than a differently named cursor or Path.open.",
+      "evidence": [],
+      "recommendation": "(a) strip leading `--` comment lines before the WITH check, or check for `WITH` followed by `AS (` anywhere before INSERT; (b) note in the Task 4 README step to keep using the TRANSFORM_SQL name; (c) also accept a Call to dict; (d) assert at least one warning per failed attempt whose message names the ref and the attempt, rather than an exact total.",
+      "reviewedSha256": "9cd18453931e8ea058bebdb1eb91052736971badecb76d10e42d9fdb3b8f066f"
+    },
+    {
+      "id": "py-pipe-lab-sme-013",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 103
+      },
+      "claim": "Technically inaccurate contrast: 'Loading the same file twice now leaves one row per email instead of duplicates'. email is the PRIMARY KEY of staging_signups, so without the upsert a second load does not create duplicates; it raises UniqueViolation (reproduced: a plain-INSERT executemany with a repeated key raises UniqueViolation and, because psycopg 3.3 runs executemany in pipeline mode, leaves 0 rows of that batch even on an autocommit connection). The idempotency point is right; the 'instead of duplicates' framing teaches the wrong failure mode.",
+      "evidence": [],
+      "recommendation": "Reword: 'Loading the same file twice now updates each email's row instead of failing with a duplicate-key error, so a rerun after a failed night is safe.'",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    },
+    {
+      "id": "py-pipe-lab-sme-014",
+      "severity": "low",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 141
+      },
+      "claim": "The Task 6 hint `sorted(...)` without a key fails: neither Pydantic models nor the SimpleNamespace rows the check passes define ordering, so `sorted(kept.values())` raises TypeError: '<' not supported. The README names the order (by email) but not the key.",
+      "evidence": [],
+      "recommendation": "Write the hint as `sorted(kept.values(), key=lambda s: s.email)`.",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    },
+    {
+      "id": "py-pipe-lab-sme-015",
+      "severity": "low",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/lab.json",
+        "line": 41
+      },
+      "claim": "Setup portability is unverified beyond the reviewer's host. The prerequisite is an open-ended `python >=3.12` while every package is pinned exactly, and two pins are binary-only in practice (psycopg-binary has no sdist; pydantic_core's sdist needs a Rust toolchain). I could only observe cp312 macOS arm64 wheels in the provided venv (network use is out of scope for this review), so wheel availability for Windows x86_64/ARM64, Linux aarch64 and for newer CPython releases is not verified either way, and no wheel-availability evidence is recorded in the lab's evidence tree. If a wheel is missing, setup fails with 'No matching distribution' or a Rust build error, and exact pins prevent pip from falling back.",
+      "evidence": [],
+      "recommendation": "Record per-target evidence (e.g. `pip download --only-binary=:all: --platform <tag> --python-version <v> -r starter/requirements.txt` for win_amd64, manylinux x86_64/aarch64, macosx x86_64/arm64 and each supported CPython), and either state the tested range in the prerequisite (e.g. 3.12-3.14) or note what to do on an unsupported interpreter.",
+      "reviewedSha256": "658d4f05bb8da6ba3c6e0958f23245bbbc239c52f836e5ceb21a9e1cbba8369f"
+    }
+  ]
+}

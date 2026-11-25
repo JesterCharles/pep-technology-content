@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "education critic (independent Claude subagent, 2026-11-18)",
+  "reviewedPath": "python/fastapi-services/coding-lab/lab.json",
+  "reviewedSha256": "be2efea95050e484f9e7e9091c8dd8e20874ba660338c1e8e571ef91eedbabc3",
+  "artifactHashes": {
+    "coding-lab/lab.json": "be2efea95050e484f9e7e9091c8dd8e20874ba660338c1e8e571ef91eedbabc3",
+    "coding-lab/README.md": "09cc6cab0b593f2089e6061c39f3ddabebeedee7ab8613b97701e5c186f23d6b"
+  },
+  "findings": [
+    {
+      "id": "py-api-lab-edu-r01",
+      "severity": "low",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "line": 85
+      },
+      "claim": "A side effect of the fixture regeneration (edu-007): fixtures/signups.json now has 4 sign-ups, with one in 'general', two in 'testing' and one in 'data'. README line 85's paging example '?limit=2&offset=1 skips the first sign-up and returns the next two' cannot be shown on the shipped data in the optional uvicorn run (line 87, 'try the routes'). /sessions/general/signups?limit=2&offset=1 returns [] and /sessions/testing/signups?limit=2&offset=1 returns one sign-up. The checks use their own SIGNUPS, so nothing fails; but a novice who tries the README's own example in /docs sees a result that seems to contradict it.",
+      "evidence": [],
+      "recommendation": "Name the session the example comes from and use values the fixture can show, e.g. '/sessions/testing/signups?limit=1&offset=1 skips Ben Okafor and returns Eli Novak'. Or say that the example describes the checks' data, not the snapshot.",
+      "reviewedSha256": "09cc6cab0b593f2089e6061c39f3ddabebeedee7ab8613b97701e5c186f23d6b"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/python/fastapi-services/coding-lab-critic-education.json",
+    "items": [
+      {
+        "findingId": "py-api-lab-edu-001",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "reviewedSha256": "80a3bc6427f5187543b8069716076026f5721888bbf28212d7a1270d56a4e9ca",
+        "note": "test_task06 now expects (502, 'Workshop service unavailable') for ConnectError (line 173). README Task 6 table (line 118), the upstream.py docstring and README troubleshooting line 174 ('the route answers 502') all say 502. Probe recheck1/probes/upstream.solved.py (the page recipe with 502) passes 10/10 with my own main/settings/tests."
+      },
+      {
+        "findingId": "py-api-lab-edu-002",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "reviewedSha256": "80a3bc6427f5187543b8069716076026f5721888bbf28212d7a1270d56a4e9ca",
+        "note": "The mutant now patches both bindings ('u.fetch_workshop = m.fetch_workshop = ...', line 237). Probe test_routelevel.py (an override 404 test plus a route-level ReadTimeout test through a get_workshop_client override) passes 10/10. README line 138 says a route-level test is accepted."
+      },
+      {
+        "findingId": "py-api-lab-edu-003",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "reviewedSha256": "80a3bc6427f5187543b8069716076026f5721888bbf28212d7a1270d56a4e9ca",
+        "note": "Task 8 now records the keys assigned into app.dependency_overrides via a Recorder dict and requires 'get_repository' (lines 245-291). It also adds a must-fail mutant in which overrides are ignored, so an override that does no work is caught. Probes: test_nooverride.py and test_only422.py fail Task 8 with 'in a test, replace the repository with app.dependency_overrides[get_repository] = ...'. README-style, route-level, class-based and monkeypatch.setitem suites pass 10/10. README line 140 and the lab.json notes describe the new runs."
+      },
+      {
+        "findingId": "py-api-lab-edu-004",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "reviewedSha256": "09cc6cab0b593f2089e6061c39f3ddabebeedee7ab8613b97701e5c186f23d6b",
+        "note": "README Task 6 (lines 110-121) now teaches the page recipe: raise_for_status, then except TimeoutException, TransportError and HTTPStatusError in that order, with the 'first matching except wins' reason. 'every' is dropped. test_task06 adds a ConnectTimeout case. Probes: upstream_issuccess_connect.py (is_success plus a ConnectError catch) passes 10/10, so the page-accepted variant is not failed. upstream_readtimeout_only.py and upstream_transport_first.py fail Task 6 with the message 'catch TimeoutException before TransportError ...'. upstream_no_raise_for_status.py fails with the JSONDecodeError named and the raise_for_status hint."
+      },
+      {
+        "findingId": "py-api-lab-edu-005",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/lab.json",
+        "reviewedSha256": "be2efea95050e484f9e7e9091c8dd8e20874ba660338c1e8e571ef91eedbabc3",
+        "note": "fastapi-routes#o1 has been removed from objectives; the topic stays in covers. The notes record that the route-definition clause is practised in Tasks 1-3 while the run clause stays with the page. README line 87 explains that fastapi dev needs fastapi[standard] and gives cd starter / uvicorn / cd .., and line 88 covers the offline /docs case."
+      },
+      {
+        "findingId": "py-api-lab-edu-006",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "reviewedSha256": "80a3bc6427f5187543b8069716076026f5721888bbf28212d7a1270d56a4e9ca",
+        "note": "Fresh starter run (recheck1/lab): all 8 failures now name the task and an action. Task 5 builds its config with SimpleNamespace, so it fails with 'NotImplementedError: Task 5: write make_client' instead of a pydantic error. Route checks 1/2/3/7 append the decorator to add. Task 4 has a Task 4 message for a token default. Task 7 uses raise_server_exceptions=False: probe main_notry.py gives 'Task 7: got 500; catch UpstreamError ...'. Probe upstream_notransport.py gives 'Task 5: pass transport=transport ...' with no network attempt."
+      },
+      {
+        "findingId": "py-api-lab-edu-007",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/fixtures/signups.json",
+        "reviewedSha256": "ac3494a3cf9aa9e4a1f2eab1318e062256aedb41041f9e63635b09d4fda3dbed",
+        "note": "The fixture now holds exactly the data-pipelines lab's accepted, deduplicated people: Ana Ruiz in 'data', Ben Okafor, Eli Novak and Fay Adams. Chen Li and Dana Kim (rejected by that lab's Task 5) are gone. README Goal lines 5 and 7 frame the JSON snapshot and the walk-in POST as memory-only, with the pipeline as the source of truth."
+      },
+      {
+        "findingId": "py-api-lab-edu-008",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "reviewedSha256": "09cc6cab0b593f2089e6061c39f3ddabebeedee7ab8613b97701e5c186f23d6b",
+        "note": "README line 10 now says about 50 minutes with setup included. It names the split: setup and Tasks 1-3 in the 20-minute block, Tasks 4-8 in the 40-minute block, with the end of Task 3 as the pause point (line 90 marks it), and it keeps the 60-minute cap. lab.json estimatedMedian is 50, and its notes say this is an unmeasured authoring estimate. This is still not a measured pilot; my solve was scripted, so I cannot confirm the 20-minute first block for a novice. It is plausible but tight, and the figure is honestly labelled."
+      },
+      {
+        "findingId": "py-api-lab-edu-009",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/fixtures/signups.json",
+        "reviewedSha256": "ac3494a3cf9aa9e4a1f2eab1318e062256aedb41041f9e63635b09d4fda3dbed",
+        "note": "Every workshop_id is now 1 or 2, matching the Spring Basics CatalogConfig seeds. README line 106 says the Basics catalog ignores the token while a deployed catalog checks it. The optional end-to-end step was declined by the reconciler as extra setup, which is acceptable."
+      },
+      {
+        "findingId": "py-api-lab-edu-010",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "reviewedSha256": "09cc6cab0b593f2089e6061c39f3ddabebeedee7ab8613b97701e5c186f23d6b",
+        "note": "Reject-with-evidence accepted. The sibling Python module labs (data-pipelines README:94/100, python-fundamentals README:97-98/132) dictate at the same level. The 60-minute cap is tight after this round's Task 6 and Task 8 additions. And README line 140 now states what Task 8's tests must catch (four broken versions), which gives the learner the intent behind the dictated code. README unchanged on dictation; no further action."
+      },
+      {
+        "findingId": "py-api-lab-edu-011",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/expected/on-completion.txt",
+        "reviewedSha256": "184a1edaef2dd8075eb591c8e8188a188f8eb7ca3dfab9ef1c1cbdcb06c42136",
+        "note": "The expected line is now '<one dot for each of your own tests>........', matching pytest's order (starter/test_api.py runs first, re-verified with -v in the first pass and unchanged collection now). README line 87 gives cd starter and cd .., and line 171 adds a troubleshooting entry for running inside starter. Task 2 at README line 79 now reads look up, raise 404 when None, otherwise return."
+      }
+    ]
+  }
+}

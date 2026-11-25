@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "ops-critic-education (independent Claude critic subagent, 2026-11-18)",
+  "reviewedPath": "containers-cicd/microservices-and-ci-cd/coding-lab/lab.json",
+  "reviewedSha256": "9c58c9241d704517b6f9baea638de0c5848f51a5180d4112ac83d3e063368d78",
+  "artifactHashes": {
+    "coding-lab/README.md": "9df67c0351afc02676fb64ea88d404a136d9009c5722ea3b1356e8dcdef57517",
+    "coding-lab/expected/solved-summary.txt": "28db168f1d14b0368e49a7fc65d0c2c2788732a4fc1b12ca0cbb2a606b2d7b37",
+    "coding-lab/expected/starter-summary.txt": "039fc674111feca307863bf3dd73b6162ca85b455f5e95822abe2e90727daf2f",
+    "coding-lab/fixtures/.env.example": "16d958ba8d51b7600909af11bbcc39441a8f4b4c80a18379e12e2a50287223e4",
+    "coding-lab/fixtures/briefs/architecture-brief.md": "ee182f1507303308163b72ff003ada5b818ca8ce7322a4d02fdd7bb7fa437bfa",
+    "coding-lab/fixtures/briefs/image-reference.txt": "8a3a8f613ad38f9e27e7a4e8d7419ccc3cfc78e1967a516040a2c58ac1527a0f",
+    "coding-lab/lab.json": "9c58c9241d704517b6f9baea638de0c5848f51a5180d4112ac83d3e063368d78",
+    "coding-lab/starter/.github/workflows/ci.yml": "23e3f3b9efacc064c3ecc267ea1ad4a8b33e8434eaeaa918d027cc197a1a9987",
+    "coding-lab/starter/.gitignore": "6c9e486632f5647c93d52d6c064f6e4ebea0c0ddd0747d9f91511f6a06cf817a",
+    "coding-lab/starter/compose.yaml": "79caf1e98f7b157cf5ac62869d1d5241fd25a2466c2ba467b38d78e3cfe63823",
+    "coding-lab/starter/decisions.yaml": "337d0e1f7712e1857918ba6e7bfd6c842bfa06e1513baa19ce983f980c6ef391",
+    "coding-lab/starter/reviews/.dockerignore": "319f8e376e8fdddd571f42b249ee21d571c6673e526cb8b8577077a77f2fa976",
+    "coding-lab/starter/reviews/Dockerfile": "7617adb046a7b6b9f8a5119747c6d1256391b0c123d1b16a429f8e7c202f8a34",
+    "coding-lab/starter/reviews/app/main.py": "1786d5bf84bb996fd3d03437923e0e9fba81dc841c3df7b685b23df141958393",
+    "coding-lab/starter/reviews/requirements.txt": "44216c29888f2536291b0822db49381252392f80298b391c94c130bf892ebbad",
+    "coding-lab/tests/ci.test.mjs": "32822e43ab8a0caf2540bf2b9410d993dda00fcbafcbc2a252fc0a64f7723f12",
+    "coding-lab/tests/compose.test.mjs": "b3365f5caedfe40b6bcf7816da47cb20fdbfb50cf33c3e5e3bad8a0033db19ba",
+    "coding-lab/tests/decisions.test.mjs": "c20d558eab1b795210d08bc2f6ce2748520db552a0a1ab05fda396ebbab09eb3",
+    "coding-lab/tests/dockerfile.test.mjs": "849779dc9e92f98e1a78c77f8bd215dc70ac31aff289f3eedcd86694be14a3d4",
+    "coding-lab/tests/lab.mjs": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f",
+    "coding-lab/tests/package-lock.json": "967ac4c675131cb4beb93684e07dbbb8f8a427a78dc66422036927ce5c126803",
+    "coding-lab/tests/package.json": "3a5c13790064c853eef28d93aed9525d0b7280843d68c34a43c0f734a8e3a4fd",
+    "coding-lab/tests/service.test.mjs": "92be8e5f4dcdfb0f79d041c8e552eadbf507a97ceb039eec6f087d8482dd6261"
+  },
+  "findings": [
+    {
+      "id": "ops-edu-01",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/app/main.py",
+        "line": 33
+      },
+      "claim": "The starter docstring misteaches HTTPX defaults. It says the naive call \"sets no connect or read timeout, so a hanging api hangs us too\", but the S38 service-to-service-calls page teaches \"HTTPX has a five-second inactivity default that timeout=None turns off\" and its explore activity says HTTPX with nothing set stops after about 5 seconds. Verified in a scratch venv with httpx 0.28.1: inspect.signature(httpx.get).parameters[\"timeout\"] is Timeout(timeout=5.0). The README troubleshooting line 147 (\"set both a connect and a read limit, and remove timeout=None\") refers to a timeout=None that the shipped starter does not contain, so README, docstring and topic page disagree on what the draft call actually does. Objective service-to-service-calls#o2 explicitly asks learners to compare explicit limits with the documented default and with timeouts disabled; this lab tells them the default does not exist.",
+      "evidence": [],
+      "recommendation": "Make the draft match the page's anti-pattern: ship the call with timeout=None (or an httpx.Client(timeout=None)) and reword the docstring rule 2 to \"timeout=None disables the five-second default, so a hanging api hangs us too\". Keep README troubleshooting line 147 consistent with that draft.",
+      "reviewedSha256": "1786d5bf84bb996fd3d03437923e0e9fba81dc841c3df7b685b23df141958393"
+    },
+    {
+      "id": "ops-edu-02",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 233
+      },
+      "claim": "reviews-error-mapping only checks that the patterns `except ... httpx.TimeoutException:` and `HTTPException(504` both occur somewhere, and separately a ConnectError/RequestError except plus a 502/503 somewhere; it never ties an except clause to the status it raises. Reproduced against a passing solution copy (LAB_PROJECT override): (a) swapping the codes so TimeoutException raises 502 and ConnectError raises 504 still passes all 27; (b) placing `except httpx.RequestError: raise HTTPException(status_code=502)` before `except httpx.TimeoutException: raise HTTPException(status_code=504)` passes all 27, although TimeoutException subclasses RequestError (verified with issubclass under httpx 0.28.1 in a scratch venv) so the 504 branch is unreachable and every timeout becomes 502. The failure message itself offers httpx.RequestError as an acceptable choice, steering learners towards (b). Objective service-to-service-calls#o3 (504 for a timeout, 502/503 for a refused connection, as the page teaches) can therefore be passed with the mapping wrong.",
+      "evidence": [],
+      "recommendation": "Parse except blocks in order: find the clause whose exception list includes TimeoutException (or ConnectTimeout/ReadTimeout) and require the raise inside that block to be 504; require the ConnectError block to raise 502/503; fail when RequestError/TransportError/HTTPError/Exception is caught before TimeoutException. Drop RequestError from the hint or explain the ordering.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-edu-03",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 277
+      },
+      "claim": "ci-build-push accepts any push expression that mentions github.event_name or github.ref. Reproduced: changing the solution to `push: ${{ github.event_name == 'pull_request' }}` (pushes only from pull requests, the exact inversion of the taught rule) passes all 27 tests; `${{ github.ref != 'refs/heads/main' }}` would pass the same way. Inverting == and != is a plausible novice slip, and github-actions-pipeline#o3 (\"when an image is only built versus also pushed\") is credited without the learner getting the condition right.",
+      "evidence": [],
+      "recommendation": "Accept only semantically correct forms, e.g. event_name != 'pull_request', event_name == 'push', ref == 'refs/heads/main' (or startsWith(github.ref, 'refs/tags/')), and reject the inverted operators with a message that explains which runs would push.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-edu-04",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 310
+      },
+      "claim": "ci-no-secret-prints only flags a run step whose own text contains both echo/printf/cat and a literal `${{ secrets.` expression. Routing the secret through env, which the secrets-in-ci page and README line 118 both recommend for docker login, defeats it: adding a step `env: {PW: ${{ secrets.REGISTRY_PASSWORD }}}` with `run: echo \"$PW\" | base64` passes all 27 tests. That is precisely the scenario the secrets-in-ci page opens with (a step base64-encodes a secret into the run log), so the test titled \"no step prints a secret to the run log\" passes a step that prints a secret in a form redaction cannot catch. A learner who \"fixes\" the debug step by moving the secret into env, instead of deleting it, is told the step is fine.",
+      "evidence": [],
+      "recommendation": "Resolve env names bound to secrets.* (step, job and workflow env) and flag any run that echoes/printf/cat/base64/tee those variables except via ::add-mask::; at minimum require that the shipped debugging step is gone (no step named like it, no echo of REGISTRY_* variables).",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-edu-05",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 208
+      },
+      "claim": "reviews-timeouts is satisfied by text that does not configure the call. Reproduced: (a) `timeout = httpx.Timeout(3.0, connect=2.0)` as a local variable that is never passed to httpx.get passes, because the final check only looks for `timeout\\s*=` anywhere after removing the literal \"httpx.Timeout\"; (b) a comment `# later: timeout=httpx.Timeout(3.0, connect=2.0)` with no timeout argument on the call passes all 27. Conversely a correct explicit alternative, `timeout=3.0` on the call (httpx applies 3 s to connect, read, write and pool), fails with \"build an httpx.Timeout(...)\", although README line 97 presents httpx.Timeout only as \"for example\".",
+      "evidence": [],
+      "recommendation": "Strip comments and docstrings before matching, and require the timeout keyword inside the httpx.get/client call's argument list (or on the client constructor) to reference the Timeout object or a numeric value; either accept a plain number as an explicit limit or say plainly in the README that an httpx.Timeout with a separate connect limit is required.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-edu-06",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 229
+      },
+      "claim": "reviews-auth-forward accepts only the dict-literal text `\"Authorization\": authorization`. Reproduced: lowercase key `{\"authorization\": authorization}` (HTTP header names are case-insensitive) fails, and the guarded form `headers = {}` / `if authorization: headers[\"Authorization\"] = authorization` fails with \"send the incoming authorization parameter on\". The only accepted form crashes when the caller sends no header: verified with httpx 0.28.1 in a scratch venv, headers={\"Authorization\": None} raises TypeError \"Header value must be str or bytes, not <class 'NoneType'>\", which the taught except clauses do not catch, so the request ends as an unhandled 500 - the outcome service-to-service-calls#o3 says to avoid. So the test fails the more correct guarded answer and forces a form that returns 500 for header-less callers. Meanwhile a comment line `# \"Authorization\": authorization` with no header on the call passes all 27.",
+      "evidence": [],
+      "recommendation": "Strip comments, then accept any form that puts the incoming authorization value into the outgoing headers (dict literal, subscript assignment, either key case), and either accept or prefer a guard for a missing header (or make the parameter required / return 401). Mention the None case in README phase 4.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-edu-07",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 260
+      },
+      "claim": "Several CI rules check presence, not the taught relationship. Reproduced against a passing solution: (a) moving actions/checkout after `./mvnw test` in the test job passes ci-test-job, although README line 113 and the failure text say checkout must come before the tests; (b) deleting the docker login step entirely and putting `# ${{ secrets.REGISTRY_USERNAME }} ${{ secrets.REGISTRY_PASSWORD }}` in a YAML comment passes ci-secret-refs, so secrets-in-ci#o1 (\"reference a repository secret ... instead of writing the credential into the file\") is credited without any step using a secret.",
+      "evidence": [],
+      "recommendation": "In ci-test-job require the checkout step index to be lower than the test-run step index. In ci-secret-refs read the parsed YAML (step env, with, run values) rather than raw text, and require a login step (docker login --password-stdin or docker/login-action) whose credentials come from those secrets.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-edu-08",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 166
+      },
+      "claim": "Dockerfile and port rules mis-grade plausible edits. Reproduced: (a) keeping the draft's early `COPY ./app ./app` and adding a second COPY of app after pip install passes reviews-deps-order, although the early copy still invalidates the dependency layer on every code change - the exact defect phase 3 is about; (b) `fastapi run ... --host=127.0.0.1` passes reviews-listen because only the space-separated `--host X` form is parsed; (c) the correct alternative `uvicorn app.main:app --host=0.0.0.0 --port 8000` fails with \"uvicorn defaults to 127.0.0.1\" (README line 89 names only the space-separated `--host 0.0.0.0` form); (d) .dockerignore with `.env*` (covers .env) fails; (e) in compose, `127.0.0.1:8000:9000` passes reviews ports although README line 79 says publish container port 8000 and the app listens on 8000.",
+      "evidence": [],
+      "recommendation": "Require that no COPY/ADD of the app (or `.`) precedes the pip install; parse `--host=VALUE` as well as `--host VALUE` for both fastapi and uvicorn; treat glob entries that match .env as satisfying the rule; check the container side of the reviews port mapping is 8000.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-edu-09",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/decisions.yaml",
+        "line": 42
+      },
+      "claim": "The decision worksheet discloses its answers by position and wording, so the explain/compare/justify objectives it claims reduce to lookup. In store_contrast every \"one of\" list is ordered relational, document, key-value, so for all 9 fields the k-th option is correct for the k-th store; the option labels are the sql-vs-nosql page table cells slugified (\"Declared up front\" -> declared-up-front, \"Mostly get and put by key\" -> get-and-put-by-key). Paired questions are listed in field order (discovery_setup_a/b, jenkinsfile/github_actions, replicas/stable address), and the first listed option is the answer for shared_concern_at_gateway, compose_service_names_are, different_store_types_are_enabled_by and manual_approval_before_production; distractors such as image-caching and build-caching are implausible. The cart-session and Approve-button scenarios are near-verbatim copies of the sql-vs-nosql and jenkins page examples. Each rule reports the first wrong field and every field has 2-3 options, so a learner can pass by trial reruns without reading the brief, and each `why` passes with any 20 characters (verified with filler \"aaaaaaaaaaaaaaaaaaaaaa\"). Apart from the compose tests 10, 11 and 13 (own database, service-name URLs), which exercise the applied side of monolith#o2 and api-gateways#o3, this worksheet is the only practice for the explain/compare/justify parts of monolith-vs-microservices o1-o3, sql-vs-nosql o1-o3, api-gateways o1-o3 and jenkins o1/o3.",
+      "evidence": [],
+      "recommendation": "Shuffle option order per question, use plausible distractors (e.g. rate-limiting vs authentication vs request-logging; client-side vs server-side discovery terms), vary scenarios away from the page examples, and make at least one item per objective require the learner to produce something checkable (e.g. name the field that drives the store choice, or pick the brief sentence that justifies it) rather than a free `why` that is only length-checked.",
+      "reviewedSha256": "337d0e1f7712e1857918ba6e7bfd6c842bfa06e1513baa19ce983f980c6ef391"
+    },
+    {
+      "id": "ops-edu-10",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/lab.json",
+        "line": 23
+      },
+      "claim": "lab.json declares all 24 objectives, but several objective clauses are never elicited by any task or test: service-to-service-calls#o2 requires Spring RestClient timeouts and a comparison with each client's documented default and with timeouts disabled - the lab has no RestClient file and no comparison item; secrets-in-ci#o2 requires add-mask for derived values and knowing that fork-triggered runs get no secrets - neither appears; api-gateways-and-service-discovery#o2 requires telling client-side from server-side discovery, but the choices `the-calling-service | a-router-in-front` restate the brief's own sentences and the terms never appear; adding-fastapi-service-to-compose#o3 asks learners to explain why 0.0.0.0 is needed, but the task is replacing `fastapi dev` with `fastapi run` as README line 89 dictates; jenkins-registries-cd-and-kubernetes#o2 asks what a registry stores, but the only item copies the page's ghcr.io/acme/shop-api:1.4.2 split onto ghcr.io/pepshop/reviews:1.4.2.",
+      "evidence": [],
+      "recommendation": "Either add small checkable items for the missing clauses (a RestClient snippet with connect/read timeouts or a worksheet row comparing HTTPX default, timeout=None and explicit limits; an add-mask/fork question; client-side vs server-side naming; a short-form image reference such as reviews:1.4.2 to resolve to docker.io/library or the default tag) or record these objectives as partially covered rather than declaring full coverage.",
+      "reviewedSha256": "9c58c9241d704517b6f9baea638de0c5848f51a5180d4112ac83d3e063368d78"
+    },
+    {
+      "id": "ops-edu-11",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "line": 96
+      },
+      "claim": "README phases 2-4 and 6 hand over nearly every final value the tests check: the exact SHAs with tags, the exact push expression, `httpx.Timeout(3.0, connect=2.0)`, `HTTPException(status_code=504, ...)`, the three .dockerignore entries, `API_BASE_URL: http://api:8080`, `needs: test`, `contents: read`, and the failure messages repeat them (e.g. \"push must depend on ... for example push: ${{ github.event_name != 'pull_request' }}\"). For a novice repair-and-complete lab some scaffolding is appropriate, but with every value given, tests 1-14 and 21-27 become transcription; github-actions-pipeline#o2 (\"Write a workflow ... using needs\") is satisfied by typing the one line the README prints.",
+      "evidence": [],
+      "recommendation": "Keep the rule names and page pointers but withhold one decisive value per phase (e.g. state \"push only for runs that are not pull requests\" and let the learner write the expression from the page; say \"a connect limit of 2 s and a read limit of 3 s\" without the constructor; say \"the status the page assigns to a timeout\"). Keep the SHAs given, since looking them up is not a lab objective.",
+      "reviewedSha256": "9df67c0351afc02676fb64ea88d404a136d9009c5722ea3b1356e8dcdef57517"
+    },
+    {
+      "id": "ops-edu-12",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "line": 11
+      },
+      "claim": "The lab is required for Standard (trackRequirement.standard = required), yet tests 15 (image reference) and 20 (delivery) can only be answered from the S39 \"Reading (optional): Jenkins, registries, CD and Kubernetes\" page (its topic.json title marks it optional). README lines 10-11 turn the optional reading into a prerequisite (\"Phase 7 asks about that optional reading, so read it before phase 7\"), and phase 7's 4 minutes does not include reading that ~800-word page (about 4 minutes at the timing model's 200 wpm). A learner who skips the optional page cannot reach 27/27 without guessing.",
+      "evidence": [],
+      "recommendation": "Either mark phase 7 and its two tests as optional/extension (excluded from the required pass), or move the two facts it needs into the brief/README and add the page-reading time to the S39 estimate.",
+      "reviewedSha256": "9df67c0351afc02676fb64ea88d404a136d9009c5722ea3b1356e8dcdef57517"
+    },
+    {
+      "id": "ops-edu-13",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "line": 34
+      },
+      "claim": "Timing is internally inconsistent and the worst case is thin. README S38 phase labels sum to 3+8+5+8+12 = 36 minutes but the header says 39; coding-lab-timing.json gives phase 5 as 15 minutes while README line 100 says 12. Phase 1 is 3 minutes, but reading the README itself (1139 words) takes about 5.7 minutes at the model's own 200 wpm, and the brief (588 words, read in phase 5) takes about 3 of phase 5's 12 README minutes before any of the 30 choices are made. worstRequiredMinutes 60 is typical 55 plus 5 minutes, while the model charges about 1 minute per failed retry and store_contrast alone reports one wrong field per run (up to 9 sequential reruns), so a handful of slips exceeds the bound.",
+      "evidence": [],
+      "recommendation": "Make README phase minutes sum to the stated per-day totals and agree with the timing JSON, account for README/brief reading explicitly, and base the worst case on a stated number of retries per test group, not a flat 5 minutes.",
+      "reviewedSha256": "9df67c0351afc02676fb64ea88d404a136d9009c5722ea3b1356e8dcdef57517"
+    },
+    {
+      "id": "ops-edu-14",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 22
+      },
+      "claim": "A YAML syntax error is silently treated as an empty file. The compose draft is commented as `#  reviews:` (hash plus two spaces); an editor toggle-comment that removes \"# \" leaves one-space indentation, and the yaml parser then throws \"All mapping items must start at the same column\" (reproduced with the lab's yaml 2.9.1). yamlFile catches the error and returns {}, so every compose test reports \"add a service named reviews with build: ./reviews ...\" or similar, even though reviews is present and the provided api and db services have also \"vanished\". The same silent fallback applies to ci.yml and decisions.yaml. README troubleshooting line 144 helps only if the learner suspects indentation.",
+      "evidence": [],
+      "recommendation": "Report parse errors explicitly (e.g. \"compose.yaml is not valid YAML at line N: <message>\") from every YAML-reading rule, and state the exact uncomment method in README phase 2 (delete only the `#` character; an editor toggle-comment also removes one space and breaks indentation). No comment style survives both methods, so the explicit parse message is the main fix.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-edu-15",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/.github/workflows/ci.yml",
+        "line": 21
+      },
+      "claim": "The pipeline the learner is asked to complete builds the wrong thing. The build step tags ghcr.io/pepshop/reviews but uses `context: .`; in the lab project the root has no Dockerfile (the reviews Dockerfile is under reviews/, and compose.yaml correctly uses build: ./reviews), and the test job runs `./mvnw test` although the project has no mvnw. The test title \"the image build keeps its context\" rewards leaving `context: .` (the shipped value), so a learner finishes believing this workflow builds and pushes the reviews image, contradicting what phase 2 just taught about build contexts.",
+      "evidence": [],
+      "recommendation": "Set the draft context to ./reviews (or ship a root Dockerfile and name the image accordingly), make the test job match the project (or say in the README that it stands for the shop api's tests in the real repository), and have ci-build-push check the context points at the reviews Dockerfile.",
+      "reviewedSha256": "23e3f3b9efacc064c3ecc267ea1ad4a8b33e8434eaeaa918d027cc197a1a9987"
+    },
+    {
+      "id": "ops-edu-16",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/fixtures/briefs/architecture-brief.md",
+        "line": 9
+      },
+      "claim": "The brief says \"Two incidents drive this review:\" and then lists three numbered incidents (heap crash, whole-app redeploy, promotion scaling). Each incident backs one architecture question, so the miscount makes a careful reader wonder which one is not evidence.",
+      "evidence": [],
+      "recommendation": "Change to \"Three incidents drive this review:\".",
+      "reviewedSha256": "ee182f1507303308163b72ff003ada5b818ca8ce7322a4d02fdd7bb7fa437bfa"
+    },
+    {
+      "id": "ops-edu-17",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "line": 104
+      },
+      "claim": "At the end of S38 the learner is told to \"Run the tests and finish the S38 phases before you stop\", but nothing says what a finished S38 looks like. Reproduced: with phases 1-5 complete and ci.yml plus the S39 worksheet sections as shipped, 17 pass and 10 fail, and the CI failures print first in the TAP output. A novice may read 10 failures (listed first) as S38 work left undone.",
+      "evidence": [],
+      "recommendation": "State the S38 checkpoint explicitly: \"After phase 5, tests 9-14, 16-19 and 21-27 pass (17 of 27); the 8 workflow tests and tests 15 and 20 belong to S39.\"",
+      "reviewedSha256": "9df67c0351afc02676fb64ea88d404a136d9009c5722ea3b1356e8dcdef57517"
+    },
+    {
+      "id": "ops-edu-18",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "line": 7
+      },
+      "claim": "README line 7 says the tests check files \"against the rules this module taught\", but tests 21, 22 and 24 (WORKDIR, requirements-before-code layer order, .dockerignore entries) are taught in the previous Containers and Compose module (S36 image-layers-and-build-caching) and map to none of the 24 declared objectives. That cumulative review is reasonable but is presented as this module's content, and README phase 3 does not point learners back to the page that teaches it.",
+      "evidence": [],
+      "recommendation": "Say \"against the rules this module and the Containers and Compose module taught\" and point phase 3 at the image-layers-and-build-caching page; optionally note in lab.json that tests 21, 22 and 24 are cumulative review.",
+      "reviewedSha256": "9df67c0351afc02676fb64ea88d404a136d9009c5722ea3b1356e8dcdef57517"
+    },
+    {
+      "id": "ops-edu-19",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "line": 13
+      },
+      "claim": "Against the captain's short, minimal-files lab shape: the What-you-edit table and the single test command are prominent and correct (README setup and test commands match lab.json byte-for-byte; starter fails exactly the 27 declared failingTests; expected/starter-summary.txt and expected/solved-summary.txt match real runs on Node v24.2.0), but the learner edits 7 files in 5 formats across 7 phases, and the README is 1139 words plus a 588-word brief. Much of the README length is the per-phase answer lists noted in ops-edu-11.",
+      "evidence": [],
+      "recommendation": "Trim the README by moving the per-phase rule lists into the failing-test messages (which already carry them) and keep each phase to one or two lines pointing at the file and the page; consider whether .dockerignore and the Dockerfile layer-order repair (prior-module content) are needed in this module lab.",
+      "reviewedSha256": "9df67c0351afc02676fb64ea88d404a136d9009c5722ea3b1356e8dcdef57517"
+    }
+  ]
+}

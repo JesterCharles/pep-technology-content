@@ -68,7 +68,7 @@ Where to act: Add the class annotation first.
 
 Next step: Use the annotation that applies across all controllers.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Then add the handler.
 
@@ -87,7 +87,7 @@ Printed alternative: Local handler present: local answers. No local handler: the
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-boot/reference/web/servlet.html
 - https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-advice.html

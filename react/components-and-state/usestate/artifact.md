@@ -10,7 +10,7 @@
 
 Interfaces need to remember things between clicks. Predict what happens here before any teaching.
 
-A local variable fails for two reasons: changing it does not trigger a render, and on the next render the function runs again and it starts from scratch.
+A local variable fails for two reasons: changing it does not trigger a render, and each render reruns the function, so it starts from scratch.
 
 State solves both. React keeps the value between renders, and calling the setter asks for a new render. Each component instance keeps its own private state.
 
@@ -20,7 +20,7 @@ Call `useState` at the top of a component. It returns the current value and a se
 const [name, setName] = useState('Ada');
 ```
 
-Then call the setter from an event handler, and React renders again with the new value. Pass handlers as functions: `onClick={handleClick}`, not `onClick={handleClick()}`, which would run during render.
+Then call the setter from an event handler, and React re-renders with the new value. Pass handlers as functions: `onClick={handleClick}`, not `onClick={handleClick()}`, which would run during render.
 
 Each render has a snapshot of its state. Inside one event handler, `score` does not change, so `setScore(score + 1)` written three times sets the same value three times.
 
@@ -30,7 +30,7 @@ When the next value depends on the previous one, pass an updater function. React
 setCount(c => c + 1);
 ```
 
-Trace setters as a queue. A plain value replaces the queued result, and an updater function works from the queued result. React processes the queue during the next render, and only then does the screen change.
+Trace setters as a queue. A plain value replaces the queued result, and an updater function works from it. React processes the queue during the next render; only then does the screen change.
 
 ## Recap
 
@@ -54,7 +54,7 @@ Where to act: The first line inside `Likes`.
 
 Next step: Declare the state with a value and a setter, starting at 0, in the same shape as the `name` example.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The `onClick` on the button.
 
@@ -78,7 +78,7 @@ setN(x => x + 1);  // next depends on previous
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - react.dev/learn/state-a-components-memory: When a regular variable isn't enough; Adding a state variable; State is isolated and private
 - react.dev/learn/state-as-a-snapshot: Setting state triggers renders; State over time

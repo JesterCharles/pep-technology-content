@@ -130,8 +130,6 @@ def reserve(n):
 - No checked exceptions: nothing forces a caller to catch.
 - `logger = logging.getLogger(__name__)`; set the level once; `logger.exception()` inside `except` adds the traceback.
 
-Next topic: Writing and running script files
-
 ## Cheat sheet
 
 A newsroom editor sets one threshold each morning: only stories at least this important reach the front page. Reporters still write up the minor items, but those stay in the notebook unless the editor lowers the threshold. With no instruction at all, the house default is fairly high, so routine updates never make the paper while warnings and emergencies always do.
@@ -145,33 +143,6 @@ Write `parse_qty(text)`. It returns `int(text)`; when that raises `ValueError`, 
 Try it in any Python 3.10 or later interpreter, or trace it on paper. No answer is shown here; the success criteria tell you when you are done.
 
 Success criteria: `parse_qty("3")` returns `3` and logs nothing; `parse_qty("abc")` returns `0` and the log shows an ERROR line followed by a traceback that ends in `ValueError`; your handler names `ValueError`, not a bare `except:`.
-
-Use these same observable steps when working from the text alternative.
-
-1. Where to look: Read the code in the workspace on the right (below these steps on a narrow screen).
-2. What to do or type: Under Prediction, pick the result you expect.
-3. What to expect: Pick Low, Medium or High confidence, then press Check my prediction.
-4. How to know it's done: Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.
-
-1. Where to look: In Call parse_qty, read the three values for `text`.
-2. What to do or type: Pick a value, then press Call parse_qty(text).
-3. What to expect: The output box prints what ran and what came back, and the model highlights each line that ran.
-4. How to know it's done: Each check above changes from open to done when a run shows it. Continue appears when every check is done.
-
-1. Where to look: In Run app.py, pick a level for `basicConfig`.
-2. What to do or type: Press python3 app.py.
-3. What to expect: The log lines the program prints appear in the output box. Run it at each level and compare.
-4. How to know it's done: Each check above changes from open to done when a run shows it. Continue appears when every check is done.
-
-1. Where to look: Use the inventory.py editor in the workspace.
-2. What to do or type: Replace `___` with a `raise OutOfStock(...)` that has a message. Then, aligned with `try`, add `except OutOfStock:` calling `logger.exception(...)`, `else:` calling `logger.info(...)` and `finally:` calling `logger.debug(...)`. Press Run or Ctrl+Enter (Cmd+Enter on a Mac).
-3. What to expect: Problems names any placeholder, indentation or structure outside its supplied block; Output confirms the completed scaffold.
-4. How to know it's done: The author check reads done, then Continue appears. Reset code restores the incomplete starter.
-
-1. Where to look: Read the question and the code it names in the workspace on the right.
-2. What to do or type: Pick one answer, pick your confidence, then press Check answer.
-3. What to expect: Feedback appears below. If the first answer is not right, a second question appears; answer it and press Check second try.
-4. How to know it's done: Either way, Continue then shows and takes you to the recap.
 
 |  |  |
 | --- | --- |

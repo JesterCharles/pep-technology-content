@@ -60,7 +60,7 @@ Where to act: The parameter list of `Panel`.
 
 Next step: List the two prop names you need inside destructuring braces, and give one of them a default with an equals sign.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The `h3` and the space below it inside the section.
 
@@ -85,7 +85,7 @@ function Card({ title = 'Untitled', children }) {
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - react.dev/learn/passing-props-to-a-component: Passing props to a component; Specifying a default value for a prop; Passing JSX as children; How props change over time
 

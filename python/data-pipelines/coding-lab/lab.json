@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "id": "python/data-pipelines/coding-lab",
+  "scope": "module",
+  "covers": [
+    "python/data-pipelines/reading-csv-and-json-files-with-generators",
+    "python/data-pipelines/connecting-to-postgres-from-python-with-psycopg",
+    "python/data-pipelines/loading-into-a-staging-table-with-upserts",
+    "python/data-pipelines/elt-transforming-in-sql-after-loading",
+    "python/data-pipelines/cleaning-and-validating-records-with-pydantic-and-type-hints",
+    "python/data-pipelines/deduplicating-in-sql-vs-in-python",
+    "python/data-pipelines/ai-enrichment-with-validated-outputs",
+    "python/data-pipelines/keeping-sensitive-data-out-of-prompts"
+  ],
+  "objectives": [
+    "python/data-pipelines/reading-csv-and-json-files-with-generators#o1",
+    "python/data-pipelines/reading-csv-and-json-files-with-generators#o2",
+    "python/data-pipelines/reading-csv-and-json-files-with-generators#o3",
+    "python/data-pipelines/connecting-to-postgres-from-python-with-psycopg#o1",
+    "python/data-pipelines/connecting-to-postgres-from-python-with-psycopg#o2",
+    "python/data-pipelines/connecting-to-postgres-from-python-with-psycopg#o3",
+    "python/data-pipelines/loading-into-a-staging-table-with-upserts#o1",
+    "python/data-pipelines/loading-into-a-staging-table-with-upserts#o2",
+    "python/data-pipelines/elt-transforming-in-sql-after-loading#o2",
+    "python/data-pipelines/elt-transforming-in-sql-after-loading#o3",
+    "python/data-pipelines/cleaning-and-validating-records-with-pydantic-and-type-hints#o1",
+    "python/data-pipelines/cleaning-and-validating-records-with-pydantic-and-type-hints#o2",
+    "python/data-pipelines/cleaning-and-validating-records-with-pydantic-and-type-hints#o3",
+    "python/data-pipelines/deduplicating-in-sql-vs-in-python#o1",
+    "python/data-pipelines/ai-enrichment-with-validated-outputs#o1",
+    "python/data-pipelines/ai-enrichment-with-validated-outputs#o2",
+    "python/data-pipelines/ai-enrichment-with-validated-outputs#o3",
+    "python/data-pipelines/keeping-sensitive-data-out-of-prompts#o2",
+    "python/data-pipelines/keeping-sensitive-data-out-of-prompts#o3"
+  ],
+  "language": "python",
+  "prerequisites": [
+    {
+      "tool": "python",
+      "version": ">=3.12,<3.16",
+      "check": "python3 --version"
+    },
+    {
+      "tool": "PostgreSQL server and psql",
+      "version": "16 or later (18 recommended)",
+      "check": "psql \"$DATABASE_URL\" -c \"SELECT version();\""
+    }
+  ],
+  "os": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "network": {
+    "setup": "once",
+    "test": "none"
+  },
+  "setup": {
+    "command": "python -m pip install -r starter/requirements.txt",
+    "cwd": "."
+  },
+  "test": {
+    "command": "python -m pytest -q",
+    "cwd": ".",
+    "timeoutSeconds": 240,
+    "starterExpectation": "fail",
+    "failingTests": [
+      "tests/test_main.py::test_task01_extract_streams_csv_and_jsonl_with_generators",
+      "tests/test_main.py::test_task02_connect_reads_database_url_and_queries_with_parameters",
+      "tests/test_main.py::test_task03_load_staging_commits_an_idempotent_batch_upsert",
+      "tests/test_main.py::test_task04_transform_rebuilds_the_summary_all_or_nothing",
+      "tests/test_main.py::test_task05_pydantic_model_accepts_and_rejects_rows",
+      "tests/test_main.py::test_task06_latest_per_email_deduplicates_in_python",
+      "tests/test_main.py::test_task07_minimize_for_prompt_sends_only_what_the_task_needs",
+      "tests/test_main.py::test_task08_enrich_validates_answers_and_retries_or_rejects",
+      "tests/test_main.py::test_task09_your_tests_drive_enrich_with_the_fake_client"
+    ]
+  },
+  "fixtures": {
+    "seed": 0,
+    "files": [
+      "fixtures/signups.csv",
+      "fixtures/signups.jsonl"
+    ]
+  },
+  "expectedOutput": "expected/on-completion.txt",
+  "cleanup": {
+    "paths": [
+      ".venv",
+      ".pytest_cache",
+      "starter/.pytest_cache",
+      "starter/__pycache__",
+      "starter/pipeline/__pycache__",
+      "tests/__pycache__",
+      "postgresql schema pipeline_lab_<12 hex characters> in the DATABASE_URL database, created and dropped by each test run"
+    ],
+    "notes": "Setup creates the virtual environment .venv in the lab folder (the README creates it with python3 -m venv on macOS and Linux and py -m venv on Windows, as the modules page teaches, then activates it before the setup command; the declared prerequisite check is the macOS and Linux form python3 --version, and Windows learners use py --version) and installs the exact versions pinned in starter/requirements.txt, the lab's lock of every installed package, including tzdata 2026.6 on Windows, which psycopg 3.3.9 requires there (PyPI JSON metadata, https://pypi.org/pypi/psycopg/3.3.9/json lists the requirement tzdata; sys_platform == \"win32\", and https://pypi.org/pypi/tzdata/json shows 2026.6, uploaded 2026-10-28, as the latest release; both retrieved 2026-11-18). psycopg comes with its binary package, so no compiler or libpq install is needed. Wheel availability (PyPI JSON metadata, https://pypi.org/pypi/psycopg-binary/3.3.9/json and https://pypi.org/pypi/pydantic-core/2.50.4/json, retrieved 2026-11-18; not a tested run on each platform): psycopg-binary 3.3.9 ships cp310-cp315 wheels for win_amd64, macOS x86_64 and arm64, manylinux x86_64 and aarch64 and musllinux, but none for win_arm64 and no sdist; pydantic-core 2.50.4 ships cp312-cp315 wheels for all of those platforms including win_arm64. The lab therefore supports Python 3.12 to 3.15 and not native ARM64 Windows Python; it was run on Python 3.12 on macOS arm64 against PostgreSQL 18.3. The database checks read DATABASE_URL, create one uniquely named schema pipeline_lab_<12 hex characters> in that database, run starter/pipeline/schema.sql inside it, and drop it with CASCADE when the module's tests finish; they never touch another schema. While a check runs the learner's load_staging or run_transform, it points DATABASE_URL at that schema with psycopg's make_conninfo and a search_path option, and reads the result through its own second connection, so only committed work is visible: that observes the with-block commit on a clean exit (Task 3) and the rollback on an exception (Task 4). After an interrupted run the README lists and drops leftover pipeline_lab_ schemas in POSIX shells and PowerShell. The test command writes .pytest_cache and __pycache__ folders; starter/.pytest_cache appears only if the learner runs pytest inside starter. The Task 9 check starts child Python processes with bytecode writing off and the pytest cache plugin disabled. The enrichment uses the shipped FakeModelClient with scripted answers: no network, API key, account or paid AI call. Every person in the fixtures and tests is made up. The random schema suffix only isolates runs and never changes a result; every check uses fixed data and fixed timestamps. Resetting the learner's work means copying the four edited files back from a fresh copy of the lab. The expected output replaces the per-learner test count and the run time with placeholders, because Task 9 adds the learner's own tests to the run; pytest runs the learner's file before tests/test_main.py. The 55-minute median is an unpiloted authoring estimate: about 10 minutes of first-time setup plus about 45 minutes for the nine tasks (Tasks 1-4 on S16, 5-9 on S17, inside each Lab day's guided-lab block); 60 minutes is the cap of the 30-60 minute module-lab allowance. To keep setup and tasks inside that cap, the lab has no SQL-deduplication task: deduplicating-in-sql-vs-in-python#o2 stays with its page, and Task 6 practises deduplication in Python. The checks observe yielded records, rows committed in PostgreSQL, validation results, the prompts sent to the fake client (each carries the Enrichment schema and the sign-up's ref and no name, email or phone) and log records. Source checks add the taught construct where behaviour cannot show it: a generator with csv.DictReader or DictReader, json.loads and an explicit encoding on any open call, and no whole-file read (Task 1); no hard-coded connection string (Task 2); ON CONFLICT (email) DO UPDATE, executemany or copy on any cursor and no execute inside a loop, and a with block around connect() (Task 3); a WITH common table expression after any leading -- comment lines and a with block around connect() (Task 4). Task 8 also checks that max_attempts sets the number of calls. Task 9 runs the learner's tests against their code and against four broken versions of enrich (accepts any answer, never retries, never rejects, loads a junk answer for each rejected ref); the last three wrap the learner's own enrich, so no reference solution ships. Objectives not claimed: keeping-sensitive-data-out-of-prompts#o1 (identify personal and secret fields) is practised on its page; the lab's Task 7 sends an allow-list (ref, session, comment) and observes #o2 through dropping and pseudonymizing, while masking free text is described, not performed, because the fixture comments carry no personal data. The shipped pseudonym is a plain hash, labelled in the code and README as a lab shortcut; the page's random token with a mapping kept on your side is the production method. deduplicating-in-sql-vs-in-python#o2 is not claimed (see above); predict-and-explain halves are asked as predict-then-run steps in Tasks 1, 3 and 5 and are not observed by checks."
+  },
+  "minutes": {
+    "estimatedMedian": 55,
+    "cap": 60
+  },
+  "trackRequirement": {
+    "standard": "required",
+    "fast": "not-required"
+  },
+  "platform": {
+    "handoff": "bundle",
+    "adapter": null
+  },
+  "licensing": []
+}

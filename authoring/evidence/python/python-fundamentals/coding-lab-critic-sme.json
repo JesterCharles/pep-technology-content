@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "Python SME critic (independent Claude subagent, 2026-11-18)",
+  "reviewedPath": "python/python-fundamentals/coding-lab/lab.json",
+  "reviewedSha256": "dd42cde616f83a9b70e1827092169bc49bf076008894bedc9e972e2a1fb003a3",
+  "artifactHashes": {
+    "coding-lab/lab.json": "dd42cde616f83a9b70e1827092169bc49bf076008894bedc9e972e2a1fb003a3",
+    "coding-lab/README.md": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+  },
+  "findings": [
+    {
+      "id": "py-fund-lab-sme-001",
+      "severity": "medium",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "line": 289
+      },
+      "claim": "Task 9 and Task 10 source checks read learner files with read_text(encoding=\"utf-8\") and pass the str to ast.parse (lines 250 and 289). A file saved as UTF-8 with a BOM (a Notepad 'UTF-8 with BOM' save or some Windows editors; Windows is a declared OS) keeps U+FEFF at the start of the str, and ast.parse raises 'SyntaxError: invalid non-printable character U+FEFF' even though Python itself imports and runs the file normally. Reproduced on Python 3.12.11/pytest 9.2.0: my passing solution with a BOM prepended to starter/test_signups.py and starter/signups/cli.py gives '2 failed, 13 passed' (task09 and task10 fail with that SyntaxError from ast.py; the learner's own tests and the subprocess runs pass). The same BOM plus CRLF in records.py is harmless (15 passed) because inspect.getsource decodes through tokenize. This is a false failure whose message points at no learner mistake. Graded medium rather than high only because it needs a BOM save (current Notepad and VS Code default to UTF-8 without BOM); found by code reading plus a macOS reproduction, not on Windows.",
+      "evidence": [],
+      "recommendation": "Parse bytes instead: ast.parse(path.read_bytes()) (handles a BOM and CRLF; verified ast.parse(b'\\xef\\xbb\\xbfx = 1\\r\\n') succeeds), or read with encoding=\"utf-8-sig\", at both line 250 and line 289.",
+      "reviewedSha256": "529b861a4d44fb1e428613339d0614d79faf6e3e50ff92af7ddc2c5fa5c60871"
+    },
+    {
+      "id": "py-fund-lab-sme-002",
+      "severity": "medium",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "line": 186
+      },
+      "claim": "False pass on the Task 7 mutable-default fix. The check only passes a non-empty list (mine = [\"z@example.com\"]), so the common wrong fix `waitlist = waitlist or []` passes: reproduced, full run '15 passed'. With that fix add_to_waitlist(\"c\", my_empty_list) silently appends to a new list and leaves the caller's empty list untouched, which is exactly the aliasing class of bug Task 7 and mutability-and-aliasing#o3 claim to teach (the topic page teaches `if tags is None: tags = []`).",
+      "evidence": [],
+      "recommendation": "Add an empty-list case, e.g. `empty = []; assert records.add_to_waitlist(\"c@example.com\", empty) is empty and empty == [\"c@example.com\"], \"Task 7: test the default with `is None`; an empty list that is passed in must still be used\"`.",
+      "reviewedSha256": "529b861a4d44fb1e428613339d0614d79faf6e3e50ff92af7ddc2c5fa5c60871"
+    },
+    {
+      "id": "py-fund-lab-sme-003",
+      "severity": "medium",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 111
+      },
+      "claim": "Task 4 says to return the title then 'the values joined with \", \"', and every README example passes strings, but the check (tests/test_main.py line 109) calls report_line(\"x\", 1, 2, a=1, b=True). A learner who follows the README literally with \", \".join(values) gets 'TypeError: sequence item 0: expected str instance, int found' (reproduced) instead of a task-named assertion message; the requirement to convert values with str() appears only inside the check's failure text.",
+      "evidence": [],
+      "recommendation": "State it in Task 4: 'values may be any type, so convert each with str() (or an f-string) before joining', and/or add the int example to the README sentence on line 112.",
+      "reviewedSha256": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+    },
+    {
+      "id": "py-fund-lab-sme-004",
+      "severity": "high",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 129
+      },
+      "claim": "Technically wrong example: '`add_to_waitlist(\"a@example.com\")` called twice without a waitlist returns `[\"a@example.com\", \"b@example.com\"]` the second time'. Calling it twice with \"a@example.com\" returns [\"a@example.com\", \"a@example.com\"]; the stated result needs a first call with \"a@example.com\" and a second with \"b@example.com\". The sentence is the lab's only explanation of the shared-default bug.",
+      "evidence": [],
+      "recommendation": "Rewrite as: 'Calling add_to_waitlist(\"a@example.com\") and then add_to_waitlist(\"b@example.com\") without a waitlist returns [\"a@example.com\", \"b@example.com\"] the second time, because the default list is created once, when def runs, and shared.'",
+      "reviewedSha256": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+    },
+    {
+      "id": "py-fund-lab-sme-005",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "line": 109
+      },
+      "claim": "Two Task 4/Task 2 false passes from test data that cannot distinguish the bug. (a) The keyword-order assertion uses a=1, b=True, already alphabetical, so a report_line that iterates sorted(fields.items()) passes (reproduced: 15 passed) despite the message 'keep the keyword fields in the order given' (kwargs order is preserved since PEP 468). (b) find_signup is specified to return the first match (README line 98), but the test list has unique emails, so a loop that keeps overwriting and returns the last match passes (reproduced: 15 passed).",
+      "evidence": [],
+      "recommendation": "Use non-alphabetical keywords, e.g. report_line(\"x\", 1, 2, b=True, a=1) == \"x: 1, 2 (b=True, a=1)\"; add a duplicate email to the Task 2 list and assert the first dict is returned with `is`.",
+      "reviewedSha256": "529b861a4d44fb1e428613339d0614d79faf6e3e50ff92af7ddc2c5fa5c60871"
+    },
+    {
+      "id": "py-fund-lab-sme-006",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "line": 293
+      },
+      "claim": "Task 10 static checks are looser than README items 1-3, so a test file that skips two of them passes. Reproduced (both 16/15 passed): (a) a parametrized test that does not take `room` (session_status(10, taken)) plus an unrelated `def test_room(room): assert room` satisfies 'use it as a parameter of a test'; (b) `with pytest.raises(Exception):` satisfies the raises check and still kills the parse_seats mutant, although README item 3 asks for SignupError. The mutation runs themselves are sound: patching signups.records attributes before pytest.main imports test_signups.py makes both `from signups.records import ...` and module-attribute styles see the mutant, and a parametrize without an 'almost full' case is caught.",
+      "evidence": [],
+      "recommendation": "Require the fixture name among the args of the parametrized test, and require the pytest.raises argument to unparse to SignupError (or name SignupError in the message only if a broad class is acceptable).",
+      "reviewedSha256": "529b861a4d44fb1e428613339d0614d79faf6e3e50ff92af7ddc2c5fa5c60871"
+    },
+    {
+      "id": "py-fund-lab-sme-007",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "line": 299
+      },
+      "claim": "Correct, idiomatic pytest forms are rejected by AST shape with misleading messages. Reproduced each against an otherwise passing solution: cases held in a module constant (@pytest.mark.parametrize(\"taken, expected\", CASES)) or passed as argvalues=[...] fail 'parametrize one test with at least 3 cases' although 3 cases run; `from pytest import fixture` / @fixture and tests grouped in a `class TestStatus:` fail 'write a @pytest.fixture and use it as a parameter of a test'. The topic page and README teach the inline literal form, so this is friction rather than a blocker.",
+      "evidence": [],
+      "recommendation": "Either count cases at run time (e.g. collect with pytest --collect-only -q in the existing subprocess and count ids of the parametrized test) or extend the messages: 'put the cases list directly in the decorator, as in the README'. Accept dec.keywords argvalues and resolve a module-level Name to its List value.",
+      "reviewedSha256": "529b861a4d44fb1e428613339d0614d79faf6e3e50ff92af7ddc2c5fa5c60871"
+    },
+    {
+      "id": "py-fund-lab-sme-008",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "line": 251
+      },
+      "claim": "Narrow source checks reject equivalent correct code. Task 9 requires an ImportFrom whose module is exactly 'signups.records': a relative `from .records import ...` (valid under `python -m signups.cli`) and `from signups import records` with records.report_line(...) both fail 'import the record functions with from signups.records import ...' (reproduced). Task 2 (line 74) only finds None on the right of a Compare, so `if None is found:` fails 'test the find_signup result with `is None`, never `== None`' (reproduced). Both are prescribed by the README, so impact is small.",
+      "evidence": [],
+      "recommendation": "Accept node.module in {'signups.records', 'records'} or `from signups import records`; in Task 2 inspect both node.left and node.comparators for a None constant.",
+      "reviewedSha256": "529b861a4d44fb1e428613339d0614d79faf6e3e50ff92af7ddc2c5fa5c60871"
+    },
+    {
+      "id": "py-fund-lab-sme-009",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/starter/test_signups.py",
+        "line": 8
+      },
+      "claim": "starter/test_signups.py finds the `signups` package only through pytest's default prepend import mode (tests/test_main.py inserts starter/ itself, the learner file does not), and the lab ships no ini file to anchor rootdir. If the lab folder sits under any directory with a pytest.ini/pyproject [tool.pytest] (a learner's projects folder or monorepo) or PYTEST_ADDOPTS sets --import-mode=importlib, the whole run stops. Reproduced: a parent pytest.ini with `addopts = --import-mode=importlib` gives 'ModuleNotFoundError: No module named signups' and 'Interrupted: 1 error during collection'; a parent `python_files = check_*.py` gives 'no tests ran'; in both cases .pytest_cache is written to the parent folder, outside the cleanup list.",
+      "evidence": [],
+      "recommendation": "Add a troubleshooting line: 'If pytest reports a rootdir or configfile outside the lab folder, move the lab folder out of that project or run from a folder with no parent pytest.ini/pyproject.toml.' If a code fix is wanted, a starter/conftest.py that inserts its own folder into sys.path is the minimal one, provided the lab layout allows that extra starter file.",
+      "reviewedSha256": "3df5286623f026c04fdf036e6c3f581b209840c56665125bc2d059529c71fdee"
+    },
+    {
+      "id": "py-fund-lab-sme-010",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/expected/on-completion.txt",
+        "line": 1
+      },
+      "claim": "The expected output shows the ten lab-check dots first and the learner's dots after them, but pytest collects starter/test_signups.py before tests/test_main.py (directory order), so a real run prints the learner's own dots first. Verified with my solution: 15 passed, and `pytest -v` lists the five starter/test_signups.py tests before test_task01.",
+      "evidence": [],
+      "recommendation": "Write the line as '<one dot for each of your own tests>..........' or describe it as 'one dot per test (your tests first, then the ten lab checks)'.",
+      "reviewedSha256": "970e9091f46d9cc083d1bcd92790815772a0db2290039f47542ef114fe7b0130"
+    },
+    {
+      "id": "py-fund-lab-sme-011",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/lab.json",
+        "line": 89
+      },
+      "claim": "cleanup.notes says 'tasks 1-9 also check the source for the taught construct (... the __name__ guard ...)'. No check inspects source for the __name__ guard (Task 9 verifies it behaviorally via a silent import plus exit statuses, which is sound), Task 7 has no source check, and Task 3's type hints are read through inspect.signature, not source. The behavior-based Task 9 check does still reject a guard-less cli (verified: bare main(sys.argv) and unguarded sys.exit(main(sys.argv)) both fail task09).",
+      "evidence": [],
+      "recommendation": "Reword: 'tasks 1-6, 8 and 9 also check the source or signature for the taught construct (...); Task 7 and the __name__ guard are checked by behavior'.",
+      "reviewedSha256": "dd42cde616f83a9b70e1827092169bc49bf076008894bedc9e972e2a1fb003a3"
+    },
+    {
+      "id": "py-fund-lab-sme-012",
+      "severity": "medium",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/lab.json",
+        "line": 26
+      },
+      "claim": "Two claimed objectives are only half performed by the learner. (1) modules-imports-and-virtual-environments#o1 'Import from the standard library and from your own module with import and from ... import ...': the learner writes only `from signups.records import ...` (test_main.py line 251); every standard-library import (sys, logging) is pre-written in the starter. (2) functions-and-arguments#o1 '... and call it with keyword arguments in any order': the learner defines the default parameter (checked via inspect.signature), but the keyword-in-any-order call is made by the check itself (test_main.py line 88); no learner-written code has to call anything with keyword arguments (my Task 9 used normalize_signup(row)). By contrast writing-and-running-script-files#o1 (run from the terminal, read the exit status) is acceptably covered: the README asks the learner to do it in Task 9 and a test cannot observe a terminal session, while the checks observe the script and its exit statuses. Graded medium, not high: the central skill of each objective is observed and the missing halves are cheap to add.",
+      "evidence": [],
+      "recommendation": "(1) Remove `import logging` (or `import sys` from cli.py) from the starter and have the learner write it, checked by an ast.Import in the source. (2) Have Task 9 call normalize_signup(row, default_session=\"general\") or another learner call with a keyword argument, and check for a Call with a keyword arg in cli.py. Otherwise drop the two objectives from lab.json.",
+      "reviewedSha256": "dd42cde616f83a9b70e1827092169bc49bf076008894bedc9e972e2a1fb003a3"
+    },
+    {
+      "id": "py-fund-lab-sme-013",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 138
+      },
+      "claim": "Optional and untaught: the exceptions-and-logging page never shows `raise ... from` (grep of artifact.md), so apply this only if that page is extended. Task 8 has the learner raise SignupError inside `except ValueError:` without `from`, so an uncaught SignupError prints 'During handling of the above exception, another exception occurred', which reads as a bug in the handler; the Python tutorial's exception-chaining guidance is to use `raise ... from err` (or `from None`) when translating an exception. The check accepts both forms (verified: `from err` and `from None` variants pass), so this is a teaching-quality improvement only.",
+      "evidence": [],
+      "recommendation": "Show `except ValueError as err:` and `raise SignupError(...) from err` in Task 8 step 3, with one sentence on what `from` adds to the traceback.",
+      "reviewedSha256": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+    },
+    {
+      "id": "py-fund-lab-sme-014",
+      "severity": "medium",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 153
+      },
+      "claim": "Task 9 sends the learner into the starter folder ('Try it from the `starter` folder') and never says to return to the lab folder. Running the one test command from there collects only starter/test_signups.py: reproduced with my solution, `python -m pytest -q` in starter/ prints '5 passed' (all green, none of the ten lab checks run), and `python -m pytest -q starter/test_signups.py` prints 'no tests ran'. During Task 10 a learner can therefore see green while the checks fail. That run also writes starter/.pytest_cache, which is in neither lab.json cleanup.paths nor the README cleanup commands (README line 192-195), so the cleanup step leaves it behind. Troubleshooting covers only the reverse mistake.",
+      "evidence": [],
+      "recommendation": "After the Task 9 try-out add 'then go back to the lab folder (cd ..) before you run the tests'; add a troubleshooting line 'Only your own tests ran / no tests ran: you are in starter/; go back to the lab folder'; add starter/.pytest_cache to cleanup.paths and both README cleanup commands.",
+      "reviewedSha256": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+    },
+    {
+      "id": "py-fund-lab-sme-015",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 94
+      },
+      "claim": "A Task 1 port that forgets `seated += table_size` makes tables_needed loop forever; the whole run then hangs with no output (reproduced: killed by a 20 s alarm with nothing printed). Nothing in Troubleshooting tells the learner to stop it with Ctrl+C or where to look, and pytest has no timeout here.",
+      "evidence": [],
+      "recommendation": "Add a troubleshooting line: 'The tests never finish: press Ctrl+C; a while loop that never changes its condition (Task 1: add table_size to seated) runs forever.'",
+      "reviewedSha256": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+    },
+    {
+      "id": "py-fund-lab-sme-016",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "line": 120
+      },
+      "claim": "README line 20 says 'Each failing check names its task and the next action', but several first failures are raw errors or bare asserts. On the starter (--tb=line): Task 3 fails with 'TypeError: normalize_signup() missing 1 required positional argument', Task 4 with 'TypeError: report_line() got an unexpected keyword argument', Task 5 with 'KeyError: testing' raised inside records.py; and the asserts at lines 68, 69, 160, 165 and 167 carry no message, so a later regression there shows only the compared values. The messages are stable and the test names carry the task number, so this is polish.",
+      "evidence": [],
+      "recommendation": "Add messages to the five bare asserts (e.g. 'Task 2: describe returns \"<email> is in <session>\"', 'Task 6: unique_emails returns the set of emails'), and soften README line 20 to 'Each failing check is named after its task; most also name the next action'.",
+      "reviewedSha256": "529b861a4d44fb1e428613339d0614d79faf6e3e50ff92af7ddc2c5fa5c60871"
+    }
+  ]
+}

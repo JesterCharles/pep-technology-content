@@ -40,7 +40,7 @@ Static version: a dev profile that permits all requests is active on a shared se
 
 Where to act: The command field.
 
-Next step: Copy the first start command from the teaching text, then the curl from the task. Then stop, and do it again with the other start command.
+Next step: Type the first start command from the teaching text without its `#` comment, then the curl from the task. Then run stop, and do it again with the other start command, again without its comment.
 
 Without JavaScript the terminal cannot run. On paper, write the commands to start with the dev profile, send a request, stop, start without the profile, and send it again. Say what you expect each request to return.
 
@@ -48,7 +48,7 @@ Where to act: The line under `.env.local`.
 
 Next step: The variable needs the prefix that makes Vite expose it, then an equals sign, then the address.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The `base` line in `src/api.js`.
 
@@ -71,7 +71,7 @@ curl -i http://localhost:8080/api/orders         # expect 401 or 403
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - docs.spring.io/spring-boot/reference/features/profiles.html: Adding Active Profiles; Profile-specific Configuration Files
 - docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html: Authorizing an Endpoint

@@ -228,6 +228,30 @@ test("T25 lets the newest current recheck supersede an older current verdict", a
   assert.equal(result.status, 0, result.stderr);
 });
 
+test("T25 lets Git introduction ancestry outrank review loop ordinals", async () => {
+  const { root, digest } = await fixture();
+  await writeTopicEvidence(
+    root,
+    report("education", digest, { findings: [highFinding(digest)] }),
+    report("sme", digest),
+    reconciliation(digest, [decision("accept")]),
+    [["loop10-critic-education-recheck.json", educationRecheck(digest, "resolved")]],
+  );
+  gitIn(root, "init", "-q");
+  gitIn(root, "add", "-A");
+  gitIn(root, "commit", "-q", "-m", "older higher-numbered recheck");
+  await writeTopicEvidence(root, null, null, null, [
+    ["loop9-critic-education-recheck.json", educationRecheck(digest, "open")],
+  ]);
+  gitIn(root, "add", "-A");
+  gitIn(root, "commit", "-q", "-m", "newer lower-numbered recheck");
+
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.doesNotMatch(result.stderr, /recheck recency is ambiguous/);
+  assert.match(result.stderr, /high finding finding-1 remains open/);
+});
+
 test("T25 uses repository history rather than recheck filename order", async () => {
   const { root, digest } = await fixture();
   await writeTopicEvidence(
@@ -272,6 +296,90 @@ test("T25 ignores a newer stale recheck when selecting the newest current verdic
   assert.equal(result.status, 0, result.stderr);
 });
 
+test("T25 uses review loop order when conflicting current rechecks share an introduction commit", async () => {
+  const { root, digest } = await fixture();
+  await writeTopicEvidence(
+    root,
+    report("education", digest, { findings: [highFinding(digest)] }),
+    report("sme", digest),
+    reconciliation(digest, [decision("accept")]),
+    [
+      ["course-final-loop7-critic-education-recheck.json", educationRecheck(digest, "open")],
+      ["course-final-loop9-critic-education-recheck.json", educationRecheck(digest, "resolved")],
+    ],
+  );
+  gitIn(root, "init", "-q");
+  gitIn(root, "add", "-A");
+  gitIn(root, "commit", "-q", "-m", "squashed review loops");
+
+  const result = check(root);
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("T25 compares tied review loop ordinals numerically", async () => {
+  const { root, digest } = await fixture();
+  await writeTopicEvidence(
+    root,
+    report("education", digest, { findings: [highFinding(digest)] }),
+    report("sme", digest),
+    reconciliation(digest, [decision("accept")]),
+    [
+      ["loop9-critic-education-recheck.json", educationRecheck(digest, "resolved")],
+      ["loop10-critic-education-recheck.json", educationRecheck(digest, "open")],
+    ],
+  );
+  gitIn(root, "init", "-q");
+  gitIn(root, "add", "-A");
+  gitIn(root, "commit", "-q", "-m", "squashed numeric review loops");
+
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.doesNotMatch(result.stderr, /recheck recency is ambiguous/);
+  assert.match(result.stderr, /high finding finding-1 remains open/);
+});
+
+test("T25 rejects malformed review loop ordinals on tied current rechecks", async () => {
+  const { root, digest } = await fixture();
+  await writeTopicEvidence(
+    root,
+    report("education", digest, { findings: [highFinding(digest)] }),
+    report("sme", digest),
+    reconciliation(digest, [decision("accept")]),
+    [
+      ["loop09-critic-education-recheck.json", educationRecheck(digest, "resolved")],
+      ["loop10-critic-education-recheck.json", educationRecheck(digest, "open")],
+    ],
+  );
+  gitIn(root, "init", "-q");
+  gitIn(root, "add", "-A");
+  gitIn(root, "commit", "-q", "-m", "malformed review loop");
+
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /recheck recency is ambiguous/);
+});
+
+test("T25 rejects duplicate review loop ordinals on tied current rechecks", async () => {
+  const { root, digest } = await fixture();
+  await writeTopicEvidence(
+    root,
+    report("education", digest, { findings: [highFinding(digest)] }),
+    report("sme", digest),
+    reconciliation(digest, [decision("accept")]),
+    [
+      ["alpha-loop9-critic-education-recheck.json", educationRecheck(digest, "resolved")],
+      ["beta-loop9-critic-education-recheck.json", educationRecheck(digest, "open")],
+    ],
+  );
+  gitIn(root, "init", "-q");
+  gitIn(root, "add", "-A");
+  gitIn(root, "commit", "-q", "-m", "duplicate review loops");
+
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /recheck recency is ambiguous/);
+});
+
 test("T25 rejects tied current recheck history instead of using filename order", async () => {
   const { root, digest } = await fixture();
   await writeTopicEvidence(
@@ -291,6 +399,38 @@ test("T25 rejects tied current recheck history instead of using filename order",
   const result = check(root);
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /recheck recency is ambiguous: current rechecks have tied or incomparable introduction history/);
+});
+
+test("T25 keeps incomparable introduction histories ambiguous despite review loop names", async () => {
+  const { root, digest } = await fixture();
+  await writeTopicEvidence(
+    root,
+    report("education", digest, { findings: [highFinding(digest)] }),
+    report("sme", digest),
+    reconciliation(digest, [decision("accept")]),
+  );
+  gitIn(root, "init", "-q");
+  gitIn(root, "add", "-A");
+  gitIn(root, "commit", "-q", "-m", "base review evidence");
+
+  gitIn(root, "checkout", "-q", "-b", "open-loop");
+  await writeTopicEvidence(root, null, null, null, [
+    ["loop9-critic-education-recheck.json", educationRecheck(digest, "open")],
+  ]);
+  gitIn(root, "add", "-A");
+  gitIn(root, "commit", "-q", "-m", "open loop");
+
+  gitIn(root, "checkout", "-q", "-b", "resolved-loop", "HEAD~1");
+  await writeTopicEvidence(root, null, null, null, [
+    ["loop10-critic-education-recheck.json", educationRecheck(digest, "resolved")],
+  ]);
+  gitIn(root, "add", "-A");
+  gitIn(root, "commit", "-q", "-m", "resolved loop");
+  gitIn(root, "merge", "-q", "--no-ff", "open-loop", "-m", "merge review loops");
+
+  const result = check(root);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /recheck recency is ambiguous/);
 });
 
 test("T25 accepts tied current rechecks when their verdicts agree", async () => {

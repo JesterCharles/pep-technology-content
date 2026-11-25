@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "id": "spring-boot/assessments/spring-final-coding-intermediate-place-order/coding-lab",
+  "scope": "course",
+  "covers": [
+    "spring-boot/relationships-and-transactions/how-transactions-work-in-spring",
+    "spring-boot/relationships-and-transactions/one-to-many-and-many-to-one-relationships",
+    "spring-boot/spring-data-jpa/controller-service-and-repository-layers"
+  ],
+  "objectives": [
+    "spring-boot/relationships-and-transactions/how-transactions-work-in-spring#o1",
+    "spring-boot/relationships-and-transactions/one-to-many-and-many-to-one-relationships#o3"
+  ],
+  "language": "Java 25, Spring Boot 4.1.2",
+  "prerequisites": [
+    {
+      "tool": "JDK",
+      "version": "25",
+      "check": "java -version"
+    },
+    {
+      "tool": "Apache Maven",
+      "version": "3.9 or later",
+      "check": "mvn -v"
+    }
+  ],
+  "os": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "network": {
+    "setup": "once",
+    "test": "none"
+  },
+  "setup": {
+    "command": "mvn -q dependency:go-offline",
+    "cwd": "starter"
+  },
+  "test": {
+    "command": "mvn -q -o test",
+    "cwd": "starter",
+    "timeoutSeconds": 600,
+    "starterExpectation": "fail",
+    "failingTests": [
+      "pickup.PlaceOrderTest.task1AddLineSetsBothSides",
+      "pickup.PlaceOrderTest.task1PlacesAnOrderWithItsLines",
+      "pickup.PlaceOrderTest.task1AFailingLineChangesNothing",
+      "pickup.DatabaseOutageTest.task1ARefusedOrderInsertChangesNothing",
+      "pickup.DatabaseOutageTest.task1ARefusedLineInsertChangesNothing",
+      "pickup.DatabaseOutageTest.task1ARefusedFirstStockUpdateChangesNothing",
+      "pickup.DatabaseOutageTest.task1ARefusedSecondStockUpdateChangesNothing",
+      "pickup.DatabaseOutageTest.task1ARefusedLastWriteChangesNothing"
+    ]
+  },
+  "fixtures": {
+    "seed": 0,
+    "files": []
+  },
+  "expectedOutput": "expected/test-summary.txt",
+  "cleanup": {
+    "paths": [
+      "starter/target"
+    ],
+    "notes": "Final Assessment coding challenge, Spring (intermediate, 20 minutes from the end of setup, reading included; JDK 25, Maven and the dependency download are set up before the timer). One assessed behaviour, the bounded Pickup Orders all-or-nothing contract: OrderService.place saves an order with its lines (PickupOrder.addLine keeps both sides in sync; cascade is provided) and reserves stock; a failing line (409/404/400, including two lines for one SKU beyond stock) or a database refusal of the order insert, a line insert, the first or second stock update, or the last write of the order leaves stock, orders and lines unchanged. 8 checks: check 1 (addLine, plain Java, ungated) and check 2 (one placed order) stand alone; checks 3-8 start with one normal order that must reach the database and be either fully placed or fully unchanged (a half-saved first order fails the check), so an addLine slip with a correct transaction still earns the all-or-nothing checks it shows, while code that never saves stock (no transaction, detached products) fails the gate. Each outage check also requires that the refused statement was actually sent. Every no-transaction variant fails at least 3 of the 8 checks (below 70%). Objective claims: how-transactions-work-in-spring#o1 (several writes commit or roll back together), one-to-many-and-many-to-one-relationships#o3 (helper keeps both sides in sync). controller-service-and-repository-layers is practised context, not claimed. The outage is a test-only Hibernate StatementInspector registered by a test property (it also counts writes for the last-write check); the checks read state through test-owned JPQL. It is not a universal transaction oracle: writes that bypass Hibernate (JdbcTemplate) are outside it, and a hand-written undo without a transaction can pass. The three business exceptions are provided ErrorResponseExceptions rendered by spring.mvc.problemdetails.enabled, so this repo ships no @RestControllerAdvice/@ExceptionHandler/ProblemDetail code that would template the basic Spring challenge. No security, source inspection, network, clock or Mockito. Derived from Tasks 3-4 of the preserved 60-minute Pickup Orders prototype (Spring Coding Assessment 2) with security, ownership and reads removed. Timing is an authoring estimate (about 15 minutes median, cap 20), not a measured learner pilot."
+  },
+  "minutes": {
+    "estimatedMedian": 15,
+    "cap": 20
+  },
+  "trackRequirement": {
+    "standard": "required",
+    "fast": "required"
+  },
+  "platform": {
+    "handoff": "bundle",
+    "adapter": null
+  },
+  "licensing": [
+    "Starter, tests, README and seed data: original work for this repository.",
+    "Spring Boot 4.1.2, Hibernate, H2 (EPL/MPL dual), JUnit (EPL 2.0), Apache Maven and Maven plugins (Apache License 2.0) are downloaded at setup; none is committed."
+  ]
+}

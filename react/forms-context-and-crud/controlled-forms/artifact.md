@@ -56,7 +56,7 @@ Where to act: The checkbox and the select in the JSX.
 
 Next step: Each needs a prop that reads state and an onChange. A checkbox reads a different property from a text field.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: Inside `handleSubmit`.
 
@@ -77,7 +77,7 @@ function handleSubmit(event) { event.preventDefault(); save(name); }
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - react.dev/reference/react-dom/components/form: Usage
 - react.dev/reference/react-dom/components/input: Usage (controlling an input with a state variable); Troubleshooting

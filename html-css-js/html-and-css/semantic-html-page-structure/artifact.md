@@ -42,7 +42,7 @@ Keep a `div` when a wrapper exists only for layout, such as two columns side by 
 
 ### Apply it to a new page
 
-A help centre page, new markup. Check both things you practised: the element that fits the content, and heading levels that never skip on the way down.
+A help centre page has the h1 Help centre. Check both things you practised: the element that fits the content, and heading levels that never skip on the way down.
 
 ## Model
 
@@ -66,8 +66,6 @@ F Copyright and contact <div>
 - Heading levels form an outline: start at level 1, never skip a level going down, jump up freely.
 - Replacing a `div` with a semantic element keeps the layout, because both display as blocks; keep the class for your CSS.
 - Keep `div` for wrappers that exist only for layout.
-
-Next topic: Forms and HTML5 validation
 
 ## Cheat sheet
 
@@ -111,15 +109,15 @@ Prediction (practice, not scored): two pages look identical; page A uses only di
 
 ### drag
 
-Steps: 1. Where to look: The news-page wireframe in the model; the current region is outlined, and its name appears above the element buttons. 2. What to do: Press the element button you think fits the outlined region. 3. What to expect: A right choice shows that tag in the wireframe and outlines the next region; a wrong choice explains why and lets you choose again. 4. How to know it is done: The counter under the buttons reads 6 of 6 regions done and Continue appears. Region sorter: choose the element for each region of a news page. Worked answer: A, the site banner with logo and site name, is header; B, the links to Home, World and Sport, is nav; C, everything unique to this page, is main; D, the news story, is article because it makes sense on its own; E, the related stories sidebar, is aside because it is tangential to the story; F, copyright and contact, is footer.
+Steps: 1. Where to look: The news-page wireframe in the model; the current region is outlined, and its name appears above the element buttons. 2. What to do: Press the element button you think fits the outlined region. 3. What to expect: A right choice shows that tag in the wireframe and outlines the next region; a wrong choice explains why and lets you choose again. 4. How to know it is done: The counter under the buttons reads 6 of 6 regions done and Continue becomes available. Region sorter: choose the element for each region of a news page. Worked answer: A, the site banner with logo and site name, is header; B, the links to Home, World and Sport, is nav; C, everything unique to this page, is main; D, the news story, is article because it makes sense on its own; E, the related stories sidebar, is aside because it is tangential to the story; F, copyright and contact, is footer.
 
 ### explore
 
-Steps: 1. Where to look: The outline in the model: each heading is indented by its level, and any skip is marked in red. 2. What to do: Use the −1 and +1 buttons beside a heading to change its level, then press Check outline. 3. What to expect: The outline redraws as you change levels; Check outline lists any heading that still needs a change. 4. How to know it is done: Check outline says the outline is right and Continue appears. Heading activity: set heading levels for a news story. Worked answer: City council approves new bike lanes is h1; What changes is h2; Which streets come first and When work starts are h3 because they belong under What changes; Reactions is h2; From cyclists is h3. The starting levels jumped from h2 to h4, which skips h3.
+Steps: 1. Where to look: The outline in the model: each heading is indented by its level, and any skip is marked in red. 2. What to do: Use the −1 and +1 buttons beside a heading to change its level, then press Check outline. 3. What to expect: The outline redraws as you change levels; Check outline lists any heading that still needs a change. 4. How to know it is done: Check outline says the outline is right and Continue becomes available. Heading activity: set heading levels for a news story. Worked answer: City council approves new bike lanes is h1; What changes is h2; Which streets come first and When work starts are h3 because they belong under What changes; Reactions is h2; From cyclists is h3. The starting levels jumped from h2 to h4, which skips h3.
 
 ### explore
 
-Steps: 1. Where to look: The recipe markup below the task, and the live layout check in the model. 2. What to do: Press a tag in the markup (it highlights), then press the element it should become. Repeat for each tag, then press Check markup. 3. What to expect: The opening and closing tags change, and the live layout check lists this browser's default display for each element you chose. 4. How to know it is done: Check markup says the markup fits and Continue appears. Replace-the-div activity for a recipe page. Worked answer: div class masthead, holding the site name, becomes header; div class page, holding everything unique to the page, becomes main; div class recipe, the self-contained recipe, becomes article; div class cols, which only places the ingredients and method side by side, stays div; div class tips, a themed group headed Chef's tips, becomes section; div class legal, holding the copyright line, becomes footer. Each keeps its class, and all of these elements display as blocks by default, so the layout does not change.
+Steps: 1. Where to look: The recipe markup below the task, and the live layout check in the model. 2. What to do: Press a tag in the markup (it highlights), then press the element it should become. Repeat for each tag, then press Check markup. 3. What to expect: The opening and closing tags change, and the live layout check lists this browser's default display for each element you chose. 4. How to know it is done: Check markup says the markup fits and Continue becomes available. Replace-the-div activity for a recipe page. Worked answer: div class masthead, holding the site name, becomes header; div class page, holding everything unique to the page, becomes main; div class recipe, the self-contained recipe, becomes article; div class cols, which only places the ingredients and method side by side, stays div; div class tips, a themed group headed Chef's tips, becomes section; div class legal, holding the copyright line, becomes footer. Each keeps its class, and all of these elements display as blocks by default, so the layout does not change.
 
 ### mcq
 

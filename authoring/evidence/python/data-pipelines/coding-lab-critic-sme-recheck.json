@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "Python + PostgreSQL SME critic (independent Claude subagent, 2026-11-18)",
+  "reviewedPath": "python/data-pipelines/coding-lab/lab.json",
+  "reviewedSha256": "085d44d3638afbe401c007a919e53d706fc890dc84dad27bf3dbae1900abf5f4",
+  "artifactHashes": {
+    "coding-lab/lab.json": "085d44d3638afbe401c007a919e53d706fc890dc84dad27bf3dbae1900abf5f4",
+    "coding-lab/README.md": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e"
+  },
+  "findings": [
+    {
+      "id": "py-pipe-lab-sme-r01",
+      "severity": "low",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "line": 157
+      },
+      "claim": "The new source checks still miss materialising comprehensions. Reproduced (recheck1/variants_r.py, log variants_r.log): in read_csv, `rows = [r for r in csv.DictReader(f)]` then `for row in rows: yield row` passes Task 1, though it reads the whole file first. That is what the streaming message and reading#o2 rule out; whole_file only looks at read/readlines attributes, list/sorted/tuple calls and Starred nodes. In load_staging, `[cur.execute(UPSERT_SQL, r) for r in records]` plus an unreachable executemany passes Task 3, because per_row only looks inside For/While nodes (the dead executemany is needed to satisfy `batched`, so this one is contrived). The listed cases in sme-005/006 are fixed; these are the remaining shapes.",
+      "evidence": [],
+      "recommendation": "In Task 1, also reject an ast.ListComp/SetComp/DictComp whose generator iterates the reader or file handle (or any comprehension inside read_csv/read_jsonl). In Task 3, add ast.ListComp/SetComp/GeneratorExp to the loop node types searched for an `execute` call.",
+      "reviewedSha256": "7ef7ccf61d11de00472e511ed3b1c99c3106ce4c19afdf0c90a37d07317717cc"
+    },
+    {
+      "id": "py-pipe-lab-sme-r02",
+      "severity": "low",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/lab.json",
+        "line": 41
+      },
+      "claim": "The machine-readable prerequisite check is now `python3 --version`, while lab.json declares Windows support. On Windows the python.org installer provides `py` and `python`, not `python3`. A bare `python3` usually resolves to the Microsoft Store app-execution alias, which prints 'Python was not found' or opens the Store. README line 26 handles this correctly with `py --version`, and the notes say so, but a tool or person running lab.json's `check` string on Windows gets a false failure. Not run on Windows; this is standard Windows launcher behaviour.",
+      "evidence": [],
+      "recommendation": "Use a check string that works on all three OSes, e.g. `python --version` run after activating the venv (as README line 49 already says), or state in the check field which OS it applies to. Alternatively keep `python3 --version` and add the Windows form in the same string, e.g. `python3 --version (Windows: py --version)`, if the schema allows free text.",
+      "reviewedSha256": "085d44d3638afbe401c007a919e53d706fc890dc84dad27bf3dbae1900abf5f4"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/python/data-pipelines/coding-lab-critic-sme.json",
+    "items": [
+      {
+        "findingId": "py-pipe-lab-sme-001",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "7ef7ccf61d11de00472e511ed3b1c99c3106ce4c19afdf0c90a37d07317717cc",
+        "note": "load_staging(records) and run_transform() now open their own connection; the your_db fixture points DATABASE_URL at the lab schema with make_conninfo(..., options='-c search_path=...') and reads through the checks' separate autocommit connection. Reproduced (recheck1/variants_r.py, log variants_r.log): a bare connect()+executemany+close() with no commit fails 'Task 3: 0 rows are visible from another connection ... `with connect() as conn:` so a clean exit commits'; a bare connection with commit() and no with block fails the task-named with-block check; `with connect() as conn:`, the page literal `with psycopg.connect(os.environ[\"DATABASE_URL\"]) as conn:` and `with connect() as conn, conn.cursor() as cur:` all pass. Task 4's injection observes the rollback from the second connection. The commit and rollback are now observed, so the claims for loading#o1 and connecting#o3 are both backed. Starter Tasks 3/4 fail 'Task 3: write load_staging' and 'Task 4: finish connect() in Task 2 first'."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-002",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e",
+        "note": "Task 4 now uses the page's `with connect() as conn:` block, and conn.transaction() is no longer required. README line 120 says the starter is in autocommit mode, which the starter really sets (database.py line 52). Reproduced: the starter-shaped autocommit run_transform and a `with connect()` block that sets autocommit=True inside both fail the rollback assertion. The with block (and with plus conn.transaction()) pass. The second-connection read removes the hidden dependency on the fixture's autocommit setting."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-003",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "7ef7ccf61d11de00472e511ed3b1c99c3106ce4c19afdf0c90a37d07317717cc",
+        "note": "Two wrapper mutants were added: never rejects, and loads a junk answer for each rejected ref. Reproduced: the README's two tests and a helper-based pair pass all four mutants. The call-count-only plus no-enrich suite now fails ('your tests still pass when enrich never rejects'). Tests that check only enriched lengths fail on never-rejects; tests that check only rejected fail on junk-answer. The wrappers ship no solution."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-004",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "7ef7ccf61d11de00472e511ed3b1c99c3106ce4c19afdf0c90a37d07317717cc",
+        "note": "Task 8 now calls enrich with max_attempts=1 and 3 and checks the number of calls. Reproduced: an enrich hard-coded to range(1, 3) now fails Task 8 first ('with max_attempts=1 make 1 call(s); use max_attempts, do not hard-code the tries'). The Task 9 mutant messages add '(if Task 8 fails, fix it first)'."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-005",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "7ef7ccf61d11de00472e511ed3b1c99c3106ce4c19afdf0c90a37d07317717cc",
+        "note": "Reproduced: Path(path).open(encoding=...), io.open(..., encoding=...) and `from csv import DictReader` now pass. fh.readlines(), src.read().splitlines(), [*csv.DictReader(f)] and list(csv.DictReader(f)) now fail with the task-named streaming message. A remaining list-comprehension bypass falls outside the required fix's list; it is reported as py-pipe-lab-sme-r01."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-006",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "7ef7ccf61d11de00472e511ed3b1c99c3106ce4c19afdf0c90a37d07317717cc",
+        "note": "Reproduced: `with conn.cursor() as cursor: cursor.executemany(...)` passes. A per-row cur.execute in a for loop, even with a dead executemany, now fails 'Task 3: send the whole batch with executemany (not one execute per row)'. ON CONFLICT DO NOTHING still fails. A comprehension-based per-row bypass remains; see py-pipe-lab-sme-r01."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-007",
+        "status": "open",
+        "file": "python/data-pipelines/coding-lab/starter/requirements.txt",
+        "reviewedSha256": "d911077351b8815422d39c74cd54e6b8f8e67f4b3b4d4e9675d790b46ecbd852",
+        "note": "The lock itself is fixed: line 14 pins `tzdata==2026.6 ; sys_platform == \"win32\"`, which matches psycopg 3.3.9's `tzdata; sys_platform == \"win32\"` requirement in the installed metadata. I could not check tzdata 2026.6 on PyPI offline; the reconciler did. One part of the required fix is still missing: 'record the source with its retrieval date in the module evidence'. authoring/evidence/python/data-pipelines/ has no tzdata source record outside the critic and reconciliation files, and the lab.json notes mention tzdata 2026.6 with no URL or retrieval date, unlike the wheel sentence beside them. To close: add the PyPI source (e.g. https://pypi.org/pypi/psycopg/3.3.9/json and the tzdata release page) with its retrieval date. The re-recorded solved run is private, so I could not check it."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-008",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e",
+        "note": "README lines 150-151 and the enrich.py docstring now call the plain hash a lab shortcut, say it can be reversed by guessing the email, and name the page's production method (a random token with the mapping kept on your side). This is the reconciled wording fix, and it is technically accurate."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-009",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e",
+        "note": "minimize_for_prompt is now an allow-list of ref, session and comment. Test lines 351-359 require exactly those keys: the old deny-list now fails, and a comprehension-built allow-list passes. README line 151 says free text can carry personal data and would be masked in production, and line 6 is softened to 'without sending names, emails or phone numbers'. Under the reconciled decision, masking is described rather than performed."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-010",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e",
+        "note": "Cleanup step 1 (lines 196-198) now gives POSIX and PowerShell forms. The PowerShell form uses `$env:DATABASE_URL` for both the \\dn listing and the DROP SCHEMA. I checked the POSIX forms against PostgreSQL 18.3 in the first pass; the PowerShell forms are correct by standard $env: syntax, not run."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-011",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "7ef7ccf61d11de00472e511ed3b1c99c3106ce4c19afdf0c90a37d07317717cc",
+        "note": "run_step now turns psycopg errors and NotImplementedError into 'Task N: ...' failures. Reproduced: os.getenv in connect() gives 'Task 2: read os.environ[\"DATABASE_URL\"] so a missing variable raises KeyError, got AttributeError(...)'. str(err) in validate_all gives 'Task 5: record err.errors() (a list of dicts) ...'. Inlined transform SQL gives 'Task 4: run_transform must run the TRANSFORM_SQL name ...'. All nine starter failures name their task. README line 22 is reworded to 'most failure messages say what to do next'. One raw failure remains: an enrich that does not catch ModelError fails with a bare ModelError traceback. The rewording covers it."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-012",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "7ef7ccf61d11de00472e511ed3b1c99c3106ce4c19afdf0c90a37d07317717cc",
+        "note": "Reproduced: (a) a CTE after a `--` comment line passes, via strip_comments; (b) inlined SQL gets a task-named message, and README line 120 says to keep the TRANSFORM_SQL name; (c) `kept = dict()` and the set-of-seen form, walking newest first, both pass now that the AST rule is removed; (d) an extra WARNING on the final reject passes with the >=3 rule, and the separate ModelError branch passes. A single combined except branch also passes."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-013",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e",
+        "note": "README line 104 is now a predict-then-run step whose reveal says a plain INSERT fails with a duplicate-key error on the primary key, and the upsert updates each email's row. This matches my reproduction: a plain INSERT executemany with a repeated key raises UniqueViolation."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-014",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e",
+        "note": "README line 143 now gives `sorted(kept.values(), key=lambda s: s.email)`. My solution uses that expression and passes Task 6."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-015",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/lab.json",
+        "reviewedSha256": "085d44d3638afbe401c007a919e53d706fc890dc84dad27bf3dbae1900abf5f4",
+        "note": "The prerequisite version is now '>=3.12,<3.16' (line 40). README line 26 says Python 3.12 to 3.15, tested on 3.12, and that native ARM64 Windows Python is not supported. The lab.json notes record the wheel availability from the psycopg-binary 3.3.9 and pydantic-core 2.50.4 PyPI JSON, with URLs and the 2026-11-18 retrieval date, labelled 'not a tested run'. I could not re-fetch PyPI offline; the record matches the reconciliation. The only run is still Python 3.12 on macOS arm64, and that is stated."
+      }
+    ]
+  }
+}

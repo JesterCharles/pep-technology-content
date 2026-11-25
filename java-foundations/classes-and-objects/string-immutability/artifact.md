@@ -46,7 +46,7 @@ The model: a `String` object is immutable: once created, its characters never ch
 
 ## Cheat sheet
 
-Where to act: The call shown after Item:, above the two buttons.
+Where to act: The line that starts with Scenario:, just above the two buttons.
 
 Next step: First look at the variable's type: is the call made on `s` or on `sb`? The type decides the answer before the method name does.
 

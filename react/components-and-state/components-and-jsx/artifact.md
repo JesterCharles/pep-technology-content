@@ -57,7 +57,7 @@ Where to act: Above `function App()` in the editor.
 
 Next step: Copy the shape of `Hello` from the teaching step, then change its name and what it returns.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Inside the `main` element of `App`, before the `p`.
 
@@ -69,7 +69,7 @@ Where to act: The `return` statement, at the `h2` and the `div`.
 
 Next step: Two siblings cannot sit at the top of a return, so decide what single thing can hold them.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: Inside the `div`.
 
@@ -100,7 +100,7 @@ function Card() {            // Capitalized name
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - react.dev/learn/javascript-in-jsx-with-curly-braces: Using curly braces: A window into the JavaScript world
 - react.dev/learn/writing-markup-with-jsx: Converting HTML to JSX; The Rules of JSX

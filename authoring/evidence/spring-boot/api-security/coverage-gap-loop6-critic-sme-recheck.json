@@ -1,0 +1,366 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "cg-critic-sme-loop6 (independent Claude critic subagent, not the author, 2026-11-18)",
+  "reviewedPath": "spring-boot/api-security/coding-lab/README.md",
+  "reviewedSha256": "85274e0d4c489e1b4b6960a6edf364da8c1dbf075f9bf6abb33c8e145e26b745",
+  "artifactHashes": {
+    "coding-lab/lab.json": "18a6d0de09e34121bb75970e5a07527a6dc33bfa94f13faedb04e9df5239058d",
+    "coding-lab/README.md": "85274e0d4c489e1b4b6960a6edf364da8c1dbf075f9bf6abb33c8e145e26b745"
+  },
+  "findings": [
+    {
+      "id": "cg-sme-apisec-019",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "line": 239
+      },
+      "claim": "The Task 2 prerequisite probe that loop 6 relies on for 'true feedback' does not fire in the two realistic incomplete Task 2 states, and in one of them three step 6 rows give false feedback about correct requests, including the new role message, while no row names Task 2. earlierTasks() treats only a 401 for a token-bearing request to an unmapped path as 'Task 2 not done' (comment line 235: 'without one it is 401'). Critic runs at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c, JDK 25.0.5, Maven 3.9.16 offline, on the private solution with the step 6 rows unchanged: (a) Task 2's chain present but without the oauth2 resource-server line (the omission README Task 4 and Troubleshooting line 188 anticipate): with no authentication mechanism configured, every token-bearing request to a protected path answers 403 (observed; consistent with Http403ForbiddenEntryPoint, the entry point that always answers 403), while the permitted login path still works, so the probe sees 403, passes, and the rows report: role 'the role check did refuse this caller, but this API has no such admin action ... aim at an admin action this API has' (false: the request targets the API's one admin action), validation 'no Bean Validation constraint rejected this request' (the constraint exists; the request never reached the controller), DTO 'this request does not give the caller a booking, so the response DTO is not what answers it'. The safe-errors row's 'refused before it reached your code' is accurate, but no row names Task 2, contrary to README line 194 ('when an earlier task is unfinished, the message names that task first'); the role message invites the learner to change a correct row. (b) Task 2's chain bean absent: Spring Boot's default resource-server chain authenticates the token, and the probe does not fire either (the rows run past it); the hashing row then says 'finish Tasks 1 and 2 first' and the role row names Task 2 only in a trailing parenthesis, so the feedback is right in substance but not via the probe. In both states task2ProtectsEndpointsByPathAndRole also fails, which mitigates; hence medium, not high.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+          "section": "earlierTasks(), lines 230-243; answeredByRoleCheck 403-without-admin-success message, lines 320-328; answeredByValidation and answeredByTheDto messages",
+          "retrievedAt": "2026-11-19T01:57:25Z",
+          "textSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0"
+        },
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/README.md",
+          "section": "Task 4 (line 71), Troubleshooting lines 188 and 194",
+          "retrievedAt": "2026-11-19T01:57:25Z",
+          "textSha256": "85274e0d4c489e1b4b6960a6edf364da8c1dbf075f9bf6abb33c8e145e26b745"
+        },
+        {
+          "url": "https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/web/authentication/Http403ForbiddenEntryPoint.html",
+          "section": "Http403ForbiddenEntryPoint: 'The commence method will always return an HttpServletResponse.SC_FORBIDDEN (403 error)'",
+          "retrievedAt": "2026-11-19T01:51:07Z",
+          "textSha256": "dc879e5efa34a4076f6c3b0c58e78e2fcb573c03bfa84aceadb3ec7f9a522319"
+        },
+        {
+          "url": "https://docs.spring.io/spring-security/reference/servlet/architecture.html",
+          "section": "Handling Security Exceptions: ExceptionTranslationFilter starts authentication through the AuthenticationEntryPoint when the user is not authenticated",
+          "retrievedAt": "2026-11-19T01:51:07Z",
+          "textSha256": "c5941919702d2afd341afacec57108fce688cf3a85d90055cdda1697e2331866"
+        },
+        {
+          "url": "https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html",
+          "section": "Default JWT Configuration: 'If the application doesn't expose a SecurityFilterChain bean, then Spring Boot will expose the above default one' (anyRequest authenticated, oauth2ResourceServer jwt)",
+          "retrievedAt": "2026-11-19T01:51:07Z",
+          "textSha256": "ad9fa404f1914fc5cc27f407381906ca4c99f84444393b64d527e92df7c14084"
+        }
+      ],
+      "recommendation": "Probe Task 2 by outcome, not by one status: for example, treat the step 6 prerequisite as met only when a token-bearing request to the unmapped path answers 404 and an anonymous request to it answers 401; otherwise name Task 2 (and Task 4's resource-server line) before judging any row. Fix the probe comment accordingly. Add the chain-without-resource-server variant to lab-run.json variantRuns.",
+      "reviewedSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0"
+    },
+    {
+      "id": "cg-sme-apisec-020",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "line": 441
+      },
+      "claim": "The safe-errors row's new leak probe (handlerEchoesExceptionText) only invokes @ExceptionHandler methods with exactly one parameter (line 441), so a handler that copies the exception message into its body passes the row as long as it declares a second parameter. Spring MVC @ExceptionHandler methods commonly take a request argument (WebRequest, HttpServletRequest) beside the exception, for example to fill the problem's instance. Critic run at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c, JDK 25.0.5, Maven 3.9.16 offline: the private solution with only ApiErrors changed so its NoSuchElementException handler also takes an HttpServletRequest and sets the problem detail to the exception's message passes all 10 tests (exit 0); the same handler without the second parameter fails the row with 'the error body still reveals the exception'. The README step 4 rule and the ApiErrors TODO ('The detail must not repeat the exception message') and the loop-6 commit's own description (a handler that copies exception text is caught by the marker probe) are therefore not enforced for a common handler shape, and with the no-argument Optional.orElseThrow() the copied text is the JDK's internal 'No value present' (printed on the JDK 25.0.5 toolchain in a critic probe). The #o3 choice itself is unaffected (the learner still has to pick the safe-errors request), so medium.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+          "section": "answeredBySafeErrors and handlerEchoesExceptionText, lines 388-452 (parameter-count filter at line 441)",
+          "retrievedAt": "2026-11-19T01:57:25Z",
+          "textSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0"
+        },
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/starter/src/main/java/secure/ApiErrors.java",
+          "section": "TODO Task 7 step 4: the detail must not repeat the exception message",
+          "retrievedAt": "2026-11-19T01:57:25Z",
+          "textSha256": "6212dad5d5b623770a6760ce8b6a669a307ff9f57b7a2507b87f60844f2eb389"
+        },
+        {
+          "url": "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-exceptionhandler.html",
+          "section": "Exceptions / Method Arguments: @ExceptionHandler methods may also declare WebRequest, NativeWebRequest, ServletRequest and ServletResponse arguments",
+          "retrievedAt": "2026-11-19T01:45:30Z",
+          "textSha256": "4264d07897130a21ab29c2ad6c6b4086af823cb8e61ff7a3fde0fc5e4d954009"
+        },
+        {
+          "url": "https://owasp.org/API-Security/editions/2023/en/0xa8-security-misconfiguration/",
+          "section": "API8:2023 Is the API Vulnerable?: 'Error messages include stack traces, or expose other sensitive information'",
+          "retrievedAt": "2026-11-19T01:45:27Z",
+          "textSha256": "fa79642256145c261b861c8d938a4c6ac189e341604b59bd7075d1dca8177f1b"
+        }
+      ],
+      "recommendation": "Drive the marker exception through the application's real exception resolution instead of calling one-parameter methods reflectively: for example, obtain the context's HandlerExceptionResolver (handlerExceptionResolver bean), resolve the marker exception against a MockHttpServletRequest/MockHttpServletResponse for the booking path with the controller's handler method, and check the written body for the marker; that covers every supported handler signature and return type. Add a two-parameter echoing variant to lab-run.json variantRuns.",
+      "reviewedSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0"
+    },
+    {
+      "id": "cg-sme-apisec-021",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "line": 346
+      },
+      "claim": "The loop-6 validation-row message for a request without a token is returned before the request is sent, so it is also given where it is false. For a null caller the row always answers 'without a token the security filter refuses this request before it reaches the controller, so validation never runs'. Critic acceptance matrix at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c: the same message is returned for an anonymous request to the public workshop list, which Task 2's chain permits for everyone (README line 59) and which the security filter does not refuse. The conclusion (validation did not answer it) is still right, so low.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+          "section": "answeredByValidation, lines 346-349",
+          "retrievedAt": "2026-11-19T01:57:25Z",
+          "textSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0"
+        },
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/README.md",
+          "section": "Task 2, line 59: GET /workshops public",
+          "retrievedAt": "2026-11-19T01:57:25Z",
+          "textSha256": "85274e0d4c489e1b4b6960a6edf364da8c1dbf075f9bf6abb33c8e145e26b745"
+        },
+        {
+          "url": "https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html",
+          "section": "Authorize HttpServletRequests: requestMatchers(...).permitAll() lets matching requests through without authentication",
+          "retrievedAt": "2026-11-19T02:00:23Z",
+          "textSha256": "9462b6047076b2ba8b99680b2acd615d9cb81addf8335db6a4053352091c74df"
+        }
+      ],
+      "recommendation": "Send the anonymous request first and give the security-filter message only when the response is 401 or 403 with no resolved exception; otherwise use the ordinary 'no Bean Validation constraint rejected this request' message.",
+      "reviewedSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0"
+    },
+    {
+      "id": "cg-sme-apisec-022",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "line": 247
+      },
+      "claim": "A step 6 path written as a URI template aborts the whole step 6 test instead of reporting a row. send() passes the learner's path to MockMvcRequestBuilders.request as a URI template with no variables (line 247); a path that copies the controller's mapping with its {id} placeholder throws IllegalArgumentException ('Not enough variable values available to expand id'). Critic run at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c: the private solution with only the validation row changed that way makes task7ShowsTheAttackEachPracticeStops error (surefire: row:224 -> answeredByValidation:350 -> send:247 >> IllegalArgument) with no row list, so the other rows' feedback is lost, contrary to README line 123 ('one run lists every row that is still missing or wrong'). The well() shape check (lines 270-281) checks the method, the leading slash and the caller, not braces. Plausible for a learner who reads the shipped controller's mapping; low.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+          "section": "send(), lines 246-264; well(), lines 270-281",
+          "retrievedAt": "2026-11-19T01:57:25Z",
+          "textSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0"
+        },
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/README.md",
+          "section": "Task 7 step 6 and line 123",
+          "retrievedAt": "2026-11-19T01:57:25Z",
+          "textSha256": "85274e0d4c489e1b4b6960a6edf364da8c1dbf075f9bf6abb33c8e145e26b745"
+        },
+        {
+          "url": "https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/test/web/servlet/request/MockMvcRequestBuilders.html",
+          "section": "MockMvcRequestBuilders.request/get: 'uriTemplate - a URI template; the resulting URI will be encoded', 'uriVariables - zero or more URI variables'",
+          "retrievedAt": "2026-11-19T01:51:07Z",
+          "textSha256": "21c57161744dc1812c1c75defa3a495f4f08b1ba1949dd476ebb647dd7cca789"
+        }
+      ],
+      "recommendation": "In well(), reject a path containing '{' or '}' with a message to write a concrete id, or build the request from java.net.URI (MockMvcRequestBuilders.request(HttpMethod, URI)) and catch IllegalArgumentException per row so one bad row cannot hide the others.",
+      "reviewedSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0"
+    },
+    {
+      "id": "cg-sme-apisec-023",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "line": 188
+      },
+      "claim": "The Troubleshooting row for task4 states a symptom and two causes that the real toolchain does not produce, and the new step 6 feedback leans on the same misunderstanding (cg-sme-apisec-019). README line 188: 'task4 gets 401 with a valid token: .oauth2ResourceServer(...) is missing from the chain, or the converter was not passed to .jwt(...)'. Critic runs at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c, JDK 25.0.5, Maven 3.9.16 offline, on the private solution: (a) with the resource-server line removed from the chain, task4 fails with 'Status expected:<200> but was:<403>' (and task2 with 'expected:<401> but was:<403>'), because without any authentication mechanism the default entry point answers 403; (b) with .jwt(...) given Customizer.withDefaults() instead of the shipped converter, all 10 tests pass, because the shipped JwtAuthenticationConverter @Bean is picked up by the resource-server DSL. A learner seeing 403 will not match the row, and the second cause is not a cause.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/README.md",
+          "section": "Troubleshooting, line 188; Task 2 status pair, line 60",
+          "retrievedAt": "2026-11-19T01:57:25Z",
+          "textSha256": "85274e0d4c489e1b4b6960a6edf364da8c1dbf075f9bf6abb33c8e145e26b745"
+        },
+        {
+          "url": "https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/web/authentication/Http403ForbiddenEntryPoint.html",
+          "section": "Http403ForbiddenEntryPoint: commence always returns 403",
+          "retrievedAt": "2026-11-19T01:51:07Z",
+          "textSha256": "dc879e5efa34a4076f6c3b0c58e78e2fcb573c03bfa84aceadb3ec7f9a522319"
+        },
+        {
+          "url": "https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html",
+          "section": "Extracting Authorities Manually (Using a Custom Claim Name, Using a Custom Scope Prefix): a JwtAuthenticationConverter declared as a @Bean configures the claim name and the ROLE_ prefix with no DSL wiring shown",
+          "retrievedAt": "2026-11-19T01:51:07Z",
+          "textSha256": "ad9fa404f1914fc5cc27f407381906ca4c99f84444393b64d527e92df7c14084"
+        }
+      ],
+      "recommendation": "Rewrite the row: 'task4 or task2 gets 403 where 200 or 401 is expected: .oauth2ResourceServer(...) is missing from the chain, so no token is read'. Drop the converter clause, or say that the shipped converter bean is used automatically.",
+      "reviewedSha256": "85274e0d4c489e1b4b6960a6edf364da8c1dbf075f9bf6abb33c8e145e26b745"
+    },
+    {
+      "id": "cg-sme-apisec-024",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/starter/src/main/java/secure/AuthController.java",
+        "line": 28
+      },
+      "claim": "The new registration guard holds for what it guards, but its comment overclaims and it adds an enumeration signal. Critic probe at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c in a fresh Spring context (POST /auth/register over MockMvc, solved code): re-registering admin answers 409 and the admin login still works; 'Admin' and 'admin ' get 201 but only USER tokens (403 on the admin endpoint), so no takeover through name variants. Boundaries: (1) the seeded bookings belong to grace and ada (data.sql) but the shipped user table holds only admin, so in the running app (README 'To try it live') the first caller to register as ada gets 201, logs in, and reads Ada's booking 2 with 200; 'registering cannot take over ... anyone else' (line 28) is therefore not true of the seeded customers. (2) 201 for a new name versus 409 for an existing one tells an anonymous caller which usernames exist; the OWASP Authentication Cheat Sheet lists 'This user ID is already in use' as an incorrect account-creation response because it enables user enumeration. (3) A registration with no password answers 201 and stores null (critic probe: storedPassword reads null afterwards, as Spring Security 7.1 PasswordEncoder.encode returns null for null), and a second registration of that name then answers 201 and replaces it; a missing username answers 409 rather than 400. None affects the tests or a step 6 row (the step 6 check registers its accounts through UserAccountService), so low.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/starter/src/main/java/secure/AuthController.java",
+          "section": "register, lines 26-34",
+          "retrievedAt": "2026-11-19T01:57:25Z",
+          "textSha256": "873526ee0d47b67dc0a39055cf06bc7291048f22d736744e745d34030e1b258b"
+        },
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/starter/src/main/resources/data.sql",
+          "section": "bookings owned by grace and ada",
+          "retrievedAt": "2026-11-19T01:57:25Z",
+          "textSha256": "3aab56a45e6a3b3bdc8f3b7e4f0fdf28c7be59cfccbf013f132838ee77765c49"
+        },
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/starter/src/main/java/secure/UserAccountService.java",
+          "section": "constructor seeds only admin",
+          "retrievedAt": "2026-11-19T01:57:25Z",
+          "textSha256": "5d4f13c3898f8c70a36545e6e025b6fed63c0fb93cfc05c62c03e604a1bd106c"
+        },
+        {
+          "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html",
+          "section": "Authentication and Error Messages / Account creation: incorrect response example 'This user ID is already in use'",
+          "retrievedAt": "2026-11-19T01:45:31Z",
+          "textSha256": "04e6954c5ac446efd3f761e501d7fde9e214da2b6893d2edd6b453def2a040cb"
+        },
+        {
+          "url": "https://owasp.org/API-Security/editions/2023/en/0xa2-broken-authentication/",
+          "section": "API2:2023 Broken Authentication, Impacts: 'Attackers can gain complete control of other users' accounts in the system, read their personal data'",
+          "retrievedAt": "2026-11-19T01:45:26Z",
+          "textSha256": "116d5a456d4793beed60c28682288c823e83724c369988b5a0ef4a563533499c"
+        },
+        {
+          "url": "https://docs.spring.io/spring-security/reference/api/java/org/springframework/security/crypto/password/PasswordEncoder.html",
+          "section": "PasswordEncoder.encode: 'The value can be null in the event that the user has no password; in which case the result must be null'",
+          "retrievedAt": "2026-11-19T01:51:08Z",
+          "textSha256": "717bb7e2ed79b7418eff2cafccef47bd23b1f13c66189d13f84aa88df8653cfd"
+        }
+      ],
+      "recommendation": "Seed grace and ada in UserAccountService beside admin with disposable dev passwords (which also lets the step 6 check drop its own registration), or reword the comment to 'an existing account is never replaced'. Optionally answer 400 for a missing username or password, and note in the comment that 409 reveals existing names, which a production API would avoid (for example with a generic accepted response and an out-of-band confirmation).",
+      "reviewedSha256": "873526ee0d47b67dc0a39055cf06bc7291048f22d736744e745d34030e1b258b"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/spring-boot/api-security/coverage-gap-critic-sme.json",
+    "items": [
+      {
+        "findingId": "cg-sme-apisec-001",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/OwnBookingTest.java",
+        "reviewedSha256": "c1be82fff8c1d5f558fe94e7aec1c90f32a39d52ee444778dae6dc163073e4c6",
+        "note": "Critic runs at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c (learner bytes identical to the solved commit 3c00320f; git diff --quiet) on fresh git archive copies of the lab, JDK 25.0.5 and Maven 3.9.16 offline (mvn -q -o test, about 7-10 s wall per full run): the shipped starter runs 10 tests and fails exactly the 9 lab.json failingTests (defaultProfileSendsNoCorsHeaders passes); the private overlay passes 10/10, prints nothing, exits 0, with surefire counts 2/1/7 matching expected/test-summary.txt. The step-5 assertions (GET, URI /bookings/2, Grace's own bearer header, 404) are byte-unchanged by the loop-6 commit. Mutant: the private solution with only the step-5 request retargeted to a booking that does not exist (also a 404) fails task7ProvesTheOwnershipCheck on the URI assertion with the step-5 message; every other test passes."
+      },
+      {
+        "findingId": "cg-sme-apisec-002",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0",
+        "note": "Critic runs at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c (learner bytes identical to the solved commit 3c00320f; git diff --quiet) on fresh git archive copies of the lab, JDK 25.0.5 and Maven 3.9.16 offline (mvn -q -o test, about 7-10 s wall per full run): the shipped starter runs 10 tests and fails exactly the 9 lab.json failingTests (defaultProfileSendsNoCorsHeaders passes); the private overlay passes 10/10, prints nothing, exits 0, with surefire counts 2/1/7 matching expected/test-summary.txt. defaultProfileSendsNoCorsHeaders still asserts that the default context holds no UrlBasedCorsConfigurationSource bean, the type Spring Security activates on (live Spring Security CORS reference: CORS is configured automatically only if a UrlBasedCorsConfigurationSource instance is present), and README Task 6 states the type-based rule. Mutant: the CORS source bean moved out of the dev-profile class into a separate unprofiled @Configuration class fails only defaultProfileSendsNoCorsHeaders, with the Task 6 message."
+      },
+      {
+        "findingId": "cg-sme-apisec-003",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/lab.json",
+        "reviewedSha256": "18a6d0de09e34121bb75970e5a07527a6dc33bfa94f13faedb04e9df5239058d",
+        "note": "Re-judged on the current bytes. lab.json declares common-api-security-risks-owasp#o3 and lists task7ShowsTheAttackEachPracticeStops in failingTests (lab.json validates against lab.schema.json, ajv 2020 with formats). Step 6 asks, for each of the five practices #o3 names, for the attacker request that practice is there to answer, and the shipped check sends it against the running app. Critic acceptance matrix (scratch probe calling the five shipped row checks on the solved app; 120 attack candidates from four callers and 30 method/path pairs, including case, slash, semicolon, encoding, query and trailing-slash variants, plus 10 login forms): no candidate passes two rows, every accepted candidate is an instance of its own practice (a customer reaching the admin statistics endpoint; a login presenting the stored value; a non-positive booking id with a token; a customer reading a booking of their own; a token-bearing request for a booking the caller cannot see), and the new prerequisite probe path passes no row. Practice-removal mutants with the rows unchanged each fail through their own row: raw password storage (names Task 1), the ADMIN rule removed (role row), the @Positive constraint removed (names step 3), the controller returning the entity (names steps 2 and 3), the handler copying the exception message (safe-errors row). So #o3 is practised by an executable act and checked behaviourally. The restored after-pass block (README lines 141-150) sits below the Done line, collapsed and labelled for after the tests pass; it describes two rows' attacks in prose (a normal user running an admin action; a copied user table used as passwords), which the step 6 hint already frames with the reading's two questions, so it is a formative residual, not a key. Its risk statements match the live OWASP API Security Top 10 2023 pages (API2 lists 'Uses plain text, non-encrypted, or weakly hashed passwords'; API5 asks 'Can a regular user access administrative endpoints?'; API3 merges the former Excessive Data Exposure and Mass Assignment; API8 lists 'Error messages include stack traces, or expose other sensitive information'; the 2023 list has no input-validation or injection category, Injection was API8:2019) and the topic page ('validation limits bad input; DTOs stop mass assignment and leaks; safe errors reveal less; hashing and role checks protect login and actions'). New weaknesses of the step 6 check that do not defeat the act are raised as cg-sme-apisec-019 to -022."
+      },
+      {
+        "findingId": "cg-sme-apisec-004",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0",
+        "note": "Critic runs at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c (learner bytes identical to the solved commit 3c00320f; git diff --quiet) on fresh git archive copies of the lab, JDK 25.0.5 and Maven 3.9.16 offline (mvn -q -o test, about 7-10 s wall per full run): the shipped starter runs 10 tests and fails exactly the 9 lab.json failingTests (defaultProfileSendsNoCorsHeaders passes); the private overlay passes 10/10, prints nothing, exits 0, with surefire counts 2/1/7 matching expected/test-summary.txt. The structural checks in task7ServesOnlyTheCallersOwnBooking are unchanged. Mutant: the original controller-only mutant (BookingRepository through the constructor, findById with its own owner comparison and a hand-written id check, no constraint) fails at the constructor-type check with the Task 7 step 3 message; the step 6 validation row also reports that the id carries no constraint."
+      },
+      {
+        "findingId": "cg-sme-apisec-005",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "85274e0d4c489e1b4b6960a6edf364da8c1dbf075f9bf6abb33c8e145e26b745",
+        "note": "Rule as in earlier rechecks: exact final code outside a collapsed block is open; an outcome statement that names a tool is a graded hint. At 649d6503e7ef6ea82cb2c4dc3c288fb573da589c the Task 6 and Task 7 code still appears only in the collapsed hint blocks (README lines 93-98 and 132-137). The loop-6 README change adds only the collapsed after-pass risk block (lines 141-150), which contains no code. The finding's scope stays resolved."
+      },
+      {
+        "findingId": "cg-sme-apisec-006",
+        "status": "resolved",
+        "file": "authoring/evidence/spring-boot/api-security/coding-lab/lab-run.json",
+        "reviewedSha256": "71bdaed7a6c8d92235e1f97ec6071d7c38fc6693fe2e1ccbc7da9d13564cfa04",
+        "note": "lab-run.json at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c records 'solved at 3c00320f31fb09d554da67a63ebf54175efda28b by run coverage-gap-o3-loop6-1795052085', validates against solved-run.schema.json (ajv 2020 with formats), and its artifactHashes bind all 22 tracked public lab files with hashes equal to the current bytes (no stale, unbound or extra binding); git diff --quiet 3c00320f..649d6503 -- spring-boot/ is clean. Independent reproduction: Critic runs at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c (learner bytes identical to the solved commit 3c00320f; git diff --quiet) on fresh git archive copies of the lab, JDK 25.0.5 and Maven 3.9.16 offline (mvn -q -o test, about 7-10 s wall per full run): the shipped starter runs 10 tests and fails exactly the 9 lab.json failingTests (defaultProfileSendsNoCorsHeaders passes); the private overlay passes 10/10, prints nothing, exits 0, with surefire counts 2/1/7 matching expected/test-summary.txt. The record's variantRuns are consistent with the critic's own runs, which used partly different mutants (title-equal service message passes; a handler copying the exception message into its detail fails; the ADMIN rule and the constraint removed fail through their rows; the record widened the response record where the critic returned the entity; the step 6 test run alone passes with the hashing row as ada). The record does not cover the two-parameter echoing handler (cg-sme-apisec-020) or an incomplete Task 2 chain (cg-sme-apisec-019); the record itself is accurate for what it states."
+      },
+      {
+        "findingId": "cg-sme-apisec-007",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "85274e0d4c489e1b4b6960a6edf364da8c1dbf075f9bf6abb33c8e145e26b745",
+        "note": "README line 9 and lab.json cleanup.notes still label the minutes an authoring estimate, not a measured pilot, with a task basis (Tasks 1-5 about 31, Task 6 about 5, Task 7 about 19; 55 plus 5 setup) and self-study as the Task 7 overflow; lab.json validates against lab.schema.json. README contract items re-checked: goal, prerequisites with version checks, setup, tasks, test, expected output, offline note, cleanup and troubleshooting are present, and the README contains the exact setup and test commands declared in lab.json. Timing verdict: honest as an unmeasured estimate with zero slack at the 60-minute ceiling. The loop-6 commit adds no required learner work (the check and registration changes are invisible to a learner who passes; the restored block is optional reading after the pass); full runs took about 7-10 s wall each in the critic's runs. Unbudgeted retries remain possible for learners who hit the false feedback in cg-sme-apisec-019 or the aborted run in cg-sme-apisec-022; the pause rule covers that."
+      },
+      {
+        "findingId": "cg-sme-apisec-008",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0",
+        "note": "Critic runs at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c (learner bytes identical to the solved commit 3c00320f; git diff --quiet) on fresh git archive copies of the lab, JDK 25.0.5 and Maven 3.9.16 offline (mvn -q -o test, about 7-10 s wall per full run): the shipped starter runs 10 tests and fails exactly the 9 lab.json failingTests (defaultProfileSendsNoCorsHeaders passes); the private overlay passes 10/10, prints nothing, exits 0, with surefire counts 2/1/7 matching expected/test-summary.txt. Mutant: a field-injected BookingRepository next to the correct BookingService constructor, with the handler doing its own lookup and owner comparison (constraint kept), fails task7ServesOnlyTheCallersOwnBooking on the declared-field check with the Task 7 step 3 message."
+      },
+      {
+        "findingId": "cg-sme-apisec-009",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0",
+        "note": "No Risk enum, risk constants or literal expected values exist at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c. git grep for the learner helper forms over the lab finds them only in the README instruction, the OwnBookingTest TODO and helpers, one shape message, and the hashing row's control login with the real password (not an accepted answer). The loop-5 helper-form probe is gone (see 017). Each row is decided from the running app, so a script copying literals from the test file has no key to copy."
+      },
+      {
+        "findingId": "cg-sme-apisec-010",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/OwnBookingTest.java",
+        "reviewedSha256": "c1be82fff8c1d5f558fe94e7aec1c90f32a39d52ee444778dae6dc163073e4c6",
+        "note": "Point by point at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c: (1) the restored after-pass block names API2, API5, API3 (in the full list) and API8 (in the full list) and says plainly that bad input is the reading's pairing, not a 2023 category, which is exactly the recommendation and matches the live OWASP 2023 list and the API2, API3, API5 and API8 pages fetched for this review; no shipped value presents a paraphrase as an OWASP category. (2) The five row methods carry only the practice name. (3) No README example request is an accepted answer; the public workshop list in the helper comment and shape message passes no row in the critic's acceptance matrix. (4) All five rows are reported in one run (README line 123; critic runs listing three and four rows at once), except for the template-path abort raised as cg-sme-apisec-022."
+      },
+      {
+        "findingId": "cg-sme-apisec-011",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "85274e0d4c489e1b4b6960a6edf364da8c1dbf075f9bf6abb33c8e145e26b745",
+        "note": "Task 7 stays about 19 minutes for four retrieval edits, one step-5 request and five one-line step 6 requests; all rows are reported in one run and the messages say what the practice did with the request, so a learner who knows the five requests needs one run. Critic measurement: about 7-10 s wall per full run on a warm offline cache. The retry-cost finding stays resolved; the residual retry risks are cg-sme-apisec-019 and -022."
+      },
+      {
+        "findingId": "cg-sme-apisec-012",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "85274e0d4c489e1b4b6960a6edf364da8c1dbf075f9bf6abb33c8e145e26b745",
+        "note": "README line 120 still states the premise for the two defence-in-depth rows, and both premises hold in critic probes: with only the @Positive constraint removed (MockMvc, handler kept), a non-positive id with Grace's token answers 404 with the same fixed problem body as a missing booking; and on a real servlet container (RANDOM_PORT probe, solved code with ApiErrors emptied) a missing or foreign booking answers 500 and a non-positive id 400, each body holding only timestamp, status, error and path, matching the live Boot 4.1 property defaults (spring.web.error.include-message never, include-exception false, include-stacktrace never). The restored after-pass block says the same ('Spring Boot's own error page already hides them, so the row checks that your handler does too'), which is true. The Boot servlet reference prose still says the machine-client body includes the exception message; the defaults and the run show it does not, so the lab follows the behaviour. Optional point (c), a sentence that a fast hash would also pass the hashing row, was not added; it was optional."
+      },
+      {
+        "findingId": "cg-sme-apisec-013",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "85274e0d4c489e1b4b6960a6edf364da8c1dbf075f9bf6abb33c8e145e26b745",
+        "note": "The tightenings hold at 649d6503e7ef6ea82cb2c4dc3c288fb573da589c: the hint no longer says every request was already seen, the row messages say what the practice did with the request, and the restored after-pass block is now below the Done line, collapsed and labelled 'Read after the tests pass', which is the placement the recommendation asked for. Residual routes stay formative: the shipped test comments pairing requests with outcomes are unchanged; the step-5 request is accepted by the safe-errors row; the hashing row is forced by the helper set; and the new role message for a refused request to an action this API lacks ('aim at an admin action this API has') narrows the choice only after the learner has already chosen the right practice and caller shape."
+      },
+      {
+        "findingId": "cg-sme-apisec-014",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0",
+        "note": "The step 6 check still registers grace and ada itself before judging the rows (lines 201-202). Critic runs on the solved code with the hashing row using ada: passes in the full run and when the step 6 test runs alone (-Dtest=SecurityLabTest#task7ShowsTheAttackEachPracticeStops); the full suite also passes under MethodOrderer$Random with seed 11 (surefire XML shows the step 6 test third instead of fourth). The acceptance matrix accepts the stored-value login for admin, grace and ada and refuses an unknown account with 'the user table holds no account with that name'. The new registration guard does not affect this, because the check registers through UserAccountService, not through POST /auth/register."
+      },
+      {
+        "findingId": "cg-sme-apisec-015",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "85274e0d4c489e1b4b6960a6edf364da8c1dbf075f9bf6abb33c8e145e26b745",
+        "note": "The cases the finding named now name the right task. Critic runs: Task 7 steps 1-4 at the starter with steps 5-6 solved: the validation, DTO and safe-errors rows name step 3, steps 2 and 3, and step 4, and the hashing and role rows pass; the raw starter reports only 'finish Task 3 first'; on the finished app a 401 or 403 in the safe-errors row says the request was refused before it reached the learner's code; raw storage names Task 1; the ADMIN rule removed names Task 2's ADMIN rule. A different incomplete-Task-2 state (the chain without the resource server) still produces false row feedback; it is not one of this finding's cases and is raised as cg-sme-apisec-019."
+      },
+      {
+        "findingId": "cg-sme-apisec-016",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0",
+        "note": "answeredBySafeErrors no longer compares the body with the exception's getMessage(); it fails on the exception's class name, the word Exception, a stack-frame pattern, or a handler that copies a marker message into its answer. Critic runs: the private solution with the service exception's message set to the required title passes all 10 tests (the loop-5 false failure is gone); a one-parameter handler whose detail copies the exception message fails the row with 'the error body still reveals the exception'; a handler that sets its instance from the current request passes (no false failure from the direct invocation). The marker probe skips handlers with more than one parameter, which lets an echoing handler through; that new gap is raised as cg-sme-apisec-020."
+      },
+      {
+        "findingId": "cg-sme-apisec-017",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0",
+        "note": "earlierTasks() (lines 231-243) now builds its probe directly with MockMvc for an unmapped path, without the learner helper; the critic's acceptance matrix shows that path passes no row for any caller. No complete step 6 request appears in helper form in the check source. Whether the probe detects an unfinished Task 2 at all is a separate question raised as cg-sme-apisec-019."
+      },
+      {
+        "findingId": "cg-sme-apisec-018",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "953903e32b01ccb1c3c75527f98ededbd3275255ac1adbac99bf084e212cb6f0",
+        "note": "answeredByValidation now returns, for a null caller, that the security filter refuses the request before it reaches the controller and that the request must carry a caller's token (lines 346-349); the matrix confirms this for a non-positive id without a token, which is the case the finding named. The message is returned without sending the request, so it is also given for a public path where the filter refuses nothing; that small residual is raised as cg-sme-apisec-021."
+      }
+    ]
+  }
+}

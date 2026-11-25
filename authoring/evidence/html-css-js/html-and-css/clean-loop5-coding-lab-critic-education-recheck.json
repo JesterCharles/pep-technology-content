@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "clean-loop5-education-critic (independent Claude critic subagent, 2026-11-19)",
+  "reviewedPath": "html-css-js/html-and-css/coding-lab/README.md",
+  "reviewedSha256": "211dc6d648415025cd47888e112407deb395b9347ecf44033e4329d0a2708c70",
+  "artifactHashes": {
+    "coding-lab/README.md": "211dc6d648415025cd47888e112407deb395b9347ecf44033e4329d0a2708c70",
+    "coding-lab/expected/on-completion.txt": "2242211c4798464260692cf26026103b36c42cdee5acbcba37f487e5ce4bd73c",
+    "coding-lab/lab.json": "65542c061c237ebab532ca86db69fd5bbaa2c16edaef741bd7739dc4a3cd3a10",
+    "coding-lab/starter/index.html": "a096e9c62cf3b06c9afeadbf4d7b97e5508085d00376b1f2f360d8dc888d9aa3",
+    "coding-lab/starter/styles.css": "e7c1f3b7b97c1fa7a6761bc2deed9fe88fcf7066ace7ef83541dfa5a67de2dd2",
+    "coding-lab/tests/browser.mjs": "9ce76aaf5ace75676b57fba4254ae16d33987ce41c1e21e31d6ab40ccaa74656",
+    "coding-lab/tests/layout.test.mjs": "d42d6cb6e9ba213691e7556d7e297469f7d4b457c288dd4fd8cb567486996677"
+  },
+  "findings": [
+    {
+      "id": "cl5-edu-001",
+      "severity": "medium",
+      "location": {
+        "file": "html-css-js/html-and-css/coding-lab/tests/layout.test.mjs",
+        "line": 142
+      },
+      "claim": "Loop 5 finishes every animation on the checklist and tags whose end time is finite, and treats that as 'the state the learner sees once it has ended'. A finite end time does not mean the animation ever ends on screen. A paused animation, one with an enormous duration, or one with an enormous delay and backwards fill all have finite end times. finish() removes their effect before measuring, while the real page keeps drawing the held keyframe. I added one rule at a time to a private copy of the completed work. Each of these passed all 12 tests although the page as drawn shows the wrong size: a paused animation holding a scale on both tags; a paused animation holding a different width on both tags; a days-long animation holding a scale on both tags; a days-long animation holding a zoom on the gear checklist; and a short animation with a days-long delay and backwards fill holding a scale on both tags. A paused scale animation on the checklist also passed task 11, failing only tasks 5 and 6. To confirm the drawn size, I loaded each of the five variant pages in the pinned Chromium with no test handling and waited under a second. In every one, the tags' drawn width was not 200px, and the held scale or zoom was still in the computed style. For these pages the task 11 Outcome ('exactly 200px wide on screen') and README line 17 ('It rejects scaling, rotating, translating or zooming a tag or the checklist itself') are false. The lab.json notes have the same problem: they say finite animations are finished first and endless ones are measured as drawn. This is the same class of defect as the accepted cl4-sme-001, and loop 5 narrowed it but did not close it. Graded medium on the same basis as that decision. It needs a deliberate, implausible keyframes rule. The calculated width is still required, because finish() leaves the tag's own base style to be measured, so the box-model calculation is not skipped. The solved-run matrix has no paused or long-running animation variant.",
+      "evidence": [],
+      "recommendation": "Finish only animations that will actually end soon on screen: those that are running (not paused) and whose remaining active time plus delay is short. Measure every other animation as drawn, as the endless ones already are, so that a paused or effectively endless held keyframe fails the existing scale, zoom, width or padding checks. Add a paused variant and a long-duration (or long-delay, backwards-fill) variant to the solved-run matrix, and keep the lab.json notes sentence in line with the rule that ships.",
+      "reviewedSha256": "d42d6cb6e9ba213691e7556d7e297469f7d4b457c288dd4fd8cb567486996677"
+    },
+    {
+      "id": "cl5-edu-002",
+      "severity": "low",
+      "location": {
+        "file": "html-css-js/html-and-css/coding-lab/tests/layout.test.mjs",
+        "line": 140
+      },
+      "claim": "Animations are finished only on the checklist and the two tags, not on their ancestors. A finite scale entrance animation on .page fails task 11 on a private copy of the completed work. The failure is deterministic: it happened on every run, with durations from tens of milliseconds up to seconds, because the headless page is measured before its timeline advances. The message says the tag 'lays out 200px wide but is drawn' at a smaller size and that 'something around it is scaling it'. That is true at the instant measured, but the learner who opens the page sees correct 200px tags once the entrance ends; loading the same page in the pinned Chromium with no test handling and waiting under a second drew both tags at 200px. The same entrance animation on the tags themselves passes, so the behaviour is inconsistent. The lab.json notes sentence 'finite animations finished first' does not say it covers only the checklist and tags. Graded low. A whole-page scale entrance is an unlikely edit in this lab, the error is fail-safe (a correct page fails, no wrong page passes), and the message points at the right region.",
+      "evidence": [],
+      "recommendation": "Settle finite animations on the checklist's ancestors too, using the same rule as cl5-edu-001 (running and ending soon). Or scope the lab.json notes sentence to the checklist and tags, and add a Troubleshooting clause: an animation that scales the page around the checklist must be removed or must have ended.",
+      "reviewedSha256": "d42d6cb6e9ba213691e7556d7e297469f7d4b457c288dd4fd8cb567486996677"
+    },
+    {
+      "id": "cl5-edu-003",
+      "severity": "low",
+      "location": {
+        "file": "html-css-js/html-and-css/coding-lab/tests/layout.test.mjs",
+        "line": 177
+      },
+      "claim": "The tag-side cause list now covers contents, inline*, table*, float and absolute or fixed position. A tag given display: none is not covered. On a private copy of the completed work it fails task 11 on the fill control with no box, and the message blames 'something around the tag (a wrapper, a float beside it, columns or positioning on the checklist)'. README Troubleshooting line 208 says 'the message names the cause', which is not true for this case. The edit is implausible, because the tag vanishes from the page and the learner would notice at once, so this is low polish. One more small wording point: the absolute case prints 'it is positioned absolute', while README line 208 says 'positioned it absolutely'.",
+      "evidence": [],
+      "recommendation": "Treat display: none like display: contents, as a tag-side cause with no box (for example 'its display is none, so it is not drawn'). Optionally print 'it is absolutely positioned' and 'it has fixed position' to match README wording.",
+      "reviewedSha256": "d42d6cb6e9ba213691e7556d7e297469f7d4b457c288dd4fd8cb567486996677"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/html-css-js/html-and-css/coding-lab-critic-education.json",
+    "items": [
+      {
+        "findingId": "cl4-edu-001",
+        "status": "resolved",
+        "file": "html-css-js/html-and-css/coding-lab/tests/layout.test.mjs",
+        "reviewedSha256": "d42d6cb6e9ba213691e7556d7e297469f7d4b457c288dd4fd8cb567486996677",
+        "note": "At ea630d09 the fill-control cause is built from the reason actually detected (lines 177-186), not from the blockified computed display. I probed a private copy of the completed work, and each probe failed only task 11. Floated tags print 'it is floated'. Absolutely and fixed-positioned tags print 'it is positioned absolute' or 'it is positioned fixed'. inline-block, inline-flex, table and table-cell tags print their real display. display: contents prints 'its display is contents, so it has no box of its own'. All of these fall under 'the tag itself is not an ordinary block ... remove that change from the tag'. The self-contradictory 'not an ordinary block (its display is block ...)' text is gone. README Troubleshooting line 208 now lists contents beside inline-block and table, so both parts of the finding are fixed. A residual display: none case and a small wording point are raised separately as low cl5-edu-003."
+      },
+      {
+        "findingId": "cl3-edu-001",
+        "status": "resolved",
+        "file": "html-css-js/html-and-css/coding-lab/tests/layout.test.mjs",
+        "reviewedSha256": "d42d6cb6e9ba213691e7556d7e297469f7d4b457c288dd4fd8cb567486996677",
+        "note": "Still resolved at ea630d09. The control separates tag-side causes, which name the tag's own display, float or position, from causes around the tag. Probes on a private copy of the completed work each failed only task 11. A two-column checklist with automatic-width tags got the 'something around the tag' cause. So did automatic-width tags in a new formatting context beside a float sized from the checklist. Absolutely positioned tags with automatic width and container-relative insets got the tag-side 'positioned absolute' cause, which is the right fix for the tag. README task 11 Outcome (line 141: 'Both stay ordinary blocks directly in the gear checklist, and each gets its size from its own width'), line 17 and Troubleshooting line 208 state the narrowing and its reasons. I judge it acceptable for o2 and clearly communicated: it keeps the 200px on the tag's own width. Valid variants still pass all 12: child-combinator selectors on the tag rules, a flex-column checklist, relative offsets and learner transitions on the checklist and tags."
+      },
+      {
+        "findingId": "cl3-edu-002",
+        "status": "resolved",
+        "file": "authoring/evidence/html-css-js/html-and-css/coding-lab-solved-run.json",
+        "reviewedSha256": "68b0a8b454b6bbdf363c9f253ad67c39d69754cb0c0fa0c907d58f6944a33ab5",
+        "note": "At e6858774 the record names commit ea630d09 and a git archive of the lab into private staging outside the repository. contract, procedure, cleanup and privateStaging agree with each other, and no field contradicts another. environment.os (macOS 27.2.1, Darwin 27.2.0 arm64), node v24.2.0 and npm 11.3.0 match sw_vers, uname, node and npm on this host. ranAt 02:54:11Z falls between the ea630d09 and e6858774 commit times. All 13 artifactHashes match the ea630d09 bytes, and ea630d09..e6858774 changes only this record. My own runs on fresh git archives of ea630d09 gave these results. The starter gave tests 12, pass 0, fail 12, and its failing set equals lab.json failingTests by programmatic comparison. The private completed work gave pass 12, fail 0, and its timing-masked output matched expected/on-completion.txt byte for byte. I reproduced these matrix entries with equivalent variants: inline-block, table, contents and floated tags, absolute insets, the multicolumn checklist, the float beside a formatting context, vw, vh and vmin widths, automatic width, automatic width with a container-relative side margin, percentage width, a small scale or zoom on the tags, held wrong width and wrong padding after an animation ends, an endless scale, a zoomed checklist, child-combinator selectors, a flex-column checklist and learner transitions. Every outcome matched the record. I did not reproduce the markup-wrapper variants, max-width over automatic width or the logical inline size; I rely on the record for those. The matrix's claims are true as stated, but it omits paused or long-running animations, which pass wrongly (new medium cl5-edu-001)."
+      },
+      {
+        "findingId": "education-coding-lab-answer-disclosure",
+        "status": "resolved",
+        "file": "html-css-js/html-and-css/coding-lab/README.md",
+        "reviewedSha256": "211dc6d648415025cd47888e112407deb395b9347ecf44033e4329d0a2708c70",
+        "note": "Still resolved at ea630d09. Loop 5 changed only README lines 17 and 208, one lab.json notes sentence and the task 11 test's animation handling, checklist check and cause text. None of these adds a number or a declaration. I listed every two- and three-digit number in the README, lab.json, expected output, starter files and layout test. Then, without printing them, I took the width values from the private completed work that the README does not state. I counted their occurrences in those files, in the-box-model topic.json, in the solved-run record and in this report. The calculated width occurs in none of them; the only other such value is an existing starter size unrelated to task 11. The only task 11 sizes present are the README's 200, 12, 3 and 10, the checklist widths 480 and 720 and the window sizes; no calculated width appears. The new checklist message and the cause texts name the problem, never a target value or a completed rule. The starter comment still ends 'Calculate each width yourself.' Hint 2 gives the topic page's formula, not a value."
+      },
+      {
+        "findingId": "education-module-lab-answer-disclosure",
+        "status": "resolved",
+        "file": "html-css-js/html-and-css/coding-lab/README.md",
+        "reviewedSha256": "211dc6d648415025cd47888e112407deb395b9347ecf44033e4329d0a2708c70",
+        "note": "Still resolved at ea630d09. No task in the module lab supplies completed CSS or HTML, and tasks 1 to 10 are unchanged. Task 11 is outcome-first, and o2 is really practised: automatic, percentage, viewport-unit and side-margin routes each fail only task 11 on my probes, so the learner must work out a fixed width per box-sizing model. o1 (label the four areas) is supported by the README 'Before you type a width' step, hint 1 and the box-model view check in 'Check it in a browser'. The task 11 hints cite 'Four areas, inside out' and 'Two ways to count width', and both headings exist in the-box-model artifact.md. The topic objectives o1 and o2 match what task 11 practises, and the-box-model topic.json lab reason describes task 11 accurately."
+      },
+      {
+        "findingId": "edu-t1",
+        "status": "resolved",
+        "file": "html-css-js/html-and-css/coding-lab/README.md",
+        "reviewedSha256": "211dc6d648415025cd47888e112407deb395b9347ecf44033e4329d0a2708c70",
+        "note": "Still resolved at ea630d09. README line 3 and lab.json minutes (estimatedMedian 53, cap 60) agree. Both are labelled an unmeasured authoring estimate with setup excluded. The lab.json breakdown sums to the median (5 + 28 + 12 + 8), and the cap stays inside the 62 minutes for the S21 lab that intake.md section Lab plan assigns. Loop 5 added only a few words to README line 17 and Troubleshooting line 208, which changes nothing in the estimate's basis."
+      }
+    ]
+  }
+}

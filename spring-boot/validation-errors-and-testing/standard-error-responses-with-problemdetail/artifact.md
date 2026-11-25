@@ -28,7 +28,7 @@ Framework exceptions such as validation failures or a wrong method can use the s
 spring.mvc.problemdetails.enabled=true
 ```
 
-A validation failure then answers `400` with a body like `{"type":"about:blank","title":"Bad Request","status":400,"detail":"Invalid request content.","instance":"/workshops"}`.
+A validation failure then answers `400` with a body like `{"title":"Bad Request","status":400,"detail":"Invalid request content.","instance":"/workshops"}`. There is no `type` member: when it is left out, the type is `about:blank`.
 
 The default body names no fields. To add field errors, extend `ResponseEntityExceptionHandler` in your advice and override its handler.
 
@@ -48,7 +48,7 @@ Where to act: Change the return type, then replace the `___`.
 
 Next step: Use the factory shown in the teaching panel, with the status for a conflict.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: After creating it, add two more lines.
 
@@ -58,9 +58,9 @@ Printed alternative: Return a ProblemDetail with status 409, a detail, a title a
 
 Where to act: Use the command box under the log.
 
-Next step: The supported list shows a start command for each setting; send the request after each start.
+Next step: Keep the order in the task: start, send the POST, restart with the property on, send the POST again.
 
-Printed alternative: Setting off: 400 with the default Boot error JSON. Setting on: 400 with application/problem+json, title Bad Request and detail Invalid request content.
+Printed alternative: Setting off: 400 with application/json and the default Boot error body (timestamp, status, error, path). Setting on: 400 with application/problem+json; title Bad Request, status 400, instance /workshops and detail Invalid request content.
 
 - `ProblemDetail.forStatusAndDetail(status, detail)`
 - Media type: `application/problem+json`.
@@ -68,7 +68,7 @@ Printed alternative: Setting off: 400 with the default Boot error JSON. Setting 
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-boot/reference/web/servlet.html
 - https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-rest-exceptions.html
@@ -91,7 +91,7 @@ Status: minimum release, November 2026. The author checked this page and re-fetc
 
 ### terminal
 
-**Printed alternative:** Setting off: 400 with the default Boot error JSON. Setting on: 400 with application/problem+json, title Bad Request and detail Invalid request content.
+**Printed alternative:** Setting off: 400 with application/json and the default Boot error body (timestamp, status, error, path). Setting on: 400 with application/problem+json; title Bad Request, status 400, instance /workshops and detail Invalid request content.
 
 ### mcq
 

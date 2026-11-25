@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "pep-react-lab-replacement-critic-sme loop 4 (Claude Opus 5.5, fresh independent context; not the author, not an earlier critic, not a reconciler)",
+  "reviewedPath": "react/forms-context-and-crud/coding-lab/lab.json",
+  "reviewedSha256": "4e1b30b6ed1a953a9659a08c9fac28a919e9e811e6c9147c8cbec25c7faa1b27",
+  "artifactHashes": {
+    "coding-lab/README.md": "ad10aa0be71277c4047aa960997b93566d18cd0034904b3ed6a85f807b36007b",
+    "coding-lab/lab.json": "4e1b30b6ed1a953a9659a08c9fac28a919e9e811e6c9147c8cbec25c7faa1b27",
+    "coding-lab/tests/verify-learner-test.mjs": "21d55bc2c3c365b1583f0e41c9fc55193ae420f179fa9207b000c697d20a86af",
+    "coding-lab/tests/vitest.mutation.config.js": "cc38b8b752ea8b6f0ede6ba481887c0dbd9595d32eef10f16aef02c81ffeafb3",
+    "coding-lab/tests/task8-variant.jsx": "fa7d878c6d3cbf121d225b1b29c81731095333ef26d0cd0d07579a5b85f58f3c",
+    "coding-lab/tests/setup.js": "21a897b8af349e70ced39c51ae71b10e073d667a15a7558756e06502e1444eaa",
+    "coding-lab/tests/vitest.config.js": "e1d9291aa9d6cefc013b403e588cd8b5c2f1d1b8f9866376d611969bb33683f1",
+    "coding-lab/starter/src/service-form.test.jsx": "e2004f2082f0343970bbaf9935f0c58247f351d2665247be18a93c466ed62d93"
+  },
+  "findings": [
+    {
+      "id": "sme-fcc-u1",
+      "severity": "medium",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/task8-variant.jsx",
+        "line": 10
+      },
+      "claim": "The variants still depend on the learner's form markup, now through the label matcher. fieldByLabel scans only <label> elements inside the form and compares the label's raw textContent, trimmed, for exact equality. The public tests use Testing Library's getByLabelText, which works differently in two ways. It leaves the text of a nested select, input or textarea out of a wrapping label's text, and it also resolves aria-labelledby and aria-label. A finished form can therefore pass every public test, task 2 included, while the variants cannot find its fields. readForm then returns null, so the three listener variants (blank-ignored, blank-saves, complete-ignored) never inject their fault, and a correct learner test is rejected (a false negative). Reproduced on the solved overlay with my own complete, correct test. (a) Change only the team field so that its label wraps the select instead of using htmlFor. The label's textContent then also contains every option's text. The run shows 'Tests 8 passed (8)', and npm test then exits 1 with three misleading messages, each telling the learner to add an assertion the test already has. (b) The same happens when both fields use wrapping labels, and (c) when the name field is labelled by aria-labelledby pointing at a span. (d) Wrapping only the name input is accepted, because an input contributes no text to textContent. README task 2 and the starter's TASK 2 comment instruct htmlFor/id, so the shipped path works. But t2 is titled 'every field has a programmatically associated label' and accepts all of these alternatives. The starter's own checkbox demonstrates the wrapping pattern, so learners can plausibly copy it for the select. The learner cannot diagnose the failure from the messages. The variant's trim-only normalisation also differs from Testing Library's default whitespace collapsing. That edge was not reproduced.",
+      "evidence": [],
+      "recommendation": "Find the fields exactly the way the public tests do, so the variant sees a field whenever t2 passes. For example, use the label-text query from @testing-library/dom (already in tests/node_modules), scoped to event.target, and take the first match for 'Service name' and 'Owning team'. Verified in scratch on 8543f338 with only that change to readForm: probes (a), (b) and (c), the no-type-attribute form, and the reference test are all accepted, and the partial test driven by TEAMS is still rejected with the three completed-submission messages. Alternatively, keep a hand-written matcher that excludes labelable descendants, collapses whitespace and follows aria-labelledby (not verified in scratch).",
+      "reviewedSha256": "fa7d878c6d3cbf121d225b1b29c81731095333ef26d0cd0d07579a5b85f58f3c"
+    },
+    {
+      "id": "sme-fcc-u2",
+      "severity": "low",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/task8-variant.jsx",
+        "line": 34
+      },
+      "claim": "The control run does not have the same footprint as the fault runs, so a test can be accepted for spotting the harness rather than the behaviour (a false positive). In the control (and in both onSave variants), the wrapper registers no document submit listener; in the three listener variants it does. In the control, the real form receives the test's own onSave function; in the two onSave variants, it receives a different function. Any test that distinguishes the control from the faults on those two properties alone therefore passes the control and fails every fault. Reproduced on the solved overlay, both accepted by npm test with exit 0. (a) A test that never submits the form. It spies on document.addEventListener during render and asserts that no 'submit' listener was added. It then walks React's internal fiber from the rendered form element and asserts that the component's onSave prop is the test's mock. (b) A test that never performs the blank-name submission at all. It uses the same addEventListener spy assertion, then fills and submits the form and checks onSave with only the name (see sme-fcc-u3). Both tests rely on a deliberate document.addEventListener spy or on React internals. No innocent test I tried hit this: the TEAMS, DOM-tag, env-var and function-name/length probes are all rejected (see sme-fcc-t3). So this residual matters for intentional gaming only.",
+      "evidence": [],
+      "recommendation": "Make the control structurally identical to the faults, so that only behaviour differs. Register the same capture-phase document submit listener in every variant, the control included, with the fault-specific branches inside it. Always hand the real form a wrapper around onSave that forwards its arguments, the control included. Verified in scratch on 8543f338 with only those two edits: probes (a) and (b) are then rejected with the control message, while the reference test, my own complete test, the split/describe/todo file and the App-rendering test are still accepted.",
+      "reviewedSha256": "fa7d878c6d3cbf121d225b1b29c81731095333ef26d0cd0d07579a5b85f58f3c"
+    },
+    {
+      "id": "sme-fcc-u3",
+      "severity": "low",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/task8-variant.jsx",
+        "line": 56
+      },
+      "claim": "The complete-wrong-values variant alters only the name it passes to onSave, so the 'onSave receives the entered values' check does not cover the team. README line 132 says the check scores that 'onSave receives the entered name and team', and lab.json cleanup.notes says 'onSave receives the entered values'. Reproduced on the solved overlay: a test that does the blank half properly, then fills and submits the form, but checks only that onSave was called with an object containing the entered name is accepted with exit 0. The mirror test, which checks only the team, is rejected with 'it still passes when onSave receives different values'. A plain toHaveBeenCalled check is rejected the same way. A learner who forgets the team is therefore told the test is complete, contrary to the stated scoring.",
+      "evidence": [],
+      "recommendation": "Either add a variant that alters only the team (a seventh mutation run, about 1 s), or split the wrong-values variant into a name-altering run and a team-altering run. Alternatively, narrow the README and lab.json wording to 'onSave receives the entered name'. Not verified in scratch.",
+      "reviewedSha256": "fa7d878c6d3cbf121d225b1b29c81731095333ef26d0cd0d07579a5b85f58f3c"
+    },
+    {
+      "id": "sme-fcc-u4",
+      "severity": "low",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/verify-learner-test.mjs",
+        "line": 15
+      },
+      "claim": "Variant runs pipe the child's stdout and stderr through spawnSync with the default maxBuffer of 1024*1024 bytes. Node documents that when this is exceeded, the child is terminated and the call reports an error. The script then prints 'Could not start Vitest: spawnSync <node> ENOBUFS' and calls process.exit(1) from inside runVitest. That message is misleading, since Vitest did start and the normal run had already passed 8/8. The early exit also skips the rmSync of the mkdtemp directory, so an empty task8-* directory is left in the OS temp dir. lab.json says 'the tests create nothing else' and the README says 'The lab writes nothing else'. Reproduced on the solved overlay with a correct test that writes 2 MiB to process.stdout directly: 'Tests 8 passed (8)', then the ENOBUFS line, exit 1, and a leaked empty task8-* directory, which I removed. Scope: only raw process.stdout or stderr writes over 1 MiB trigger it. A 2 MiB console.log was accepted normally, because Vitest does not route console output to the JSON run's stdout. The JSON-read failure path does remove the directory. Interrupting npm test with Ctrl+C mid-run also leaves the directory; that was not reproduced.",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/nodejs/node/v24.2.0/doc/api/child_process.md",
+          "section": "child_process.spawnSync(command[, args][, options]): maxBuffer - Largest amount of data in bytes allowed on stdout or stderr. If exceeded, the child process is terminated and any output is truncated. Default: 1024 * 1024",
+          "retrievedAt": "2026-11-18T17:08:21Z",
+          "textSha256": "cb16b94a8cf6b6596a95332f10f5733bbbec6d4ebe6fb5849496fbac0b3ac014"
+        }
+      ],
+      "recommendation": "For variant runs, either ignore stdout (the JSON results come from --outputFile) while keeping a bounded stderr tail, or set a large maxBuffer. When result.error is set, report the real error code rather than 'could not start' once the normal run has started. Wrap the variant loop in try/finally so the temp directory is always removed. Not verified in scratch.",
+      "reviewedSha256": "21d55bc2c3c365b1583f0e41c9fc55193ae420f179fa9207b000c697d20a86af"
+    },
+    {
+      "id": "sme-fcc-u5",
+      "severity": "low",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/verify-learner-test.mjs",
+        "line": 57
+      },
+      "claim": "When the learner file is missing, or holds only test.todo or test.skip entries, the oracle correctly refuses credit (exit 1). But its only message is 'your test fails against an unchanged copy of your finished form, so it depends on something other than the form's behaviour.' That message is wrong in both cases: nothing failed, and the cause is that there is no runnable test. Reproduced on the solved overlay. (a) With starter/src/service-form.test.jsx deleted, the normal run shows 'Test Files 7 passed (7)' and 'Tests 7 passed (7)', then the control message and exit 1. (b) With a file holding only a todo named like the task 8 test plus a skipped test, the run shows 'Tests 7 passed | 1 skipped | 1 todo (9)', then the same control message and exit 1. This affects diagnosis only; the verdict is correct.",
+      "evidence": [],
+      "recommendation": "Distinguish the case control.passed === 0 from a failing control run. For example: 'Task 8: no runnable test was found in starter/src/service-form.test.jsx; write at least one test (todo and skipped tests do not count).' Not verified in scratch.",
+      "reviewedSha256": "21d55bc2c3c365b1583f0e41c9fc55193ae420f179fa9207b000c697d20a86af"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/react/forms-context-and-crud/coding-lab-critic-sme.json",
+    "items": [
+      {
+        "findingId": "sme-fcc-1",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/helpers.js",
+        "reviewedSha256": "246db4456d970b9989074561992f7a423b6283f637a8764875166ab20fe646ad",
+        "note": "Unchanged at 8543f338. Rechecked on the current bytes with the solved overlay, macOS, Node 24.2.0 and npm 11.3.0. A sendJson that reads the body with text() and parses it only when non-empty passes 8/8, and the oracle accepts it (exit 0). A sendJson that calls json() even on the 204 fails exactly tasks 6 and 7."
+      },
+      {
+        "findingId": "sme-fcc-2",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/t3-client-validation.test.jsx",
+        "reviewedSha256": "b87cdbfa131afed46b27370ed2f5d42dfd3f3db62386bd493ccd2a947d7d5893",
+        "note": "Unchanged at 8543f338. A form that sets fieldErrors only when validation fails, so stale client errors are never cleared, fails task 3. It also fails the reference learner test 8 in the normal run, so the oracle never runs."
+      },
+      {
+        "findingId": "sme-fcc-3",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/starter/src/service-form.test.jsx",
+        "reviewedSha256": "e2004f2082f0343970bbaf9935f0c58247f351d2665247be18a93c466ed62d93",
+        "note": "The file changed in this loop (the step 4 and step 5 comments now name the matchers). The step 3 guidance still uses findBy for an element that appears, and step 5 still says queryBy with not.toBeInTheDocument proves absence, findBy rejects when the element is missing, and waitFor may wrap it. expect.hasAssertions() is still present. Accurate."
+      },
+      {
+        "findingId": "sme-fcc-4",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/README.md",
+        "reviewedSha256": "ad10aa0be71277c4047aa960997b93566d18cd0034904b3ed6a85f807b36007b",
+        "note": "The README changed in this loop (task 8 and expected-output text only). The troubleshooting entry still names test 5 and the Save service button that cannot be found. A mutant that resets the pending state only after a successful onSave (no finally) fails only task 5, with 'Unable to find an accessible element with the role \"button\" and name \"Save service\"'. The entry matches."
+      },
+      {
+        "findingId": "sme-fcc-5",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/lab.json",
+        "reviewedSha256": "4e1b30b6ed1a953a9659a08c9fac28a919e9e811e6c9147c8cbec25c7faa1b27",
+        "note": "lab.json changed in this loop (cleanup.notes only). The node prerequisite is still '^22.12.0 || >=24', and the README still says 'Node.js 22.12+ (22.x LTS) or 24+, and npm 10 or newer'. Both match vitest 4.1.12's engines range. Exercised only on Node 24.2.0 with npm 11.3.0; Node 22 was not exercised."
+      },
+      {
+        "findingId": "sme-fcc-r1",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/t3-client-validation.test.jsx",
+        "reviewedSha256": "b87cdbfa131afed46b27370ed2f5d42dfd3f3db62386bd493ccd2a947d7d5893",
+        "note": "Unchanged at 8543f338. A createService that posts to the wrong URL (a task-4 bug) fails exactly tasks 4, 5 and 7, and task 3 passes."
+      },
+      {
+        "findingId": "sme-fcc-r2",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/t3-client-validation.test.jsx",
+        "reviewedSha256": "b87cdbfa131afed46b27370ed2f5d42dfd3f3db62386bd493ccd2a947d7d5893",
+        "note": "Unchanged at 8543f338. A handler that calls preventDefault and then stopPropagation passes 8/8, and the new oracle accepts it (exit 0). The variants' document capture listener runs before React, so the learner's stopPropagation does not interfere. Removing preventDefault fails only task 3."
+      },
+      {
+        "findingId": "sme-fcc-t1",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/verify-learner-test.mjs",
+        "reviewedSha256": "21d55bc2c3c365b1583f0e41c9fc55193ae420f179fa9207b000c697d20a86af",
+        "note": "The script now spawns process.execPath with tests/node_modules/vitest/vitest.mjs, which is vitest 4.1.12's package bin entry. It passes no shell, uses cwd tests/, and prints result.error when the spawn fails. That removes the .cmd/EINVAL path on Windows. Node's child_process docs place the .bat/.cmd restriction on batch files only, and process.execPath is the absolute path of the running node executable (both retrieved 2026-11-18 from nodejs/node v24.2.0 docs). Observed on macOS only: the starter exits 1 with all 8 lab.json failingTests names failing, matching test.failingTests exactly, and the oracle is not reached. The solved run exits 0 with the success line, and it passes from a lab path and TMPDIR that both contain spaces and through a symlinked lab path. A normal-run failure propagates vitest's own exit status. Nothing was run on Windows; Windows correctness is reasoned from the Node sources and remains unverified. A residual spawnSync buffer issue is recorded as sme-fcc-u4."
+      },
+      {
+        "findingId": "sme-fcc-t2",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/vitest.mutation.config.js",
+        "reviewedSha256": "cc38b8b752ea8b6f0ede6ba481887c0dbd9595d32eef10f16aef02c81ffeafb3",
+        "note": "The plugin now resolves every import from any importer except the virtual module and task8-variant.jsx with this.resolve (skipSelf). It swaps when the normalized resolved id, with the query stripped, separators made POSIX and the case lowered on win32, equals the real ServiceForm file. It does not read learner source. Observed on macOS, all accepted with exit 0 using a correct test: the shipped import, an extensionless import, a path through ../src, a default+named import, a namespace import, a dynamic import inside the test, and a test that renders App inside MemoryRouter with the tests' fetch stub (the pages' import is swapped too). From the sources (Vite v6.4.6, retrieved 2026-11-18): the Plugin API's Path Normalization section says resolved ids use POSIX separators while keeping the Windows volume, which the norm() comparison handles. The Virtual Modules Convention section documents the NUL-prefixed id. Vite's resolve plugin resolves 'C:/...' absolute ids through isNonDriveRelativeAbsolutePath, so the virtual module's absolute re-export should resolve on Windows. Not run on Windows; unverified there."
+      },
+      {
+        "findingId": "sme-fcc-t3",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/task8-variant.jsx",
+        "reviewedSha256": "fa7d878c6d3cbf121d225b1b29c81731095333ef26d0cd0d07579a5b85f58f3c",
+        "note": "The original file named in this finding (tests/faulty-service-form.jsx) was deleted at 8543f338; its replacement is tests/task8-variant.jsx. Every reproduction named in the claim is now rejected with exit 1: the TEAMS-driven partial test (three completed-submission messages), the TEAMS-only vacuous test, the firstChild tag/childNodes test, the TASK8_VARIANT env test, and a ServiceForm name/length identity probe (all five messages each). The variant re-exports every named export, adds no DOM, and the config deletes TASK8_VARIANT. The capture-phase interception is correct with React 19: the document capture listener runs before React's root listener, and stopPropagation keeps the submission from React. This held in StrictMode, under fake timers with Enter-key submission, and with fireEvent. The wrapper is not footprint-free, though. A deliberate document.addEventListener spy, or a walk of React's internal fiber, still tells the control from the faults; that residual is recorded as sme-fcc-u2."
+      },
+      {
+        "findingId": "sme-fcc-t4",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/verify-learner-test.mjs",
+        "reviewedSha256": "21d55bc2c3c365b1583f0e41c9fc55193ae420f179fa9207b000c697d20a86af",
+        "note": "Scoring now requires the control to pass cleanly with at least one passed assertion, and counts a fault as caught when any learner assertion fails. tests/setup.js (sha256 21a897b8af349e70ced39c51ae71b10e073d667a15a7558756e06502e1444eaa) now registers afterEach(cleanup). All accepted with exit 0: a describe with beforeEach render and two tests split into the blank half and the completed half, followed by test.todo and test.skip (9 passed, 1 skipped, 1 todo); a two-row test.each that renders in each row; fake timers with advanceTimers; and waitFor. A file with only todo/skip tests is refused with a misleading message, recorded as sme-fcc-u5."
+      },
+      {
+        "findingId": "sme-fcc-t5",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/task8-variant.jsx",
+        "reviewedSha256": "fa7d878c6d3cbf121d225b1b29c81731095333ef26d0cd0d07579a5b85f58f3c",
+        "note": "The original file named in this finding (tests/faulty-successful-service-form.jsx) was deleted at 8543f338; its replacement is tests/task8-variant.jsx. The type=\"text\" selector is gone. A solved form whose name input has no type attribute passes 8/8, and my correct test is accepted with exit 0. Markup dependence persists through the label matcher, though: a select wrapped by its label, or an aria-labelledby name field, passes every public test, yet a correct test is rejected. That is recorded as sme-fcc-u1."
+      },
+      {
+        "findingId": "sme-fcc-t6",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/verify-learner-test.mjs",
+        "reviewedSha256": "21d55bc2c3c365b1583f0e41c9fc55193ae420f179fa9207b000c697d20a86af",
+        "note": "Results are now read from a per-variant --outputFile in a mkdtemp directory, not from stdout. A correct test that writes a raw line to process.stdout and also logs 2 MiB through console.log is accepted with exit 0. Each missed variant prints its own message naming the behaviour, observed for every partial probe (no-error-check, no-not-called check, called-only, team-only, blank-only). A parse failure prints a separate message with the stderr tail. Those messages are worded to the variant, and the JSON reporter behaviour was observed locally with vitest 4.1.12 only; no Vitest documentation was retrieved. Determinism: the reference test gave identical results in four runs. The whole npm test took about 11 s against about 5.5 s for the normal run alone, so the six extra runs cost about 1 s each. Residual diagnostics issues are recorded as sme-fcc-u4 (ENOBUFS on more than 1 MiB of raw stdout) and sme-fcc-u5 (missing or todo-only file)."
+      }
+    ]
+  }
+}

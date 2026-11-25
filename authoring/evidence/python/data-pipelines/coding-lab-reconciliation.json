@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "author": "pep-standard-fast-labs-python-authoring crewmate (Claude Opus 5.5)",
+  "decidedBy": "data-pipelines coding-lab reconciler (independent non-author Claude reconciler, 2026-11-18)",
+  "reviewedPath": "python/data-pipelines/coding-lab/lab.json",
+  "reviewedSha256": "658d4f05bb8da6ba3c6e0958f23245bbbc239c52f836e5ceb21a9e1cbba8369f",
+  "decisions": [
+    {
+      "findingId": "py-pipe-lab-edu-001",
+      "decision": "accept",
+      "rationale": "Verified: python-fundamentals/modules-imports-and-virtual-environments/artifact.md teaches `python3 -m venv .venv` on macOS/Linux and `py -m venv .venv` on Windows (lines 19, 89, 116, 133). Line 20 says that after activation `python` means the venv's Python. README:26 (`python --version`), README:38 (`python -m venv .venv`) and lab.json prerequisites[0].check contradict that page before any venv exists. Decided the same way as py-fund-lab-edu-007 in the python-fundamentals reconciliation. Required fix: change only the pre-venv macOS/Linux lines. The prerequisite check becomes `python3 --version` (Windows: `py --version`), venv creation becomes `python3 -m venv .venv`, and lab.json prerequisites[0].check becomes `python3 --version`. Add the page's sentence that after activation `python` works on every system, and add a Troubleshooting entry for 'command not found: python' before activation. The setup command `python -m pip install -r starter/requirements.txt` and the test command `python -m pytest -q` stay byte-identical to lab.json."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-002",
+      "decision": "accept",
+      "rationale": "Verified: README:149 dictates `PERSONAL_FIELDS = {\"email\", \"name\", \"phone\"}`, and test_main.py:287 only compares against that literal set, so the learner performs no identification. The Signup record also has no secret field, so the secret half of keeping-sensitive-data-out-of-prompts#o1 is never performed. Claim rule applied uniformly (same as the python-fundamentals reconciliation): a production clause of a claimed objective that the learner is never asked to perform is either added as learner work observed by a check or dropped from lab.json objectives, with the dropped claim recorded as a gap in the module evidence. Composed with py-pipe-lab-edu-012: the allow-list leaves PERSONAL_FIELDS unused. Required fix (saves learner time): remove PERSONAL_FIELDS from the starter, the README and the Task 8 check, and drop #o1 from lab.json objectives, recording the gap (identifying personal and secret fields is practised on the page, not in the lab). Accepted alternative, about +1 minute, that keeps #o1: keep a learner-decided identification constant with the literal removed from README Task 8 (the learner uses the page's 'Value / Default action' table), and add one secret-bearing key (e.g. `desk_token`) to the Task 8 input dict. The check asserts that the constant names the personal fields and the secret, that none of its keys appears in the minimized record, and its message does not list the answer."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-003",
+      "decision": "accept",
+      "rationale": "Reproduced: an enrich that calls `client.complete(\"classify\")` instead of build_prompt(record) passes test_task09 (probe bypass_min: 1 passed). Every prompt assertion at test_main.py:328-331 is negative, so the check does not observe the request for JSON matching the declared schema, nor that the prompt is built from the minimized record. Required fix (no added learner time): in test_task09, assert that each prompt contains json.dumps(enrich.Enrichment.model_json_schema()) and the ref of the sign-up it is for (refs[i]). Give it a task-named message, e.g. 'Task 9: send build_prompt(minimize_for_prompt(signup)) so the prompt carries the Enrichment schema and the ref'. build_prompt may stay shipped. The learner's declared Enrichment schema plus the observed request then supports ai#o1. Without these assertions, #o1 must be dropped from objectives."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-004",
+      "decision": "accept",
+      "rationale": "Verified: no learner code opens a connection in a with block. connect() returns a bare connection that test_main.py:125-129 closes. load_staging and run_transform receive the fixture's autocommit connection (test_main.py:63-68). loading#o1's with-block clause is therefore unobserved. Its pages teach `with psycopg.connect(os.environ[\"DATABASE_URL\"]) as conn:` (loading-into-a-staging-table-with-upserts/artifact.md:13, 73; connecting...psycopg/artifact.md:33). Required fix (time-neutral, no new task; probed in review/l2-recon/alt2, 12 passed): follow the loading and ELT pages' idiom. load_staging(records) and run_transform() take no connection and each open `with connect() as conn:` (load_staging also opens `conn.cursor()` there). The Task 3 and Task 4 checks monkeypatch DATABASE_URL to psycopg.conninfo.make_conninfo(DATABASE_URL, options=f\"-c search_path={lab_schema}\") and read the results from the fixture's separate connection. That observes the commit on a clean exit behaviourally: a no-commit load_staging (bare connect(), executemany, close()) was probed and leaves 0 rows. The Task 4 failure injection then observes the rollback. The 'found N rows' (Task 3) and summary (Task 4) messages must name the cause, e.g. 'Task 3: 0 rows are visible from another connection: open the connection with `with connect() as conn:` so a clean exit commits'. With both commit and rollback observed, connecting-to-postgres-from-python-with-psycopg#o3 may be added to objectives; it must not be claimed otherwise. Either `with connect() as conn:` or the page's literal `with psycopg.connect(os.environ[\"DATABASE_URL\"]) as conn:` must pass. Tasks 3 and 4 then depend on Task 2's connect(), so README:81 ('a task passes on its own') needs that exception stated, and the Task 3 and Task 4 checks give a 'Task N: finish connect() in Task 2 first' message when connect() still raises NotImplementedError. Do not add a separate run_nightly task (60-minute cap). Accepted alternative: drop loading-into-a-staging-table-with-upserts#o1 from objectives and record the gap. Same decision as py-pipe-lab-sme-001."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-005",
+      "decision": "accept",
+      "rationale": "Verified: a grep of python/*/*/artifact.md finds no `conn.transaction()`. The ELT page (lines 31-39) teaches the transform as one `with psycopg.connect(...) as conn:` block. Probe withconn: writing `with conn:` in run_transform fails test_task04 with a raw 'psycopg.OperationalError: the connection is closed'. The lab and the page disagree, and the page is the source of truth. Required fix: Task 4 uses the page's idiom. run_transform() opens `with connect() as conn:`, runs the DELETE and TRANSFORM_SQL inside it, and does not use conn.transaction(). The check and its messages change as stated in py-pipe-lab-edu-004, and the README Task 4 text and the test_main.py:198 message no longer mention conn.transaction(). Probed: the page's idiom passes, and an autocommit version fails the rollback check. Accepted alternative only if the author keeps the shared connection: keep conn.transaction() and add the bridge sentences. They must say that the checks pass an autocommit connection, that conn.transaction() is psycopg's block for one transaction on an open connection, and that `with conn:` would close it. Add a Troubleshooting entry for 'the connection is closed'. Same decision as py-pipe-lab-sme-002."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-006",
+      "decision": "accept",
+      "rationale": "Reproduced: `kept = dict()` (probe dictcall) and the page's set-of-seen-keys form over rows sorted by signed_up_at descending (probe setform) both produce the correct rows. Both fail with 'Task 6: key a dict on the email'. deduplicating-in-sql-vs-in-python/artifact.md:13, 18 and #o1 teach 'a set or a dict'. Required fix: remove the ast.Dict/DictComp assertion at test_main.py:247-250. The behavioural assertion already proves latest-per-email. Alternatively widen it to also accept dict()/set() calls and Set/SetComp nodes. Any remaining message describes behaviour, not a construct, and README Task 6 says a set or a dict both work. Same decision as py-pipe-lab-sme-012 part (c)."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-007",
+      "decision": "accept",
+      "rationale": "Reproduced (probe pathopen): `with Path(path).open(encoding=\"utf-8\", newline=\"\") as f:` fails with 'Task 1: open the file in read_csv with an explicit encoding=\"utf-8\"', a false message. Required fix: the open check accepts any call whose function is the name `open` or an Attribute whose attr is `open` (`Path(...).open`, `io.open`), provided it has an `encoding` keyword. Same decision as py-pipe-lab-sme-005, which carries the rest of the Task 1 source-check fix."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-008",
+      "decision": "accept",
+      "rationale": "Reproduced (probe helper_tests): two correct tests that build the client inside a helper (`def run(answers): return enrich(FakeModelClient(answers), [SIGNUP])`) fail with 'Task 10: every test drives enrich with a FakeModelClient', which is false. Required fix: remove the per-body text rule at test_main.py:378. Keep at most a module-level check that FakeModelClient and enrich are used in starter/test_enrich.py, and let the mutant runs (strengthened under py-pipe-lab-sme-003) prove that the tests drive enrich. Do not add sme-003's suggested per-test-function 'calls enrich' AST rule. It would recreate this helper false failure."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-009",
+      "decision": "accept",
+      "rationale": "Reproduced on the shipped starter (--tb=line): Tasks 4 and 7 first fail with a raw 'psycopg.errors.SyntaxError: syntax error at or near \"TODO\"'. `os.getenv(\"DATABASE_URL\")` in connect() gives a raw 'AttributeError: 'NoneType' object has no attribute 'encode''. Omitting `from typing import Literal` gives 'Interrupted: 2 errors during collection' with no task result (probe noliteral_import). README:22 overstates the messages. Required fix: (1) wrap the database calls of Tasks 4 and 7 in `except psycopg.Error as err: pytest.fail(f\"Task N: <SQL name> failed: {err}\")`. (2) Give the Task 2 KeyError check a Task 2 message (try/except, or check the exception type and pytest.fail 'read os.environ[\"DATABASE_URL\"] so a missing variable raises KeyError'). (3) Give the Task 4 injection a message for DID NOT RAISE. (4) Add Troubleshooting entries: 'errors during collection / NameError / SyntaxError: fix the file and line shown first', plus a tip to read the lines that start with `E` or run one task with `python -m pytest -q -k task04`. Alternatively, where a first failure stays raw, reword README:22 and the test_main.py docstring to 'each failing check is named after its task; most also say what to do next', as in the python-fundamentals decision. Same decision as py-pipe-lab-sme-011."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-010",
+      "decision": "accept",
+      "rationale": "Verified: README:10 says 'About 55 minutes' and lab.json:98 says the figure is an unmeasured estimate of the ten tasks only. Setup (venv, pip install, DATABASE_URL, the psql check) is not counted. The sibling SQL lab budgets it separately ('About 10 minutes of setup the first time, then about 30 minutes for the tasks'), so the realistic first-time total is about 65 minutes, over the captain's 60-minute cap for the whole module lab. Time ledger of this reconciliation: the required fixes were chosen to add at most about 3 learner-minutes (edu-011 asks for written predictions, edu-016 adds an except branch; edu-002 removes PERSONAL_FIELDS, and edu-012 and edu-005 simplify Task 8 and Task 4; the others change only checks or README wording). Required fix: (1) state setup separately in README:10 and lab.json notes ('about 10 minutes of setup, then about N for the tasks'), with the setup + tasks total at most 60, keeping the captain-settled sentence shape and the pause row. (2) Re-derive N task by task after the fixes, set lab.json minutes.estimatedMedian to the same whole-lab value, and keep the 'unpiloted authoring estimate' label. (3) If the re-derived total still exceeds 60, remove Task 7 (LATEST_CHECKINS_SQL, its check and the checkins table) and drop deduplicating-in-sql-vs-in-python#o2 from objectives, recording the gap (Task 6 keeps the dedup practice, and SQL dedup stays practised on its page). Do not rely on more copy-typing to make the figure fit."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-011",
+      "decision": "accept",
+      "rationale": "Accepted in part. Verified: README:89, :103 and :137 state the answers to the predict halves of reading#o3, loading#o2 and pydantic#o3, and README:149 dictates the identification answer (decided under edu-002, where the constant is removed). The task-step direction is operational steps that never give the answer to the reasoning step. Required fix (about +1.5 minutes): turn the three pre-answered statements into predict-then-run steps, e.g. 'Before you run the check, write down what a second loop over read_csv(...) gives, then compare' (Task 1), 'how many rows the second load leaves' (Task 3), and 'which of \"1\", \"2026-11-03T10:00:00\" and \"two\" Pydantic converts' (Task 5). Not required, and rejected for this lab: replacing the dictated operational code of Tasks 1-3 and 7 with construct names and page pointers. The l3 reconciliation (py-api-lab-edu-010) kept sibling-level dictation because of the cap, edu-010 shows this lab is already over the 60-minute cap with setup. The dictated lines are syntax the pages show (CSV/JSONL readers, %s parameters, ON CONFLICT, DISTINCT ON) or untaught bridges (the %(name)s placeholders, absent from the loading page), not reasoning answers. The reading#o3 second-iteration assertion stays as a behavioural check of the generator."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-012",
+      "decision": "accept",
+      "rationale": "Verified: keeping-sensitive-data-out-of-prompts/artifact.md:15 and 'Next step' teach 'Start from the task... drop every field, then add back only what tagging really needs' and 'mask what remains'. Its table says message text is 'Send only if needed, with personal data masked'. Task 8's deny-list (README:150) and the check (test_main.py:292-298), which forces seats and signed_up_at into the prompt, contradict the page. A learner applying the taught allow-list fails Task 8. Required fix (zero added time, simpler than the deny-list): minimize_for_prompt returns an allow-list of what classification needs, {\"ref\": pseudonym(...), \"session\": ..., \"comment\": ...}, and the check asserts exactly those keys. Masking is not required (cap): the fixture comments carry no personal data, so 'send only if needed, with personal data masked' holds, and o2 is observed through dropping and pseudonymizing. Instead add one README sentence that free text can carry personal data and would be masked in production (e.g. an email inside the comment replaced with [email]), and soften README:6 accordingly. Accepted alternative: the mask step with one fixture comment containing an address, as the critic proposes, if the edu-010 ledger allows it. Same decision as py-pipe-lab-sme-009."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-013",
+      "decision": "accept",
+      "rationale": "Verified: starter/pipeline/enrich.py:18-21 computes an unkeyed SHA-256 of a fixed public prefix plus the email. The docstring says 'without revealing it' and README:152 says 'without the model ever seeing who it is'. The page (artifact.md:15) defines pseudonymizing as swapping in a random token and keeping the mapping on your side. Anyone with a candidate email list can recompute the ref. Required fix (zero learner time): reword the docstring and README:152 to say this is a lab shortcut: a plain hash of an email can be reversed by guessing emails, and production uses the page's method, a random token with the mapping kept on your side (or a keyed hash whose key never ships). Accepted alternative, probed in review/l2-recon/alt (12 passed): replace the hash with a module-level mapping, `REFS.setdefault(email, \"p-\" + secrets.token_hex(5))`. Refs then differ between runs, while the custom check messages stay stable. Same decision as py-pipe-lab-sme-008."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-014",
+      "decision": "accept",
+      "rationale": "Accepted in part. Verified: README:7 says 'ten linked tasks', but each check uses its own inline data (README:81 says so). staging_signups is typed (schema.sql: seats integer, signed_up_at timestamp NOT NULL), so the raw export (seats 'two', a blank row) cannot be staged raw. README:121's 'the raw rows were loaded first' is therefore inaccurate, and the ELT page (line 19) says staging columns are usually text. The checkins table first appears in Task 7. Required fix (README wording only): in the Goal, give the pipeline order (extract, validate, deduplicate, load to staging, transform in SQL, enrich minimized records), say that the rows are validated before staging, and introduce the door-scanner checkins. Replace 'ten linked tasks' with wording that says each task builds one step and its check gives it its own data. Reword README:121 to drop 'raw' (e.g. 'the rows were loaded first, and PostgreSQL does the transform where the data already is'). Not required: the end-to-end composition task (60-minute cap, see edu-010)."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-015",
+      "decision": "accept",
+      "rationale": "Verified: README:27 says only 'from the SQL course'. The course reading sql-jdbc-foundations/relational-design/installing-postgres-and-a-sql-client exists and covers the PATH steps (lines 57-67) and 'role ... does not exist' (line 97). The sibling SQL lab README:149 has the role troubleshooting entry, which this README lacks. Cleanup README:196 is POSIX-only. Required fix: name that reading in Prerequisites with a version check; show `postgresql://postgres@localhost:5432/postgres` as the typical Windows/Linux-package URL in Setup step 3; add a Troubleshooting entry for 'role \"...\" does not exist' (put an existing PostgreSQL user in DATABASE_URL); and add the PowerShell cleanup forms (decided under sme-010). Not required: separate chmod 600 or Windows PATH notes. The named reading covers PATH (lines 57-67), and the SQL lab README covers the password file with `chmod 600 ~/.pgpass` (lines 45 and 148); the Setup step should point to that README section by name."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-016",
+      "decision": "accept",
+      "rationale": "Verified: ai-enrichment-with-validated-outputs/artifact.md:21 says 'A non-validation exception, such as a network failure, should get its own handling rather than being treated as a bad answer'. README:159 folds ModelError into the ValidationError branch and message. Required fix (about +0.5 minutes): README Task 9 asks for a separate `except ModelError` branch with its own WARNING message naming the ref and attempt, e.g. 'model call failed for %s (attempt %d)'. It may still retry within max_attempts, and the README says why (a transient failure gets a bounded retry, then the reject path). The Task 9 warning checks must accept both messages (see sme-012 part (d))."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-017",
+      "decision": "accept",
+      "rationale": "Verified: the fixtures use example.com addresses and 555-01xx numbers, the privacy page says 'Use made-up data in tests and examples', and the README never says that the people are made up. Required fix: one sentence in the Goal or the Offline note saying that every person in the fixtures and tests is made up, as the privacy page recommends for tests."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-001",
+      "decision": "accept",
+      "rationale": "Verified: every database check passes the fixture's connection (test_main.py:63-68), and the only learner connection code is connect(). The with-block half of loading-into-a-staging-table-with-upserts#o1 is therefore unobserved, while the batching half is observed. Required fix (time-neutral, no new task; probed in review/l2-recon/alt2, 12 passed): follow the loading and ELT pages' idiom. load_staging(records) and run_transform() take no connection and each open `with connect() as conn:` (load_staging also opens `conn.cursor()` there). The Task 3 and Task 4 checks monkeypatch DATABASE_URL to psycopg.conninfo.make_conninfo(DATABASE_URL, options=f\"-c search_path={lab_schema}\") and read the results from the fixture's separate connection. That observes the commit on a clean exit behaviourally: a no-commit load_staging (bare connect(), executemany, close()) was probed and leaves 0 rows. The Task 4 failure injection then observes the rollback. The 'found N rows' (Task 3) and summary (Task 4) messages must name the cause, e.g. 'Task 3: 0 rows are visible from another connection: open the connection with `with connect() as conn:` so a clean exit commits'. With both commit and rollback observed, connecting-to-postgres-from-python-with-psycopg#o3 may be added to objectives; it must not be claimed otherwise. Either `with connect() as conn:` or the page's literal `with psycopg.connect(os.environ[\"DATABASE_URL\"]) as conn:` must pass. Tasks 3 and 4 then depend on Task 2's connect(), so README:81 ('a task passes on its own') needs that exception stated, and the Task 3 and Task 4 checks give a 'Task N: finish connect() in Task 2 first' message when connect() still raises NotImplementedError. Do not add a separate run_nightly task (60-minute cap). Accepted alternative: drop loading-into-a-staging-table-with-upserts#o1 from objectives and record the gap. The suggested search_path-in-DATABASE_URL approach was probed (with make_conninfo) and works. Same decision as py-pipe-lab-edu-004."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-002",
+      "decision": "accept",
+      "rationale": "Verified: conn.transaction() is on none of the module's pages, the ELT page (lines 31-39) teaches the connection block, and the lesson only holds because the checks pass an autocommit connection (test_main.py:65). Required fix: Task 4 uses the page's `with connect() as conn:` block, as stated in py-pipe-lab-edu-005, which removes the hidden autocommit dependency and the savepoint trap the critic reproduced. Accepted alternative (only with the shared connection kept): the critic's sentence that the checks pass an autocommit connection, that conn.transaction() opens one transaction for both statements, and that in your own script `with psycopg.connect(...) as conn:` commits on a clean exit. Same decision as py-pipe-lab-edu-005."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-003",
+      "decision": "accept",
+      "rationale": "Reproduced (probe review/l2-recon/probes/mutants.py): a test file containing only a call-count test (`assert len(client.prompts) == 2`) and a test that never calls enrich passes the clean run and kills both shipped mutants. No assertion on the enriched or rejected outcome is needed today. Required fix: add two mutants that wrap the learner's enrich and keep its call pattern: 'never rejects' (`(good(c, s, n)[0], [])`) and 'loads a junk answer for each rejected ref' (append `{'ref': r, 'interest': 'other', 'level': 'beginner'}` for each rejected ref). Wrappers ship no solution. Probed: the README's two prescribed tests kill all four mutants, while the call-count-only tests survive both new ones, so Task 10 gains no learner work. Rejected parts: an independent reference enrich in test_main.py (it would commit a Task 9 solution, against lab-contract section 8), and a per-test 'calls enrich' AST rule (it conflicts with edu-008)."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-004",
+      "decision": "accept",
+      "rationale": "Reproduced (probe hardcoded2): an enrich hard-coded to `range(1, 3)` passes Task 9, and Task 10 then reports 'your tests still pass when enrich never retries', which blames the learner's correct tests. Required fix: add a Task 9 assertion that max_attempts is honoured, e.g. a FakeModelClient of 3 invalid answers with max_attempts=3 makes 3 calls and max_attempts=1 makes 1 (probed on my scratch solution: 1 and 3 calls), with the message 'Task 9: use max_attempts, do not hard-code the number of tries'. Task 9 then fails first, so the Task 10 mutant messages must also say 'if Task 9 fails, fix it first', because both still print in the same run. Do not add an independent reference enrich to test_main.py: a correct one-attempt enrich is a committed Task 9 solution (lab-contract section 8)."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-005",
+      "decision": "accept",
+      "rationale": "Reproduced: false failures for `Path(path).open(encoding=..., newline=\"\")` (probe pathopen) and for `from csv import DictReader` (probe dictreader_import: 'Task 1: read the CSV with csv.DictReader'), and a false pass for `with open(...) as fh: for line in fh.read().splitlines():` (probe fhread: 1 passed). Only the literal names f.read, f.readlines and list are banned, so whole-file reads that reading#o2 says break bounded memory can pass. Required fix: reject any call whose func is an Attribute with attr in {read, readlines}, whatever the receiver, and any list(...)/sorted(...) call or [*...] over the reader. Accept `open`, `*.open` and `io.open` calls with an encoding keyword. Accept csv.DictReader, or a bare DictReader imported from csv. Every message stays task-named."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-006",
+      "decision": "accept",
+      "rationale": "Reproduced (probe cursorname): `with conn.cursor() as cursor: cursor.executemany(UPSERT_SQL, records)` fails with 'send the whole batch with cur.executemany', which is false. Probe perrow: a per-row `cur.execute` loop plus an unreachable `cur.executemany` passes. Required fix: accept any call whose func is an Attribute with attr `executemany` or `copy`, whatever the receiver, and reject an `execute` call inside a for loop in load_staging (or observe batching by counting execute vs executemany through a wrapped cursor). Keep the message task-named."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-007",
+      "decision": "accept",
+      "rationale": "Verified from PyPI JSON metadata (https://pypi.org/pypi/psycopg/3.3.9/json, retrieved 2026-11-18): requires_dist includes 'tzdata; sys_platform == \"win32\"', and starter/requirements.txt does not pin it, so Windows resolves an unpinned tzdata. That contradicts lab.json cleanup.notes ('the lab's lock of every installed package') and lab-contract section 5. The latest tzdata on PyPI that day is 2026.6. Required fix: add `tzdata==2026.6 ; sys_platform == \"win32\"` (or the version current when the fix is made) to starter/requirements.txt, record the source with its retrieval date in the module evidence, and re-record the solved run. New lock tooling (pip-compile or uv) is not required."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-008",
+      "decision": "accept",
+      "rationale": "Verified: an unkeyed SHA-256 with a public prefix (enrich.py:18-21) contradicts the page's random token plus a mapping kept on your side (keeping-sensitive-data-out-of-prompts/artifact.md:15), and the docstring and README:152 overclaim. Required fix, decided as py-pipe-lab-edu-013: honest lab-shortcut wording that names the page's production method. Accepted alternative: the probed random token with a module-level mapping. An HMAC key read from the environment is not required, because it adds a setup variable against the captain's minimal-setup rule."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-009",
+      "decision": "accept",
+      "rationale": "Verified: minimize_for_prompt keeps the free-text comment unmasked (README:150, test_main.py:297), the page says free text can contain personal data and should be masked (artifact.md:13, 37 and the table), and README:6 promises enrichment 'without sending anyone's personal data'. Required fix, decided as py-pipe-lab-edu-012: an allow-list (ref, session, comment), plus a README sentence that free text can carry personal data and would be masked in production, and README:6 softened (e.g. 'without sending names, emails or phone numbers'). The mask step with a fixture comment containing an address is the accepted alternative if the edu-010 time ledger allows it."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-010",
+      "decision": "accept",
+      "rationale": "Verified: README:196 gives only `psql \"$DATABASE_URL\" ...`. In PowerShell, \"$DATABASE_URL\" expands the unset PowerShell variable to an empty string (standard interpolation; Setup step 3 already uses the $env: form for this reason). Required fix: add the PowerShell forms `psql $env:DATABASE_URL -c \"\\dn pipeline_lab_*\"` and `psql $env:DATABASE_URL -c \"DROP SCHEMA pipeline_lab_<hex> CASCADE\"` to Cleanup step 1. The lab.json prerequisite check string may stay POSIX, because the README gives the PowerShell form of that check (README:66)."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-011",
+      "decision": "accept",
+      "rationale": "Reproduced: the starter's Tasks 4 and 7 fail with raw psycopg SyntaxError, connect() with os.getenv gives a raw AttributeError, and the Task 4 injection against SQL inlined in run_transform gives 'Failed: DID NOT RAISE Error' (probe inline_sql). The validate_all str(err) TypeError is the critic's reproduction, accepted by inspection of test_main.py:226. Required fix, decided as py-pipe-lab-edu-009: wrap the Task 4 and Task 7 database calls in pytest.fail('Task N: ...'), give the Task 2 KeyError check and the Task 4 injection task-named messages, and handle the validate_all str(err) TypeError the same way (e.g. assert that each rejected error list is a list of dicts before indexing, with a Task 5 message). Otherwise reword README:22."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-012",
+      "decision": "accept",
+      "rationale": "All four parts verified. (a) Probe cte_comment: a CTE preceded by a `--` comment fails 'start TRANSFORM_SQL with a WITH ... CTE'. Required: strip leading `--` comment lines (or leading whitespace and comments) before the startswith check. (b) The injection only works if run_transform reads the module global TRANSFORM_SQL at call time (reproduced, probe inline_sql: 'DID NOT RAISE Error'). Required: README Task 4 says to keep using the TRANSFORM_SQL name inside run_transform, and the DID NOT RAISE case gets a task-named message (see edu-009). (c) `kept = dict()` false failure: same decision as edu-006. (d) Probe extra_warning: an extra WARNING when a ref is finally rejected gives 4 warnings and fails 'log one WARNING for each invalid or failed answer'. Required: assert at least one WARNING per failed attempt (at least 3 here), each naming a ref, rather than exactly 3. This also lets the separate ModelError branch from edu-016 pass."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-013",
+      "decision": "accept",
+      "rationale": "Reproduced against the local PostgreSQL 18.3 (throwaway schema, dropped): a second plain-INSERT executemany of the same rows into a table keyed on email raises UniqueViolation. It does not create duplicates. README:103's 'instead of duplicates' teaches the wrong failure mode. Required fix: reword README:103 to 'Loading the same file twice now updates each email's row instead of failing with a duplicate-key error, so a rerun after a failed night is safe.' If edu-011's predict-then-run step replaces this line, keep that accurate contrast in the reveal."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-014",
+      "decision": "accept",
+      "rationale": "Reproduced (probe sortednokey): `sorted(kept.values())` raises 'TypeError: '<' not supported' on the check's SimpleNamespace rows, and Pydantic models define no ordering either. Required fix: README Task 6 writes the hint as `sorted(kept.values(), key=lambda s: s.email)`, or names the key without the full expression if the edu-011 wording calls for that."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-015",
+      "decision": "accept",
+      "rationale": "Verified from PyPI JSON metadata (retrieved 2026-11-18). psycopg-binary 3.3.9 ships cp310-cp315 wheels for win_amd64, macOS x86_64/arm64, manylinux x86_64/aarch64 and musllinux, but no win_arm64 wheel and no sdist. pydantic-core 2.50.4 ships cp312-cp315 wheels for win_amd64, win_arm64, macOS, manylinux and musllinux (it also has an sdist that needs Rust). Native Windows-on-ARM Python therefore fails setup with 'No matching distribution found for psycopg-binary==3.3.9' (inferred from the file list, not run), and CPython newer than 3.15 has no wheels. Only 3.12 on macOS arm64 was run in this review. Required fix: record this wheel evidence with its retrieval date in the module evidence, listed as wheel availability, not as a tested run. The prerequisite and README say 'Python 3.12 or later, up to 3.15 (wheels exist for 3.12-3.15; tested on 3.12)'. Add one README note that native ARM64 Windows Python is not supported, because psycopg-binary 3.3.9 has no ARM64 Windows wheel. Do not claim the x64-Python-under-emulation workaround unless it is run. A pip download run for every platform is not required."
+    }
+  ]
+}

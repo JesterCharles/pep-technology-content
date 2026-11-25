@@ -12,11 +12,11 @@
 
 ETL transforms in your program, then loads the finished rows. ELT loads raw rows first, then transforms them inside the database with SQL.
 
-This pipeline uses ELT. Raw rows sit in staging, so when transform logic turns out to be wrong you fix the SQL and rerun without fetching the source again. Set-based SQL also runs next to the data, and the database enforces types and constraints on the result.
+This pipeline uses ELT. Raw rows sit in staging, so when the transform is wrong you fix the SQL and rerun without refetching the source. Set-based SQL also runs next to the data, and the database enforces types and constraints.
 
 ### A CTE names each cleaning step
 
-`WITH name AS (SELECT ...)` names a temporary result that the next statement can read, and `INSERT INTO target SELECT ... FROM name` writes it. Staging columns are usually text, so cast them with `::int` and tidy text with `lower(trim(x))`.
+`WITH name AS (SELECT ...)` names a temporary result the next statement can read, and `INSERT INTO target SELECT ... FROM name` writes it. Staging columns are usually text: cast with `::int` and tidy with `lower(trim(x))`. `CREATE TABLE target AS SELECT ...` instead creates a new table.
 
 ```
 WITH cleaned AS (
@@ -30,9 +30,9 @@ SELECT id, city FROM cleaned;
 
 ### Run the whole transform as one transaction
 
-A rebuild often has two steps: clear the target, then fill it. Run them in one `with psycopg.connect(...)` block so readers never see a half-built table. A failure rolls back both steps, leaving the old rows in place.
+A rebuild often has two steps: clear the target, then fill it. Run them in one `with psycopg.connect(...)` block so readers never see a half-built table. A failure rolls back both, leaving the old rows.
 
-In autocommit mode each statement commits by itself, so a failure in step two leaves the target already empty.
+In autocommit mode each statement commits alone, so a failure in step two leaves the target empty.
 
 ```
 with psycopg.connect(conninfo) as conn:
@@ -43,9 +43,9 @@ with psycopg.connect(conninfo) as conn:
 ## Recap
 
 - ETL transforms before loading; ELT loads raw rows and transforms inside the database.
-- Keeping raw rows in staging lets you fix a transform and replay it without going back to the source.
+- Raw rows in staging let you fix and replay a transform without going back to the source.
 - `WITH name AS (SELECT ...)` plus `INSERT ... SELECT` cleans and reshapes in one statement. Cast staging text before comparing it.
-- Run the transform in one transaction, so a failure leaves the target table unchanged.
+- Run the transform in one transaction, so a failure leaves the target unchanged.
 
 ## Cheat sheet
 
@@ -57,7 +57,7 @@ Where to act: The ___ line inside the WITH parentheses.
 
 Next step: Write the columns first, then FROM, then the filter, following the staging_users example.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The filter on your SELECT.
 
@@ -85,7 +85,7 @@ CREATE TABLE report AS SELECT ...;   -- builds a new table
 
 ## Sources
 
-First draft, not reviewed. Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.
+Sources checked on 2026-11-04. The author checked this page against these official pages; independent review pending.
 
 - PostgreSQL: WITH queries (common table expressions)
 - PostgreSQL: CREATE TABLE AS

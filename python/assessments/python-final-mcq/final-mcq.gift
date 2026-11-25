@@ -1,0 +1,415 @@
+// Python course final MCQ (python-final-mcq), graded, 30 questions, 30 minutes. Published in this repository under the captain's public-answer consent (Firstmate, 2026-11-19).
+
+$CATEGORY: python/assessments/python-final-mcq
+
+::py-final-q01::[html]<p><code>stock.csv</code> holds a header line <code>item,qty,boxes</code> and one data line <code>pen,0,6</code>. What does this print?</p><pre><code>import csv
+&nbsp;
+with open("stock.csv", newline\="", encoding\="utf-8") as f\:
+&nbsp;   for row in csv.DictReader(f)\:
+&nbsp;       if row["qty"]\:
+&nbsp;           print("qty given\:", row["qty"])
+&nbsp;       print(int(row["boxes"]) / 2)</code></pre>{
+~<code>3.0</code> only#Not quite. <code>row["qty"]</code> is the string <code>"0"</code>, not the number 0. Only an empty string counts as false, so the <code>if</code> body runs.
+~<code>qty given\: 0</code>, then <code>3</code>#Not quite. That is Java's integer division. In Python <code>/</code> is true division and always returns a float.
+=<code>qty given\: 0</code>, then <code>3.0</code>#Correct. <code>csv.DictReader</code> gives every value as a string, and the non-empty string <code>"0"</code> counts as true in an <code>if</code>. <code>/</code> always returns a float, so 6 / 2 is 3.0.
+~<code>3</code> only#Not quite. The csv value is the string <code>"0"</code>, which counts as true, and <code>/</code> returns the float 3.0.
+}
+
+::py-final-q02::[html]<p>In a stock report, <code>None</code> means a count is unknown. What does this print?</p><pre><code>stock \= \{"pen"\: 3, "ink"\: None, "pad"\: 0\}
+for name, qty in stock.items()\:
+&nbsp;   if qty is None\:
+&nbsp;       print(name, "unknown")
+&nbsp;   elif not qty\:
+&nbsp;       print(name, "empty")</code></pre>{
+=Two lines\: <code>ink unknown</code>, then <code>pad empty</code>#Correct. <code>items()</code> gives each key-value pair in insertion order. ink matches <code>is None</code> first, 0 counts as false so pad prints empty, and 3 counts as true so pen prints nothing.
+~Two lines\: <code>ink empty</code>, then <code>pad empty</code>#Not quite. The <code>is None</code> branch is tested first, so ink never reaches the <code>not qty</code> test.
+~One line\: <code>ink unknown</code>#Not quite. 0 counts as false in an <code>if</code>, so <code>not qty</code> is True for pad and it prints <code>pad empty</code>.
+~Three lines\: <code>pen empty</code>, <code>ink unknown</code>, <code>pad empty</code>#Not quite. 3 counts as true, so <code>not qty</code> is False for pen and nothing prints for it.
+}
+
+::py-final-q03::[html]<p>A help desk counts tickets per queue. What does this print?</p><pre><code>counts \= \{\}
+for queue in ["web", "app", "web", "web"]\:
+&nbsp;   counts[queue] \= counts.get(queue, 0) + 1
+print(counts)</code></pre>{
+~<code>\{'web'\: 1, 'app'\: 1\}</code>#Not quite. <code>get</code> returns the count already stored, so each repeat adds 1 to it instead of starting again.
+~<code>KeyError\: 'web'</code> on the first ticket#Not quite. <code>get</code> returns the default 0 for a missing key instead of raising. Only <code>counts[queue]</code> on the right-hand side would raise.
+=<code>\{'web'\: 3, 'app'\: 1\}</code>#Correct. <code>get</code> returns 0 the first time a queue appears and the stored count after that, so each ticket adds 1. A dict keeps insertion order.
+~<code>\{'app'\: 1, 'web'\: 3\}</code>#Not quite. The counts are right, but a dict keeps insertion order, and web was added first.
+}
+
+::py-final-q04::[html]<p>This app has only this route. Which request reaches the <code>search</code> function?</p><pre><code>class Filters(BaseModel)\:
+&nbsp;   max_price\: int
+&nbsp;
+@app.post("/hotels/\{city\}/search")
+def search(city\: str, filters\: Filters, page\: int \= 1)\:
+&nbsp;   ...</code></pre>{
+=<code>POST /hotels/oslo/search?page\=2</code> with the JSON body <code>\{"max_price"\: 90\}</code>#Correct. <code>city</code> comes from the path, the model-typed <code>filters</code> from the JSON body, and <code>page</code> from the query string, so all three sources are filled.
+~<code>POST /hotels/search?city\=oslo&amp;page\=2</code> with the JSON body <code>\{"max_price"\: 90\}</code>#Not quite. <code>city</code> is part of the path template, so the path needs a city segment. <code>/hotels/search</code> matches no route, so the answer is 404.
+~<code>GET /hotels/oslo/search?page\=2&amp;max_price\=90</code> with no body#Not quite. The route is registered for POST only, so a GET to that path answers 405. A model-typed parameter is also read from the body, not the query string.
+~<code>POST /hotels/oslo/search?page\=2&amp;max_price\=90</code> with no body#Not quite. A parameter typed as a Pydantic model is read from the JSON body. With no body, validation fails with 422 and a <code>loc</code> starting with <code>body</code>.
+}
+
+::py-final-q05::[html]<p><code>raw</code> holds text quantities such as <code>"4"</code>, <code>""</code>, <code>"n/a"</code> and <code>"7"</code>. A cleanup step must convert each number to an int, skip every value that is not a number, log one warning per skipped value, and keep going. Which design does all of that and follows the course guidance on comprehensions?</p>{
+~A <code>for</code> loop that sits inside one <code>try</code> and logs in <code>except ValueError</code>#Not quite. The first bad value jumps out of the whole loop to the <code>except</code>, so every later value, including "7", is lost.
+=A <code>for</code> loop with <code>try</code> around <code>int(q)</code> and logging in <code>except ValueError</code>#Correct. The error handling sits inside the loop, so each bad value is logged and skipped and the loop carries on. An explicit loop is the right tool when items need their own error handling and a side effect.
+~A list comprehension <code>[int(q) for q in raw if q !\= ""]</code>#Not quite. The filter removes only empty strings. <code>int("n/a")</code> still raises <code>ValueError</code> and stops the comprehension, and nothing is logged.
+~A list comprehension that calls <code>logger.warning</code> inside its <code>if</code> clause while it filters#Not quite. Even with a filter that skips bad values, this uses a comprehension for a side effect, logging, which the course guidance rejects. Logic that needs logging or <code>try</code>/<code>except</code> belongs in a <code>for</code> loop.
+}
+
+::py-final-q06::[html]<p>The route catches <code>httpx.TimeoutException</code> as 504 and <code>httpx.TransportError</code> as 502 <code>Customer service unavailable</code>, and maps <code>raise_for_status()</code> errors to 502 <code>Customer service error</code>. Lookups work on a developer's laptop. In staging, where Spring Boot runs on another host, every lookup returns 502 <code>Customer service unavailable</code>. Which line causes it?</p><pre><code>class Settings(BaseSettings)\:
+&nbsp;   spring_token\: str
+&nbsp;
+settings \= Settings()
+client \= httpx.Client(
+&nbsp;   base_url\="http\://localhost\:8080",
+&nbsp;   headers\=\{"Authorization"\: f"Bearer \{settings.spring_token\}"\},
+&nbsp;   timeout\=httpx.Timeout(5.0, connect\=2.0),
+)</code></pre>{
+~<code>headers\=\{"Authorization"\: f"Bearer \{settings.spring_token\}"\}</code>#Not quite. A bad token gets a 401 response. <code>raise_for_status()</code> turns it into <code>HTTPStatusError</code>, which this route reports as <code>Customer service error</code>, not <code>unavailable</code>.
+=<code>base_url\="http\://localhost\:8080"</code>#Correct. localhost is the machine making the call, so in staging nothing listens there and the connection is refused. <code>httpx.ConnectError</code> is a <code>TransportError</code>, hence the 502. Read the base URL from settings, like the token.
+~<code>timeout\=httpx.Timeout(5.0, connect\=2.0)</code>#Not quite. A connect timeout raises <code>TimeoutException</code>, which the route reports as 504. A refused connection fails at once instead of waiting.
+~<code>spring_token\: str</code>#Not quite. If the variable were missing, <code>Settings()</code> would fail when the service starts, so no lookup would get a response at all.
+}
+
+::py-final-q07::[html]<p>The helper's hint promises an int, but its body returns something else. What happens?</p><pre><code>def parse_qty(text\: str) -&gt; int\:
+&nbsp;   return text.strip()
+&nbsp;
+class Line(BaseModel)\:
+&nbsp;   qty\: int
+&nbsp;
+line \= Line(qty\=parse_qty(" 7 "))
+print(line.qty + 1)</code></pre>{
+~It raises <code>TypeError</code> inside <code>parse_qty</code>.#Not quite. Type hints, including return hints, are not checked when the code runs, so the function returns the string without complaint.
+~It raises <code>TypeError</code> at <code>line.qty + 1</code>.#Not quite. That would need <code>qty</code> to still be a string. The model validates the field and converts "7" to the int 7.
+=It prints <code>8</code>.#Correct. Python does not check the <code>-&gt; int</code> hint, so <code>parse_qty</code> quietly returns the string "7". The Pydantic model is the first real check\: it converts the clean numeric string to the int 7.
+~It raises <code>ValidationError</code> when <code>Line</code> is built.#Not quite. In lax mode Pydantic converts a clean numeric string such as "7" to an int. It rejects only values it cannot convert safely.
+}
+
+::py-final-q08::[html]<p>A client sends <code>GET /rooms/12/slots?limit\=3</code> to this route. What does it get back?</p><pre><code>@app.get("/rooms/\{room_id\}/slots")
+def list_slots(room_id\: int, day\: str, limit\: int \= 5)\:
+&nbsp;   return \{"room"\: room_id, "day"\: day, "limit"\: limit\}</code></pre>{
+~200, with <code>"day"\: null</code> in the body#Not quite. Only a parameter with a default is optional. <code>day</code> has none, so leaving it out is a validation error, not <code>None</code>.
+~404, with <code>Not Found</code> as the detail and no <code>loc</code>#Not quite. <code>day</code> is not in the path template, so the URL matches the route. The problem is the missing query parameter.
+~422, with <code>loc</code> <code>["path", "day"]</code> and type <code>missing</code>#Not quite. Only names in the path template are path parameters. A parameter without a default that is not in the path is a query parameter, so <code>loc</code> starts with <code>query</code>.
+=422, with <code>loc</code> <code>["query", "day"]</code> and type <code>missing</code>#Correct. <code>day</code> is not in the path and has no default, so it is a required query parameter. Validation fails before the function runs.
+}
+
+::py-final-q09::[html]<p>Sales rows are the same record when store and day match. What does this print?</p><pre><code>rows \= [
+&nbsp;   \{"store"\: "N", "day"\: "Mon", "sales"\: 5\},
+&nbsp;   \{"store"\: "S", "day"\: "Mon", "sales"\: 7\},
+&nbsp;   \{"store"\: "N", "day"\: "Mon", "sales"\: 6\},
+&nbsp;   \{"store"\: "N", "day"\: "Tue", "sales"\: 4\},
+]
+seen, kept \= set(), []
+for r in rows\:
+&nbsp;   key \= (r["store"], r["day"])
+&nbsp;   if key not in seen\:
+&nbsp;       seen.add(key)
+&nbsp;       kept.append(r["sales"])
+print(kept)</code></pre>{
+~<code>[7, 6, 4]</code>#Not quite. A set of seen keys keeps the first row for a key. Keeping the last needs a dict that overwrites.
+~<code>[5, 7]</code>#Not quite. The key includes the day, so N/Tue is a different key from N/Mon and is kept.
+~<code>TypeError</code>, because a tuple cannot be added to a set#Not quite. A tuple of strings is hashable, so it can be a set element or a dict key. A list could not.
+=<code>[5, 7, 4]</code>#Correct. The tuple <code>(store, day)</code> is the natural key, and a set of seen keys keeps the first row for each key, so the second N/Mon row is skipped.
+}
+
+::py-final-q10::[html]<p>A shelf report keeps the newest codes and maps each aisle letter to its number. What does this print?</p><pre><code>codes \= ["A1", "B2", "C3", "D4", "E5"]
+recent \= codes[-3\:]
+picked \= \{c[0]\: c[1\:] for c in recent[\:\:2]\}
+print(picked)</code></pre>{
+=<code>\{'C'\: '3', 'E'\: '5'\}</code>#Correct. <code>codes[-3\:]</code> keeps C3, D4 and E5, the step 2 keeps C3 and E5, and slicing a string gives a string, so the values are '3' and '5'.
+~<code>\{'C'\: '3', 'D'\: '4', 'E'\: '5'\}</code>#Not quite. <code>recent[\:\:2]</code> takes every second item of the three, so D4 is skipped.
+~<code>\{'A'\: '1', 'C'\: '3'\}</code>#Not quite. A negative start counts from the end, so <code>codes[-3\:]</code> is the last three codes, not the first.
+~<code>\{'C'\: 3, 'E'\: 5\}</code>#Not quite. Slicing a string returns a string, so <code>c[1\:]</code> is '3', not the int 3.
+}
+
+::py-final-q11::[html]<p>A seating chart starts both rows from one blank list. What does this print?</p><pre><code>blank \= [0, 0]
+grid \= \{"a"\: blank, "b"\: blank\}
+grid["a"][0] \= 5
+grid["b"] \= grid["b"].copy()
+grid["b"].append(1)
+print(grid["a"], grid["b"])</code></pre>{
+~<code>[5, 0] [0, 0, 1]</code>#Not quite. Storing <code>blank</code> twice does not copy it. Until the copy, a and b name one list, so the 5 is visible through both.
+~<code>[5, 0, 1] [5, 0, 1]</code>#Not quite. After <code>copy()</code>, <code>b</code> names a new list, so appending to it no longer changes the list behind <code>a</code>.
+~<code>[5, 0, 1] [0, 0, 1]</code>#Not quite. The 5 is written before the copy, so the copy includes it. The append happens after the copy, so only b gets it.
+=<code>[5, 0] [5, 0, 1]</code>#Correct. Both keys start out naming the same list, so setting <code>a[0]</code> shows through <code>b</code>. The copy then gives <code>b</code> its own list, so the append changes only <code>b</code>.
+}
+
+::py-final-q12::[html]<p>A booking script raises its own exception when a slot is taken. What does this print?</p><pre><code>class Busy(Exception)\: pass
+&nbsp;
+def reserve(slot)\:
+&nbsp;   if slot \=\= "9\:00"\:
+&nbsp;       raise Busy("slot taken")
+&nbsp;   return slot
+&nbsp;
+booked \= []
+for slot in ["9\:00", "9\:30"]\:
+&nbsp;   try\:
+&nbsp;       booked.append(reserve(slot))
+&nbsp;   except Busy\:
+&nbsp;       booked.append("wait")
+&nbsp;   finally\:
+&nbsp;       booked.append("|")
+print(booked)</code></pre>{
+=<code>['wait', '|', '9\:30', '|']</code>#Correct. <code>reserve</code> raises before <code>append</code> gets a value, <code>except Busy</code> adds 'wait', and <code>finally</code> adds '|' after every pass of the loop.
+~<code>['9\:00', 'wait', '|', '9\:30', '|']</code>#Not quite. <code>reserve</code> raises before it returns, so <code>append</code> never receives '9\:00'.
+~<code>['wait', '9\:30', '|']</code>#Not quite. <code>finally</code> runs on every pass, whether or not the <code>try</code> block raised, so '|' is added twice.
+~Nothing prints\: <code>Busy</code> stops the loop with a traceback#Not quite. <code>except Busy</code> matches the raised exception, so it is handled and the loop continues.
+}
+
+::py-final-q13::[html]<p>A clinic import builds <code>Visit(**r)</code> for each raw record inside <code>try</code>/<code>except ValidationError</code> and keeps the records that validate. Which records are kept?</p><pre><code>class Visit(BaseModel)\:
+&nbsp;   patient_ref\: str
+&nbsp;   minutes\: int
+&nbsp;   room\: str | None \= None
+&nbsp;
+raw \= [
+&nbsp;   \{"patient_ref"\: "P1", "minutes"\: 12.0\},
+&nbsp;   \{"patient_ref"\: "P2", "minutes"\: None\},
+&nbsp;   \{"patient_ref"\: "P3", "minutes"\: 20, "room"\: None\},
+]</code></pre>{
+~P1, P2 and P3#Not quite. <code>None</code> is allowed only where the type says <code>| None</code>. <code>minutes</code> is a plain <code>int</code>, so <code>None</code> fails validation.
+~P3 only#Not quite. Lax mode converts a float with no fractional part, so 12.0 becomes the int 12 and P1 is kept.
+=P1 and P3#Correct. 12.0 converts to 12 without loss, and <code>room</code> is declared <code>str | None</code>, so <code>None</code> is allowed there. <code>minutes</code> is a plain required <code>int</code>, so <code>None</code> is rejected.
+~P2 and P3#Not quite. Both steps are reversed\: lax mode converts 12.0 to the int 12, and <code>None</code> is allowed only where the type says <code>| None</code>.
+}
+
+::py-final-q14::[html]<p>An extract step chains two generators. What does this print?</p><pre><code>def read(lines)\:
+&nbsp;   for line in lines\:
+&nbsp;       print("read", line)
+&nbsp;       yield line
+&nbsp;
+def skip_header(rows)\:
+&nbsp;   for row in rows\:
+&nbsp;       if row !\= "sku"\:
+&nbsp;           yield row
+&nbsp;
+rows \= skip_header(read(["sku", "a", "b"]))
+print("ready")
+print(next(rows))</code></pre>{
+~Four lines\: <code>read sku</code>, <code>read a</code>, <code>ready</code>, <code>a</code>#Not quite. Calling a generator function runs none of its body, so nothing is read before <code>ready</code> prints.
+=Four lines\: <code>ready</code>, <code>read sku</code>, <code>read a</code>, <code>a</code>#Correct. Creating the chain runs nothing. <code>next</code> resumes the chain until one value passes the filter, so <code>read</code> runs twice, and nothing more is read after 'a' is yielded.
+~Five lines\: <code>ready</code>, <code>read sku</code>, <code>read a</code>, <code>read b</code>, <code>a</code>#Not quite. Records move through the chain one at a time. <code>next</code> stops as soon as <code>skip_header</code> yields 'a', so 'b' is not read yet.
+~Two lines\: <code>ready</code>, <code>read sku</code>#Not quite. <code>skip_header</code> drops 'sku' and keeps pulling from <code>read</code> until a row passes, so <code>next</code> returns 'a'.
+}
+
+::py-final-q15::[html]<p>A teammate runs <code>python3 -m pip freeze &gt; requirements.txt</code> and commits the file. It lists 80 packages the project never uses and misses <code>httpx</code>, which the project's <code>.venv</code> has. What went wrong?</p>{
+=The <code>.venv</code> was not active, so <code>python3 -m pip</code> ran the system Python's pip and froze its packages#Correct. <code>python -m pip</code> is the pip of whichever Python runs, so freeze records that Python's packages. Activate the venv first, then freeze.
+~<code>pip freeze</code> always lists every package on the machine, so the file has to be written by hand#Not quite. Freeze lists the packages of the Python that runs it. Inside an active venv that is only the venv's packages.
+~<code>freeze</code> leaves out packages installed with <code>python -m pip install</code>, which is why <code>httpx</code> is missing#Not quite. By default freeze leaves out pip itself, not the packages you installed.
+~<code>.venv/</code> is in <code>.gitignore</code>, so pip cannot see the packages inside it#Not quite. <code>.gitignore</code> only controls what Git commits. It has no effect on what pip finds.
+}
+
+::py-final-q16::[html]<p>pytest reports this failure. What does the report tell you, and what should change?</p><pre><code>def fee(days)\:
+&nbsp;   """Return the fee\: 4 per day."""
+&nbsp;   return days * 4
+&nbsp;
+def test_fee()\:
+&nbsp;   assert fee(3) \=\= 14</code></pre><pre><code>&gt;       assert fee(3) \=\= 14
+E       assert 12 \=\= 14
+E        +  where 12 \= fee(3)</code></pre>{
+~<code>fee</code> returned 14 and the test expected 12, so change the function#Not quite. The <code>where</code> line shows <code>fee(3)</code> returned 12. The 14 is the expected value written in the test.
+~<code>fee</code> returned 12, so change the function until it returns 14#Not quite. A failing test does not prove the code is wrong. The docstring's rule gives 12 for three days, so the test's 14 is the mistake.
+=<code>fee</code> returned 12, which follows its rule, so change the test to expect 12#Correct. The <code>where</code> line names the value the call returned\: 12. Three days at 4 per day is 12, so the function is right and the test's expected 14 is the mistake.
+~<code>fee</code> raised an exception at the <code>&gt;</code> line, so wrap the call in <code>pytest.raises</code>#Not quite. The <code>&gt;</code> line marks the failed assert, and the <code>E</code> lines show the values compared. Nothing was raised.
+}
+
+::py-final-q17::[html]<p><code>count.py</code> (first block) and <code>test_count.py</code> (second block) sit in one folder. What does <code>python -m pytest -q</code> report?</p><pre><code>import sys
+def main(argv)\:
+&nbsp;   if len(argv) !\= 2\:
+&nbsp;       print("usage\: count.py TEXT", file\=sys.stderr)
+&nbsp;       return 2
+&nbsp;   return 0
+&nbsp;
+if __name__ \=\= "__main__"\:
+&nbsp;   sys.exit(main(sys.argv))</code></pre><pre><code>import count
+def test_main()\:
+&nbsp;   assert count.main(["data"]) \=\= 0</code></pre>{
+~1 passed\: <code>main</code> treats <code>"data"</code> as its first argument and returns 0#Not quite. The first argument is <code>argv[1]</code>. <code>argv[0]</code> is the script name's slot, so <code>["data"]</code> has no argument at all.
+~No result\: importing <code>count</code> runs <code>main</code> and calls <code>sys.exit</code>, which stops pytest#Not quite. On import, <code>__name__</code> is <code>"count"</code>, so the guarded line does not run. The import only defines <code>main</code>.
+~1 passed\: <code>main</code> reads pytest's own command line, which has two items#Not quite. <code>main</code> reads its <code>argv</code> parameter. Only the guarded line passes it <code>sys.argv</code>, and that line does not run on import.
+=1 failed\: the list lacks the script name, so <code>main</code> returns 2#Correct. <code>main</code> expects the shape of <code>sys.argv</code>, where item 0 is the script name. A one-item list has no argument, so <code>len(argv) !\= 2</code> is True. Pass <code>["count.py", "data"]</code>.
+}
+
+::py-final-q18::[html]<p>This app has only the two routes shown. What status codes do these four requests get, in order?</p><pre><code>class BookingIn(BaseModel)\:
+&nbsp;   room_id\: int
+&nbsp;
+bookings \= \{7\: \{"id"\: 7, "room_id"\: 3\}\}
+&nbsp;
+@app.post("/bookings", status_code\=201)
+def create(b\: BookingIn)\:
+&nbsp;   ...
+&nbsp;
+@app.get("/bookings/\{booking_id\}")
+def read(booking_id\: int)\:
+&nbsp;   if booking_id not in bookings\:
+&nbsp;       raise HTTPException(status_code\=404, detail\="Booking not found")
+&nbsp;   return bookings[booking_id]</code></pre><p>1\: <code>POST /bookings</code> with body <code>\{"room_id"\: "x"\}</code>. 2\: <code>GET /bookings/8</code>. 3\: <code>DELETE /bookings/7</code>. 4\: <code>GET /bookings/seven</code>.</p>{
+~422, 404, 404, 404#Not quite. A path that exists without that method answers 405, and a path value that fails its type answers 422.
+~422, 404, 405, 404#Not quite. '/bookings/seven' matches the route template, and then 'seven' fails the <code>int</code> check, which is a 422.
+=422, 404, 405, 422#Correct. 'x' fails <code>int</code>, booking 8 is missing so the route raises 404, the path exists without a DELETE route, and 'seven' fails the <code>int</code> path parameter.
+~400, 404, 405, 422#Not quite. FastAPI answers a body that fails validation with 422, not 400.
+}
+
+::py-final-q19::[html]<p>What does pytest report for this test file?</p><pre><code>import pytest
+&nbsp;
+def per_shelf(boxes, shelves)\:
+&nbsp;   if shelves &lt;\= 0\:
+&nbsp;       raise ValueError("shelves must be positive")
+&nbsp;   return boxes // shelves
+&nbsp;
+@pytest.mark.parametrize("boxes, shelves, each", [(10, 2, 5), (6, 0, 0), (9, 4, 2)])
+def test_per_shelf(boxes, shelves, each)\:
+&nbsp;   assert per_shelf(boxes, shelves) \=\= each</code></pre>{
+~3 passed\: the <code>ValueError</code> is the behaviour the function is meant to have for 0 shelves#Not quite. The test asserts a return value, and nothing in it expects an exception. Only <code>pytest.raises</code> turns a raised exception into a pass.
+=1 failed, 2 passed\: the <code>ValueError</code> of the <code>(6, 0, 0)</code> case escapes the test#Correct. Each parametrized case runs and is reported on its own. An exception that escapes a test fails that case. Test the error with <code>pytest.raises(ValueError)</code> instead.
+~1 failed, 1 passed\: the failing <code>(6, 0, 0)</code> case stops pytest before <code>(9, 4, 2)</code> runs#Not quite. Parametrized cases are independent, so a failure in one does not stop the next.
+~2 failed, 1 passed\: <code>9 // 4</code> is 2.25, so the <code>(9, 4, 2)</code> case fails as well#Not quite. <code>//</code> floors to the int 2, so that case passes.
+}
+
+::py-final-q20::[html]<p><code>get_db</code> yields a connection whose fetched rows arrive as dicts with <code>id</code>, <code>sku</code> and <code>qty</code>. The <code>results</code> table holds ids 1 to 50. <code>GET /results?limit\=2&amp;offset\=10</code> returns ten rows, ids 3 to 12. What causes it?</p><pre><code>@app.get("/results", response_model\=list[ResultOut])
+def list_results(limit\: int \= Query(20, ge\=1, le\=100),
+&nbsp;                offset\: int \= Query(0, ge\=0),
+&nbsp;                db\=Depends(get_db))\:
+&nbsp;   return db.execute(
+&nbsp;       "SELECT id, sku, qty FROM results ORDER BY id LIMIT %s OFFSET %s",
+&nbsp;       (offset, limit),
+&nbsp;   ).fetchall()</code></pre>{
+~FastAPI fills the function's parameters in URL order, so <code>limit</code> received 10 and <code>offset</code> received 2#Not quite. FastAPI matches query parameters by name, so <code>limit</code> is 2 and <code>offset</code> is 10 inside the function.
+~The database applies <code>LIMIT</code> and <code>OFFSET</code> before <code>ORDER BY</code>, so the page comes from unsorted rows#Not quite. <code>ORDER BY</code> sorts first, and the ids 3 to 12 are in order. Ten rows also means the limit used was 10, not 2.
+~The <code>Query(20, ...)</code> default replaced the <code>limit\=2</code> the client sent#Not quite. A default applies only when the client leaves the parameter out. A limit of 20 would also return 20 rows, not ten.
+=The <code>%s</code> placeholders are filled in order, so 10 went to <code>LIMIT</code> and 2 went to <code>OFFSET</code>#Correct. Values fill <code>%s</code> placeholders by position, as with <code>VALUES (%s, %s)</code> rows or JDBC <code>?</code> parameters. Pass <code>(limit, offset)</code> to match <code>LIMIT %s OFFSET %s</code>.
+}
+
+::py-final-q21::[html]<p>A contact check logs only the record's reference when it fails. Can the person's email or name still reach the log?</p><pre><code>def check_contact(record)\:
+&nbsp;   if "@" not in record["email"]\:
+&nbsp;       raise ValueError(f"bad email \{record['email']\} for \{record['name']\}")
+&nbsp;
+try\:
+&nbsp;   check_contact(record)
+except ValueError\:
+&nbsp;   logger.exception("contact rejected ref\=%s", record["ref"])</code></pre>{
+~No\: <code>logger.exception</code> writes only its own message and the <code>ref</code> argument.#Not quite. <code>logger.exception</code> logs at ERROR level with the traceback, and the traceback ends with the exception's message.
+=Yes\: <code>logger.exception</code> adds the traceback, which ends with the raised message.#Correct. The log line is clean, but the traceback includes the exception message, which copies the email and name into every log that keeps it. Raise with the reference instead.
+~No\: the f-string in a <code>raise</code> is not kept in tracebacks.#Not quite. The message is part of the exception object, and the traceback prints it.
+~No\: <code>logger.exception</code> adds the traceback only at DEBUG level, which a WARNING threshold drops.#Not quite. <code>logger.exception</code> logs at ERROR level with the traceback, which passes a WARNING threshold.
+}
+
+::py-final-q22::[html]<p>Each night a 30 MB customer file is loaded into staging, which keeps every night's rows. The same customer can appear twice in one file and can reappear on a later night. Two rows are the same customer when their emails match after trimming and lowercasing. Where should the pipeline deduplicate, and on which key?</p>{
+~Python before loading, on the normalized email\: only Python can normalize it.#Not quite. A normalized email can also be computed in SQL with <code>lower(trim(email))</code>. The course's case for Python is a small file whose duplicates stay within one batch; here, Python before loading sees only tonight's file, so customers who return on a later night slip through. The cross-night duplicates decide it.
+~SQL after loading, on the stored <code>email</code> column\: it sees earlier nights' rows.#Not quite. The placement is right, but <code>' Ana@example.org'</code> and <code>'ana@example.org'</code> are different values, so the raw column misses those duplicates.
+=SQL after loading, on <code>lower(trim(email))</code>\: it sees earlier nights' rows.#Correct. Only a step that sees the stored rows can catch a customer who returns on a later night, and SQL normalizes the key with <code>lower(trim(email))</code>. The small file size does not outweigh the cross-night duplicates.
+~Python before loading, in a dict on <code>email</code> that keeps the last row\: the file fits.#Not quite. The file does fit in memory, but this sees only tonight's file and keys on the raw email, so it misses both the returning and the differently spelled duplicates.
+}
+
+::py-final-q23::[html]<p>A loader turns dict records into rows by spreading each record into a function call. What does this print?</p><pre><code>def to_row(sku, qty\=1, **extra)\:
+&nbsp;   return sku, qty, len(extra)
+&nbsp;
+records \= [\{"qty"\: 3, "sku"\: "A"\}, \{"sku"\: "B", "note"\: "gift"\}, \{"qty"\: 2\}]
+rows, failed \= [], 0
+for r in records\:
+&nbsp;   try\:
+&nbsp;       rows.append(to_row(**r))
+&nbsp;   except TypeError\:
+&nbsp;       failed +\= 1
+print(rows, failed)</code></pre>{
+=<code>[('A', 3, 0), ('B', 1, 1)] 1</code>#Correct. <code>**r</code> passes each key as a keyword argument, matched by name, so key order does not matter. B gets the default qty and <code>**extra</code> collects <code>note</code>. The third record has no <code>sku</code>, so the call raises <code>TypeError</code> and is counted.
+~<code>[(3, 'A', 0), ('B', 1, 1)] 1</code>#Not quite. <code>**</code> passes keyword arguments, which are matched to parameters by name, not by the dict's key order.
+~<code>[('A', 3, 0), ('B', 1, 1), (None, 2, 0)] 0</code>#Not quite. A required parameter has no default, so leaving <code>sku</code> out raises <code>TypeError</code>. Python never fills it with <code>None</code>.
+~<code>[('A', 3, 0)] 2</code>#Not quite. <code>**extra</code> collects keyword arguments that match no parameter, so <code>note</code> is accepted. Without <code>**extra</code> it would raise.
+}
+
+::py-final-q24::[html]<p><code>GET /parcels/\{parcel_id\}</code> gets <code>db</code> from <code>Depends(get_db)</code> and raises <code>HTTPException(404)</code> when <code>db.fetch_parcel</code> returns <code>None</code>. The real <code>get_db</code> yields an object that reads the seeded test database, which holds parcel 1. <code>EmptyDb.fetch_parcel</code> always returns <code>None</code>. The tests run in file order.</p><pre><code>def test_missing()\:
+&nbsp;   app.dependency_overrides[get_db] \= lambda\: EmptyDb()
+&nbsp;   assert client.get("/parcels/1").status_code \=\= 404
+&nbsp;
+def test_found()\:
+&nbsp;   assert client.get("/parcels/1").status_code \=\= 200</code></pre><p><code>python -m pytest test_parcels.py\:\:test_found</code> passes. <code>python -m pytest test_parcels.py</code> fails <code>test_found</code> with 404. Why?</p>{
+~<code>get_db</code> is a generator, so <code>test_missing</code> used it up and it yields nothing later#Not quite. FastAPI calls <code>get_db</code> again for each request, and while the override is set it is not called at all.
+~An override applies only inside the test that sets it, so parcel 1 is missing from the database#Not quite. <code>test_found</code> passes when run alone against the same database, so parcel 1 is there. The override outlives the test that set it.
+=<code>test_missing</code> never clears its override, so <code>test_found</code> also gets <code>EmptyDb</code>#Correct. An override stays on the app object until it is cleared, so it leaks into every later test. Clear it in a <code>finally</code> block or a fixture after the test.
+~<code>client</code> caches the first response for each URL, so <code>test_found</code> receives the cached 404#Not quite. The test client sends every request to the app. The second request gets 404 because the app still uses the override.
+}
+
+::py-final-q25::[html]<p>A project folder holds <code>load.py</code> and a teammate's scratch file <code>json.py</code>, which contains only <code>data \= []</code>. <code>python3 load.py</code> stops with an <code>AttributeError</code> on the <code>json.loads</code> line. Why?</p><pre><code>\# load.py
+import json
+print(json.loads("[1, 2]"))</code></pre>{
+=The script's folder is searched before the standard library, so the local file wins#Correct. In a normal script run, Python searches <code>sys.path</code> in order, and the script's folder comes before the standard library. Rename the scratch file.
+~The venv is not active, so the standard library's <code>json</code> module is missing#Not quite. The standard library comes with every Python, venv or not. A module Python cannot find raises <code>ModuleNotFoundError</code> at the <code>import</code> line, not an <code>AttributeError</code> later.
+~<code>json</code> must be installed with <code>python -m pip install json</code> before it can be imported#Not quite. <code>json</code> is part of the standard library, so it needs no install. A missing module would fail at the <code>import</code> line with <code>ModuleNotFoundError</code>.
+~<code>import json</code> binds only the module name, so reaching <code>loads</code> needs <code>from json import loads</code>#Not quite. <code>import json</code> gives you the module, and <code>json.loads</code> reaches into it. The problem is which file was imported as json.
+}
+
+::py-final-q26::[html]<p><code>stock</code> keeps each SKU's running total, and <code>sku</code> is its primary key. Each night's file holds that night's change per SKU, at most one row per SKU. The loader below runs once per night. Last week, on Monday the loader stopped with an error partway through the file, and an operator reran it to completion. On Thursday the same night's file was loaded twice, and both runs finished. Which incident or incidents, if any, added a night's quantities to <code>stock</code> more than once?</p><pre><code>with psycopg.connect(os.environ["DATABASE_URL"]) as conn\:
+&nbsp;   with conn.cursor() as cur\:
+&nbsp;       cur.executemany(
+&nbsp;           """INSERT INTO stock (sku, qty) VALUES (%s, %s)
+&nbsp;              ON CONFLICT (sku)
+&nbsp;              DO UPDATE SET qty \= stock.qty + EXCLUDED.qty""",
+&nbsp;           rows,
+&nbsp;       )</code></pre>{
+~Neither of them#Not quite. The primary key stops a second row, not a second addition. A repeat must leave the same table as one run, and Thursday's repeat adds every change again because <code>SET</code> reads <code>stock.qty</code>.
+~Only Monday#Not quite. The <code>with</code> block is one transaction\: the error rolled back the rows written before it, so the rerun added the night once. Thursday is the double count.
+=Only Thursday#Correct. On Thursday the second load conflicts on every SKU, and <code>SET qty \= stock.qty + EXCLUDED.qty</code> adds the incoming change to the stored total again, so that night counts twice. On Monday the error rolled back the whole <code>with</code> block, so the rerun added the night once. The page's form, <code>SET qty \= EXCLUDED.qty</code>, would leave the same table after a repeat; this <code>SET</code> reads the stored row, so it does not.
+~Both of them#Not quite. Monday's failed run left nothing behind, because the error rolled back the whole <code>with</code> block. Thursday is right\: its second load adds every change again.
+}
+
+::py-final-q27::[html]<p>A nightly rebuild runs this with autocommit off. As in most staging tables, <code>staging_orders.qty</code> is a <code>text</code> column. The scheduler does not show the job's output. After tonight's run, readers still see yesterday's rows in <code>clean_orders</code>. Which explanation and fix are right?</p><pre><code>with psycopg.connect(os.environ["DATABASE_URL"]) as conn\:
+&nbsp;   conn.execute("DELETE FROM clean_orders")
+&nbsp;   conn.execute("""
+&nbsp;       WITH c AS (SELECT lower(trim(sku)) AS sku, qty
+&nbsp;                  FROM staging_orders WHERE qty &gt; 0)
+&nbsp;       INSERT INTO clean_orders (sku, qty)
+&nbsp;       SELECT sku, qty\:\:int FROM c
+&nbsp;   """)</code></pre>{
+~<code>lower(trim(sku))</code> cannot run on a <code>text</code> column, which rolls back the <code>DELETE</code> too; drop the cleaning from the CTE#Not quite. <code>lower(trim(x))</code> is how staging text is tidied, and it runs on text. The part PostgreSQL rejects is the uncast comparison <code>qty &gt; 0</code>.
+~Both statements committed, but text values fail <code>&gt; 0</code> when compared as text; cast inside the <code>SELECT</code> instead#Not quite. If both had committed, the DELETE would have emptied the table and readers would not see yesterday's rows.
+~The <code>INSERT</code> writes text <code>qty</code> into an int column, which is rejected and rolls back the <code>DELETE</code> too; cast in the CTE instead#Not quite. The final <code>SELECT</code> already casts with <code>qty\:\:int</code>, so the INSERT receives ints. The statement fails earlier, at the uncast comparison <code>qty &gt; 0</code> in the CTE's <code>WHERE</code>.
+=Comparing text <code>qty</code> with <code>0</code> is rejected, which rolls back the <code>DELETE</code> too; cast first with <code>qty\:\:int &gt; 0</code>#Correct. PostgreSQL has no <code>text &gt; integer</code> comparison, so the INSERT fails. Leaving the <code>with</code> block through that error rolls back the whole transaction, DELETE included. Cast staging text before comparing it.
+}
+
+::py-final-q28::[html]<p>A billing ticket is enriched. <code>Label</code> has <code>topic\: str</code> and <code>confidence\: float</code>. The fake client returns these replies in order and counts calls in <code>fake.calls</code>\: 1 <code>\{"topic"\: "billing"\}</code>, 2 <code>\{"topic"\: "shipping", "confidence"\: 0.9\}</code>, 3 <code>\{"topic"\: "billing", "confidence"\: 0.8\}</code>.</p><pre><code>def enrich_one(client, prompt, attempts\=3)\:
+&nbsp;   for _ in range(attempts)\:
+&nbsp;       text \= client.complete(prompt)
+&nbsp;       try\:
+&nbsp;           return Label.model_validate_json(text)
+&nbsp;       except ValidationError\:
+&nbsp;           pass
+&nbsp;   return None
+&nbsp;
+label \= enrich_one(fake, "Tag this ticket")</code></pre><p>What is <code>label</code>, and what is <code>fake.calls</code>?</p>{
+~The billing label, and 3#Not quite. Validation cannot tell that shipping is the wrong topic. Reply 2 has a valid shape, so the loop returns it after 2 calls.
+~<code>None</code>, and 3#Not quite. A failed attempt only moves the loop on. Reply 2 validates, so the loop returns it.
+~A <code>ValidationError</code> from reply 1, and 1#Not quite. The <code>except ValidationError</code> inside the loop catches the failure and the loop tries again.
+=The shipping label, and 2#Correct. Reply 1 lacks <code>confidence</code> and fails validation. Reply 2 has the right shape, so it validates and the loop returns it. A schema checks shape, not truth, so review or sample results for meaning.
+}
+
+::py-final-q29::[html]<p><code>client</code> is the page's settings client\: an <code>httpx.Client</code> for the inventory API with <code>timeout\=httpx.Timeout(5.0, connect\=2.0)</code>. In staging the inventory API stalls, and the call times out. What does a caller of the running FastAPI service get?</p><pre><code>@app.get("/stock/\{sku\}")
+def stock(sku\: str)\:
+&nbsp;   try\:
+&nbsp;       response \= client.get(f"/api/stock/\{sku\}")
+&nbsp;       response.raise_for_status()
+&nbsp;   except httpx.ConnectError\:
+&nbsp;       raise HTTPException(status_code\=502, detail\="Inventory offline")
+&nbsp;   except httpx.HTTPStatusError\:
+&nbsp;       raise HTTPException(status_code\=502, detail\="Inventory error")
+&nbsp;   return response.json()</code></pre>{
+~502 with detail <code>Inventory offline</code>#Not quite. A timeout is not a <code>ConnectError</code>\: the two are siblings under <code>TransportError</code>. Only a <code>TransportError</code> clause would catch both.
+=500 Internal Server Error#Correct. A read timeout raises <code>ReadTimeout</code>, a <code>TimeoutException</code> and so a kind of <code>TransportError</code>, but neither a <code>ConnectError</code> nor an <code>HTTPStatusError</code>. No clause matches, so the exception escapes the route and the running service answers a plain 500. Catch <code>httpx.TimeoutException</code> as well, and answer 504.
+~504 Gateway Timeout#Not quite. Nothing in this route maps a timeout to 504, and FastAPI does not do it on its own. An exception that no clause catches becomes a plain 500.
+~502 with detail <code>Inventory error</code>#Not quite. The timeout is raised inside <code>client.get</code>, before any response exists. <code>HTTPStatusError</code> comes only from <code>raise_for_status()</code> on a received non-2xx response.
+}
+
+::py-final-q30::[html]<p>After this load, the staging table holds three rows, all <code>('C', 3)</code>. Where is the defect, and what is the fix?</p><pre><code>def read(pairs)\:
+&nbsp;   row \= \{\}
+&nbsp;   for sku, qty in pairs\:
+&nbsp;       row["sku"] \= sku
+&nbsp;       row["qty"] \= qty
+&nbsp;       yield row
+&nbsp;
+batch \= list(read([("A", 1), ("B", 2), ("C", 3)]))
+cur.executemany(INSERT_SQL, [(r["sku"], r["qty"]) for r in batch])</code></pre>{
+~Load\: add a unique key on <code>sku</code> with an upsert, so the repeats collapse#Not quite. That would leave one row, still C's. The wrong data comes from the extract stage, before loading.
+=Extract\: every <code>yield</code> hands out the same dict; build a new dict for each pair#Correct. <code>row</code> is created once, so <code>batch</code> holds three names for one dict, which ends with C's values. Create the dict inside the loop.
+~Extract\: the generator is one-shot, so <code>list()</code> reads the last pair three times#Not quite. <code>list()</code> runs the generator once and gets three yields. The problem is that all three yields are the same object.
+~Load\: <code>executemany</code> sends the last parameter tuple for every row; run one <code>execute</code> per row#Not quite. <code>executemany</code> sends each tuple in turn. The tuples are already all <code>('C', 3)</code>, because <code>batch</code> holds the same dict three times.
+}

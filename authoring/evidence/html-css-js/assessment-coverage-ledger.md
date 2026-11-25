@@ -9,7 +9,7 @@ Column meanings:
 - **demand**: production (the learner builds or operates something) or reasoning (the learner predicts, explains or decides). Production objectives are always demonstrated by a lab task or the graded practical, never by multiple choice alone.
 - **module lab task**: the task in `<module>/coding-lab/` whose public test evidences the objective (only test-evidenced objectives are claimed in `lab.json`).
 - **mastery item**: the practice item in the module's `assessments/<module>-mastery-check/practice.gift` titled with this objective id.
-- **graded practical / graded MCQ**: the objective is listed in `assessments/web-client-practical/blueprint.json` or `assessments/web-client-mcq/blueprint.json`.
+- **graded practical / graded MCQ**: the objective is listed in `assessments/web-client-practical/blueprint.json` or `assessments/web-client-mcq/blueprint.json`. The MCQ column follows the value-free Course Review coverage plan `authoring/evidence/html-css-js/html-css-js-final-mcq-coverage.json`, where each of the 30 items elicits two to four objectives.
 - Every topic keeps its own formative practice (page activities and `artifact.gift`) from the accepted 243-topic baseline; this ledger adds the module- and course-level locations, and the status column records where a hands-on topic-page activity is the primary practice.
 
 Standard track schedules each module lab on its lab block (S21, S23, S25, S26) with the mastery checks closing each module (S21, S23, S25, S27). Fast Track demonstrates the same objective checklist through the FT12-FT15 project increments of the one course project, and uses these canonical labs only as optional remediation; no lab content is duplicated into a Fast tree.
@@ -20,25 +20,25 @@ Standard track schedules each module lab on its lab block (S21, S23, S25, S26) w
 |---|---|---|---|---|---|---|---|
 | semantic-html-page-structure | o1 | production | - | yes | yes | yes | element choice exercised in lab task 7 for one region; full choice set sampled by the graded practical and a mastery item |
 | semantic-html-page-structure | o2 | production | task 7 | yes | - | yes | covered |
-| semantic-html-page-structure | o3 | production | task 7 | yes | yes | - | covered |
-| forms-and-html5-validation | o1 | production | task 8 | - | yes | - | covered |
+| semantic-html-page-structure | o3 | production | task 7 | yes | yes | yes | covered |
+| forms-and-html5-validation | o1 | production | task 8 | - | yes | yes | covered |
 | forms-and-html5-validation | o2 | production | task 9 | - | yes | yes | covered |
 | forms-and-html5-validation | o3 | reasoning | - | yes | - | yes | covered |
 | accessibility-basics | o1 | production | tasks 8, 10 | - | - | yes | covered |
 | accessibility-basics | o2 | production | task 10 | yes | - | yes | covered |
-| accessibility-basics | o3 | production | task 10 | - | yes | - | covered |
-| the-box-model | o1 | reasoning | - | yes | - | - | covered |
+| accessibility-basics | o3 | production | task 10 | - | yes | yes | covered |
+| the-box-model | o1 | reasoning | - | yes | - | yes | covered |
 | the-box-model | o2 | reasoning | - | yes | - | yes | covered |
 | the-box-model | o3 | reasoning | - | yes | - | yes | covered |
-| flexbox | o1 | production | tasks 2, 3 | - | yes | - | covered |
-| flexbox | o2 | production | tasks 2, 3 | - | yes | - | covered |
-| flexbox | o3 | reasoning | - | yes | - | - | covered |
-| grid | o1 | production | task 4 | - | yes | - | covered |
-| grid | o2 | production | task 5 | - | - | - | covered |
+| flexbox | o1 | production | tasks 2, 3 | - | yes | yes | covered |
+| flexbox | o2 | production | tasks 2, 3 | - | yes | yes | covered |
+| flexbox | o3 | reasoning | - | yes | - | yes | covered |
+| grid | o1 | production | task 4 | - | yes | yes | covered |
+| grid | o2 | production | task 5 | - | - | yes | covered |
 | grid | o3 | reasoning | - | yes | - | yes | covered |
-| responsive-mobile-first-layout | o1 | production | tasks 4, 5 | - | yes | - | covered |
+| responsive-mobile-first-layout | o1 | production | tasks 4, 5 | - | yes | yes | covered |
 | responsive-mobile-first-layout | o2 | production | task 1 | - | - | - | covered |
-| responsive-mobile-first-layout | o3 | production | task 6 | - | yes | - | covered |
+| responsive-mobile-first-layout | o3 | production | task 6 | - | yes | yes | covered |
 
 ## JavaScript Fundamentals (`javascript-fundamentals`)
 
@@ -46,23 +46,23 @@ Standard track schedules each module lab on its lab block (S21, S23, S25, S26) w
 |---|---|---|---|---|---|---|---|
 | javascript-for-java-developers | o1 | reasoning | - | yes | - | yes | covered |
 | javascript-for-java-developers | o2 | reasoning | - | yes | - | yes | covered |
-| javascript-for-java-developers | o3 | reasoning | - | yes | - | - | covered |
-| let-const-and-equals | o1 | production | task 1 | - | yes | - | covered |
+| javascript-for-java-developers | o3 | reasoning | - | yes | - | yes | covered |
+| let-const-and-equals | o1 | production | task 1 | - | yes | yes | covered |
 | let-const-and-equals | o2 | reasoning | - | yes | - | yes | covered |
 | let-const-and-equals | o3 | production | task 1 | - | - | yes | covered |
-| functions-as-values-arrow-functions-and-callbacks | o1 | production | task 2 | - | yes | - | covered |
-| functions-as-values-arrow-functions-and-callbacks | o2 | production | task 2 | - | yes | - | covered |
+| functions-as-values-arrow-functions-and-callbacks | o1 | production | task 2 | - | yes | yes | covered |
+| functions-as-values-arrow-functions-and-callbacks | o2 | production | task 2 | - | yes | yes | covered |
 | functions-as-values-arrow-functions-and-callbacks | o3 | reasoning | - | yes | - | yes | covered |
-| arrays-and-objects-map-filter-reduce | o1 | production | tasks 3, 5, 6 | - | yes | - | covered |
+| arrays-and-objects-map-filter-reduce | o1 | production | tasks 3, 5, 6 | - | yes | yes | covered |
 | arrays-and-objects-map-filter-reduce | o2 | production | task 3 | yes | yes | yes | covered |
-| arrays-and-objects-map-filter-reduce | o3 | production | task 4 | - | yes | - | covered |
-| destructuring-and-spread | o1 | production | task 5 | - | yes | - | covered |
-| destructuring-and-spread | o2 | production | tasks 2, 5 | - | yes | - | covered |
+| arrays-and-objects-map-filter-reduce | o3 | production | task 4 | - | yes | yes | covered |
+| destructuring-and-spread | o1 | production | task 5 | - | yes | yes | covered |
+| destructuring-and-spread | o2 | production | tasks 2, 5 | - | yes | yes | covered |
 | destructuring-and-spread | o3 | reasoning | - | yes | - | yes | covered |
-| modules-import-and-export | o1 | production | task 6 | - | yes | - | covered |
-| modules-import-and-export | o2 | production | task 6 | - | yes | - | covered |
+| modules-import-and-export | o1 | production | task 6 | - | yes | yes | covered |
+| modules-import-and-export | o2 | production | task 6 | - | yes | yes | covered |
 | modules-import-and-export | o3 | reasoning | - | yes | - | yes | covered |
-| scope-and-closures | o1 | reasoning | - | yes | - | - | covered |
+| scope-and-closures | o1 | reasoning | - | yes | - | yes | covered |
 | scope-and-closures | o2 | production | task 7 | - | yes | - | covered |
 | scope-and-closures | o3 | reasoning | - | yes | - | yes | covered |
 
@@ -73,54 +73,54 @@ Standard track schedules each module lab on its lab block (S21, S23, S25, S26) w
 | project-setup-with-npm-and-vite | o1 | production | - | - | yes | - | hands-on in the S27 browser-client project (topic-page terminal rehearsal); the graded practical opens by scaffolding and starting a Vite project |
 | project-setup-with-npm-and-vite | o2 | reasoning | - | - | - | yes | covered |
 | project-setup-with-npm-and-vite | o3 | reasoning | - | yes | - | yes | covered |
-| selecting-and-changing-the-dom | o1 | production | task 1 | - | yes | - | covered |
-| selecting-and-changing-the-dom | o2 | production | task 1 | - | yes | - | covered |
+| selecting-and-changing-the-dom | o1 | production | task 1 | - | yes | yes | covered |
+| selecting-and-changing-the-dom | o2 | production | task 1 | - | yes | yes | covered |
 | selecting-and-changing-the-dom | o3 | reasoning | - | - | - | yes | covered |
-| events-and-event-bubbling | o1 | production | task 2 | - | yes | - | covered |
+| events-and-event-bubbling | o1 | production | task 2 | - | yes | yes | covered |
 | events-and-event-bubbling | o2 | reasoning | - | yes | - | yes | covered |
-| events-and-event-bubbling | o3 | production | task 3 | - | yes | - | covered |
+| events-and-event-bubbling | o3 | production | task 3 | - | yes | yes | covered |
 | preventing-cross-site-scripting | o1 | reasoning | - | yes | - | yes | covered |
-| preventing-cross-site-scripting | o2 | production | task 4 | - | yes | - | covered |
-| preventing-cross-site-scripting | o3 | production | task 4 | - | yes | - | covered |
-| promises | o1 | reasoning | - | yes | - | - | covered |
-| promises | o2 | production | task 5 | - | yes | - | covered |
+| preventing-cross-site-scripting | o2 | production | task 4 | - | yes | yes | covered |
+| preventing-cross-site-scripting | o3 | production | task 4 | - | yes | yes | covered |
+| promises | o1 | reasoning | - | yes | - | yes | covered |
+| promises | o2 | production | task 5 | - | yes | yes | covered |
 | promises | o3 | production | task 5 | yes | - | yes | covered |
-| async-and-await | o1 | production | task 6 | - | yes | - | covered |
-| async-and-await | o2 | production | task 6 | - | yes | - | covered |
+| async-and-await | o1 | production | task 6 | - | yes | yes | covered |
+| async-and-await | o2 | production | task 6 | - | yes | yes | covered |
 | async-and-await | o3 | production | task 6 | yes | - | yes | covered |
 | the-event-loop | o1 | reasoning | - | yes | - | yes | covered |
 | the-event-loop | o2 | reasoning | - | - | - | yes | covered |
 | debugging-with-devtools-breakpoints | o1 | reasoning | - | yes | - | - | hands-on on the topic page's buggy practice script in real DevTools; mastery item reinforces |
-| debugging-with-devtools-breakpoints | o2 | reasoning | - | yes | - | - | covered |
+| debugging-with-devtools-breakpoints | o2 | reasoning | - | yes | - | yes | covered |
 | debugging-with-devtools-breakpoints | o3 | reasoning | - | yes | - | - | hands-on on the topic page's buggy practice script in real DevTools; mastery item reinforces |
 
 ## Fetch and the Browser Client (`fetch-and-browser-client`)
 
 | topic | objective | demand | module lab task | mastery item | graded practical | graded MCQ | status |
 |---|---|---|---|---|---|---|---|
-| fetching-data | o1 | production | task 5 | - | yes | - | covered |
+| fetching-data | o1 | production | task 5 | - | yes | yes | covered |
 | fetching-data | o2 | production | task 5 | yes | - | yes | covered |
-| fetching-data | o3 | production | - | - | yes | - | covered |
+| fetching-data | o3 | production | - | - | yes | yes | covered |
 | handling-http-errors-and-problemdetail-responses | o1 | production | task 5 | yes | - | yes | covered |
 | handling-http-errors-and-problemdetail-responses | o2 | production | task 4 | - | - | yes | covered |
-| handling-http-errors-and-problemdetail-responses | o3 | production | task 4 | - | yes | - | covered |
+| handling-http-errors-and-problemdetail-responses | o3 | production | task 4 | - | yes | yes | covered |
 | fixing-cors-spring-security-config-vs-vite-dev-proxy | o1 | reasoning | - | yes | - | yes | covered |
 | fixing-cors-spring-security-config-vs-vite-dev-proxy | o2 | reasoning | - | yes | - | yes | covered |
-| fixing-cors-spring-security-config-vs-vite-dev-proxy | o3 | reasoning | - | yes | - | - | covered |
+| fixing-cors-spring-security-config-vs-vite-dev-proxy | o3 | reasoning | - | yes | - | yes | covered |
 | cookies-vs-localstorage-where-tokens-should-live | o1 | reasoning | - | yes | - | yes | covered |
 | cookies-vs-localstorage-where-tokens-should-live | o2 | reasoning | - | yes | - | yes | covered |
-| calling-your-spring-boot-api-from-the-browser | o1 | production | - | - | yes | - | request construction practised in lab task 3; sent end-to-end in the S27 course project and the graded practical |
-| calling-your-spring-boot-api-from-the-browser | o2 | production | task 6 | - | yes | - | covered |
-| environment-settings-for-the-api-address | o1 | production | task 1 | - | yes | - | covered |
+| calling-your-spring-boot-api-from-the-browser | o1 | production | - | - | yes | yes | request construction practised in lab task 3; sent end-to-end in the S27 course project and the graded practical |
+| calling-your-spring-boot-api-from-the-browser | o2 | production | task 6 | - | yes | yes | covered |
+| environment-settings-for-the-api-address | o1 | production | task 1 | - | yes | yes | covered |
 | environment-settings-for-the-api-address | o2 | reasoning | - | yes | - | yes | covered |
 | testing-a-plain-function-with-vitest | o1 | production | task 7 | - | yes | - | covered |
 | testing-a-plain-function-with-vitest | o2 | production | task 7 | - | yes | - | covered |
-| testing-a-plain-function-with-vitest | o3 | production | task 7 | - | - | - | covered |
+| testing-a-plain-function-with-vitest | o3 | production | task 7 | - | - | yes | covered |
 
 ## Totals
 
 - Objectives mapped: 83 across 4 modules and 29 topics.
 - Module lab coverage: 47 objectives evidenced by public lab tests.
 - Mastery-check coverage: 38 objectives with practice items.
-- Graded practical blueprint samples 39 objectives; graded MCQ blueprint samples 35 objectives; both span all four modules.
+- Graded practical blueprint samples 39 objectives; graded MCQ blueprint elicits 76 objectives through 30 items ordered easy to harder, reaching all 29 topics (of the 7 objectives it leaves out, Vite scaffolding is evidenced by the S27 project and the practical; the closure and Vitest objectives by their module labs and the practical; the two DevTools debugging objectives by the debugging page's practice script and the mastery check only; and the viewport-meta explanation by the html-and-css lab and its topic's practice); both span all four modules.
 - No production objective is assessed by multiple choice alone.

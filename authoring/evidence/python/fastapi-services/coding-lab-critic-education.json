@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "education critic (independent Claude subagent, 2026-11-18)",
+  "reviewedPath": "python/fastapi-services/coding-lab/lab.json",
+  "reviewedSha256": "68af88b55de003424f5e4f78be669a228f58d1a2db6494a248025e48846a9e70",
+  "artifactHashes": {
+    "coding-lab/lab.json": "68af88b55de003424f5e4f78be669a228f58d1a2db6494a248025e48846a9e70",
+    "coding-lab/README.md": "0f11916d3aaf8ac05055e126886a34505063b9b8b967b20296b6fe58a83b77cb"
+  },
+  "findings": [
+    {
+      "id": "py-api-lab-edu-001",
+      "severity": "high",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "line": 110
+      },
+      "claim": "Task 6 requires a refused connection (httpx.ConnectError) to become UpstreamError(503, ...), and tests/test_main.py:154 enforces 503. The taught page says the opposite everywhere: its cheat-sheet table row 'Refused connection | ConnectError | 502', its explore model ('If the connection is refused, httpx raises ConnectError and your API returns 502'), the teaching text ('commonly 504 for a timeout and 502 for other upstream failures'), and its graded editor activity, which fails the learner with 'Use 502 for a connection failure.' README line 161 repeats the 503. A learner who applies what the page graded them on fails the lab. Reproduction (scratch copy, provided l3 venv): a fetch_workshop mapping ConnectError/TransportError to 502 fails test_task06 with 'Task 6: expected UpstreamError(503, 'Workshop service unavailable'), got UpstreamError(502, 'Workshop service unavailable')'; the same code with 503 passes all 10. The lab silently contradicts the page with no explanation, and 502 Bad Gateway is the conventional gateway answer for an unreachable upstream, which is why the page chose it.",
+      "evidence": [],
+      "recommendation": "Align with the page: use 502 for ConnectError in README line 110, tests/test_main.py lines 154 and 162 (message), the upstream.py docstring and README line 161 ('the route answers 502'). Keep 'Workshop service unavailable' as the detail if you want to keep it distinct from the non-2xx detail. If 503 is a deliberate design choice, change the page first, in its own branch, and do not ship a lab that contradicts it.",
+      "reviewedSha256": "0f11916d3aaf8ac05055e126886a34505063b9b8b967b20296b6fe58a83b77cb"
+    },
+    {
+      "id": "py-api-lab-edu-002",
+      "severity": "high",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "line": 205
+      },
+      "claim": "The 'fetch_workshop never raises' mutant only rebinds signups_api.upstream.fetch_workshop. main.py:11 imports fetch_workshop by name, and run_learner_tests imports signups_api.main before applying the patch, so the route keeps the real function. A learner who tests the outbound failure through the route (TestClient plus an override of get_workshop_client returning an httpx.Client with a MockTransport that raises ReadTimeout, asserting 504) has a valid MockTransport test that genuinely catches a never-raising fetch_workshop. But Task 8 fails it with 'your tests still pass when fetch_workshop never raises; add a test that catches it', which is false and gives the learner no way forward. Reproduced in scratch (Variant A): the README-style direct test passes; the route-level test fails Task 8 (1 failed, 9 passed). This route-level style is exactly the Task 7 pattern and an honest reading of topic o3 ('Test the outbound call ... by using an httpx mock transport').",
+      "evidence": [],
+      "recommendation": "Patch both bindings in the mutant: \"u.fetch_workshop = m.fetch_workshop = lambda client, workshop_id: {'id': workshop_id}\\n\". Verified in scratch: with this change the README-style tests still pass (10 passed) and the route-level variant now passes (10 passed), and a route-level test still fails under the mutant because the route then answers 200.",
+      "reviewedSha256": "6f1eca438dd30446c16f3aa3c5e833c07d99b933f2186ded82f825289f25c63b"
+    },
+    {
+      "id": "py-api-lab-edu-003",
+      "severity": "high",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/lab.json",
+        "line": 15
+      },
+      "claim": "lab.json claims serving-pipeline-results-as-an-api#o3 ('Provide the database connection to routes as a dependency, and replace it in tests with a dependency override'). The learner only consumes shipped dependencies: get_repository and the generator dependency get_workshop_client are given. The 'replace it in tests' half is the learner's own work only in Task 8, where tests/test_main.py:229 checks that the string 'dependency_overrides' appears anywhere in test_api.py. A bare app.dependency_overrides.clear() satisfies that. Reproduction (Variant B): a learner test that never overrides anything, asserts client.get('/signups/99').status_code == 404 against the real fixture data and calls app.dependency_overrides.clear() in finally passes all 10 checks. Neither mutant observes an override either: the always-200 app and the never-raising fetch_workshop are caught without one. So the override clause is claimed but not observed. This is the over-claim the captain's lab rule forbids.",
+      "evidence": [],
+      "recommendation": "Make the check observe the override. Either (a) AST-check for an assignment whose target is a Subscript of an attribute named dependency_overrides keyed by get_repository; or, more robustly, (b) add a must-still-pass run of the learner's tests with the shipped data swapped so that a no-override test fails. For example, patch repository.load_repository to return a SignupRepository holding id 99, so a test that relies on the real data for a 404 fails, while README's override to SignupRepository([]) still passes. Optionally have the learner write the 1-line get_repository-style provider (or a yield dependency) so 'provide ... as a dependency' is also practised, or narrow the claim in evidence.",
+      "reviewedSha256": "68af88b55de003424f5e4f78be669a228f58d1a2db6494a248025e48846a9e70"
+    },
+    {
+      "id": "py-api-lab-edu-004",
+      "severity": "medium",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "line": 105
+      },
+      "claim": "Task 6 teaches a narrower and different error-handling recipe from the page it practises. The page and its graded editor require response.raise_for_status() with except httpx.HTTPStatusError, and catching httpx.TimeoutException before the broader httpx.TransportError ('the first matching except wins'). The page's GIFT o2 item tests that ordering. The README instead dictates except ConnectError and a 'not response.is_success' check. So the page's central ordering lesson is never practised: TimeoutException and ConnectError are siblings, so order cannot matter. And raise_for_status is never mentioned, so the learner meets two idioms with no bridge. The README's 'Translate every failure' is also untrue. Any other transport failure (httpx.ReadError, RemoteProtocolError, both TransportError but not ConnectError) escapes fetch_workshop and becomes a plain 500, the very outcome the page warns about. By inspection of the dictated table; the page-idiom version (raise_for_status, TimeoutException, then TransportError, then HTTPStatusError) does pass the checks once the status matches (Variant C2).",
+      "evidence": [],
+      "recommendation": "Teach the page's recipe in Task 6: inside try, call client.get(...) then response.raise_for_status(); except httpx.TimeoutException -> 504; except httpx.TransportError -> 502 (any other transport failure); except httpx.HTTPStatusError as err -> 502 'Workshop service returned {err.response.status_code}'. Add one case to test_task06 with a handler raising httpx.ReadError (expect the transport-failure mapping), so catching only ConnectError fails and the ordering lesson is observed. The existing ReadTimeout case already fails a learner who catches TransportError first. Drop 'every' if the narrow mapping stays.",
+      "reviewedSha256": "0f11916d3aaf8ac05055e126886a34505063b9b8b967b20296b6fe58a83b77cb"
+    },
+    {
+      "id": "py-api-lab-edu-005",
+      "severity": "medium",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/lab.json",
+        "line": 11
+      },
+      "claim": "fastapi-routes#o1 is claimed whole, but its clause 'and run the app locally' is only an optional, unobserved step (README line 87, 'Optional: see the routes run'). The route-definition clause is well observed by test_task01-03. The run clause also clashes with the page, which teaches 'Run locally with fastapi dev main.py'. The pinned set installs plain fastapi, not fastapi[standard], so 'fastapi dev' does not work here: in the provided venv, 'python -m fastapi --help' answers 'pip install \"fastapi[standard]\"'. The README switches to 'python -m uvicorn signups_api.main:app' without saying why. Graded medium rather than high because the core clause is observed and a run cannot be test-observed; but as written the claim is partial and the README does not say so.",
+      "evidence": [],
+      "recommendation": "Either record in lab.json notes/evidence that only the route-definition clause of fastapi-routes#o1 is observed and the run clause stays with the page's terminal activity, or make the run a required numbered step with a visible self-check (for example: open /docs and see the three routes). In both cases, add one sentence at README line 87: 'The page used fastapi dev, which needs the fastapi[standard] extra; this lab installs plain FastAPI, so start the same app with uvicorn, the server fastapi dev runs for you.'",
+      "reviewedSha256": "68af88b55de003424f5e4f78be669a228f58d1a2db6494a248025e48846a9e70"
+    },
+    {
+      "id": "py-api-lab-edu-006",
+      "severity": "medium",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "line": 21
+      },
+      "claim": "README line 21 promises 'Each failing check names its task and the next action.' In the starter state (reproduced), test_task05 fails before any of its messages with a raw pydantic_core ValidationError: '3 validation errors for Settings ... Extra inputs are not permitted'. That text names neither Task 5 nor the real cause, which is that Task 5's check builds Settings(spring_base_url=..., ...) and so silently depends on Task 4 being done first. A novice doing tasks out of order, or stuck on Task 4, gets a confusing error on Task 5. The route checks for Tasks 1, 2, 3 and 7 fail with 'Task N: ... must answer 201, got 404'. That names the task but not the action; the action ('check the path and the decorator') sits only in Troubleshooting.",
+      "evidence": [],
+      "recommendation": "Decouple Task 5's check from Task 4: make_client only reads three attributes, so build the config with types.SimpleNamespace(spring_base_url=..., spring_token=..., spring_timeout_seconds=1.5), or wrap Settings(...) in a try that fails with 'Task 5 uses Task 4's Settings fields; finish Task 4 first'. Append the action to the route-status messages, e.g. 'got 404: add @app.post(\"/signups\", status_code=201, response_model=SignupOut)'; 404 at that point always means the route is missing.",
+      "reviewedSha256": "0f11916d3aaf8ac05055e126886a34505063b9b8b967b20296b6fe58a83b77cb"
+    },
+    {
+      "id": "py-api-lab-edu-007",
+      "severity": "medium",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "line": 5
+      },
+      "claim": "The scenario does not hold together with the data-pipelines lab and the serving page. (1) The serving page and serving#o1 frame this as 'read-only GET routes over tables your pipeline has already loaded', yet Task 1 adds POST /signups to the results API. That sign-up lives only in the in-memory repository: it is lost on restart and never reaches the pipeline's PostgreSQL table, and the README never says so. (2) README line 5 and repository.py say the fixture is the pipeline's loaded result, but it contradicts what that pipeline produces from its own fixtures. The pipeline's staging_signups has no id, workshop_id or status columns. Its Task 5 rejects chen.li.example.com (no @) and Dana Kim's seats 'two', yet both appear here. Its Task 6 keeps Ana Ruiz's latest sign-up, in session 'data', yet here she is in 'general'. Learners who just finished the pipeline lab will notice.",
+      "evidence": [],
+      "recommendation": "Add one framing sentence. For example: the pipeline's nightly export adds the desk's id, workshop assignment and status, and this lab reads a JSON snapshot of it. POST /signups records a walk-in at the desk in this app's memory only, and the pipeline's next run is still the source of truth. Regenerate fixtures/signups.json so its people, sessions and emails match the pipeline lab's accepted, deduplicated output (drop Chen Li and Dana Kim or fix them, and move Ana Ruiz to 'data'). Alternatively, frame the POST as a separate walk-in resource so the results routes stay read-only.",
+      "reviewedSha256": "0f11916d3aaf8ac05055e126886a34505063b9b8b967b20296b6fe58a83b77cb"
+    },
+    {
+      "id": "py-api-lab-edu-008",
+      "severity": "medium",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "line": 9
+      },
+      "claim": "Time honesty is incomplete. lab.json notes say the 45-minute median covers the eight tasks only, so the venv creation and the pip install of 28 pinned packages (the first block on a fresh machine) are outside it, and the README does not say so. The README speaks of 'your scheduled exercise block', but S18 gives the lab two blocks (20 + 40 minutes) and the README names no stopping point between them. The data-pipelines README does ('the end of Task 4 is a natural place to stop'). I did not measure a learner time: my solve was scripted. On reading, 45 minutes for 8 tasks plus Task 8 debugging is plausible but tight for a novice, and setup pushes the first block over 20 minutes if it is not pre-done.",
+      "evidence": [],
+      "recommendation": "Say that setup takes about 5 minutes and is not in the 45, or include it. Name the split: e.g. 'Setup and Tasks 1-3 fit the first 20-minute block; Tasks 4-8 the 40-minute block; the end of Task 3 is a natural stop.' Keep the 60-minute cap sentence.",
+      "reviewedSha256": "0f11916d3aaf8ac05055e126886a34505063b9b8b967b20296b6fe58a83b77cb"
+    },
+    {
+      "id": "py-api-lab-edu-009",
+      "severity": "low",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "line": 5
+      },
+      "claim": "Spring coherence gaps. README line 5 says the catalog is 'the API you built in the Spring Boot Basics lab'. But that lab's CatalogConfig seeds only workshops 1 and 2, and this fixture has Dana Kim on workshop_id 3: against the real catalog, /signups/4/workshop gets an upstream 404, so our 502. That lab's API also checks no bearer token, so the lab's token is never checked by the service it names. Troubleshooting line 161 says 'without a running catalog the route answers 503' but never tells the learner they can run the Spring lab (mvn -q -o spring-boot:run on 8080) and set SPRING_BASE_URL=http://localhost:8080 for a real end-to-end call. That would be a cheap, motivating optional step.",
+      "evidence": [],
+      "recommendation": "Use workshop ids 1 and 2 only in fixtures/signups.json (or say id 3 is deliberately unknown, to show the 502). Add a sentence that the deployed catalog checks the token while the Basics-lab version ignores it. Add an optional end-to-end step: run the Spring Basics lab, export SPRING_BASE_URL=http://localhost:8080 and SPRING_TOKEN=any, start uvicorn, open /signups/1/workshop.",
+      "reviewedSha256": "0f11916d3aaf8ac05055e126886a34505063b9b8b967b20296b6fe58a83b77cb"
+    },
+    {
+      "id": "py-api-lab-edu-010",
+      "severity": "low",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "line": 72
+      },
+      "claim": "The README gives away almost every line. Task 1 dictates the full decorator and the return expression. Task 3 gives both Query(...) expressions. Task 5 lists all four keyword arguments. Task 6 gives exception, status and detail for every row. Task 7 gives the three statements. Task 8 gives the exact override, request, assertions, handler and pytest.raises form. The labs are rightly scaffolded for novices, but as written the learner never makes a decision the page practised, such as choosing the status code, choosing the except order, or choosing what assertion proves the failure path. Task 8 in particular could ask for intent rather than dictation.",
+      "evidence": [],
+      "recommendation": "Withhold one decision per task while keeping the steps numbered. For example: Task 3 states the rule ('at most 50, at least 1, default 10') and lets the learner write the Query bounds; Task 6 gives the table but not the try/except layout; Task 8 states what the two tests must catch (an app that answers 200 to everything; a fetch_workshop that swallows a timeout) and the tools to use, and moves the exact code into a collapsed hint.",
+      "reviewedSha256": "0f11916d3aaf8ac05055e126886a34505063b9b8b967b20296b6fe58a83b77cb"
+    },
+    {
+      "id": "py-api-lab-edu-011",
+      "severity": "low",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/expected/on-completion.txt",
+        "line": 1
+      },
+      "claim": "Polish. (1) expected/on-completion.txt shows the eight lab dots first and the learner's dots after, but pytest collects starter/test_api.py before tests/test_main.py. Verified with -v: the learner's tests run first. (2) README line 87 says 'From the starter folder, start the app' after telling the learner to open the terminal in the lab folder; there is no 'cd starter' and no reminder to return to the lab folder before the test command. (3) README line 79 says 'Return repo.get(signup_id); when it is None, raise ...', in the reverse of the order the code needs.",
+      "evidence": [],
+      "recommendation": "Write the expected line as '<one dot for each of your own tests>........'. In the optional run, give 'cd starter', the uvicorn command, then 'cd ..' before testing. Rephrase Task 2: 'Look the sign-up up with repo.get(signup_id); if it is None, raise HTTPException(...); otherwise return it.'",
+      "reviewedSha256": "181348e031b3e589c52fe94370447df553c3ccf7617717f568a7943b0952cee8"
+    }
+  ]
+}

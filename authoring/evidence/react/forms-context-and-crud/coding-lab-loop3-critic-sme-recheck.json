@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "pep-react-lab-replacement-critic-sme loop 3 (Claude Opus 5.5, fresh independent context; not the author)",
+  "reviewedPath": "react/forms-context-and-crud/coding-lab/lab.json",
+  "reviewedSha256": "314393f8123934ef827e4f2c359226c90e14c7ee934ce32dc3fde20b30c98287",
+  "artifactHashes": {
+    "coding-lab/README.md": "f9285a920ffd4f3ea33cae440d00bddc72991b5513e4c3af2662f3bdb56622fd",
+    "coding-lab/lab.json": "314393f8123934ef827e4f2c359226c90e14c7ee934ce32dc3fde20b30c98287",
+    "coding-lab/tests/verify-learner-test.mjs": "8c93e5ac3ef214faad80dc43fdd628b17769ba48fb4738053f0fd4f13dc1c733",
+    "coding-lab/tests/vitest.mutation.config.js": "f8e6e2cc1238e75cde6470117bb8d526eb19d5523a943e1e33e67ff93df09d89",
+    "coding-lab/tests/faulty-service-form.jsx": "0b47b70d6f8b9def8a9f9f65a93292a55df8ee8966130ae57836960fd9ed2e5f",
+    "coding-lab/tests/faulty-successful-service-form.jsx": "4f55d8fb18d78444510d4cbd719429efd06eec58ca4d625c8abba94734eb04e7"
+  },
+  "findings": [
+    {
+      "id": "sme-fcc-t1",
+      "severity": "high",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/verify-learner-test.mjs",
+        "line": 11
+      },
+      "claim": "On Windows, npm test cannot run any test. verify-learner-test.mjs spawns node_modules/.bin/vitest.cmd with spawnSync and no shell option. Since the CVE-2024-27980 fix, Node rejects a .cmd passed to spawn/spawnSync without shell with EINVAL. Every Node version the lab admits (^22.12.0 || >=24) carries that fix. spawnSync then returns status null with an error and never starts vitest. The script maps a non-zero status to process.exit(status ?? 1), so on Windows the starter and the finished solution both exit 1 silently, with zero test names. lab.json lists windows in os, and test.failingTests (eight named tests) cannot be observed there. Not reproduced on Windows (no Windows host). On macOS I confirmed the code path: a spawnSync whose spawn fails returns status null, and the script turns that into a bare exit 1 with no output. Passing shell: true would also bring Windows quoting problems for install paths with spaces.",
+      "evidence": [
+        {
+          "url": "https://nodejs.org/en/blog/vulnerability/april-2024-security-releases-2",
+          "section": "Command injection via args parameter of child_process.spawn without shell option enabled on Windows (CVE-2024-27980): spawn/spawnSync now error with EINVAL for .bat/.cmd files without the shell option",
+          "retrievedAt": "2026-11-18T16:04:26Z",
+          "textSha256": "86fcd775c9c1f6cd47dcff731c57440699e583c34a70704cddeb02675ed57e54"
+        },
+        {
+          "url": "https://nodejs.org/api/child_process.md",
+          "section": "Spawning .bat and .cmd files on Windows",
+          "retrievedAt": "2026-11-18T16:04:26Z",
+          "textSha256": "b0f49af6812e31f36feea1616c08a49e2066a29e163cda5565ff9355b6d580e2"
+        }
+      ],
+      "recommendation": "Run vitest with the current Node binary and vitest's JS entry instead of the .bin shim: spawnSync(process.execPath, [<tests>/node_modules/vitest/vitest.mjs, 'run', ...]). That needs no shell or .cmd on any OS. Verified in scratch on macOS: that form runs the mutation config and emits the JSON report (status 1 for the faulty variant, as expected). Also, when spawnSync returns an error, print it instead of exiting silently.",
+      "reviewedSha256": "8c93e5ac3ef214faad80dc43fdd628b17769ba48fb4738053f0fd4f13dc1c733"
+    },
+    {
+      "id": "sme-fcc-t2",
+      "severity": "high",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/vitest.mutation.config.js",
+        "line": 22
+      },
+      "claim": "The swap fires only when the raw import specifier is exactly './components/ServiceForm.jsx' and the importer string is exactly path.resolve(...) of the learner test, so correct tests are rejected (false negatives). Reproduced on the solved overlay with my own correct test (blank click, findBy error, onSave not called, then type, selectOptions, submit, waitFor onSave called with the values, queryBy error absent). With './components/ServiceForm.jsx' it passes normally and is accepted. The same test importing './components/ServiceForm' (no extension, which Vite resolves) or '../src/components/ServiceForm.jsx' passes the normal run 8/8, but both mutation runs pass too, because no swap happens. npm test then exits 1 with 'Task 8 must prove both invalid and valid submissions.' Neither the README nor the starter comment says the import must stay byte-identical. The plugin does not read learner source text, but acceptance depends on the literal specifier the learner wrote. On Windows, Vite passes importer ids with POSIX separators (C:/...), while path.resolve yields backslashes. So the importer comparison never matches, and every correct test would be rejected even after sme-fcc-t1 is fixed. Not reproduced on Windows; this rests on Vite's documented path normalization. A symlinked lab path on macOS was checked and does work.",
+      "evidence": [
+        {
+          "url": "https://github.com/vitejs/vite/blob/v6.4.6/docs/guide/api-plugin.md#path-normalization",
+          "section": "Plugin API: Path Normalization (resolved ids use POSIX separators on Windows; normalize paths before comparing)",
+          "retrievedAt": "2026-11-18T16:04:26Z",
+          "textSha256": "c5dad8c4b445abec7e115a90c9364c8e24934f435a96d32f37c90aaefd8f1eec"
+        }
+      ],
+      "recommendation": "Match on resolved ids, not raw strings. In resolveId, when the importer is the learner test, call this.resolve(source, importer, { skipSelf: true }). Compare vite's normalizePath(resolved.id) with normalizePath of the real starter/src/components/ServiceForm.jsx, and compare normalizePath(importer) with normalizePath(learnerTest). Keep the importer restriction so the faulty wrappers' own import of the real form is not swapped. (Recommendation not verified in scratch.)",
+      "reviewedSha256": "f8e6e2cc1238e75cde6470117bb8d526eb19d5523a943e1e33e67ff93df09d89"
+    },
+    {
+      "id": "sme-fcc-t3",
+      "severity": "high",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/faulty-service-form.jsx",
+        "line": 13
+      },
+      "claim": "The oracle accepts partial and vacuous tests whose failure under mutation comes from the wrapper's own footprint, not from the faulty submission behavior (false positives). This contradicts the README and lab.json claim that an always-passing or partial test does not earn credit. Each faulty module exports only a default component, so the starter form's named TEAMS export becomes undefined under mutation. Each also wraps the form in an extra div, so container.firstChild changes. Reproduced, all accepted with npm test exit 0 on the solved overlay. (a) An innocent partial test: the blank half done properly, then type a name, selectOptions with TEAMS[1] and click Save, with no assertion on onSave or on the error disappearing. (b) The blank half plus a container.firstChild snapshot. (c) The vacuous test expect(TEAMS).toContain('Payments'). (d) The vacuous test expect(container.firstChild.tagName).toBe('FORM'). (e) The vacuous test expect(process.env.TASK8_VARIANT).toBeUndefined(): the variant env var reaches the learner test's worker. By contrast, partial tests that touch neither leak are correctly rejected: blank-only, valid-only, the no-error-assertion variant, and the vacuous expect(true).toBe(true). The capture-phase interception itself is sound with React 19. The ancestor's onSubmitCapture runs before the form's bubble-phase onSubmit, and stopPropagation stops it, so both variants reject the correct test.",
+      "evidence": [],
+      "recommendation": "Make the faulty modules indistinguishable from the real one except for the fault. Add a re-export of every named export of the real ServiceForm module (export * from it). Do the interception without extra DOM, for example by returning the real ServiceForm directly and registering a native capture-phase submit listener on document in a layout effect, which runs before React's root listener. Delete TASK8_VARIANT from process.env in the mutation config after reading it. Add a third, control run: a pass-through wrapper built the same way with no fault, against which the learner test must pass. That rejects any test that detects the wrapper rather than the behavior. (Recommendation not verified in scratch.)",
+      "reviewedSha256": "0b47b70d6f8b9def8a9f9f65a93292a55df8ee8966130ae57836960fd9ed2e5f"
+    },
+    {
+      "id": "sme-fcc-t4",
+      "severity": "medium",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/verify-learner-test.mjs",
+        "line": 38
+      },
+      "claim": "rejectsVariant requires exactly one assertion result in the learner file, and that one result must fail. Any file with more than one test is therefore rejected with the generic message, even when the faulty behaviors are caught. Reproduced on the solved overlay. (a) The correct combined test plus a second passing test (the name field has a label) passes the normal run 9/9. Each variant fails the combined test, yet the oracle rejects it. (b) A two-test split with afterEach(cleanup) (blank scenario; full scenario) passes 9/9 normally. The blank variant fails both tests and the successful variant fails the full one, yet it is rejected. (c) Adding a test.todo also rejects an otherwise accepted file. Separately, and predating this diff: tests/setup.js does not register Testing Library cleanup and vitest globals are off, so RTL's auto-cleanup never runs. A second rendering test in the learner file, or test.each with two rows, fails the normal run with 'Found multiple elements with the role \"button\" and name \"Save service\"'. describe blocks, a one-row test.each, waitFor, fake timers (shouldAdvanceTime with user-event advanceTimers) and Enter-key submission all work and are accepted.",
+      "evidence": [],
+      "recommendation": "Count a variant as rejected when the mutation run exits 1 and at least one assertion result in the learner file failed, after the normal run has passed every test. Add afterEach(cleanup) to tests/setup.js, or enable it there, so multiple learner tests do not collide. If one test is intended, say so in the README task 8 text and the starter comment.",
+      "reviewedSha256": "8c93e5ac3ef214faad80dc43fdd628b17769ba48fb4738053f0fd4f13dc1c733"
+    },
+    {
+      "id": "sme-fcc-t5",
+      "severity": "medium",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/faulty-successful-service-form.jsx",
+        "line": 5
+      },
+      "claim": "Both faulty wrappers find the name field with the CSS selector input[type=\"text\"], so the oracle depends on the learner's form markup. Reproduced: in the solved overlay, deleting only the name input's type attribute leaves an input that defaults to text, keeps role textbox and passes all seven public tests. With that form, my correct learner test passes normally but passes the 'successful' variant too, because the selector finds nothing and the wrapper never intercepts, so it is rejected. The 'blank' variant blocks every submission in that case, which still rejects, but only by accident. A false negative that the learner cannot diagnose from the message.",
+      "evidence": [],
+      "recommendation": "Find the name control the way the public tests do: by its label or role inside event.target, for example the form control whose label text is 'Service name', or the first non-checkbox, non-select element in form.elements. Or decide blank versus completed from the text of the single textbox and the select, not from a type attribute.",
+      "reviewedSha256": "4f55d8fb18d78444510d4cbd719429efd06eec58ca4d625c8abba94734eb04e7"
+    },
+    {
+      "id": "sme-fcc-t6",
+      "severity": "low",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/verify-learner-test.mjs",
+        "line": 28
+      },
+      "claim": "When the oracle rejects a test, the learner sees 'Tests 8 passed (8)' followed by 'Task 8 must prove both invalid and valid submissions.' and exit 1. There is no failing test name and no hint of which behavior the test missed, because both mutation runs' stdout and stderr are swallowed. The same message is printed when the JSON report cannot be parsed or the run crashes. Reproduced: a correct test that also writes a raw line to process.stdout is rejected, because JSON.parse of the captured stdout fails. Ordinary console.log, console.error and screen.debug do not break parsing, since Vitest routes them away from the JSON reporter's stdout. Not a correctness defect for well-behaved tests, but it weakens diagnosis.",
+      "evidence": [],
+      "recommendation": "Write the JSON report to a temp file with --outputFile.json=<path> and parse that instead of stdout. Name the missed behavior in the message: 'your test still passes when the form ignores the blank-name submission' or '... ignores the completed submission'. Report parse and crash failures separately, with the captured stderr.",
+      "reviewedSha256": "8c93e5ac3ef214faad80dc43fdd628b17769ba48fb4738053f0fd4f13dc1c733"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/react/forms-context-and-crud/coding-lab-critic-sme.json",
+    "items": [
+      {
+        "findingId": "sme-fcc-1",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/helpers.js",
+        "reviewedSha256": "246db4456d970b9989074561992f7a423b6283f637a8764875166ab20fe646ad",
+        "note": "Unchanged since loop 2. jsonResponse still builds a real Response with a null body for 204. Re-run on the current bytes with the solved overlay: a sendJson that parses through text() then JSON.parse passes 8/8, and the oracle accepts it. A sendJson that always calls json() fails tasks 6 and 7 with 'SyntaxError: Unexpected end of JSON input'."
+      },
+      {
+        "findingId": "sme-fcc-2",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/t3-client-validation.test.jsx",
+        "reviewedSha256": "b87cdbfa131afed46b27370ed2f5d42dfd3f3db62386bd493ccd2a947d7d5893",
+        "note": "Unchanged since loop 2. A form that never clears stale client errors fails task 3, and the overlay's learner test fails task 8. The new oracle does not change this."
+      },
+      {
+        "findingId": "sme-fcc-3",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/starter/src/service-form.test.jsx",
+        "reviewedSha256": "b76a2a9413ca2a1129015023505a896d391f3b181acbc8cbdc8da5d89e98c249",
+        "note": "Unchanged since loop 2. The step 3/5 query-variant guidance is still accurate (findBy for appearance; queryBy with not.toBeInTheDocument, or waitFor, for absence), and expect.hasAssertions() is present. The new README task 8 text also says findBy for the error and queryBy for its absence, consistent with this guidance."
+      },
+      {
+        "findingId": "sme-fcc-4",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/README.md",
+        "reviewedSha256": "f9285a920ffd4f3ea33cae440d00bddc72991b5513e4c3af2662f3bdb56622fd",
+        "note": "README changed in this loop (task 8 paragraphs only). The troubleshooting entry still names test 5 and the Save service button that cannot be found after a server error. Removing the finally that resets the pending state fails only task 5, with exactly that 'Unable to find ... button ... Save service' symptom."
+      },
+      {
+        "findingId": "sme-fcc-5",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/lab.json",
+        "reviewedSha256": "314393f8123934ef827e4f2c359226c90e14c7ee934ce32dc3fde20b30c98287",
+        "note": "lab.json changed in this loop (cleanup.notes only). The node prerequisite '^22.12.0 || >=24' and the README's 'Node.js 22.12+ (22.x LTS) or 24+, and npm 10 or newer' still match vitest 4.1.12's engines range. The solved run passes under Node 24.2.0 with both npm 11.3.0 and npm 10.9.2. Node 22 was not exercised in this recheck."
+      },
+      {
+        "findingId": "sme-fcc-r1",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/t3-client-validation.test.jsx",
+        "reviewedSha256": "b87cdbfa131afed46b27370ed2f5d42dfd3f3db62386bd493ccd2a947d7d5893",
+        "note": "Unchanged since loop 2. A createService pointed at the wrong URL (a task-4 bug) fails only tasks 4, 5 and 7, and task 3 passes."
+      },
+      {
+        "findingId": "sme-fcc-r2",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/t3-client-validation.test.jsx",
+        "reviewedSha256": "b87cdbfa131afed46b27370ed2f5d42dfd3f3db62386bd493ccd2a947d7d5893",
+        "note": "Unchanged since loop 2. A handler that calls preventDefault and then stopPropagation passes 8/8, and the oracle accepts it. Removing preventDefault fails only task 3, with 'handleSubmit must call event.preventDefault(): expected 0 to be greater than 0'."
+      }
+    ]
+  }
+}

@@ -38,6 +38,8 @@ spring.http.clients.read-timeout=3s
 
 A timeout or connection failure surfaces as `ResourceAccessException`. A non-2xx response surfaces as a `RestClientResponseException` subclass, unless you handle it with `onStatus`. Catch these at the client boundary and raise your own exception, so your API answers clearly, such as 502 or 503, without passing on partner details.
 
+To test such a client without the partner, `MockRestServiceServer` binds to the `RestClient.Builder` and returns canned responses with no network.
+
 You want to test `PartnerClient` with no partner running, with no network and no container engine.
 
 ## Recap
@@ -54,7 +56,7 @@ Where to act: Start with the constructor parameters.
 
 Next step: One parameter is the builder Boot gives you; the other is a value read from a property.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Then fix the assignment.
 
@@ -74,7 +76,7 @@ Printed alternative: Read timeout or connection refused: ResourceAccessException
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-boot/reference/features/external-config.html
 - https://docs.spring.io/spring-boot/reference/io/rest-client.html

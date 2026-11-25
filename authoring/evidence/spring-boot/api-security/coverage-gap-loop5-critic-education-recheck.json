@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "cg-critic-education-loop5 (independent Claude critic subagent, not the author, 2026-11-18)",
+  "reviewedPath": "spring-boot/api-security/coding-lab/README.md",
+  "reviewedSha256": "39eddbde6f2f11a621f823a8c2db07830bd58d3e21907a050702157fba978f1c",
+  "artifactHashes": {
+    "coding-lab/lab.json": "18a6d0de09e34121bb75970e5a07527a6dc33bfa94f13faedb04e9df5239058d",
+    "coding-lab/README.md": "39eddbde6f2f11a621f823a8c2db07830bd58d3e21907a050702157fba978f1c"
+  },
+  "findings": [
+    {
+      "id": "cg-education-api-security-013",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "line": 316
+      },
+      "claim": "The role-checks row tells a learner who used the reading's own API5 example that no role check answered it, when the role check did. The reading's drag activity (artifact.md line 85, artifact.html line 301) gives \"A normal user calls DELETE /admin/users/9 and it works: API5 Function Level\", and the live API5:2023 entry asks \"Can a regular user access administrative endpoints?\". A learner who understood the reading can write that request for the role row with a customer as caller. Critic runs at 74390a3c33d50eb6dc5876732231853df35d1e16 on a completed copy: with the role row set to a customer's DELETE /admin/users/9, the row fails with \"even an ADMIN cannot do this, so no role check is what answers it\"; probe tests on separate completed copies show the customer gets 403 from the /admin/** ADMIN rule and ADMIN gets 404, because the app has no such handler. The same message is given for a customer's POST /admin/stats, which the probe shows the customer gets 403 and ADMIN 405 for. The row accepts only the one admin action this API has, which is fair, but the message gives a false reason: the role check is exactly what refused the customer. The README and TODO do not list the API's endpoints for step 6. The only admin path is in Task 2 (\"/admin/** only for role ADMIN\") and the Test section curl, so the learner can recover, but only after being told something untrue about the practice the row teaches.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+          "section": "answeredByRoleCheck, lines 306-326 (message at line 316)",
+          "retrievedAt": "2026-11-18T10:40:00Z",
+          "textSha256": "461a04e1293d417b49cfca390e63202ced67a5091d47c372c2ee412359a11353"
+        },
+        {
+          "url": "file:///spring-boot/api-security/common-api-security-risks-owasp/artifact.md",
+          "section": "Static interaction alternatives, drag: \"A normal user calls DELETE /admin/users/9 and it works: API5 Function Level\"",
+          "retrievedAt": "2026-11-18T10:40:00Z",
+          "textSha256": "d416728f4b3303daa83d8f6ee6efd74ca4a3cbf9187842d26e9c5201e463bece"
+        },
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/README.md",
+          "section": "Task 2 (line 59) and Task 7 step 6 (lines 116-120)",
+          "retrievedAt": "2026-11-18T10:40:00Z",
+          "textSha256": "39eddbde6f2f11a621f823a8c2db07830bd58d3e21907a050702157fba978f1c"
+        },
+        {
+          "url": "https://owasp.org/API-Security/editions/2023/en/0xa5-broken-function-level-authorization/",
+          "section": "API5:2023 Is the API Vulnerable? (\"Can a regular user access administrative endpoints?\")",
+          "retrievedAt": "2026-11-18T10:34:08Z",
+          "textSha256": "e6206ede658c8c323dbe352e179c36ae58a1fd813d099e568b1f460915788e92"
+        }
+      ],
+      "recommendation": "Make the message true for this case. When the caller's request is refused with 403 but ADMIN gets 404 or 405, say that the role check did refuse this caller, but this API has no such admin action, so the row cannot show that an ADMIN may do it, and tell the learner to aim at an admin action this API really has (Task 2 names the admin path). Keep \"even an ADMIN cannot do this\" for requests that ADMIN is also refused. Optionally say in the step 6 TODO that the requests run against this lab's own endpoints.",
+      "reviewedSha256": "461a04e1293d417b49cfca390e63202ced67a5091d47c372c2ee412359a11353"
+    },
+    {
+      "id": "cg-education-api-security-014",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/starter/src/main/java/secure/AuthController.java",
+        "line": 26
+      },
+      "claim": "Pre-existing (since d39d09e4, outside the loop-5 diff); filed because step 6 now asks the learner what role checks and password hashing answer \"against your finished API\". In the finished app, anyone can take over the admin account with two requests that neither practice answers. The shipped AuthController, which the README says is complete and stays as shipped, exposes POST /auth/register under the public /auth/** rule, and UserAccountService.register overwrites an existing entry (Map.put) without any check. Critic probe test on the private completion at 74390a3c33d50eb6dc5876732231853df35d1e16: an anonymous POST /auth/register for username admin with a password the attacker chooses returned 201; POST /auth/token with that password returned 200 and a token with role ADMIN; GET /admin/stats with that token returned 200. This is broken authentication as the live API2:2023 entry describes it (attackers exploit implementation flaws to assume other users' identities), and it makes the role row's premise (a USER cannot reach the admin action) hollow for an attacker who simply re-registers admin. No README step, test or hint uses /auth/register. The README Goal says the lab finally closes \"the classic API risks\", and learners treat the shipped classes as a model. Routing note: the technology SME should confirm the fix; it changes no step 6 row verdict.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/starter/src/main/java/secure/AuthController.java",
+          "section": "register endpoint, lines 26-30, and the class comment \"This class is complete; you do not edit it\"",
+          "retrievedAt": "2026-11-18T10:40:00Z",
+          "textSha256": "10cea6f1dd08110024fa15433b51f66dfbf8181e902928c583c27f37a5583c3a"
+        },
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/starter/src/main/java/secure/UserAccountService.java",
+          "section": "register stores with accounts.put, overwriting an existing user",
+          "retrievedAt": "2026-11-18T10:40:00Z",
+          "textSha256": "5d4f13c3898f8c70a36545e6e025b6fed63c0fb93cfc05c62c03e604a1bd106c"
+        },
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/README.md",
+          "section": "Goal line 6 and the What you edit note line 26 (AuthController stays as shipped)",
+          "retrievedAt": "2026-11-18T10:40:00Z",
+          "textSha256": "39eddbde6f2f11a621f823a8c2db07830bd58d3e21907a050702157fba978f1c"
+        },
+        {
+          "url": "https://owasp.org/API-Security/editions/2023/en/0xa2-broken-authentication/",
+          "section": "API2:2023 Broken Authentication, overview and Is the API Vulnerable?",
+          "retrievedAt": "2026-11-18T10:34:08Z",
+          "textSha256": "80534468afcde061a058084f88a3e6d20719f7ebd2207ceba567772bcb3efb80"
+        },
+        {
+          "url": "https://owasp.org/API-Security/editions/2023/en/0x11-t10/",
+          "section": "OWASP Top 10 API Security Risks - 2023, API2:2023 description",
+          "retrievedAt": "2026-11-18T10:34:08Z",
+          "textSha256": "80a3eac15ddff485d6d3b9b53e222dc4afd4d109a63b8f6e095ff422f9d35b60"
+        }
+      ],
+      "recommendation": "Remove the unused /auth/register endpoint from the shipped AuthController (the tests register accounts through UserAccountService directly), or make registration refuse an existing username so it can never replace an account. Rerun the solved run and the step 6 variants afterwards. If the endpoint stays for a reason, record the risk honestly in the README rather than claiming the classic risks are closed.",
+      "reviewedSha256": "10cea6f1dd08110024fa15433b51f66dfbf8181e902928c583c27f37a5583c3a"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/spring-boot/api-security/coverage-gap-critic-education.json",
+    "items": [
+      {
+        "findingId": "cg-education-api-security-001",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/lab.json",
+        "reviewedSha256": "18a6d0de09e34121bb75970e5a07527a6dc33bfa94f13faedb04e9df5239058d",
+        "note": "Checked at 74390a3c33d50eb6dc5876732231853df35d1e16. lab.json declares common-api-security-risks-owasp#o3, carried by Task 7 step 6: for each of the five practices the reading names (password hashing, role checks, validation, the response DTO, safe error bodies) the learner writes the attacker request that practice is there to answer, and task7ShowsTheAttackEachPracticeStops sends it against the finished app and decides from runtime behaviour (statuses for the caller and for ADMIN, the resolved exception type, response keys against the Booking fields, the ApiErrors handler types, the stored value against the known dev passwords) that this practice is what answers it. Critic runs this round on fresh git-archive copies of 74390a3c33d50eb6dc5876732231853df35d1e16 (JDK 25.0.5, Maven 3.9.16, offline, mvn -q -o test from starter/): the shipped starter ran 10 tests and failed exactly the 9 lab.json failingTests, defaultProfileSendsNoCorsHeaders passing, and its step 6 message was \"finish Task 3 first: issue returned null, so no caller has a token yet\"; the private completion exited 0 with no output and surefire 2, 1 and 7 tests, matching expected/test-summary.txt; each run took 8 to 15 s on this machine with a warm offline cache. Wrong-answer variants, each my own edit of the step 6 rows on a completed copy, failed with a row-specific message: a guessed admin password in the hashing row; another customer's booking in the role row and in the DTO row; a non-numeric id and an anonymous non-positive id in the validation row; an anonymous booking request and a failed login in the safe-errors row; a plain request in the hashing row; an admin-only request in the DTO row; and one owned-booking request copied into all five rows (only the DTO row passed). An alternative correct set (the other customer or ADMIN as caller, another customer's booking for safe errors, a negative id) passed. With the constraint removed from the controller, the validation row names Task 7 step 3 first. Since b04c5b14 no learner-facing byte names a risk category any more: the after-pass block is gone. I still judge #o3 practised: the objective asks to connect practices to the risks they reduce, and each row is a concrete instance of the risk words the reading itself uses for these practices (bad input, leaks, revealing errors, login, actions); naming the OWASP categories is the page's #o1, not #o3. The missing post-pass explanation is tracked under -010 (open, low); a false message for the reading's own API5 example is filed as -013 (low). Neither undoes the executable act. README step 6 line 120 (new in this loop) frames validation and safe error bodies as defence in depth. Validation half verified: on a completed copy with the constraint removed, a probe shows a customer's non-positive id answers 404 with the fixed problem body, so the owner query does turn it away. Error-page half (Spring Boot's own error page leaves out the exception) not verified by me: MockMvc does not render the container error page, so this is an SME matter. Disclosure: \"would also turn a bad id away\" points the validation row at a bad id in open step text, but step 3 already tells the learner to reject a non-positive id with a constraint, so it hands over nothing that the learner has not just implemented; accepted."
+      },
+      {
+        "findingId": "cg-education-api-security-002",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "39eddbde6f2f11a621f823a8c2db07830bd58d3e21907a050702157fba978f1c",
+        "note": "Checked at 74390a3c33d50eb6dc5876732231853df35d1e16. Task 7 steps 1 to 4 and the BookingRepository, BookingService, BookingController and ApiErrors TODOs are byte-unchanged; exact signatures stay only in the collapsed \"Hints for steps 1 and 3\". The loop-5 change ships the imports that the Task 1 and Task 3 TODOs already listed (SecurityConfig, TokenService); those tasks are copy-from-TODO by design, not Task 7 retrieval, so nothing new is handed over. New step 6 messages name prerequisites (\"finish Task 7 step 3 first: the booking id carries no constraint yet\", \"finish Task 7 step 4 first: ApiErrors has no handler yet\") without giving the constraint, query or ProblemDetail code. README contract items: goal, prerequisites with version checks, setup, tasks, test, expected output, offline note, cleanup and troubleshooting are all present, and the setup and test commands equal lab.json (mvn -q dependency:go-offline and mvn -q -o test, both in starter)."
+      },
+      {
+        "findingId": "cg-education-api-security-003",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/OwnBookingTest.java",
+        "reviewedSha256": "c1be82fff8c1d5f558fe94e7aec1c90f32a39d52ee444778dae6dc163073e4c6",
+        "note": "Checked at 74390a3c33d50eb6dc5876732231853df35d1e16. The step 5 shipped asserts (GET, URI /bookings/2, Grace's bearer header, 404) are unchanged by the loop-5 edit. Rerun this round: my own edit of a completed copy with the step 5 request changed to a missing booking (999) fails task7ProvesTheOwnershipCheck with \"step 5 must ask for Ada's booking 2, not a booking that does not exist\"; the unmodified completion passes."
+      },
+      {
+        "findingId": "cg-education-api-security-004",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "39eddbde6f2f11a621f823a8c2db07830bd58d3e21907a050702157fba978f1c",
+        "note": "Checked at 74390a3c33d50eb6dc5876732231853df35d1e16. README Task 6 text, its hint and troubleshooting row, DevProfileSecurityTest and defaultProfileSendsNoCorsHeaders are byte-unchanged in this loop. Rerun this round: removing the dev chain's CORS line from a completed copy fails task6DevProfileAllowsOnlyTheLocalFrontEndOrigin with Access-Control-Allow-Origin null, so step 2 is needed as the README says; the starter passes defaultProfileSendsNoCorsHeaders. The hedged rationale stands."
+      },
+      {
+        "findingId": "cg-education-api-security-005",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/lab.json",
+        "reviewedSha256": "18a6d0de09e34121bb75970e5a07527a6dc33bfa94f13faedb04e9df5239058d",
+        "note": "Checked at 74390a3c33d50eb6dc5876732231853df35d1e16. lab.json minutes stay setup 5, tasks 55; cleanup.notes records the task-by-task basis labelled an authoring estimate, not a learner pilot (tasks 1 to 5 about 31 with the Task 1 and Task 3 imports and the DevSecurityConfig shell shipped, task 6 about 5, task 7 about 19 including five one-line attack requests), and README line 9 gives the same split. A recorded basis exists, which is what this finding asked for; whether the numbers are honest is judged under -007."
+      },
+      {
+        "findingId": "cg-education-api-security-006",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "39eddbde6f2f11a621f823a8c2db07830bd58d3e21907a050702157fba978f1c",
+        "note": "Checked at 74390a3c33d50eb6dc5876732231853df35d1e16. Task 6 step 1 (README line 87) is byte-unchanged: it cites no page section, says the dev-profile page explains why only this origin and points to the collapsed hint for the bean types and setters. Text check only."
+      },
+      {
+        "findingId": "cg-education-api-security-007",
+        "status": "open",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "39eddbde6f2f11a621f823a8c2db07830bd58d3e21907a050702157fba978f1c",
+        "note": "Checked at 74390a3c33d50eb6dc5876732231853df35d1e16. README line 9 and lab.json now say Tasks 1 to 5 about 31, Task 6 about 5, Task 7 about 19 (55, 60 with setup). Itemised against loop 4's arithmetic (Tasks 1 to 5 realistically about 33, Task 7 about 19 to 21): shipping the eight import lines that the Task 1 and Task 3 TODOs listed saves about 1 minute, so Tasks 1 to 5 are about 32. Step 6 costs about 7 to 8 minutes: about 2 to read step 6, its hint, the TODO and the helpers; about 4 to write five requests, now without the removed \"every request you need is one you have already seen\" hint, so the learner must find the admin path, a non-positive id and the stolen-table login form; and about 1 to 2 for one or two reruns (8 to 15 s each here, about 30 s on a cold laptop) and reading the problem list. On top of steps 1 to 5 at about 14 (loop 2) that gives Task 7 about 21 to 22, so a typical learner needs about 58 task minutes and about 63 with setup, against the stated 55 and 60. The uncounted minutes are about 1 in Tasks 1 to 5 and about 2 to 3 in step 6. The self-study overflow note is kept and the figures are labelled an estimate, so this stays low. To close: say Task 7 about 21 and the day about 62 to 63 with the overflow kept, or trim step 6 (for example drop one row) to fit 55."
+      },
+      {
+        "findingId": "cg-education-api-security-008",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "461a04e1293d417b49cfca390e63202ced67a5091d47c372c2ee412359a11353",
+        "note": "Checked at 74390a3c33d50eb6dc5876732231853df35d1e16. No practice-to-answer table exists; each row's verdict is computed from the running app. The failure points at line 214, the problem list, not at an answer. New in this loop: earlierTasks (line 235) probes Task 2 by sending, in the learner's own attack() syntax, an owned-booking request that also passes one row. It is not paired with a practice name there, and the same request already sits beside a comment in task7ServesOnlyTheCallersOwnBooking, so under loop 3's line (a readable key at the failure line is a defect; a trial oracle alone is not) this adds to the oracle rather than being a key. The cheaper probe would use a request that answers no row, for example an ADMIN call to the admin endpoint. The test is still a trial oracle: my all-rows variant with one candidate identified its row in one run; this is the formative trade-off loops 3 and 4 accepted. The readable predicates state each practice's property, not a request to copy. The hashing row stays the most guided: the login helper, the STOLEN constant's Javadoc (a copied user table) and the two new messages (\"password hashing answers a login\", \"hashing protects what the user table stores\") together fix its form except the username, so after one wrong try it can be passed without the connection. Loop 4 accepted this because the shape follows from the attack model the helper documents; I accept it on the same ground."
+      },
+      {
+        "findingId": "cg-education-api-security-009",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/OwnBookingTest.java",
+        "reviewedSha256": "c1be82fff8c1d5f558fe94e7aec1c90f32a39d52ee444778dae6dc163073e4c6",
+        "note": "Checked at 74390a3c33d50eb6dc5876732231853df35d1e16. No learner-facing byte now labels a practice or row with an OWASP category: the after-pass block that held the corrected labels was removed in b04c5b14, and the TODO and README step 6 call the five items \"practices from the OWASP reading\", which is true (the reading's Teaching lists them as earlier practices that help). README line 105 calls the Task 7 defect broken object level authorization, OWASP API1, which matches the live API1:2023 entry (OWASP list retrieved 2026-11-18T10:34:08Z). Resolved because nothing is mislabelled; nothing is labelled at all, which -010 covers."
+      },
+      {
+        "findingId": "cg-education-api-security-010",
+        "status": "open",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "39eddbde6f2f11a621f823a8c2db07830bd58d3e21907a050702157fba978f1c",
+        "note": "Checked at 74390a3c33d50eb6dc5876732231853df35d1e16. Parts (a) to (c) still hold: rows are named by practice and answered with requests, so there is no risk-wording echo; the helper example passes no row; and the safe-errors row accepts another customer's booking, so a learner who reads step 4 as object-level is not penalised. Part (d) has regressed. Loop 4 closed it on the collapsed after-pass block that gave one reason per practice and named step 5's API1, and b04c5b14 removed that block with nothing in its place (README lines 139 to 142 go from the Done line straight to the Test section). A learner who passes step 6 by trial (the check lists every row per run, and the passing requests appear in the shipped tests) never sees, in any current byte, why each request is the one that practice answers or which risk from the reading it is. Wrong attempts do get accurate per-row feedback now, so the gap is only the post-pass closure. Low. To close: add a short \"after the tests pass\" note, placed under Expected output or after the Done line with a plain read-after instruction (as the loop-4 SME recommendation allowed), that names for each practice the risk in the reading's words (bad input, leaked fields, revealing errors, a copied user table, an admin action) without restating the requests."
+      },
+      {
+        "findingId": "cg-education-api-security-011",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "461a04e1293d417b49cfca390e63202ced67a5091d47c372c2ee412359a11353",
+        "note": "Checked at 74390a3c33d50eb6dc5876732231853df35d1e16. The step 6 check now registers grace and ada itself before judging (lines 201-202), and the OwnBookingTest TODO says the user table holds admin from the start and that the check registers grace and ada. Critic runs, each my own edit of the hashing row on a completed copy: a stolen-table login as grace and as ada each pass when task7ShowsTheAttackEachPracticeStops runs alone (-Dtest=SecurityLabTest#task7ShowsTheAttackEachPracticeStops), and as ada in the full run; the completion's admin row passes. The result no longer depends on test order."
+      },
+      {
+        "findingId": "cg-education-api-security-012",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "461a04e1293d417b49cfca390e63202ced67a5091d47c372c2ee412359a11353",
+        "note": "Checked at 74390a3c33d50eb6dc5876732231853df35d1e16. answeredBySafeErrors now separates a success (\"this request succeeds, so no error body is written\") from an error with no resolved exception (\"this request was refused before it reached your code (for example by the security filter), so your ApiErrors handler never wrote its body\"). Critic runs, my own edits of a completed copy: an anonymous booking request (401) and a failed login (401) in the safe-errors row both get the new message, which matches the response the learner sees. Small residual: for the failed login it was the shipped AuthController, not the security filter, that refused the request; the message says \"for example\", and \"your code\" is still true, so this is accurate enough."
+      }
+    ]
+  }
+}

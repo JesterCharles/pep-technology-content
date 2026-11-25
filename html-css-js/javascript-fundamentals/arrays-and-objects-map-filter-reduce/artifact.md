@@ -75,7 +75,7 @@ Where to act: The callback you pass to `filter`.
 
 Next step: It receives one product and should return a true or false value. Look at which property answers that question.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The callback you pass to `map`.
 
@@ -89,7 +89,7 @@ Where to act: The `reduce` callback.
 
 Next step: Name its two parameters for what they hold: the total so far and one cart item. Return the new total.
 
-Another hint Another hint, 2 of 2 for Activity 4
+Another hint Hint 2 of 2 for Activity 4
 
 Where to act: After the callback, inside the `reduce` parentheses.
 
@@ -119,7 +119,7 @@ const sum = nums.reduce((acc, n) => acc + n, 0);
 - MDN: Array.prototype.map, retrieved 2026-11-04
 - MDN: Array.prototype.reduce, retrieved 2026-11-04
 
-First draft, retrieved 2026-11-04. These claims have not had independent review yet, so treat them as unverified until that review is recorded.
+Sources checked on 2026-11-04; independent review pending.
 
 ## Static interaction alternatives
 

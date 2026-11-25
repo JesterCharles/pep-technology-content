@@ -53,8 +53,6 @@ Findings: none yet.
 - `docker compose exec SERVICE COMMAND` checks inside a running container.
 - Exited: logs. Wrong setting: exec. Unreachable: ps.
 
-Module finished. Next module: Microservices and CI/CD.
-
 ## Cheat sheet
 
 |  |  |

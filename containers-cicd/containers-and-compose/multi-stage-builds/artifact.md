@@ -64,8 +64,6 @@ Left behind: everything in the build stage that is not copied.
 - Front end: Node stage runs `npm run build`; nginx stage copies only `dist`.
 - `COPY --from` picks exactly what ships, so tools and source stay out.
 
-Next topic: Ports, volumes and environment variables
-
 ## Cheat sheet
 
 ```

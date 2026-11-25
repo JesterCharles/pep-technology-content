@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "Independent SME critic (Claude subagent, non-author), 2026-11-19",
+  "reviewedPath": "spring-boot/spring-boot-basics/coding-lab/lab.json",
+  "reviewedSha256": "f80f34ad1606c86fbc0103941f27267e7fba1b29c227ad3f2c3966c35554c69e",
+  "artifactHashes": {
+    "coding-lab/lab.json": "f80f34ad1606c86fbc0103941f27267e7fba1b29c227ad3f2c3966c35554c69e",
+    "coding-lab/README.md": "47a2cca76a8f88fe7b562b00de0201d0670094a1a5a0760b5d08ce7fd3705530",
+    "assessments/spring-boot-basics-mastery-check/blueprint.json": "6c48701b211c78d38224146f4c97f55ca4a930c2cc87b07580533baebf5f351c",
+    "assessments/spring-boot-basics-mastery-check/practice.gift": "1e4b79cd784a1dd14b4f2f2f96aa0f4efb267a626ed500a5abae8cae0a46ea0e"
+  },
+  "findings": [
+    {
+      "id": "spring-basics-lab9-sme-001",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/spring-boot-basics/coding-lab/tests/workshops/WorkshopApiTest.java",
+        "line": 84
+      },
+      "claim": "Executed offline on 2026-11-19 with Temurin 25.0.5.1+2 and Maven 3.9.16 (mvn -q -o test), against a git-archive export of 2b90ba87 and a copy of the setup-filled local Maven repository. Each variant started from my own silent nine-task completion and changed one thing. The Task 6 test reads both settings from the Spring Environment, so it cannot tell where they came from. Three wrong locations pass the whole suite silently with exit 0: application.properties in the starter folder itself, in starter/config/, and in starter/src/test/resources. Boot loads the first two from the working directory (file:./ and file:./config/). Maven copies the third into target/test-classes, which only the test run sees (observed in target/), so the app run from main does not get either setting: I started the src/test/resources variant from main on its runtime classpath, and it logged 'Tomcat started on port 8080', and /about returned service 'unnamed'. Of the four wrong locations I tried, the test rejects only src/main/java, which I confirmed: target/classes has no application.properties and the test fails. Task 6 exists to teach that the file belongs in src/main/resources (generating-a-spring-boot-project-and-its-structure#o2). The test's own failure message says the values are read from starter/src/main/resources/application.properties, and module.json says 'Task 6 tests only where application.properties lives'. Neither is true for these three variants.",
+      "evidence": [],
+      "recommendation": "In task6ApplicationPropertiesNameTheServiceAndPort, also assert that the application.properties resource the class loader finds comes from the main output directory: its URL ends in /classes/application.properties and not /test-classes/application.properties. Executed in a scratch copy of the test: that assertion failed the three wrong locations, and the full completion still passed silently. It also rejects application.yml, which fits the README's request for an application.properties file. If the test stays as is, change module.json's 'tests only where application.properties lives' to say that the test checks the two values.",
+      "reviewedSha256": "c7d52ca8ed06056615d35fd98cd64d5c09731fcc791656c6e7fa83e3aedaee1b"
+    },
+    {
+      "id": "spring-basics-lab9-sme-002",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/spring-boot-basics/coding-lab/tests/workshops/WorkshopsApplicationMainTest.java",
+        "line": 32
+      },
+      "claim": "Executed offline on 2026-11-19 with Temurin 25.0.5.1+2 and Maven 3.9.16 (mvn -q -o test), against a git-archive export of 2b90ba87 and a copy of the setup-filled local Maven repository. Each variant started from my own silent nine-task completion and changed one thing. A main method that starts the application without passing args through still passes Task 9 when port 8081 is free. The --server.port=0 override is then dropped and the server binds 8081 from Task 6. lab-run.json discloses this. I also ran it with 8081 taken.\n\n- With my completed app already running on 8081 (as after the README spot check), the same variant fails as an error: 'Failed to start bean webServerStartStop'.\n- With an IPv4-only listener on 8081 (macOS arm64; not tried elsewhere), Tomcat bound the IPv6 wildcard. The test's request to localhost reached the other listener, and the test hung indefinitely in HttpClient.send (thread dump taken; I killed the fork after about 3 minutes). The request has no timeout.\n\nA correct completion that passes args passed in both cases. So the README troubleshooting promise 'the Task 9 test picks a free port' holds only for the completion the README asks for, and the test does not check that args reached SpringApplication.",
+      "evidence": [],
+      "recommendation": "In task9MainStartsTheEmbeddedServer, assert that the started context's Environment has server.port equal to \"0\", so a main that drops args fails with a clear message. Executed in a scratch copy of the test: that assertion failed the dropped-args main with 'expected 0 but was 8081'. It passed the direct SpringApplication.run call, a new SpringApplication instance and SpringApplicationBuilder, each passing args. Also give the HttpRequest a timeout (for example 10 seconds), so a wrong listener cannot hang the run.",
+      "reviewedSha256": "fb118391567935159a79e107e81a947dda65e24b3b4517af5c8e310acbdef972"
+    },
+    {
+      "id": "spring-basics-lab9-sme-003",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/spring-boot-basics/coding-lab/tests/workshops/WorkshopApiTest.java",
+        "line": 113
+      },
+      "claim": "Executed offline on 2026-11-19 with Temurin 25.0.5.1+2 and Maven 3.9.16 (mvn -q -o test), against a git-archive export of 2b90ba87 and a copy of the setup-filled local Maven repository. Each variant started from my own silent nine-task completion and changed one thing. The Task 8 test checks only one 400: the request with groupSize missing. A completion that binds groupSize as a String and parses it itself passes the whole suite silently. I ran that variant as the app: groupSize=abc returns HTTP 500, while the fixture's 400 response says 'groupSize is missing or is not a number'. Separately, the fixture gives groupSize 'minimum: 1', but no response or test defines what groupSize=0 does. Run as the app, that variant returned 200 with bookable true for groupSize=0. My own completion has no check for it either (by reading, not run). The fixture is otherwise valid and matches the tests: a structural check with SnakeYAML confirmed openapi 3.1.0, string info title and version, the path template variable equal to the one required path parameter, groupSize as a required integer query parameter, string response keys 200, 400 and 404 each with a description, a $ref that resolves, and schema field names workshopId, groupSize and bookable. No networked OpenAPI validator was available offline.",
+      "evidence": [],
+      "recommendation": "Add one MockMvc request with groupSize=abc that expects 400. Then either remove 'minimum: 1' from the fixture, or add 'or is less than 1' to its 400 description with a groupSize=0 request that expects 400.",
+      "reviewedSha256": "c7d52ca8ed06056615d35fd98cd64d5c09731fcc791656c6e7fa83e3aedaee1b"
+    },
+    {
+      "id": "spring-basics-lab9-sme-004",
+      "severity": "low",
+      "location": {
+        "file": "authoring/evidence/spring-boot/spring-boot-basics/coding-lab/lab-run.json",
+        "line": 25
+      },
+      "claim": "Executed offline on 2026-11-19 with Temurin 25.0.5.1+2 and Maven 3.9.16 (mvn -q -o test), against a git-archive export of 2b90ba87 and a copy of the setup-filled local Maven repository. Each variant started from my own silent nine-task completion and changed one thing. lab-run.json variantRuns lists 'scanning only the about package' among the variants that 'each fail the intended task test'. Executed: with scanBasePackages naming only about, the Task 7 test passes. The variant is caught only because seven other tests fail (tasks 1-5, 8 and 9), each with a 404 on a workshops path. The other listed variants do fail their own task's test as stated, although in my version of the optional-groupSize variant, Task 8 fails as an error (a NullPointerException), not a failure. Adding a separate @ComponentScan(\"about\") next to a plain @SpringBootApplication behaves the same way.",
+      "evidence": [],
+      "recommendation": "Reword variantRuns to say that the about-only scan passes the Task 7 test and is caught by the tests for tasks 1-5, 8 and 9. Optionally, add a status-only GET /workshops expecting 200 to the Task 7 test. The starter already returns 200 there, so this does not couple Task 7 to Task 1, and it makes the scanning task's own test reject a package list that drops workshops.",
+      "reviewedSha256": "d0c100cee4dcc626262f91b2e84bb8ca53f10ff1727a918ea9a50f1f71e6a5de"
+    },
+    {
+      "id": "spring-basics-lab9-sme-005",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/spring-boot-basics/coding-lab/tests/workshops/WorkshopsApplicationMainTest.java",
+        "line": 33
+      },
+      "claim": "Executed offline on 2026-11-19 with Temurin 25.0.5.1+2 and Maven 3.9.16 (mvn -q -o test), against a git-archive export of 2b90ba87 and a copy of the setup-filled local Maven repository. Each variant started from my own silent nine-task completion and changed one thing. On every passing run (5 of 5, macOS arm64), target/surefire-reports/workshops.WorkshopsApplicationMainTest-output.txt contains an ERROR line from org.apache.tomcat.util.net.Acceptor, 'Socket accept failed', with a java.nio.channels.AsynchronousCloseException stack trace. It comes from Tomcat 11.0.27's graceful shutdown during context.close(). README line 127 sends learners to these files for the Spring log, so a correct completion shows an ERROR stack trace. Closing the HttpClient did not remove it. Adding --server.shutdown=immediate to the test's main arguments did: 0 occurrences, test still passing, in a scratch copy of the test. The standalone app stopped with SIGTERM logged graceful shutdown without this ERROR.",
+      "evidence": [],
+      "recommendation": "Add \"--server.shutdown=immediate\" to the arguments the Task 9 test passes to main. Otherwise, add one README sentence saying the Task 9 report may show a Tomcat 'Socket accept failed' error at shutdown, and that this is expected.",
+      "reviewedSha256": "fb118391567935159a79e107e81a947dda65e24b3b4517af5c8e310acbdef972"
+    },
+    {
+      "id": "spring-basics-lab9-sme-006",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/spring-boot-basics/coding-lab/README.md",
+        "line": 151
+      },
+      "claim": "Executed offline on 2026-11-19 with Temurin 25.0.5.1+2 and Maven 3.9.16 (mvn -q -o test), against a git-archive export of 2b90ba87 and a copy of the setup-filled local Maven repository. Each variant started from my own silent nine-task completion and changed one thing. The troubleshooting row puts `Cannot access central in offline mode` in code formatting, as if it were the literal message. I ran mvn -q -o test against an empty local repository. Maven 3.9.16 printed \"Cannot access central (https://repo.maven.apache.org/maven2) in offline mode and the artifact ... has not been downloaded from it before\". The repository URL sits between the words, so a learner searching the output for the quoted text finds no match. The row predates this change (README line 109 at bb966c3f). The other rows hold. The COMPILATION ERROR row: I broke one file, and -q printed \"[ERROR] COMPILATION ERROR :\" followed by the file and line. The port row: with 8081 in use, Boot printed \"Web server failed to start. Port 8081 was already in use.\" The java -version and mvn -v row: the Java version line is present. Separately, mvn -q -o dependency:go-offline on the setup-filled repository exited 0 with no output, as lab-run.json states.",
+      "evidence": [],
+      "recommendation": "Change the row heading to the start of the real message, for example `Cannot access central (...) in offline mode`, or drop the code formatting and write that Maven reports it cannot access central in offline mode.",
+      "reviewedSha256": "47a2cca76a8f88fe7b562b00de0201d0670094a1a5a0760b5d08ce7fd3705530"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/spring-boot/spring-boot-basics/module-practice-critic-sme.json",
+    "items": [
+      {
+        "findingId": "spring-basics-req-sme-001",
+        "status": "resolved",
+        "file": "spring-boot/spring-boot-basics/coding-lab/README.md",
+        "reviewedSha256": "47a2cca76a8f88fe7b562b00de0201d0670094a1a5a0760b5d08ce7fd3705530",
+        "note": "Resolved at current bytes.\n\n- No spring-boot:run remains in the lab, module.json or lab-run.json (grep). The spot check now runs WorkshopsApplication.main from the IDE (README lines 129-130, expected/test-summary.txt line 13), which needs no Maven plugin.\n- The Offline note is true. I ran main offline on the compiled classpath from mvn -o dependency:build-classpath (runtime scope) against the setup-filled repository, which contains no spring-boot-maven-plugin. The log read 'Tomcat started on port 8081'.\n- All five curl spot checks returned exactly the documented output: two seeded workshops; the id 1 JSON; a first line of HTTP/1.1 404 for id 999; the /about JSON with service workshop-catalog; the availability JSON for workshop 2 with groupSize 12.\n- I then stopped the app with SIGTERM and port 8081 was free."
+      },
+      {
+        "findingId": "spring-basics-req-sme-002",
+        "status": "resolved",
+        "file": "spring-boot/spring-boot-basics/coding-lab/expected/test-summary.txt",
+        "reviewedSha256": "952ef42f79474be0dd79c2c14b72ea4b015f36c90e891cad43ba3278cb8afdc9",
+        "note": "Resolved at current bytes. The wording is now 'each has one line that starts as shown'. In my completed run, line 4 of workshops.WorkshopApiTest.txt starts 'Tests run: 8, Failures: 0, Errors: 0, Skipped: 0', and line 4 of workshops.WorkshopsApplicationMainTest.txt starts 'Tests run: 1, Failures: 0, Errors: 0, Skipped: 0'. Each line continues with a time-elapsed suffix."
+      }
+    ]
+  }
+}

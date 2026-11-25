@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "author": "pep-standard-fast-labs-python-authoring crewmate (Claude Opus 5.5)",
+  "decidedBy": "data-pipelines coding-lab reconciler, loop 1 (independent non-author Claude reconciler, 2026-11-18)",
+  "reviewedPath": "python/data-pipelines/coding-lab/lab.json",
+  "reviewedSha256": "085d44d3638afbe401c007a919e53d706fc890dc84dad27bf3dbae1900abf5f4",
+  "decisions": [
+    {
+      "findingId": "py-pipe-lab-edu-011",
+      "decision": "accept",
+      "rationale": "Still open. Verified at f4fdc687 (README.md sha256 5bce07b8...): Tasks 1 (README:90) and 5 (README:139) are now predict-then-run steps. Task 3 (README:104) asks for the prediction and then answers it in the next parenthesis: '(A plain INSERT fails with a duplicate-key error on the primary key; the upsert updates each email's row ...)'. My first-round sme-013 decision asked to keep that accurate contrast 'in the reveal', meaning after the learner has predicted and run, not printed beside the question. Required fix: delete the parenthesis. Tell the learner where to compare: the upsert half against the Task 3 check, which loads the batch twice and counts rows; the plain-INSERT half against the loading page's 'ON CONFLICT turns a failure into a decision' section or its 'Prediction' activity (loading-into-a-staging-table-with-upserts/artifact.md lines 25 and 98). The rerun-safety point may stay as a statement after that comparison, as long as it does not name what the plain INSERT does. The rejection of withholding the operational code of Tasks 1-3 is unchanged, and the critic accepts it."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-007",
+      "decision": "accept",
+      "rationale": "Still open. Verified at f4fdc687: starter/requirements.txt line 14 pins `tzdata==2026.6 ; sys_platform == \"win32\"`. That part is resolved. The lab.json cleanup.notes mention 'tzdata 2026.6 on Windows, which psycopg 3.3.9 requires there' with no URL or retrieval date, unlike the wheel-availability sentence beside it. A grep of authoring/evidence/python/data-pipelines and authoring/catalog/python/data-pipelines finds 'tzdata' only in the critic and reconciliation files. Required fix: record the source with its retrieval date, either in lab.json cleanup.notes next to the wheel sentence or in the module evidence. Suggested wording: 'psycopg 3.3.9 declares tzdata; sys_platform == \"win32\" (https://pypi.org/pypi/psycopg/3.3.9/json, retrieved 2026-11-18); tzdata 2026.6 was the latest release on PyPI (https://pypi.org/pypi/tzdata/json, retrieved 2026-11-18)'. I fetched both URLs on 2026-11-18 in the first round (review/l2-recon/pypi-psycopg_3.3.9.json and pypi-tzdata.json), and they show exactly these values. If the author fetches them again, use the date of that fetch."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-r01",
+      "decision": "accept",
+      "rationale": "Verified at f4fdc687: README Task 6 (line 143) adds the set route only as a parenthesis. The same sentence then says 'replace the kept sign-up when a later one arrives' and ends with `sorted(kept.values(), key=lambda s: s.email)`. Both only fit the dict route; the set route never replaces, and its kept is a list with no .values(). The check accepts both routes (my first-round probe setform), so only the README is inconsistent. Required fix (wording only, no time cost): either write two short alternatives, each with its own return (dict: replace when a later one arrives, return `sorted(kept.values(), key=lambda s: s.email)`; set: walk the sign-ups sorted newest first, keep each email's first, return the kept list sorted by email), or keep the dict route only and mention the set route in one closing sentence that names its different return."
+    },
+    {
+      "findingId": "py-pipe-lab-edu-r02",
+      "decision": "accept",
+      "rationale": "Verified at f4fdc687: README:26 says native ARM64 Windows Python is not supported, and Troubleshooting (README:203-215) has no entry for the pip error such a learner sees. The learner is told only that their Python is unsupported, with no next step. The required next action must stay honest. My first-round sme-015 decision did not allow claiming the x64-Python-under-emulation workaround unless it is run. Required fix: (1) add a next action after the README:26 sentence. Either say 'use a macOS, Linux or x64 Windows computer for this lab', or offer the x64 (AMD64) python.org Python under Windows' x64 emulation. If you offer the emulation route, record Microsoft's documentation of x64 emulation on Arm with its retrieval date in the module evidence and label it 'not tested for this lab'. (2) Add a Troubleshooting entry for 'No matching distribution found for psycopg-binary==3.3.9' that names the same next action."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-r01",
+      "decision": "accept",
+      "rationale": "Reproduced at f4fdc687 against my own scratch solution, with the shipped tests unchanged (review/l2-recon/loop1/lab): (a) in read_csv, `rows = [r for r in csv.DictReader(f)]` followed by `for row in rows: yield row` passes test_task01 (2 passed), although it reads the whole file before the first yield. The Task 1 message and reading#o2 rule that out, and whole_file (test_main.py:157-163) only looks at read/readlines attributes, list/sorted/tuple calls and Starred nodes. (b) In load_staging, `[cur.execute(UPSERT_SQL, r) for r in records]` plus an unreachable executemany passes test_task03, because per_row (test_main.py:234-240) only searches For/While nodes. (b) is contrived, but the fix costs nothing. Required fix: in Task 1, also reject any ListComp/SetComp/DictComp inside read_csv or read_jsonl (a correct streaming reader needs none), with the same task-named message. In Task 3, add ListComp, SetComp, DictComp and GeneratorExp to the node types searched for an `execute` call. No learner-facing change."
+    },
+    {
+      "findingId": "py-pipe-lab-sme-r02",
+      "decision": "reject-with-evidence",
+      "rationale": "Not warranted, and decided the same way as the fastapi-services loop-1 reconciliation (py-api-lab-sme-r02). Evidence: (1) authoring/schemas/lab.schema.json defines prerequisites[] items as exactly {tool, version, check} with additionalProperties false, so a per-OS check cannot be declared. (2) `python3 --version` matches README line 26 and the modules page, which teaches python3 on macOS/Linux and py on Windows (the first-round edu-001 decision). (3) lab.json (sha256 085d44d3...) cleanup.notes already state that 'the prerequisite check is python3 --version on macOS and Linux and py --version on Windows'. That is the critic's own fallback, and it is the fix the python-fundamentals loop-1 reconciliation required for the identical point (py-fund-lab-edu-r02). (4) README:26 gives Windows learners `py --version`. Switching to `python --version` would break the pre-venv check on macOS and Linux systems with no `python` command, which is the edu-001 defect this lab just fixed."
+    }
+  ]
+}

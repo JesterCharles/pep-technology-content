@@ -66,7 +66,7 @@ Where to act: Inside `useEffect`, and the array after it.
 
 Next step: Start with the fetch chain from the predict step, storing the JSON in the state you already have. Then ask which value the Effect reads.
 
-Another hint Another hint, 2 of 2 for Activity 4
+Another hint Hint 2 of 2 for Activity 4
 
 Where to act: The end of the Effect function.
 
@@ -88,7 +88,7 @@ useEffect(() => {
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - developer.mozilla.org/en-US/docs/Web/API/AbortController: Instance methods
 - developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch: Making a request; Canceling a request

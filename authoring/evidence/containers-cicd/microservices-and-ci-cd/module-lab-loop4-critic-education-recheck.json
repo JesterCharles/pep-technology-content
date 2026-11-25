@@ -1,0 +1,240 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "ops-critic-education-loop4 (independent Claude critic subagent, 2026-11-19)",
+  "reviewedPath": "containers-cicd/microservices-and-ci-cd/coding-lab/lab.json",
+  "reviewedSha256": "0c680786a68731ee36634d8cd5248f95262cff5c53a2bb898d6d15d1b75b5685",
+  "artifactHashes": {
+    "coding-lab/README.md": "e286096a9d79a56980a6267dea525baa22a66030d0f6f42397922b5c25afbdc3",
+    "coding-lab/expected/solved-summary.txt": "81d0bfdcbbd94535840e83ac7e86ffad20ed0b7666584dec288f40e5905ebd25",
+    "coding-lab/expected/starter-summary.txt": "8d7ef1775b6202f3d991778ed70229eb223206847ef9800f9f0d88f27c6a7028",
+    "coding-lab/fixtures/.env.example": "16d958ba8d51b7600909af11bbcc39441a8f4b4c80a18379e12e2a50287223e4",
+    "coding-lab/fixtures/briefs/architecture-brief.md": "62f2be54b3807b2586acaa138809a8ba40ff928f77dad31389147586900fed9d",
+    "coding-lab/fixtures/briefs/image-reference.txt": "b19ef04e2336adfd683e93fc1f27223bf2936e300ce45226ea7555d15b9b2f33",
+    "coding-lab/lab.json": "0c680786a68731ee36634d8cd5248f95262cff5c53a2bb898d6d15d1b75b5685",
+    "coding-lab/starter/.github/workflows/ci.yml": "0fd485a2de89495350989d88d162d32c82388883f0874182d170e91877d38231",
+    "coding-lab/starter/.gitignore": "6c9e486632f5647c93d52d6c064f6e4ebea0c0ddd0747d9f91511f6a06cf817a",
+    "coding-lab/starter/compose.yaml": "296a2981948ec44e9c38f05a592b2cffb109c12fd85fc9bbc77a55db9b75000c",
+    "coding-lab/starter/decisions.yaml": "f6b0bfd1d3a069c661dca3ac4a05c7fb1eadeec3177985ca1a58430fbbdc6fb6",
+    "coding-lab/starter/reviews/.dockerignore": "79052f6871c4f7f8dcda47576c5a56a89a518db2cef8a4585f951f13f4be0946",
+    "coding-lab/starter/reviews/Dockerfile": "1fe56443a057e8ca6d4a7b8a1471bce2d29e57aad6b08c33fcfb9bad3c736736",
+    "coding-lab/starter/reviews/app/main.py": "f57ae633f73b9f06018376bd983e5ef9c32a75774e965ed397648f680838bb6b",
+    "coding-lab/starter/reviews/requirements.txt": "44216c29888f2536291b0822db49381252392f80298b391c94c130bf892ebbad",
+    "coding-lab/tests/ci.test.mjs": "a113d84a95e7ecf499b6bf7c00d86656153bc73984b174349398abddb6ff4719",
+    "coding-lab/tests/compose.test.mjs": "657fd6172e7417928559e579ef5e95eeecbc17bd70180cbf3a7651f199f5a02d",
+    "coding-lab/tests/decisions.test.mjs": "7106f71ffb382ac4bc9d9a7befc46f626b27b35d57bb1fd5489e10372351cb94",
+    "coding-lab/tests/dockerfile.test.mjs": "f3bc73b5464d020765f278773bb72a2808886e55c0b7afb6126713b12ebc2f9b",
+    "coding-lab/tests/lab.mjs": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77",
+    "coding-lab/tests/package-lock.json": "967ac4c675131cb4beb93684e07dbbb8f8a427a78dc66422036927ce5c126803",
+    "coding-lab/tests/package.json": "3a5c13790064c853eef28d93aed9525d0b7280843d68c34a43c0f734a8e3a4fd",
+    "coding-lab/tests/service.test.mjs": "8314fabe10b849245f72e3917b76ad8f83d593dce9b4bd7523a064c28385ea41"
+  },
+  "findings": [
+    {
+      "id": "ops-edu-r4-01",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 666
+      },
+      "claim": "Loop 4 regression in ci-no-secret-prints: a step that writes a secret to the run log now passes test 7. Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. Shape: beside the README login, the login step adds a cat command opening an unquoted here-document whose body is the step-env variable mapped from secrets.REGISTRY_PASSWORD, with the cat output redirected to stderr and then piped into docker login with the username variable and --password-stdin. The loop-3 grader fails test 7 with the PRINTS_SECRET message; the loop-4 grader passes 26/26. Under bash 3.2.57 with set -eo pipefail, a stub docker and a dummy value, the value is written to stderr (the run log) and docker receives nothing on stdin. Cause: heredocs() now joins the rest of the opening line into the command (tests/lab.mjs line 642), so the exemption at line 666 sees a last stage of docker login --password-stdin and skips the body, and the command loop exempts the opening line as a login pipeline (lines 653-660), which checks only for a middle tee stage. The shape is outside the ops-sme-r2-03 heredoc list and the ops-sme-r1-02 pipeline list (which rules redirects in a login pipeline non-binding), and the echo-with-stderr-redirect analogue already passes on both graders, so no acceptance is unmet and no item reopens. It is untaught and off the README path, hence low.",
+      "evidence": [],
+      "recommendation": "Optional, tests/lab.mjs only: in the heredoc exemption (line 666), and in the login-pipeline exemption (lines 653-660), do not exempt a pipeline whose opening stage redirects its standard output (for example >&2, 1>&2 or >/dev/stderr), so the value that never reaches docker is judged as printed. If the reconciler keeps redirects non-binding as in ops-sme-r1-02, record this as accepted debt.",
+      "reviewedSha256": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/containers-cicd/microservices-and-ci-cd/module-lab-critic-education.json",
+    "items": [
+      {
+        "findingId": "ops-edu-01",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/app/main.py",
+        "reviewedSha256": "f57ae633f73b9f06018376bd983e5ef9c32a75774e965ed397648f680838bb6b",
+        "note": "Resolved; unchanged. Loop 4 changed only tests/lab.mjs (the 3c6a03a2 export and the loop-3 recheck export at 6e6bccab differ in no README, starter, fixture, expected, lab.json or topic-page byte). The starter call still passes timeout=None (main.py line 41) and docstring rule 2 (lines 33-34) only says the timeout argument is wrong and points to the service-to-service page. The replayed shipped starter run prints \"the call passes timeout=None: reread what the service-to-service page says that does, then pass explicit limits\" for test 24 (tests/lab.mjs line 350), and the page states the default and what timeout=None does (service-to-service-calls/artifact.md line 41). Starter, docstring, message and page agree."
+      },
+      {
+        "findingId": "ops-edu-02",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77",
+        "note": "Resolved against the sharpened acceptance; reviews-error-mapping (tests/lab.mjs lines 423-454) is unchanged in loop 4. Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. Must fail, each failing only test 26: the two statuses swapped (line 446 message); a RequestError handler before the timeout handler (order message, line 445); a tuple of the timeout and connect exceptions answering the timeout status with a connect handler left below (line 452); an except Exception, and an except HTTPError, answering a server-error status between the two handlers (line 453 message naming that handler); and the tuple alone, which gets the status message (line 452), not the escape message. Must pass, 26/26: RequestError after the timeout handler, HTTPError after it, each with an allowed status, and a ConnectError handler placed before the timeout handler."
+      },
+      {
+        "findingId": "ops-edu-03",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77",
+        "note": "Resolved against the sharpened acceptance; unchanged in loop 4. Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. ci-trigger requires both push and pull_request (tests/lab.mjs lines 513-516) and ci-build-push always evaluates the pull-request run (lines 538-560). Must fail: a push-only trigger with an unconditional push and with an always-true ref condition (tests 1 and 4 fail, the test 4 message saying pull-request images would be pushed once the trigger is added, line 557); with both triggers, an unconditional push, an inverted event-name condition, a ref condition true for every non-main ref and an always-true ref condition (each fails only test 4 with \"as written, a pull request run would push an image\", line 556). Must pass, 26/26: an event-name condition, a main-ref condition, an && of event and ref, and a step-level if that skips the build step on pull requests around an unconditional push. README phase 6 (line 100) states the behaviour without the expression."
+      },
+      {
+        "findingId": "ops-edu-04",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77",
+        "note": "Resolved against the sharpened acceptance; rechecked on the loop-4 ci-no-secret-prints (tests/lab.mjs lines 647-671), whose heredoc opener now keeps the pipeline around the operator up to the nearest ;, && or || (heredocs, lines 634-646). Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. Must fail test 7 with the PRINTS_SECRET message (line 633): a step mapping the password secret into env and piping it to an encoder; the shipped debug step kept with its name, the secret mapped into step env and printed through the env-context expression; a cat here-document whose body is the secret-mapped variable, its <<- form, and quoted-delimiter bodies holding the secrets-context or env-context expression; a cat heredoc followed by ;, && or || and the README login; and a cat heredoc piped through tee /dev/stderr, or a bare tee, into docker login (line 658). Must fail test 6: the env-context expression of the password variable inside the login command, with the \"writes a ${{ ... }} expression into the command text\" message (line 602). Must pass, 26/26: the README env-routed echo form (README line 102), the critic's printf form, a three-stage feed ending in docker login --password-stdin, a quoted-delimiter cat heredoc holding only the shell variable, and (new in loop 4) a cat heredoc piped into docker login --password-stdin beside the README form, also after a leading && command. One shape that loop 3 flagged and loop 4 no longer flags is filed as ops-edu-r4-01; it is outside this item's must-fail list and does not reopen it."
+      },
+      {
+        "findingId": "ops-edu-05",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77",
+        "note": "Resolved; rechecked on the loop-4 reviews-timeouts (tests/lab.mjs lines 340-370), which counts a timeout keyword only on the outgoing call or on the constructor of the client that makes it (lines 346-348); loop 4 widened outgoingCall (lines 314-334) to annotated client bindings and to a verb called on a freshly built client. Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. Fail test 24, each with an accurate message: a Timeout bound to a name and never passed (line 369); the timeout argument commented out (line 352); a plain number on the call (SINGLE_NUMBER, line 339); a None read limit inside httpx.Timeout (line 354); an unused module-level client built with a Timeout, plain or annotated, while the call has none (line 369); timeout=None on a client call whose client carries a Timeout (line 350); a chained call on a client built with no timeout (line 352) or with timeout=None (line 350); a helper that takes the Timeout while the call has none (line 369). Pass 26/26: an inline Timeout, a Timeout bound to a module-level name or a local and passed by it, Timeouts on a module-level base_url client (plain or annotated), on a with-block client and on a freshly built client whose verb is chained (one line, multi-line, async, or with a named Timeout), the page's async shape, and a solution that also has an unrelated def with a timeout=None default. README phase 4 rule 2 (line 81) still states that an httpx.Timeout with explicit connect and read limits is required. Observation for the SME list, not a condition of this item (whose acceptance is that the rule passes only when the call or its client gets explicit limits): a Timeout bound by an annotated assignment and passed by name still fails with the built-but-never-used message, because line 351 reads only unannotated bindings; this is identical on the loop-3 grader."
+      },
+      {
+        "findingId": "ops-edu-06",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77",
+        "note": "Resolved; still met on the loop-4 reviews-auth-forward (tests/lab.mjs lines 393-420). Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. Pass 26/26: an upper-case header key in a dict literal (the critic's solution), a lower-case key, a dict built by subscript and passed by name, the ops-edu-06 guarded form (empty dict filled by subscript under a positive check) after a missing-token 401 guard, and a required header parameter with no guard. A commented-out forward beside an empty headers dict fails test 25 with the header message (line 400), so comments do not count. README phase 4 rule 1 (line 80) says to answer 401 before the call. The ops-edu-06 form with no 401 path still fails test 25, now with the no-guard message (line 419), as the ops-sme-010 record expects. A headers dict bound by an annotated assignment is judged under ops-edu-r2-01, not here."
+      },
+      {
+        "findingId": "ops-edu-07",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77",
+        "note": "Resolved; still met. Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. Checkout moved after the test step fails test 2 with the order message (tests/lab.mjs line 528). Deleting the login step and leaving both secrets in a YAML comment fails test 6 with the keep-a-login-step message (line 593); ci-secret-refs reads parsed YAML, so comments do not count."
+      },
+      {
+        "findingId": "ops-edu-08",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77",
+        "note": "Resolved; still met. Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. (b) the page's fastapi run command with a loopback --host=VALUE fails test 23, naming the host it was given (tests/lab.mjs line 201); (c) uvicorn with the all-interfaces host passes in both the --host VALUE and --host=VALUE forms (hostOf, lines 179-185); (e) a reviews mapping to container port 9000 fails test 14 (line 152). Parts (a) and (d) stay moot: the Dockerfile layers and .dockerignore are provided (starter/reviews/Dockerfile lines 1-10, starter/reviews/.dockerignore) and have no rule."
+      },
+      {
+        "findingId": "ops-edu-09",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/decisions.yaml",
+        "reviewedSha256": "f6b0bfd1d3a069c661dca3ac4a05c7fb1eadeec3177985ca1a58430fbbdc6fb6",
+        "note": "Resolved against the narrowed acceptance; unchanged. Loop 4 changed only tests/lab.mjs (the 3c6a03a2 export and the loop-3 recheck export at 6e6bccab differ in no README, starter, fixture, expected, lab.json or topic-page byte). The store_contrast blocks keep their per-block ordering (decisions.yaml lines 29-47). The critic recomputed every single-question list's expected position from the public tests (positions kept out of this report; see ops-edu-r1-03). The option texts are unchanged since the loop-3 recheck found each distractor a concept its page teaches, and the brief's scenarios still differ from the pages' worked examples (architecture-brief.md lines 52-57 and 77-79)."
+      },
+      {
+        "findingId": "ops-edu-10",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/lab.json",
+        "reviewedSha256": "0c680786a68731ee36634d8cd5248f95262cff5c53a2bb898d6d15d1b75b5685",
+        "note": "Resolved per the operator decision (option A); unchanged. Loop 4 changed only tests/lab.mjs (the 3c6a03a2 export and the loop-3 recheck export at 6e6bccab differ in no README, starter, fixture, expected, lab.json or topic-page byte). All 24 objectives are declared and required (lab.json lines 15-39 and 128). The five added worksheet items are present (decisions.yaml lines 52-54, 59-70, 79-83 and 85-93; tests 18-21). Phase 7 stays required with the Jenkins reading stated as its prerequisite (README lines 93-95) and charged to S39 (README line 31; lab.json line 124). The Dockerfile and .dockerignore stay prewired and only the start command is repaired (README line 74). Timing stays typical 56, bound 60 (lab.json lines 123-125); coding-lab-timing.json changed only its measuredAt date."
+      },
+      {
+        "findingId": "ops-edu-11",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/decisions.yaml",
+        "reviewedSha256": "f6b0bfd1d3a069c661dca3ac4a05c7fb1eadeec3177985ca1a58430fbbdc6fb6",
+        "note": "Resolved under the loop-2 reconciliation's acceptance: it closes with ops-edu-r1-01, provided the rest stays as the loop-2 recheck found it. ops-edu-r1-01 stays resolved (see that item). The README and all topic pages are byte-identical to the loop-3 export, and every title and message printed by the replayed shipped starter run and by the replayed README end-of-S38 checkpoint run is identical to the loop-3 replay (both diffed line by line). Loop 4 adds no message text: it changes which existing guard message is chosen (tests/lab.mjs lines 411-419), which calls count as the outgoing call (lines 291-334) and how a heredoc opener is read (lines 634-646); none of these prints on the starter or checkpoint run beyond what loop 3 printed, and none states or singles out any worksheet item's expected option. Objective sweep carried forward from the loop-3 recheck rather than redone page by page: the README, the topic pages, the starter and the worksheet are byte-identical to the loop-3 export and both runs print line-identical messages, so its page-derived decisive value for each of the 24 declared objectives stands; the critic reconfirmed the secrets-page lines (secrets-in-ci/artifact.md lines 20-37) and the brief lines this report cites. Every worksheet hint printed on those runs (tests 15-22, tests/lab.mjs lines 709-845) is a reread pointer. The redaction and fork items remain decidable only from the secrets page (secrets-in-ci/artifact.md lines 29 and 37); the push condition remains the learner's own from the pipeline page (ops-edu-03)."
+      },
+      {
+        "findingId": "ops-edu-12",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "reviewedSha256": "e286096a9d79a56980a6267dea525baa22a66030d0f6f42397922b5c25afbdc3",
+        "note": "Resolved; unchanged. Phase 7 stays required; README lines 93-95 tell Standard learners to read the \"Reading (optional)\" Jenkins page and why; README line 31, coding-lab-timing.json and lab.json minutes.standard-s39 (line 124) charge its about four minutes to S39 (4+9+5+1 = 19)."
+      },
+      {
+        "findingId": "ops-edu-13",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "reviewedSha256": "e286096a9d79a56980a6267dea525baa22a66030d0f6f42397922b5c25afbdc3",
+        "note": "Resolved; unchanged. Phase minutes sum to the day totals (S38 5+8+2+8+14 = 37, S39 4+9+5+1 = 19; README lines 30-31 and 62-113) and match coding-lab-timing.json and lab.json lines 123-124; the timing record changed only its measuredAt date in loop 4. The README (969 words, wc -w) and the brief are budgeted explicitly, and the 60-minute figure is stated with its retry assumption (README lines 33-34); its credibility is ops-edu-r1-04."
+      },
+      {
+        "findingId": "ops-edu-14",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77",
+        "note": "Resolved; still met. Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. A one-space reviews key in compose.yaml makes tests 9-14 report \"compose.yaml is not valid YAML (the parser stops at line 31): ... delete only the # at the start of each line\" (loadYaml, tests/lab.mjs lines 24-36, message line 33) instead of missing-content messages. README phase 2 (line 68) says to delete only the #, and troubleshooting (line 130) explains the message."
+      },
+      {
+        "findingId": "ops-edu-15",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77",
+        "note": "Resolved; still met. Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. A build context of the repository root fails test 4 (tests/lab.mjs line 543), and the test title names the reviews folder. The ci.yml header (starter/.github/workflows/ci.yml lines 1-3) still says what the backend mvnw command stands for."
+      },
+      {
+        "findingId": "ops-edu-16",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/fixtures/briefs/architecture-brief.md",
+        "reviewedSha256": "62f2be54b3807b2586acaa138809a8ba40ff928f77dad31389147586900fed9d",
+        "note": "Resolved; unchanged. architecture-brief.md line 9 says \"Three incidents drive this review:\" and lists three (lines 11-17)."
+      },
+      {
+        "findingId": "ops-edu-17",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "reviewedSha256": "e286096a9d79a56980a6267dea525baa22a66030d0f6f42397922b5c25afbdc3",
+        "note": "Resolved; still met. README line 89 states the end-of-S38 checkpoint. Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. Replayed with the critic's solution, the starter ci.yml and the starter Phase 7 sections: exactly tests 9-19 and 23-26 pass (15 of 26), and tests 1-8 and 20-22 fail, with messages identical to the loop-3 replay."
+      },
+      {
+        "findingId": "ops-edu-18",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "reviewedSha256": "e286096a9d79a56980a6267dea525baa22a66030d0f6f42397922b5c25afbdc3",
+        "note": "Resolved; unchanged. No layer-order, WORKDIR or .dockerignore rule exists in tests/lab.mjs; the prewired files are labelled previous-module work (starter/reviews/Dockerfile lines 1-3, starter/reviews/.dockerignore lines 1-2); README line 7 makes no claim that every test checks this module's rules."
+      },
+      {
+        "findingId": "ops-edu-19",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "reviewedSha256": "e286096a9d79a56980a6267dea525baa22a66030d0f6f42397922b5c25afbdc3",
+        "note": "Resolved; unchanged. The README is 969 words (1139 originally). The learner edits six starter files (README table lines 14-21) and each phase gives the file, the goal and the page pointer. Every edited file maps to a declared objective, and the prewired previous-module work is labelled."
+      },
+      {
+        "findingId": "ops-edu-r1-01",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/decisions.yaml",
+        "reviewedSha256": "f6b0bfd1d3a069c661dca3ac4a05c7fb1eadeec3177985ca1a58430fbbdc6fb6",
+        "note": "Resolved; loop 4 keeps all four clauses met. Clause 1: decisions.yaml is byte-identical to the loop-3 export (sha256 f6b0bfd1), so the derived-value list (lines 88-90), its field, its reread hint (tests/lab.mjs line 822) and the grader's expected value (line 818) are unchanged, and the ops-edu-r1-03 band still holds (recomputed). Clause 2: unchanged replacement options, each a concept the secrets page teaches (secrets-in-ci/artifact.md lines 20-31) that by the page does not keep a derived value out of the log. Clause 3: the critic replayed the shipped starter run and the README end-of-S38 checkpoint run and read every printed title and message; both are identical, line for line, to the loop-3 replay, the README through phase 7 and the starter comments and docstrings are unchanged, so no option is stated, ruled out or singled out by pre-answer text. Clause 4: the test 7 text (PRINTS_SECRET, line 633) is unchanged; loop 4 changed only when the heredoc rule fires (lines 634-646 and 663-668), not its wording. The other five items stay resolved because their texts are unchanged: Dockerfile TODO lines 4-5, main.py docstring lines 33-34, test 23 and 24 starter messages (tests/lab.mjs lines 198 and 350), test 3 message (tests/lab.mjs line 535) and README line 107."
+      },
+      {
+        "findingId": "ops-edu-r1-02",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77",
+        "note": "Resolved against its acceptance; the loop-4 guard change keeps it met. Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. All five original variants fail only test 25: a guard body that only prints, an HTTPException created without raise, and a guard that returns a dict (each with \"your missing-token check does not raise HTTPException with 401, so a request without a token is not refused: raise it there\", tests/lab.mjs line 418, which names the missing raise); headers made conditional on authorization with no guard, inline and through a name (no-guard message, line 419); and a forwarding dict built but not passed, the call sending an empty headers dict (header message, line 400). Must pass, 26/26: a missing-token guard raising 401 before the call, either header-key case, a dict literal or a dict passed by name, and a required header parameter with no guard. The full guard list is judged under ops-edu-r2-02."
+      },
+      {
+        "findingId": "ops-edu-r1-03",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/decisions.yaml",
+        "reviewedSha256": "f6b0bfd1d3a069c661dca3ac4a05c7fb1eadeec3177985ca1a58430fbbdc6fb6",
+        "note": "Resolved; unchanged. The critic recomputed, from the public worksheet and tests/lab.mjs, the expected option's position in the twelve single-question option lists (decisions.yaml lines 14, 16, 25, 50, 55, 61, 69, 82, 86, 89, 92 and 102; four two-option and eight three-option lists). The acceptance band holds: every position that exists holds the expected option in at least two and at most six of the twelve lists. store_contrast keeps its per-block ordering. Positions and counts per list are kept out of this report."
+      },
+      {
+        "findingId": "ops-edu-r1-04",
+        "status": "resolved",
+        "file": "authoring/evidence/containers-cicd/microservices-and-ci-cd/coding-lab-timing.json",
+        "reviewedSha256": "cf9437a4835205e4fe182d0a85ea5cc168eda19bfef6035e5655fd5a0d07a3b9",
+        "note": "Resolved on binding part (1); unchanged apart from the measuredAt date (coding-lab-timing.json line 4). README lines 33-34 call the 60-minute figure a planning allowance, not a measured worst case (the typical path plus four extra failed runs of about a minute each), and say no learner has been timed. coding-lab-timing.json line 76 says the same and the notObserved note (line 85) stays. Recommended part (2) was not taken: the decide-* rules still report the first wrong field per run (firstWrong, tests/lab.mjs lines 709-714), which the acceptance allows."
+      },
+      {
+        "findingId": "ops-edu-r1-05",
+        "status": "resolved",
+        "file": "authoring/evidence/containers-cicd/microservices-and-ci-cd/coding-lab-solved-run.json",
+        "reviewedSha256": "e99d1ca410bfd63b2a29096932a8424e1bd8bf4d2775ccdf61d28e4044e3c583",
+        "note": "Resolved; re-recorded for loop 4. coding-lab-solved-run.json is now \"solved at 2204f76c by run local-1795052065\" (lines 4-7), the loop-4 fix commit, whose lab bytes equal HEAD 3c6a03a2: the critic recomputed all 23 bound file hashes (lines 47-140) and they equal the current lab bytes, tests/lab.mjs included (line 126). Solution 1 (line 29) and solution 2 (line 33) entries give provenance only, the checkpoint entry (line 37) and the procedure (lines 15-21) describe no concrete solution choice, and line 45 says no solution, hidden test or hash of either is recorded. The regenerated module lock (authoring/catalog/containers-cicd/microservices-and-ci-cd/module.lock.json) carries the loop-4 tests/lab.mjs hash."
+      },
+      {
+        "findingId": "ops-edu-r2-01",
+        "status": "open",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77",
+        "note": "Open (filed medium; residual low) on two call-list shapes the loop-4 fix does not reach; both fail identically on the loop-3 grader, so neither is a loop-4 regression. Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. Met: c1 inline URL; c2 URL in a local (also when the local is annotated); c3 URL local with a named dict; c4 a module-level base_url client with a Timeout and a relative path, plain and, new in loop 4, bound by an annotated assignment (annotation naming the httpx class, the class imported by name, an Optional annotation, and an annotated module AsyncClient awaited in an async handler); c5 a with-block client; c6 the page's async shape; c7 an earlier print before c1, before annotated c4 and before a chained call; and, new in loop 4, a verb chained on a freshly built Client or AsyncClient (one line, multi-line, async, base_url with a relative path). All pass 26/26. Must-fail shapes fail; with no httpx call, test 25 prints the no-call message (tests/lab.mjs line 399). Not met: (1) c3 with the headers dict bound by an annotated assignment and passed by name fails test 25 with \"send the incoming authorization value on as the outgoing Authorization header\" (line 400), although the header is forwarded: forwardsToken (lines 373-382) reads a named dict only from an unannotated binding or a subscript. This is the deciding ground: the loop-3 reconciliation ruled that an annotated assignment with a value is an assignment that binds the name (its ops-sme-r3-01 decision), and c3's words (\"a headers dict bound to a name\") do not exclude it. (2) Secondary: the loop-3 reconciliation's must-pass list names a c4 variant \"with the class imported by name\"; with the imported name used as the annotation it passes 26/26, but with the client constructed through that imported name (not httpx.Client) it fails tests 24 and 25 with the no-call messages (lines 343 and 399), although the call is made with an httpx client: httpxConstructors (line 296) recognises only the module-qualified constructor, and the callee sentence covers \"a name bound to an httpx Client\". Residual weight is low: neither shape is the page's, the starter's or the README's (all three use the module-qualified form and unannotated names). Fix in tests/lab.mjs only: accept an optional annotation between a headers name and its equals sign in forwardsToken, as httpxConstructors now does, and accept a Client or AsyncClient constructor name imported from httpx."
+      },
+      {
+        "findingId": "ops-edu-r2-02",
+        "status": "open",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77",
+        "note": "Open, low, on the guard list's closing clause only; the loop-3 open clause (f6) is now met. Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. Must pass, each 26/26: g1 a not-authorization guard raising 401; g2 detail first and status_code second; g3 401 positional and as the status constant; g4 is-None and ==-None guards; g5 a positive check (truthiness, and is-not-None) wrapping the call with an else raising 401; g6 a positive check building the headers with an else raising 401 and the call after the if/else; g7 a required parameter with no guard. Must fail, each failing only test 25: f1 (body only prints), f2 (no raise), f3 (returns a dict) and f7 (positive check whose else returns a dict) get the missing-raise message (tests/lab.mjs line 418), true for them; f4 (conditional headers, inline and named), f8 (guard after the call) and the no-guard dict literal get the no-guard message (line 419), true for them; f5 gets the header message (line 400). f6 is now met: the positive check wrapping the call with no else, the positive check building the headers with no else, a 401 raised inside the positive branch with no else, and the ops-edu-06 form with no 401 path all get the no-guard message (line 419), because loop 4 picks the missing-raise text only when a negative check or a positive check with an else exists (lines 411-418). Not met: the closing clause (\"Shapes outside it are non-binding: they may pass, or fail with a message that is true for them\"), which the loop-3 reconciliation applied as binding. A positive check wrapping the call and its return, followed at the same indent by a raise of HTTPException with 401 and no else, is a correct handler (a no-token request gets 401 and never reaches the call), outside the list (g5 needs an else). It fails test 25 with \"a request with no token is not refused before the call: answer 401 when authorization is missing\" (line 419), which is false for it. The loop-3 grader failed it with the missing-raise text, also false, so this is not a loop-4 regression. Severity low: README phase 4 rule 1 (line 80) reads guard-first. Fix in tests/lab.mjs only: when the positive block always returns, treat a 401 raise directly after it at the same indent like its else branch."
+      },
+      {
+        "findingId": "ops-edu-r2-03",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "9278b451b1a2602839347dd1b5fa403999dab8260041c18006343738de902a77",
+        "note": "Resolved; unchanged in loop 4. Reproduced on scratch copies under critic-work/education-recheck4 of the frozen export at HEAD 3c6a03a2 (lab.json sha256 0c680786, tests/lab.mjs sha256 9278b451), npm ci in tests, Node v24.2.0, node --test --test-reporter=tap with LAB_PROJECT; the critic wrote its own 26/26 solution (result lines equal expected/solved-summary.txt) and ran one-change variants of it against the loop-4 grader and, for comparison, the loop-3 grader (tests/lab.mjs sha256 1cc3d198); no private overlay, staging, work folder, SME or reconciler folder was read. The uvicorn branch of reviews-listen (tests/lab.mjs lines 203-208) prints \"the server is told to listen on 127.0.0.1: reread the adding-FastAPI page on the address a server in a container must listen on\" for both --host 127.0.0.1 and --host=127.0.0.1 (line 207), the fastapi branch's form (line 201); it does not say \"without --host\" or who can reach that address. uvicorn with no --host option keeps the missing-host wording (line 206). uvicorn with the all-interfaces host passes in both spellings."
+      }
+    ]
+  }
+}

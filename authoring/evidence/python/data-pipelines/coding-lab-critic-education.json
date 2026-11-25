@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "education critic (independent Claude subagent, 2026-11-18)",
+  "reviewedPath": "python/data-pipelines/coding-lab/lab.json",
+  "reviewedSha256": "658d4f05bb8da6ba3c6e0958f23245bbbc239c52f836e5ceb21a9e1cbba8369f",
+  "artifactHashes": {
+    "coding-lab/lab.json": "658d4f05bb8da6ba3c6e0958f23245bbbc239c52f836e5ceb21a9e1cbba8369f",
+    "coding-lab/README.md": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+  },
+  "findings": [
+    {
+      "id": "py-pipe-lab-edu-001",
+      "severity": "high",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 38
+      },
+      "claim": "Setup step 1 creates the venv with `python -m venv .venv` (README lines 26 and 38; lab.json prerequisite check `python --version`, line 42) before any venv exists. The course's own page python/python-fundamentals/modules-imports-and-virtual-environments/artifact.md teaches `python3 -m venv .venv` on macOS/Linux (lines 19, 89, 116, 133) and says that only after activation does `python` mean the venv's Python. On a default macOS (python.org installer, Homebrew or Xcode command-line tools) and on Ubuntu/Debian without python-is-python3 there is no `python` command, so the very first command and the prerequisite check fail with `command not found` for exactly the novice this README addresses, and the README contradicts the taught command.",
+      "evidence": [],
+      "recommendation": "On macOS and Linux use `python3 --version` and `python3 -m venv .venv` (Windows stays `py`), then add one sentence: after activation `python` is the venv's Python, so every later command uses `python`. Mirror the change in lab.json prerequisites (`python3 --version`, with the Windows `py --version` note) and in the troubleshooting list.",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    },
+    {
+      "id": "py-pipe-lab-edu-002",
+      "severity": "high",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/lab.json",
+        "line": 33
+      },
+      "claim": "keeping-sensitive-data-out-of-prompts#o1 (\"Identify the personal and secret fields in a record that must not be sent\") is claimed, but README Task 8 step 1 (line 149) hands the learner the answer verbatim, `PERSONAL_FIELDS = {\"email\", \"name\", \"phone\"}`, and the check (tests/test_main.py line 287) only compares against that literal set. The learner performs no identification; the test observes copying. The record also has no secret field at all, so the 'secret' half of the objective has no task. This breaches the rule that lab.json never claims an objective the test does not observe the learner performing.",
+      "evidence": [],
+      "recommendation": "Remove the literal set from the README; ask the learner to decide, from the Signup fields and the page's 'Value / Default action' table, which fields identify a person, and keep the check. To make it a real decision, add one non-obvious field to the scenario (for example a secret-bearing `desk_token` column in the export, or a free-text field that needs masking) that must also be excluded; otherwise drop o1 from lab.json objectives.",
+      "reviewedSha256": "658d4f05bb8da6ba3c6e0958f23245bbbc239c52f836e5ceb21a9e1cbba8369f"
+    },
+    {
+      "id": "py-pipe-lab-edu-003",
+      "severity": "high",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/lab.json",
+        "line": 30
+      },
+      "claim": "ai-enrichment-with-validated-outputs#o1 (\"... design an enrichment step that requests JSON matching a declared schema\") is claimed, but the request half is shipped pre-written: starter/pipeline/enrich.py build_prompt (lines 45-51) already embeds Enrichment.model_json_schema() and the JSON instruction. The learner only types two Literal fields given verbatim in README line 156. Nothing observes the request either: probe in scratch, an enrich that calls `client.complete(\"classify\")` and builds the ref with `pseudonym(...)` directly (no build_prompt, no minimize_for_prompt) passes test_task09 in full, because every prompt assertion (tests line 328-331) is negative (no personal value present). So neither 'requests JSON matching the schema' nor 'the prompt is built from the minimized record' is observed.",
+      "evidence": [],
+      "recommendation": "Either make the learner write build_prompt (or its schema line) and add positive assertions in test_task09 that each prompt contains `json.dumps(Enrichment.model_json_schema())` and the minimized record's ref and comment, or remove ai#o1 from objectives. A positive 'prompt contains the ref' assertion also closes the minimize_for_prompt bypass.",
+      "reviewedSha256": "658d4f05bb8da6ba3c6e0958f23245bbbc239c52f836e5ceb21a9e1cbba8369f"
+    },
+    {
+      "id": "py-pipe-lab-edu-004",
+      "severity": "high",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/lab.json",
+        "line": 21
+      },
+      "claim": "loading-into-a-staging-table-with-upserts#o1 is claimed, and it starts \"Open a psycopg connection from an environment-variable connection string in a with block\". No task has the learner write a `with psycopg.connect(...)` block: connect() returns a bare connection that the check closes by hand (tests lines 125-129), and load_staging/run_transform receive the fixture's autocommit connection. The same gap leaves connecting-to-postgres-from-python-with-psycopg#o3 (manage the connection and transaction with with blocks, commit on clean exit, rollback on exception) unclaimed and unpracticed, although it is the one remaining 'do' objective of the eight topics and a nightly load is exactly where it matters. The pages' central transaction idiom therefore never reaches real-toolchain practice.",
+      "evidence": [],
+      "recommendation": "Add a short final task, for example `run_nightly(paths)` in database.py (or a pipeline.py), that opens `with connect() as conn:` and calls load_staging and run_transform; check from a second connection that a clean run is committed and that an injected failure leaves staging and summary unchanged. Then claim connecting#o3, and loading#o1 becomes honest. Alternatively drop loading#o1 from objectives.",
+      "reviewedSha256": "658d4f05bb8da6ba3c6e0958f23245bbbc239c52f836e5ceb21a9e1cbba8369f"
+    },
+    {
+      "id": "py-pipe-lab-edu-005",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 119
+      },
+      "claim": "Task 4 requires `with conn.transaction():` (README line 119; test message line 198), an API no Python page teaches: a grep of python/*/*/artifact.md finds no `transaction()`. The ELT page's 'Run the whole transform as one transaction' section and the psycopg page teach the connection block (`with psycopg.connect(...) as conn:`) as the transaction. A learner applying the taught idiom inside run_transform writes `with conn:`; probe in scratch: test_task04 then fails with raw `psycopg.OperationalError: the connection is closed`, with no Task 4 text and no next action, because the connection block closes the shared connection.",
+      "evidence": [],
+      "recommendation": "In Task 4, bridge explicitly: one or two sentences that run_transform receives an already open connection, so the page's connection block is not available; `conn.transaction()` is psycopg's block for one transaction on an open connection (commit on clean exit, rollback on exception), and `with conn:` would close the connection. Add that symptom to Troubleshooting.",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    },
+    {
+      "id": "py-pipe-lab-edu-006",
+      "severity": "high",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "line": 248
+      },
+      "claim": "test_task06 wrongly fails correct, taught solutions. Its structural check requires an ast.Dict or ast.DictComp node. Probes in scratch: (a) `kept = dict()` keyed on email gives 'Task 6: key a dict on the email' although it does exactly that; (b) the page's set-of-seen-keys form (`seen, kept = set(), []` over rows sorted by signed_up_at descending), which the claimed objective deduplicating#o1 names ('with a set or a dict'), gives the same false message. Both produce the correct rows.",
+      "evidence": [],
+      "recommendation": "Drop the structural assertion (the behavioural assertion already proves the latest-per-email result) or widen it to accept `dict()`/`set()` calls and Set/SetComp nodes, and make the message describe the behaviour, not a construct.",
+      "reviewedSha256": "9cd18453931e8ea058bebdb1eb91052736971badecb76d10e42d9fdb3b8f066f"
+    },
+    {
+      "id": "py-pipe-lab-edu-007",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "line": 114
+      },
+      "claim": "test_task01 only recognises a call spelled exactly `open`. Probe in scratch: `with Path(path).open(encoding=\"utf-8\", newline=\"\") as f:` (Path is already imported in records.py) fails with 'Task 1: open the file in read_csv with an explicit encoding=\"utf-8\"', a false message: the encoding is there. The README steers learners to `open(...)`, so this is friction rather than a blocker.",
+      "evidence": [],
+      "recommendation": "Accept any call whose function name ends in `open` (`open`, `Path(...).open`, `io.open`) with an `encoding` keyword, or name the expected spelling in the message.",
+      "reviewedSha256": "9cd18453931e8ea058bebdb1eb91052736971badecb76d10e42d9fdb3b8f066f"
+    },
+    {
+      "id": "py-pipe-lab-edu-008",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "line": 378
+      },
+      "claim": "test_task10 requires the text `FakeModelClient` inside every test function body. Probe in scratch: two correct tests that build the client through a helper (`def run(answers): return enrich(FakeModelClient(answers), [SIGNUP])`) and kill both mutants fail with 'Task 10: every test drives enrich with a FakeModelClient of scripted answers', which is false. Helpers and fixtures are normal pytest style.",
+      "evidence": [],
+      "recommendation": "Rely on the mutant runs (they already prove the tests drive enrich), or check that FakeModelClient is used anywhere in the module; if the per-body rule stays, say 'create the FakeModelClient inside each test function' in README Task 10.",
+      "reviewedSha256": "9cd18453931e8ea058bebdb1eb91052736971badecb76d10e42d9fdb3b8f066f"
+    },
+    {
+      "id": "py-pipe-lab-edu-009",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 22
+      },
+      "claim": "README line 22 promises 'Each failing check names its task and the next action', which is false in several states a learner will meet. Starter run (scratch): Tasks 4 and 7 fail with raw `psycopg.errors.SyntaxError: syntax error at or near \"TODO\"`, with no next action. `os.getenv(\"DATABASE_URL\")` in connect() gives `AttributeError: 'NoneType' object has no attribute 'encode'`, because test line 131 is a bare pytest.raises(KeyError). `with conn:` in run_transform gives 'the connection is closed'. Forgetting `from typing import Literal` (Task 9) gives a collection error: 'Interrupted: 2 errors during collection', which hides all ten task results, and Troubleshooting has no entry for it. A -q run of the starter also prints ten full tracebacks, with no guidance to read the `E` lines.",
+      "evidence": [],
+      "recommendation": "Wrap each pre-assert call in the checks with try/except that calls pytest.fail with a 'Task N: ...' message (for example 'Task 4: write TRANSFORM_SQL; PostgreSQL said: ...'), and give Task 2 an explicit message ('read os.environ[\"DATABASE_URL\"] so a missing variable raises KeyError'). Add Troubleshooting entries for 'errors during collection / NameError / SyntaxError: fix the file and line shown first', and a tip to read the lines starting with `E` or to focus with `python -m pytest -q -k task04`.",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    },
+    {
+      "id": "py-pipe-lab-edu-010",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/lab.json",
+        "line": 98
+      },
+      "claim": "The 55-minute estimate (README line 10; lab.json minutes) is, by lab.json's own note (line 98), an unmeasured authoring estimate of the ten tasks only. It excludes first-time setup (venv, pip install, DATABASE_URL, the psql check and possibly a password file), which the sibling SQL lab budgets separately at about 10 minutes, and the day-2 re-activation. A realistic first-time total is therefore about 65 minutes, over the 60-minute cap. The 5.5 minutes per task that remain only hold because Tasks 1-3, 7 and 8 are transcription (see the give-away finding); with the give-away reduced, the estimate rises further. The README does not say whether setup is inside the 55.",
+      "evidence": [],
+      "recommendation": "State setup time separately in README ('about 10 minutes of setup, then about 45 for the tasks') and make the total fit 60: merge or trim tasks (for example fold Task 2's query into Task 3, or make Task 7 an optional stretch) rather than relying on copy-typing. Record that the estimate is unpiloted until a measured run exists.",
+      "reviewedSha256": "658d4f05bb8da6ba3c6e0958f23245bbbc239c52f836e5ceb21a9e1cbba8369f"
+    },
+    {
+      "id": "py-pipe-lab-edu-011",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 93
+      },
+      "claim": "The README gives away too much for a concept-focused lab. Tasks 1, 2, 3 and 7 supply complete function bodies or SQL verbatim (lines 85-87, 93-94, 100-101, 145), so learners transcribe rather than apply the pages. Every 'predict' half is pre-answered as a statement: line 89 says what a second iteration gives, line 103 says what a rerun leaves, line 137 says which values Pydantic converts or rejects. reading#o3's second-iteration assertion (tests line 91) is true for any generator, so it observes nothing the learner did. The pages use 'Where to act / Next step' hint ladders, and the sibling SQL lab README uses 'You decide' steps; this lab hands over the code.",
+      "evidence": [],
+      "recommendation": "Keep the numbered steps, but replace literal code with the construct to use and a pointer to the page section (for example 'use the page's streaming reader shape with csv.DictReader'). Keep literal code only for untaught bridges (conn.transaction, %(name)s named placeholders, Literal). Turn each prediction into an action: 'Before you run the check, write down how many rows the second load leaves, then compare.'",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    },
+    {
+      "id": "py-pipe-lab-edu-012",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "line": 292
+      },
+      "claim": "The privacy task contradicts the page it claims. keeping-sensitive-data-out-of-prompts teaches 'Start from the task ... drop every field, then add back only what tagging needs' and 'mask what remains', with free text such as message text 'send only if needed, with personal data masked'. The lab's minimize_for_prompt is a deny-list (README line 150), and the check (tests lines 292-298) forces the prompt to carry seats, signed_up_at and the unmasked free-text comment, none of which the interest/level classification needs except the comment. A learner who applies the taught allow-list fails Task 8.",
+      "evidence": [],
+      "recommendation": "Make Task 8 an allow-list of what classification needs (session and comment), plus a simple mask of an email or phone number inside the comment, and add a fixture comment that contains one (for example 'call me on 555-0102'). Then assert the prompt record keeps only those keys and that the comment is masked.",
+      "reviewedSha256": "9cd18453931e8ea058bebdb1eb91052736971badecb76d10e42d9fdb3b8f066f"
+    },
+    {
+      "id": "py-pipe-lab-edu-013",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/starter/pipeline/enrich.py",
+        "line": 18
+      },
+      "claim": "The pseudonym framing overclaims and differs from the page. The page defines pseudonymizing as swapping an internal key for a random token and keeping the mapping on your side. The shipped pseudonym() is an unkeyed SHA-256 of the email with a fixed, published prefix ('signups-lab:'), truncated to 10 hex characters. Anyone holding a list of candidate emails can recompute it, yet the docstring says 'without revealing it' and README line 152 says 'without the model ever seeing who it is'. That teaches novices that a plain hash of an identifier is anonymous.",
+      "evidence": [],
+      "recommendation": "Either use a random token with a local mapping dict (matching the page), or a keyed hash (HMAC with a secret read from the environment), and reword the README: 'a reference the model cannot reverse without the key or mapping you keep'. Add one sentence that a plain hash of an email can be reversed by guessing.",
+      "reviewedSha256": "81e08d9de25ecc45ee3a7a8df77ca9fbc2fad2f3121291df2dc6288fe25d0222"
+    },
+    {
+      "id": "py-pipe-lab-edu-014",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 7
+      },
+      "claim": "The scenario is described as 'ten linked tasks' that 'build the pipeline that loads them', but no task or check composes extract, validate, deduplicate, load, transform and enrich. Each check uses its own inline data, and the fixtures feed only Task 1. The order is incoherent: the upsert (Task 3) comes before validation (Task 5), yet staging_signups is typed (integer seats, timestamp NOT NULL), so the raw export (seats 'two', a blank row) could not be loaded raw. That contradicts README line 121 ('the raw rows were loaded first') and the ELT page's note that staging columns are usually text. The checkins table appears in Task 7 with no mention in the Goal, and 'loading the same file twice' (line 103) never loads a file.",
+      "evidence": [],
+      "recommendation": "Add a three-line pipeline order to the Goal (extract, validate, deduplicate, load, transform in SQL, enrich minimized records) that says the export is validated before staging. Introduce the door-scanner checkins in the Goal, and add the final composition task proposed in the loading#o1 finding so the fixtures flow end to end once.",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    },
+    {
+      "id": "py-pipe-lab-edu-015",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 27
+      },
+      "claim": "PostgreSQL guidance assumes the SQL course setup without pointing to it, and misses the most common first failure. Prerequisites say 'from the SQL course' without naming the reading 'Installing Postgres and a SQL client' or giving a version check. The default URL has no user, so libpq uses the login name. On Windows (the EDB installer creates only `postgres`) and Linux apt installs, that fails with `role \"<login>\" does not exist`, which Troubleshooting does not cover; the sibling SQL lab README covers it at line 149. Cleanup step 1 (line 196) gives only the POSIX `\"$DATABASE_URL\"` form, while Setup gives a PowerShell variant. The `chmod 600 ~/.pgpass` requirement and `psql` not being on PATH after a Windows install are not mentioned.",
+      "evidence": [],
+      "recommendation": "Name the SQL course reading in Prerequisites. Show `postgresql://postgres@localhost:5432/postgres` as the typical Windows/Linux URL. Add a `role \"...\" does not exist` Troubleshooting entry (put your PostgreSQL user in the URL), a PowerShell form of the cleanup psql commands (`psql $env:DATABASE_URL ...`), and a one-line note on chmod 600 and the Windows psql PATH.",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    },
+    {
+      "id": "py-pipe-lab-edu-016",
+      "severity": "low",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 159
+      },
+      "claim": "Task 9 folds ModelError (a timeout or failed call) into the same except branch and the same warning as an invalid answer. The ai-enrichment page says 'A non-validation exception, such as a network failure, should get its own handling rather than being treated as a bad answer.' The lab silently teaches the opposite.",
+      "evidence": [],
+      "recommendation": "Keep the retry, but use a separate `except ModelError` branch with its own message ('model call failed for %s (attempt %d)'), or add one sentence saying that the lab deliberately retries transient call failures within the same bound, and why.",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    },
+    {
+      "id": "py-pipe-lab-edu-017",
+      "severity": "low",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 8
+      },
+      "claim": "The privacy framing is otherwise sound (offline FakeModelClient, no API key, example.com emails and 555-01xx phone numbers), but the README never tells the learner that the fixture people are made up, or why. The page teaches 'Use made-up data in tests and examples', and the lab misses a cheap chance to reinforce it.",
+      "evidence": [],
+      "recommendation": "Add one sentence to the Goal or Offline note: every person in the fixtures and tests is made up (example.com addresses, 555-01xx numbers), as the privacy page recommends for tests.",
+      "reviewedSha256": "56cb098e06356aa45ae3e9c3642ff576c7cbf0b319e1dfafd10c2057553a999c"
+    }
+  ]
+}

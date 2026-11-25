@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "ops-critic-education-loop2 (independent Claude critic subagent, 2026-11-18)",
+  "reviewedPath": "containers-cicd/microservices-and-ci-cd/coding-lab/lab.json",
+  "reviewedSha256": "0c680786a68731ee36634d8cd5248f95262cff5c53a2bb898d6d15d1b75b5685",
+  "artifactHashes": {
+    "coding-lab/README.md": "e286096a9d79a56980a6267dea525baa22a66030d0f6f42397922b5c25afbdc3",
+    "coding-lab/expected/solved-summary.txt": "81d0bfdcbbd94535840e83ac7e86ffad20ed0b7666584dec288f40e5905ebd25",
+    "coding-lab/expected/starter-summary.txt": "8d7ef1775b6202f3d991778ed70229eb223206847ef9800f9f0d88f27c6a7028",
+    "coding-lab/fixtures/.env.example": "16d958ba8d51b7600909af11bbcc39441a8f4b4c80a18379e12e2a50287223e4",
+    "coding-lab/fixtures/briefs/architecture-brief.md": "62f2be54b3807b2586acaa138809a8ba40ff928f77dad31389147586900fed9d",
+    "coding-lab/fixtures/briefs/image-reference.txt": "b19ef04e2336adfd683e93fc1f27223bf2936e300ce45226ea7555d15b9b2f33",
+    "coding-lab/lab.json": "0c680786a68731ee36634d8cd5248f95262cff5c53a2bb898d6d15d1b75b5685",
+    "coding-lab/starter/.github/workflows/ci.yml": "0fd485a2de89495350989d88d162d32c82388883f0874182d170e91877d38231",
+    "coding-lab/starter/.gitignore": "6c9e486632f5647c93d52d6c064f6e4ebea0c0ddd0747d9f91511f6a06cf817a",
+    "coding-lab/starter/compose.yaml": "296a2981948ec44e9c38f05a592b2cffb109c12fd85fc9bbc77a55db9b75000c",
+    "coding-lab/starter/decisions.yaml": "6e3e7063e2dbcd751bda37aa79c71bfb9fa4b3793abb65d1c1cf9d42c7c53786",
+    "coding-lab/starter/reviews/.dockerignore": "79052f6871c4f7f8dcda47576c5a56a89a518db2cef8a4585f951f13f4be0946",
+    "coding-lab/starter/reviews/Dockerfile": "1fe56443a057e8ca6d4a7b8a1471bce2d29e57aad6b08c33fcfb9bad3c736736",
+    "coding-lab/starter/reviews/app/main.py": "f57ae633f73b9f06018376bd983e5ef9c32a75774e965ed397648f680838bb6b",
+    "coding-lab/starter/reviews/requirements.txt": "44216c29888f2536291b0822db49381252392f80298b391c94c130bf892ebbad",
+    "coding-lab/tests/ci.test.mjs": "a113d84a95e7ecf499b6bf7c00d86656153bc73984b174349398abddb6ff4719",
+    "coding-lab/tests/compose.test.mjs": "657fd6172e7417928559e579ef5e95eeecbc17bd70180cbf3a7651f199f5a02d",
+    "coding-lab/tests/decisions.test.mjs": "7106f71ffb382ac4bc9d9a7befc46f626b27b35d57bb1fd5489e10372351cb94",
+    "coding-lab/tests/dockerfile.test.mjs": "f3bc73b5464d020765f278773bb72a2808886e55c0b7afb6126713b12ebc2f9b",
+    "coding-lab/tests/lab.mjs": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+    "coding-lab/tests/package-lock.json": "967ac4c675131cb4beb93684e07dbbb8f8a427a78dc66422036927ce5c126803",
+    "coding-lab/tests/package.json": "3a5c13790064c853eef28d93aed9525d0b7280843d68c34a43c0f734a8e3a4fd",
+    "coding-lab/tests/service.test.mjs": "8314fabe10b849245f72e3917b76ad8f83d593dce9b4bd7523a064c28385ea41"
+  },
+  "findings": [
+    {
+      "id": "ops-edu-r2-01",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 311
+      },
+      "claim": "Loop 2 made test 25 reject a correct, page-modelled call with a message that contradicts the code. reviews-auth-forward now takes the outgoing call to be the first call whose own argument text contains API_BASE_URL (outgoingCall, tests/lab.mjs lines 311-322). It then looks for the forwarded header only in that call or in an httpx.Client (lines 324-334 and 343). The service-to-service page's own example passes a url variable: \"await client.get(url, headers=headers, timeout=limits)\" (service-to-service-calls/artifact.md line 25). A learner who builds the URL on the line before the call therefore gets no call, and test 25 fails with \"send the incoming authorization value on as the outgoing Authorization header of the call to the shop api\" (line 343). That message names the header, which is already forwarded, so the learner has no way to find the real cause. Reproduced on scratch copies under the critic workspace with the lab exported at HEAD 607eea16 (lab files equal afe3e48c), npm ci in tests, Node v24.2.0 and LAB_PROJECT; the critic wrote its own 26/26 solution and applied one-change variants to it; no private overlay was read. Moving the f-string into a local url passed to httpx.get fails only test 25 with that message, both with a named header dict and with a dict literal in the call; tests 24 and 26 still pass. Loop 1's rule matched the header text anywhere, so this is new in loop 2. It costs reruns against the four-rerun allowance (ops-edu-r1-04).",
+      "evidence": [],
+      "recommendation": "Locate the outgoing call as the httpx request (httpx.get/post/request or a client method) or as a call whose URL argument is a name assigned from text containing API_BASE_URL. Add the url-variable form, with a named dict and with a dict literal, to the must-pass cases. Keep every ops-edu-r1-02 must-fail case failing. When no outgoing call is found, say that instead of naming the header. Grader and message change only.",
+      "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22"
+    },
+    {
+      "id": "ops-edu-r2-02",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 335
+      },
+      "claim": "Loop 2's 401-guard recogniser rejects two correct forms with messages that contradict the code. It accepts only an if line before the call that tests the missing case (not authorization, is None, == None), and the HTTPException's first argument must be 401 (RAISE_401, tests/lab.mjs line 335; guards, lines 346-352). (a) raise HTTPException(detail=..., status_code=401) in the guard fails test 25 with \"your missing-token check does not raise HTTPException with 401\" (line 352). handlers() in the same file reads the status keyword in any order (line 364). (b) A positive check that wraps the call, if authorization: or if authorization is not None:, with the 401 raised in the else branch, fails with \"a request with no token would reach the shop api without one: answer 401 before the call\" (line 350), although it answers 401 and never calls. Loop 1's guard check accepted (b). The ops-edu-r1-02 acceptance did not list it as a must-pass, so this is a regression rather than a reopened acceptance. Reproduced on the critic's solution with LAB_PROJECT; each variant fails only test 25. Likelihood is low: README phase 4 rule 1 (line 80) reads as guard-first, and FastAPI convention puts status_code first.",
+      "evidence": [],
+      "recommendation": "Read the 401 with the same any-order pattern handlers() uses. Accept a positive authorization check whose else branch raises 401 when the outgoing call sits inside the if branch. Keep all five ops-edu-r1-02 must-fail variants failing. Grader change only.",
+      "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22"
+    },
+    {
+      "id": "ops-edu-r2-03",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 205
+      },
+      "claim": "Loop 2 reworded the uvicorn branch of test 23 to \"uvicorn without --host uses its default address: reread the adding-FastAPI page ...\" (tests/lab.mjs line 205). It prints that for any host other than 0.0.0.0, including an explicit loopback. Reproduced: CMD [\"uvicorn\", \"app.main:app\", \"--host\", \"127.0.0.1\", \"--port\", \"8000\"] fails test 23 with that message, which tells the learner they left out --host when they wrote it. The fastapi branch names the host it was given (line 201), and loop 1's uvicorn message made no such claim. This is off the README path (phase 3, line 74, asks for the page's command), so few learners see it.",
+      "evidence": [],
+      "recommendation": "When hostOf returns a value, print the same message the fastapi branch does (\"the server is told to listen on <host>: ...\"), and keep the \"without --host\" wording for the case where no host is given. Message change only.",
+      "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/containers-cicd/microservices-and-ci-cd/module-lab-critic-education.json",
+    "items": [
+      {
+        "findingId": "ops-edu-01",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/app/main.py",
+        "reviewedSha256": "f57ae633f73b9f06018376bd983e5ef9c32a75774e965ed397648f680838bb6b",
+        "note": "Resolved; unchanged since loop 1 except wording. The starter call passes timeout=None (main.py line 41); docstring rule 2 (lines 33-34) now only says the timeout argument is wrong and points to the service-to-service page; test 24 on the starter run says \"the call passes timeout=None: reread what the service-to-service page says that does\" (tests/lab.mjs line 288); the page states the default and what timeout=None does (service-to-service-calls/artifact.md line 41). No README line describes the draft call any more. Starter, docstring, message and page agree."
+      },
+      {
+        "findingId": "ops-edu-02",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Resolved against the sharpened acceptance. Reproduced on scratch copies under the critic workspace with the lab exported at HEAD 607eea16 (lab files equal afe3e48c), npm ci in tests, Node v24.2.0 and LAB_PROJECT; the critic wrote its own 26/26 solution and applied one-change variants to it; no private overlay was read. reviews-error-mapping now takes the refused-connection handler as the first except clause in source order that catches ConnectError by name, through a superclass or bare (CATCHES_CONNECT and the find at tests/lab.mjs lines 371 and 381). Must-fail, each failing only test 26: (a) a TimeoutException+ConnectError tuple answering the timeout status with the ConnectError-catching handler left below; (b) an except Exception answering 500 placed between the timeout handler and the refused handler; (c) the same with httpx.HTTPError; a bare except answering 500 in the same place; and the tuple alone, which now gets the status message (\"your timeout handler also catches refused connections, so they get the timeout status\", line 385) instead of the escape message. Loop-1 checks still hold: swapped statuses fail (line 379) and RequestError or TransportError before TimeoutException fail with the order message (line 378). Must-pass, each 26/26: ConnectError, RequestError, HTTPError or NetworkError after the timeout handler with an allowed status; ConnectError placed before TimeoutException; statuses written as status.HTTP_ constants, through JSONResponse(status_code=...), or with raise ... from exc."
+      },
+      {
+        "findingId": "ops-edu-03",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Resolved against the sharpened acceptance. Reproduced on scratch copies under the critic workspace with the lab exported at HEAD 607eea16 (lab files equal afe3e48c), npm ci in tests, Node v24.2.0 and LAB_PROJECT; the critic wrote its own 26/26 solution and applied one-change variants to it; no private overlay was read. ci-trigger now requires both push and pull_request (tests/lab.mjs lines 446-450) and ci-build-push always evaluates the pull-request case (lines 477-491). Must-fail: a push-only trigger with an unconditional push and a push-only trigger with an always-true github.ref expression each fail tests 1 and 4, test 4 saying \"once the workflow also runs on pull requests (test 1), this push setting would push their images too\" (line 490); with both triggers, an unconditional push and the event-name and ref inversions fail test 4 with \"as written, a pull request run would push an image\" (line 489). Must-pass, 26/26: an event-name condition, a main-ref condition, an && of both, and a step-level if that skips the build step on pull requests around push: true. README phase 6 line 100 states the behaviour (pull requests built and tested, never pushed; a push to main publishes) without the expression, and the test 1 message names both events and points to the page's on: block (line 449). Residuals outside the acceptance, left to the reconciler: a job-level if that skips the whole build job on pull requests also passes (consistent with the accepted step-level form), and the expression evaluator, unchanged in loop 2, also accepts a push value written without the expression braces."
+      },
+      {
+        "findingId": "ops-edu-04",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Resolved against the sharpened acceptance. Reproduced on scratch copies under the critic workspace with the lab exported at HEAD 607eea16 (lab files equal afe3e48c), npm ci in tests, Node v24.2.0 and LAB_PROJECT; the critic wrote its own 26/26 solution and applied one-change variants to it; no private overlay was read. refersTo and inlineSecret now treat the env-context expression of a secret-mapped NAME as a use of that secret (tests/lab.mjs lines 513-515), in ci-no-secret-prints (lines 563-575) and in ci-secret-refs (line 535). Must-fail: the shipped debug step kept with its name, given step env REGISTRY_PASSWORD from secrets and an echo of the env-context expression, fails test 7; an env-context expression piped into the login fails test 6 with the accurate \"writes a ${{ ... }} expression into the command text\" message. Encoder forms fail test 7: echo of the env variable piped to base64, base64 with a here-string, a two-line run ending in a pipe, and both encoders reading the env-context expression; job-level and workflow-level env printed with echo fail too. Must-pass: the README's env-routed form piped to docker login --password-stdin, with echo or printf, passes 26/26, and a step that only registers a mask passes. printenv by name still passes; the reconciliation ruled that case non-binding."
+      },
+      {
+        "findingId": "ops-edu-05",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Resolved; rechecked on the loop-2 keyword-argument reader (tests/lab.mjs lines 258-308). An unused named httpx.Timeout, a commented-out timeout argument, a statement-level \"timeout = ...\" assignment and a plain number each fail test 24 with an accurate message; a named Timeout passed by name, an inline Timeout and a Timeout passed to an httpx.Client constructor pass. README phase 4 rule 2 (line 81) still states that an httpx.Timeout with explicit connect and read limits is required."
+      },
+      {
+        "findingId": "ops-edu-06",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Resolved; still met. A lower-case header key (the critic's own solution), an upper-case dict literal, the subscript form and a required header parameter with no guard pass test 25; a commented-out forward fails (tests/lab.mjs lines 323-353). README phase 4 rule 1 (line 80) says to answer 401 before the call. A loop-2 false rejection in the same rule is recorded as new finding ops-edu-r2-01."
+      },
+      {
+        "findingId": "ops-edu-07",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Resolved; still met. Checkout moved after the test step fails test 2 with the order message (tests/lab.mjs line 461); deleting the login step and leaving both secrets in a YAML comment fails test 6 (line 526)."
+      },
+      {
+        "findingId": "ops-edu-08",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Resolved; still met. The page's start command with --host=127.0.0.1 fails test 23 (tests/lab.mjs line 201); uvicorn with --host=0.0.0.0 passes; a reviews mapping to container port 9000 fails test 14 (line 152). Parts (a) and (d) stay moot because the Dockerfile layers and .dockerignore are provided. A loop-2 wording slip in the uvicorn message is recorded as new finding ops-edu-r2-03."
+      },
+      {
+        "findingId": "ops-edu-09",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/decisions.yaml",
+        "reviewedSha256": "6e3e7063e2dbcd751bda37aa79c71bfb9fa4b3793abb65d1c1cf9d42c7c53786",
+        "note": "Resolved against the narrowed acceptance; the loop-2 reordering keeps it met. The store_contrast blocks are unchanged and keep their per-block ordering (decisions.yaml lines 29-47). The critic recomputed every option list's expected position from the public tests (positions kept out of this report): no position rule holds across sections for the shared lists, and the single-question lists are covered under ops-edu-r1-03. Loop 2 changed only the order of options (the decisions.yaml diff from 38cb7c1d to afe3e48c touches no option text), so the loop-1 judgement on distractor text stands. The critic spot-checked line 89 against the secrets page: each distractor has a counterpart the page teaches against (secrets-in-ci/artifact.md lines 11, 31 and 73). The brief's scenarios still differ from the pages' worked examples (architecture-brief.md lines 52-57 and 77-79). The critic applied the same literal standard as for ops-edu-11; the line 89 residual is the pre-stating message, tracked under ops-edu-r1-01, not the option text."
+      },
+      {
+        "findingId": "ops-edu-10",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/lab.json",
+        "reviewedSha256": "0c680786a68731ee36634d8cd5248f95262cff5c53a2bb898d6d15d1b75b5685",
+        "note": "Resolved per the operator decision (option A); the loop-2 changes keep every clause. All 24 objectives are declared and required (lab.json lines 15-39 and 128). The five added items are present (decisions.yaml lines 52-54, 59-70, 79-83 and 85-93). Phase 7 stays required, with the Jenkins reading stated as its prerequisite (README lines 93-95) and charged to S39 (README line 31; coding-lab-timing.json lines 44-46; lab.json line 124). The Dockerfile and .dockerignore stay prewired and only the start command is repaired (README line 74). Timing is typical 56 and bound 60 (lab.json lines 123-125). Reproduced: the shipped starter fails exactly the 26 declared failingTests, in order, and its result lines equal expected/starter-summary.txt; the critic's own solution passes 26/26 and its result lines equal expected/solved-summary.txt. The clause that two independent private overlays pass rests on the solved-run record (coding-lab-solved-run.json lines 29-35); the critic did not inspect the overlays. The record no longer describes a private solution (see ops-edu-r1-05). One elicitation residual remains, tracked as ops-edu-r1-01 and ops-edu-11."
+      },
+      {
+        "findingId": "ops-edu-11",
+        "status": "open",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Open on the literal wording of acceptance clause (1), which requires ops-edu-r1-01 to be met for all three secrets_in_logs items; it is not met for the derived-value item (decisions.yaml line 90), see ops-edu-r1-01. The critic applied that literal wording. The rest of the acceptance is met. For clause (1)'s stated purpose, the redaction and fork items (lines 87 and 93) can now be decided only from the secrets page (secrets-in-ci/artifact.md lines 29 and 37): the starter and checkpoint messages only point to the page (tests/lab.mjs lines 571 and 717-719), test 21 is retitled \"the secrets-in-logs questions match the secrets page\", and README line 107 only points to the page's fork rule. For clause (2), ops-edu-03 is met, so the push condition comes from the pipeline page (github-actions-pipeline/artifact.md line 52). The 24-objective sweep against the starter run, the end-of-S38 checkpoint run and the README found a page-derived decisive value for all 24 declared objectives, secrets-in-ci#o2 included (its redaction and fork items), so the item is open only on clause (1)'s literal wording. Monolith o1-o3, SQL o1-o3, gateways o1-o3 and Jenkins o1-o3 rest on worksheet items whose printed hints are reread pointers. The adding-FastAPI items rest on the page's notifier model and the start command plus the listen-address item (adding-fastapi-service-to-compose/artifact.md lines 17-36). The service-to-service items rest on the header form, the Timeout limits, the default and RestClient items and the status codes (service-to-service-calls/artifact.md lines 18-54). Pipeline o1-o2 rest on the on: block and needs. Secrets o1 and o3 rest on the env mapping and the permissions block (secrets-in-ci/artifact.md lines 13-27). Action SHAs and messages that name the rule (tests 1, 2 and 8) stay, as clause (3) allows."
+      },
+      {
+        "findingId": "ops-edu-12",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "reviewedSha256": "e286096a9d79a56980a6267dea525baa22a66030d0f6f42397922b5c25afbdc3",
+        "note": "Resolved; unchanged. Phase 7 stays required; README lines 93-95 tell Standard learners to read the \"Reading (optional)\" Jenkins page and why; README line 31, coding-lab-timing.json lines 44-46 and lab.json minutes.standard-s39 (line 124) charge its 799 words (4 minutes) to S39: 4+9+5+1 = 19."
+      },
+      {
+        "findingId": "ops-edu-13",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "reviewedSha256": "e286096a9d79a56980a6267dea525baa22a66030d0f6f42397922b5c25afbdc3",
+        "note": "Resolved. Phase minutes sum to the day totals (S38 5+8+2+8+14 = 37, S39 4+9+5+1 = 19; README lines 30-31, 62-113) and equal coding-lab-timing.json and lab.json. Reading is budgeted explicitly: the README is 969 words (wc), matching the timing derivation (coding-lab-timing.json line 21), and the brief is 634 words (line 41). The 60-minute figure is stated with its retry assumption (README line 33); its credibility is ops-edu-r1-04."
+      },
+      {
+        "findingId": "ops-edu-14",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Resolved; still met. A one-space reviews key in compose.yaml makes tests 9-14 report \"compose.yaml is not valid YAML (the parser stops at line 31)\" (tests/lab.mjs lines 18-36) instead of missing-content messages. README phase 2 (line 68) says to delete only the #, and troubleshooting (line 130) explains the message."
+      },
+      {
+        "findingId": "ops-edu-15",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Resolved; still met. ci-build-push requires the reviews folder as the build context (tests/lab.mjs line 476); context \".\" fails test 4, and the title names the reviews folder. The ci.yml header (starter/.github/workflows/ci.yml lines 1-3) still says what the backend mvnw command stands for."
+      },
+      {
+        "findingId": "ops-edu-16",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/fixtures/briefs/architecture-brief.md",
+        "reviewedSha256": "62f2be54b3807b2586acaa138809a8ba40ff928f77dad31389147586900fed9d",
+        "note": "Resolved; unchanged. architecture-brief.md line 9 says \"Three incidents drive this review:\" and lists three (lines 11-17)."
+      },
+      {
+        "findingId": "ops-edu-17",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "reviewedSha256": "e286096a9d79a56980a6267dea525baa22a66030d0f6f42397922b5c25afbdc3",
+        "note": "Resolved; still met. README line 89 states the end-of-S38 checkpoint. Replayed with the critic's solution, the starter ci.yml and the starter Phase 7 sections: exactly tests 9-19 and 23-26 pass (15 of 26) and tests 1-8 and 20-22 fail."
+      },
+      {
+        "findingId": "ops-edu-18",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "reviewedSha256": "e286096a9d79a56980a6267dea525baa22a66030d0f6f42397922b5c25afbdc3",
+        "note": "Resolved; unchanged. No layer-order, WORKDIR or .dockerignore rule remains; the prewired files are labelled previous-module work (starter/reviews/Dockerfile lines 1-3, .dockerignore lines 1-2); README line 7 makes no claim that every test checks this module's rules."
+      },
+      {
+        "findingId": "ops-edu-19",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "reviewedSha256": "e286096a9d79a56980a6267dea525baa22a66030d0f6f42397922b5c25afbdc3",
+        "note": "Resolved. The README is 969 words (1139 originally; loop 2 added two sentences, at lines 33-34 and 100). The learner still edits six starter files (README table lines 14-21), and each phase gives the file, the goal and the page pointer. Every edited file maps to a declared objective, and the prewired previous-module work is labelled."
+      },
+      {
+        "findingId": "ops-edu-r1-01",
+        "status": "open",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Open on one of the six items; the other five are resolved. Replayed both the shipped starter run and the README end-of-S38 checkpoint run, and read every printed title and message, the starter comments and docstrings, and the README. Resolved: (1) listening_on_127_0_0_1 (decisions.yaml line 62). The Dockerfile TODO (lines 4-5) and the test 23 title and message (tests/lab.mjs line 198) now only point to the adding-FastAPI page. (2) httpx_with_timeout_none (line 66). The docstring (main.py lines 33-34) and the test 24 message (line 288) point to the page without stating what None does. (3) log_redaction_is (line 87). The test 7 message (line 571) no longer characterises redaction. (5) fork_pull_request_run_receives (line 93). README line 107 only points to the page's fork rule. (6) github_actions_jobs_run (line 97). The test 3 message (line 468) now only points to the page. Still open: (4) hide_a_derived_value_by (line 90). The test 7 message prints on both the starter run and the checkpoint run (tests/lab.mjs line 571). Two of the three options on line 89 contradict its wording: one contradicts \"(directly, through an env variable or encoded)\" and one contradicts \"never prints one\". That leaves one option consistent with text the learner reads before phase 7, which the acceptance forbids. Outside the acceptance's scope: two test 24 messages printed only after particular wrong phase 4 attempts (lines 292 and 296) say what a None limit does, which bears on item (2)."
+      },
+      {
+        "findingId": "ops-edu-r1-02",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Resolved against its acceptance. Reproduced on scratch copies under the critic workspace with the lab exported at HEAD 607eea16 (lab files equal afe3e48c), npm ci in tests, Node v24.2.0 and LAB_PROJECT; the critic wrote its own 26/26 solution and applied one-change variants to it; no private overlay was read. reviews-auth-forward now locates the outgoing call (tests/lab.mjs lines 311-322), requires the forwarded value in that call's headers argument or in a dict/subscript bound to the name passed there (lines 324-334), and requires an if-guard before the call whose body raises HTTPException 401 (lines 335, 346-352). Must-fail, each failing only test 25: guard body replaced by a print, HTTPException created without raise, guard returning a dict (all three with the named \"does not raise HTTPException with 401\" message, line 352), guard removed with a conditional headers expression (both the named-dict and the dict-literal form), and a forwarding dict built but the call sending an empty dict. A guard placed after the call and a guard answering 403 also fail. Must-pass, 26/26: dict literal in the call, name bound to a dict, subscript assignment, either key case, a required header parameter with no guard, a one-line guard, a status.HTTP_401 constant, and an httpx.Client carrying the headers. Loop-2 false rejections of other correct forms are recorded as new findings ops-edu-r2-01 and ops-edu-r2-02."
+      },
+      {
+        "findingId": "ops-edu-r1-03",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/decisions.yaml",
+        "reviewedSha256": "6e3e7063e2dbcd751bda37aa79c71bfb9fa4b3793abb65d1c1cf9d42c7c53786",
+        "note": "Resolved. The critic recomputed, from the public worksheet and tests/lab.mjs, the expected option's position in the twelve single-question option lists (decisions.yaml lines 14, 16, 25, 50, 55, 61, 69, 82, 86, 89, 92 and 102). The acceptance band is met: every position that exists holds the expected option in at least two and at most six of the twelve lists. No simple position, length or alphabetical rule holds across them. store_contrast keeps its per-block ordering. Positions and counts are kept out of this report."
+      },
+      {
+        "findingId": "ops-edu-r1-04",
+        "status": "resolved",
+        "file": "authoring/evidence/containers-cicd/microservices-and-ci-cd/coding-lab-timing.json",
+        "reviewedSha256": "567ca9dd8eae8cc55f30e74f026b9c3929442282f915146513cd08f65f6ee6bd",
+        "note": "Resolved on binding part (1). README lines 33-34 call the 60-minute figure \"a planning allowance, not a measured worst case: the typical path plus four extra failed runs of about a minute each\" and add \"No learner has been timed yet\". coding-lab-timing.json line 76 says the same (\"a planning allowance, not a measured or derived worst case\"), and the notObserved note (line 85) stays. Recommended part (2) was not taken: decide-* rules still report the first wrong field per run (tests/lab.mjs lines 605-610), which the acceptance allows."
+      },
+      {
+        "findingId": "ops-edu-r1-05",
+        "status": "resolved",
+        "file": "authoring/evidence/containers-cicd/microservices-and-ci-cd/coding-lab-solved-run.json",
+        "reviewedSha256": "ccbe49473d65e73269c7f9eb755babb7a0a2905a5ae00750788a80fb1639dae7",
+        "note": "Resolved. coding-lab-solved-run.json line 29 now gives only provenance for solution 1 (written by the lab author, uncommitted private staging), as line 33 does for solution 2. The checkpoint entry (line 37) and the procedure (lines 15-21) describe no concrete solution choice. The record was re-recorded at afe3e48c, and its 23 file hashes equal the current lab bytes. The timing record's independentAgentSolve note gives phase minutes only."
+      }
+    ]
+  }
+}

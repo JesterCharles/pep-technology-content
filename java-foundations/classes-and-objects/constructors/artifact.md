@@ -63,7 +63,7 @@ The model: a constructor has the class's name and no return type, and it runs on
 
 ## Cheat sheet
 
-Where to act: The item shown after Item:, above the two buttons.
+Where to act: The line that starts with Scenario:, just above the two buttons.
 
 Next step: First check whether the class declares any constructor. Then compare the number and types of arguments in the `new` expression with the constructors the class really has.
 

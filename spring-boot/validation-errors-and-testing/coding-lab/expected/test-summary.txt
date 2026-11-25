@@ -7,12 +7,19 @@ Terminal: no output, and the command exits with status 0.
 Quiet mode (-q) prints only problems, so silence means every test passed.
 
 Test reports in starter/target/surefire-reports/ begin:
-  bookings.ValidationApiTest.txt  Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
-  bookings.WebLayerTest.txt       Tests run: 1, Failures: 0, Errors: 0, Skipped: 0
+  bookings.BugReportTest.txt      Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+  bookings.ErrorSliceTest.txt     Tests run: 2, Failures: 0, Errors: 0, Skipped: 0
+  bookings.ValidationApiTest.txt  Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+  bookings.WebLayerTest.txt       Tests run: 3, Failures: 0, Errors: 0, Skipped: 0
 
-Spot check with the running app, from starter/ (mvn -q -o spring-boot:run, then in a second terminal):
-  curl -s -i localhost:8080/bookings/999       first line HTTP/1.1 404, body a problem+json
-                                               object with title "Booking not found"
-  curl -s -X POST localhost:8080/bookings -H "Content-Type: application/json" \
-       -d '{"attendee":"","email":"nope","seats":0}'
-                                               problem+json with status 400 and the failing fields
+Optional: to read a real response body without starting the app, add .andDo(print())
+before .andReturn() in a MockMvc request (README Task 5 shows how), run the tests, and
+open the matching starter/target/surefire-reports/bookings.<TestClass>-output.txt.
+The completed lab answers:
+  GET /bookings/999                            status 404, a problem+json object
+                                               with title "Booking not found"
+  POST /bookings with body {"attendee":"","email":"nope","seats":0}
+                                               status 400, problem+json with the failing fields
+  GET /bookings/0                              status 400, a problem+json object with a title
+                                               and a detail: compare them with your Task 5
+                                               prediction

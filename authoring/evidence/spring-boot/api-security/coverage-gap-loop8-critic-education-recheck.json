@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "cg-critic-education-loop8 (independent Claude critic subagent, not the author, 2026-11-18)",
+  "reviewedPath": "spring-boot/api-security/coding-lab/README.md",
+  "reviewedSha256": "f7a388db16f1cc78b4ca7821cc422661159ecb5e59b1eaea7019579d22971e63",
+  "artifactHashes": {
+    "coding-lab/lab.json": "18a6d0de09e34121bb75970e5a07527a6dc33bfa94f13faedb04e9df5239058d",
+    "coding-lab/README.md": "f7a388db16f1cc78b4ca7821cc422661159ecb5e59b1eaea7019579d22971e63"
+  },
+  "findings": [
+    {
+      "id": "cg-education-api-security-019",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "line": 265
+      },
+      "claim": "The loop-8 ADMIN-token prerequisite names Task 2 and tells the learner to fix a hasRole rule they already have when the real gap is in Task 3, so the step 6 check gives a false 'finish Task 2 first' reason in a realistic state. earlierTasks (lines 262-268) issues an ADMIN token with the learner's TokenService and, on 401 or 403 from /admin/**, reports 'finish Task 2 first: an ADMIN token is refused on /admin/** (the rule should be hasRole(\"ADMIN\"), which matches the ROLE_ADMIN authority the converter gives)'. But the ADMIN authority comes from the token's roles claim, which Task 3 writes; the shipped converter maps only that claim to ROLE_* authorities. Critic runs at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1, each my own edit of the private completion's TokenService with everything else unchanged, running SecurityLabTest: (a) the roles claim line omitted, and (b) the claim misnamed 'role'. In both, task2ProtectsEndpointsByPathAndRole passed (its ADMIN case uses a test user, not a token), task3 failed at line 111 with a NullPointerException, task4 failed at line 123 (200 expected, 403), and task7ShowsTheAttackEachPracticeStops printed only the Task 2 hasRole message above. The learner's Task 2 is correct and passing, yet step 6 tells them to change its rule; README line 194 promises that 'when an earlier task is unfinished, the message names that task first'. A hasAuthority(\"ADMIN\") rule (my control edit) gets the same message, which is true there, with task2 failing at line 101. Before loop 8 the same Task 3 state reached the role row with a different wrong reason, so loop 8 does not make this worse than loop 7, but the new message is explicitly directive and points at the wrong file. Low: the same run also fails task3, and a learner working in task order is likely to fix Task 3 first.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+          "section": "earlierTasks, lines 241-270 (ADMIN-token probe and message at lines 262-268); task2ProtectsEndpointsByPathAndRole lines 90-103 (ADMIN case via a test user); task3 line 111",
+          "retrievedAt": "2026-11-19T05:58:00Z",
+          "textSha256": "1706cb8049d9403e85b7eaf2ed0c7a1b412e294afaffab80d400adaaf4e48dfc"
+        },
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/starter/src/main/java/secure/TokenService.java",
+          "section": "Task 3 TODO: the roles claim is part of the token the learner builds",
+          "retrievedAt": "2026-11-19T05:58:00Z",
+          "textSha256": "4dbfe5e886be714d44b84af666beefb164c907abc62c21992993fd4ecfd1d139"
+        },
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/README.md",
+          "section": "line 194, troubleshooting: 'when an earlier task is unfinished, the message names that task first'",
+          "retrievedAt": "2026-11-19T05:58:00Z",
+          "textSha256": "f7a388db16f1cc78b4ca7821cc422661159ecb5e59b1eaea7019579d22971e63"
+        },
+        {
+          "url": "https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html",
+          "section": "Extracting Authorities Manually: JwtGrantedAuthoritiesConverter with setAuthoritiesClaimName(\"roles\") and setAuthorityPrefix(\"ROLE_\") derives authorities from that claim",
+          "retrievedAt": "2026-11-19T05:55:20Z",
+          "textSha256": "75fe904fdb85cef10e564d7e1bda698458714e1435250021c01d01ec10e1a3a2"
+        }
+      ],
+      "recommendation": "Before naming Task 2 on a refused ADMIN token, decode that token with the shipped JwtDecoder and check its roles claim: if the claim is missing or lacks ADMIN, report 'finish Task 3 first: the token has no roles claim with ADMIN, so the converter gives no ROLE_ADMIN authority'; only otherwise name Task 2's hasRole rule. Or word the one message to name both causes (Task 2's hasRole(\"ADMIN\") rule or Task 3's roles claim). Rerun three states: roles claim omitted (expect Task 3), claim misnamed (expect Task 3), hasAuthority(\"ADMIN\") rule (expect Task 2).",
+      "reviewedSha256": "1706cb8049d9403e85b7eaf2ed0c7a1b412e294afaffab80d400adaaf4e48dfc"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/spring-boot/api-security/coverage-gap-critic-education.json",
+    "items": [
+      {
+        "findingId": "cg-education-api-security-001",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/lab.json",
+        "reviewedSha256": "18a6d0de09e34121bb75970e5a07527a6dc33bfa94f13faedb04e9df5239058d",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. lab.json still declares common-api-security-risks-owasp#o3 and README Task 7 step 6 (lines 116-120) still carries it: for each of the five practices the objective names (validation, DTOs, error bodies without internals, password hashing, role checks) the learner writes the attacker request that practice is there to answer, and task7ShowsTheAttackEachPracticeStops sends it to the finished app and judges it from runtime behaviour. Critic runs this round on fresh git-archive copies of f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1 (JDK 25.0.5, Maven 3.9.16, offline, mvn -q -o test from starter/). The shipped starter ran 10 tests and failed exactly the 9 lab.json failingTests, with defaultProfileSendsNoCorsHeaders passing and the step 6 check naming Task 3 first. The private completion exited 0 with no output, surefire 2, 1 and 7 tests as in expected/test-summary.txt (about 14 s wall time here). A set of correct alternative rows, my own edit (a stolen-table login as a customer, the other customer on the real admin action, ADMIN with a negative id written in lower case with extra spaces, the other customer reading her own booking, a customer asking for a booking that is not hers) passed. Two wrong sets, each my own edit, failed every row in one run, each with a true row-specific reason: a real (not stolen) password, an unknown account, the reading's admin-users DELETE that this API lacks, an anonymous caller in the role row, an anonymous or non-numeric id in the validation row, another customer's booking and the public workshop list in the DTO row, an anonymous request and an unmapped path in the safe-errors row. So the act is executable and a row passes only when its practice answers the request. I judge #o3 practised: the connection is made per practice as the attack it answers, and the OWASP labels come only in the collapsed read-after block. One loop-8 side effect, noted rather than filed: because registration now uses @Valid/@NotBlank, a validation row built directly with the Attack record (not with the attack or login helpers) as an anonymous blank-field registration now passes, answered by the shipped constraint rather than the learner's (same row at 505af8efafc0a91f276f379bf9f3a44da9dfb195 fails with 'no Bean Validation constraint rejected this request'). That is still a true validation-to-bad-input connection and is reachable only outside the documented helper forms (the helper form of the same request fails truthfully), so it does not undo the act; README line 120's 'your constraint' is slightly too strong for it. New finding -019 (a wrong-task message from the new ADMIN prerequisite) does not undo the act either."
+      },
+      {
+        "findingId": "cg-education-api-security-002",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "f7a388db16f1cc78b4ca7821cc422661159ecb5e59b1eaea7019579d22971e63",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. README.md and lab.json are byte-identical to loop 7 (sha256 unchanged). Loop 8 changes only AuthController.register and SecurityLabTest. Task 7 steps 1 to 5, the BookingRepository, BookingService, BookingController and ApiErrors TODOs and the collapsed 'Hints for steps 1 and 3' are unchanged; exact signatures stay only in that collapsed hint. The new loop-8 texts (the ADMIN-token prerequisite message, the widened malformed-path message, the Registration record and its Javadoc) give no query, constraint, ProblemDetail code or step 6 row. README contract items are present: goal, prerequisites with version checks, setup, tasks, test, expected output, offline note, cleanup and troubleshooting; setup and test commands equal lab.json (mvn -q dependency:go-offline and mvn -q -o test, both in starter)."
+      },
+      {
+        "findingId": "cg-education-api-security-003",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/OwnBookingTest.java",
+        "reviewedSha256": "c1be82fff8c1d5f558fe94e7aec1c90f32a39d52ee444778dae6dc163073e4c6",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. OwnBookingTest is byte-identical to loop 7; the step 5 asserts (GET, URI /bookings/2, Grace's bearer header, 404) are unchanged. Rerun this round, my own edit of a completed copy: with the step 5 request pointed at a missing booking, task7ProvesTheOwnershipCheck fails at its URI assert with 'step 5 must ask for Ada's booking 2, not a booking that does not exist'. The unmodified completion passes."
+      },
+      {
+        "findingId": "cg-education-api-security-004",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "f7a388db16f1cc78b4ca7821cc422661159ecb5e59b1eaea7019579d22971e63",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. README Task 6, its hint and troubleshooting row, DevProfileSecurityTest and defaultProfileSendsNoCorsHeaders are unchanged by loop 8. Rerun this round, my own edit of a completed copy: removing the dev chain's CORS line fails task6DevProfileAllowsOnlyTheLocalFrontEndOrigin at line 44 with Access-Control-Allow-Origin null, while defaultProfileSendsNoCorsHeaders passes. The hedged type-based rationale (README line 91) stands."
+      },
+      {
+        "findingId": "cg-education-api-security-005",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/lab.json",
+        "reviewedSha256": "18a6d0de09e34121bb75970e5a07527a6dc33bfa94f13faedb04e9df5239058d",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. lab.json is byte-identical to loop 7: minutes setup 5 and tasks 55, with a task-by-task authoring basis in cleanup.notes (tasks 1 to 5 about 31, task 6 about 5, task 7 about 19), labelled an estimate and not a learner pilot, and the same split on README line 9. The recorded basis this finding asked for exists; whether the numbers are honest is judged under -007."
+      },
+      {
+        "findingId": "cg-education-api-security-006",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "f7a388db16f1cc78b4ca7821cc422661159ecb5e59b1eaea7019579d22971e63",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. Task 6 step 1 (README line 87) is unchanged: it cites no page section, says the dev-profile page explains why only this origin, and points to the collapsed hint for the bean types and setters. Text check only."
+      },
+      {
+        "findingId": "cg-education-api-security-007",
+        "status": "open",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "f7a388db16f1cc78b4ca7821cc422661159ecb5e59b1eaea7019579d22971e63",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. README line 9 and lab.json still state Tasks 1 to 5 about 31, Task 6 about 5, Task 7 about 19 (55 for the tasks, 60 with setup); loop 8 adds and removes no learner work. My own itemisation, not inherited: Task 1 about 4 to 6 (bean, constructor injection, two calls; the constructor already registers admin, so the encoder must be assigned before that call, a likely one-rerun slip); Task 2 about 4 to 6 (the chain from the TODO, whose HttpMethod, HttpSecurity and SecurityFilterChain imports are not pre-placed); Task 3 about 2 to 3; Task 4 about 1 (a run); Task 5 about 6 to 8 (a configuration class from an empty shell, a second chain, a profile on the main chain); plus about 6 Maven runs (14 s each here, 20 to 40 s on a typical learner laptop), so Tasks 1 to 5 about 24 to 30. Task 6 about 5. Task 7 steps 1 to 5 about 15 to 17 (four retrieval edits without code and one MockMvc request, with two runs). Step 6 about 7 to 9: read the step, its hint and the TODO block with the Attack record, the two helpers and STOLEN, decide five rows, one run listing every wrong row and one fix-and-rerun. That gives Task 7 about 22 to 26 and the tasks about 51 to 61, so about 56 to 66 with setup and a midpoint near 61. The stated Tasks 1 to 5 share is generous, but the Task 7 share (19) sits below my range, and the day total is at the optimistic end. It stays open and low: the figures are labelled an authoring estimate and the self-study overflow for Task 7 is kept. To close it, state Task 7 at about 22 to 24 and the day at about 60 to 62 with the overflow kept, or remove about 3 minutes of step 6 reading."
+      },
+      {
+        "findingId": "cg-education-api-security-008",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "1706cb8049d9403e85b7eaf2ed0c7a1b412e294afaffab80d400adaaf4e48dfc",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. No table pairs a practice with an answer; each row's verdict is computed at runtime and the failure line is the problem list (line 214). The new loop-8 ADMIN probe in earlierTasks (lines 262-268) sends an ADMIN token to an /admin path that no handler serves, which no row accepts, so it discloses no passing request; its message names hasRole(\"ADMIN\"), which Task 2's TODO already shows. The extended handlerEchoesExceptionText (lines 463-507) builds a marker exception and a fake caller, not a row. The test stays a trial oracle, the formative trade-off accepted since loop 3; its readable predicates state each practice's property, not a request to copy."
+      },
+      {
+        "findingId": "cg-education-api-security-009",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "f7a388db16f1cc78b4ca7821cc422661159ecb5e59b1eaea7019579d22971e63",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. The read-after block (README lines 141-150) is unchanged. Rechecked against the live OWASP API Security Top 10 2023 pages retrieved 2026-11-19T05:55:20Z: API2:2023 lists 'Uses plain text, non-encrypted, or weakly hashed passwords' (hashing as API2 holds); API5:2023 asks 'Can a regular user access administrative endpoints?' (role checks as API5 holds); API3:2023 covers an endpoint that 'exposes properties of an object that are considered sensitive and should not be read by the user' (the DTO as API3 holds); API8:2023 lists 'Error messages include stack traces, or expose other sensitive information' (revealing errors under API8 holds); the owner check as API1 holds. The 2023 list runs API1 Broken Object Level Authorization to API10 Unsafe Consumption of APIs with no input-validation category, so 'not a separate category in the 2023 list' is true. The labels agree with the topic page (artifact.md lines 13-30), which names API1, API2 and API5 and lists the five practices at line 30."
+      },
+      {
+        "findingId": "cg-education-api-security-010",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "f7a388db16f1cc78b4ca7821cc422661159ecb5e59b1eaea7019579d22971e63",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. (a) Rows are named by practice and judged by runtime effect, so no wording match exists to exploit. (b) The only examples in the file and README are the request form and 'GET /workshops', which passes no row (my wrong-set run: 'this request does not give the caller a booking'). (c) The safe-errors row accepts both a missing booking and another customer's booking (completion and my alternative set). (d) The collapsed read-after block gives one reason per practice and restates no request. All parts hold at the loop-8 head."
+      },
+      {
+        "findingId": "cg-education-api-security-011",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "1706cb8049d9403e85b7eaf2ed0c7a1b412e294afaffab80d400adaaf4e48dfc",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. The step 6 check still registers grace and ada itself (lines 201-202), and the OwnBookingTest TODO says so. My alternative set with a stolen-table login as grace passed with task7ShowsTheAttackEachPracticeStops run alone (-Dtest=SecurityLabTest#task7ShowsTheAttackEachPracticeStops), so the result does not depend on test order; an unknown account got 'the user table holds no account with that name'. The registration change touches only the HTTP endpoint; the check calls UserAccountService.register directly."
+      },
+      {
+        "findingId": "cg-education-api-security-012",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "1706cb8049d9403e85b7eaf2ed0c7a1b412e294afaffab80d400adaaf4e48dfc",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. answeredBySafeErrors (lines 420-461) keeps separate messages. My wrong-set runs on a completed copy: an anonymous request got 'this request was refused before it reached your code (for example by the security filter), so your ApiErrors handler never wrote its body', which matches what happened; an unmapped path and a blank-field registration (built directly with the record) each got 'your ApiErrors handler did not answer this error', true for a completion that maps only NoSuchElementException."
+      },
+      {
+        "findingId": "cg-education-api-security-013",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "1706cb8049d9403e85b7eaf2ed0c7a1b412e294afaffab80d400adaaf4e48dfc",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. answeredByRoleCheck (lines 341-365) is unchanged. My runs on a completed copy: a customer's DELETE on the reading's admin-users example got 'the role check did refuse this caller, but this API has no such admin action ... aim at an admin action this API has', which is true; an anonymous caller got 'this caller is not one a role check refuses'; the other customer on the real admin action passed. A hasAuthority(\"ADMIN\") rule (my edit) now stops in the prerequisite with a true message instead of reaching this row, and task2 fails at line 101 in the same run."
+      },
+      {
+        "findingId": "cg-education-api-security-014",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/starter/src/main/java/secure/AuthController.java",
+        "reviewedSha256": "c83e315b0153611d5e01fa212102ede61bd6d3d3caf6d39a3e9270ad61c3ac7d",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. Critic probe test added only to a scratch copy of the completion (POST /auth/register over MockMvc): registering admin with an attacker's password 409, then the real admin login 200 with the stored value still a bcrypt hash; a new name 201, its second registration 409. The takeover this finding filed stays closed under the loop-8 rewrite. The residual noted since loop 6 (the seeded booking owners grace and ada have no accounts in the running app, and 201 versus 409 reveals which names exist) is unchanged and routed to the technology SME; no step 6 verdict depends on it."
+      },
+      {
+        "findingId": "cg-education-api-security-015",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "1706cb8049d9403e85b7eaf2ed0c7a1b412e294afaffab80d400adaaf4e48dfc",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. handlerEchoesExceptionText (lines 463-507) now also fills Principal and Authentication parameters with a test caller and a Locale parameter, and reads what a handler writes to the response and its error message. My own ApiErrors edits on a completed copy, each run with both task7 SecurityLabTest checks: echoing handlers taking a Principal, an Authentication or a Locale that each read that parameter before copying the exception text all failed with 'answeredBySafeErrorBodies: the error body still reveals the exception'; so did a void handler with a response parameter that writes a problem JSON holding the exception text, and a void handler that passes the text to sendError. Controls passed: a void handler writing a fixed problem body, and a Principal handler whose detail names the caller but not the exception. The loop-7 residual is closed. Residual, not filed: an echoing handler whose extra parameter is a type the probe does not fill, such as JwtAuthenticationToken, and that dereferences it, throws in the probe, is treated as not echoing and passed (my run). The lab never shows that type and teaches Principal, so a learner is unlikely to write it; the technology SME may judge whether to treat a throwing handler as unproven rather than safe."
+      },
+      {
+        "findingId": "cg-education-api-security-016",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "1706cb8049d9403e85b7eaf2ed0c7a1b412e294afaffab80d400adaaf4e48dfc",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. earlierTasks (lines 241-270) keeps the loop-7 probes and adds the ADMIN-token probe. My SecurityConfig edits on the completion, run with task2, task4 and step 6: the chain without its resource-server line printed only 'finish Task 2 first: the chain does not accept a valid token yet (is the .oauth2ResourceServer line in place?)', with task2 at line 97 and task4 at line 123; the chain method without @Bean and the chain without the ADMIN rule each printed only 'finish Task 2 first: a USER token is not refused on /admin/** yet ...'; a hasAuthority(\"ADMIN\") rule printed the new ADMIN-token message, which is true there. README line 194's promise holds in these Task 2 states. The new probe does misname the task when Task 3's token lacks its roles claim; filed as -019."
+      },
+      {
+        "findingId": "cg-education-api-security-017",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "1706cb8049d9403e85b7eaf2ed0c7a1b412e294afaffab80d400adaaf4e48dfc",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. row() (lines 225-238) now reports a malformed path as 'write a real path: an actual id in place of any {placeholder}, and no spaces or other characters a URL cannot hold'. My runs, my own edit of the completion's validation row: a booking id followed by an SQL-style condition with spaces and a literal {id} placeholder each got that message on their own row; it now names both causes, so a learner who wrote spaces is told something true. Fixed as recommended."
+      },
+      {
+        "findingId": "cg-education-api-security-018",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/starter/src/main/java/secure/AuthController.java",
+        "reviewedSha256": "c83e315b0153611d5e01fa212102ede61bd6d3d3caf6d39a3e9270ad61c3ac7d",
+        "note": "Checked at f437bce1a385be8ff0ec5a70d88a607cfd6cf3a1. AuthController.register now takes a Registration record with @NotBlank on both components and @Valid on the @RequestBody parameter; the 409 duplicate check stays in the handler as a business rule, and /auth/token keeps the plain Credentials record. This matches the course's Bean Validation page and no longer contradicts README line 192. Critic probe test on a scratch copy of the completion: blank username, whitespace-only username, blank password and missing password each returned 400 with MethodArgumentNotValidException resolved; duplicate 409, new name 201, real admin login 200. Side effect noted under -001 (a directly built blank-registration row now passes the validation row through the shipped constraint), not filed: it is a true validation-to-bad-input answer and needs a form outside the documented helpers. Whether Boot's 400 error body for that exception reveals anything internal is for the technology SME; the MockMvc body was empty."
+      }
+    ]
+  }
+}

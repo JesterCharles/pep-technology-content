@@ -48,7 +48,7 @@ Where to act: The first two lines of the test.
 
 Next step: Find the field by its label and type into it, then find the button by its role and name, and click it. Remember these are awaited.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: After the click.
 
@@ -72,7 +72,7 @@ expect(screen.queryByRole('button', { name: 'Join' })).toBeNull();
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - registry.npmjs.org/@testing-library/react/latest: version 16.3.3 (npm registry metadata)
 - registry.npmjs.org/@testing-library/user-event/latest: version 14.6.7 (npm registry metadata)

@@ -64,7 +64,7 @@ Where to act: The line with the ___ placeholder, indented inside read_orders.
 
 Next step: Start from the read_events pattern; only the reader in the middle changes.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The loop inside your with block.
 
@@ -85,7 +85,7 @@ next(gen)                        # StopIteration when exhausted
 
 ## Sources
 
-First draft, not reviewed. Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.
+Sources checked on 2026-11-04. The author checked this page against these official pages; independent review pending.
 
 - Python docs: csv (DictReader, newline)
 - Python docs: json (load, loads)

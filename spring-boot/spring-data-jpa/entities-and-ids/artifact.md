@@ -69,7 +69,7 @@ Where to act: Work from the top of the class down.
 
 Next step: Each TODO needs one annotation or one member. The teaching panel has a similar class.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Look at the last TODO.
 
@@ -88,7 +88,7 @@ Printed alternative: Null id: insert. Existing id with changed title: update. Ex
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-data/jpa/reference/jpa/entity-persistence.html
 - https://jakarta.ee/specifications/persistence/3.2/

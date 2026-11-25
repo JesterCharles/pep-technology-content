@@ -1,0 +1,230 @@
+// Containers & CI/CD - 30-minute course-final MCQ (graded). Private authoring candidate.
+// 30 single-answer applied items, about 1 minute allotted per item (sizing only, no per-question timer),
+// cumulative across all 16 taught topics, ordered easy (q01-q08), medium (q09-q20) and hard (q21-q30).
+// Distinct from the formative topic quizzes and from the 8-MCQ part of the containers-cicd module check.
+// Exactly one correct answer per item, feedback on every option.
+
+$CATEGORY: containers-cicd/assessments/containers-cicd-course-final
+
+::ccd-cf30-q01::[html]<p>You run <code>docker run -d --rm --name w1 nginx\:alpine</code> and <code>docker run -d --name w2 nginx\:alpine</code>, then <code>docker stop w1 w2</code>. Next you run both commands again.</p><p>What happens?</p>{
+~Both start, because stopping a container frees its name#Not quite. A stopped container still exists and keeps its name until it is removed.
+=w1 starts; w2 fails, since stopped w2 still holds the name#Correct. --rm removed w1 when it stopped, freeing the name. w2 still exists as Exited, and names are unique.
+~Both fail, because each name was already used once#Not quite. w1 was removed by --rm, so its name is free again.
+~w2 starts; w1 fails, because --rm keeps the name reserved#Not quite. --rm removes the container, which frees the name.
+}
+
+::ccd-cf30-q02::[html]<p>Ivo's compose.yaml gives the db service <code>volumes\: - pgdata\:/var/lib/postgresql</code>. <code>docker compose up -d</code> stops with an error about the volume pgdata.</p><p>What is missing?</p>{
+~A <code>pgdata</code> entry under db's <code>environment</code>#Not quite. environment sets variables; it does not create volumes.
+~A <code>depends_on\: [pgdata]</code> line on the db service#Not quite. depends_on orders services; a volume is not a service.
+~Quotes around the <code>pgdata\:/var/lib/postgresql</code> entry#Not quite. Quoting is optional here; the volume itself is undeclared.
+=A top-level <code>volumes\:</code> that declares <code>pgdata\:</code>#Correct. A named volume used by a service is also declared under the top-level volumes\: section.
+}
+
+::ccd-cf30-q03::[html]<p>A Linux build server has Podman and no Docker. The shop-api image, built with docker build, is in the registry as <code>ghcr.io/acme/shop-api\:1.0</code>. A teammate says the server must first run <code>podman machine start</code> and rebuild the image with <code>podman build</code>.</p><p>Which steps are needed?</p>{
+=Neither\: on Linux, no VM and no rebuild are needed#Correct. On Linux Podman is daemonless and needs no machine, and both tools run the same OCI images, so podman run can start this one.
+~Both, because Podman always runs containers in a VM#Not quite. The VM is for macOS and Windows; on Linux Podman runs containers directly.
+~Only the rebuild, because Docker-built images are Docker-only#Not quite. Both tools follow the OCI standards, so they run the same images.
+~Only the VM, because podman machine replaces the daemon#Not quite. podman machine creates a Linux VM on macOS and Windows; Linux needs none.
+}
+
+::ccd-cf30-q04::[html]<p>A workflow starts with <code>on\: pull_request</code> and has one job, test. Lena pushes a commit straight to main without opening a pull request.</p><p>What happens in GitHub Actions?</p>{
+~test runs, because every push to main starts every workflow#Not quite. A workflow starts only on the events listed in on.
+~test runs, because a push to main counts as a pull request#Not quite. A push and a pull request are different events.
+=Nothing runs\: only pull request events start this workflow#Correct. on lists the events that start a run, and this workflow lists only pull_request.
+~test starts and is cancelled, because main is protected#Not quite. Nothing starts at all\: the push event is not listed in on.
+}
+
+::ccd-cf30-q05::[html]<p>Two ways to give a deploy script its key\: an inline step runs <code>./deploy.sh --key $\{\{ secrets.DEPLOY_KEY \}\}</code>; an env step sets <code>env\: DEPLOY_KEY\: $\{\{ secrets.DEPLOY_KEY \}\}</code> and runs <code>./deploy.sh</code>, which reads the variable.</p><p>Which follows the course's practice?</p>{
+~The inline step, because a secret in a command is redacted anyway#Not quite. Redaction is best effort; the course keeps secrets out of the command text.
+~Either one, because both read it from the secrets context#Not quite. Both read it, but only the env step keeps it out of the command text.
+~Neither, because run steps cannot read repository secrets#Not quite. Steps read secrets through the secrets context, for example via env.
+=The env step, because env keeps it out of the command text#Correct. Mapping the secret into env keeps it out of the command line that runs.
+}
+
+::ccd-cf30-q06::[html]<p>The shop's mobile app calls one API gateway, which routes to api, reports and notifier. The gateway container crashes; every service is still healthy.</p><p>What happens?</p>{
+=App requests fail, but api still reaches reports by service name#Correct. Every outside request depends on the gateway, the one critical hop. Service-to-service calls use Compose names and never pass through it.
+~The app falls back to calling each service's address directly#Not quite. With a gateway, clients know only its one entry point.
+~Everything stops, because services call each other via the gateway#Not quite. The gateway sits in front of outside clients; services reach each other by name.
+~The app keeps working, because the gateway only adds authentication#Not quite. Clients send every request through the gateway; with it down, nothing from outside reaches the services.
+}
+
+::ccd-cf30-q07::[html]<p>catalog moved its products into a key-value store, keyed by product id. Now the page that lists products by brand needs a workaround.</p><p>Why?</p>{
+~Key-value stores need a declared schema before brand can be stored#Not quite. A key-value store imposes no schema on the value.
+~Listing by brand is a join, which only relational stores offer#Not quite. Filtering one product list by a field is a query, not a join.
+=Key-value stores mostly get and put by key, not filter by fields#Correct. A key-value store mostly gets and puts a value by its key; most cannot filter by fields inside the value. A document store queries by fields.
+~Database per service stops catalog querying its own store#Not quite. A service queries its own store freely; the rule is about other services' data.
+}
+
+::ccd-cf30-q08::[html]<p>The front-end image's last stage is below. It builds without errors, but the browser shows nginx's default page instead of the app.</p><pre><code>FROM nginx\:alpine
+COPY --from\=build /app/dist /usr/share/nginx</code></pre><p>Why?</p>{
+~dist must be copied without --from, straight from the project folder#Not quite. Without --from, COPY reads your folder, not the build stage's output.
+=dist's files went outside the html folder nginx serves#Correct. nginx serves files from /usr/share/nginx/html, so the build output must be copied into that folder.
+~The node stage must come last, because it holds the built files#Not quite. The last stage becomes the image; Node and the source should stay behind.
+~nginx needs <code>npm run build</code> to run in this stage first#Not quite. The build stage already ran it; nginx only serves the output.
+}
+
+::ccd-cf30-q09::[html]<p>A front-end Dockerfile copies package.json and package-lock.json, runs <code>npm ci</code>, then runs <code>COPY . .</code> and <code>npm run build</code>. The folder has no .dockerignore. Lee makes a Git commit, changes no other file, and rebuilds.</p><p>Which steps run again?</p>{
+~None, because Docker never sends the .git folder to the builder#Not quite. Only a .dockerignore keeps .git out of the build context.
+=COPY . . and npm run build, because the commit changed .git#Correct. Without a .dockerignore, COPY . . copies .git too. The commit changed it, so that step and every later one rerun; npm ci stays cached.
+~Every step, because a commit invalidates the whole cache#Not quite. Steps before the first changed step stay cached.
+~Only npm run build, because COPY . . skips Git data#Not quite. COPY . . copies everything in the context that is not ignored.
+}
+
+::ccd-cf30-q10::[html]<p>The back-end Dockerfile ends like this. The image builds, but the container exits at once, saying it cannot find the jar file.</p><pre><code>FROM eclipse-temurin\:25-jre
+WORKDIR /app
+COPY --from\=build /app/target/*.jar app.jar
+ENTRYPOINT ["java", "-jar", "target/app.jar"]</code></pre><p>What is wrong?</p>{
+~A JRE cannot run a jar that was built in a JDK stage#Not quite. The JDK builds the jar and the JRE runs it; that is the point of the two stages.
+~COPY --from copied the whole target folder, not one file#Not quite. COPY --from copies only the paths you name, here the jar file.
+~ENTRYPOINT runs during the build, before the jar exists#Not quite. That is RUN; ENTRYPOINT sets the command the container runs.
+=-jar must name app.jar, where COPY put the jar#Correct. The path after -jar must be the file you copied, and COPY --from put it at /app/app.jar.
+}
+
+::ccd-cf30-q11::[html]<p>In compose.yaml, db sets <code>POSTGRES_DB\: orders</code>. The api service sets <code>SPRING_DATASOURCE_URL\: jdbc\:postgresql\://db\:5432/shop</code>. The api logs say the database "shop" does not exist.</p><p>Which change fixes it?</p>{
+~Change the host from db to localhost#Not quite. Inside api, localhost is api itself; db is right.
+~Rename the db service to shop#Not quite. The service name is the host part of the URL; the database name comes last.
+=End the URL with /orders#Correct. The URL ends with the database name, and POSTGRES_DB created orders, not shop.
+~Set POSTGRES_USER to shop#Not quite. That changes the login user, not which database exists.
+}
+
+::ccd-cf30-q12::[html]<p>Local development needs <code>DB_HOST\=db</code>; staging needs <code>DB_HOST\=staging-db</code>. A teammate proposes building two shop-api images, each with its own <code>ENV DB_HOST</code> line.</p><p>Which review is right?</p>{
+=Build one image and pass DB_HOST at run time with -e or --env-file#Correct. -e or --env-file sets the value when the container starts. A value written with ENV is baked into the image as its default, so building two images per environment is unnecessary; -e overrides it at run time.
+~Fine\: ENV is how a container receives its environment variables#Not quite. ENV does set a variable, but it bakes one default into the image; -e and --env-file set it per container without a rebuild.
+~Build one image and COPY a different .env into it for each place#Not quite. A copied file is still inside the image, and changing it needs a rebuild.
+~Build one image with ENV, then change it with exec in each container#Not quite. An exec edit lives only in that container and is lost when it is recreated.
+}
+
+::ccd-cf30-q13::[html]<p>The db service sets POSTGRES_USER and POSTGRES_DB in its environment and has this healthcheck. Neither your shell nor a .env file sets those names.</p><pre><code>healthcheck\:
+&nbsp; test\: ["CMD-SHELL", "pg_isready -U $\{POSTGRES_USER\} -d $\{POSTGRES_DB\}"]</code></pre><p>Who fills in <code>$\{POSTGRES_USER\}</code> in this test?</p>{
+~The db container's shell, from db's own environment#Not quite. That is what $$ achieves; with one $, Compose has already filled it in.
+~pg_isready, which looks the user up in the database#Not quite. pg_isready receives the text after Compose has filled it in.
+=Compose, from your machine, when it reads compose.yaml#Correct. With a single $, Compose fills the variable from your machine, not from db's environment. Writing $$ leaves it for the container to expand. Here neither your shell nor .env sets the names, so Compose substitutes an empty string and prints a warning.
+~Nobody\: the text reaches pg_isready exactly as written#Not quite. Compose expands a single $ itself; only $$ passes the reference through.
+}
+
+::ccd-cf30-q14::[html]<p>compose.yaml names its services api and db, and api's datasource URL is <code>jdbc\:postgresql\://database\:5432/shop</code>. After <code>docker compose up -d</code>\:</p><pre><code>$ docker compose ps -a
+shop-api-1   Exited (1)
+shop-db-1    Up 2 minutes (healthy)
+$ docker compose logs api
+... java.net.UnknownHostException\: database</code></pre><p>What is wrong?</p>{
+~db is not ready yet; add <code>condition\: service_healthy</code>#Not quite. ps already shows db as healthy; the error is about the host name.
+=The URL host must be db, the service name in compose.yaml#Correct. ps shows db running and healthy; the log says the name database does not resolve. Compose registers service names, so the host is db.
+~The logs are stale; run exec in api to see the real error#Not quite. api has exited, and exec needs a running container; logs are the right check.
+~Spring needs the variable to be named DATABASE_URL#Not quite. Spring reads SPRING_DATASOURCE_URL, and the error names the host.
+}
+
+::ccd-cf30-q15::[html]<p>In the split shop, the reports team renames a field in its JSON response, and api reads that field.</p><p>What does this change mean for releases?</p>{
+~Only reports redeploys, as with any reports fix#Not quite. That holds only while the reports API stays compatible.
+~Nothing breaks, because each service owns its database#Not quite. Private data protects the tables, not the JSON contract callers read.
+~Only api redeploys, because callers own the contract#Not quite. reports changed the response, so reports ships the change too.
+=api must change too, so the releases are now coupled#Correct. The page warns that a renamed column read by another team breaks its code; a renamed JSON field does the same. Services deploy alone only while each API stays compatible.
+}
+
+::ccd-cf30-q16::[html]<p>reports calls orders in two places\: (1) when a signed-in user exports their own orders, and (2) in a nightly job, with no user, that totals every order. orders checks each token's access.</p><p>Which token does each call send?</p>{
+=(1) the incoming Authorization header; (2) a service token#Correct. Forward the caller's token when orders must apply that user's access; use a configured token for work with no user.
+~A configured service token for both calls#Not quite. Then the export would get reports' access, not the user's.
+~(1) a configured service token; (2) the last user's token#Not quite. The nightly job has no user, and a saved user token is not its own.
+~(1) the user's token in the query string; (2) a configured token#Not quite. Query strings end up in logs; tokens go in the Authorization header.
+}
+
+::ccd-cf30-q17::[html]<p>A release job in the acme/shop-api repository pushes the image as <code>ghcr.io/acme/shop-api\:2.0</code> and as <code>registry.example.com/shop/api\:2.0</code>. GitHub's registry ghcr.io accepts the run's <code>GITHUB_TOKEN</code> when the job's <code>permissions</code> block includes <code>packages\: write</code>; registry.example.com is a separate system that knows nothing about GitHub tokens.</p><p>Which credentials should it use?</p>{
+~GITHUB_TOKEN with <code>write-all</code> for GHCR, so pushes never fail; a secret for the other#Not quite. write-all grants far more than pushing a package needs; list only the permissions the job uses.
+=GITHUB_TOKEN with least-access permissions for GHCR; a secret for the other#Correct. The first reference names the ghcr.io registry for this repository, where GITHUB_TOKEN, limited to the least access it needs, suits. registry.example.com is another system, so it needs a stored secret.
+~GITHUB_TOKEN for both, since it is created per run#Not quite. The token belongs to this repository's run; it cannot log in to another company's registry.
+~A stored secret for both, since GITHUB_TOKEN can only check out code#Not quite. With the right permissions GITHUB_TOKEN can push this repository's packages, so no long-lived secret is needed for GHCR.
+}
+
+::ccd-cf30-q18::[html]<p>A workflow has four jobs\: lint; test with <code>needs\: lint</code>; build with <code>needs\: test</code>; and docs with no needs. On a push, lint fails.</p><p>Which jobs run?</p>{
+~All four run, and only lint is marked as failed#Not quite. needs makes a job wait, and a failed dependency skips it.
+~lint, docs and build run; only test is skipped#Not quite. A job is skipped when its dependency fails or is skipped, so build is skipped too.
+=lint and docs run; test and build are skipped#Correct. test is skipped because lint failed, and build because test was skipped. docs has no needs, so it runs.
+~Only lint runs; the whole workflow stops at the failure#Not quite. A failure affects only dependent jobs; docs still runs.
+}
+
+::ccd-cf30-q19::[html]<p>The reports service reads <code>DATABASE_URL\: postgresql\://reports\:$\{REPORTS_PW\}@reports-db\:5432/reports</code>, with REPORTS_PW in an untracked .env. A teammate wants to run production the same way, since the password is no longer in compose.yaml.</p><p>Is that sound?</p>{
+~Yes\: an untracked .env file works as a secret store on any machine#Not quite. It is a plain local file; it protects nothing beyond Git.
+~Yes, as long as .env is also listed in .dockerignore and .gitignore#Not quite. That keeps it out of images, but the file is still unprotected wiring.
+~No\: Compose cannot read $\{...\} variables on a server#Not quite. Compose reads them anywhere; the point is what protects the value.
+=No\: $\{...\} is local wiring; production needs a secret store#Correct. Reading a value from an untracked .env is wiring, not secret protection; production uses a real secret store.
+}
+
+::ccd-cf30-q20::[html]<p>api sends every reports call to one well-known address, <code>http\://reports-router\:8000</code>. A service registry lists three reports instances; reports-2 crashed a moment ago and is still listed.</p><p>Which discovery style is this, and what has to stop using reports-2?</p>{
+=Server-side; the router side must skip it, and api's code stays unchanged#Correct. The caller sends to a router at a well-known address, and the router asks the registry and forwards. So the router side must avoid the dead instance; api's code stays simple.
+~Client-side; api must ask the registry again and choose another instance#Not quite. In client-side discovery the caller asks the registry. Here api only knows the router's address.
+~Neither; it is Compose DNS, so reports-2 must be restarted under its name#Not quite. Compose DNS finds containers by service name, with no registry. Here a router consults a registry of instances.
+~Server-side; api must remove reports-2 from the registry before retrying#Not quite. In server-side discovery api never talks to the registry; the router side deals with it.
+}
+
+::ccd-cf30-q21::[html]<p>The back-end build stage runs <code>COPY . .</code>, and the project folder holds a .env file with a real API key. The final JRE stage copies only the jar. There is no .dockerignore.</p><p>Which is true?</p>{
+~In the final image, because COPY . . ran during the build#Not quite. Only the final stage ships, and it received only the jar.
+~In the final image unless the build stage deletes .env with RUN#Not quite. The final stage never had .env; deleting it in the build stage changes nothing that ships.
+=Not shipped, but sent to the builder; add .env to .dockerignore#Correct. A stage left behind adds nothing to the image, but the whole context is still sent to the builder. Ignored files never reach it.
+~Nothing to fix\: a .dockerignore would drop the source the jar needs#Not quite. .dockerignore leaves out only what it lists, such as .env.
+}
+
+::ccd-cf30-q22::[html]<p>Ana fixes a setting by editing a file inside the running api container with <code>docker compose exec</code>. The app works. After <code>docker compose down</code> and <code>docker compose up -d</code>, the old setting is back.</p><p>Why?</p>{
+=The edit lived in the old container; up made a new one from the image#Correct. The image never changes. down removed the container that held the edit, and up created a fresh one.
+~down rebuilt the api image from ./backend, which replaced her edit#Not quite. down stops and removes containers and the network; it builds nothing.
+~The edit was saved to a named volume, and down deleted that volume#Not quite. down keeps named volumes unless -v is given, and a file edited in the container's filesystem is not in a volume.
+~exec ran her command in a temporary copy of the api container#Not quite. exec runs inside the service's running container; that container was then removed.
+}
+
+::ccd-cf30-q23::[html]<p>Raj's compose.yaml mounts the named volume pgdata for db. He runs <code>docker compose down</code>, renames the volume to pg-data in both places in compose.yaml, and runs <code>docker compose up -d</code>. The database is empty.</p><p>Why?</p>{
+~<code>docker compose down</code> removed the volume and its data#Not quite. down keeps named volumes; only down -v removes them.
+~Compose renamed pgdata, then postgres\:18 re-initialised it#Not quite. Compose does not rename volumes; a new name is a new volume.
+~The data was in the container's writable layer, which down removed#Not quite. The data was in the named volume, which outlives containers.
+=pg-data is a new, empty volume; the old pgdata still holds the data#Correct. down keeps named volumes, and a named volume is found by its name, so the renamed entry gave db new, empty storage.
+}
+
+::ccd-cf30-q24::[html]<p>The reports image runs <code>fastapi run app/main.py --port 8000</code>, and compose.yaml publishes it as <code>"127.0.0.1\:8001\:8000"</code>. Three callers try it\: api at <code>http\://reports\:8000</code>, a curl on your laptop to <code>localhost\:8001</code>, and a teammate's laptop to your laptop's address on port 8001.</p><p>Which callers connect?</p>{
+~Only api, because fastapi run listens inside the network only#Not quite. fastapi run listens on 0.0.0.0, so the published port works from your machine too.
+=api and your laptop connect; the teammate cannot#Correct. fastapi run listens on 0.0.0.0, so other services reach port 8000; the publish is on 127.0.0.1, so only your machine reaches 8001.
+~All three, because fastapi run listens on every interface#Not quite. That is inside the container; the 127.0.0.1 in ports limits the laptop side to this machine.
+~Only your laptop, because api must also use port 8001#Not quite. 8001 is the host port; services use the container port, 8000.
+}
+
+::ccd-cf30-q25::[html]<p>The Spring api calls inventory with this RestClient. Today inventory's handler is stuck\: the connection opens, but no response bytes arrive.</p><pre><code>HttpClient http \= HttpClient.newBuilder()
+&nbsp;   .connectTimeout(Duration.ofSeconds(2)).build();
+var factory \= new JdkClientHttpRequestFactory(http);
+RestClient client \= RestClient.builder()
+&nbsp;   .baseUrl("http\://inventory\:8080").requestFactory(factory).build();</code></pre><p>What happens to the call?</p>{
+~It fails after 2 s\: <code>connectTimeout</code> limits the whole call#Not quite. connect limits opening the connection, which succeeded here.
+~It fails after about 5 s\: the default read limit of <code>RestClient</code>#Not quite. Five seconds is HTTPX's default; a JDK-backed RestClient has no read limit.
+~It fails at once\: <code>JdkClientHttpRequestFactory</code> treats silence as refused#Not quite. The connection was accepted; nothing ends the wait for data.
+=It waits with no limit\: nothing calls <code>setReadTimeout</code> on the factory#Correct. Only the connect limit is set. A JDK-backed RestClient with no read timeout waits for data forever.
+}
+
+::ccd-cf30-q26::[html]<p>checkout calls inventory's reserve endpoint with a 3-second read timeout and maps a timeout to 504. Each service has its own database. Today inventory takes 5 seconds and then commits the reservation.</p><p>What does the user see, and what happens to the stock?</p>{
+=504, and inventory keeps the committed reservation#Correct. checkout gave up at 3 s, but inventory still committed at 5 s. One transaction cannot cover two private databases, so the data now disagree until extra design reconciles them.
+~504, and inventory rolls back when checkout disconnects#Not quite. inventory finishes its own work; nothing undoes its commit when the caller leaves.
+~504, and checkout's transaction rolls the reservation back#Not quite. checkout's transaction cannot reach inventory's private database.
+~504, and the reservation lasts only until checkout retries#Not quite. Nothing releases the reservation; a retry would reserve stock again.
+}
+
+::ccd-cf30-q27::[html]<p>A design review compares four ways to run the orders and reports databases. reports needs order totals for its dashboard.</p><p>Which design follows database per service?</p>{
+~Two servers; reports calls the orders API, and orders reads reports' tables for a badge#Not quite. Separate servers do not help when orders reads reports' tables directly; that direction breaks the rule too.
+~Two servers; a nightly job in reports copies totals straight from orders' tables#Not quite. A batch job is still reports reading orders' tables, so those tables become a public contract.
+=One server, two schemas, each account limited to its own; reports calls orders' API#Correct. Privacy can be separate tables, a separate schema or a separate server; what matters is that no other service reads them. Sharing one server is fine while each service reaches only its own schema.
+~Two servers, plus a third that holds one customers table both services read and write#Not quite. A table that two services share is owned by neither; each service should keep its data private.
+}
+
+::ccd-cf30-q28::[html]<p>This project's Dockerfile copies a prebuilt <code>target/app.jar</code>. The test job runs <code>./mvnw package</code>, which writes that jar. The build job has <code>needs\: test</code>, checks out the repository, and runs docker/build-push-action with <code>context\: .</code>. The build step fails\: the jar is not found.</p><p>Why?</p>{
+~needs carries test's files over, so the Dockerfile path must be wrong#Not quite. needs only orders and gates jobs; it moves no files.
+=build runs on a fresh runner that never had test's target folder#Correct. Each job runs on its own runner. Checkout copies the repository, and target was only ever written on test's runner.
+~Checkout deletes target before the build step starts#Not quite. Checkout copies the repository onto a runner that starts without it.
+~build-push-action builds from the registry, not the context#Not quite. With context\: . it reads the checked-out files.
+}
+
+::ccd-cf30-q29::[html]<p>A workflow with <code>on\: [push, pull_request]</code> reads secrets.DEPLOY_KEY. A contractor with write access pushes a branch to the repository, and an outside contributor opens a pull request from a fork.</p><p>Which is accurate?</p>{
+~Both runs get it, but redaction keeps it hidden from both of them#Not quite. Redaction is not a permission boundary, and fork runs receive no secrets.
+~Neither run gets it, because secrets only reach runs on the main branch#Not quite. A same-repository branch push gets the secrets.
+~The fork run gets it, but the contractor's own branch run does not#Not quite. It is the other way round.
+=Only the contractor's run gets it, and the contractor can read it#Correct. Anyone with write access can read secrets through a workflow; a fork run receives no repository secrets, only GITHUB_TOKEN.
+}
+
+::ccd-cf30-q30::[html]<p>Ana changes Java code in ./backend and runs <code>docker compose up -d</code> again. <code>docker compose ps</code> shows api still "Up 2 hours", and the old behaviour remains.</p><p>Why?</p>{
+~up -d rebuilds the image only when the Dockerfile itself changes#Not quite. up -d builds only a missing image; it does not compare the Dockerfile or the source code.
+~api needs <code>docker compose down -v</code> before any code change shows#Not quite. -v deletes the database volume; it does not rebuild the image.
+=up -d builds only missing images; the api image already existed#Correct. Compose builds an image only when it is missing; the api image existed, so nothing was rebuilt and the running container was left as it was.
+~The api container must be restarted with <code>docker compose restart api</code> before it sees new code#Not quite. A restart reuses the same image; the code was copied into the image at build time, so only a rebuild picks up the change.
+}

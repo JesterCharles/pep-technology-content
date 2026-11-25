@@ -70,7 +70,7 @@ An architect draws one plan for a house. A builder then puts up three houses fro
 
 The plan is the class, each built house is an object, and each address note is a reference.
 
-Where to act: The item shown after Item:, above the three buttons.
+Where to act: The line that starts with Scenario:, just above the three buttons.
 
 Next step: Ask whether the part is written once as a plan, runs to make something new, or only names something that already exists.
 

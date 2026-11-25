@@ -60,9 +60,8 @@ stub `fetch` and run fully offline.
 Work in task order. Tests 4-7 build on tasks 1-3, and test 7 also needs the
 "Service deleted" toast you add in task 6. Until tasks 4-6 are done, the run
 also prints "Unhandled Rejection" errors from the unfinished API calls; they
-go away as you finish those tasks. Test 8 only proves that your own
-test passes; its role, label, user-event and query-variant demonstrations are
-self-checked practice.
+go away as you finish those tasks. After the 8 tests pass, `npm test` also
+checks your test 8 (see task 8) and exits with an error until it is complete.
 
 ## Files you edit
 
@@ -114,15 +113,37 @@ Every task is marked with a `TASK n` comment in the starter source.
 7. **Toasts through context** - `src/ToastContext.jsx`. A real context,
    provider state, `addToast`, and the layout's live region shows every toast.
 8. **Write your own test** - `starter/src/service-form.test.jsx`. Query by
-   role and label, simulate typing and clicking with user-event, pick the
-   right getBy/queryBy/findBy variant, and assert what the user can see.
-   The suite checks only that your test passes, so check those choices
-   yourself.
+   role and label to prove this scenario: start with a blank name, click Save
+   with user-event, and use `findBy` to verify the visible "Enter a service
+   name." error while `onSave` remains uncalled
+   (`expect(onSave).not.toHaveBeenCalled()`). Then type a name, select a team
+   (`user.selectOptions`), submit again, and use `queryBy` to verify the error
+   is gone while `onSave` receives the entered values
+   (`expect(onSave).toHaveBeenCalledWith(...)`). You may split the scenario
+   into more than one test and import the form however you like.
+
+   How test 8 is checked: `npm test` reruns your test file against an
+   unchanged copy of your finished form, which must pass, and against six
+   copies that each break one behaviour: ignoring the blank submission,
+   calling `onSave` for it, ignoring the completed submission, never calling
+   `onSave` for it, and passing `onSave` a different name or a different
+   team. Your test must fail
+   against each broken copy, so it is scored on four checks: the error
+   appears after the blank submit, `onSave` stays uncalled for it, the
+   completed submit is handled, and `onSave` receives the entered name and
+   team. Using role and label queries, user-event, the right getBy/queryBy/
+   findBy variant and the "error is gone" check is up to you: the check does
+   not score those choices, so review them yourself. If something is missing,
+   the run names the behaviour your test does not catch.
 
 ## Expected output
 
 See `expected/on-completion.txt`. The run summary must show
-`Test Files  8 passed (8)` and `Tests  8 passed (8)`.
+`Test Files  8 passed (8)` and `Tests  8 passed (8)` (a higher Tests count,
+and any todo, if you split test 8 into several tests), followed by
+`✓ Task 8 rejects faulty submission behaviors`. Until test 8 is complete,
+`npm test` instead lists what your test misses and exits with an error, even
+though the summary shows 8 passed.
 
 ## Offline note
 

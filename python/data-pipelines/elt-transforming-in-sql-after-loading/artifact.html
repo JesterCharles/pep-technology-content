@@ -273,7 +273,7 @@ html:not(.is-enhanced) .pep-js-only { display: none; }
 <section class="pep-teach" data-pep-teaching data-pep-instructions>
 <h3>ETL and ELT differ in where the transform runs</h3>
 <p>ETL transforms in your program, then loads the finished rows. ELT loads raw rows first, then transforms them inside the database with SQL.</p>
-<p>This pipeline uses ELT. Raw rows sit in staging, so when transform logic turns out to be wrong you fix the SQL and rerun without fetching the source again. Set-based SQL also runs next to the data, and the database enforces types and constraints on the result.</p>
+<p>This pipeline uses ELT. Raw rows sit in staging, so when the transform is wrong you fix the SQL and rerun without refetching the source. Set-based SQL also runs next to the data, and the database enforces types and constraints.</p>
 
 
 
@@ -283,7 +283,7 @@ html:not(.is-enhanced) .pep-js-only { display: none; }
 <h2 id="where-fits-2">Where this fits</h2>
 <p data-pep-fit-decision><strong>Decision:</strong> Transform in Python before loading (ETL), or in SQL after loading (ELT)?</p>
 <p data-pep-fit-good><strong>Good fit:</strong> Use ELT for joins, filters, casts and aggregation over data already in PostgreSQL, where keeping raw rows lets you replay a fix.</p>
-<p data-pep-fit-boundary><strong>Choose something else when:</strong> The transform needs Python logic, such as calling an external API or a validation library. Do that step in Python, and still load raw rows when you can.</p>
+<p data-pep-fit-boundary><strong>Choose something else when:</strong> The transform needs Python logic, such as an external API call or a validation library. Do that step in Python, and still load raw rows when you can.</p>
 </section>
 </div>
 <div data-pep-workspace="activity">
@@ -329,7 +329,7 @@ html:not(.is-enhanced) .pep-js-only { display: none; }
 <div class="pep-region">
 <section class="pep-teach" data-pep-teaching data-pep-instructions>
 <h3>A CTE names each cleaning step</h3>
-<p><code>WITH name AS (SELECT ...)</code> names a temporary result that the next statement can read, and <code>INSERT INTO target SELECT ... FROM name</code> writes it. Staging columns are usually text, so cast them with <code>::int</code> and tidy text with <code>lower(trim(x))</code>.</p>
+<p><code>WITH name AS (SELECT ...)</code> names a temporary result the next statement can read, and <code>INSERT INTO target SELECT ... FROM name</code> writes it. Staging columns are usually text: cast with <code>::int</code> and tidy with <code>lower(trim(x))</code>. <code>CREATE TABLE target AS SELECT ...</code> instead creates a new table.</p>
 <pre class="pep-code"><code>WITH cleaned AS (
     SELECT id, lower(trim(city)) AS city
     FROM staging_users
@@ -346,14 +346,14 @@ SELECT id, city FROM cleaned;</code></pre>
 <div data-pep-workspace="code">
 <div id="task-3" data-pep-task data-pep-may-stall>
 <h3>Your task: finish the transform in the editor below</h3>
-<ol><li>In <code>transform.sql</code>, replace <code>___</code> inside the CTE with a <code>SELECT</code> from <code>staging_orders</code>.</li><li>Output <code>id</code>, the <code>email</code> lowercased and trimmed, and <code>qty</code> as an integer, keeping only positive quantities.</li><li>Press Run. Output compares the staging rows with the resulting <code>orders_clean</code> table.</li><li>A mismatch uses an attempt and you get one retry.</li></ol>
+<ol><li>In <code>transform.sql</code>, replace <code>___</code> inside the CTE with a <code>SELECT</code> from <code>staging_orders</code>.</li><li>Output <code>id</code>, the <code>email</code> lowercased and trimmed, and <code>qty</code> as an integer, keeping only positive quantities.</li><li>Name the cleaned columns with <code>AS email</code> and <code>AS qty</code>, as <code>AS city</code> does in the example.</li><li>Press Run. Output compares the staging rows with the resulting <code>orders_clean</code> table.</li><li>A mismatch uses an attempt and you get one retry.</li></ol>
 <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="1" data-section-skip>
 <summary><span>Need a hint?</span><span class="pep-hint__ordinal">Hint 1 of 2 for Activity 3</span></summary>
 <div class="pep-hint__body">
 <p data-pep-hint-target><strong>Where to act:</strong> The ___ line inside the WITH parentheses.</p>
 <p data-pep-hint-step><strong>Next step:</strong> Write the columns first, then FROM, then the filter, following the staging_users example.</p>
 <details class="pep-hint" data-pep-hint data-pep-hint-for="task-3" data-pep-hint-order="2" data-section-skip>
-<summary><span>Another hint</span><span class="pep-hint__ordinal">Another hint, 2 of 2 for Activity 3</span></summary>
+<summary><span>Another hint</span><span class="pep-hint__ordinal">Hint 2 of 2 for Activity 3</span></summary>
 <div class="pep-hint__body">
 <p data-pep-hint-target><strong>Where to act:</strong> The filter on your SELECT.</p>
 <p data-pep-hint-step><strong>Next step:</strong> Compare the row with qty 0 against your filter: staging values are text, so cast before you compare.</p>
@@ -405,8 +405,8 @@ SELECT id, email, qty FROM cleaned;
 <div class="pep-region">
 <section class="pep-teach" data-pep-teaching data-pep-instructions>
 <h3>Run the whole transform as one transaction</h3>
-<p>A rebuild often has two steps: clear the target, then fill it. Run them in one <code>with psycopg.connect(...)</code> block so readers never see a half-built table. A failure rolls back both steps, leaving the old rows in place.</p>
-<p>In autocommit mode each statement commits by itself, so a failure in step two leaves the target already empty.</p>
+<p>A rebuild often has two steps: clear the target, then fill it. Run them in one <code>with psycopg.connect(...)</code> block so readers never see a half-built table. A failure rolls back both, leaving the old rows.</p>
+<p>In autocommit mode each statement commits alone, so a failure in step two leaves the target empty.</p>
 <pre class="pep-code"><code>with psycopg.connect(conninfo) as conn:
     conn.execute(&quot;DELETE FROM orders_clean&quot;)
     conn.execute(TRANSFORM_SQL)</code></pre>
@@ -467,7 +467,7 @@ SELECT id, email, qty FROM cleaned;
 </div>
 <section class="pep-recap" data-pep-recap aria-labelledby="recap-title">
 <h2 id="recap-title">Recap</h2>
-<ul><li>ETL transforms before loading; ELT loads raw rows and transforms inside the database.</li><li>Keeping raw rows in staging lets you fix a transform and replay it without going back to the source.</li><li><code>WITH name AS (SELECT ...)</code> plus <code>INSERT ... SELECT</code> cleans and reshapes in one statement. Cast staging text before comparing it.</li><li>Run the transform in one transaction, so a failure leaves the target table unchanged.</li></ul>
+<ul><li>ETL transforms before loading; ELT loads raw rows and transforms inside the database.</li><li>Raw rows in staging let you fix and replay a transform without going back to the source.</li><li><code>WITH name AS (SELECT ...)</code> plus <code>INSERT ... SELECT</code> cleans and reshapes in one statement. Cast staging text before comparing it.</li><li>Run the transform in one transaction, so a failure leaves the target unchanged.</li></ul>
 <details class="pep-cheat" data-pep-cheat-sheet data-section-skip><summary>Cheat sheet (optional)</summary><pre class="pep-code"><code>WITH cleaned AS (
     SELECT id, upper(trim(code)) AS code, age::int AS age
     FROM staging_people
@@ -478,7 +478,7 @@ SELECT id, code, age FROM cleaned;
 
 CREATE TABLE report AS SELECT ...;   -- builds a new table</code></pre></details>
 <details class="pep-sources" data-pep-sources data-section-skip><summary>Sources and review date (optional)</summary>
-<p><strong>First draft, not reviewed.</strong> Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.</p>
+<p><strong>Sources checked on 2026-11-04.</strong> The author checked this page against these official pages; independent review pending.</p>
 <ul><li><a href="https://www.postgresql.org/docs/current/queries-with.html" rel="noopener">PostgreSQL: WITH queries (common table expressions)</a></li><li><a href="https://www.postgresql.org/docs/current/sql-createtableas.html" rel="noopener">PostgreSQL: CREATE TABLE AS</a></li><li><a href="https://www.postgresql.org/docs/current/sql-insert.html" rel="noopener">PostgreSQL: INSERT</a></li><li><a href="https://www.psycopg.org/psycopg3/docs/basic/transactions.html" rel="noopener">psycopg 3: Transactions management</a></li></ul>
 </details>
 </section>

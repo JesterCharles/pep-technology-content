@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "cg-critic-education-loop6 (independent Claude critic subagent, not the author, 2026-11-18)",
+  "reviewedPath": "spring-boot/validation-errors-and-testing/coding-lab/lab.json",
+  "reviewedSha256": "39c95b1cca6505291972a0a709a40a4fd8e501c4426f3e09e51847e3c3665fa1",
+  "artifactHashes": {
+    "coding-lab/README.md": "877bc9feb94f8664a4317f6cdcd201219e01158942546119255d3faa25c7b081",
+    "coding-lab/expected/test-summary.txt": "768c5e97e28c55ec478710290ac6b698a7b78354221740125765f16f6109043b",
+    "coding-lab/lab.json": "39c95b1cca6505291972a0a709a40a4fd8e501c4426f3e09e51847e3c3665fa1",
+    "coding-lab/starter/pom.xml": "fb0c2acc5f6db04b05b7591f071f62c277ada789fe1fe2681e07969c0cad5bfe",
+    "coding-lab/starter/src/main/java/bookings/Booking.java": "bcefacdb6c60b239abd881a27396a25ea4b68ef73e00442dfa3ee59991408201",
+    "coding-lab/starter/src/main/java/bookings/BookingController.java": "409ac8b7a92618508daa4f121814b2e349af382af7c8de6ce716d747a4e548a5",
+    "coding-lab/starter/src/main/java/bookings/BookingService.java": "aec9ed47794c903988a7e5e61d720aaf2531bb7aeff1e200ead76923ef536a3a",
+    "coding-lab/starter/src/main/java/bookings/BookingsApplication.java": "5bcb3140f019b1974fd0f350326c71ae56fcb51249d834921c08f2ca6f338d84",
+    "coding-lab/starter/src/main/java/bookings/NewBooking.java": "494471cac979299843f81708811f48de2b15d58ff68bb973e91d6d4acb4324b3",
+    "coding-lab/starter/src/main/resources/application.properties": "7b931c73dc627379b1aeb3f50534fafa7837a9a61fd5b153615b4e3e051ce853",
+    "coding-lab/tests/bookings/BugReportTest.java": "b452c7e91a7d375f205eeaa7532107b98f3d7e77fc889a8c73495607b04ae2d1",
+    "coding-lab/tests/bookings/ErrorSliceTest.java": "0fa43b2c43eaa6ca00a666af0245bc925cf19448d9a0188e94e8be6a8c285fd2",
+    "coding-lab/tests/bookings/ValidationApiTest.java": "18f61e91209dbc06c15d0a405d1c2531b76d81fc66d710839efeb31b1a1d7473",
+    "coding-lab/tests/bookings/WebLayerTest.java": "9d6403eac50efffe069a885def4b70315fe6a4d8206bb08e95a27a4c0a708208"
+  },
+  "findings": [
+    {
+      "id": "cg-education-validation-011",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "line": 85
+      },
+      "claim": "Task 5's prediction step has lost its observe half. Since bff3db3c (verified with git show and git log -S on the test files), task5PredictsTheProblemBodyOfTheFix only requires PREDICTED_TITLE and PREDICTED_DETAIL to be non-blank and checks a 400 problem+json body with string title and detail; it no longer compares the body with the prediction, so its failure message no longer shows the real values. README line 85 tells the learner to 'compare the real title and detail in the MockMvc result with your prediction ... before you correct the constant', but nothing in the lab shows that body: on success mvn -q -o test prints nothing, the step-1 MvcResult is never printed, and neither the README, the TODOs, the hints nor any page in this module teaches a way to print a MockMvc response (no andDo(print()) or similar in the six artifact.html files). Critic run at e838bbe7: a completed copy with both constants set to arbitrary wrong text exits 0 with zero bytes of output. So a learner who predicts wrongly is never told, and 'correct the constant' has no trigger. The step remains a prediction with no reveal, which is not a formative self-check. Line 85 also uses non-learner wording ('independent response contract', 'treating your prediction as its oracle'). This does not affect the lane's decision to unclaim standard-error-responses-with-problemdetail#o2 (module.json records it truthfully); it affects the honesty and usefulness of a README step that remains in the lab and in the Task 5 minutes.",
+      "evidence": [],
+      "recommendation": "Give the learner a way to observe the real body after the fix, without putting the answer in the open before step 2. Either add a collapsed 'Check your prediction' block after step 3 that gives the real title and detail and the one-line reason they differ from the ProblemDetail page's request-body example (the same pattern as Task 8's 'Check your answer'), or tell the learner in step 3's follow-up how to see the body of the step-1 MvcResult (for example print its response body once, or add MockMvc's print result handler) and name the import. Replace 'before you correct the constant' with an instruction that matches the shipped behaviour (the test passes either way; record why your prediction differed), and replace 'independent response contract ... oracle' with plain words such as 'the test passes whatever you predicted; it only checks that the fixed request answers with a 400 problem body'.",
+      "reviewedSha256": "877bc9feb94f8664a4317f6cdcd201219e01158942546119255d3faa25c7b081"
+    },
+    {
+      "id": "cg-education-validation-012",
+      "severity": "high",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ValidationApiTest.java",
+        "line": 63
+      },
+      "claim": "bean-validation-on-requests#o3 (validate a path variable with a constraint on the method parameter) is still declared in lab.json, but no starter-failing test now passes only when the learner does it. bff3db3c removed the reflection check that fixed cg-sme-validation-003 ('a hand-written id check passed') and replaced it with nothing behavioural. Critic run at e838bbe7 on a completed copy whose BookingController.byId has no constraint and instead throws Spring's ResponseStatusException with status 400 and a reason text for ids below 1: all 12 tests pass with no output (task5RejectsANonPositiveIdWith400, task5ReproducesTheZeroIdReport and task5PredictsTheProblemBodyOfTheFix included), because the built-in problem details from Task 6 turn that exception into a 400 problem+json body whose detail is the reason string. The author's proof claim that a hand-written check 'fails BugReportTest's problem+json check' holds for the variant I reproduced that throws ResponseStatusException without a reason (task5PredictsTheProblemBodyOfTheFix fails: no value at $.detail), and is false for the with-reason variant, which is the ordinary way to write it. I ran only these two hand-written variants. The residual is disclosed nowhere: README line 163 and the lab-run.json testScope read as if Task 5's fix is covered. The README hint names the constraint, so a learner who follows it does the right thing, but a learner who reaches for the pre-Bean-Validation habit the bug report invites is told 'Done'. This is the same class of defect as cg-education-validation-001/002, which were rated high.",
+      "evidence": [],
+      "recommendation": "Restore an executable, non-shape oracle for the fix. A probe on these bytes shows MvcResult.getResolvedException() is HandlerMethodValidationException with the constraint and ResponseStatusException with the hand-written throw, so task5RejectsANonPositiveIdWith400 can keep the result of GET /bookings/0 and assert that the resolved exception is Spring's method-validation exception (with a message that says to use a Bean Validation constraint on the id parameter). That reads runtime behaviour, not declarations; the Bean Validation page and README step 2 already name that exception, so it discloses no prediction value. If the lane prefers not to add it, unclaim bean-validation-on-requests#o3 in lab.json and record the gap in module.json sourceCoverageNotes, as was done for problemdetail#o2. Either way, correct the hand-written-check claim in the proof notes and record the outcome against cg-sme-validation-003, whose fix this change removed.",
+      "reviewedSha256": "18f61e91209dbc06c15d0a405d1c2531b76d81fc66d710839efeb31b1a1d7473"
+    },
+    {
+      "id": "cg-education-validation-013",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "line": 193
+      },
+      "claim": "Two Troubleshooting rows no longer match the shipped checks. (1) Line 193 says ErrorSliceTest fails when 'the fake is declared outside this test class'. The declaring-class check was removed in bff3db3c; critic run at e838bbe7 with the fake moved to a top-level @TestConfiguration class imported into ErrorSliceTest: all 12 tests pass. (2) Line 191 bolds the message 'the call to create must still be recorded' as the reset symptom, but after rewording in bff3db3c and e838bbe7 the shipped message in task8VerifiesTheCreateCall now reads 'the controller's create call with the posted booking must remain recorded: verify it, do not reset the mock', so a learner searching the README for the printed text does not find it. Both rows still point at the right task, so the learner recovers; the rows are inaccurate rather than misleading. (3) By reading only (not run): in task8ShowsThatAPlainMockIsOnlyCalledWhenYouPassItIn the context-mock check is now a bare verifyNoInteractions (in loop 5 it was a labelled 'step 3' assert), so an interaction on the context mock would surface Mockito's 'No interactions wanted here', which the line 191 row attributes to a missing verify call.",
+      "evidence": [],
+      "recommendation": "Line 193: drop 'or the fake is declared outside this test class' and name the current messages instead (step 1: not the full application context; step 2: a fake, not a Mockito mock, that finds nothing). Line 191: quote the current shipped message text, for example 'must remain recorded', and either label the context-mock check with a 'step 3' message again or add a row for Mockito's no-interactions text on the context mock.",
+      "reviewedSha256": "877bc9feb94f8664a4317f6cdcd201219e01158942546119255d3faa25c7b081"
+    },
+    {
+      "id": "cg-education-validation-014",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/lab.json",
+        "line": 19
+      },
+      "claim": "The standard the lane applied to problemdetail#o2 (do not claim a compound objective when only one half is executed) is not applied to three other compound objectives lab.json still claims. standard-error-responses-with-problemdetail#o1 names type, title, status, detail and an extra property; the lab's handlers set status, title and detail only, and no task or test sets a type or an extra property. global-error-handling#o3 is 'never expose stack traces ... while logging them on the server'; no task logs anything. bean-validation-on-requests#o2 is 'predict the status code and which fields fail for a given invalid body'; Task 1 and Task 3 state the fields and the status, and the learner predicts nothing. These claims predate this branch (all three are in lab.json on main, per git diff main e838bbe7), so this is an inconsistency surfaced by the new decision, not a regression. A grep of module.json at e838bbe7 and a recursive grep of authoring/evidence/spring-boot/validation-errors-and-testing/ for the three objective ids find no partial-coverage record (only the loop-6 critic reports mention them), and coverage-gap-reconciliation.json has no decision on them.",
+      "evidence": [],
+      "recommendation": "Have the reconciler either record these three as partial lab coverage in module.json sourceCoverageNotes (with the half the topic page covers) or unclaim them, consistent with the problemdetail#o2 decision. If problemdetail#o1 stays claimed, the cheapest executable half is one extra property on the Task 2 or Task 3 ProblemDetail, checked over MockMvc.",
+      "reviewedSha256": "39c95b1cca6505291972a0a709a40a4fd8e501c4426f3e09e51847e3c3665fa1"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/spring-boot/validation-errors-and-testing/coverage-gap-critic-education.json",
+    "items": [
+      {
+        "findingId": "cg-education-validation-001",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/BugReportTest.java",
+        "reviewedSha256": "b452c7e91a7d375f205eeaa7532107b98f3d7e77fc889a8c73495607b04ae2d1",
+        "note": "Runs at e838bbe7 (git archive copies, JDK 25.0.5+8, Maven 3.9.16, own offline local repo, mvn -q -o test): the untouched starter fails exactly the 12 declared failingTests (10 failures, 2 errors); a private completed solution passes 12/12 with no output. BugReportTest.java changed only in task5PredictsTheProblemBodyOfTheFix; task5ReproducesTheZeroIdReport still binds method GET, URI /bookings/0 and status 400 in shipped code. Re-ran my original variant on these bytes (learner request changed to GET /bookings/abc, constraint removed from byId): task5ReproducesTheZeroIdReport fails with 'the reproduction must send the request the report describes, not another one that also fails ==> expected: </bookings/0> but was: </bookings/abc>', and task5RejectsANonPositiveIdWith400 fails on 404. The reproduction half is intact; the separate fix-half gap is new finding cg-education-validation-012."
+      },
+      {
+        "findingId": "cg-education-validation-002",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ErrorSliceTest.java",
+        "reviewedSha256": "0fa43b2c43eaa6ca00a666af0245bc925cf19448d9a0188e94e8be6a8c285fd2",
+        "note": "Runs at e838bbe7 (git archive copies, JDK 25.0.5+8, Maven 3.9.16, own offline local repo, mvn -q -o test): the untouched starter fails exactly the 12 declared failingTests (10 failures, 2 errors); a private completed solution passes 12/12 with no output. ErrorSliceTest lost its class-annotation, nested-class and declaring-class reflection (bff3db3c, verified with git log -S) and gained the behavioural slice check in 897dd764/e838bbe7; the request-binding and ApiErrors-title checks are unchanged and the slice check is now behavioural (no ApplicationAvailability bean; every BookingService is a non-mock fake whose byId(1L) throws NoSuchElementException). Re-ran my original variant on these bytes (GET /no-such-path for the 404, GET /bookings/abc for the 400): both task7 tests fail (title 'Not Found' and 'Bad Request' instead of the ApiErrors titles), and the shipped URI/method checks remain as a second line. A fake declared outside the test class but still supplied by an imported @TestConfiguration now passes; that still meets web-layer-tests-with-mockmvc#o2 ('a @TestConfiguration fake'), so the objective stays proved; only the stale Troubleshooting row is affected (new finding cg-education-validation-013)."
+      },
+      {
+        "findingId": "cg-education-validation-003",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "reviewedSha256": "877bc9feb94f8664a4317f6cdcd201219e01158942546119255d3faa25c7b081",
+        "note": "Read README, all TODOs and hints at e838bbe7. Task 5 step 1 and Task 7 steps 3-4 still state outcomes, not code; the constraint, slice annotation, configuration-class shape and property stay in collapsed hints. Task 8 step 3 (README line 143 and the WebLayerTest TODO) is now more specific: replace null with a BookingController built with the plain mock, call built's create with POSTED, verify on the plain mock with POSTED. That names the acts and the argument but prints no constructor call or verify line; the learner still writes the three statements. No answer disclosure beyond the accepted collapsed-hint tier."
+      },
+      {
+        "findingId": "cg-education-validation-004",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "reviewedSha256": "877bc9feb94f8664a4317f6cdcd201219e01158942546119255d3faa25c7b081",
+        "note": "The original claim (the predict and explain answers were stated in the open) stays fixed at e838bbe7: README and tests state neither predicted value, and Task 8's explanation is in a collapsed 'Check your answer'. The reconciliation's basis for this finding ('the prediction is ... checked against the real body') no longer holds, because bff3db3c removed that comparison (verified with git show); the lane has unclaimed problemdetail#o2 accordingly. The new consequence, that the prediction now has no way to be observed, is filed as cg-education-validation-011, not reopened here. The explain half of mockito-in-spring-at-mockitobean#o2 is still self-checked plus the executable plain-mock contrast in Task 8 step 3."
+      },
+      {
+        "findingId": "cg-education-validation-005",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "reviewedSha256": "877bc9feb94f8664a4317f6cdcd201219e01158942546119255d3faa25c7b081",
+        "note": "Pacing bytes unchanged at e838bbe7: README lines 10-14 and lab.json minutes give setup 5, S9 27 and S10 40 against the 40-minute 'Faded, then fresh problem' block, labelled an authoring estimate with a per-task basis in lab.json cleanup.notes and a stop/pause rule per day. The Task 8 step 3 rewording adds no work (the same three acts against a pre-declared variable and constant), so the 10-minute Task 8 estimate stands."
+      },
+      {
+        "findingId": "cg-education-validation-006",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "reviewedSha256": "877bc9feb94f8664a4317f6cdcd201219e01158942546119255d3faa25c7b081",
+        "note": "Troubleshooting rows for 'Content type not set' and the ambiguous @ExceptionHandler mapping are unchanged; the starter run at e838bbe7 still fails task6AnswersFrameworkErrorsWithProblemDetail with 'Content type not set', which the row explains."
+      },
+      {
+        "findingId": "cg-education-validation-007",
+        "status": "resolved",
+        "file": "authoring/catalog/spring-boot/validation-errors-and-testing/module.json",
+        "reviewedSha256": "faaa7e00a0b8ffefa74367fe9b0805f7daeeabeec892b1487e20457349d6e897",
+        "note": "module.json at e838bbe7 (one added note, recording the problemdetail#o2 lab gap) still records the S9/S10 split and the 40-minute S10 block; lab.json cleanup.notes agree. The new note is truthful: lab.json no longer lists problemdetail#o2, and a git grep of e838bbe7 finds the id only in module.json's gap note and the practice mastery-check blueprint (which is not a lab claim)."
+      },
+      {
+        "findingId": "cg-education-validation-008",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "reviewedSha256": "877bc9feb94f8664a4317f6cdcd201219e01158942546119255d3faa25c7b081",
+        "note": "Task 5 step 2 is unchanged at e838bbe7: it says the page example is a request-body failure, this one is method validation on a path variable, and the Bean Validation page names the exception, without giving the value. The text after step 3 changed (see cg-education-validation-011 for the missing reveal)."
+      },
+      {
+        "findingId": "cg-education-validation-009",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/WebLayerTest.java",
+        "reviewedSha256": "9d6403eac50efffe069a885def4b70315fe6a4d8206bb08e95a27a4c0a708208",
+        "note": "Runs at e838bbe7 (git archive copies, JDK 25.0.5+8, Maven 3.9.16, own offline local repo, mvn -q -o test): the untouched starter fails exactly the 12 declared failingTests (10 failures, 2 errors); a private completed solution passes 12/12 with no output. The Task 8 plain-mock TODO is still 'Task 8 step 3', and both JUnit asserts in task8ShowsThatAPlainMockIsOnlyCalledWhenYouPassItIn begin 'step 3' (missing built: 'step 3 missing: replace null with a BookingController built with the plain mock'; missing call: 'step 3: call create on the controller you built, with POSTED'), matching README step 3. The probe and the two no-more/no-interactions checks emit bare Mockito text; the context-mock one replaced a labelled loop-5 assert (see cg-education-validation-013 item 3). The removed call-location check that loop 5 relied on is replaced by a behavioural probe; I ran one Task 8 path for this item: built wired to a different mock and create called directly on the plain mock; it fails at the probe with Mockito's 'Wanted but not invoked: bookingService.byId(5L)', on a shipped line commented 'the controller you built must hand its calls to the plain mock', which points the learner at the fix. A built-on-the-plain-mock controller plus a direct plain.create(POSTED) passes; README line 145 and lab-run.json state that residual honestly and tell the learner to make the call through built."
+      },
+      {
+        "findingId": "cg-education-validation-010",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/WebLayerTest.java",
+        "reviewedSha256": "9d6403eac50efffe069a885def4b70315fe6a4d8206bb08e95a27a4c0a708208",
+        "note": "Runs at e838bbe7 (git archive copies, JDK 25.0.5+8, Maven 3.9.16, own offline local repo, mvn -q -o test): the untouched starter fails exactly the 12 declared failingTests (10 failures, 2 errors); a private completed solution passes 12/12 with no output. The step 3 TODO (lines 85-88) lists only the acts and does not state why the context's controller never calls a plain mock; the reason stays in the collapsed 'Check your answer'. Re-ran my MockMvc variant on these bytes (request sent through MockMvc, then verify on the plain mock, built left null): the learner's own verify fails first with Mockito's 'Wanted but not invoked ... Actually, there were zero interactions with this mock', which README Troubleshooting line 192 explains and routes back to step 3."
+      }
+    ]
+  }
+}

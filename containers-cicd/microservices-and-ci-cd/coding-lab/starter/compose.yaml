@@ -1,0 +1,51 @@
+# The shop stack after the Containers and Compose module.
+# The api image was already built there, so this module's stack runs it by
+# image name. TODO (README phase 2): uncomment the teammate's reviews draft
+# below and repair it — it names its database and the api wrongly, writes
+# the password into the file, publishes to every interface, reuses the shop's
+# volume, and only orders container start (its database has no healthcheck).
+services:
+  api:
+    image: shop-api:dev
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/shop
+      SPRING_DATASOURCE_USERNAME: shop
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: shop
+      POSTGRES_USER: shop
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 10
+
+#  reviews:
+#    build: ./reviews
+#    ports:
+#      - "8000:8000"
+#    environment:
+#      DATABASE_URL: postgresql://reviews:dev-pass2@db:5432/reviews
+#      API_BASE_URL: http://localhost:8080
+#    depends_on:
+#      - reviews-db
+#  reviews-db:
+#    image: postgres:18
+#    environment:
+#      POSTGRES_DB: reviews
+#      POSTGRES_USER: reviews
+#      POSTGRES_PASSWORD: dev-pass2
+#    volumes:
+#      - db-data:/var/lib/postgresql
+
+volumes:
+  db-data:

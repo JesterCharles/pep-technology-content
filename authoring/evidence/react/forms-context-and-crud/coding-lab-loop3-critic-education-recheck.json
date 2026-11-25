@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "pep-react-lab-replacement-critic-education loop 3 (Claude Opus 5.5, fresh independent context; not the author)",
+  "reviewedPath": "react/forms-context-and-crud/coding-lab/lab.json",
+  "reviewedSha256": "314393f8123934ef827e4f2c359226c90e14c7ee934ce32dc3fde20b30c98287",
+  "artifactHashes": {
+    "coding-lab/README.md": "f9285a920ffd4f3ea33cae440d00bddc72991b5513e4c3af2662f3bdb56622fd",
+    "coding-lab/lab.json": "314393f8123934ef827e4f2c359226c90e14c7ee934ce32dc3fde20b30c98287",
+    "coding-lab/expected/on-completion.txt": "6f3f3b40e5bce31c8a317cd79c18eb769447e950908f19f5a704988528a1a9d0",
+    "coding-lab/starter/src/service-form.test.jsx": "b76a2a9413ca2a1129015023505a896d391f3b181acbc8cbdc8da5d89e98c249",
+    "coding-lab/tests/verify-learner-test.mjs": "8c93e5ac3ef214faad80dc43fdd628b17769ba48fb4738053f0fd4f13dc1c733",
+    "coding-lab/tests/vitest.mutation.config.js": "f8e6e2cc1238e75cde6470117bb8d526eb19d5523a943e1e33e67ff93df09d89",
+    "coding-lab/tests/faulty-service-form.jsx": "0b47b70d6f8b9def8a9f9f65a93292a55df8ee8966130ae57836960fd9ed2e5f",
+    "coding-lab/tests/faulty-successful-service-form.jsx": "4f55d8fb18d78444510d4cbd719429efd06eec58ca4d625c8abba94734eb04e7",
+    "coding-lab/tests/package.json": "f4e8da23c878b8405f9c8138517023af3691973acef9038eea93e6b877e1e227"
+  },
+  "findings": [
+    {
+      "id": "edu-fcc-t1",
+      "severity": "high",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/verify-learner-test.mjs",
+        "line": 6
+      },
+      "claim": "On Windows, which lab.json declares as a supported OS, the one test command cannot run, and it prints nothing to say why. This is reasoned from the cited Node.js sources; it was not run on Windows. The new npm test script calls spawnSync on node_modules/.bin/vitest.cmd (lines 4-11) without the shell option. Since the April 2024 CVE-2024-27980 releases, which both declared Node lines (^22.12 and >=24) include, Node errors with EINVAL when a .cmd file is passed to spawnSync without shell. The Node docs also say .bat and .cmd files cannot run without a shell. When a spawn fails, spawnSync returns status null; on macOS a failing spawn showed 'status null' with an error code. Line 12 then calls process.exit(normal.status ?? 1). So Windows learners would see only npm's script header and exit code 1 on every run, with no vitest output, even on a correct solution. A second Windows defect sits in tests/vitest.mutation.config.js line 22. It compares Vite's importer id with a path.resolve result. Vite passes forward-slash ids, and path.resolve on Windows yields backslashes, so on Windows the faulty variants would likely never be substituted and every correct test would be rejected. Before this change the script was plain 'vitest run' through npm, which does not have this problem.",
+      "evidence": [
+        {
+          "url": "https://nodejs.org/en/blog/vulnerability/april-2024-security-releases-2",
+          "section": "Command injection via args parameter of child_process.spawn without shell option enabled on Windows (CVE-2024-27980): breaking-change note",
+          "retrievedAt": "2026-11-18T16:03:50Z",
+          "textSha256": "86fcd775c9c1f6cd47dcff731c57440699e583c34a70704cddeb02675ed57e54"
+        },
+        {
+          "url": "https://nodejs.org/api/child_process.html",
+          "section": "Spawning .bat and .cmd files on Windows",
+          "retrievedAt": "2026-11-18T16:03:32Z",
+          "textSha256": "4ab3e8d2b5d148776961ef2d975019d8d296407709e46efa907a92aa4d0c6b98"
+        }
+      ],
+      "recommendation": "Make the runner independent of the platform. Spawn process.execPath with the vitest package's own JS entry, for example node_modules/vitest/vitest.mjs, instead of the .bin shim. Print the spawn error, if any, before exiting. In the mutation plugin, compare normalized paths: normalize both sides to forward slashes, or use path.relative or Vite's normalizePath. If a Windows run cannot be recorded, say so in the solved-run evidence rather than implying Windows parity.",
+      "reviewedSha256": "8c93e5ac3ef214faad80dc43fdd628b17769ba48fb4738053f0fd4f13dc1c733"
+    },
+    {
+      "id": "edu-fcc-t2",
+      "severity": "medium",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/lab.json",
+        "line": 84
+      },
+      "claim": "The contract now claims more machine verification than the oracle gives, and the honest disclosure from the edu-fcc-3 fix was deleted. The diff removed the README sentence 'its role, label, user-event and query-variant demonstrations are self-checked practice' and the lab.json sentences 'honor-verified practice, not machine-verified; this lab claims no machine-verified coverage of those demonstrations'. In their place, cleanup.notes (line 84) say the oracle is 'rejecting vacuous and partial tests', and README line 124 says 'an always-passing or partial test does not earn credit'. lab.json lines 28-30 still list ui-tests#o1-o3. Observed in a scratch copy with the private solution, using tests I wrote myself. (a) A test that clicks Save with fireEvent, checks the container's innerHTML for the error text, changes the input and select with fireEvent, and checks the text is gone passes 8/8 and gets the 'Task 8 rejects faulty submission behaviors' line. It uses no getByRole, no getByLabelText, no user-event and no findBy or queryBy, so o1, o2 and o3 are not scored. (b) A test that follows the README scenario but never asserts onSave, neither 'remains uncalled' nor 'receives the entered values', also earns full credit; by the README's own scenario that is a partial test. The oracle proves one thing: the test detects that the blank submission shows the error, and that the valid resubmission changes the outcome. That is a real improvement, but it is narrower than the wording. The uncommitted worktree edit to the ui-tests topic.json lab reason ('the choice of each getBy/queryBy/findBy query is self-checked') already concedes the point, but lab.json and the README do not say it.",
+      "evidence": [],
+      "recommendation": "Restore a precise disclosure in lab.json cleanup.notes and README 'How to test' / task 8. The suite proves that your test notices when the form ignores the blank submission or the valid resubmission. Querying by role and label, using user-event, choosing findBy or queryBy, and the onSave assertions are self-checked. Drop 'partial' or define it as 'misses either submission'. Optionally, add a third variant that shows the error but still calls onSave on a blank name, so that 'onSave remains uncalled' is scored too.",
+      "reviewedSha256": "314393f8123934ef827e4f2c359226c90e14c7ee934ce32dc3fde20b30c98287"
+    },
+    {
+      "id": "edu-fcc-t3",
+      "severity": "medium",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/README.md",
+        "line": 117
+      },
+      "claim": "Correct learner tests are rejected for structural reasons that nothing tells the learner about, and the message points them at their assertions instead. These cases were observed in a scratch copy with the private solution and a complete, correct test of my own. (1) Changing only the import line to the extensionless './components/ServiceForm', or to '../src/components/ServiceForm.jsx', still shows 'Tests 8 passed (8)'. npm test then exits 1 with 'Task 8 must prove both invalid and valid submissions.', because vitest.mutation.config.js line 22 substitutes the faulty form only for the exact source string './components/ServiceForm.jsx'. Extensionless imports are common, and editors can rewrite them. (2) Splitting the scenario into two test() blocks is a natural move: the README's own wording has two phases, and the earlier Vitest topic teaches several tests per file. Without cleanup the second test fails with 'Found multiple elements with the role \"button\" and name \"Save service\"'. The config has no globals, so Testing Library's auto-cleanup is off and the starter only shows one test. With an added afterEach(cleanup) the run shows 'Tests 9 passed (9)' and is again rejected with 'must prove both'. The reason is that verify-learner-test.mjs line 38 requires exactly one assertion result. Quote style and renaming the imported binding are fine; a single-quoted import passed. Neither the README task 8, the starter comment nor the failure message says to keep a single test() or to leave the import line as shipped.",
+      "evidence": [],
+      "recommendation": "In the README task 8 and the starter comment, state the two structural rules: keep the scenario in the one shipped test() and leave the ServiceForm import line unchanged. Better, relax the oracle. Match the resolved ServiceForm module path rather than the raw source string. Accept any number of tests in the file, provided at least one fails under each variant. Make the failure message name these rules, for example: 'Task 8: your test still passed when the form ignored the blank-name submission. Keep one test() and the shipped import line.'",
+      "reviewedSha256": "f9285a920ffd4f3ea33cae440d00bddc72991b5513e4c3af2662f3bdb56622fd"
+    },
+    {
+      "id": "edu-fcc-t4",
+      "severity": "low",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/README.md",
+        "line": 128
+      },
+      "claim": "The stated completion signal is now incomplete, and the oracle's failure message does not say which half failed. README 'Expected output' (lines 128-129) still says 'The run summary must show Test Files 8 passed (8) and Tests 8 passed (8)'. Every rejected variant I ran also shows exactly that green summary: vacuous, blank-only, valid-only and changed-import. One plain stderr line follows it, 'Task 8 must prove both invalid and valid submissions.', with no npm error banner. A learner who reads the README criterion can believe the lab is done. The decisive line ' ✓ Task 8 rejects faulty submission behaviors' appears only in expected/on-completion.txt. The message is learner-safe, because it leaks no solution, but it is not specific. It is the same text whether the test missed the blank-name half or the resubmission half: verify-learner-test.mjs line 43 short-circuits and line 44 prints one fixed string.",
+      "evidence": [],
+      "recommendation": "Add the ' ✓ Task 8 rejects faulty submission behaviors' line to the README completion criterion, and say that npm test exits non-zero without it. Report each variant separately. For example, 'your test still passed when the form ignored the blank-name submission: assert the error appears and onSave is not called'; or '...ignored the valid resubmission: assert the error is gone and onSave received the values'.",
+      "reviewedSha256": "f9285a920ffd4f3ea33cae440d00bddc72991b5513e4c3af2662f3bdb56622fd"
+    },
+    {
+      "id": "edu-fcc-t5",
+      "severity": "low",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/starter/src/service-form.test.jsx",
+        "line": 13
+      },
+      "claim": "The scenario reaches slightly past what the module taught. The ui-tests topic page (artifact.md lines 5-31, 67-70) teaches getByRole, getByLabelText, user.type, user.click and the getBy/queryBy/findBy choice. The earlier Vitest topic teaches toBe and toEqual. No learner page in react/ or html-css-js/ mentions user.selectOptions, vi.fn or toHaveBeenCalled/toHaveBeenCalledWith; this was checked by grep over artifact.md and artifact.html. The README task 8 (lines 120-122) and starter steps 4-5 (lines 13-16) require 'onSave remains uncalled' and 'onSave receives the entered values'. The starter names user.selectOptions but no matcher for the onSave checks. The impact is limited: the oracle can be satisfied without onSave assertions (see edu-fcc-t2), and the public tests show selectOptions. Even so, a learner following the README literally must find two mock matchers on their own.",
+      "evidence": [],
+      "recommendation": "In starter steps 4-5, name the matchers: 'expect(onSave).not.toHaveBeenCalled()' and 'expect(onSave).toHaveBeenCalledWith({ ... })'. Or add one sentence on mock-function assertions to the ui-tests topic page before S33.",
+      "reviewedSha256": "b76a2a9413ca2a1129015023505a896d391f3b181acbc8cbdc8da5d89e98c249"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/react/forms-context-and-crud/coding-lab-critic-education.json",
+    "items": [
+      {
+        "findingId": "edu-fcc-1",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/lab.json",
+        "reviewedSha256": "314393f8123934ef827e4f2c359226c90e14c7ee934ce32dc3fde20b30c98287",
+        "note": "Judged against the captain-authorized firstmate decision react-forms-lab-scope option A. The two-slot sequencing is unchanged in the current bytes: lab.json cleanup.notes (line 84) puts tasks 1-3 in the S32 slot and tasks 4-8 on S33 after its teach-then-check steps, and README 'When to do the tasks' (lines 43-46) agrees. The Task 8 change keeps the test on S33, after the Testing Library lesson."
+      },
+      {
+        "findingId": "edu-fcc-2",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/lab.json",
+        "reviewedSha256": "314393f8123934ef827e4f2c359226c90e14c7ee934ce32dc3fde20b30c98287",
+        "note": "minutes are still 25/30 under owner directive 95387e98 and decision option A, and cleanup.notes still disclose that they cover the whole two-slot set and are planning evidence, not a measured pilot. The finding stays resolved by that directive. Task 8 is now more demanding: a full two-phase test that must fail both faulty variants. A learner who meets the import or split-test traps in edu-fcc-t3 will spend extra minutes. This pushes further against the planning figure, which a future learner pilot should measure."
+      },
+      {
+        "findingId": "edu-fcc-3",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/verify-learner-test.mjs",
+        "reviewedSha256": "8c93e5ac3ef214faad80dc43fdd628b17769ba48fb4738053f0fd4f13dc1c733",
+        "note": "The mutation check this finding recommended now exists. npm test runs the normal suite, then reruns the learner test against two runtime variants of the learner's own ServiceForm. One ignores the blank-name submission and one ignores the valid resubmission, and the learner test must fail under each. Observed on macOS, Node 24.2.0 and npm 11.3.0 in a scratch copy with the private solution. A test whose only assertion is that onSave was not called, and a test that only checks the blank-name error, are rejected; so is a test that only checks onSave after a valid submission. My own complete test and the private reference test pass with the ' ✓ Task 8 rejects faulty submission behaviors' line. The core defect, credit for a test that ignores the form, is closed. The honest disclosure that accompanied the earlier fix was removed, and the new wording over-claims; that is raised separately as edu-fcc-t2."
+      },
+      {
+        "findingId": "edu-fcc-4",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/starter/src/service-form.test.jsx",
+        "reviewedSha256": "b76a2a9413ca2a1129015023505a896d391f3b181acbc8cbdc8da5d89e98c249",
+        "note": "The starter comment is byte-identical to loop 2. Steps 3 and 5 (lines 10-17) still say findBy for appearing and queryBy with not.toBeInTheDocument for absence, and name user.type and user.selectOptions. The new README task 8 (lines 117-124) describes the same scenario with the same query choices, so the two do not conflict."
+      },
+      {
+        "findingId": "edu-fcc-5",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/README.md",
+        "reviewedSha256": "f9285a920ffd4f3ea33cae440d00bddc72991b5513e4c3af2662f3bdb56622fd",
+        "note": "The coupling note is still present at README lines 60-63: tests 4-7 build on tasks 1-3, and test 7 needs the task 6 toast. Line 113 keeps 'announce \"Service deleted\"' in the task 6 summary."
+      },
+      {
+        "findingId": "edu-fcc-6",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/README.md",
+        "reviewedSha256": "f9285a920ffd4f3ea33cae440d00bddc72991b5513e4c3af2662f3bdb56622fd",
+        "note": "The troubleshooting entry at README lines 154-156 still reads 'Test 5 cannot find the Save service button after a server error ... reset the pending state in a finally block', which matches the real failure signature."
+      },
+      {
+        "findingId": "edu-fcc-7",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/starter/src/components/ServiceForm.jsx",
+        "reviewedSha256": "3a8e0892bac66949d912cd1150b226179d5dbba0c6df5102b610612eb82b6d7c",
+        "note": "The file is unchanged since loop 2. TASK 2 (line 30) still says 'The team caption is a <span>; make it a <label> first.' On the shipped starter, test 2 fails on the Service name label association, as expected."
+      },
+      {
+        "findingId": "edu-fcc-8",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/t3-client-validation.test.jsx",
+        "reviewedSha256": "b87cdbfa131afed46b27370ed2f5d42dfd3f3db62386bd493ccd2a947d7d5893",
+        "note": "The file is unchanged since loop 2. Lines 23-31 still spy on preventDefault and require a cancelled submit. Observed on the shipped starter at b3609592: test 3 fails with 'handleSubmit must call event.preventDefault(): expected 0 to be greater than 0'. README troubleshooting (lines 157-158) still maps the jsdom requestSubmit trace to a missing preventDefault."
+      },
+      {
+        "findingId": "edu-fcc-9",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/README.md",
+        "reviewedSha256": "f9285a920ffd4f3ea33cae440d00bddc72991b5513e4c3af2662f3bdb56622fd",
+        "note": "README lines 31-41 still start the optional block 'from the tests folder', use 'cd ../starter', and say to run tests in a second terminal and stop the server with Ctrl+C."
+      },
+      {
+        "findingId": "edu-fcc-r1",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/t3-client-validation.test.jsx",
+        "reviewedSha256": "b87cdbfa131afed46b27370ed2f5d42dfd3f3db62386bd493ccd2a947d7d5893",
+        "note": "The file is unchanged since loop 2: the release block (line 65) still waits only for the 'Saving' button to go, not for task-4 output, so test 3 stays independent of task 4. The new verifier runs the normal suite first and exits on its result, so it adds no new cross-task coupling. Observed: the shipped starter fails all 8 under the lab.json failingTests names, and the private solution passes 8/8 plus the Task 8 oracle line."
+      },
+      {
+        "findingId": "edu-fcc-r2",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/t3-client-validation.test.jsx",
+        "reviewedSha256": "b87cdbfa131afed46b27370ed2f5d42dfd3f3db62386bd493ccd2a947d7d5893",
+        "note": "The labelled assertion is still at line 31. Observed on the shipped starter at b3609592: '→ handleSubmit must call event.preventDefault(): expected 0 to be greater than 0', which names the fix."
+      }
+    ]
+  }
+}

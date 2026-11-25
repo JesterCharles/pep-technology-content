@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "cg-critic-sme (independent Claude critic subagent, 2026-11-17)",
+  "reviewedPath": "spring-boot/api-security/coding-lab/README.md",
+  "reviewedSha256": "d363fb0cecf91a24d4aab5ed268de4a41b8f486bdcee3d8dfa54275a7b35743c",
+  "artifactHashes": {
+    "coding-lab/lab.json": "b522e162cacc8adc257ae290721d1c90ef9db9dbc74be07977ba94e06d1bdf04",
+    "coding-lab/README.md": "d363fb0cecf91a24d4aab5ed268de4a41b8f486bdcee3d8dfa54275a7b35743c"
+  },
+  "findings": [
+    {
+      "id": "cg-sme-apisec-008",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "line": 138
+      },
+      "claim": "The Task 7 layering check reads only BookingController's public constructor parameter types. Critic run on a private solution with BookingRepository added to BookingController as a field-injected dependency and the handler doing its own repository lookup and owner comparison (the BookingService constructor, the derived query declaration and the id constraint left in place): all 9 tests pass, so spring-review-layers-data-access-errors-testing-security#o1 (controller uses the service, not the repository) can still be skipped. Low: it needs deliberate field injection next to a correct constructor, which the README and hints do not suggest.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+          "section": "task7ServesOnlyTheCallersOwnBooking structural checks",
+          "retrievedAt": "2026-11-18T04:46:42Z",
+          "textSha256": "226462db59ac3790611eca56df67c306b79c5fa233f4a07c45fd29ad31c26748"
+        }
+      ],
+      "recommendation": "Also reject any declared field of type BookingRepository in BookingController (getDeclaredFields), or assert that the service's owner query is the one called (for example, a spy on the repository in a slice).",
+      "reviewedSha256": "226462db59ac3790611eca56df67c306b79c5fa233f4a07c45fd29ad31c26748"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/spring-boot/api-security/coverage-gap-critic-sme.json",
+    "items": [
+      {
+        "findingId": "cg-sme-apisec-001",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/OwnBookingTest.java",
+        "reviewedSha256": "ca5f192045a4ee6f70e39bd6240f8f659f9887ca60bf408ff80c1a217efa5ee4",
+        "note": "Critic runs at cb8c2e07 on fresh git-archive copies (JDK 25, Maven offline): starter fails exactly the declared tests and a private solution passes 9/9; the original bypass (Task 7 source left at the starter, an unrelated URL with Grace's token) now fails the shipped URI assertion; method, URI and the Authorization header carrying Grace's token are all bound."
+      },
+      {
+        "findingId": "cg-sme-apisec-002",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "226462db59ac3790611eca56df67c306b79c5fa233f4a07c45fd29ad31c26748",
+        "note": "Critic runs at cb8c2e07 on fresh git-archive copies (JDK 25, Maven offline): starter fails exactly the declared tests and a private solution passes 9/9; both earlier placement variants (the CORS source bean moved to SecurityConfig, declared once as the interface type and once as the concrete type) now fail defaultProfileSendsNoCorsHeaders on the getBeansOfType guard; the guard sits on UrlBasedCorsConfigurationSource, the type Spring Security activates on, and the README Task 6 text now states the type-based activation correctly. Earlier dev-chain variants (no cors() call, wrong bean name, no bean, no profile) are still caught."
+      },
+      {
+        "findingId": "cg-sme-apisec-003",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/lab.json",
+        "reviewedSha256": "b522e162cacc8adc257ae290721d1c90ef9db9dbc74be07977ba94e06d1bdf04",
+        "note": "common-api-security-risks-owasp#o3 is no longer declared in lab.json objectives; the README turns the mapping into a check-yourself question with a collapsed answer. This takes the first option of the original recommendation; the topic stays in covers, as on main, and the coverage debt of 1 is the author's to report."
+      },
+      {
+        "findingId": "cg-sme-apisec-004",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "reviewedSha256": "226462db59ac3790611eca56df67c306b79c5fa233f4a07c45fd29ad31c26748",
+        "note": "Critic runs at cb8c2e07 on fresh git-archive copies (JDK 25, Maven offline): starter fails exactly the declared tests and a private solution passes 9/9; the original controller-only mutant (repository in the constructor, manual owner compare and id check) now fails the structural checks the recommendation asked for (constructor parameter types, a derived id-and-owner query, a constraint on the id). A narrower residual (field injection next to the correct constructor) is raised as new finding cg-sme-apisec-008."
+      },
+      {
+        "findingId": "cg-sme-apisec-005",
+        "status": "open",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "d363fb0cecf91a24d4aab5ed268de4a41b8f486bdcee3d8dfa54275a7b35743c",
+        "note": "Rule applied in both Spring rechecks: exact final code outside a collapsed block is open; an outcome statement that names a tool is accepted as a graded hint. Read README and starter TODOs at cb8c2e07: Task 6 and Task 7 now state outcomes, starter TODOs are outcome-only and the final code sits inside collapsed hints. Still open, narrow: the Troubleshooting row for task6 (line 173) restates the exact dev-chain CORS call and the bean name outside any collapsed block, and the task7 row (line 174) names the query and the caller call. Neutralise those rows (name the missing piece, not its code) or accept them explicitly as a third hint tier in reconciliation."
+      },
+      {
+        "findingId": "cg-sme-apisec-006",
+        "status": "open",
+        "file": "authoring/evidence/spring-boot/api-security/coding-lab/lab-run.json",
+        "reviewedSha256": "fa97c298747ba7d5f83ba063cd0be7d35960ef1265f8d51aaf90a2d9242522a1",
+        "note": "Run evidence: the record is byte-identical to the first-pass head 8e24dc2e (git diff empty) and still binds pre-extension lab bytes; the author rewrites it only after this recheck, from the final head, so it stays open until then. Critic reproduction at this head: starter fails exactly the 8 declared failingTests of 9, a private solution passes 9/9."
+      },
+      {
+        "findingId": "cg-sme-apisec-007",
+        "status": "resolved",
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "reviewedSha256": "d363fb0cecf91a24d4aab5ed268de4a41b8f486bdcee3d8dfa54275a7b35743c",
+        "note": "README Goal and lab.json cleanup notes label the 5 + 51 minutes an authoring estimate with a task-by-task basis (Tasks 1 to 5 about 35, Task 6 about 6, Task 7 about 10) and a 60-minute pause point."
+      }
+    ]
+  }
+}

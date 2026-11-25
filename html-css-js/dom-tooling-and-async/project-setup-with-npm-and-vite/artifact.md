@@ -54,7 +54,7 @@ Where to act: The terminal input, for the first command.
 
 Next step: Copy the first line shown on this page. Watch for the double dash before the template option.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: The terminal input, after scaffolding.
 
@@ -103,7 +103,7 @@ npm ci
 - npm docs: package.json, retrieved 2026-11-04
 - Vite: Getting started, retrieved 2026-11-04
 
-First draft, retrieved 2026-11-04. These claims have not had independent review yet, so treat them as unverified until that review is recorded.
+Sources checked on 2026-11-04; independent review pending.
 
 ## Static interaction alternatives
 

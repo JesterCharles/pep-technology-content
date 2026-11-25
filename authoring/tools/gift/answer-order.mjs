@@ -316,9 +316,10 @@ export function isAnswerOrderPermutation(oldText, newText) {
 
 const historyCache = new Map();
 
-// Bytes of a historical artifact.gift blob at the same path whose SHA-256
-// equals the recorded hash, from the checked-out branch's Git history.
-function historicalGift(repoRoot, artifactPath, sha256) {
+// Bytes of a historical blob at the same path whose SHA-256 equals the
+// recorded hash, from the checked-out branch's Git history. Shared with the
+// artifact.html counterpart in ../html/answer-order.mjs.
+export function historicalBlob(repoRoot, artifactPath, sha256) {
   const key = `${repoRoot}\0${artifactPath}`;
   if (!historyCache.has(key)) {
     const blobs = new Map();
@@ -363,7 +364,7 @@ export async function acceptAnswerOrderPermutations(repoRoot, bindings) {
       output.push(binding);
       continue;
     }
-    const old = historicalGift(repoRoot, binding.artifactPath, binding.sha256);
+    const old = historicalBlob(repoRoot, binding.artifactPath, binding.sha256);
     let current = null;
     try {
       current = await readFile(path.join(repoRoot, binding.artifactPath));

@@ -17,7 +17,7 @@ This project's API contract then makes them simple: 401 means sign in again, and
 Send people back where they were. On a 401, pass the current location along, and read it after login:
 
 ```
-go('/sign-in', { state: { from: here }, replace: true });
+go('/sign-in', { state: { from: location }, replace: true });
 ```
 
 Note what clearing auth state means. Clearing the user from your app does not end the server's session: an HttpOnly cookie cannot be removed by JavaScript. Ending that session takes a logout request to the server. Here, the server has already said the session is not valid.
@@ -46,7 +46,7 @@ Where to act: The body of `handleStatus`.
 
 Next step: Branch on the status value. Each branch calls one or two of the functions in the second parameter.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The `navigate` call.
 
@@ -66,7 +66,7 @@ Static version: a Sign out button only clears user state and redirects, with an 
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/401: Status
 - developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/403: Status

@@ -1,0 +1,277 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "ops-critic-sme-loop2 (independent Claude critic subagent, 2026-11-18)",
+  "reviewedPath": "containers-cicd/microservices-and-ci-cd/coding-lab/lab.json",
+  "reviewedSha256": "0c680786a68731ee36634d8cd5248f95262cff5c53a2bb898d6d15d1b75b5685",
+  "artifactHashes": {
+    "coding-lab/README.md": "e286096a9d79a56980a6267dea525baa22a66030d0f6f42397922b5c25afbdc3",
+    "coding-lab/expected/solved-summary.txt": "81d0bfdcbbd94535840e83ac7e86ffad20ed0b7666584dec288f40e5905ebd25",
+    "coding-lab/expected/starter-summary.txt": "8d7ef1775b6202f3d991778ed70229eb223206847ef9800f9f0d88f27c6a7028",
+    "coding-lab/fixtures/.env.example": "16d958ba8d51b7600909af11bbcc39441a8f4b4c80a18379e12e2a50287223e4",
+    "coding-lab/fixtures/briefs/architecture-brief.md": "62f2be54b3807b2586acaa138809a8ba40ff928f77dad31389147586900fed9d",
+    "coding-lab/fixtures/briefs/image-reference.txt": "b19ef04e2336adfd683e93fc1f27223bf2936e300ce45226ea7555d15b9b2f33",
+    "coding-lab/lab.json": "0c680786a68731ee36634d8cd5248f95262cff5c53a2bb898d6d15d1b75b5685",
+    "coding-lab/starter/.github/workflows/ci.yml": "0fd485a2de89495350989d88d162d32c82388883f0874182d170e91877d38231",
+    "coding-lab/starter/.gitignore": "6c9e486632f5647c93d52d6c064f6e4ebea0c0ddd0747d9f91511f6a06cf817a",
+    "coding-lab/starter/compose.yaml": "296a2981948ec44e9c38f05a592b2cffb109c12fd85fc9bbc77a55db9b75000c",
+    "coding-lab/starter/decisions.yaml": "6e3e7063e2dbcd751bda37aa79c71bfb9fa4b3793abb65d1c1cf9d42c7c53786",
+    "coding-lab/starter/reviews/.dockerignore": "79052f6871c4f7f8dcda47576c5a56a89a518db2cef8a4585f951f13f4be0946",
+    "coding-lab/starter/reviews/Dockerfile": "1fe56443a057e8ca6d4a7b8a1471bce2d29e57aad6b08c33fcfb9bad3c736736",
+    "coding-lab/starter/reviews/app/main.py": "f57ae633f73b9f06018376bd983e5ef9c32a75774e965ed397648f680838bb6b",
+    "coding-lab/starter/reviews/requirements.txt": "44216c29888f2536291b0822db49381252392f80298b391c94c130bf892ebbad",
+    "coding-lab/tests/ci.test.mjs": "a113d84a95e7ecf499b6bf7c00d86656153bc73984b174349398abddb6ff4719",
+    "coding-lab/tests/compose.test.mjs": "657fd6172e7417928559e579ef5e95eeecbc17bd70180cbf3a7651f199f5a02d",
+    "coding-lab/tests/decisions.test.mjs": "7106f71ffb382ac4bc9d9a7befc46f626b27b35d57bb1fd5489e10372351cb94",
+    "coding-lab/tests/dockerfile.test.mjs": "f3bc73b5464d020765f278773bb72a2808886e55c0b7afb6126713b12ebc2f9b",
+    "coding-lab/tests/lab.mjs": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+    "coding-lab/tests/package-lock.json": "967ac4c675131cb4beb93684e07dbbb8f8a427a78dc66422036927ce5c126803",
+    "coding-lab/tests/package.json": "3a5c13790064c853eef28d93aed9525d0b7280843d68c34a43c0f734a8e3a4fd",
+    "coding-lab/tests/service.test.mjs": "8314fabe10b849245f72e3917b76ad8f83d593dce9b4bd7523a064c28385ea41"
+  },
+  "findings": [
+    {
+      "id": "ops-sme-r2-01",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 350
+      },
+      "claim": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). Loop 2 changed the no-guard message of reviews-auth-forward to \"a request with no token would reach the shop api without one: answer 401 before the call when authorization is missing\". That consequence is false for the plain dict-literal shape: a dict literal that maps Authorization to the optional parameter, passed as the call's headers, with no guard. In httpx 0.28.1 a None header value raises TypeError (\"Header value must be str or bytes, not <class 'NoneType'>\") before any request is sent. Executed under FastAPI TestClient against a local stub api, a request without the header returned 500, and the stub api received no request. The message is true only for the conditional-headers shape, which sent the request with no Authorization header and returned 200. The loop-1 message described the dict-literal case accurately (send None as the header and end in a 500). The same false message is also shown for the positive-form guard (if authorization ... else raise 401), which does answer 401; that false fail is recorded under ops-sme-r1-01.",
+      "evidence": [],
+      "recommendation": "Word the message so that it is true for both shapes. For example: \"a request with no token would end in a 500 or reach the shop api without one: answer 401 before the call when authorization is missing\". Alternatively, choose the wording by whether the headers expression is conditional.",
+      "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22"
+    },
+    {
+      "id": "ops-sme-r2-02",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 586
+      },
+      "claim": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). ci-permissions returns leastAccess(top) as soon as a top-level permissions block exists (line 586), and it never looks at jobs.<job_id>.permissions. Each of these one-line additions passes 26/26: a top-level contents: read plus \"permissions: write-all\" on the build job, and the same top-level block plus a build-job block of contents: read and packages: write. GitHub documents that a permissions key inside a job gives every action and run command in that job the access it lists, so the job that holds the registry secrets runs with a write-scoped GITHUB_TOKEN. Yet test 8 (\"a permissions block gives GITHUB_TOKEN least access\") passes. Loop 2 added per-job checking only for the case with no top-level block (lines 587-596), so the two paths are now asymmetric. The same override also passed under the loop-1 grader, so this is not a regression. It is low because the learner must add a write grant on purpose, and the README never suggests one, but GitHub's own Docker Hub publish example puts a job-level permissions block with packages: write and other write scopes on its push job.",
+      "evidence": [
+        {
+          "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax",
+          "section": "permissions: \"You can use permissions either as a top-level key, to apply to all jobs in the workflow, or within specific jobs. When you add the permissions key within a specific job, all actions and run commands within that job that use the GITHUB_TOKEN gain the access rights you specify.\"",
+          "retrievedAt": "2026-11-18T08:39:03Z",
+          "textSha256": "1ecc1a15004955f1fe9ae622022a8ef867718fb3d1a4b367dcdf2df8f02749a7"
+        },
+        {
+          "url": "https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images",
+          "section": "Publishing images to Docker Hub: example workflow job push_to_registry with job-level permissions packages: write, contents: read, attestations: write, id-token: write",
+          "retrievedAt": "2026-11-18T08:51:55Z",
+          "textSha256": "3780e7d621f6d915672f9f98261366591e96cbcba1ad51ed7ecd84698accd77c"
+        }
+      ],
+      "recommendation": "When a top-level block exists, also run leastAccess on every job that has its own permissions block, and fail with the existing least-access message. Keep the current per-job path for workflows that have no top-level block.",
+      "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22"
+    },
+    {
+      "id": "ops-sme-r2-03",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 508
+      },
+      "claim": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). commands() (lines 508-511) splits a run script on newlines, so in a heredoc the printer and the line that expands the secret are judged apart. Repro: a new build-job step whose run block is cat <<EOF, then a line holding the job-env variable mapped from secrets.REGISTRY_PASSWORD, then EOF. It passes 26/26. Run under bash -e with that variable set, the step writes the secret value to stdout, which is the run log. A heredoc is a redirection, and the r1-07 acceptance lists the here-string form as the minimum (\"at least\"), which holds. This shape is the remaining unflagged printer form beside printenv, which was ruled non-binding. The same behaviour existed under the loop-1 grader. It is low because an unquoted heredoc that prints a secret is a deliberate shape, not a slip the starter invites.",
+      "evidence": [],
+      "recommendation": "Before splitting, fold each heredoc body (from a <<WORD or <<-WORD operator up to its terminator) into the command that opened it, and treat any secret-mapped variable in the body as fed to that command. Alternatively, accept this shape explicitly as non-binding in the reconciliation, as was done for printenv.",
+      "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/containers-cicd/microservices-and-ci-cd/module-lab-critic-sme.json",
+    "items": [
+      {
+        "findingId": "ops-sme-001",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/app/main.py",
+        "reviewedSha256": "f57ae633f73b9f06018376bd983e5ef9c32a75774e965ed397648f680838bb6b",
+        "note": "The starter call passes timeout=None (main.py line 41), and docstring rule 2 (lines 33-34) now says only that the timeout argument is wrong for a service call and points to the page. It no longer claims that a call with no timeout hangs. The README has no troubleshooting line about a timeout the starter lacks. reviews-timeouts (tests/lab.mjs line 288) rejects timeout=None, and its message points to the page. Verified in httpx 0.28.1: a None default leaves read, write and pool off, so the message at line 296 is accurate."
+      },
+      {
+        "findingId": "ops-sme-002",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "The Docker Hub route still holds. README line 102 and architecture-brief.md lines 81-82 say that GITHUB_TOKEN cannot sign in to Docker Hub. The login-action message (tests/lab.mjs line 530) and the ci-permissions message (line 582) give that reason. Reproduced: a top-level packages: write added to contents: read fails ci-permissions, which is correct least access for a Docker Hub push."
+      },
+      {
+        "findingId": "ops-sme-003",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). These fail ci-no-secret-prints (lines 563-575): a job-env secret echoed in a new step; that variable echoed and piped into base64; and the shipped debug step given step env with an env-context expression in its echo. The inline secrets-context expression piped to docker login --password-stdin is not flagged as a print. ci-secret-refs (line 535) rejects it with its own accurate reason. printenv by name still passes, which the first reconciliation ruled non-binding."
+      },
+      {
+        "findingId": "ops-sme-004",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). With both triggers present, ci-build-push (lines 471-494) fails an inverted event-name condition and an always-true ref condition, with \"a pull request run would push an image\". It passes these push conditions: event name not equal to the pull-request event, event name equal to push, ref equal to the main ref, ref_name equal to main, and an && of event and ref. The ops-edu-03 cases behave too. Each of these fails: a push-only trigger with an unconditional push, a push-only trigger with an always-true ref condition (test 1 and test 4 both fail, and the test 4 message names the pull-request runs), and an unconditional push with both triggers and no guard. A pull_request-only trigger fails test 1. A step-level if that skips the build-push step on pull requests passes around an unconditional push, and so does on: [push, pull_request]."
+      },
+      {
+        "findingId": "ops-sme-005",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). Each of these fails ci-secret-refs: a literal password piped to --password-stdin; -p with no space; --password=; -p placed on a backslash-continued line (the argv check at line 521 runs after the lines are joined); and the login step deleted with both secrets.REGISTRY_* expressions left in a YAML comment. A literal --username fails with the username message. A SHA-pinned docker/login-action whose username and password come from secrets.* passes."
+      },
+      {
+        "findingId": "ops-sme-006",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). Moving actions/checkout after the test run step fails ci-test-job (lines 453-462) with \"the checkout step comes after the test step\"."
+      },
+      {
+        "findingId": "ops-sme-007",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). These fail reviews-listen (lines 187-208): fastapi run with --host=127.0.0.1, and an exec-form ENTRYPOINT fastapi run whose CMD passes --host 127.0.0.1. These pass: uvicorn with --host=0.0.0.0 --port=8000, ENTRYPOINT fastapi run with CMD app/main.py --port 8000, and the shell form of fastapi run. The rewritten messages (lines 198-207) only point to the page, and the claim that uvicorn uses its default address without --host is true."
+      },
+      {
+        "findingId": "ops-sme-008",
+        "status": "open",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). Every case the acceptance names behaves. Must fail, and does: an unused lowercase local named timeout with no timeout on the call (\"built but never used\"); the same plus a plain number on the call (single-number message); an unused Timeout bound to another name; read=None; connect=None. Must pass, and does: a Timeout inline in the call; one bound to a module-level name and passed by that name; one bound to a local named timeout and passed by it; one given to the httpx.Client whose client.get makes the call (with-block); an async AsyncClient. One acceptance sentence still fails: \"only a timeout keyword argument inside a call's argument list counts as passing a timeout, for the outgoing httpx call or the httpx client it uses\". keywordArgs (lines 258-278) and line 286 count a timeout= keyword on any call except httpx.Timeout. Repro: a module-level httpx.Client built with the Timeout and never used, while the httpx.get call has no timeout, passes 26/26. The pass is wrong because the request runs on HTTPX defaults, not the explicit connect and read limits the test title promises. Residual severity: low. HTTPX's default timeout still bounds the call, so nothing hangs, and the slip needs a client the learner builds but never calls. Fix: count the keyword only on the call that outgoingCall identifies, or on a client whose name makes that call."
+      },
+      {
+        "findingId": "ops-sme-009",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). Under the first-matching-except logic (lines 373-387), a RequestError handler before TimeoutException fails with the order message (line 378), and swapping the timeout and refused statuses fails with the timeout-status message (line 379). A RequestError, HTTPError, TransportError, ConnectError or ConnectError-tuple handler placed after TimeoutException with an allowed status passes. A ConnectError handler placed before TimeoutException also passes, which is valid Python because ConnectError is not a superclass of TimeoutException. A JSONResponse returned with an allowed status_code passes as well. The ops-edu-02 must-fail cases fail. A TimeoutException+ConnectError tuple with a ConnectError handler left below it as dead code, and the same tuple alone, both get the status message \"your timeout handler also catches refused connections\", not the escape message. An except Exception handler, or an except httpx.HTTPError handler, answering a 500 between the timeout and ConnectError handlers gets the first-matching-handler message naming that class. Removing the refused handler gets the escape message."
+      },
+      {
+        "findingId": "ops-sme-010",
+        "status": "open",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). This acceptance (ops-edu-06) held after loop 1 and loop 2 broke it. These core cases still behave: a lowercase header key, a subscript-built dict and a required authorization parameter with no guard all pass, and an optional parameter with no guard fails. The failing sentence is \"any form that forwards the incoming value as the outgoing Authorization header ... passes\". outgoingCall (tests/lab.mjs lines 311-322) takes the outgoing call to be the first call anywhere in the file whose argument text contains API_BASE_URL. These forwarding forms therefore fail with the false message \"send the incoming authorization value on as the outgoing Authorization header\": the URL built in a local variable and passed to httpx.get; a module-level httpx.Client(base_url=API_BASE_URL, ...) whose .get takes a relative path and the headers; and any earlier call that mentions API_BASE_URL, such as a print or log line. All three pass 26/26 under the loop-1 grader. Executed under FastAPI TestClient (fastapi 0.136.3, httpx 0.28.1) against a local stub api: each forwards the caller's bearer token, and each answers 401 without calling the api when no header is sent. HTTPX documents base_url as prepending a URL to all outgoing requests and recommends a Client instance beyond one-off scripts. The root cause is the same as the ops-sme-r1-01 residual, and one fix closes both. Residual severity: medium."
+      },
+      {
+        "findingId": "ops-sme-011",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/app/main.py",
+        "reviewedSha256": "f57ae633f73b9f06018376bd983e5ef9c32a75774e965ed397648f680838bb6b",
+        "note": "Docstring rule 3 (main.py lines 35-36) names only a timed-out or refused call. README phase 4 rule 3 (line 82) names a timeout and a refused connection, and says HTTPX raises httpx.ConnectError for the latter, which is true. Test 26's title is \"a timed-out or refused call becomes a clear gateway error response\". None of them claims that raise_for_status (line 43) errors are mapped."
+      },
+      {
+        "findingId": "ops-sme-012",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). ci-build-push (line 475-476) requires the build context to be the reviews folder. context \".\" fails with the reviews-Dockerfile message, and both \"reviews\" and \"./reviews\" pass. The starter workflow header (ci.yml lines 1-3) still says where mvnw lives."
+      },
+      {
+        "findingId": "ops-sme-013",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "reviewedSha256": "e286096a9d79a56980a6267dea525baa22a66030d0f6f42397922b5c25afbdc3",
+        "note": "This finding took the note route. README line 107 is now a pointer: \"Optional and not tested: after phase 7, check the secrets page's rule for runs from forks and decide whether the login step needs the same guard as the push\". The recheck reconciliation (ops-edu-r1-01) explicitly allows this form as still satisfying ops-sme-013. Reproduced: a login step guarded with a not-pull-request event condition passes 26/26, so the optional guard is not penalised. Because ops-edu-03 now requires the pull_request trigger, an unguarded login meets the secrets page's fork rule on every fork pull request. That is reasoned from the rule and not executed, since no runner is used. The note covers it, and the guard stays optional by decision."
+      },
+      {
+        "findingId": "ops-sme-014",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/Dockerfile",
+        "reviewedSha256": "1fe56443a057e8ca6d4a7b8a1471bce2d29e57aad6b08c33fcfb9bad3c736736",
+        "note": "Still moot. The provided Dockerfile installs dependencies before copying the code (lines 8-10). The README limits phase 3 to the start command (line 74). tests/lab.mjs has no dependency-order rule: grep for reviews-deps-order finds nothing."
+      },
+      {
+        "findingId": "ops-sme-015",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). With POSTGRES_DB removed and the URL database named after the user, compose-reviews-env passes (line 114 defaults the database to the user, as the postgres image does). Using the shop's password variable in both places fails with the REVIEWS_DB_PASSWORD message (line 108)."
+      },
+      {
+        "findingId": "ops-sme-016",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/Dockerfile",
+        "reviewedSha256": "1fe56443a057e8ca6d4a7b8a1471bce2d29e57aad6b08c33fcfb9bad3c736736",
+        "note": "Still moot. The base-image rule is gone (grep for reviews-image in tests/lab.mjs finds nothing), and the provided FROM python:3.14-slim (Dockerfile line 6) is not graded."
+      },
+      {
+        "findingId": "ops-sme-017",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). A single-$ ${POSTGRES_USER} in a CMD-SHELL healthcheck fails compose-reviews-depends with the $$ explanation (line 128-129). A $$ form passes, and so does an exec-form CMD list with literal names."
+      },
+      {
+        "findingId": "ops-sme-018",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/fixtures/briefs/architecture-brief.md",
+        "reviewedSha256": "62f2be54b3807b2586acaa138809a8ba40ff928f77dad31389147586900fed9d",
+        "note": "architecture-brief.md line 9 reads \"Three incidents drive this review:\", followed by the three-item list (lines 11-17)."
+      },
+      {
+        "findingId": "ops-sme-019",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/.github/workflows/ci.yml",
+        "reviewedSha256": "0fd485a2de89495350989d88d162d32c82388883f0874182d170e91877d38231",
+        "note": "This finding was rejected in reconciliation, and it is moot on the current bytes. The header (ci.yml lines 1-5) does not say the pipeline runs. It says the tests read the workflow and never run it, that it breaks rules the module taught, and where the api's mvnw lives."
+      },
+      {
+        "findingId": "ops-sme-020",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/lab.json",
+        "reviewedSha256": "0c680786a68731ee36634d8cd5248f95262cff5c53a2bb898d6d15d1b75b5685",
+        "note": "This finding was rejected on scope, and the rejection still holds. The reviews image still has no USER instruction (Dockerfile lines 6-12), but none of the 24 objectives (lab.json lines 15-40) covers image users. The Dockerfile build steps are provided, and phase 3 changes only the start command."
+      },
+      {
+        "findingId": "ops-sme-r1-01",
+        "status": "open",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). All five must-fail variants fail. A guard body that prints, an HTTPException created without raise, and a guard returning a dict all get the missing-raise message (line 352). A removed guard with the headers made conditional on authorization, inline or through a name, fails (line 350). A forwarding dict built but not passed, with the call sending an empty dict, fails (line 343). The named must-pass forms pass: a dict literal in the call's headers, a name assigned the dict, a subscript-built dict, a lowercase key, a not-authorization guard with status_code=401, a status.HTTP_401_UNAUTHORIZED constant, and a required parameter with no guard. Two acceptance sentences still fail on runnable code. (1) \"It passes a guard on missing authorization whose body raises HTTPException with 401 before the outgoing call\": RAISE_401 (line 335) needs 401 or status_code= right after the opening parenthesis. raise HTTPException(detail=..., status_code=401) therefore fails with the false message \"does not raise HTTPException with 401\", although handlers() at line 364 already accepts any keyword order. The positive form, if authorization: build the headers, else: raise HTTPException 401, fails with \"a request with no token would reach the shop api without one\", because line 349 recognises only not-authorization or is-None guards. (2) \"With the forwarded value reaching the call ... through the name assigned that dict ... and passed as headers\": this fails when the URL is in a local variable, or when a base_url client makes the call, because outgoingCall (lines 311-322) then finds no call or the wrong one (details under ops-sme-010). Executed under FastAPI TestClient against a local stub api, every one of these shapes forwards the token and answers 401 without calling the api when the header is missing. All of them pass 26/26 under the loop-1 grader, so these are regressions introduced by loop 2. Residual severity: medium. The false messages give the learner no route to a fix."
+      },
+      {
+        "findingId": "ops-sme-r1-02",
+        "status": "open",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). The join (commands(), lines 508-511) works. The README login wrapped with a trailing backslash, and with the line ending after the pipe, both pass ci-secret-refs and ci-no-secret-prints. Run under bash -e with a stub docker, both hand docker the argv login, the registry, --username, the user and --password-stdin, and they feed the secret only to stdin. A folded (>) block and a trailing \"|| exit 1\" also pass. The here-string form fails ci-secret-refs with the honest message that the lab checks the piped form (line 538), and ci-no-secret-prints does not flag it. The ops-sme-005 must-fail cases still fail. One acceptance sentence fails: \"ci-no-secret-prints never reports a secret written to the log for a pipeline that ends in docker login --password-stdin after joining\". Repro: printf of the password variable piped through tr -d and then into docker login --password-stdin, all on one line. ci-no-secret-prints reports \"writes a secret ... to the run log\" because intoLogin (line 569) requires exactly two pipe stages. ci-secret-refs reports \"feed the password to docker login through --password-stdin\" because line 537 takes the second stage as the login. Both messages are false: under bash with a stub docker, the secret reaches only docker's stdin and nothing is printed. The behaviour is the same under the loop-1 grader, so it is not a regression. Residual severity: low, because a three-stage feed is uncommon and the README shows the two-stage form."
+      },
+      {
+        "findingId": "ops-sme-r1-03",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). An httpx.HTTPError handler after TimeoutException with either allowed refused status passes 26/26. CATCHES_CONNECT (line 371) now includes HTTPError, as SUPER_OF_TIMEOUT (line 369) does. Verified in httpx 0.28.1: ConnectError and TimeoutException are both TransportError subclasses."
+      },
+      {
+        "findingId": "ops-sme-r1-04",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). With no top-level block, a contents: read block on each of the two jobs passes (lines 584-597). Leaving one job without a block fails with the add-a-block message. These still fail: a top-level write-all (\"is not least access\", line 578), a top-level extra packages: write, and per-job blocks with an extra packages: write (line 582). The message \"anything you do not list becomes none\" matches GitHub's workflow-syntax rule. A job-level block that widens access while a top-level block exists is not detected. That is a separate defect, filed as ops-sme-r2-02."
+      },
+      {
+        "findingId": "ops-sme-r1-05",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). httpx.Timeout(None, connect=..., read=...) passed as the call's timeout now passes (line 295). A None default with only connect fails with \"a None default leaves every limit you do not set switched off\" (line 296), in both the positional and the timeout=None spelling. read=None and connect=None fail (line 292). Verified in httpx 0.28.1: Timeout(None, connect=1.5) gives read, write and pool None, so the message is true."
+      },
+      {
+        "findingId": "ops-sme-r1-06",
+        "status": "resolved",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/app/main.py",
+        "reviewedSha256": "f57ae633f73b9f06018376bd983e5ef9c32a75774e965ed397648f680838bb6b",
+        "note": "main.py line 4 now reads \"The lab's tests (in its tests folder) read this file as text\", which names the right folder without a wrong relative path."
+      },
+      {
+        "findingId": "ops-sme-r1-07",
+        "status": "open",
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "111e75f2bcd5fe88806b6bbc3d77eb3240d3af86bfe625da77221ca6dce2df22",
+        "note": "Basis for every reproduction below: a scratch copy of the frozen loop-2 export (equal to HEAD 607eea16); the shipped starter gives 0/26 and its result lines equal expected/starter-summary.txt; the critic wrote its own passing solution (26/26 under node --test with LAB_PROJECT, result lines equal expected/solved-summary.txt), and each variant is a minimal edit of it, evaluated by calling every rule function in tests/lab.mjs that the 26 tests assert on (the key variants were also rerun through node --test with LAB_PROJECT, with the same counts). The acceptance floor holds. ci-no-secret-prints (PRINTERS, line 562, applied to every pipe stage at line 570) fails a job-env secret fed by here-string to base64, with or without a space after <<<, and to xxd. It still fails an echo piped into base64. The env-context form (ops-edu-04) fails in both ci-no-secret-prints and ci-secret-refs with accurate messages, and the encoder rule covers it: base64 fed by here-string from an env-context expression fails, and so does that expression echoed into base64. An ::add-mask:: of a derived value and the README two-stage login pipeline are not flagged. One acceptance sentence fails: \"a pipeline ending in docker login --password-stdin [is] not flagged\". The three-stage pipeline described under ops-sme-r1-02 (printf of the password variable, then tr -d, then docker login --password-stdin) is flagged with \"writes a secret ... to the run log\", and under bash it prints nothing. It is the same defect as the ops-sme-r1-02 residual, and the same fix closes both. Residual severity: low. Residuals not named by the acceptance: a cat heredoc whose body expands the variable passes 26/26, and under bash it prints the secret (filed as ops-sme-r2-03). printenv by name still passes, which was ruled non-binding. An echo of the variable redirected to a file is reported as written to the run log, which is untrue, but that shape fails ci-secret-refs anyway and it predates loop 2."
+      }
+    ]
+  }
+}
