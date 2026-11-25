@@ -643,16 +643,54 @@ async function inspectHtml(html, browser, spec) {
       }
 
       const fitsByActivity = new Set();
-      for (const fit of root?.querySelectorAll("section[data-pep-where-fits]") ?? []) {
-        const fields = ["decision", "good", "boundary"].map((name) => [...fit.querySelectorAll(`[data-pep-fit-${name}]`)]
-          .filter((node) => node.closest("[data-pep-where-fits]") === fit));
+      const fitSections = [...root?.querySelectorAll("section[data-pep-where-fits]") ?? []];
+      // Path anatomy (DESIGN.md "On the job"): the card is mandatory and carries five rows in a fixed
+      // order, each with text beyond its leading <strong> label. Other pages keep the optional
+      // three-field Where this fits rule unchanged.
+      const pathFitRows = [
+        ["decision", "decision"], ["good", "Use it when"], ["boundary", "Choose something else when"],
+        ["work", "At work"], ["interview", "In interviews"],
+      ];
+      const fitRowBody = (row) => {
+        const copy = row.cloneNode(true);
+        const lead = [...copy.childNodes].find((child) => child.nodeType === Node.ELEMENT_NODE ||
+          (child.nodeType === Node.TEXT_NODE && normalize(child.textContent)));
+        if (lead?.nodeType === Node.ELEMENT_NODE && lead.tagName === "STRONG") lead.remove();
+        return normalize(copy.textContent);
+      };
+      if (pathAnatomy && !fitSections.length) {
+        problems.guidance.push("path-anatomy pages require an On the job card (section[data-pep-where-fits])");
+      }
+      for (const fit of fitSections) {
+        const owned = (name) => [...fit.querySelectorAll(`[data-pep-fit-${name}]`)]
+          .filter((node) => node.closest("[data-pep-where-fits]") === fit);
         const headings = [...fit.querySelectorAll("h2")].filter((node) => node.closest("[data-pep-where-fits]") === fit);
-        if (headings.length !== 1 || !/^Where this fits$|^When and why$|^On the job$/u.test(normalize(headings[0].textContent)) ||
-            fields.some((items) => items.length !== 1 || !normalize(items[0]?.textContent))) {
-          problems.guidance.push("Where this fits requires a direct heading and one non-empty decision, good-fit and boundary field, each directly owned");
-        } else if (fields.some((items, fieldIndex) => fieldIndex > 0 &&
-            Boolean(fields[fieldIndex - 1][0].compareDocumentPosition(items[0]) & Node.DOCUMENT_POSITION_PRECEDING))) {
-          problems.guidance.push("Where this fits fields must appear in decision, good-fit, boundary order");
+        if (pathAnatomy) {
+          if (headings.length !== 1 || normalize(headings[0].textContent) !== "On the job") {
+            problems.guidance.push("path-anatomy On the job card requires one direct h2 heading reading On the job");
+          }
+          const rows = pathFitRows.map(([name, label]) => ({ name, label, items: owned(name) }));
+          for (const row of rows) {
+            if (row.items.length !== 1) {
+              problems.guidance.push(`path-anatomy On the job card requires exactly one directly owned ${row.label} row (data-pep-fit-${row.name})`);
+            } else if (!fitRowBody(row.items[0])) {
+              problems.guidance.push(`path-anatomy On the job ${row.label} row (data-pep-fit-${row.name}) must have text beyond its label`);
+            }
+          }
+          const present = rows.filter((row) => row.items.length === 1).map((row) => row.items[0]);
+          if (present.some((node, index) => index > 0 &&
+              Boolean(present[index - 1].compareDocumentPosition(node) & Node.DOCUMENT_POSITION_PRECEDING))) {
+            problems.guidance.push("path-anatomy On the job rows must appear in decision, Use it when, Choose something else when, At work, In interviews order");
+          }
+        } else {
+          const fields = ["decision", "good", "boundary"].map(owned);
+          if (headings.length !== 1 || !/^Where this fits$|^When and why$|^On the job$/u.test(normalize(headings[0].textContent)) ||
+              fields.some((items) => items.length !== 1 || !normalize(items[0]?.textContent))) {
+            problems.guidance.push("Where this fits requires a direct heading and one non-empty decision, good-fit and boundary field, each directly owned");
+          } else if (fields.some((items, fieldIndex) => fieldIndex > 0 &&
+              Boolean(fields[fieldIndex - 1][0].compareDocumentPosition(items[0]) & Node.DOCUMENT_POSITION_PRECEDING))) {
+            problems.guidance.push("Where this fits fields must appear in decision, good-fit, boundary order");
+          }
         }
         if (fit.closest("[data-pep-teaching], [data-pep-task], [data-pep-workspace], [data-pep-hint], [data-pep-optional]")) {
           problems.guidance.push("Where this fits must be a peer region, not nested in teaching, task, workspace, hint or optional content");
