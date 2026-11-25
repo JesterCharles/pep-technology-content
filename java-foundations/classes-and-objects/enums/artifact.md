@@ -70,7 +70,7 @@ The model: an enum declares a type whose only values are a fixed list of named c
 
 ## Cheat sheet
 
-Where to act: The call shown after Item:, above the two buttons.
+Where to act: The line that starts with Scenario:, just above the two buttons.
 
 Next step: Find the parameter type of the method being called, then ask whether the argument's type matches it exactly. A name spelled in a `String` is not a constant.
 

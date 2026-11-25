@@ -48,7 +48,7 @@ The model: each method call gets a frame on its thread's stack. The frame holds 
 
 ## Cheat sheet
 
-Where to act: The item shown after Item:, above the three buttons.
+Where to act: The line that starts with Scenario:, just above the three buttons.
 
 Next step: Trace the program line by line. A variable declared in `main` goes in the frame, a field goes in the object its variable refers to, and an arrow ends at the object whose reference the variable was given; `b = a` copies `a`'s arrow.
 
