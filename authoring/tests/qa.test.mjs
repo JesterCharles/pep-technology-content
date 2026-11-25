@@ -2859,9 +2859,16 @@ test("private leak comparison keeps raw exact scanning and claims no transformed
   assert.equal(await leakOutcome(value, { transformHtml: inPage(`<pre>${Buffer.from(value).toString("base64")}</pre>`) }), "passed", "an alternate encoding is not decoded");
 });
 
-test("path anatomy moves activity checks into the reading column and the timeline into the lesson path", async () => {
+// The fixture's three-field card, upgraded to the path anatomy's five-row On the job card.
+const workRow = "<p data-pep-fit-work><strong>At work:</strong> A teammate asks whether a preview change needs a ticket for the integrations team.</p>";
+const interviewRow = "<p data-pep-fit-interview><strong>In interviews:</strong> You may be asked which effects stay local and which cross a system boundary.</p>";
+const withCareerRows = (html) => html
+  .replace(">Where this fits</h2>", ">On the job</h2>")
+  .replace(/(<p data-pep-fit-boundary>[^]*?<\/p>)/u, `$1\n      ${workRow}\n      ${interviewRow}`);
+
+async function pathAnatomyFixture() {
   const html = await readFile(path.join(fixtures, "good.html"), "utf8");
-  const marked = html.replace(" data-pep-guidance-contract", ' data-pep-guidance-contract data-pep-anatomy="path"');
+  const marked = withCareerRows(html.replace(" data-pep-guidance-contract", ' data-pep-guidance-contract data-pep-anatomy="path"'));
   const checkBlock = (n) => marked.match(new RegExp(`\\s*<section class="activity-checks" data-pep-activity-checks aria-labelledby="checks-${n}">[\\s\\S]*?</section>`, "u"))[0];
   const taskOpen = ['<div id="task-safe" data-pep-task>', '<div id="task-explain" data-pep-task data-pep-may-stall>', '<div id="task-recap" data-pep-task data-pep-may-stall>'];
   let migrated = marked.replace('<nav aria-label="Activities">', '<nav aria-label="Activities" data-pep-path>');
@@ -2869,6 +2876,11 @@ test("path anatomy moves activity checks into the reading column and the timelin
     const block = checkBlock(n);
     migrated = migrated.replace(block, "").replace(taskOpen[n - 1], `<div data-pep-instructions>${block.trim()}</div>\n        ${taskOpen[n - 1]}`);
   });
+  return { html, marked, migrated };
+}
+
+test("path anatomy moves activity checks into the reading column and the timeline into the lesson path", async () => {
+  const { html, marked, migrated } = await pathAnatomyFixture();
   assert.deepEqual(await validateLearnerGuidance(migrated), []);
 
   const unmovedChecks = marked.replace('<nav aria-label="Activities">', '<nav aria-label="Activities" data-pep-path>');
@@ -2890,4 +2902,95 @@ test("path anatomy moves activity checks into the reading column and the timelin
   // New labels accepted on every page.
   assert.deepEqual(await validateLearnerGuidance(html.replace(">Objectives</summary>", ">Topic objectives</summary>")), []);
   assert.deepEqual(await validateLearnerGuidance(html.replace(">Where this fits</h2>", ">On the job</h2>")), []);
+});
+
+test("path anatomy requires a five-row On the job card with At work and In interviews rows", async () => {
+  const { migrated } = await pathAnatomyFixture();
+  assert.deepEqual(await validateLearnerGuidance(migrated), [], "the five-row path fixture passes");
+  const only = async (html, message, label) => assert.deepEqual(await validateLearnerGuidance(html), [message], label);
+  const required = (label, name) => `path-anatomy On the job card requires exactly one directly owned ${label} row (data-pep-fit-${name})`;
+  const blank = (label, name) => `path-anatomy On the job ${label} row (data-pep-fit-${name}) must have text beyond its label`;
+
+  await only(migrated.replace(/\s*<section data-pep-where-fits[^]*?<\/section>/u, ""),
+    "path-anatomy pages require an On the job card (section[data-pep-where-fits])", "missing card");
+  await only(migrated.replace(workRow, ""), required("At work", "work"), "missing At work row");
+  await only(migrated.replace(interviewRow, ""), required("In interviews", "interview"), "missing In interviews row");
+  await only(migrated.replace(interviewRow, `${interviewRow}${interviewRow}`), required("In interviews", "interview"), "duplicate In interviews row");
+  await only(migrated.replace(/<p data-pep-fit-good>[^]*?<\/p>/u, ""), required("Use it when", "good"), "missing Use it when row");
+  await only(migrated.replace(`${workRow}\n      ${interviewRow}`, `${interviewRow}\n      ${workRow}`),
+    "path-anatomy On the job rows must appear in decision, Use it when, Choose something else when, At work, In interviews order", "career rows swapped");
+  await only(migrated.replace(/<p data-pep-fit-good>[^]*?<\/p>\s*/u, "").replace(workRow, `<p data-pep-fit-good><strong>Use it when:</strong> Use the local control.</p>${workRow}`),
+    "path-anatomy On the job rows must appear in decision, Use it when, Choose something else when, At work, In interviews order", "Use it when after the boundary");
+  await only(migrated.replace(workRow, "<p data-pep-fit-work></p>"), blank("At work", "work"), "empty At work row");
+  await only(migrated.replace(workRow, "<p data-pep-fit-work><strong>At work:</strong>  </p>"), blank("At work", "work"), "label-only At work row");
+  await only(migrated.replace(interviewRow, "<p data-pep-fit-interview><strong>In interviews:</strong></p>"), blank("In interviews", "interview"), "label-only In interviews row");
+  await only(migrated.replace(/<p data-pep-fit-decision><strong>Decision:<\/strong>[^<]*<\/p>/u, "<p data-pep-fit-decision><strong>Decision:</strong></p>"), blank("decision", "decision"), "label-only decision");
+  await only(migrated.replace(">On the job</h2>", ">Where this fits</h2>"),
+    "path-anatomy On the job card requires one direct h2 heading reading On the job", "path card headed Where this fits");
+  await only(migrated.replace(/<p data-pep-fit-decision>[^]*?<\/p>/u, ""), required("decision", "decision"), "missing decision row");
+  await only(migrated.replace(/<p data-pep-fit-boundary>[^]*?<\/p>/u, ""), required("Choose something else when", "boundary"), "missing boundary row");
+  await only(migrated.replace(/<p data-pep-fit-good>[^]*?<\/p>/u, "<p data-pep-fit-good><strong>Use it when:</strong></p>"), blank("Use it when", "good"), "label-only Use it when row");
+  await only(migrated.replace(workRow, "<p data-pep-fit-work><!-- note --> <strong>At work:</strong></p>"), blank("At work", "work"), "comment before the label");
+  // Leading whitespace before the label is skipped, and a row without a <strong> label counts all of its text.
+  assert.deepEqual(await validateLearnerGuidance(migrated.replace(workRow, workRow.replace("<strong>", "\n  <strong>"))), [], "leading whitespace");
+  assert.deepEqual(await validateLearnerGuidance(migrated.replace(workRow, "<p data-pep-fit-work>A teammate asks for a review.</p>")), [], "unlabelled row text");
+});
+
+test("path anatomy accepts an activity-local On the job card in the reading column", async () => {
+  const { migrated } = await pathAnatomyFixture();
+  const card = migrated.match(/\s*<section data-pep-where-fits[^]*?<\/section>/u)[0];
+  // Rebuild each activity as a path activity: reading column (local teaching, card, checks), then its own workspace.
+  let local = migrated.replace(card, "").replace('<div data-pep-workspace="activity">', "<div>");
+  for (const n of [1, 2, 3]) {
+    const activity = local.match(new RegExp(`<section class="activity" id="activity-${n}"[^]*?\\n      </section>`, "u"))[0];
+    const reading = activity.match(/<div data-pep-instructions>[^]*?<\/div>/u)[0];
+    const checks = reading.slice("<div data-pep-instructions>".length, -"</div>".length);
+    const rebuilt = activity
+      .replace(reading, `<div data-pep-instructions><div data-pep-teaching><p>Local teaching ${n}.</p></div>${n === 1 ? card.trim() : ""}${checks}</div>\n        <div data-pep-workspace="activity-${n}">`)
+      .replace(/\n      <\/section>$/u, "</div>\n      </section>");
+    local = local.replace(activity, rebuilt);
+  }
+  assert.deepEqual(await validateLearnerGuidance(local), []);
+  // The card may not sit inside teaching, so the reading-column wrapper itself must not carry data-pep-teaching.
+  const wrapperIsTeaching = local.replace('<div data-pep-instructions><div data-pep-teaching><p>Local teaching 1.</p></div>', '<div data-pep-instructions data-pep-teaching><p>Local teaching 1.</p>');
+  assert.deepEqual(await validateLearnerGuidance(wrapperIsTeaching),
+    ["Where this fits must be a peer region, not nested in teaching, task, workspace, hint or optional content"]);
+});
+
+test("non-path pages keep the optional three-field Where this fits rule", async () => {
+  const html = await readFile(path.join(fixtures, "good.html"), "utf8");
+  assert.deepEqual(await validateLearnerGuidance(html.replace(/\s*<section data-pep-where-fits[^]*?<\/section>/u, "")), [], "the card stays optional");
+  assert.deepEqual(await validateLearnerGuidance(withCareerRows(html)), [], "career rows are accepted");
+  assert.deepEqual(await validateLearnerGuidance(html.replace(/(<p data-pep-fit-decision><strong>Decision:<\/strong>)[^<]*/u, "$1")), [], "a label-only row still counts as non-empty off the path");
+  assert.deepEqual(await validateLearnerGuidance(html.replace("</section>\n\n    <div data-pep-workspace", '<p data-pep-fit-work></p></section>\n\n    <div data-pep-workspace')), [], "an empty career row is not checked off the path");
+  assert.deepEqual(await validateLearnerGuidance(html.replace(/<p data-pep-fit-boundary>[^]*?<\/p>/u, "")),
+    ["Where this fits requires a direct heading and one non-empty decision, good-fit and boundary field, each directly owned"], "the existing message is unchanged");
+});
+
+test("topic schema accepts an optional career object and rejects malformed ones", async () => {
+  const { default: addFormats } = await import("ajv-formats");
+  const ajv = new Ajv2020({ allErrors: true, strict: false });
+  addFormats(ajv);
+  const validate = ajv.compile(JSON.parse(await readFile(path.resolve("authoring/schemas/topic.schema.json"), "utf8")));
+  const artifact = { status: "present" };
+  const topic = {
+    schemaVersion: 1, id: "demo-topic", title: "Demo", kind: "core", curriculum: [], objectives: [], prerequisites: [],
+    minutes: { aboutLabel: 10, budget: 15, modeledP50: 9, modeledWorstPath: 12, basis: "fixture" },
+    artifacts: { html: artifact, md: artifact, pdf: artifact, gift: artifact, video: artifact, lab: artifact },
+    freshness: { status: "unverified", checkedAt: null, sourcesRef: "sources.json", unverifiedItems: [] },
+    licensing: [], lab: "none", components: {},
+  };
+  assert.equal(validate(topic), true, JSON.stringify(validate.errors));
+  const career = { atWork: "Used in code review.", interviewProbe: "Explain the trade-off." };
+  assert.equal(validate({ ...topic, career }), true, JSON.stringify(validate.errors));
+  assert.equal(validate({ ...topic, career: { ...career, sourceIds: ["job-posting-1"] } }), true, JSON.stringify(validate.errors));
+  for (const [label, bad] of [
+    ["missing interviewProbe", { atWork: "Used in code review." }],
+    ["empty atWork", { ...career, atWork: "" }],
+    ["unknown key", { ...career, verified: true }],
+    ["empty sourceIds entry", { ...career, sourceIds: [""] }],
+    ["duplicate sourceIds", { ...career, sourceIds: ["a", "a"] }],
+  ]) {
+    assert.equal(validate({ ...topic, career: bad }), false, label);
+  }
 });

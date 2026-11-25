@@ -311,7 +311,7 @@ Narrow frame (<960 px), one column in source order:
 
 - **Lesson path replaces the topic-bar timeline.** The activity links (`a[data-pep-activity-link]`, one per activity, in order) live in the lesson path, never in the topic bar. Each row shows the activity's own title, never "Activity N", plus a status word: Done, Open or Locked. Rows for earlier activities sit above the current activity's reading content, and rows for later activities sit after the activity, in a container marked `data-pep-path`. Each activity has two slots, `data-pep-path-slot="before"` at the start of its reading column and `data-pep-path-slot="after"` after its workspace. Each slot is itself a `data-pep-path` list. Each row exists once in the document. On navigation, script moves the earlier rows and the current row into the current activity's before-slot and the later rows into its after-slot, the way the model moves into `data-model-slot`. It never clones a row. Without JavaScript it stays where it was authored, directly after the topic bar, as the table of contents. Print hides it. [A]
 - **Current activity marker.** The current row and its reading content share one 2 px accent inline-start line, drawn by the path slot wrapper. `data-pep-instructions` itself stays on the page surface with no rail, so the instruction-surface check still holds. [A]
-- **Reading column.** `data-pep-instructions` holds, in order: the step heading, the complete teaching, any **On the job** decision card, and the activity checks. It is the complete instruction block and immediately precedes the workspace in source and visual order. [A]
+- **Reading column.** `data-pep-instructions` holds, in order: the step heading, the complete teaching, the **On the job** card (mandatory on path pages; see [Where this fits](#where-this-fits)), and the activity checks. It is the complete instruction block and immediately precedes the workspace in source and visual order. [A]
 - **Your task leads the workspace.** `data-pep-task` stays the first child of `data-pep-workspace`, so directional task copy ("below", "under", "above") reads correctly. Open the task with one short question or instruction line (at most about 160 characters, set at 20/28 bold); worked examples and sample code are teaching and belong in the reading column. Hints stay inside the task. [A]
 - **Activity checks as a tracker.** The activity-check block (`data-pep-activity-checks`, same label and criteria rules) moves out of the workspace to the end of the reading column. It shows a status word, "In progress" or "Done", taken from the activity's `data-pep-completed`, in its own element beside the heading, never inside it, so the heading text stays exactly **What success looks like** or **Activity checks**. "Done" uses the accent with a check icon, because completion is not correctness; status green stays reserved for verified correct results. Where the engine verifies criteria one by one, each criterion shows its own state. Because source order is fixed, on narrow frames the checks appear before the task; do not move them by breakpoint. [A]
 - **Restart lives with the activity.** **Restart activity** (`data-pep-reset`) leaves the topic bar and sits at the foot of the current workspace, left of **Previous activity** and **Continue**, inside the activity-navigation group. It keeps every Restart rule above. [A]
@@ -323,7 +323,8 @@ Gate changes for the path anatomy (T08 and the QA harness):
 - Activity checks are owned by the activity's `data-pep-instructions`, are not inside the task, and precede the task in source order. This replaces "checks follow the task" and "checks share the task's parent".
 - No `a[data-pep-activity-link]` sits inside `.pep-topicbar`; every one sits inside a `[data-pep-path]` container.
 - The topic-bar objectives label may also be **Topic objectives** (accepted on every page).
-- The decision card may be headed **On the job** (accepted on every page).
+- The decision card may be headed **On the job** on every page; on path pages it must be.
+- Every path page has at least one On the job card (`section[data-pep-where-fits]`) headed **On the job**. Each card has exactly one directly owned `data-pep-fit-decision`, `data-pep-fit-good`, `data-pep-fit-boundary`, `data-pep-fit-work` and `data-pep-fit-interview` row, in that order, each with text beyond its leading `<strong>` label. This replaces the optional three-field rule on path pages only; the existing placement and ownership rules still apply.
 
 ## Colors
 
@@ -521,7 +522,7 @@ The topic/progress bar is the clearest brand-accent surface; the interactive wor
 
 ### Where this fits
 
-Use this pattern after the core explanation and before task instructions **only when the topic or activity presents a meaningful practitioner choice**. One topic-level decision is enough unless activities genuinely involve different choices. Omit the entire section when no useful decision exists; do not create boilerplate. Keep it separate from the optional anecdote.
+Use this pattern after the core explanation and before task instructions **only when the topic or activity presents a meaningful practitioner choice**. One topic-level decision is enough unless activities genuinely involve different choices. Omit the entire section when no useful decision exists; do not create boilerplate. Keep it separate from the optional anecdote. On `data-pep-anatomy="path"` pages the card is mandatory and carries two career rows; see **On the job (path anatomy)** below.
 
 ```html
 <section data-pep-where-fits aria-labelledby="where-fits">
@@ -541,16 +542,40 @@ Use this pattern after the core explanation and before task instructions **only 
 
 The decision is authentic rather than rhetorical. The good fit describes actual scale and purpose. The boundary names a materially different tool or structure, not merely “when it is hard.” This section may use necessary domain terms, but contains no answer to the activity. It is a peer—not a descendant—of teaching, task, workspace, hints and optional content. Topic-level placement uses the nearest preceding topic teaching and following task/workspace; an activity-local instance belongs to that activity, follows its local/applicable teaching and precedes its own task. Structural QA checks direct ownership, order, non-empty fields and placement; independent education and technology-SME review judges whether the choice is meaningful, authentic and technically true. [A]
 
-**On the job (path anatomy).** On `data-pep-anatomy="path"` pages the same section is headed **On the job**, so it reads as the practitioner judgment it is, and it stays open; never collapse it into a disclosure. It keeps its surface, accent top rail, hooks and placement. Inside, the decision sentence is the headline (16/24, 600, text-strong, with its "Decision:" label visually hidden), followed by two labelled rows: **Use it when** (accent label, 2 px accent inline-start line) and **→ Choose something else when** (text-strong label, 2 px line-strong inline-start line). Neither row uses status green or red or check/cross glyphs; they are guidance, not verdicts. Phrase the decision as the real question a practitioner asks ("Comprehension or ordinary loop?"), and end the boundary by naming the alternative to use instead ("…write a named method instead"), so the card always answers what to reach for. [A]
+**On the job (path anatomy).** On `data-pep-anatomy="path"` pages the same section is headed **On the job**, so it reads as the practitioner judgment it is, and it stays open; never collapse it into a disclosure. It keeps its surface, accent top rail, hooks and placement. Inside, the decision sentence is the headline (16/24, 600, text-strong, with its "Decision:" label visually hidden), followed by four labelled rows in this order: **Use it when** (accent label, 2 px accent inline-start line), **→ Choose something else when**, **At work** and **In interviews** (each a text-strong label with a 2 px line-strong inline-start line). No row uses status green or red or check/cross glyphs; they are guidance, not verdicts. Phrase the decision as the real question a practitioner asks ("Comprehension or ordinary loop?"), and end the boundary by naming the alternative to use instead ("…write a named method instead"), so the card always answers what to reach for. The alternative is either already taught on this page or an earlier one, or explained in a clause where it is named ("…use a generator, which produces values one at a time"). [A]
+
+The card is **mandatory on path pages**. The optional rule above ("omit the entire section when no useful decision exists") still governs pages without the marker, but every path page carries at least one On the job card, and every card on a path page carries all five rows. One card per page is the minimum; it sits in the reading column (`data-pep-instructions`) of the activity whose decision it states, after that activity's teaching and before its activity checks, and a further card is added only for an activity with a genuinely different decision (the distinct-owner rule above). The card may not sit inside teaching, so mark the teaching inside the reading column with its own `data-pep-teaching` element rather than putting `data-pep-teaching` on the `data-pep-instructions` wrapper. Frame the decision at the level a junior developer meets it on a team ("Do I need a join here, or is one table enough?"). When review still finds no authentic decision, the finding is escalated to the captain (`authoring/docs/workflow.md` §2.4) rather than resolved with boilerplate. The two career rows tie the concept and the activity to the job:
+
+- **At work** (`data-pep-fit-work`): one sentence naming a concrete place this shows up in a junior developer's working week on a team, such as a ticket, a code review, a failing build or a colleague's question. Name this topic's situation; never write a generic "this is important".
+- **In interviews** (`data-pep-fit-interview`): one sentence naming how an interviewer is likely to probe this, as a question or task the learner could be asked. Point to the activity when it practises exactly that probe.
+
+Like the other rows, the career rows contain no activity answer: an interview probe names the question, never its solution. They use only terms already taught or explained in a clause. Never badge a career line as verified. Whether career lines need a recorded source at all, or may stand as practitioner advice, and whether an unsourced line is listed in the topic's `freshness.unverifiedItems`, is pending a captain decision; until then the topic's optional `career.sourceIds` may name sources but is not required. When a topic records its optional `career` object (`atWork`, `interviewProbe`) in `topic.json`, it mirrors the page's first On the job card. The card's order runs from the decision to its use: the first three rows answer what to reach for, and the two career rows then place that choice at work and in an interview. [A]
+
+```html
+<section data-pep-where-fits aria-labelledby="on-the-job-3">
+  <h2 id="on-the-job-3">On the job</h2>
+  <p data-pep-fit-decision><strong>Decision:</strong> Comprehension or ordinary loop?</p>
+  <p data-pep-fit-good><strong>Use it when:</strong> You build one new list from a list you already have.</p>
+  <p data-pep-fit-boundary><strong>→ Choose something else when:</strong> Each item needs several steps or error handling; write an ordinary loop instead.</p>
+  <p data-pep-fit-work><strong>At work:</strong> Code reviewers often comment on how a pull request builds new lists from existing data.</p>
+  <p data-pep-fit-interview><strong>In interviews:</strong> You may be asked to compare two ways of building a list and say which one you would keep.</p>
+</section>
+```
 
 ```css
 [data-pep-anatomy="path"] [data-pep-where-fits] > h2 { margin: 0 0 4px; font: 700 16px/24px var(--pep-font-sans); color: var(--pep-accent-text); }
 [data-pep-anatomy="path"] [data-pep-fit-decision] { margin: 0 0 12px; font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
-[data-pep-anatomy="path"] [data-pep-fit-good], [data-pep-anatomy="path"] [data-pep-fit-boundary] { margin: 0; padding: 8px 0 8px 12px; border-top: 1px solid var(--pep-line); border-inline-start: 2px solid var(--pep-accent); }
-[data-pep-anatomy="path"] [data-pep-fit-boundary] { border-inline-start-color: var(--pep-line-strong); }
-[data-pep-anatomy="path"] [data-pep-fit-good] > strong, [data-pep-anatomy="path"] [data-pep-fit-boundary] > strong { display: block; font: 600 13px/20px var(--pep-font-sans); }
+[data-pep-anatomy="path"] [data-pep-fit-decision] > strong { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+[data-pep-anatomy="path"] [data-pep-fit-good], [data-pep-anatomy="path"] [data-pep-fit-boundary],
+[data-pep-anatomy="path"] [data-pep-fit-work], [data-pep-anatomy="path"] [data-pep-fit-interview] { margin: 0; padding: 8px 0 8px 12px; border-top: 1px solid var(--pep-line); border-inline-start: 2px solid var(--pep-accent); }
+[data-pep-anatomy="path"] [data-pep-fit-boundary], [data-pep-anatomy="path"] [data-pep-fit-work],
+[data-pep-anatomy="path"] [data-pep-fit-interview] { border-inline-start-color: var(--pep-line-strong); }
+[data-pep-anatomy="path"] [data-pep-fit-good] > strong, [data-pep-anatomy="path"] [data-pep-fit-boundary] > strong,
+[data-pep-anatomy="path"] [data-pep-fit-work] > strong, [data-pep-anatomy="path"] [data-pep-fit-interview] > strong { display: block; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-strong); }
 [data-pep-anatomy="path"] [data-pep-fit-good] > strong { color: var(--pep-accent-text); }
 ```
+
+Each row's label is its first child, a `<strong>` ending in a colon so screen readers pause before the row's text; the row's own text follows it. The gate ignores that leading label when it checks that a row is non-empty. [A]
 
 ### Progressive optional hints
 
@@ -741,12 +766,14 @@ The Learner quiz shows a card holding "Question 1 of 3", a type chip and a segme
 .pep-explain { grid-column: 2; margin: 4px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
 .pep-verdict { display: flex; align-items: center; gap: 8px; font-weight: 700; }
 .pep-verdict--correct { color: var(--pep-success); } .pep-verdict--wrong { color: var(--pep-danger); } .pep-verdict--revealed { color: var(--pep-warning); }
+.pep-verdict--near { color: var(--pep-warning); }
 ```
 
 - The correct state uses a solid border, a check icon and "Correct answer". The chosen wrong answer uses a dashed border, a cross icon and "Your answer". Locked options stay at full text contrast, never faded below 4.5:1. [T][A]
 - **Colour follows the result, never the option.** Answer controls stay neutral until the learner commits, even when their labels carry meaning ("Compiles" / "Does not compile", "Yes" / "No", "Same" / "Changed"). Pre-colouring options green or red breaks the Meaning-Only Rule, pulls learners toward the green option and leaves a colour-only cue. After a pick: the chosen wrong control takes the dashed danger style with a cross and words ("✗ not this one") until the scenario changes; a right pick shows the success verdict in the feedback and marks the scenario where it lands. Never leave a success state on a control that the next scenario reuses. [A]
 - Confidence ratings are a row of option-style buttons ("Guessing", "Fairly sure", "Certain") at least 96 px wide, with the same selected style. [A]
 - Feedback sits directly under the options in a `pep-callout`. The verdict word comes first, then why each option is right or wrong. [A]
+- **Near-miss verdict.** An answer that is right in substance but differs in one named detail (`authoring/docs/practice-feedback-policy.md`) opens with "Almost" in `pep-verdict--near`: warning tone, no cross glyph, never the danger red or the dashed wrong-answer style, because the learner's work is not wrong. A specific nudge follows at once, naming the detail and the line to change without writing the finished answer. [A]
 - The correct option's position is planned, never authored first: page-build sources use `authoring/tools/html/answer-order.mjs` and topic GIFT banks use `authoring/tools/gift/answer-order.mjs`. Keep option lengths comparable, so the longest option is not a cue to the answer.
 
 ### Progress, stepper, timelines and process maps
@@ -1003,7 +1030,7 @@ Known `@1` gaps, accepted until a component version changes them: some fragments
 - Keep course objectives in the topic-bar native disclosure (`data-pep-objectives`, labelled **Objectives**, **What you'll learn** or **Topic objectives**) and per-activity completion criteria beside the task (`data-pep-activity-checks`), or, on path-anatomy pages, at the end of the reading column as the activity tracker.
 - Put **Previous activity** beside Next/Continue; preserve activity work across both directions and browser history while keeping future steps locked.
 - Put native progressive **Need a hint?** disclosures beside tasks where a learner may reasonably stall, outside required progress, grading and time.
-- Include a separate **Where this fits** decision, good fit and when-not-to-use boundary when the concept presents a meaningful practitioner choice; otherwise omit it.
+- Include a separate **Where this fits** decision, good fit and when-not-to-use boundary when the concept presents a meaningful practitioner choice; otherwise omit it. On path-anatomy pages, always include the **On the job** card with its decision, **Use it when**, **Choose something else when**, **At work** and **In interviews** rows, and name an alternative that is already taught or explained in a clause.
 - Give code-writing objectives the editor workspace, not piece selectors; keep its instructions first, mobile controls visible, heights bounded and no-JavaScript reading complete.
 - Keep Optional Anecdote and Challenge disclosures native, closed by default, public-safe and outside all required objective, progress, completion and time accounting. Keep anecdotes concrete, everyday and code-free.
 
@@ -1025,6 +1052,7 @@ Known `@1` gaps, accepted until a component version changes them: some fragments
 - Put a breadcrumb, a "Topic N of M" line, a loose metadata row, a page-wide Goals panel, or objectives outside the topic bar, including a repeat of the objectives under a task.
 - Rely on hover for objectives, hints or navigation.
 - Use an anecdote for code, syntax, commands, output or a second technical explanation.
+- Write generic On the job career lines ("this is important for your career"), put an activity answer in an **In interviews** probe, or give On the job rows status colours or check/cross glyphs.
 - Make learners assemble code from operand, operator or token radio grids when they could type it.
 - Stack several activities' controls in one long enhanced workspace, lock completed steps, discard inputs during navigation, or put results away from the control that made them.
 - Reuse the reference annotation colors (red, green, purple) as UI colors.
