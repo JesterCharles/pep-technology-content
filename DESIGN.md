@@ -747,6 +747,7 @@ The Learner quiz shows a card holding "Question 1 of 3", a type chip and a segme
 - **Colour follows the result, never the option.** Answer controls stay neutral until the learner commits, even when their labels carry meaning ("Compiles" / "Does not compile", "Yes" / "No", "Same" / "Changed"). Pre-colouring options green or red breaks the Meaning-Only Rule, pulls learners toward the green option and leaves a colour-only cue. After a pick: the chosen wrong control takes the dashed danger style with a cross and words ("✗ not this one") until the scenario changes; a right pick shows the success verdict in the feedback and marks the scenario where it lands. Never leave a success state on a control that the next scenario reuses. [A]
 - Confidence ratings are a row of option-style buttons ("Guessing", "Fairly sure", "Certain") at least 96 px wide, with the same selected style. [A]
 - Feedback sits directly under the options in a `pep-callout`. The verdict word comes first, then why each option is right or wrong. [A]
+- The correct option's position is planned, never authored first: page-build sources use `authoring/tools/html/answer-order.mjs` and topic GIFT banks use `authoring/tools/gift/answer-order.mjs`. Keep option lengths comparable, so the longest option is not a cue to the answer.
 
 ### Progress, stepper, timelines and process maps
 
