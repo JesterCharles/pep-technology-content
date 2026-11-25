@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "independent web SME critic subagent (claude-opus-5-5), did not author",
+  "reviewedPath": "html-css-js/html-css-js-course-review/html-css-js-review-browser-client/artifact.html",
+  "reviewedSha256": "f84171a2972ae5cbbe48c576f28c1782902cd8bb0709f5cdab02872afef30a5c",
+  "findings": [
+    {
+      "id": "sme-p2r-01",
+      "severity": "low",
+      "location": {
+        "file": "html-css-js/html-css-js-course-review/html-css-js-review-browser-client/artifact.html",
+        "line": 569
+      },
+      "claim": "Activity 3 now places the request in development behind the Vite dev proxy (line 551), but report 2 still says \"a gateway answers 502 with an HTML page\". When the proxy target is down, Vite's own proxy error handler answers 502 with Content-Type text/plain and an empty body, not an HTML page. The keyed option C still handles it identically (non-problem type, else branch, no parsing), and the original code still lands in catch (res.json() on an empty body rejects with SyntaxError), so the key and every explanation stay correct; only the scenario detail is imprecise for the stated setup.",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/vitejs/vite/main/packages/vite/src/node/server/middlewares/proxy.ts",
+          "section": "proxyMiddleware: proxy.on('error') handler",
+          "retrievedAt": "2026-11-09T22:35:46Z",
+          "textSha256": "310b9fcd60bad967c5ba6db8bf4e952394858bf860b14bd8c5083c2df7fa1d84"
+        }
+      ],
+      "recommendation": "Either say \"the Vite proxy answers 502 with a plain-text body\" (and refer to \"the gateway's non-JSON body\" in the option B and C explanations), or say the outage happens in production behind a same-origin gateway that returns an HTML 502 page.",
+      "reviewedSha256": "f84171a2972ae5cbbe48c576f28c1782902cd8bb0709f5cdab02872afef30a5c"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/html-css-js/html-css-js-course-review/html-css-js-review-browser-client/critic-sme.json",
+    "items": [
+      {
+        "findingId": "sme-p2-01",
+        "status": "resolved",
+        "file": "html-css-js/html-css-js-course-review/html-css-js-review-browser-client/artifact.html",
+        "reviewedSha256": "f84171a2972ae5cbbe48c576f28c1782902cd8bb0709f5cdab02872afef30a5c",
+        "note": "Line 551 now fixes the setup: VITE_API_URL is /api and the Vite dev proxy forwards it to Spring Boot, so the request is same-origin and the fulfilled-400/502 claims hold. Recap line 660 now says fetch rejects on a network failure or a CORS-blocked cross-origin response, the cheat sheet (line 666) says a rejection means no readable response, and the Using Fetch source note mentions CORS; artifact.md mirrors these. Earlier Chromium run: a same-origin 502 fulfilled, a cross-origin 502 without CORS headers rejected (TypeError: Failed to fetch)."
+      },
+      {
+        "findingId": "sme-p2-02",
+        "status": "resolved",
+        "file": "html-css-js/html-css-js-course-review/html-css-js-review-browser-client/artifact.html",
+        "reviewedSha256": "f84171a2972ae5cbbe48c576f28c1782902cd8bb0709f5cdab02872afef30a5c",
+        "note": "Recap line 657 limits setAttribute to harmless attributes such as data- (never an event handler, href or src), and option D (line 434) says setAttribute on a data- attribute stores only a value; MDN setAttribute is now a listed source. Re-executed in Chromium: the new onmouseover payload ran on hover via innerHTML and via insertAdjacentHTML, and created no anchor via textContent. Click on the CSS-drawn icon span: target SPAN.icon, matches(\"button.like\") false, closest() found the li id; click on the word: target BUTTON; currentTarget.dataset.id undefined. So keyed D is the only correct option and A/B/C explanations are accurate."
+      },
+      {
+        "findingId": "sme-p2-03",
+        "status": "resolved",
+        "file": "html-css-js/html-css-js-course-review/html-css-js-review-browser-client/artifact.html",
+        "reviewedSha256": "f84171a2972ae5cbbe48c576f28c1782902cd8bb0709f5cdab02872afef30a5c",
+        "note": "Option C explanation (line 619) now ends \"a network failure still reaches the connection message in catch\", which no longer claims catch is reached only by a rejected fetch."
+      }
+    ]
+  }
+}

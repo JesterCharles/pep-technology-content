@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "cg-critic-sme-loop7 (independent Claude critic subagent, not the author, 2026-11-18)",
+  "reviewedPath": "spring-boot/validation-errors-and-testing/coding-lab/lab.json",
+  "reviewedSha256": "39c95b1cca6505291972a0a709a40a4fd8e501c4426f3e09e51847e3c3665fa1",
+  "artifactHashes": {
+    "coding-lab/README.md": "1d92b09c6832b537fdcafae31c576da332188ebccfb2e37889cfd1776e1bb80c",
+    "coding-lab/expected/test-summary.txt": "c455a65b0edea873483391b6d56e787030bcc5fc03d323993d83d2b2de57ab0b",
+    "coding-lab/lab.json": "39c95b1cca6505291972a0a709a40a4fd8e501c4426f3e09e51847e3c3665fa1",
+    "coding-lab/starter/pom.xml": "fb0c2acc5f6db04b05b7591f071f62c277ada789fe1fe2681e07969c0cad5bfe",
+    "coding-lab/starter/src/main/java/bookings/Booking.java": "bcefacdb6c60b239abd881a27396a25ea4b68ef73e00442dfa3ee59991408201",
+    "coding-lab/starter/src/main/java/bookings/BookingController.java": "409ac8b7a92618508daa4f121814b2e349af382af7c8de6ce716d747a4e548a5",
+    "coding-lab/starter/src/main/java/bookings/BookingService.java": "aec9ed47794c903988a7e5e61d720aaf2531bb7aeff1e200ead76923ef536a3a",
+    "coding-lab/starter/src/main/java/bookings/BookingsApplication.java": "5bcb3140f019b1974fd0f350326c71ae56fcb51249d834921c08f2ca6f338d84",
+    "coding-lab/starter/src/main/java/bookings/NewBooking.java": "494471cac979299843f81708811f48de2b15d58ff68bb973e91d6d4acb4324b3",
+    "coding-lab/starter/src/main/resources/application.properties": "7b931c73dc627379b1aeb3f50534fafa7837a9a61fd5b153615b4e3e051ce853",
+    "coding-lab/tests/bookings/BugReportTest.java": "b452c7e91a7d375f205eeaa7532107b98f3d7e77fc889a8c73495607b04ae2d1",
+    "coding-lab/tests/bookings/ErrorSliceTest.java": "0fa43b2c43eaa6ca00a666af0245bc925cf19448d9a0188e94e8be6a8c285fd2",
+    "coding-lab/tests/bookings/ValidationApiTest.java": "30d8b1acdb3e48efb590fd1d1da0f687e1c1a0f6ec172d097416fb9d7a412b38",
+    "coding-lab/tests/bookings/WebLayerTest.java": "9d6403eac50efffe069a885def4b70315fe6a4d8206bb08e95a27a4c0a708208"
+  },
+  "findings": [
+    {
+      "id": "cg-sme-validation-019",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "line": 193
+      },
+      "claim": "The new Troubleshooting row for task8ShowsThatAPlainMockIsOnlyCalledWhenYouPassItIn says 'No interactions wanted here' means a plain-mock call is unverified 'or your step 3 call reached the context's @MockitoBean instead of the plain mock (for example through MockMvc or a controller built with the context's mock)'. The first cause is right (critic mutant: an extra unverified built.byId call fails with that text). The second is not: a critic mutant that builds the controller with the context mock fails at the learner's own verify with 'Wanted but not invoked', and without that verify it fails with 'step 3: call create on the controller you built, with POSTED'. The shipped verifyNoInteractions on the context mock only gives 'No interactions wanted here' when a call reached the context mock as well as the correct plain-mock work (critic mutant: correct step 3 plus an extra MockMvc GET; Mockito names mock 'bookings.BookingService#0' and BookingController.byId). So the row's 'instead of' and its 'controller built with the context's mock' example send the learner after the wrong cause.",
+      "evidence": [],
+      "recommendation": "Reword the second cause as 'or a call also reached the context's @MockitoBean (the message names mock bookings.BookingService#0, for example an extra MockMvc request in this test)' and drop the 'controller built with the context's mock' example; the existing 'Wanted but not invoked' row already covers a call that went to the context mock instead of the plain mock.",
+      "reviewedSha256": "1d92b09c6832b537fdcafae31c576da332188ebccfb2e37889cfd1776e1bb80c"
+    },
+    {
+      "id": "cg-sme-validation-020",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "line": 196
+      },
+      "claim": "The new Task 5 Troubleshooting row says the assertInstanceOf failure means 'the 400 comes from a check you wrote by hand'. One Bean Validation route also reaches that message: with a class-level @Validated on BookingController, Spring skips its built-in MVC method validation and applies method validation through an AOP proxy, which throws ConstraintViolationException. Critic mutants on the overlay: @Validated on the class with the @Positive constraint kept fails the three Task 5 tests with an unhandled ConstraintViolationException (no Troubleshooting row); the same plus an ApiErrors handler that turns ConstraintViolationException into a 400 problem fails only task5RejectsANonPositiveIdWith400 with the message about a hand-written check, although the learner wrote no check by hand. The test's verdict is right (that is not Spring MVC's built-in method validation that README Task 5 step 3 asks for); only the diagnosis text is wrong for this case. Nothing in the README or the S9 pages prompts class-level @Validated; the Spring reference names it as the case that disables the built-in support (sentences below).",
+      "evidence": [
+        {
+          "url": "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-validation.html",
+          "section": "Web on Servlet Stack > Annotated Controllers > Validation (sentence: 'If a controller has a class level @Validated , then method validation is applied through an AOP proxy.'; text normalized by stripping tags, unescaping entities and collapsing whitespace)",
+          "retrievedAt": "2026-11-18T13:41:28Z",
+          "textSha256": "066dee104f31f5a73634722bffc8e7328de1c60ac1beda8c9d997d43f0eca711"
+        },
+        {
+          "url": "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-validation.html",
+          "section": "Web on Servlet Stack > Annotated Controllers > Validation (sentence: 'In order to take advantage of the Spring MVC built-in support for method validation added in Spring Framework 6.1, you need to remove the class level @Validated annotation from the controller.'; same normalization)",
+          "retrievedAt": "2026-11-18T13:41:28Z",
+          "textSha256": "ef2e80621ee7544b70cdea1f544412efbf0c5ee9e119fa78931c6dbce1ab3d1c"
+        }
+      ],
+      "recommendation": "Extend the row: 'the 400 does not come from Spring MVC's own method validation: either you wrote the check by hand, or a class-level @Validated on BookingController switched it to an AOP proxy (remove it)'; optionally add a row for an unhandled ConstraintViolationException in the Task 5 tests with the same cause.",
+      "reviewedSha256": "1d92b09c6832b537fdcafae31c576da332188ebccfb2e37889cfd1776e1bb80c"
+    },
+    {
+      "id": "cg-sme-validation-021",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ValidationApiTest.java",
+        "line": 46
+      },
+      "claim": "global-error-handling#o1 ('Handle a custom not-found exception and validation failures for all controllers in one @RestControllerAdvice with @ExceptionHandler methods') has no check of its 'for all controllers in one @RestControllerAdvice' half. Every request in the suite goes to BookingController, so controller-local @ExceptionHandler methods behave the same as advice methods. Critic mutant on the overlay: the @RestControllerAdvice and @Order annotations removed from ApiErrors (left a plain class) and the two Task 2/3 handlers, written as README Tasks 2 and 3 describe, placed inside BookingController instead: all 12 tests pass silently (with Task 6's property on; local handlers win over any advice). README line 123 says the shipped checks confirm 'each answer is your ApiErrors problem body', which does not hold under this mutant. This is not a cheaper edit (README Task 2 names the advice class), but local versus global handlers is exactly the misconception the module's global-error-handling#o2 teaches. The claim and task2 are unchanged from origin/main (1814ba7d), so it predates this branch and was not raised by earlier loops.",
+      "evidence": [],
+      "recommendation": "Prove 'all controllers' by behavior: in ValidationApiTest, @Import a small nested test @RestController whose GET endpoint throws NoSuchElementException, and assert inside task2TurnsAnUnknownIdIntoAProblem404 (so failingTests, the test count and expected/test-summary.txt stay as they are) that it answers 404 with title 'Booking not found'. Critic remedy run (as a separate 13th test in a work-dir copy): the overlay passes 13/13; the local-handler mutant fails it with the probe's unhandled NoSuchElementException. If this is deferred as main-era, record the half in module.json sourceCoverageNotes with cg-sme-validation-018's objectives and qualify README line 123.",
+      "reviewedSha256": "30d8b1acdb3e48efb590fd1d1da0f687e1c1a0f6ec172d097416fb9d7a412b38"
+    },
+    {
+      "id": "cg-sme-validation-022",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/lab.json",
+        "line": 22
+      },
+      "claim": "web-layer-tests-with-mockmvc#o1 ('Write a @WebMvcTest that performs a request with MockMvc and asserts the status, headers and JSON body') is only partly executed: no task asks the learner to assert a header and no test checks one; in Task 4 the request and its status and JSON assertions are shipped, and the learner adds the annotation, the mock field and the stub. In Task 7 the learner writes the requests, but the shipped checks re-assert status and title on the returned result, so the learner's own andExpect lines are not required: a critic mutant of the overlay with every andExpect removed from both Task 7 requests passes 12/12 silently (the same holds for the Task 5 reproduction's status expectation). That is reasonable, since a learner's assertions cannot be checked without source inspection, but it means the 'asserts' half is shipped rather than learner-performed. The claim is unchanged from origin/main; it belongs with the main-era partial claims of cg-sme-validation-018.",
+      "evidence": [],
+      "recommendation": "Record the header half as partial in module.json sourceCoverageNotes next to the problemdetail#o2 note (with cg-sme-validation-018's objectives), or add a Task 7 step that asserts the problem response's Content-Type header and a shipped check of result.getResponse().getContentType().",
+      "reviewedSha256": "39c95b1cca6505291972a0a709a40a4fd8e501c4426f3e09e51847e3c3665fa1"
+    },
+    {
+      "id": "cg-sme-validation-023",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/expected/test-summary.txt",
+        "line": 15
+      },
+      "claim": "The optional 'Spot check with the running app' starts the app with mvn -q -o spring-boot:run. In a fresh starter copy with a copy of the delivery's local repository, it exits 1 at once with 'No plugin found for prefix spring-boot in the current project and in the plugin groups [...]': the pom inherits spring-boot-starter-parent but declares no spring-boot-maven-plugin in its build plugins, and that local repository copy holds no spring-boot-maven-plugin; since the plugin is not declared, the setup step's dependency:go-offline has no reason to fetch it, so the offline command is not made to work by the documented setup. The README Offline note (line 172) also says 'No database and no port are used', while the spot check binds port 8080. The same command is in six other Spring Boot labs' expected files or READMEs and none of the seven starter poms declares the plugin, so this is course-wide and main-era; it does not affect the test command or any objective.",
+      "evidence": [],
+      "recommendation": "Fix on a course-level or tooling branch for all Spring Boot labs: declare spring-boot-maven-plugin in each starter pom's build plugins and prove that mvn -q -o spring-boot:run works offline after mvn -q dependency:go-offline, or drop -o and say the spot check needs the network once. In this lab, qualify the Offline note to say the optional spot check uses port 8080.",
+      "reviewedSha256": "c455a65b0edea873483391b6d56e787030bcc5fc03d323993d83d2b2de57ab0b"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/spring-boot/validation-errors-and-testing/coverage-gap-critic-sme.json",
+    "items": [
+      {
+        "findingId": "cg-sme-validation-001",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/BugReportTest.java",
+        "reviewedSha256": "b452c7e91a7d375f205eeaa7532107b98f3d7e77fc889a8c73495607b04ae2d1",
+        "note": "Loop-7 critic runs on fresh git-archive copies of b5b542a7 (lab bytes identical at 9e54e36e), Eclipse Temurin JDK 25.0.5+8, Maven 3.9.16, mvn -q -o test offline against a private copy of the delivery's local repository: the untouched starter fails exactly the 12 declared failingTests (12 run), twice; the private overlay regenerated for these bytes passes 12/12 with no output, twice. File unchanged since loop 6. Critic mutant: the reproduction sends GET /bookings/abc instead of /bookings/0; it fails task5ReproducesTheZeroIdReport on the shipped URI check. Lines 49-54 bind method, URI and status on the learner's MvcResult."
+      },
+      {
+        "findingId": "cg-sme-validation-002",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ErrorSliceTest.java",
+        "reviewedSha256": "0fa43b2c43eaa6ca00a666af0245bc925cf19448d9a0188e94e8be6a8c285fd2",
+        "note": "Loop-7 critic runs on fresh git-archive copies of b5b542a7 (lab bytes identical at 9e54e36e), Eclipse Temurin JDK 25.0.5+8, Maven 3.9.16, mvn -q -o test offline against a private copy of the delivery's local repository: the untouched starter fails exactly the 12 declared failingTests (12 run), twice; the private overlay regenerated for these bytes passes 12/12 with no output, twice. File unchanged since loop 6. Critic mutants fail both task7 tests: full @SpringBootTest with the fake overriding the real service (ApplicationAvailability check), full context with no fake (same check), a Mockito mock as the fake ('not a Mockito mock'), and an empty anonymous subclass ('the fake must find nothing'). The deliberate availability-exclusion residual is tracked separately as 015."
+      },
+      {
+        "findingId": "cg-sme-validation-003",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ValidationApiTest.java",
+        "reviewedSha256": "30d8b1acdb3e48efb590fd1d1da0f687e1c1a0f6ec172d097416fb9d7a412b38",
+        "note": "Loop-7 critic runs on fresh git-archive copies of b5b542a7 (lab bytes identical at 9e54e36e), Eclipse Temurin JDK 25.0.5+8, Maven 3.9.16, mvn -q -o test offline against a private copy of the delivery's local repository: the untouched starter fails exactly the 12 declared failingTests (12 run), twice; the private overlay regenerated for these bytes passes 12/12 with no output, twice. task5RejectsANonPositiveIdWith400 now asserts, for ids 0 and -3, that the MvcResult's resolved exception is HandlerMethodValidationException: a runtime exception type, no reflection on declarations. Critic mutants with the constraint removed and a check written by hand in byId: ResponseStatusException(BAD_REQUEST) with a reason, the same without a reason, ErrorResponseException with a ProblemDetail detail, and IllegalArgumentException mapped to a 400 problem by an ApiErrors handler: each fails task5RejectsANonPositiveIdWith400 with the actual exception type. @Min(1) in place of @Positive passes 12/12 (a correct alternative); @Positive plus @Max(100) fails on the 999 -> 404 check. Throwing a HandlerMethodValidationException by hand is not a cheap bypass: with an empty or list-less MethodValidationResult Spring fails the request (UnsupportedOperationException, 'Expected validation results'), so forging it means building real validation results. Spring Framework reference, Annotated Controllers > Validation (https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-validation.html, retrieved 2026-11-18T13:41:28Z; sentences normalized by stripping tags, unescaping entities and collapsing whitespace): 'HandlerMethodValidationException is the exception raised validation is applied to the method.' (sha256 635ff5cf3c41f34a9d1a2b0ef7ac5974439743bceb3543233768b51b99522e8d) and the parameter-constraint sentence beginning 'Java Bean Validation is applied to the method when @Constraint annotations' (sha256 ecc07da372713debbc8fca9eef5003b1023e5b5768aad75eeede3539fd77f3cc). The class-level @Validated diagnosis gap is new low finding 020."
+      },
+      {
+        "findingId": "cg-sme-validation-004",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/BugReportTest.java",
+        "reviewedSha256": "b452c7e91a7d375f205eeaa7532107b98f3d7e77fc889a8c73495607b04ae2d1",
+        "note": "Loop-7 critic runs on fresh git-archive copies of b5b542a7 (lab bytes identical at 9e54e36e), Eclipse Temurin JDK 25.0.5+8, Maven 3.9.16, mvn -q -o test offline against a private copy of the delivery's local repository: the untouched starter fails exactly the 12 declared failingTests (12 run), twice; the private overlay regenerated for these bytes passes 12/12 with no output, twice. problemdetail#o2 stays unclaimed in lab.json and module.json sourceCoverageNotes records the gap truthfully (the executable checks cover only the enablement half). README Task 5 (line 85) now says in learner words that no test checks the prediction and shows how to see the real body: critic run of the overlay with .andDo(print()) added to the step 1 request and the named static import still passes 12/12 with no terminal output and writes target/surefire-reports/bookings.BugReportTest-output.txt, whose printed MockHttpServletResponse shows status 400, content type application/problem+json and a body with title and detail. Removing the Task 6 property fails task6AnswersFrameworkErrorsWithProblemDetail and task5PredictsTheProblemBodyOfTheFix; wrong non-blank predictions pass, as the README now says."
+      },
+      {
+        "findingId": "cg-sme-validation-005",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/WebLayerTest.java",
+        "reviewedSha256": "9d6403eac50efffe069a885def4b70315fe6a4d8206bb08e95a27a4c0a708208",
+        "note": "Loop-7 critic runs on fresh git-archive copies of b5b542a7 (lab bytes identical at 9e54e36e), Eclipse Temurin JDK 25.0.5+8, Maven 3.9.16, mvn -q -o test offline against a private copy of the delivery's local repository: the untouched starter fails exactly the 12 declared failingTests (12 run), twice; the private overlay regenerated for these bytes passes 12/12 with no output, twice. File unchanged since loop 6. Verify half: a mock reset in place of verify fails task8VerifiesTheCreateCall with the shipped 'must remain recorded' message; deleting the verify fails it with 'No interactions wanted here'; verify with any() passes, as README line 142 discloses. Plain-mock step: built left null fails ('step 3 missing'); a controller built with the context mock fails ('Wanted but not invoked' at the learner's verify, or 'step 3: call create on the controller you built' without it). Calling create directly on the plain mock beside a correctly built controller passes, as README line 146 and lab-run.json testScope state. The explain half stays a check-yourself question with a collapsed answer. The ignoreStubs residual is 014."
+      },
+      {
+        "findingId": "cg-sme-validation-006",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "reviewedSha256": "1d92b09c6832b537fdcafae31c576da332188ebccfb2e37889cfd1776e1bb80c",
+        "note": "Rule as in loops 2 to 6: exact final code outside a collapsed block is open. The loop-7 README text (Task 5 paragraph at line 85, Test section line 164, Task 7 residual line 124, Troubleshooting rows 192-196) gives an inspection aid (.andDo(print()) with its import) and describes checks in prose; it names neither the constraint (still only in the collapsed hint) nor the predicted title or detail. The failure message of the new assertion names the expected exception type, which the Bean Validation page already names, not the body values."
+      },
+      {
+        "findingId": "cg-sme-validation-007",
+        "status": "resolved",
+        "file": "authoring/evidence/spring-boot/validation-errors-and-testing/coding-lab/lab-run.json",
+        "reviewedSha256": "589e76211c52bdca9ab9e89f1ca78c3f6d52f013e10ec47d408b0e672e41b868",
+        "note": "Reviewed the loop-7 run record at 9e54e36e (lab-run.json at b5b542a7 is still the loop-6 record; the rewrite is the only change in 9e54e36e). It records solved at b5b542a7; its 14 artifactHashes equal the critic's sha256 of every lab file at b5b542a7 (identical at 9e54e36e). Its counts (starter: 12 run, exactly the 12 declared failingTests fail; solved: 12/12, exit 0, no output) match the critic reproduction. Its testScope now states the Task 5 resolved-exception check, the slice-exclusion residual and the direct plain.create residual, and no longer repeats the claim that a hand-written check fails BugReportTest. It does not mention the controller-local handler gap (new finding 021)."
+      },
+      {
+        "findingId": "cg-sme-validation-008",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/WebLayerTest.java",
+        "reviewedSha256": "9d6403eac50efffe069a885def4b70315fe6a4d8206bb08e95a27a4c0a708208",
+        "note": "File unchanged since loop 6: the class Javadoc says given, mock and verify are already imported (they are, lines 5, 6 and 8) and the Task 4 TODOs name the two imports to add."
+      },
+      {
+        "findingId": "cg-sme-validation-009",
+        "status": "resolved",
+        "file": "authoring/catalog/spring-boot/validation-errors-and-testing/module.json",
+        "reviewedSha256": "faaa7e00a0b8ffefa74367fe9b0805f7daeeabeec892b1487e20457349d6e897",
+        "note": "module.json is byte-identical from e838bbe7 to 9e54e36e (sha256 faaa7e00...). lab.json minutes (setup 5, standard-s9 27, standard-s10 40, labelled as an authoring estimate with a per-task breakdown in cleanup.notes), the README estimate (line 13) and module.json agree. The loop-7 Task 5 addition (one print line and opening a report file) fits within the 12-minute Task 5 estimate in the critic's judgement."
+      },
+      {
+        "findingId": "cg-sme-validation-010",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ErrorSliceTest.java",
+        "reviewedSha256": "0fa43b2c43eaa6ca00a666af0245bc925cf19448d9a0188e94e8be6a8c285fd2",
+        "note": "Loop-7 critic runs on fresh git-archive copies of b5b542a7 (lab bytes identical at 9e54e36e), Eclipse Temurin JDK 25.0.5+8, Maven 3.9.16, mvn -q -o test offline against a private copy of the delivery's local repository: the untouched starter fails exactly the 12 declared failingTests (12 run), twice; the private overlay regenerated for these bytes passes 12/12 with no output, twice. An empty anonymous-subclass fake still fails both task7 tests ('the fake must find nothing'), because the real constructor seeds booking 1 and the shipped probe requires byId(1L) to throw."
+      },
+      {
+        "findingId": "cg-sme-validation-011",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "reviewedSha256": "1d92b09c6832b537fdcafae31c576da332188ebccfb2e37889cfd1776e1bb80c",
+        "note": "README lines 13-14 unchanged: about 27 minutes on S9 with a 45-minute pause point; on S10 stop when the 40-minute block ends. Consistent with lab.json standard-s10 40."
+      },
+      {
+        "findingId": "cg-sme-validation-012",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/WebLayerTest.java",
+        "reviewedSha256": "9d6403eac50efffe069a885def4b70315fe6a4d8206bb08e95a27a4c0a708208",
+        "note": "File unchanged since loop 6: the plain-mock TODO and both shipped messages say step 3, matching README Task 8 step 3 (line 144)."
+      },
+      {
+        "findingId": "cg-sme-validation-013",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/WebLayerTest.java",
+        "reviewedSha256": "9d6403eac50efffe069a885def4b70315fe6a4d8206bb08e95a27a4c0a708208",
+        "note": "Loop-7 critic runs on fresh git-archive copies of b5b542a7 (lab bytes identical at 9e54e36e), Eclipse Temurin JDK 25.0.5+8, Maven 3.9.16, mvn -q -o test offline against a private copy of the delivery's local repository: the untouched starter fails exactly the 12 declared failingTests (12 run), twice; the private overlay regenerated for these bytes passes 12/12 with no output, twice. File unchanged since loop 6; the call-location check is gone. The step requires a non-null BookingController in built, a recorded and verified create(POSTED) on the plain mock and a built.byId(5L) probe that must reach the plain mock. Critic mutants: built null with create called directly on the plain mock fails; a controller built with the context mock fails. The documented residual (direct plain.create beside a correctly built controller) passes, as README line 146 and lab-run.json testScope state."
+      },
+      {
+        "findingId": "cg-sme-validation-014",
+        "status": "open",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/WebLayerTest.java",
+        "reviewedSha256": "9d6403eac50efffe069a885def4b70315fe6a4d8206bb08e95a27a4c0a708208",
+        "note": "Loop-7 critic runs on fresh git-archive copies of b5b542a7 (lab bytes identical at 9e54e36e), Eclipse Temurin JDK 25.0.5+8, Maven 3.9.16, mvn -q -o test offline against a private copy of the delivery's local repository: the untouched starter fails exactly the 12 declared failingTests (12 run), twice; the private overlay regenerated for these bytes passes 12/12 with no output, twice. Unchanged and still open as a fact: the critic mutant that stubs create (and, on the plain mock, byId) with matchers and calls Mockito.ignoreStubs in place of verify, in both Task 8 tests, passes 12/12. README line 141 ('any call on the mock is unverified') still overstates only against this deliberate bypass. The loop-6 reconciliation accepted it as a documented low residual; the critic does not oppose that."
+      },
+      {
+        "findingId": "cg-sme-validation-015",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ErrorSliceTest.java",
+        "reviewedSha256": "0fa43b2c43eaa6ca00a666af0245bc925cf19448d9a0188e94e8be6a8c285fd2",
+        "note": "Loop-7 critic runs on fresh git-archive copies of b5b542a7 (lab bytes identical at 9e54e36e), Eclipse Temurin JDK 25.0.5+8, Maven 3.9.16, mvn -q -o test offline against a private copy of the delivery's local repository: the untouched starter fails exactly the 12 declared failingTests (12 run), twice; the private overlay regenerated for these bytes passes 12/12 with no output, twice. The check is unchanged and the mutant still passes (full @SpringBootTest with MockMvc auto-configuration, ApplicationAvailabilityAutoConfiguration excluded, bean-definition overriding, the nested fake overriding the real service: 12/12). As recommended, the residual is now stated in README line 124 (a full context that deliberately switches that bean's auto-configuration off and overrides the service would not be caught) and in lab-run.json testScope. Plausible full-context routes still fail (see 002)."
+      },
+      {
+        "findingId": "cg-sme-validation-016",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "reviewedSha256": "1d92b09c6832b537fdcafae31c576da332188ebccfb2e37889cfd1776e1bb80c",
+        "note": "Loop-7 critic runs on fresh git-archive copies of b5b542a7 (lab bytes identical at 9e54e36e), Eclipse Temurin JDK 25.0.5+8, Maven 3.9.16, mvn -q -o test offline against a private copy of the delivery's local repository: the untouched starter fails exactly the 12 declared failingTests (12 run), twice; the private overlay regenerated for these bytes passes 12/12 with no output, twice. Both recommended corrections are made: the ErrorSliceTest row (line 195) drops the declaring-class cause and names the current causes (a critic mutant with the fake in a separate top-level test configuration imported into the slice passes 12/12, consistent with the new row); the task8VerifiesTheCreateCall row (line 192) quotes the shipped message exactly ('the controller's create call with the posted booking must remain recorded', matched against the critic reset-mutant output). The new row at line 193 has a separate wrong cause, filed as new low finding 019."
+      },
+      {
+        "findingId": "cg-sme-validation-017",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/expected/test-summary.txt",
+        "reviewedSha256": "c455a65b0edea873483391b6d56e787030bcc5fc03d323993d83d2b2de57ab0b",
+        "note": "Line 21-23 now says the fixed GET /bookings/0 answers a problem+json object with a title and a detail to compare with the Task 5 prediction; it no longer claims the body matches the prediction. A critic run of the overlay with wrong non-blank predictions passes 12/12, consistent with the new text. The offline spring-boot:run problem in the same file's spot check is new low finding 023."
+      },
+      {
+        "findingId": "cg-sme-validation-018",
+        "status": "open",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/lab.json",
+        "reviewedSha256": "39c95b1cca6505291972a0a709a40a4fd8e501c4426f3e09e51847e3c3665fa1",
+        "note": "lab.json is byte-identical since loop 6 and module.json is unchanged in this delta: bean-validation-on-requests#o2, global-error-handling#o3 and standard-error-responses-with-problemdetail#o1 are still claimed with only part of each executed and no partial-coverage note. The loop-6 reconciliation accepted this as an out-of-scope main-era claim for a later module branch; it stays open as a fact. Loop-7 new findings 021 (global-error-handling#o1) and 022 (web-layer-tests-with-mockmvc#o1) belong with the same follow-up."
+      }
+    ]
+  }
+}

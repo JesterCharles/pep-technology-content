@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "education critic (independent Claude subagent, 2026-11-18)",
+  "reviewedPath": "python/python-fundamentals/coding-lab/lab.json",
+  "reviewedSha256": "dd42cde616f83a9b70e1827092169bc49bf076008894bedc9e972e2a1fb003a3",
+  "artifactHashes": {
+    "coding-lab/lab.json": "dd42cde616f83a9b70e1827092169bc49bf076008894bedc9e972e2a1fb003a3",
+    "coding-lab/README.md": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+  },
+  "findings": [
+    {
+      "id": "py-fund-lab-edu-001",
+      "severity": "high",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/lab.json",
+        "line": 19
+      },
+      "claim": "Over-claim rule used consistently in this report: a production clause of a claimed objective that the learner is never asked to perform (shipped code or the check performs it) is high; a clause the learner is asked to perform but that a pytest check cannot observe is medium; non-production 'explain' clauses are not counted. lab.json claims functions-and-arguments#o1 ('Define a function with positional and default parameters and call it with keyword arguments in any order'). The learner only defines normalize_signup with a default (Task 3). The keyword-argument call in any order is made by the check itself (tests/test_main.py line 88: normalize_signup(default_session=\"intro\", row=row)), and README line 105 just tells the learner 'The check calls it as ...'. Nowhere in records.py, cli.py or test_signups.py is the learner asked to write a keyword call to their own function, let alone in a reordered form (the only learner keyword arguments are print(..., file=sys.stderr) and the ** unpacking of Task 9, neither of which is a reordered call). The call clause is therefore not learner-performed, so the claim is over-stated.",
+      "evidence": [],
+      "recommendation": "Make the learner write the call and observe it: e.g. in Task 9 require normalize_signup(default_session=\"general\", row=row) (or in Task 10 require session_status(taken=taken, capacity=room[\"capacity\"])) and add an AST check that cli.py (or test_signups.py) contains a Call to a records function whose keywords are given in an order different from the parameter order. Otherwise drop functions-and-arguments#o1 from lab.json objectives.",
+      "reviewedSha256": "dd42cde616f83a9b70e1827092169bc49bf076008894bedc9e972e2a1fb003a3"
+    },
+    {
+      "id": "py-fund-lab-edu-002",
+      "severity": "high",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/lab.json",
+        "line": 26
+      },
+      "claim": "Over-claim rule used consistently in this report: a production clause of a claimed objective that the learner is never asked to perform (shipped code or the check performs it) is high; a clause the learner is asked to perform but that a pytest check cannot observe is medium; non-production 'explain' clauses are not counted. lab.json claims modules-imports-and-virtual-environments#o1 ('Import from the standard library and from your own module with import and from ... import ...'). Every standard-library import is shipped in the starter (cli.py line 6 'import sys', records.py line 7 'import logging'; README line 134 even says 'Under import logging'), so the learner never writes an `import <stdlib>` statement. The only import they write is the from-import of their own module, and README line 146 gives that line verbatim; the check (tests/test_main.py lines 250-253) only asserts that some ImportFrom of signups.records exists. The standard-library / plain `import` clause is never asked of the learner.",
+      "evidence": [],
+      "recommendation": "Remove 'import sys' from the cli.py starter and 'import logging' from the records.py starter and tell the learner (Task 8 step 1 and Task 9 step 1) to add the standard-library import they need; the existing behaviour checks then observe it (NameError otherwise) and an AST check for ast.Import of sys/logging makes it explicit. Replace the verbatim from-import line with 'import the five functions you use from signups.records with from ... import'. Alternatively drop o1 from objectives.",
+      "reviewedSha256": "dd42cde616f83a9b70e1827092169bc49bf076008894bedc9e972e2a1fb003a3"
+    },
+    {
+      "id": "py-fund-lab-edu-003",
+      "severity": "medium",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 153
+      },
+      "claim": "Over-claim rule used consistently in this report: a production clause of a claimed objective that the learner is never asked to perform (shipped code or the check performs it) is high; a clause the learner is asked to perform but that a pytest check cannot observe is medium; non-production 'explain' clauses are not counted. writing-and-running-script-files#o1 ('Write a .py script and run it from the terminal with python (or py on Windows), then read its exit status') is claimed; the run-and-read-status clause is asked (README lines 153-159) but no check can observe it, and the run form differs from the page. The page teaches `python summary.py SESSION` / `python3 summary.py` on a single file (writing-and-running-script-files/artifact.md lines 64, 91, 104), and the modules page teaches only flat modules (`from pricing import total`). No page mentions packages, __init__.py or `python -m <package>.<module>` (grep across all nine artifact.md files). The lab instead uses a package with __init__.py, `from signups.records import`, and `python -m signups.cli general`, none of which the README explains. Reproduced: following the page's habit, `python signups/cli.py general` from starter/ fails with `ModuleNotFoundError: No module named 'signups'`. The Troubleshooting entry only covers running from the wrong folder, and never says why -m is needed.",
+      "evidence": [],
+      "recommendation": "Add two sentences before Task 9: 'signups is a package: a folder with __init__.py whose modules are named signups.records, signups.cli. python -m signups.cli runs cli.py as the script while keeping the starter folder on sys.path, so its from signups... imports work; python signups/cli.py would put signups/ on the path instead and fail.' Add that ModuleNotFoundError case to Troubleshooting. In lab.json cleanup.notes (or the module evidence), record that the terminal run and the reading of the exit status are instructed but unobservable, and that the check observes the script's exit statuses instead.",
+      "reviewedSha256": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+    },
+    {
+      "id": "py-fund-lab-edu-004",
+      "severity": "medium",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 153
+      },
+      "claim": "Task 9 sends the learner into the starter folder ('Try it from the starter folder') but never tells them to return to the lab folder, and Task 10 (README line 169) then gives a lab-folder-relative command. Reproduced in a scratch copy: from starter/, `python -m pytest -q` collects only starter/test_signups.py and reports '5 passed' with all ten lab checks silently skipped (a false 'done' signal), and the README's Task 10 command `python -m pytest -q starter/test_signups.py` reports 'no tests ran' (file not found). A novice who stays in starter/ after Task 9 is misled exactly at the end of the lab.",
+      "evidence": [],
+      "recommendation": "After the Task 9 script run add: 'Then go back to the lab folder (cd ..) before you run the tests again.' Add a Troubleshooting line: 'Only your own tests ran, or no tests ran: you are in starter/; cd .. to the lab folder.'",
+      "reviewedSha256": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+    },
+    {
+      "id": "py-fund-lab-edu-005",
+      "severity": "medium",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 116
+      },
+      "claim": "Several objective-bearing lines are handed over verbatim, so the lab's only executable evidence for those objectives is transcription: Task 5 gives the full count fix `counts.get(signup[\"session\"], 0) + 1` and the loop header `for session, seats in capacity.items():` (lists#o2, lists#o3); Task 6 gives the whole dict comprehension `{session: seats - counts.get(session, 0) for session, seats in capacity.items()}` (slicing#o2, line 124); Task 8 (lines 134-140) dictates every statement of parse_seats including both f-string messages, the logger call and levels (exceptions#o1-o3); Task 9 gives the exact import line (line 146). By contrast Task 4 (line 112) gives only an input/output example, which is the right level for practice. The lab claims the learner 'can' do these things on the strength of copied code.",
+      "evidence": [],
+      "recommendation": "Keep the construct names and an input/output example, and drop the solution expressions: e.g. Task 6 'build seats_left_by_session with one dict comprehension over capacity.items(); a session missing from counts has all seats free'; Task 8 list the required behaviours (whole-number and at-least-1 messages, ERROR log with traceback only for non-numbers, one DEBUG per call) instead of each line. To pay for the extra thinking time without breaching 45/60, cut a function that carries no claimed objective (latest serves only the unclaimed slicing#o1; open_sessions duplicates the items()-unpacking evidence that seats_left_by_session already gives) rather than keep handing out code.",
+      "reviewedSha256": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+    },
+    {
+      "id": "py-fund-lab-edu-006",
+      "severity": "medium",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 9
+      },
+      "claim": "Time framing does not fit the two-day delivery. Line 9 says 'About 45 minutes of your scheduled exercise block ... if you pass 60 minutes, pause', but line 66 splits the lab over S14 and S15, each with its own coding-lab blocks (20 + 40 minutes per day). The README never says how the 45 minutes splits by day or whether the 60-minute cap is per day or in total. A learner who spends 45 minutes on Tasks 1-6 on S14 cannot tell whether to stop 15 minutes into S15. Reasoned per-task estimate for a Java developer new to Python, with the current scaffolding (not a measured timing; I solved the lab in scratch only to confirm the flow): setup 5, T1 5, T2 4, T3 4, T4 6, T5 5, T6 6, T7 4, T8 5, T9 7, T10 7, which is about 58 minutes. So 45 looks optimistic, and lab.json cleanup.notes admits it is an unpiloted authoring estimate.",
+      "evidence": [],
+      "recommendation": "State a per-day expectation and the cap scope, e.g. 'Day 1 (S14): Tasks 1-6, about 25 minutes. Day 2 (S15): Tasks 7-10, about 20 minutes. If the whole lab passes 60 minutes in total, finish in self-study.' Bring the median back to 45 by trimming a non-objective function (see the scaffolding finding) rather than by adding more verbatim code, and update lab.json minutes only if the scope stays as is.",
+      "reviewedSha256": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+    },
+    {
+      "id": "py-fund-lab-edu-007",
+      "severity": "medium",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 27
+      },
+      "claim": "Prerequisites and Setup tell macOS/Linux learners to run `python --version` and `python -m venv .venv` before any venv exists. Stock macOS (python.org, Homebrew, Xcode CLT) and stock Ubuntu provide `python3` but not `python`, so the first command a novice types can fail with 'command not found: python', and Troubleshooting has no entry for it. The course's own modules page teaches `python3 -m venv .venv` for macOS/Linux (modules-imports-and-virtual-environments/artifact.md lines 19, 89, 116), so the README also contradicts the page's terminology. Inside the activated venv `python` works, so only the pre-venv steps are affected; a learner who remembers the page will recover, which is why this is medium rather than high. The sibling fastapi-services and data-pipelines READMEs share the convention, so this is a cross-lab fix.",
+      "evidence": [],
+      "recommendation": "On macOS/Linux use `python3 --version` and `python3 -m venv .venv`, add 'after activation, python works on every system', and add a Troubleshooting line for 'command not found: python'. Apply the same fix to the sibling Python lab READMEs.",
+      "reviewedSha256": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+    },
+    {
+      "id": "py-fund-lab-edu-008",
+      "severity": "medium",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 129
+      },
+      "claim": "The aliasing example teaching the mutable-default bug is wrong as written: '`add_to_waitlist(\"a@example.com\")` called twice without a waitlist returns `[\"a@example.com\", \"b@example.com\"]` the second time'. Reproduced on the pristine starter: calling add_to_waitlist('a@example.com') twice returns ['a@example.com', 'a@example.com']; a 'b@example.com' can only appear if the second call passes it. This is an inaccuracy in the exact sentence that explains the concept, and a careful learner who reproduces it will be confused.",
+      "evidence": [],
+      "recommendation": "Rewrite as: 'Calling add_to_waitlist(\"a@example.com\") and then add_to_waitlist(\"b@example.com\"), both without a waitlist, returns [\"a@example.com\", \"b@example.com\"] the second time, because the default list is created once and shared.'",
+      "reviewedSha256": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+    },
+    {
+      "id": "py-fund-lab-edu-009",
+      "severity": "medium",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 111
+      },
+      "claim": "Task 4 does not state a requirement that the check enforces. The README says 'the values joined with \", \"', and its only example uses strings. tests/test_main.py line 109 calls report_line(\"x\", 1, 2, a=1, b=True). A README-faithful `\", \".join(values)` raises `TypeError: sequence item 0: expected str instance, int found` inside the learner's function, so the Task 4 assertion message never prints. Reproduced in scratch. str.join itself, and the need for str() on its items, are taught on none of the nine pages (grep for '.join(' and 'str(' across all artifact.md files finds nothing), and the README does not name str.join either. The cause is untaught and unscaffolded, and the failure is a raw TypeError.",
+      "evidence": [],
+      "recommendation": "Add to Task 4: 'Values may be any type, such as numbers or True, so convert each one with str() before joining: \", \".join(str(v) for v in values).' Alternatively name str.join and show report_line(\"x\", 1, 2, a=1) returning \"x: 1, 2 (a=1)\" as a second example.",
+      "reviewedSha256": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+    },
+    {
+      "id": "py-fund-lab-edu-010",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 20
+      },
+      "claim": "'Each failing check names its task and the next action' is overstated. On the shipped starter the first failures for Tasks 3, 4 and 5 are raw TypeError/KeyError messages ('normalize_signup() missing 1 required positional argument', 'report_line() got an unexpected keyword argument', \"KeyError: 'testing'\"). Only the test id names the task, and there is no next action. The value checks for describe (test lines 68-69) and for emails_for, unique_emails and seats_left_by_session (lines 160, 165, 167) carry no message. Reproduced: a cli.py that keeps sys.exit(main(sys.argv)) at top level without the guard fails Task 9 with a bare 'SystemExit: 1' instead of the 'importing signups.cli must not run main' message.",
+      "evidence": [],
+      "recommendation": "Either soften the README sentence ('each failing check is named after its task; most also say what to do next') or add messages to the unlabelled asserts and wrap the Task 9 import in a try that turns SystemExit into the 'add the __name__ guard' message.",
+      "reviewedSha256": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+    },
+    {
+      "id": "py-fund-lab-edu-011",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 132
+      },
+      "claim": "Scenario seam: Task 8 is titled 'a clear error for the seats column', but the sample data has no seats column. SIGNUPS has email/name/session and CAPACITY holds ints, and nothing in the desk (cli.py) calls parse_seats. tables_needed, find_signup/describe, cancel, latest, add_to_waitlist and mark_checked_in are likewise disconnected from the summary script. The framing is mostly fine for a concept lab, but the 'seats column' reference points at data the learner cannot find.",
+      "evidence": [],
+      "recommendation": "Either add a one-line framing ('volunteers type the seats for a new session into a form; parse_seats checks that text') or give sample.py a raw seats string that cli.py or a test passes through parse_seats.",
+      "reviewedSha256": "032c025264c1fdeccb65dde56ff495eeb1cda85a1b97c449ce216dbc278a140f"
+    },
+    {
+      "id": "py-fund-lab-edu-012",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/lab.json",
+        "line": 16
+      },
+      "claim": "Unclaimed production objectives: modules-imports-and-virtual-environments#o2 (create/activate a venv, install pinned packages with python -m pip) and #o3 (reinstall from a requirements file) are actually performed by the learner in Setup, but they are neither claimed nor given a recorded reason. Not claiming them is correct, because no check observes a venv, but a reviewer cannot tell that the omission is deliberate. The other unclaimed objectives are predict/choose/classify/read objectives that the page simulators carry, so their omission is warranted.",
+      "evidence": [],
+      "recommendation": "Add one sentence to lab.json cleanup.notes (or the module evidence): 'modules#o2/#o3 are practised in Setup on the real toolchain but not claimed, because a test cannot observe venv creation or a requirements reinstall.'",
+      "reviewedSha256": "dd42cde616f83a9b70e1827092169bc49bf076008894bedc9e972e2a1fb003a3"
+    }
+  ]
+}

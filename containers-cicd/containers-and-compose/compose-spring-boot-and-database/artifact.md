@@ -18,9 +18,9 @@ Practice prediction, not scored.
 
 `environment` sets variables. Spring Boot reads `SPRING_DATASOURCE_URL`, `_USERNAME` and `_PASSWORD`. Write `${DB_PASSWORD}` and Compose fills it from a `.env` file beside `compose.yaml`, listed in `.gitignore`.
 
-One networking rule now, the details next topic: inside a container, `localhost` is that container itself. Compose lets one service reach another by its service name and container port, so the API's URL names `db:5432`, then the database name.
+Inside a container, `localhost` is that container itself. One service reaches another by its service name and container port, so the API's URL names `db:5432`, then the database name.
 
-The password value is disposable and only wires local development; production uses Compose secrets.
+This password is disposable, for local development only; production uses Compose secrets.
 
 ### Up, ps, down
 
@@ -28,6 +28,7 @@ The password value is disposable and only wires local development; production us
 - `docker compose ps` lists the stack's containers.
 - `docker compose down` stops and removes the containers and network. Named volumes stay, so the data stays.
 - `docker compose down -v` also removes the named volumes: the data is gone.
+- `docker volume ls` lists the volumes that still exist.
 
 ### Apply it: reset the database
 
@@ -52,8 +53,6 @@ Nothing created yet.
 - Services: the API with `build`, PostgreSQL with `image`; data in a declared named volume; ports on `127.0.0.1`.
 - Datasource settings through `environment`; the password as `${DB_PASSWORD}` from an untracked `.env`.
 - `up -d` starts, `ps` lists, `down` removes containers and network, `down -v` also deletes named volumes.
-
-Next topic: Service-name networking
 
 ## Cheat sheet
 

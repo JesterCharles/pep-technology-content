@@ -2858,3 +2858,36 @@ test("private leak comparison keeps raw exact scanning and claims no transformed
   assert.equal(await leakOutcome(value, { transformHtml: inPage(`<pre>${characterReferences(renamed, "named")}</pre>`) }), "passed", "a renamed form is not an exact match");
   assert.equal(await leakOutcome(value, { transformHtml: inPage(`<pre>${Buffer.from(value).toString("base64")}</pre>`) }), "passed", "an alternate encoding is not decoded");
 });
+
+test("path anatomy moves activity checks into the reading column and the timeline into the lesson path", async () => {
+  const html = await readFile(path.join(fixtures, "good.html"), "utf8");
+  const marked = html.replace(" data-pep-guidance-contract", ' data-pep-guidance-contract data-pep-anatomy="path"');
+  const checkBlock = (n) => marked.match(new RegExp(`\\s*<section class="activity-checks" data-pep-activity-checks aria-labelledby="checks-${n}">[\\s\\S]*?</section>`, "u"))[0];
+  const taskOpen = ['<div id="task-safe" data-pep-task>', '<div id="task-explain" data-pep-task data-pep-may-stall>', '<div id="task-recap" data-pep-task data-pep-may-stall>'];
+  let migrated = marked.replace('<nav aria-label="Activities">', '<nav aria-label="Activities" data-pep-path>');
+  [1, 2, 3].forEach((n) => {
+    const block = checkBlock(n);
+    migrated = migrated.replace(block, "").replace(taskOpen[n - 1], `<div data-pep-instructions>${block.trim()}</div>\n        ${taskOpen[n - 1]}`);
+  });
+  assert.deepEqual(await validateLearnerGuidance(migrated), []);
+
+  const unmovedChecks = marked.replace('<nav aria-label="Activities">', '<nav aria-label="Activities" data-pep-path>');
+  assert.match((await validateLearnerGuidance(unmovedChecks)).join("; "), /reading column/);
+  const unmarkedPath = migrated.replace(' data-pep-path>', ">");
+  assert.match((await validateLearnerGuidance(unmarkedPath)).join("; "), /lesson path/);
+  const timelineInTopicbar = migrated
+    .replace(/\s*<nav aria-label="Activities" data-pep-path>[\s\S]*?<\/nav>/u, "")
+    .replace("</header>", '<nav aria-label="Activities" data-pep-path><ol>' +
+      ['1', '2', '3'].map((n) => `<li><a href="#activity-${n}" data-pep-activity-link>Activity ${n}</a></li>`).join("") + "</ol></nav></header>");
+  assert.match((await validateLearnerGuidance(timelineInTopicbar)).join("; "), /lesson path/);
+  const checksInsideTask = migrated.replace(/<div data-pep-instructions>(\s*<section class="activity-checks"[^]*?<\/section>)<\/div>\s*(<div id="task-safe" data-pep-task>)/u, "$2$1");
+  assert.match((await validateLearnerGuidance(checksInsideTask)).join("; "), /reading column/);
+
+  // Without the marker the earlier anatomy still governs: moved checks fail the "follow the task" rule.
+  const migratedUnmarked = migrated.replace(' data-pep-anatomy="path"', "");
+  assert.match((await validateLearnerGuidance(migratedUnmarked)).join("; "), /activity-check block|must follow its task/);
+
+  // New labels accepted on every page.
+  assert.deepEqual(await validateLearnerGuidance(html.replace(">Objectives</summary>", ">Topic objectives</summary>")), []);
+  assert.deepEqual(await validateLearnerGuidance(html.replace(">Where this fits</h2>", ">On the job</h2>")), []);
+});

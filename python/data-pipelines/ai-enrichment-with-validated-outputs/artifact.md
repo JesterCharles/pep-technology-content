@@ -58,7 +58,7 @@ Where to act: The ___ line inside the for loop.
 
 Next step: Get the text from the client first, then open a try block for the validation.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: Your except clause.
 
@@ -76,7 +76,7 @@ Enrichment.model_validate_json(text)      # raises ValidationError
 
 ## Sources
 
-First draft, not reviewed. Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.
+Sources checked on 2026-11-04. The author checked this page against these official pages; independent review pending.
 
 - Pydantic: JSON Schema
 - Pydantic: Models
@@ -92,7 +92,7 @@ Prediction: a model response with a non-numeric confidence value is validated wi
 
 ### explore
 
-Model with fixed fake responses. Valid JSON loads. Invalid JSON, a missing field and a wrong type fail validation and are retried up to the limit, then rejected. A category not on the allowed list is rejected when the field is a Literal. A well-formed but wrong category passes validation, showing that a schema cannot prove truth.
+Model with fixed fake responses. Valid JSON loads. Invalid JSON, a missing field and a wrong type fail validation and are retried up to the limit, then rejected. A well-formed but wrong category passes validation, showing that a schema cannot prove truth.
 
 ### mcq
 

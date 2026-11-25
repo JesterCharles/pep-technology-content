@@ -106,35 +106,11 @@ String describe(int n) {
 - Zero, empty and `None` count as false in a condition.
 - `==` compares values; `is` compares identity; test `is None`.
 
-Next topic: Functions and arguments
-
 ## Cheat sheet
 
 Picture a thermometer that only shows whole degrees, read by two people. The first always reports the mark just below the top of the column, even on a freezing day: three and a half degrees below zero is read as four below. The second simply ignores the half, so the same reading becomes three below. On warm days they always agree; they only differ once the temperature drops below zero.
 
 Python's floor division reads like the first person, always stepping down; Java's integer division reads like the second, stepping toward zero.
-
-Use these same observable steps when working from the text alternative.
-
-1. Where to look: Read the code in the workspace on the right (below these steps on a narrow screen).
-2. What to do or type: Under Prediction, pick the result you expect.
-3. What to expect: Pick Low, Medium or High confidence, then press Check my prediction.
-4. How to know it's done: Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.
-
-1. Where to look: Click in the describe.py editor (or Tab to it) and edit the code. Tab indents; Escape, then Tab, leaves the editor.
-2. What to do or type: Press Run (or Ctrl+Enter in the editor). The Problems panel lists each line Python would reject; press a problem to jump to its line.
-3. What to expect: Fix the lines and run again. Once nothing is flagged, Output compares each call's result with the Java's.
-4. How to know it's done: Each goal changes from open to done. If a result differs, the feedback points at the line to check; Reset code restores the start.
-
-1. Where to look: Start in Translate the Java for loop, then use the division and truthiness controls below it.
-2. What to do or type: Rewrite the shown counting loop with `range`, a colon and four-space indentation, then press Check translation.
-3. What to expect: The bounded checker names any missing loop structure; the other controls print real Python results for their listed inputs.
-4. How to know it's done: The four goals above read done, including the translated loop, and Continue appears.
-
-1. Where to look: Read the question and the code it names in the workspace on the right.
-2. What to do or type: Pick one answer, pick your confidence, then press Check answer.
-3. What to expect: Feedback appears below. If the first answer is not right, a second question appears; answer it and press Check second try.
-4. How to know it's done: Either way, Continue then shows and takes you to the recap.
 
 |  |  |
 | --- | --- |

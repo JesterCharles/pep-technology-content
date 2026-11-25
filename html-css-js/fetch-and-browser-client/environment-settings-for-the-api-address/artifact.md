@@ -101,7 +101,7 @@ const base = import.meta.env.VITE_REPORTS_URL;
 - Vite: Server options, retrieved 2026-11-04
 - Vite: Env variables and modes, retrieved 2026-11-04
 
-First draft, retrieved 2026-11-04. These claims have not had independent review yet, so treat them as unverified until that review is recorded.
+Sources checked on 2026-11-04; independent review pending.
 
 ## Static interaction alternatives
 

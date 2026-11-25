@@ -51,7 +51,7 @@ Where to act: The expression inside the div.
 
 Next step: Decide what test on count produces a true or false value rather than a number.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: Before the return statement.
 
@@ -70,7 +70,7 @@ if (!show) return null;               // render nothing
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - react.dev/learn/conditional-rendering: Conditionally returning JSX; Conditionally including JSX
 

@@ -1,9 +1,13 @@
 package secure;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,10 +27,23 @@ public class AuthController {
     public record Credentials(String username, String password) {
     }
 
+    /** What a new account needs; bcrypt reads at most 72 bytes, so a password over 72 characters is refused too. */
+    public record Registration(@NotBlank String username, @NotBlank @Size(max = 72) String password) {
+    }
+
     @PostMapping("/auth/register")
-    @org.springframework.web.bind.annotation.ResponseStatus(HttpStatus.CREATED)
-    public void register(@RequestBody Credentials credentials) {
-        accounts.register(credentials.username(), credentials.password());
+    public ResponseEntity<Void> register(@Valid @RequestBody Registration registration, BindingResult invalid) {
+        // Answer a broken registration here with 400; left to Spring's error page, an anonymous
+        // caller would see the security filter's 401 instead.
+        if (invalid.hasErrors()) {
+            return ResponseEntity.badRequest().build();
+        }
+        // An existing account is never replaced, so registering cannot take over an account that exists.
+        if (accounts.storedPassword(registration.username()) != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        accounts.register(registration.username(), registration.password());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/auth/token")

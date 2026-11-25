@@ -1,0 +1,243 @@
+{
+  "schemaVersion": 1,
+  "author": "claude-opus-5-5 (pep-standard-fast-labs-ops-replacement worker; lab author)",
+  "decidedBy": "ops-reconciler (independent non-author Claude subagent, 2026-11-18); ops-edu-10 and ops-edu-12 re-decided from escalate to accept under the operator's option A decision by ops-reconciler-r1 (independent non-author Claude subagent, 2026-11-18)",
+  "reviewedPath": "containers-cicd/microservices-and-ci-cd/coding-lab/lab.json",
+  "reviewedSha256": "9c58c9241d704517b6f9baea638de0c5848f51a5180d4112ac83d3e063368d78",
+  "decisions": [
+    {
+      "findingId": "ops-edu-01",
+      "decision": "accept",
+      "rationale": "Valid. main.py docstring rule 2 says the call \"sets no connect or read timeout, so a hanging api hangs us too\", but the call has no timeout argument and httpx 0.28.1 applies Timeout(timeout=5.0) (reconciler venv: inspect.signature(httpx.get) default = Timeout(timeout=5.0)); service-to-service-calls/artifact.md line 41 teaches \"HTTPX has a five-second inactivity default that timeout=None turns off\". README line 147 says \"remove timeout=None\", which the starter does not contain. Same defect as ops-sme-001. Acceptance: the starter call, its docstring and README troubleshooting describe the same timeout behaviour, and that behaviour matches the page (five-second default, or timeout=None if the draft is meant to hang). The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/app/main.py"
+    },
+    {
+      "findingId": "ops-edu-02",
+      "decision": "accept",
+      "rationale": "Valid. Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: swapping the codes (TimeoutException -> 502, ConnectError -> 504) passes 27/27, and an \"except httpx.RequestError -> 502\" placed before \"except httpx.TimeoutException -> 504\" passes 27/27. issubclass(httpx.TimeoutException, httpx.RequestError) is True in httpx 0.28.1, so the 504 branch is unreachable. tests/lab.mjs lines 235-237 match each pattern anywhere in the file. Same defect as ops-sme-009. Acceptance: reviews-error-mapping fails when the timeout handler does not raise 504 in its own except body, when the refused-connection handler does not raise 502/503, or when a superclass handler (RequestError, TransportError, HTTPError, Exception) comes before the TimeoutException handler; the hint no longer steers learners to RequestError without the ordering rule. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-edu-03",
+      "decision": "accept",
+      "rationale": "Valid. Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: push: ${{ github.event_name == 'pull_request' }} (inverted) and push: ${{ github.ref != '' }} (always true) both pass 27/27, because tests/lab.mjs line 277 accepts any expression that mentions github.ref or github.event_name. Same defect as ops-sme-004. Acceptance: ci-build-push passes only expressions that push for non-pull-request (or main/tag) runs and fails inverted or always-true forms with a message naming which runs would push. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-edu-04",
+      "decision": "accept",
+      "rationale": "Valid. Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: adding a step with env PW: ${{ secrets.REGISTRY_PASSWORD }} and run: echo \"$PW\" | base64 passes 27/27, because tests/lab.mjs line 312 only flags a run whose own text holds a literal \"${{ secrets.\". secrets-in-ci/artifact.md line 11 opens with exactly this base64 leak, and README line 118 recommends routing through env. Same defect as ops-sme-003. Acceptance: ci-no-secret-prints fails any step that writes a value bound to secrets.* (directly or through step, job or workflow env, including encoded forms such as base64) to the run log; output piped into docker login --password-stdin, as README line 118 teaches, still passes; the shipped debug step cannot survive by moving its secret into env. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-edu-05",
+      "decision": "accept",
+      "rationale": "Valid. Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: timeout = httpx.Timeout(3.0, connect=2.0) as an unused local passes 27/27; a comment \"# later: timeout=httpx.Timeout(3.0, connect=2.0)\" with no timeout on the call passes 27/27; timeout=3.0 on the call (a valid explicit limit for connect and read) fails \"the outgoing api call sets explicit connect and read timeouts\". Part (a) is the same defect as ops-sme-008(a). Acceptance: comments and docstrings are ignored; the rule passes only when the outgoing call (or its client) receives an explicit timeout that sets connect and read limits; either a plain number is accepted or the README states that an httpx.Timeout with a separate connect limit is required. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-edu-06",
+      "decision": "accept",
+      "rationale": "Valid. Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: {\"authorization\": authorization} and the guarded form (headers = {}; if authorization: headers[\"Authorization\"] = authorization) both fail reviews-auth-forward, while a comment '# \"Authorization\": authorization' on a call with headers={} passes 27/27. In the reconciler's httpx 0.28.1 venv, a request with headers={\"Authorization\": None} raises TypeError \"Header value must be str or bytes, not <class 'NoneType'>\", which none of the taught except clauses catch, so the only accepted shape gives a 500 for a header-less caller (handler declares authorization: str | None = Header(default=None), main.py line 27). Same defect as ops-sme-010. Acceptance: comments are ignored; any form that forwards the incoming value as the outgoing Authorization header (either key case, dict literal or subscript) passes; a missing header no longer ends as an unhandled 500 in the form the README teaches (guard, 401, or required parameter), and the README says which. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-edu-07",
+      "decision": "accept",
+      "rationale": "Valid. Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: moving actions/checkout after ./mvnw test in the test job passes 27/27 (README line 113 and the rule message both say \"before\"); deleting the docker login step and putting both secrets.REGISTRY_* references in a YAML comment passes 27/27, because ci-secret-refs (tests/lab.mjs lines 284-286) regex-matches raw file text. Part (a) is the same defect as ops-sme-006; part (b) is the same defect as ops-sme-005's comment-only secrets case. Acceptance: ci-test-job requires the checkout step before the test step; ci-secret-refs requires a real login step whose credentials come from secrets.* in parsed YAML (comments do not count). The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-edu-08",
+      "decision": "accept",
+      "rationale": "Valid on all five parts. Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: (a) keeping the early COPY ./app ./app and adding a later one passes 27/27; (b) \"--host=127.0.0.1\" with fastapi run passes 27/27; (c) uvicorn ... \"--host=0.0.0.0\" fails; (d) a .dockerignore with .env* fails; (e) \"127.0.0.1:8000:9000\" passes. Part (a) is the same defect as ops-sme-014; parts (b) and (c) are the same defect as ops-sme-007. Acceptance: no COPY/ADD of the app or the whole context precedes the pip install; --host=VALUE and --host VALUE are parsed alike for fastapi and uvicorn; an ignore glob that matches .env satisfies the rule; the reviews mapping's container port must be 8000. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-edu-09",
+      "decision": "accept",
+      "rationale": "Valid, narrowed. starter/decisions.yaml: every store_contrast option list (lines 42-44) is ordered relational, document, key-value, matching the field order, so all 9 answers are positional; the first-listed option is also correct for shared_concern_at_gateway, compose_service_names_are, different_store_types_are_enabled_by, jenkinsfile_stages_run, keeps_three_replicas_running and manual_approval_before_production. Distractors image-caching, build-caching and a-container-registry are not taught alternatives for those questions. The options are slugs of sql-vs-nosql/artifact.md table cells (lines 15-17), and the brief's cart scenario (architecture-brief.md lines 52-53) and Approve scenario (lines 77-78) restate sql-vs-nosql line 11 and jenkins line 44. The reconciler's solution passes every why with 22 filler characters (tests/lab.mjs line 330). Binding: option order no longer predicts the answer in any section; each distractor is a plausible taught alternative; the scenarios differ from the pages' worked examples. Not binding: brute-force by rerun (inherent to any public choice test) and the request for a produced, checkable artefact per objective; the length-only why check is disclosed in the README (line 103) and stays. Whether choice items count as elicitation for explain/compare objectives is part of the ops-edu-10 escalation. Reordering and rewording add no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/decisions.yaml"
+    },
+    {
+      "findingId": "ops-edu-10",
+      "decision": "accept",
+      "rationale": "The finding is valid; the fix is a product decision. lab.json declares all 24 objectives, but these clauses have no executable task with a test: service-to-service-calls#o2 (Spring RestClient timeouts, and comparison with each client's default and with timeouts disabled: there is no RestClient file or comparison item); secrets-in-ci#o2 (add-mask and fork runs get no secrets: neither appears); jenkins#o2 (what a registry stores: only the reference split is tested). The terminology part of api-gateways#o2 (client-side vs server-side discovery) and the explain part of adding-fastapi#o3 (why 0.0.0.0: the task is the README-dictated swap of fastapi dev for fastapi run, README line 89) are elicited only weakly. The time budget is the constraint. The timing model (coding-lab-timing.json) gives typical 55 and worst 60 minutes and assumes the covered pages are already read. If the 799-word optional jenkins page that phase 7 depends on is charged to the lab (about 4 minutes at the model's 200 wpm, see ops-edu-12), the typical becomes about 59, which leaves about one retry at the model's 1 minute per retry. Phase 1 also allows 3 minutes for a 1139-word README (about 5.7 minutes at 200 wpm). Adding executable items for every missing clause therefore likely exceeds the 60-minute module-lab bound unless something is cut. Options for the owner: (a) undeclare the objectives whose clauses stay unelicited and record them as beta debt; (b) add small tested items (for example worksheet rows on HTTPX default vs timeout=None vs explicit limits, add-mask and fork secrets, client-side vs server-side naming, and what a registry stores), paid for by cutting tests 22 and 24 (the layer-order and .dockerignore repairs, which map to no declared objective and are image-layers-and-build-caching objectives o2-o3 of the previous module) and possibly test 21 (base image and WORKDIR), see ops-edu-18, and by trimming the README; (c) accept choice-only worksheet items as elicitation for the explain/compare objectives, as a recorded policy; (d) raise the bound. Reconciler recommendation: (b), with (a) for any clause that still does not fit inside 60 minutes, which keeps the lab inside the bound without declaring objectives from prose. Whatever the decision, the declared objectives must equal the set that tested tasks elicit. Operator decision (2026-11-18), verbatim: \"Choose A. Keep all 24 objectives declared and required. Add the five small tested worksheet items, keep phase 7 required, state the S39 Jenkins reading as its prerequisite, and charge its approximately four minutes to S39. Fund the bound by prewiring the previous module's Dockerfile and .dockerignore work while keeping the CMD bind-address repair, and trim only redundant README prose. Re-prove that the typical path is about 55 minutes, worst case no more than 60, the starter fails exactly its declared tests, two independent private solved overlays pass, and no protected solution material enters Git or reports.\" The operator's \"A\" has the content of option (b) above (keep every objective declared, add small tested items, pay for them by cutting the previous module's image-build repairs and trimming the README), not option (a) above (undeclare); together with ops-edu-12 option (b) it keeps phase 7 required and fixes the bound. Decision changed from escalate to accept by ops-reconciler-r1 under that decision. Acceptance: all 24 objectives stay declared in lab.json and trackRequirement.standard stays required; the five small tested worksheet items are added for the clauses this finding names; phase 7 stays required with the S39 Jenkins reading stated as its prerequisite and its about four minutes charged to S39; the previous module's Dockerfile and .dockerignore work is prewired while the CMD bind-address repair stays a tested task; only redundant README prose is trimmed; the timing record re-proves a typical path of about 55 minutes and a worst case of no more than 60; the starter fails exactly its declared failingTests; two independent private solved overlays pass; and no protected solution material enters Git or reports. Elicitation residuals of the new items are tracked as ops-edu-r1-01, ops-edu-11 and ops-edu-03, and the no-protected-material residual in the solved-run record as ops-edu-r1-05, all in module-lab-recheck-reconciliation.json.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/lab.json"
+    },
+    {
+      "findingId": "ops-edu-11",
+      "decision": "accept",
+      "rationale": "Valid, narrowed. README phases 4 and 6 give the exact decisive values: httpx.Timeout(3.0, connect=2.0) (line 97), HTTPException(status_code=504, ...) (line 98), needs: test (line 114), push: ${{ github.event_name != 'pull_request' }} (line 117), contents: read (line 120). The ci-build-push failure message repeats the push expression (tests/lab.mjs line 280). For github-actions-pipeline#o2 (\"Write a workflow ... using needs\") the learner can copy the answer from the README, so the objective is not genuinely elicited. Acceptance: for every declared objective at least one decisive value is derived from the topic page rather than copied from the README or a failure message; action SHAs, file names and syntax that are not an objective may stay given. This does not require longer instructions: shorter pointers to the page also satisfy it, so the change is time-neutral or cheaper.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md"
+    },
+    {
+      "findingId": "ops-edu-12",
+      "decision": "accept",
+      "rationale": "Same decision as ops-edu-10. Facts: lab.json trackRequirement.standard is \"required\"; topic.json and the calendar title S39's jenkins topic \"Reading (optional): Jenkins, registries, CD and Kubernetes\"; README lines 10-11 turn that page into a prerequisite for phase 7; test 20 (delivery: stage order, Deployment/Service, delivery vs deployment) is taught only on that page, and test 15's registry/repository/tag split is taught only there (the previous module only shows a full image name in passing, containers-and-compose/containers-and-images/artifact.md line 37); phase 7 budgets 4 minutes and the timing model does not count reading the 799-word page. There is no implementer-only fix that keeps jenkins o1-o3 declared, keeps the page optional and adds no time: copying the facts into the brief costs reading time and turns the items into lookup, and making phase 7 optional takes jenkins o1-o3 off the required path. Options: (a) make phase 7 (tests 15 and 20) an optional extension outside the required pass and record jenkins o1-o3 as beta debt for the required lab; (b) keep it required, count the page-reading time in the S39 estimate and make the README say plainly that Standard learners must read the page; (c) put the needed facts in the brief and accept lookup-level elicitation. The reconciler recommends (a), because the reading is labelled optional at programme level. Operator decision (2026-11-18), verbatim: \"Choose A. Keep all 24 objectives declared and required. Add the five small tested worksheet items, keep phase 7 required, state the S39 Jenkins reading as its prerequisite, and charge its approximately four minutes to S39. Fund the bound by prewiring the previous module's Dockerfile and .dockerignore work while keeping the CMD bind-address repair, and trim only redundant README prose. Re-prove that the typical path is about 55 minutes, worst case no more than 60, the starter fails exactly its declared tests, two independent private solved overlays pass, and no protected solution material enters Git or reports.\" For this finding the decision has the content of option (b) above (keep phase 7 required, count the page-reading time in the S39 estimate, and have the README say plainly that Standard learners must read the page), not option (a) above (make phase 7 optional). Decision changed from escalate to accept by ops-reconciler-r1 under that decision. Acceptance: phase 7 and its tests stay on the required Standard path; the README states the \"Reading (optional): Jenkins, registries, CD and Kubernetes\" page as phase 7's prerequisite and tells Standard learners to read it; its about four minutes (799 words at the model's 200 wpm) are charged to S39 consistently in the README, coding-lab-timing.json and lab.json minutes.standard-s39; and the whole lab stays inside the operator's bound (typical about 55, worst no more than 60).",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md"
+    },
+    {
+      "findingId": "ops-edu-13",
+      "decision": "accept",
+      "rationale": "Valid. README S38 phase labels sum to 3+8+5+8+12 = 36 minutes against the header's 39 (line 34); coding-lab-timing.json gives phase 5 as 15 minutes against README line 100's 12. worstRequiredMinutes 60 is \"typical 55 plus about 5 minutes\", which is not derived from retry counts, although wrongFirstRetry charges about 1 minute per failed test and decide-store-contrast reports one wrong field per run (tests/lab.mjs lines 373-376). The README (1139 words) is read inside a 3-minute phase 1. Acceptance: the README's phase minutes sum to its day totals and match the timing JSON; README and brief reading are budgeted explicitly; the worst case is computed from a stated retry assumption and stays within the bound decided in ops-edu-10. Whether full coverage fits under 60 is decided in ops-edu-10.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md"
+    },
+    {
+      "findingId": "ops-edu-14",
+      "decision": "accept",
+      "rationale": "Valid. Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: making the reviews key indented one space, which is what removing \"# \" from the \"#  reviews:\" draft line (compose.yaml line 32) does, makes the yaml parser throw, and yamlFile (tests/lab.mjs line 22) returns {}. All six compose tests then fail with \"add a service named reviews ...\" style messages (21/27), although the service is present. The same fallback applies to ci.yml and decisions.yaml. Acceptance: a YAML parse error in compose.yaml, ci.yml or decisions.yaml produces a failure message that names the file and says it is not valid YAML (with the parser's line where available), instead of a missing-content message; README phase 2 says how to uncomment safely. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-edu-15",
+      "decision": "accept",
+      "rationale": "Valid. starter/.github/workflows/ci.yml line 21 builds context \".\" and tags ghcr.io/pepshop/reviews:latest. The only Dockerfile in the project is reviews/Dockerfile (compose.yaml's draft uses build: ./reviews), and build-push-action reads {context}/Dockerfile. ci-build-push only checks that a context key exists (tests/lab.mjs line 275); the reconciler's solution passes 27/27 with context \".\" and also with \"./reviews\". The test job runs ./mvnw test, but the project has no mvnw. Same defect as ops-sme-012. Acceptance: the image the workflow builds is the one it tags (the context or file resolves to the reviews Dockerfile, or the tag names the image the context builds), the test checks this, and the README says what the test job's command stands for when the project has no mvnw. Adds about one line of learner edit at most.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/.github/workflows/ci.yml"
+    },
+    {
+      "findingId": "ops-edu-16",
+      "decision": "accept",
+      "rationale": "Valid. fixtures/briefs/architecture-brief.md line 9 says \"Two incidents drive this review:\" and lines 11-17 list three numbered incidents, each used by decisions.yaml's architecture section. Same defect as ops-sme-018. Acceptance: the count matches the list. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/fixtures/briefs/architecture-brief.md"
+    },
+    {
+      "findingId": "ops-edu-17",
+      "decision": "accept",
+      "rationale": "Valid. Reproduced: the reconciler's solution with the starter ci.yml and empty image_reference and delivery sections gives 17 pass and 10 fail, and TAP lists the workflow failures first (not ok 1-3 are workflow tests). README line 104 (\"finish the S38 phases before you stop\") gives no checkpoint. Acceptance: the README states the end-of-S38 state (which tests pass and that the remaining failures belong to S39). The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md"
+    },
+    {
+      "findingId": "ops-edu-18",
+      "decision": "accept",
+      "rationale": "Valid. README line 7 says the tests check \"the rules this module taught\". Tests 22 (requirements before code) and 24 (.dockerignore) match containers-and-compose/image-layers-and-build-caching objectives o2 (\"Reorder a Dockerfile so dependency files are copied and installed before application source\") and o3 (\"Use a .dockerignore file ...\"), which none of the lab's 24 declared objectives cover. Test 21 (Python 3 base and WORKDIR) appears only in previous-module Dockerfile examples (image-layers-and-build-caching, multi-stage-builds) and is at most loosely tied to adding-fastapi-service-to-compose#o1. Acceptance: tests 22 and 24 (and 21 unless tied to a declared objective) are either removed (one funding route in ops-edu-10) or presented as cumulative review that points to the named previous-module page, and the README claim matches. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md"
+    },
+    {
+      "findingId": "ops-edu-19",
+      "decision": "accept",
+      "rationale": "Valid, narrowed. The critic confirms the packet core is correct (What-you-edit table, single test command matching lab.json, starter fails exactly the 27 declared tests; the reconciler's own run of the starter also gives 0/27). The defect is the size: 7 edited files in 5 formats and a 1139-word README (wc -w) plus a 588-word brief, much of it the per-phase answer lists in ops-edu-11. Acceptance: every edited file and phase maps to a declared objective or is explicitly labelled cumulative review (see ops-edu-18), and each README phase is reduced to the file, the goal and the page pointer, with rule detail left to the failure messages. The trims save learner time and help fund ops-edu-10.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md"
+    },
+    {
+      "findingId": "ops-sme-001",
+      "decision": "accept",
+      "rationale": "Same defect as ops-edu-01. Verified in the reconciler's httpx 0.28.1 venv: the default timeout is Timeout(timeout=5.0), so a call with no timeout argument does not hang; only timeout=None does (service-to-service-calls/artifact.md lines 41 and 98). README line 147 refers to a timeout=None the starter does not contain. Acceptance: as ops-edu-01 (docstring, starter call and README troubleshooting agree with each other and with the page's five-second default). The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/app/main.py"
+    },
+    {
+      "findingId": "ops-sme-002",
+      "decision": "accept",
+      "rationale": "Valid, narrowed. Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: a login with GITHUB_TOKEN and permissions {contents: read, packages: write} fails both ci-secret-refs (it requires secrets.REGISTRY_USERNAME/REGISTRY_PASSWORD) and ci-permissions (\"no permission here needs write\", tests/lab.mjs lines 323-324), while the lab pushes to ghcr.io. The secrets-in-ci page teaches both patterns: its terminal activity uses a REGISTRY_PASSWORD repository secret with contents: read only (artifact.md lines 63 and 100), and its MCQ keys D \"contents: read and packages: write\" for a GHCR push signed in with GITHUB_TOKEN and explains that C (contents: read only) is refused (artifact.html, a4 options). So the lab's message is false for the GITHUB_TOKEN route that the page itself keys as correct. Acceptance: for a ghcr.io push, the GITHUB_TOKEN + contents: read + packages: write route passes, or the lab targets a registry where a stored credential is needed and says why; failure messages are true for whichever route is shown. Page edits are not required by this decision. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md"
+    },
+    {
+      "findingId": "ops-sme-003",
+      "decision": "accept",
+      "rationale": "Same defect as ops-edu-04 for the false pass (reproduced: env-routed echo \"$PW\" | base64 passes 27/27). The false-fail half is also valid: Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT, run: echo \"${{ secrets.REGISTRY_PASSWORD }}\" | docker login ... --password-stdin fails with \"a run step prints a secret\", although stdout goes to docker's stdin and not to the log. Acceptance: as ops-edu-04; in addition, a message is not shown when its stated reason is false: if inline ${{ secrets.* }} in run text is disallowed, it fails with its own accurate reason. printenv/env/set -x detection is not binding. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-sme-004",
+      "decision": "accept",
+      "rationale": "Same defect as ops-edu-03. Reproduced: inverted == 'pull_request' and always-true github.ref != '' both pass 27/27 (tests/lab.mjs line 277). Acceptance: as ops-edu-03. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-sme-005",
+      "decision": "accept",
+      "rationale": "Valid. Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: run: echo hunter2-for-ghcr | docker login ghcr.io -u pepshop --password-stdin passes 27/27 when both secrets.REGISTRY_* strings appear elsewhere in the file, and docker login ... -p\"$REGISTRY_PASSWORD\" (no space) passes 27/27, because the -p regex at tests/lab.mjs line 289 needs whitespace or \"=\" after -p. Same defect as ops-edu-07 part (b) for the comment-only secrets case. Acceptance: the login step's password demonstrably comes from secrets.* (via env or a login action) and -p/--password in any spelling, and the starter literal, fail in every run step. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-sme-006",
+      "decision": "accept",
+      "rationale": "Same defect as ops-edu-07 part (a). Reproduced: checkout after ./mvnw test passes 27/27. Acceptance: the checkout step's index is lower than the test step's. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-sme-007",
+      "decision": "accept",
+      "rationale": "Same defect as ops-edu-08 parts (b) and (c). Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: fastapi run with \"--host=127.0.0.1\" passes 27/27; uvicorn with \"--host=0.0.0.0\" fails; ENTRYPOINT [\"fastapi\",\"run\"] + CMD [\"app/main.py\",\"--port\",\"8000\"] fails (tests/lab.mjs line 177 inspects only the last CMD/ENTRYPOINT). Acceptance: --host=VALUE and --host VALUE are treated alike for fastapi and uvicorn, and an exec-form ENTRYPOINT is combined with CMD before the check. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-sme-008",
+      "decision": "accept",
+      "rationale": "Valid; part (a) is the same defect as ops-edu-05(a). Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: the unused-local Timeout passes 27/27, and httpx.Timeout(3.0, connect=2.0, read=None) passes 27/27; the reconciler's venv shows it builds Timeout(connect=2.0, read=None, write=3.0, pool=3.0), so the read limit is disabled. Acceptance: as ops-edu-05, and None for connect or read fails. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-sme-009",
+      "decision": "accept",
+      "rationale": "Same defect as ops-edu-02. Reproduced: a RequestError-first handler and swapped status codes both pass 27/27; issubclass(httpx.TimeoutException, httpx.RequestError) is True in httpx 0.28.1. Acceptance: as ops-edu-02, and the failure message mentions handler order. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-sme-010",
+      "decision": "accept",
+      "rationale": "Same defect as ops-edu-06. Reproduced: the lowercase key and guarded forms fail reviews-auth-forward; headers={\"Authorization\": None} raises TypeError in httpx 0.28.1, which is not an httpx exception. Acceptance: as ops-edu-06. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md"
+    },
+    {
+      "findingId": "ops-sme-011",
+      "decision": "accept",
+      "rationale": "Valid, narrowed. starter main.py line 41 keeps response.raise_for_status(); in httpx 0.28.1 HTTPStatusError is not a RequestError subclass (reconciler venv: issubclass(httpx.HTTPStatusError, httpx.RequestError) is False), so the reconciler's 27/27 solution lets a 4xx/5xx from the api escape as a 500. Test 27's title (\"a failed or timed-out downstream call becomes a clear 502/503/504 response\") and docstring rule 3 therefore overclaim; the page's recap (service-to-service-calls/artifact.md line 70) assigns 502 to an invalid reply. Acceptance: either the test title, docstring and README name only the cases that are tested (timeouts and refused connections), or an HTTPStatusError mapping is required and tested. The narrowing route is enough and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/app/main.py"
+    },
+    {
+      "findingId": "ops-sme-012",
+      "decision": "accept",
+      "rationale": "Same defect as ops-edu-15 for the context (ci.yml line 21 context \".\" with no root Dockerfile; ci-build-push only checks that the key exists). Acceptance: as ops-edu-15. The suggestion to add a version or SHA tag beside :latest is declined as binding: no tested task needs it, and it would add learner time against the 60-minute bound; it may be added as optional.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/.github/workflows/ci.yml"
+    },
+    {
+      "findingId": "ops-sme-013",
+      "decision": "accept",
+      "rationale": "Valid, narrowed. README line 112 allows pull_request, and in the reconciler's 27/27 solution the build job's login step reads secrets.* on every run; secrets-in-ci/artifact.md line 37 teaches that fork-triggered runs receive no repository secrets except GITHUB_TOKEN, so that login would fail fork pull requests even though push is false. This is reasoning from documented behaviour; no runner is available to execute it. Acceptance: either the login step is guarded by the same condition as push (which also gives secrets-in-ci#o2's fork clause an executable task, see ops-edu-10), or the README phase 6 notes the fork behaviour. The note-only route adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/.github/workflows/ci.yml"
+    },
+    {
+      "findingId": "ops-sme-014",
+      "decision": "accept",
+      "rationale": "Same defect as ops-edu-08 part (a). Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: COPY requirements.txt . ; COPY . . ; RUN pip install ...; COPY ./app ./app passes 27/27. Acceptance: no COPY/ADD of \".\" or the app precedes the pip install. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-sme-015",
+      "decision": "accept",
+      "rationale": "Valid on both halves. Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: removing POSTGRES_DB from reviews-db fails compose-reviews-env (\"user and database name must match\"), although the postgres image defaults the database name to POSTGRES_USER (docker-library postgres docs); replacing ${REVIEWS_DB_PASSWORD} with the shop's ${DB_PASSWORD} in both places passes 27/27, although README line 82 requires ${REVIEWS_DB_PASSWORD}. Acceptance: an absent POSTGRES_DB is treated as POSTGRES_USER, and the reviews database's password variable must differ from the shop db's. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-sme-016",
+      "decision": "accept",
+      "rationale": "Valid, low. Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: FROM docker.io/library/python:3.14-slim fails reviews-image, because tests/lab.mjs line 161 requires the reference to start with \"python:3\". Acceptance: an optional docker.io/library/ or library/ prefix is normalised before matching. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-sme-017",
+      "decision": "accept",
+      "rationale": "Valid, low. Reproduced by the reconciler on a copy of the lab at c959eefb with its own passing solution (27/27) and LAB_PROJECT: a single-$ ${POSTGRES_USER} in the reviews-db healthcheck passes 27/27, because compose-reviews-depends (tests/lab.mjs lines 105-108) only looks for pg_isready. README line 84 says \"like the db one\", whose test uses $$ (starter compose.yaml line 28), and $$ escaping is taught in containers-and-compose/depends-on-with-health-checks/artifact.md line 25. Acceptance: a bare ${POSTGRES_*} in the reviews-db healthcheck fails with a message explaining that $$ lets the container, not Compose, expand the variable. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs"
+    },
+    {
+      "findingId": "ops-sme-018",
+      "decision": "accept",
+      "rationale": "Same defect as ops-edu-16 (architecture-brief.md line 9 \"Two incidents\" before a three-item list). Acceptance: the count matches the list. The fix is a grader or wording change and adds no learner time.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/fixtures/briefs/architecture-brief.md"
+    },
+    {
+      "findingId": "ops-sme-019",
+      "decision": "reject-with-evidence",
+      "rationale": "starter/.github/workflows/ci.yml lines 1-2 read \"It runs, but it breaks the rules this module taught\": the header claims neither that the run succeeds nor that the pipeline is correct, and a workflow_dispatch run with a failing step is still a run. The missing checkout is a defect the learner is meant to find (README line 113, test 2), and the missing mvnw is handled under ops-edu-15. No change is required by this finding.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/.github/workflows/ci.yml"
+    },
+    {
+      "findingId": "ops-sme-020",
+      "decision": "reject-with-evidence",
+      "rationale": "Rejected on scope. The lab's 24 declared objectives (catalog topic.json files for the 8 covered topics) include no image-user or non-root objective. A grep of every containers-cicd/**/artifact.md for a Dockerfile USER instruction or \"non-root\" finds no page that teaches it in either module, and the only security topic here (secrets-in-ci) is about CI secrets and GITHUB_TOKEN scope. Adding an untaught rule would test content no page covers and add learner time against the 60-minute bound (ops-edu-10). The critic itself offers \"note it as out of scope\" as an acceptable outcome.",
+      "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/Dockerfile"
+    }
+  ]
+}

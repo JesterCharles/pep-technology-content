@@ -1,7 +1,13 @@
 package secure;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
 /**
@@ -30,11 +36,7 @@ public class TokenService {
      *           .build();
      *   JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
      *   return encoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
-     * (imports: java.time.Duration, java.time.Instant,
-     *  org.springframework.security.oauth2.jose.jws.MacAlgorithm,
-     *  org.springframework.security.oauth2.jwt.JwsHeader,
-     *  org.springframework.security.oauth2.jwt.JwtClaimsSet,
-     *  org.springframework.security.oauth2.jwt.JwtEncoderParameters)
+     * (the six imports this needs are already at the top of this file)
      */
     public String issue(String username, List<String> roles) {
         return null;

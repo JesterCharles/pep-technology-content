@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "Independent SME critic (Claude subagent, non-author), 2026-11-19",
+  "reviewedPath": "spring-boot/spring-boot-basics/coding-lab/lab.json",
+  "reviewedSha256": "07e78894e53746fb06a0901565ffdc6ef67b6eac25b26b99f5726b1b9f402dd2",
+  "artifactHashes": {
+    "coding-lab/lab.json": "07e78894e53746fb06a0901565ffdc6ef67b6eac25b26b99f5726b1b9f402dd2",
+    "coding-lab/README.md": "8797a1c7123269949c78710ee0d5af19030dc2f5f1284ceb6df0df95b9a94da3",
+    "assessments/spring-boot-basics-mastery-check/blueprint.json": "6c48701b211c78d38224146f4c97f55ca4a930c2cc87b07580533baebf5f351c",
+    "assessments/spring-boot-basics-mastery-check/practice.gift": "1e4b79cd784a1dd14b4f2f2f96aa0f4efb267a626ed500a5abae8cae0a46ea0e"
+  },
+  "findings": [
+    {
+      "id": "spring-basics-req-sme-001",
+      "severity": "medium",
+      "location": { "file": "spring-boot/spring-boot-basics/coding-lab/README.md", "line": 88 },
+      "claim": "README line 88 and expected/test-summary.txt line 12 tell the learner to run the app offline with `mvn -q -o spring-boot:run`, and the Offline note (README line 96) says only the setup step uses the network. The setup step does not make that command work offline.\n\n- The starter pom declares no build plugins. spring-boot-starter-parent 4.1.2 declares spring-boot-maven-plugin only inside its build/pluginManagement (pom lines 59-280) and its profile pluginManagement.\n- maven-dependency-plugin 3.10.0, the version spring-boot-dependencies 4.1.2 pins, resolves plugins in GoOfflineMojo through ResolverUtil.getProjectPlugins. Bytecode shows that method reading MavenProject.getBuild().getPlugins() and never pluginManagement.\n- Empirical check: the empty local Maven repository used for this change's fresh solved run (run local-1795064497) was filled only by `mvn -q dependency:go-offline` plus the `mvn -q -o test` runs. It contains no org/springframework/boot/spring-boot-maven-plugin and no spring-boot-loader-tools.\n\nSo on a learner's clean repository the documented offline spot check cannot resolve the plugin. This is the first Spring module lab in course order, and none of the seven Spring lab poms declares the plugin. Running the setup again, as the Offline note and the Troubleshooting entry for 'Cannot access central in offline mode' advise, would not fix it.\n\nThe spot check itself was not executed. The exact Maven error text (no plugin found for prefix 'spring-boot', or an offline resolution failure) is inferred from static reading plus the repository contents. The required test command `mvn -q -o test` is unaffected and was proven.",
+      "evidence": [],
+      "recommendation": "Pick one. (a) Declare org.springframework.boot:spring-boot-maven-plugin, with its version inherited from the parent, under starter/pom.xml build/plugins so go-offline fetches it. This changes the pom and reopens the solved-run and critic bindings. (b) Drop `-o` from the spot-check command in README line 88 and expected/test-summary.txt line 12, and say that the first run of the app downloads the Boot Maven plugin. Either way, run the spot check once on an empty local repository so the documented command has evidence.",
+      "reviewedSha256": "8797a1c7123269949c78710ee0d5af19030dc2f5f1284ceb6df0df95b9a94da3"
+    },
+    {
+      "id": "spring-basics-req-sme-002",
+      "severity": "low",
+      "location": { "file": "spring-boot/spring-boot-basics/coding-lab/expected/test-summary.txt", "line": 9 },
+      "claim": "expected/test-summary.txt says the report starter/target/surefire-reports/workshops.WorkshopApiTest.txt 'begins:' with 'Tests run: 5, Failures: 0, Errors: 0, Skipped: 0'. Surefire 3.x plain-text reports start differently: a dashed separator, a 'Test set: <class>' line and a second separator. The Tests run line comes fourth and ends with ', Time elapsed: <n> s -- in <class>'. I confirmed the format from an existing local surefire 3.x report on this machine; this lab's own report was removed by cleanup in the solved run, so it was not inspected. A learner who compares literally will see a different first line.",
+      "evidence": [],
+      "recommendation": "Change 'begins:' to wording such as 'contains the line:' and show the line as starting with 'Tests run: 5, Failures: 0, Errors: 0, Skipped: 0', noting that a time-elapsed suffix follows.",
+      "reviewedSha256": "350714159b5f8b554492d5ac658c86a4df36a1858c43140aacacc09cf6105341"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/spring-boot/spring-boot-basics/module-practice-critic-sme.json",
+    "items": []
+  }
+}

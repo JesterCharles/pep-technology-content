@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "education critic (independent Claude subagent, 2026-11-18)",
+  "reviewedPath": "python/python-fundamentals/coding-lab/lab.json",
+  "reviewedSha256": "e8a109b7ddf10aa3afea321330f2a531b2bd3679e0c3836ebf301644c9a813bf",
+  "artifactHashes": {
+    "coding-lab/lab.json": "e8a109b7ddf10aa3afea321330f2a531b2bd3679e0c3836ebf301644c9a813bf",
+    "coding-lab/README.md": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f"
+  },
+  "findings": [
+    {
+      "id": "py-fund-lab-edu-r01",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 159
+      },
+      "claim": "New ordering slip in the corrected Task 9 try-out. Line 159 tells the learner to cd starter, run the script, read the exit status, 'then go back to the lab folder (cd ..)'. Only after the code block does line 165 add 'Run it with no session and check that the status is 2'. A learner who follows the steps in reading order is back in the lab folder for the no-session run. Reproduced in scratch: python -m signups.cli from the lab folder prints 'Error while finding module specification for 'signups.cli' (ModuleNotFoundError: No module named 'signups')' and exits 1. The learner never sees the usage line and exit status 2 that the step teaches.",
+      "evidence": [],
+      "recommendation": "Move the 'then go back to the lab folder (cd ..) before you run the tests again' clause after the no-session sentence on line 165, e.g. 'Run it with no session and check that the status is 2. Then go back to the lab folder (cd ..) before you run the tests again.'",
+      "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f"
+    },
+    {
+      "id": "py-fund-lab-edu-r02",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/lab.json",
+        "line": 41
+      },
+      "claim": "Side effect of the edu-007 correction: lab.json prerequisites[0].check is now the single string 'python3 --version', while os lists windows and README line 27 correctly tells Windows learners to use py --version. On a typical Windows install with the py launcher, python3 is either missing or the Microsoft Store alias stub, so any consumer that runs the declared check on Windows (platform handoff or a future prerequisite gate) gets a false failure. The lab schema allows only one check string per prerequisite, so this cannot be expressed per OS in prerequisites itself.",
+      "evidence": [],
+      "recommendation": "Keep 'python3 --version' (it matches the README's macOS/Linux line) and add one sentence to cleanup.notes, or to the module evidence, that the Windows prerequisite check is 'py --version', as the README states. A later tooling change could allow per-OS checks.",
+      "reviewedSha256": "e8a109b7ddf10aa3afea321330f2a531b2bd3679e0c3836ebf301644c9a813bf"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/python/python-fundamentals/coding-lab-critic-education.json",
+    "items": [
+      {
+        "findingId": "py-fund-lab-edu-001",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "reviewedSha256": "83997bc3d3b70ed8ada62c202c3c94fb56ba5c25564d66e98d440350afd602b5",
+        "note": "README Task 9 (line 155) now prescribes session_status with keyword arguments in the opposite order (taken= first). The Task 9 check parses cli.py from bytes and requires a session_status call whose keywords cover every parameter in a non-def order. Probed in scratch on Python 3.12 and 3.14: taken=/capacity= passes, and computing the status in a separate variable first also passes. A positional call and a same-order keyword call each fail with the task-named message. functions-and-arguments#o1 stays claimed and is now learner-performed and observed."
+      },
+      {
+        "findingId": "py-fund-lab-edu-002",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "reviewedSha256": "83997bc3d3b70ed8ada62c202c3c94fb56ba5c25564d66e98d440350afd602b5",
+        "note": "import logging is gone from the records.py starter and import sys from the cli.py starter; README Task 8 step 1 and Task 9 step 1 tell the learner to write them. Top-level ast.Import checks for logging (Task 8) and sys (Task 9) carry task-named messages, and the own-module ImportFrom check still holds. Probed: import sys moved inside main fails with 'import ... sys ... at the top of cli.py'. The verbatim from-import line is gone. Small deviation from the reconciliation: Task 9 no longer names the five functions to import. I accept it, because step 2 names each job (normalize, count, seats left, status, report line) and the checks are behaviour-based."
+      },
+      {
+        "findingId": "py-fund-lab-edu-003",
+        "status": "open",
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f",
+        "note": "Mostly fixed. README line 166 now explains running cli.py with -m from the folder that contains signups, and why python signups/cli.py fails with ModuleNotFoundError. Troubleshooting line 209 covers the error, and lab.json cleanup.notes records the instructed-but-unobservable terminal run and exit-status reading. Still missing is the part the reconciliation's required fix (1) names explicitly: that signups is a package, meaning a folder with __init__.py. The README says only 'cli.py is part of the signups package', and no topic page defines a Python package, so a novice still meets the word undefined. Fix: add 'a package is a folder of modules with an __init__.py file, so signups.records means records.py inside signups/' to line 166."
+      },
+      {
+        "findingId": "py-fund-lab-edu-004",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f",
+        "note": "Line 159 now says to cd back to the lab folder before running the tests. Troubleshooting line 208 covers 'Only your own tests ran, or no tests ran', and cleanup adds starter/.pytest_cache. Re-ran the probe: from starter/, pytest still prints '5 passed' with the lab checks uncollected, which is expected; the README now names that symptom and its fix. A step-ordering nit in the same paragraph is filed as new finding r01."
+      },
+      {
+        "findingId": "py-fund-lab-edu-005",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f",
+        "note": "Verbatim solution expressions removed. Task 5 (line 118) names dict.get with a 0 default without the finished line, and line 119 asks for items() unpacking without the header. Task 6 (line 126) describes seats_left_by_session's result without the comprehension. Task 8 (lines 139-145) lists behaviours and keeps the two message texts the checks match. Task 9 gives no import line. The unclaimed latest() was cut, together with its test and failingTests entry, and lab.json objectives are unchanged (slicing#o2 is still observed by the three comprehension checks). Grep of the lab, module.json and module evidence finds no stale reference to latest or the negative slice."
+      },
+      {
+        "findingId": "py-fund-lab-edu-006",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f",
+        "note": "Line 9 now says about 55 minutes in total, setup included (about 25 on day 1 for setup and Tasks 1-6, about 30 on day 2 for Tasks 7-10), and that the 60-minute cap is for the whole lab. lab.json minutes.estimatedMedian is 55 and cleanup.notes gives the same split inside each day's 20 + 40 coding-lab blocks. My own reasoned per-task re-estimate after the scaffolding cuts, not a timing, is about 58 minutes (day 1 about 28, day 2 about 30). 55 is within the noise of that estimate, but the margin to the 60-minute cap is thin; a pilot should confirm it."
+      },
+      {
+        "findingId": "py-fund-lab-edu-007",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f",
+        "note": "Prerequisites now use python3 --version on macOS/Linux and py --version on Windows; venv creation uses python3 -m venv .venv. Line 47 adds that python works on every system once the environment is active. The setup and test commands are still byte-identical to lab.json, and Troubleshooting line 206 covers 'command not found'. lab.json prerequisites[0].check is now python3 --version, as the reconciliation required; its Windows side effect is filed as new finding r02."
+      },
+      {
+        "findingId": "py-fund-lab-edu-008",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f",
+        "note": "Line 132 now describes calling with a then b without a waitlist, which returns ['a@example.com', 'b@example.com'] because the default is created once when Python defines the function. Re-ran on the corrected starter: it prints ['a@example.com', 'b@example.com']. The line also states that a passed-in empty waitlist is used, which the new check enforces."
+      },
+      {
+        "findingId": "py-fund-lab-edu-009",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f",
+        "note": "Line 111 now states that values may be any type and must be turned into text with str() before ', '.join, and line 114 adds an int/True example that matches the changed check (b=True, a=1 order). Re-ran the probe: ', '.join(values) still raises the raw TypeError, but the README now tells the learner why before they hit it."
+      },
+      {
+        "findingId": "py-fund-lab-edu-010",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "reviewedSha256": "83997bc3d3b70ed8ada62c202c3c94fb56ba5c25564d66e98d440350afd602b5",
+        "note": "The five bare asserts (describe x2, emails_for, unique_emails, seats_left_by_session) now carry task-named messages. README line 20 and the test_main.py docstring line 3 are reworded to 'most failure messages say what to do next', and the README adds that a plain TypeError still shows the task in the check name. Re-ran the probe: a guard-less sys.exit(main(sys.argv)) now fails with 'Task 9: importing signups.cli must run nothing, but it raised SystemExit(1); add the __name__ guard'. The corrected starter still fails exactly the 11 failingTests ids."
+      },
+      {
+        "findingId": "py-fund-lab-edu-011",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f",
+        "note": "The Task 8 heading is now 'a clear error for a bad seats value', and line 137 frames it as the seats a sign-up form sends as text. The parse_seats docstring and section comment in records.py match. No new shipped file was added."
+      },
+      {
+        "findingId": "py-fund-lab-edu-012",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/lab.json",
+        "reviewedSha256": "e8a109b7ddf10aa3afea321330f2a531b2bd3679e0c3836ebf301644c9a813bf",
+        "note": "cleanup.notes now records that modules-imports-and-virtual-environments#o2 and #o3 are practised in Setup but not claimed, because no test can observe them from inside the environment. It also records that the terminal run and exit-status reading for writing-and-running-script-files#o1 are observed only through the subprocess checks, and that predict-and-explain objectives are left to the pages."
+      }
+    ]
+  }
+}

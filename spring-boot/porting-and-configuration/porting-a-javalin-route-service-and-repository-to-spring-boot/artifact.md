@@ -1,4 +1,4 @@
-# Porting a Javalin route, service and repository to Spring Boot
+# Applying Spring MVC: Controllers and Error Handling
 
 ## Objectives
 
@@ -30,7 +30,7 @@ Port from the outside in. Each Javalin piece has a Spring home:
 | `new Service(new Repo())` in `main` | `@Service` and `@Repository` with constructor injection |
 | `app.exception(...)` | `@ExceptionHandler` |
 
-The service and repository method bodies stay as they were. Each exception mapping becomes a handler method in the controller:
+The service and repository method bodies stay unchanged. Each exception mapping becomes a handler method in the controller:
 
 ```
 @ExceptionHandler(ItemNotFound.class)
@@ -40,9 +40,9 @@ Err notFound(ItemNotFound e) { return new Err(e.getMessage()); }
 
 A non-numeric id fails path-variable conversion with `MethodArgumentTypeMismatchException`, which a 400 handler catches. Handlers in a controller cover only that controller.
 
-A port is only finished when clients see the same responses, including the error responses your handlers now produce.
+A port is only finished when clients see the same responses, including errors from your handlers.
 
-To verify, send the same request to both versions and compare the status code and JSON body, not just whether something came back.
+Send the same request to both versions and compare the status code and JSON body, not just whether something came back.
 
 After your port, a missing item returns status 200 with `{"error":"item 99 not found"}`. The old version returned 404 with the same body.
 
@@ -60,7 +60,7 @@ Where to act: Start with the repository and service TODOs, then the route, using
 
 Next step: The handler lambda becomes a method. What does a `ctx.json` call become there?
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Look at the parameter of the new method.
 
@@ -78,7 +78,7 @@ Printed alternative: Run curl -i for /items/abc on both ports. Both answer 400 w
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://spring.io/guides/gs/rest-service/
 - https://docs.spring.io/spring-boot/reference/web/servlet.html

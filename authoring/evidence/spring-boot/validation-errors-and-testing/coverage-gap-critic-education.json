@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "cg-critic-education (independent Claude critic subagent, 2026-11-17)",
+  "reviewedPath": "spring-boot/validation-errors-and-testing/coding-lab/lab.json",
+  "reviewedSha256": "b2cb99c60e151973f5d23382231cf2b5e4c704579d278bf4505a0c3b82e7d6c9",
+  "artifactHashes": {
+    "coding-lab/lab.json": "b2cb99c60e151973f5d23382231cf2b5e4c704579d278bf4505a0c3b82e7d6c9",
+    "coding-lab/README.md": "415843820b9fd385a940bffbe303d868344b193d5de2ea129d3d55871340e95c",
+    "coding-lab/expected/test-summary.txt": "e3548c42db1927ebc078a2d8ecd7b9eb2c1eeeed3a75402278d32931804e08fe",
+    "coding-lab/tests/bookings/BugReportTest.java": "aae25787e16310a018430c0289f1023d2080746a117a607def5e452f55b635b3",
+    "coding-lab/tests/bookings/ErrorSliceTest.java": "309abe89670c142cbcaa4ee9f3caae325acd736bfb999242e57bca5f92e40d89",
+    "coding-lab/tests/bookings/ValidationApiTest.java": "18f61e91209dbc06c15d0a405d1c2531b76d81fc66d710839efeb31b1a1d7473",
+    "coding-lab/tests/bookings/WebLayerTest.java": "677b591511d7fd52c25280bb7e36689474ae7c30b6a552e281ec7b937ff2eeb9",
+    "coding-lab/starter/src/main/java/bookings/BookingController.java": "63d5ef94a0a8390ecedf0d1098b93bf588c194ced7e683014d49e9f6900dc2ec",
+    "coding-lab/starter/src/main/java/bookings/BookingService.java": "aec9ed47794c903988a7e5e61d720aaf2531bb7aeff1e200ead76923ef536a3a",
+    "coding-lab/starter/src/main/resources/application.properties": "d12626f99550815ea2fc6a6e363e45ace88ff09986f7a8c8473d9ea5fa738584"
+  },
+  "findings": [
+    {
+      "id": "cg-education-validation-001",
+      "severity": "high",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/BugReportTest.java",
+        "line": 41
+      },
+      "claim": "debugging-a-failing-request#o2 (reproduce the failure in a MockMvc test before fixing it) is not proved. The only test for it, task5ReproducesTheZeroIdReport, checks just that the learner kept some MvcResult whose status is 400; it never checks that the request is the reported GET /bookings/0. Critic run on a completed copy, with the learner request replaced by a GET /bookings/abc (a 400 from type conversion) and @Positive removed from BookingController so the reported bug is still present: BugReportTest passed, and only ValidationApiTest.task5RejectsANonPositiveIdWith400 failed (Status expected:<400> but was:<404>). A test that does not reproduce the report is therefore accepted as the reproduction, and the \"before fixing\" order cannot be seen in the final state at all. README Troubleshooting (line 146) also misdiagnoses the case it describes: if the request is GET /bookings/0, the shipped assertEquals(400, ...) already fails before the fix whether or not the learner wrote andExpect; a pre-fix pass means the request is a different one.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/BugReportTest.java",
+          "section": "task5ReproducesTheZeroIdReport assertions",
+          "retrievedAt": "2026-11-18T03:52:00Z",
+          "textSha256": "aae25787e16310a018430c0289f1023d2080746a117a607def5e452f55b635b3"
+        },
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/debugging-a-failing-request/artifact.md",
+          "section": "Teaching: write a test that fails the same way before changing code",
+          "retrievedAt": "2026-11-18T03:52:00Z",
+          "textSha256": "0dd3daa4062793a6a0c7ebc22cffbf80585dddd4ae973350b18e8c2a2faffc50"
+        }
+      ],
+      "recommendation": "Make the shipped assertions bind the reproduction to the report: assert result.getRequest().getMethod() is GET and getRequestURI() is /bookings/0 (and keep the 400 check). Rewrite the Troubleshooting entry to say that a pass before the fix means the request is not the reported GET /bookings/0. State honestly in the README that the run-it-before-the-fix step is self-checked.",
+      "reviewedSha256": "aae25787e16310a018430c0289f1023d2080746a117a607def5e452f55b635b3"
+    },
+    {
+      "id": "cg-education-validation-002",
+      "severity": "high",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ErrorSliceTest.java",
+        "line": 56
+      },
+      "claim": "web-layer-tests-with-mockmvc#o2 (test a controller's 404 and 400 responses in a @WebMvcTest with a @TestConfiguration fake) is only partly proved. The fake is genuinely required (the slice context fails without a BookingService bean), but both task7 tests check only that some request returned 404 or 400. Critic run on a completed copy with the two learner requests replaced by GET /no-such-path (404 because no handler matches) and GET /bookings/abc (400 from type conversion): both task7 tests passed, although neither request reaches the fake's not-found path or posts an invalid body. The README (line 100-101) tells learners to expect the problem titles, but no shipped assertion checks a title, so the error-handling outcome the objective is about is never verified.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ErrorSliceTest.java",
+          "section": "task7 shipped assertions",
+          "retrievedAt": "2026-11-18T03:52:00Z",
+          "textSha256": "309abe89670c142cbcaa4ee9f3caae325acd736bfb999242e57bca5f92e40d89"
+        },
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/web-layer-tests-with-mockmvc/artifact.md",
+          "section": "Teaching: test the error paths, a 404 from a fake service and a 400 from an invalid body",
+          "retrievedAt": "2026-11-18T03:52:00Z",
+          "textSha256": "528f8d07d98cef3992f46506f5ad6379157d6d5191ee3cd2e2223149e1212ff3"
+        }
+      ],
+      "recommendation": "In the shipped part of each task7 test, assert the request (GET /bookings/{id} for the 404; POST /bookings with a non-empty JSON body for the 400) via result.getRequest(), and assert the problem title from the response body (\"Booking not found\" / \"Validation failed\"), so only the intended error paths pass.",
+      "reviewedSha256": "309abe89670c142cbcaa4ee9f3caae325acd736bfb999242e57bca5f92e40d89"
+    },
+    {
+      "id": "cg-education-validation-003",
+      "severity": "high",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "line": 99
+      },
+      "claim": "The new tasks hand over the completed code for the objectives they claim. Task 5 step 1 (README line 73 and the BugReportTest TODO) gives the entire perform/andExpect/andReturn chain; Task 7 step 2 (README line 99 and the ErrorSliceTest TODO) prints the whole nested @TestConfiguration class with its @Bean and anonymous fake; Task 8 (README line 110 and the WebLayerTest TODO) gives the exact verify line. These are exactly the acts named by debugging-a-failing-request#o2, web-layer-tests-with-mockmvc#o2 and mockito-in-spring-at-mockitobean#o2, so the learner transcribes rather than writes them. Tasks 1-4 of this lab already use the same copy-from-TODO style and were accepted earlier; the brief (no README/hint/TODO may hand over the final code) and the html-and-css precedent (education-coding-lab-answer-disclosure, high) apply to the new tasks regardless. Task 7 steps 3-4 are the good counter-example: they state the request and the expected outcome and leave the code to the learner.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/README.md",
+          "section": "Tasks 5, 7 and 8",
+          "retrievedAt": "2026-11-18T03:52:00Z",
+          "textSha256": "415843820b9fd385a940bffbe303d868344b193d5de2ea129d3d55871340e95c"
+        },
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ErrorSliceTest.java",
+          "section": "Task 7 step 2 TODO",
+          "retrievedAt": "2026-11-18T03:52:00Z",
+          "textSha256": "309abe89670c142cbcaa4ee9f3caae325acd736bfb999242e57bca5f92e40d89"
+        },
+        {
+          "url": "file:///authoring/evidence/html-css-js/html-and-css/coding-lab-critic-education.json",
+          "section": "education-coding-lab-answer-disclosure",
+          "retrievedAt": "2026-11-18T03:52:00Z",
+          "textSha256": "cb28f1cc44cc3ed87e7c64ca64e6bc5a2296dd2d9280b87059b0d85328bcf943"
+        }
+      ],
+      "recommendation": "Replace the verbatim code with outcome prompts plus staged, partial hints, as Task 7 steps 3-4 already do: for Task 5 step 1 name the request and the status the report says it should get; for Task 7 step 2 say which annotation marks a test configuration and that its @Bean must return a BookingService whose byId always throws NoSuchElementException; for Task 8 name verify and say what the call must check. Keep the full lines, if at all, in collapsed retry hints. Re-estimate lab.json minutes afterwards: the current 48 minutes presumes transcription.",
+      "reviewedSha256": "415843820b9fd385a940bffbe303d868344b193d5de2ea129d3d55871340e95c"
+    },
+    {
+      "id": "cg-education-validation-004",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "line": 86
+      },
+      "claim": "The reasoning halves of two newly declared objectives are answered for the learner. standard-error-responses-with-problemdetail#o2 asks the learner to predict the body of a validation failure; Task 6 step 2 says \"predict the body\" and the very next sentence gives the answer (detail Invalid request content., no field names), and Troubleshooting repeats it. Nothing records or checks the prediction. mockito-in-spring-at-mockitobean#o2 asks the learner to explain how a @MockitoBean differs from a plain Mockito mock; Task 8 states the explanation (line 112) and never asks for it. The doing halves are real: a no-@Order variant of a completed copy showed task3 failing with the built-in body exactly as described, and task6 cannot pass without built-in problem details.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/README.md",
+          "section": "Task 6 step 2; Task 8",
+          "retrievedAt": "2026-11-18T03:52:00Z",
+          "textSha256": "415843820b9fd385a940bffbe303d868344b193d5de2ea129d3d55871340e95c"
+        },
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/standard-error-responses-with-problemdetail/artifact.md",
+          "section": "Teaching: built-in problem details body",
+          "retrievedAt": "2026-11-18T03:52:00Z",
+          "textSha256": "3f9e026cc95e5f5093a49866b9f791d2869f886b306dfad38ad5b69b8f693b6d"
+        }
+      ],
+      "recommendation": "In Task 6 step 2 ask the learner to write the predicted status, title and detail as a comment before running, and move the actual body to after the run (a collapsed \"check your prediction\" note); drop it from Troubleshooting or phrase that entry without the value. In Task 8 pose the question (why would a plain mock(BookingService.class) not be called by the controller?) and put the answer in a collapsed check-yourself line.",
+      "reviewedSha256": "415843820b9fd385a940bffbe303d868344b193d5de2ea129d3d55871340e95c"
+    },
+    {
+      "id": "cg-education-validation-005",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "line": 8
+      },
+      "claim": "Three of the eight tasks, plus Task 5 step 1, use the S10 testing pages, and the README tells learners who reach them before S10 to finish them after reading those pages. S10 is a Concept day with no lab overlay and no guided-lab block (module.json sourceCoverageNotes; spring-boot intake line 30), and lab.json minutes (setup 5, tasks 48) are one S9 figure. So part of the required S9 lab is not doable on S9 by design, and no time is planned for the remainder. The 53 minutes stay within 60 for one lab day only if all tasks are done on S9, which means working against material the calendar has not taught yet.",
+      "evidence": [
+        {
+          "url": "file:///authoring/catalog/spring-boot/validation-errors-and-testing/module.json",
+          "section": "sourceCoverageNotes: S9 required lab, S10 Concept day with no lab overlay",
+          "retrievedAt": "2026-11-18T03:52:00Z",
+          "textSha256": "2440104602857c8e71087519686e4a47a82978a36377459605aa410309a06e66"
+        },
+        {
+          "url": "file:///authoring/evidence/spring-boot/intake.md",
+          "section": "Calendar table rows S9 and S10",
+          "retrievedAt": "2026-11-18T03:52:00Z",
+          "textSha256": "55559b8b6da2d2d1c8f9a5a8da766334a1a93e2571d7018101e4eaa33ac8f1c1"
+        },
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/lab.json",
+          "section": "minutes",
+          "retrievedAt": "2026-11-18T03:52:00Z",
+          "textSha256": "b2cb99c60e151973f5d23382231cf2b5e4c704579d278bf4505a0c3b82e7d6c9"
+        }
+      ],
+      "recommendation": "Either keep the S10-dependent tasks clearly optional on S9 and name where their time comes from (for example an S11 guided-lab block), or split lab.json minutes by day and say so in the README. Label the figure an authoring estimate with a per-task basis; none is recorded for the jump from 25 to 48 minutes.",
+      "reviewedSha256": "415843820b9fd385a940bffbe303d868344b193d5de2ea129d3d55871340e95c"
+    },
+    {
+      "id": "cg-education-validation-006",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "line": 140
+      },
+      "claim": "Two failures in the new tasks are not actionable. (1) task6AnswersFrameworkErrorsWithProblemDetail fails with \"Content type not set\" when Task 6 step 1 is missing: seen on the starter, and on a completed copy where the critic removed only the property line (every other test passed). The 415 then has no body, and nothing in the README links that text to Task 6. (2) The page teaches a different way to keep field errors (\"extend ResponseEntityExceptionHandler in your advice and override its handler\"). On a completed copy where the critic made ApiErrors extend ResponseEntityExceptionHandler while keeping its own MethodArgumentNotValidException handler, every context failed to start with \"Ambiguous @ExceptionHandler method mapped for MethodArgumentNotValidException\". The only related Troubleshooting entry (\"Failed to load ApplicationContext\" for ErrorSliceTest) blames Task 7 step 2, and the README never says that @Order is an alternative to the page's approach.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ValidationApiTest.java",
+          "section": "task6 assertions",
+          "retrievedAt": "2026-11-18T03:52:00Z",
+          "textSha256": "18f61e91209dbc06c15d0a405d1c2531b76d81fc66d710839efeb31b1a1d7473"
+        },
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/standard-error-responses-with-problemdetail/artifact.md",
+          "section": "Teaching: to add field errors, extend ResponseEntityExceptionHandler",
+          "retrievedAt": "2026-11-18T03:52:00Z",
+          "textSha256": "3f9e026cc95e5f5093a49866b9f791d2869f886b306dfad38ad5b69b8f693b6d"
+        }
+      ],
+      "recommendation": "Add a Troubleshooting entry: \"task6 says Content type not set: the property from Task 6 step 1 is missing, so Spring answers 415 with no body\". In Task 6 step 3 add one sentence that the page's route (extending ResponseEntityExceptionHandler) also works but then replaces your own MethodArgumentNotValidException handler, so do not combine the two.",
+      "reviewedSha256": "415843820b9fd385a940bffbe303d868344b193d5de2ea129d3d55871340e95c"
+    }
+  ]
+}

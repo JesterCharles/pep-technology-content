@@ -133,6 +133,7 @@ button, .opt, .pep-step { transition: background-color var(--pep-dur-1) var(--pe
 [data-pep-activity-checks] h3 { margin: 0 0 4px; font-size: 16px; line-height: 24px; }
 @media print { .pep-objectives > div { display: block !important; width: auto; } .pep-topicbar, [data-pep-activity-checks] { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
 @media (forced-colors: active) { .pep-topicbar, [data-pep-activity-checks] { border-color: CanvasText; border-block-start-color: Highlight; } }
+@media (forced-colors: active) { .pep-optional { border-color: CanvasText; } }
 /* DESIGN.md guidance contract: activity timeline, task heading, back link, Previous activity */
 .pep-topicbar nav { flex: 1 1 100%; min-width: 0; }
 .pep-steps { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
@@ -148,7 +149,8 @@ html:not(.pep-js) .pep-step[aria-disabled="true"] { color: var(--pep-text); curs
 .pep-back { margin: 0 0 4px; }
 .pep-back a { display: inline-flex; align-items: center; min-height: 44px; color: var(--pep-accent-text); font-weight: 600; }
 .pep-next-row { display: flex; flex-wrap: wrap; gap: 8px; }
-@media print { .pep-topicbar nav, .pep-back, #prev { display: none !important; } }
+@media print { .pep-topicbar nav, .pep-back, #prev, [data-pep-back-link], [data-pep-previous], [data-pep-next] { display: none !important; } }
+@media print { section[data-pep-activity][hidden] { display: grid !important; } section[data-pep-activity] [data-step][hidden] { display: block !important; } section[data-pep-activity] .task { display: flex !important; } section.pep-act:not([data-pep-activity])[hidden] { display: block !important; } section.pep-act:not([data-pep-activity])[hidden] > .workspace { display: none !important; } section.pep-act:not([data-pep-activity])[hidden] .reading [data-step][hidden] { display: block !important; } }
 /* Regions */
 .pep-regions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
 @media (min-width: 960px) { .pep-regions { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; } }
@@ -167,7 +169,9 @@ html:not(.pep-js) .pep-step[aria-disabled="true"] { color: var(--pep-text); curs
 .pep-goals > li + li { border-top: 1px solid var(--pep-line-strong); }
 .pep-goals > li::after { content: "open"; font: 600 13px/20px var(--pep-font-sans); color: var(--pep-text-muted); white-space: nowrap; }
 .pep-goals > li.is-done::after { content: "\2713\00a0 done"; color: var(--pep-success); }
-.task { display: flex; flex-direction: column; gap: 12px; padding: 16px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+.task { display: flex; flex-direction: column; gap: 12px; }
+.pep-region.workspace { padding: 24px; border: 1px solid var(--pep-line-strong); border-radius: var(--pep-radius-lg); background: var(--pep-card); }
+@media (max-width: 480px) { .pep-region.workspace { padding: 16px; } }
 .task > div { display: flex; flex-direction: column; gap: 12px; }
 .task p { margin: 0; }
 .goals { list-style: none; margin: 0; padding: 0; }
@@ -244,12 +248,12 @@ select { font: 400 14px/20px var(--pep-font-mono); min-height: 44px; padding: 8p
 .opt > span { min-width: 0; overflow-wrap: anywhere; }
 .opt:hover { border-color: var(--pep-accent); }
 .opt:has(input:checked) { border: 2px solid var(--pep-accent); background: var(--pep-accent-soft); padding: 9px 15px; }
-.opt:has(input:disabled) { cursor: default; }
+.opt:has(input:disabled) { cursor: not-allowed; }
 .opt.right, .opt.right:has(input:checked) { border: 2px solid var(--pep-success); background: var(--pep-success-soft); padding: 9px 15px; }
 .opt.wrong, .opt.wrong:has(input:checked) { border: 2px dashed var(--pep-danger); background: var(--pep-danger-soft); padding: 9px 15px; }
 .opt input { appearance: none; -webkit-appearance: none; flex: 0 0 auto; width: 44px; height: 44px; margin: -12px; border: 0; border-radius: 50%; background: radial-gradient(circle, var(--pep-page) 0 8px, var(--pep-line-strong) 8.5px 10px, transparent 10.5px); cursor: pointer; }
 .opt input:checked { background: radial-gradient(circle, var(--pep-accent-fill) 0 5px, var(--pep-page) 5.5px 7.5px, var(--pep-accent-fill) 8px 10px, transparent 10.5px); }
-.opt input:disabled { cursor: default; opacity: 0.7; }
+.opt input:disabled { cursor: not-allowed; }
 .opt input:focus-visible { outline: 2px solid var(--pep-focus); outline-offset: -8px; }
 .opt .why { display: block; margin-top: 4px; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
 .opt .badges { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
@@ -343,7 +347,8 @@ html:not(.pep-js) .pep-js-only, html:not(.pep-js) [data-region="current-control"
 /* Optional Anecdote and Challenge disclosures (never required, never counted) */
 .extras { display: flex; flex-direction: column; gap: 8px; margin: 48px 0 0; padding: 16px 0 0; border-top: 1px solid var(--pep-line-strong); min-width: 0; }
 .extras > p { margin: 0; color: var(--pep-text-muted); font: 400 14px/20px var(--pep-font-sans); }
-.pep-optional { min-width: 0; border-block: 1px solid var(--pep-line-strong); background: transparent; break-inside: avoid; }
+.pep-optional { min-width: 0; padding: 0 12px; border: 1px solid var(--pep-line); border-block-start: 4px solid var(--pep-line-strong); border-radius: var(--pep-radius-md); background: var(--pep-card); break-inside: avoid; }
+.pep-optional--challenge { border-color: var(--pep-line-strong); background: var(--pep-control); }
 .pep-optional > summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; min-height: 44px; padding: 8px 0; cursor: pointer; color: var(--pep-text-strong); font-weight: 600; }
 .pep-optional > summary::marker { color: var(--pep-accent-text); }
 .pep-optional__cue, [data-pep-optional-time] { color: var(--pep-text-muted); font: 600 13px/20px var(--pep-font-sans); }
@@ -416,13 +421,13 @@ html:not(.pep-js) .pep-js-only, html:not(.pep-js) [data-region="current-control"
   <p>Practice prediction, not scored. In Java you import classes from packages. In Python, every <code>.py</code> file is a module you can import.</p>
 </div>
       </div>
-      <div class="task" data-region="current-task">
-<div data-step="1"><div class="pep-task" id="activity-task-1" data-pep-task><h3 class="pep-task__h">Your task</h3>
-  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the code in the workspace on the right (below these steps on a narrow screen).</li><li><strong>What to do or type:</strong> Under <em>Prediction</em>, pick the result you expect.</li><li><strong>What to expect:</strong> Pick Low, Medium or High confidence, then press <em>Check my prediction</em>.</li><li><strong>How to know it's done:</strong> Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.</li></ol></div>
-  <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1-h"><h3 id="checks-1-h">What success looks like</h3><p>Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.</p></section></div>
-      </div>
     </div>
     <div class="pep-region workspace" data-pep-workspace="activity">
+      <div class="task" data-region="current-task">
+<div data-step="1"><div class="pep-task" id="activity-task-1" data-pep-task><h3 class="pep-task__h">Your task</h3>
+  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the code directly below these steps, inside this same workspace, at every screen width.</li><li><strong>What to do or type:</strong> Under <em>Prediction</em>, pick the result you expect, then pick Low, Medium or High confidence and press <em>Check my prediction</em>.</li><li><strong>What to expect:</strong> Feedback appears below. A wrong guess is fine: the feedback explains it and you still move on.</li><li><strong>How to know it's done:</strong> Continue shows.</li></ol></div>
+  <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-1-h"><h3 id="checks-1-h">What success looks like</h3><p>Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.</p></section></div>
+      </div>
       <div class="ask" data-region="current-ask">
 <div data-step="1"><h2 class="ws-h" id="ws-1-h"><span class="vh">Workspace: </span>Start with a guess</h2>
   <p id="task-1">Which line, placed at the top of <code>app.py</code>, makes <code>total([2, 3])</code> work?</p></div>
@@ -450,7 +455,7 @@ print(total([2, 3]))</pre></div></div></div>
 </div>
       </div>
       <noscript data-section-skip><div class="nojs-static"><p class="pep-label">Without JavaScript: the result</p><p>Prediction (practice, not scored): pricing.py defines total(prices); app.py in the same folder calls total([2, 3]). Which import line works? Options: from pricing import total; import pricing.py; import total from pricing; #include "pricing.py". Answer: from pricing import total. The module name is the file name without .py. import pricing.py fails with ModuleNotFoundError: No module named 'pricing.py'; 'pricing' is not a package. import total from pricing is JavaScript order and a SyntaxError in Python, and # starts a comment.</p></div></noscript>
-      <div class="feedback" data-region="current-feedback" aria-live="polite">
+      <div class="feedback" data-region="current-feedback" data-pep-feedback aria-live="polite">
 <div data-step="1" data-pep-predict-feedback></div>
       </div>
     </div>
@@ -462,7 +467,7 @@ print(total([2, 3]))</pre></div></div></div>
 <div data-step="2" data-pep-teaching>
   <h2 id="teach-2-h" tabindex="-1">One project, one virtual environment</h2>
   <p>A virtual environment is a folder, usually <code>.venv</code>, with its own Python and its own installed packages, so projects do not share or clash.</p>
-  <ul><li>Create: <code>python3 -m venv .venv</code> (Windows: <code>py -m venv .venv</code>).</li><li>Activate on POSIX shells: <code>source .venv/bin/activate</code>. On Windows use <code>.venv\Scripts\activate.bat</code> in <code>cmd.exe</code>, or <code>.venv\Scripts\Activate.ps1</code> in PowerShell. The prompt gains <code>(.venv)</code>, and <code>python</code> now means the venv's Python.</li><li>Install a pinned version: <code>python -m pip install pytest==9.1.1</code>, or every pin in a file with <code>-r requirements.txt</code>.</li></ul>
+  <ul><li>Create: <code>python3 -m venv .venv</code> (Windows: <code>py -m venv .venv</code>).</li><li>Activate on POSIX shells: <code>source .venv/bin/activate</code>. On Windows use <code>.venv\Scripts\activate.bat</code> in <code>cmd.exe</code>, or <code>.venv\Scripts\Activate.ps1</code> in PowerShell. The prompt gains <code>(.venv)</code>, and <code>python</code> now means the venv's Python.</li><li>Install a pinned version: <code>python -m pip install pytest==9.1.1</code>, or every pin in a file with <code>-r requirements.txt</code>.</li><li>Record what is installed: <code>python -m pip freeze &gt; requirements.txt</code> writes each installed package as a <code>name==version</code> line.</li></ul>
   <p><code>python -m pip</code> runs the pip that belongs to the active Python.</p>
 
 <details class="pep-optional pep-optional--anecdote" data-pep-optional="anecdote" data-section-skip>
@@ -474,14 +479,14 @@ print(total([2, 3]))</pre></div></div></div>
 </details>
 </div>
       </div>
-      <div class="task" data-region="current-task">
-<div data-step="2"><div class="pep-task" id="activity-task-2" data-pep-task><h3 class="pep-task__h">Your task</h3>
-  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Click the terminal's input line (or Tab to it), type one command at a time, and press Enter after each command.</li><li><strong>What to do or type:</strong> Create the venv with <code>python3 -m venv .venv</code>, then activate it with <code>source .venv/bin/activate</code>; the prompt then starts with <code>(.venv)</code>.</li><li><strong>What to expect:</strong> Install with <code>python -m pip install -r requirements.txt</code>, then run <code>python -m pip --version</code> and look for <code>.venv</code> in the path it prints.</li><li><strong>How to know it's done:</strong> After the first install, run <code>python -m pip freeze &gt; requirements.txt</code>, inspect it with <code>cat requirements.txt</code>, then reinstall with <code>python -m pip install -r requirements.txt</code>. Every check reads <em>done</em>.</li></ol></div>
-  <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2-h"><h3 id="checks-2-h">Activity checks</h3>
-  <ul class="goals"><li data-goal="record"><span>Record the installed packages with <code>pip freeze</code>, inspect the file, then reinstall from it</span><span class="st"></span></li><li data-goal="venv"><span>Create <code>.venv</code></span><span class="st"></span></li><li data-goal="act"><span>Activate it</span><span class="st"></span></li><li data-goal="inst"><span>Install the pinned requirements into it</span><span class="st"></span></li><li data-goal="check"><span>Confirm pip belongs to <code>.venv</code></span><span class="st"></span></li></ul></section></div>
-      </div>
     </div>
     <div class="pep-region workspace" data-pep-workspace="activity">
+      <div class="task" data-region="current-task">
+<div data-step="2"><div class="pep-task" id="activity-task-2" data-pep-task><h3 class="pep-task__h">Your task</h3>
+  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Click the terminal's input line (or Tab to it), type one command at a time, and press Enter after each command.</li><li><strong>What to do or type:</strong> Create the venv with <code>python3 -m venv .venv</code>, then activate it with <code>source .venv/bin/activate</code>. Install with <code>python -m pip install -r requirements.txt</code>, then run <code>python -m pip --version</code>. After that first install, run <code>python -m pip freeze &gt; requirements.txt</code>, inspect it with <code>cat requirements.txt</code>, then reinstall with <code>python -m pip install -r requirements.txt</code>.</li><li><strong>What to expect:</strong> Once the venv is active, the prompt starts with <code>(.venv)</code>, and <code>python -m pip --version</code> prints a path inside <code>.venv</code>.</li><li><strong>How to know it's done:</strong> Every check reads <em>done</em>.</li></ol></div>
+  <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-2-h"><h3 id="checks-2-h">Activity checks</h3>
+  <ul class="goals"><li data-goal="venv"><span>Create <code>.venv</code></span><span class="st"></span></li><li data-goal="act"><span>Activate it</span><span class="st"></span></li><li data-goal="inst"><span>Install the pinned requirements into it</span><span class="st"></span></li><li data-goal="check"><span>Confirm pip belongs to <code>.venv</code></span><span class="st"></span></li><li data-goal="record"><span>Record the installed packages with <code>pip freeze</code>, inspect the file, then reinstall from it</span><span class="st"></span></li></ul></section></div>
+      </div>
       <div class="ask" data-region="current-ask">
 <div data-step="2"><h2 class="ws-h" id="ws-2-h"><span class="vh">Workspace: </span>One project, one virtual environment</h2>
   <p id="task-2">In Sam's project, set up the environment.</p>
@@ -505,7 +510,7 @@ print(total([2, 3]))</pre></div></div></div>
   <p class="simnote">Simulated bash on Linux. Supported: ls, ls -a, cat, pwd, clear, python3 or python with -m venv, -m pip and app.py, source or . to activate, deactivate. Package versions are what pip resolved on 2026-10-15; a later install may pick newer dependency versions.</p></div>
       </div>
       <noscript data-section-skip><div class="nojs-static"><p class="pep-label">Without JavaScript: the result</p><p>Terminal activity in /home/sam/shop, which holds app.py, pricing.py and requirements.txt, which starts with one line, pytest==9.1.1. Worked example: python3 -m venv .venv creates the .venv folder and prints nothing. source .venv/bin/activate activates it; the prompt starts with (.venv). python -m pip install -r requirements.txt installs pytest 9.1.1 and the dependencies pip resolves for it; on 2026-10-15 it ended with Successfully installed iniconfig-2.3.1 packaging-26.3 pluggy-1.7.0 pygments-2.21.0 pytest-9.1.1, and a later install may resolve newer dependency versions. python -m pip --version then reports pip 26.1.2 from /home/sam/shop/.venv/lib/python3.14/site-packages/pip (python 3.14). python -m pip freeze &gt; requirements.txt prints nothing and replaces the file with the installed packages in requirements format, each at its exact version (pip itself is left out by default): iniconfig==2.3.1, packaging==26.3, pluggy==1.7.0, Pygments==2.21.0 and pytest==9.1.1; cat requirements.txt shows those five lines. Reinstalling with python -m pip install -r requirements.txt then reads all five pins and reports each as Requirement already satisfied, because the venv already has exactly those versions. Before activation, installing with the system Python on this Debian-style system fails with error: externally-managed-environment. Windows uses py -m venv .venv, then .venv\Scripts\activate.bat in cmd.exe or .venv\Scripts\Activate.ps1 in PowerShell.</p></div></noscript>
-      <div class="feedback" data-region="current-feedback" aria-live="polite">
+      <div class="feedback" data-region="current-feedback" data-pep-feedback aria-live="polite">
 <div data-step="2" data-pep-explore-feedback></div>
       </div>
     </div>
@@ -520,14 +525,14 @@ print(total([2, 3]))</pre></div></div></div>
   <p>Python searches the entries in <code>sys.path</code> in order. The entries depend on how Python starts, environment settings such as <code>PYTHONPATH</code>, and site configuration. In the normal script case shown here, the script folder, standard-library locations and the running Python's <code>site-packages</code> are among those entries. That last location is why <code>pytest</code> imports only when the venv's Python runs. If no entry has it, you get <code>ModuleNotFoundError</code>.</p>
 </div>
       </div>
+    </div>
+    <div class="pep-region workspace" data-pep-workspace="activity">
       <div class="task" data-region="current-task">
 <div data-step="3"><div class="pep-task" id="activity-task-3" data-pep-task><h3 class="pep-task__h">Your task</h3>
   <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> In <em>Run an import</em>, pick which Python runs <code>app.py</code>.</li><li><strong>What to do or type:</strong> Press one of the <code>import</code> buttons.</li><li><strong>What to expect:</strong> The output box shows where Python found the module, or a <code>ModuleNotFoundError</code>. Try each import with both Pythons.</li><li><strong>How to know it's done:</strong> Each check below changes from <em>open</em> to <em>done</em> when a run shows it. Continue appears when every check is done.</li></ol></div>
   <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-3-h"><h3 id="checks-3-h">Activity checks</h3>
   <ul class="goals"><li data-goal="std"><span>A standard-library module</span><span class="st"></span></li><li data-goal="own"><span>Your own module</span><span class="st"></span></li><li data-goal="pkg"><span>An installed package, found in the venv</span><span class="st"></span></li><li data-goal="miss"><span>A <code>ModuleNotFoundError</code></span><span class="st"></span></li></ul></section></div>
       </div>
-    </div>
-    <div class="pep-region workspace" data-pep-workspace="activity">
       <div class="ask" data-region="current-ask">
 <div data-step="3"><h2 class="ws-h" id="ws-3-h"><span class="vh">Workspace: </span>How Python finds a module</h2>
   <p id="task-3">Run <code>app.py</code>'s imports with each Python and see where each module is found.</p></div>
@@ -545,7 +550,7 @@ print(total([2, 3]))</pre></div></div></div>
   </fieldset></div>
       </div>
       <noscript data-section-skip><div class="nojs-static"><p class="pep-label">Without JavaScript: the result</p><p>Import activity for /home/sam/shop/app.py. Python searches sys.path in order: the script's folder (/home/sam/shop), the standard library, then the site-packages of the running Python. import json is found in the standard library with either Python. from pricing import total is found in /home/sam/shop as pricing.py. import pytest is found in /home/sam/shop/.venv/lib/python3.14/site-packages when the venv's Python runs, and fails with ModuleNotFoundError: No module named 'pytest' under the system python3, which has no pytest installed. import requests fails with ModuleNotFoundError: No module named 'requests' under both, because it was never installed.</p></div></noscript>
-      <div class="feedback" data-region="current-feedback" aria-live="polite">
+      <div class="feedback" data-region="current-feedback" data-pep-feedback aria-live="polite">
 <div data-step="3" data-pep-explore-feedback></div>
       </div>
     </div>
@@ -561,13 +566,13 @@ print(total([2, 3]))</pre></div></div></div>
   <p>Do not commit <code>.venv</code>: it is large, tied to one machine's Python and paths, and meant to be deleted and recreated. Add <code>.venv/</code> to <code>.gitignore</code> (since Python 3.13, venv also writes its own ignore file inside the folder).</p>
 </div>
       </div>
-      <div class="task" data-region="current-task">
-<div data-step="4"><div class="pep-task" id="activity-task-4" data-pep-task><h3 class="pep-task__h">Your task</h3>
-  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the question and the code it names in the workspace on the right.</li><li><strong>What to do or type:</strong> Pick one answer, pick your confidence, then press <em>Check answer</em>.</li><li><strong>What to expect:</strong> Feedback appears below. If the first answer is not right, a second question appears; answer it and press <em>Check second try</em>.</li><li><strong>How to know it's done:</strong> Either way, Continue then shows and takes you to the recap.</li></ol></div>
-  <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-4-h"><h3 id="checks-4-h">What success looks like</h3><p>Either way, Continue then shows and takes you to the recap.</p></section></div>
-      </div>
     </div>
     <div class="pep-region workspace" data-pep-workspace="activity">
+      <div class="task" data-region="current-task">
+<div data-step="4"><div class="pep-task" id="activity-task-4" data-pep-task><h3 class="pep-task__h">Your task</h3>
+  <ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the question and the code it names in this workspace, below these steps.</li><li><strong>What to do or type:</strong> Pick one answer, pick your confidence, then press <em>Check answer</em>.</li><li><strong>What to expect:</strong> Feedback appears below. If the first answer is not right, a second question appears; answer it and press <em>Check second try</em>.</li><li><strong>How to know it's done:</strong> Either way, Continue then shows and takes you to the recap.</li></ol></div>
+  <section class="pep-activity-checks" data-pep-activity-checks aria-labelledby="checks-4-h"><h3 id="checks-4-h">What success looks like</h3><p>Either way, Continue then shows and takes you to the recap.</p></section></div>
+      </div>
       <div class="ask" data-region="current-ask">
 <div data-step="4"><h2 class="ws-h" id="ws-4-h"><span class="vh">Workspace: </span>Commit the recipe, not the environment</h2>
   <p id="task-apply">Sam pushes the project so a teammate can run it. What should the repository contain?</p>
@@ -607,34 +612,31 @@ pytest==9.1.1</pre></div><div><p>.gitignore (commit)</p><pre class="code">.venv/
 </div>
       </div>
       <noscript data-section-skip><div class="nojs-static"><p class="pep-label">Without JavaScript: the result</p><p>Apply question: what should the repository contain so a teammate can run the project? Options: the .venv folder (no: large, tied to Sam's machine and paths, and not portable); requirements.txt with pinned versions and .venv/ listed in .gitignore (correct); nothing about packages (the teammate would have to guess versions); a zip of site-packages (the same problem as committing the venv). Retry: the teammate runs python3 -m venv .venv, activates it, then python -m pip install -r requirements.txt. pip freeze writes requirements, it does not install them; copying a venv between machines is not supported; python3 requirements.txt tries to run the text file as a script.</p></div></noscript>
-      <div class="feedback" data-region="current-feedback" aria-live="polite">
+      <div class="feedback" data-region="current-feedback" data-pep-feedback aria-live="polite">
 <div data-step="4" data-pep-apply-feedback></div>
       </div>
     </div>
   </section>
   <section class="pep-regions pep-act" data-step="5" aria-labelledby="teach-5-h">
-    <div class="pep-region reading" data-pep-instructions>
+    <div class="pep-region reading">
       <div class="teach" data-region="current-teaching">
 <div data-step="5" data-pep-recap class="recap">
   <h2 id="teach-5-h" tabindex="-1">Recap</h2>
   <ul><li>A module is a <code>.py</code> file; import it by name without <code>.py</code>.</li><li>Python searches <code>sys.path</code> in order; startup mode, environment and site configuration determine its entries.</li><li>One venv per project: create, activate, then <code>python -m pip install</code> pinned versions.</li><li>Commit <code>requirements.txt</code>; ignore <code>.venv/</code>.</li></ul>
-  <details data-section-skip><summary>Activity procedures (text alternative)</summary><p>Use these same observable steps when working from the text alternative.</p><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the code in the workspace on the right (below these steps on a narrow screen).</li><li><strong>What to do or type:</strong> Under <em>Prediction</em>, pick the result you expect.</li><li><strong>What to expect:</strong> Pick Low, Medium or High confidence, then press <em>Check my prediction</em>.</li><li><strong>How to know it's done:</strong> Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.</li></ol><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Click the terminal's input line (or Tab to it), type one command at a time, and press Enter after each command.</li><li><strong>What to do or type:</strong> Create the venv with <code>python3 -m venv .venv</code>, then activate it with <code>source .venv/bin/activate</code>; the prompt then starts with <code>(.venv)</code>.</li><li><strong>What to expect:</strong> Install with <code>python -m pip install -r requirements.txt</code>, then run <code>python -m pip --version</code> and look for <code>.venv</code> in the path it prints.</li><li><strong>How to know it's done:</strong> After the first install, run <code>python -m pip freeze &gt; requirements.txt</code>, inspect it with <code>cat requirements.txt</code>, then reinstall with <code>python -m pip install -r requirements.txt</code>. Every check reads <em>done</em>.</li></ol><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> In <em>Run an import</em>, pick which Python runs <code>app.py</code>.</li><li><strong>What to do or type:</strong> Press one of the <code>import</code> buttons.</li><li><strong>What to expect:</strong> The output box shows where Python found the module, or a <code>ModuleNotFoundError</code>. Try each import with both Pythons.</li><li><strong>How to know it's done:</strong> Each check above changes from <em>open</em> to <em>done</em> when a run shows it. Continue appears when every check is done.</li></ol><ol class="steps" aria-label="Steps"><li><strong>Where to look:</strong> Read the question and the code it names in the workspace on the right.</li><li><strong>What to do or type:</strong> Pick one answer, pick your confidence, then press <em>Check answer</em>.</li><li><strong>What to expect:</strong> Feedback appears below. If the first answer is not right, a second question appears; answer it and press <em>Check second try</em>.</li><li><strong>How to know it's done:</strong> Either way, Continue then shows and takes you to the recap.</li></ol></details>
   <details data-section-skip>
     <summary>Cheat sheet</summary>
     <table><tr><td><code>import json</code> / <code>from pricing import total</code></td><td>import a module / one name</td></tr><tr><td><code>python3 -m venv .venv</code></td><td>create (Windows: <code>py -m venv .venv</code>)</td></tr><tr><td><code>source .venv/bin/activate</code></td><td>activate on POSIX shells</td></tr><tr><td><code>.venv\Scripts\activate.bat</code> / <code>.venv\Scripts\Activate.ps1</code></td><td>activate in Windows cmd.exe / PowerShell</td></tr><tr><td><code>python -m pip install pytest==9.1.1</code></td><td>install a pinned version</td></tr><tr><td><code>python -m pip freeze &gt; requirements.txt</code></td><td>record exact versions</td></tr><tr><td><code>python -m pip install -r requirements.txt</code></td><td>reinstall them</td></tr><tr><td><code>deactivate</code></td><td>leave the venv</td></tr></table>
   </details>
   <details data-section-skip class="sources"><summary>Sources and review date</summary><p>Checked against these live official pages on 2026-10-13. The practice terminal simulates bash on Linux; its pip output is shortened from a real run of python -m pip install -r requirements.txt with pytest==9.1.1, then pip freeze and a reinstall, on CPython 3.14 and pip 26.1.2 on 2026-10-15. Dependency versions are what pip resolved that day; a later install may resolve newer ones, which is why freeze records them.</p><ul><li><a href="https://docs.python.org/3/tutorial/modules.html" rel="noopener">Python tutorial: Modules</a></li><li><a href="https://docs.python.org/3/tutorial/venv.html" rel="noopener">Python tutorial: Virtual environments and packages</a></li><li><a href="https://docs.python.org/3/library/venv.html" rel="noopener">venv: Creation of virtual environments</a></li><li><a href="https://docs.python.org/3/reference/import.html" rel="noopener">Language reference: The import system</a></li><li><a href="https://packaging.python.org/en/latest/guides/installing-using-pip-and-virtual-environments/" rel="noopener">Python Packaging User Guide: Install packages in a virtual environment using pip and venv</a></li><li><a href="https://pip.pypa.io/en/stable/cli/pip_freeze/" rel="noopener">pip documentation: pip freeze</a></li></ul></details>
-  <p class="next-topic">Next topic: <a href="../exceptions-and-logging/artifact.html" rel="noopener">Exceptions and logging</a></p>
 </div>
       </div>
       <div class="task" data-region="current-task">
 <div data-step="5"></div>
       </div>
     </div>
-    <div class="pep-region workspace" data-pep-workspace="activity">
+    <div class="pep-region workspace">
       <div class="ask" data-region="current-ask">
 <div data-step="5"><h2 class="ws-h" id="ws-5-h"><span class="vh">Workspace: </span>Recap</h2>
-  <p class="pep-js-only">All activities finished.</p>
   <p id="complete-msg" class="complete"></p></div>
       </div>
       <figure class="model" data-pep-model data-region="live-model" aria-labelledby="ws-5-h">
@@ -726,18 +728,38 @@ change:function(el,S,api){if(el.name==='py'){S.t.py=el.value;S.t.at=-1;this.rend
 (function(){
 'use strict';
 var d=document,main=d.getElementById('lesson'),stageEl=d.getElementById('stage');
-var SNAP={},MIN=(d.querySelector('meta[name="pep:budget-minutes"]')||{}).content||'';
+var SNAP={},OWN={},LASTT=null,MIN=(d.querySelector('meta[name="pep:budget-minutes"]')||{}).content||'';
 function clone(o){return JSON.parse(JSON.stringify(o));}
 var LAST=TOPIC.steps,S;
 function $(id){return d.getElementById(id);}
 function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
-function fresh(){var t=TOPIC.init();t.g=t.g||{};t.sort=t.sort||{};S={step:1,done:{},settled:{},conf:null,tries:0,t:t};}
+function fresh(){var t=TOPIC.init();t.g=t.g||{};t.sort=t.sort||{};S={step:1,done:{},settled:{},conf:null,tries:0,att:{},t:t};OWN={};LASTT=clone(t);}
 var api={$:$,qa:qa,esc:esc,checked:function(n){return checked(n);},say:say,complete:complete,hit:hit,out:out,get S(){return S;}};
 function fbFor(step){return qa('[data-region="current-feedback"] > [data-step="'+step+'"]')[0];}
 function say(html,step){var f=fbFor(step||S.step);if(f){f.innerHTML=html;}}
 function out(id,lines){var o=$(id);if(!o){return;}o.innerHTML=lines.map(function(l){return l[0]?'<span class="'+l[0]+'">'+esc(l[1])+'</span>':esc(l[1]);}).join('\n');}
 function actFor(step){return TOPIC.acts[step-1];}
+/* DESIGN.md state model: each activity keeps its own attempts, settled state, completion, credit, grade and Continue
+   availability, mirrored on its section's stable QA hooks. Navigation never changes them. */
+function secs(){return qa('section[data-pep-activity][id^="activity-"]',stageEl);}
+function attempt(){var a=actFor(S.step);if(a){S.att[a]=(S.att[a]||0)+1;reflect();}}
+function reflect(){var ss=secs();TOPIC.acts.forEach(function(a,i){var sec=ss[i];if(!sec){return;}var c=!!S.done[a],st=c||!!S.settled[a];
+  sec.setAttribute('data-pep-attempts',String(S.att[a]||0));sec.setAttribute('data-pep-settled',String(st));sec.setAttribute('data-pep-completed',String(c));
+  sec.setAttribute('data-pep-credit',c?'1':'0');sec.setAttribute('data-pep-grade',c&&a!=='predict'?'1':'0');sec.setAttribute('data-pep-continue',String(st));});}
+/* Each activity owns the parts of the shared model it changed, so Restart returns only those parts to their
+   state when the activity was first shown; every other activity keeps its state. */
+function cl(v){return v===undefined?undefined:clone(v);}
+function paths(t){var p={};Object.keys(t).forEach(function(k){var v=t[k];
+  if(v&&typeof v==='object'&&!Array.isArray(v)){Object.keys(v).forEach(function(j){p[JSON.stringify([k,j])]=JSON.stringify(v[j]);});}
+  else{p[JSON.stringify([k])]=JSON.stringify(v);}});return p;}
+function track(){if(!LASTT){LASTT=clone(S.t);return;}var a=paths(LASTT),b=paths(S.t),own=OWN[S.step]||(OWN[S.step]={});
+  Object.keys(a).concat(Object.keys(b)).forEach(function(p){if(a[p]!==b[p]){own[p]=1;}});LASTT=clone(S.t);}
+function restoreOwn(step,from){var own=OWN[step]||{};Object.keys(own).forEach(function(p){var k=JSON.parse(p);
+  if(k.length===2){var dst=S.t[k[0]],src=from[k[0]];if(!dst||typeof dst!=='object'){return;}
+    if(src&&typeof src==='object'&&Object.prototype.hasOwnProperty.call(src,k[1])){dst[k[1]]=cl(src[k[1]]);}else{delete dst[k[1]];}}
+  else if(Object.prototype.hasOwnProperty.call(from,k[0])){S.t[k[0]]=cl(from[k[0]]);}else{delete S.t[k[0]];}});
+  OWN[step]={};LASTT=clone(S.t);}
 function hit(k,msg){var need=(TOPIC.need||{})[S.step]||[];if(k){S.t.g[k]=1;}
   var left=need.filter(function(n){return !S.t.g[n];}).length;
   say('<p>'+msg+'</p><p>'+(left?left+' of '+need.length+' checks still open.':'<strong>All checks done.</strong> Continue when ready.')+'</p>');
@@ -749,6 +771,7 @@ function progress(){
     p.className='seg'+(on?' is-done':(st?' is-settled':(i===S.step-1?' is-current':'')));});
   $('prog-text').textContent=(S.step<=acts.length?'Activity '+S.step+' of '+acts.length:'Recap')+' · '+n+' of '+acts.length+' done'+(set?' · '+set+' settled, not passed':'')+' · about '+MIN+' min';
   qa('[data-pep-objectives] li').forEach(function(li,i){var need=(TOPIC.obj||[])[i]||[],ok=need.length&&need.every(function(a){return !!S.done[a];});li.classList.toggle('is-done',!!ok);});
+  reflect();
 }
 function complete(act){S.done[act]=true;progress();var nb=$('next');nb.hidden=false;}
 /* A settled miss may continue but is not done: no credit, and the page completes only when every activity passed. */
@@ -768,24 +791,24 @@ function sortLane(lane){var cfg=(TOPIC.sort||{})[S.step];if(!cfg){return;}
     else{say(msg+'<p>Next item is shown above.</p>');}}
   else{say('<p class="verdict no">Not this group: '+esc(cfg.lanes[lane])+'.</p><p>'+it.w[lane]+'</p><p>Choose another group for the same item.</p>');}
   render();var c=sortBox();if(c){var card=c.querySelector('.card');card.setAttribute('tabindex','-1');}}
-function render(){renderSort();
+function render(){track();renderSort();
   var g=S.t.g;qa('[data-region="current-task"] > [data-step="'+S.step+'"] .goals li').forEach(function(li){var k=li.getAttribute('data-goal');li.classList.toggle('done',!!g[k]);li.querySelector('.st').textContent=g[k]?'done':'open';});
   var need=(TOPIC.need||{})[S.step]||[],gs=$('goal-sum'),left=need.filter(function(k){return !g[k];}).length;
   if(gs){gs.hidden=!need.length;gs.textContent=left?left+' of '+need.length+' checks still open':'All '+need.length+' checks done';}
   if(TOPIC.render){TOPIC.render(S,api);}}
 var MAXS=1;
-function nav(step){var n=TOPIC.acts.length;if(step>MAXS){MAXS=Math.min(step,n);}main.setAttribute('data-pep-current-activity',String(Math.min(step,n)));main.setAttribute('data-pep-unlocked-through',String(MAXS));qa('[data-pep-activity-link]').forEach(function(a,i){var k=i+1;if(k===step){a.setAttribute('aria-current','step');}else{a.removeAttribute('aria-current');}if(k>MAXS){a.setAttribute('aria-disabled','true');}else{a.removeAttribute('aria-disabled');}});var pv=$('prev');if(pv){pv.hidden=step<2;}}
-function go(k){if(k<1||k>TOPIC.acts.length){show(k);return;}if(location.hash!=='#activity-'+k){try{history.pushState(null,'','#activity-'+k);}catch(err){}}show(k);}
+function nav(step){var n=TOPIC.acts.length;if(step>MAXS){MAXS=Math.min(step,n);}main.setAttribute('data-pep-current-activity',String(step));main.setAttribute('data-pep-unlocked-through',String(MAXS));qa('[data-pep-activity-link]').forEach(function(a,i){var k=i+1;if(k===step){a.setAttribute('aria-current','step');}else{a.removeAttribute('aria-current');}if(k>MAXS){a.setAttribute('aria-disabled','true');}else{a.removeAttribute('aria-disabled');}});var pv=$('prev');if(pv){pv.hidden=step<2;}}
+function go(k){if(k<1||k>TOPIC.acts.length){show(k);return;}if(location.hash!=='#activity-'+k){try{history.pushState(null,'','#activity-'+k);}catch(err){NAVING='#activity-'+k;try{location.hash='activity-'+k;}catch(e2){NAVING='';}}}show(k);}
 function show(step,focus){
-  S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
+  track();S.step=step;stageEl.setAttribute('data-step',String(step));stageEl.classList.toggle('applying',step===LAST-1);
   qa('[data-step]',stageEl).forEach(function(n){n.hidden=(+n.getAttribute('data-step')!==step);});
   if(!SNAP[step]){var h={};['current-ask','current-task','current-control','current-feedback'].forEach(function(c){var n=qa('[data-region="'+c+'"] > [data-step="'+step+'"]')[0];if(n){h[c]=n.innerHTML;}});
     SNAP[step]={html:h,t:clone(S.t)};}
   var rb=$('reset');rb.disabled=(step===LAST);
   var na=TOPIC.acts[step-1];$('next').hidden=!(na&&(S.done[na]||S.settled[na]));nav(step);
   if(step===LAST){var miss=TOPIC.acts.filter(function(a){return !S.done[a];}).length;main.setAttribute('data-pep-complete',miss?'false':'true');var c=$('complete-msg');if(c){
-    c.textContent=miss?'This page is not complete yet: '+miss+' of '+TOPIC.acts.length+' activities settled without passing. Review the explanations above; to finish, reload the page and work through it again.':'All '+TOPIC.acts.length+' activities finished.';}}
-  else{main.removeAttribute('data-pep-complete');}
+    c.textContent=miss?'This page is not complete yet: '+miss+' of '+TOPIC.acts.length+' activities settled without passing. Review the explanations above; to finish, go back to each one marked settled, choose Restart activity and try again.':'All '+TOPIC.acts.length+' activities finished.';}}
+  /* Leaving the recap keeps the page completion result: navigation never changes it. */
   render();progress();
   if(focus!==false){var h=$('teach-'+step+'-h');if(h){h.focus();}}
 }
@@ -815,7 +838,7 @@ function syncApply(){var pb=$('predict-check');if(pb&&!S.done.predict){pb.disabl
 function checkApply(which){
   var A=TOPIC.apply.A,B=TOPIC.apply.B;
   if(which==='a'){
-    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}
+    var ch=checked('apply-a');S.conf=checked('conf');if(!ch||!S.conf){return;}attempt();
     S.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
     if(ch===A.correct){S.tries=2;annotate(A,ch);$('apply-check').hidden=true;say('<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText());complete('apply');render();focusVerdict();return;}
     S.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
@@ -823,7 +846,7 @@ function checkApply(which){
     qa('[data-retry]').forEach(function(n){n.hidden=false;});qa('[data-first]').forEach(function(n){n.hidden=true;});render();
     var t=$('task-apply-b');if(t){t.focus();}
   } else {
-    var c2=checked('apply-b');if(!c2){return;}
+    var c2=checked('apply-b');if(!c2){return;}attempt();
     S.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
     if(c2===B.correct){say('<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+firstDetails()+confText());}
     else{S.settled.apply=true;qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
@@ -834,6 +857,7 @@ function checkApply(which){
 function checkPredict(){
   var P=TOPIC.predict,ch=checked('predict'),pc=checked('pconf');
   if(!ch||!pc){return;}
+  attempt();
   qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
   qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
     if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
@@ -846,13 +870,13 @@ function setTheme(t){d.documentElement.setAttribute('data-theme',t);}
 function restart(){var step=S.step,sn=SNAP[step];if(step===LAST||!sn){return;}
   Object.keys(sn.html).forEach(function(c){var n=qa('[data-region="'+c+'"] > [data-step="'+step+'"]')[0];if(n){n.innerHTML=sn.html[c];}});
   qa('[data-region="current-control"] > [data-step="'+step+'"] input[type="text"]').forEach(function(i){delete HIST[i.id];});
-  S.t=clone(sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];
+  track();restoreOwn(step,sn.t);var act=TOPIC.acts[step-1];delete S.done[act];delete S.settled[act];delete S.att[act];if(main.getAttribute('data-pep-complete')==='true'){main.setAttribute('data-pep-complete','false');}
   if(act==='apply'){S.conf=null;S.tries=0;S.firstPick=null;}
   show(step,false);syncPrompt();var h=$('teach-'+step+'-h');if(h){h.focus();}}
 var topicAct=TOPIC.act;
-TOPIC.act=function(a,b,st,ap){if(a.indexOf('lane:')===0){sortLane(a.slice(5));return;}if(topicAct){topicAct.call(TOPIC,a,b,st,ap);}};
+TOPIC.act=function(a,b,st,ap){attempt();if(a.indexOf('lane:')===0){sortLane(a.slice(5));track();return;}if(topicAct){topicAct.call(TOPIC,a,b,st,ap);}track();};
 var topicRun=TOPIC.run;
-if(topicRun){TOPIC.run=function(line,term,st,ap){topicRun.call(TOPIC,line,term,st,ap);render();};}
+if(topicRun){TOPIC.run=function(line,term,st,ap){attempt();topicRun.call(TOPIC,line,term,st,ap);render();};}
 /* pep:component terminal@1 js */
 d.addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b){return;}
@@ -891,10 +915,17 @@ if(mq&&mq.addEventListener){mq.addEventListener('change',function(e){setTheme(e.
 d.addEventListener('click',function(e){var lk=e.target.closest('a[data-pep-activity-link],a[data-pep-back-link]');if(lk){e.preventDefault();e.stopPropagation();var lkn=+lk.getAttribute('href').replace('#activity-','');if(lkn>=1&&lkn<=MAXS){go(lkn);}return;}
   var b=e.target.closest('button');if(!b){return;}
   if(b.id==='prev'){e.stopPropagation();if(S.step>1){go(Math.min(S.step-1,TOPIC.acts.length));}return;}
-  if(b.id==='next'){var nk=S.step+1;if(nk<=TOPIC.acts.length&&location.hash!=='#activity-'+nk){try{history.pushState(null,'','#activity-'+nk);}catch(err){}}}
+  if(b.id==='next'){var nk=S.step+1;if(nk<=TOPIC.acts.length&&location.hash!=='#activity-'+nk){try{history.pushState(null,'','#activity-'+nk);}catch(err){NAVING='#activity-'+nk;try{location.hash='activity-'+nk;}catch(e2){NAVING='';}}}}
 },true);
-window.addEventListener('popstate',function(){var pm=/^#activity-(\d+)$/.exec(location.hash),pk=pm?+pm[1]:1;if(pk>=1&&pk<=MAXS&&pk!==S.step){show(pk,false);}});
-fresh();show(1,false);syncPrompt();
+/* Back/Forward and fragment changes select an unlocked activity; a locked activity fragment returns to the current one; any other fragment keeps it. */
+var NAVING='';
+function historyChanged(){if(NAVING&&location.hash===NAVING){NAVING='';return;}var pm=/^#activity-(\d+)$/.exec(location.hash);if(!pm&&location.hash){return;}var pk=pm?+pm[1]:1;if(pk>=1&&pk<=MAXS&&pk!==S.step){show(pk,false);}else if(pm&&location.hash!=='#activity-'+S.step){try{history.replaceState(null,'','#activity-'+S.step);}catch(err){NAVING='#activity-'+S.step;try{location.hash='activity-'+S.step;}catch(e2){NAVING='';}}}}
+window.addEventListener('popstate',historyChanged);window.addEventListener('hashchange',historyChanged);
+/* Each editor Run is one attempt for the activity that owns the editor. */
+if(typeof LESSON_EDITOR!=='undefined'&&LESSON_EDITOR&&typeof LESSON_EDITOR.mount==='function'){var leMount=LESSON_EDITOR.mount;
+  LESSON_EDITOR.mount=function(root,cfg){if(cfg&&typeof cfg.onRun==='function'){var leRun=cfg.onRun;cfg.onRun=function(){attempt();var r=leRun.apply(this,arguments);track();return r;};}return leMount.call(this,root,cfg);};}
+/* A fresh load never selects a future activity from the URL fragment. */
+fresh();if(/^#activity-\d+$/.test(location.hash)&&location.hash!=='#activity-1'){try{history.replaceState(null,'','#activity-1');}catch(err){}}show(1,false);syncPrompt();
 })();
 </script>
 <script>
@@ -908,6 +939,16 @@ fresh();show(1,false);syncPrompt();
       printOpened.forEach(details => { details.open = false; });
       printOpened = [];
     });
+    const objectives = document.querySelector('details[data-pep-objectives]');
+    if (objectives) {
+      const objectivesSummary = objectives.querySelector(':scope > summary');
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && objectives.open && !(event.target.closest && event.target.closest('[data-lesson-editor]'))) { objectives.open = false; objectivesSummary.focus(); }
+      });
+      document.addEventListener('click', (event) => {
+        if (objectives.open && !objectives.contains(event.target)) objectives.open = false;
+      });
+    }
   })();
 </script>
 </body>

@@ -13,6 +13,7 @@ components/                         reusable learner-interface fragments
   assessments/<assessment>/
     blueprint.json                  learner-safe blueprint; never keys or rubrics
     final-mcq.gift                  Foundation course-final MCQ bank (approved exception)
+    checkpoint-mcq.gift             Standard/Fast final checkpoint MCQ bank (containers-cicd only)
   coding-lab/                       optional course-wide lab
   <module>/
     assessments/<assessment>/       optional module assessment blueprints

@@ -10,7 +10,7 @@
 
 Jobs `test` and `build` never mention each other. On a push, `test` fails.
 
-A workflow is a YAML file in `.github/workflows/`, started by an event in `on`. It has jobs, each on a runner, and each job has ordered steps.
+A workflow is a YAML file in `.github/workflows/`, started by an event in `on`. It has jobs, each on a runner, with ordered steps.
 
 ```
 name: ci
@@ -23,9 +23,9 @@ jobs:
       - run: ./mvnw test
 ```
 
-A step runs a command (`run`) or uses a packaged action (`uses`). The long commit pins the exact action version.
+A step runs a command (`run`) or a packaged action (`uses`); the long commit pins its exact version.
 
-`needs` makes a job wait for another job. If that job fails or is skipped, this one is skipped too.
+`needs` makes a job wait for another; if that one fails or is skipped, so is this one.
 
 ```
   package:
@@ -35,7 +35,7 @@ A step runs a command (`run`) or uses a packaged action (`uses`). The long commi
       - run: npm pack
 ```
 
-The image-build action is pinned the same way:
+`actions/checkout` copies your repository onto the fresh runner; the build needs it first. Pin the build action the same way:
 
 ```
 - uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
@@ -44,9 +44,9 @@ The image-build action is pinned the same way:
     push: false
 ```
 
-`actions/checkout` copies your repository onto the runner, which starts without it. `docker/build-push-action` builds the image, and with `context: .` it reads those checked-out files.
+`docker/build-push-action` builds the image; with `context: .` it reads the checked-out files.
 
-The action pushes the image to a registry only when `push` is true. A common setting builds on every pull request and pushes only from `main`:
+It pushes to a registry only when `push` is true. A common setting builds every pull request, pushing only from `main`:
 
 ```
 push: ${{ github.event_name != 'pull_request' }}
@@ -72,7 +72,7 @@ Where to act: Add the new job under `jobs`, level with `test`.
 
 Next step: Compare with how `package` waits for `lint` in the example.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: Now look at the steps of the new job.
 
@@ -98,7 +98,7 @@ Success criteria: Sketch a third job, deploy-staging, that runs only after build
 
 ## Sources
 
-Status: minimum release, checked by the page author on 2026-11-08. Sources were fetched live on 2026-11-04 and the author checked the page against them; no independent education or technology review was performed.
+Status: Sources fetched on 2026-11-04 and checked by the page author on 2026-11-08; independent review pending.
 
 - Understanding GitHub Actions: workflows, events, jobs, runners, steps
 - Workflow syntax: on, jobs, needs, runs-on, steps; jobs run in parallel by default

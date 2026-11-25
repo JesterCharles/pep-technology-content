@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "id": "python/assessments/python-final-coding-intermediate-refunds/coding-lab",
+  "scope": "course",
+  "covers": [
+    "python/fastapi-services/fastapi-routes",
+    "python/fastapi-services/serving-pipeline-results-as-an-api",
+    "python/fastapi-services/calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts"
+  ],
+  "objectives": [
+    "python/fastapi-services/fastapi-routes#o1",
+    "python/fastapi-services/calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts#o2",
+    "python/fastapi-services/serving-pipeline-results-as-an-api#o1"
+  ],
+  "language": "python",
+  "prerequisites": [
+    {
+      "tool": "python",
+      "version": ">=3.12",
+      "check": "python3 --version"
+    }
+  ],
+  "os": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "network": {
+    "setup": "once",
+    "test": "none"
+  },
+  "setup": {
+    "command": "python -m pip install -r starter/requirements.txt",
+    "cwd": "."
+  },
+  "test": {
+    "command": "python -m pytest -q",
+    "cwd": ".",
+    "timeoutSeconds": 60,
+    "starterExpectation": "fail",
+    "failingTests": [
+      "tests/test_main.py::test_check1_a_valid_refund_answers_201_with_only_the_refund_fields",
+      "tests/test_main.py::test_check2_the_refund_is_stored_with_the_payment_customer_email",
+      "tests/test_main.py::test_check3_an_unknown_payment_answers_404_and_stores_nothing",
+      "tests/test_main.py::test_check4_a_slow_payments_service_answers_504_and_stores_nothing",
+      "tests/test_main.py::test_check5_a_failing_payments_service_answers_502_and_stores_nothing",
+      "tests/test_main.py::test_check6_a_payment_that_is_not_captured_answers_409",
+      "tests/test_main.py::test_check7_earlier_refunds_of_the_same_payment_count_and_other_payments_do_not",
+      "tests/test_main.py::test_check8_refunds_may_add_up_to_exactly_the_captured_amount_but_not_beyond",
+      "tests/test_main.py::test_check9_an_invalid_body_answers_422_without_calling_payments"
+    ]
+  },
+  "fixtures": {
+    "seed": 0,
+    "files": []
+  },
+  "expectedOutput": "expected/on-completion.txt",
+  "cleanup": {
+    "paths": [
+      ".venv",
+      ".pytest_cache",
+      "starter/refunds/__pycache__",
+      "tests/__pycache__"
+    ],
+    "notes": "Final Assessment coding challenge, Python/FastAPI (intermediate, 20 minutes from the end of setup, reading included; setup and dependency installation happen before the timer). One assessed behaviour: the POST /refunds route looks the payment up once through the provided client, maps its three errors to 404/504/502, refuses an uncaptured payment (checked first) or a refund that would take this payment's refunded total beyond its captured amount with 409, otherwise stores the refund and answers 201 with only the RefundOut fields, and stores nothing on any refusal. Objective claims are partial: fastapi-routes#o1 partial [GET routes, path and query parameters, running the app locally are not observed] via check1, check2, check9; calling-the-spring-boot-api...#o2 partial [setting explicit timeouts and classifying httpx timeout/connection/non-2xx errors are done by the provided client] via check3-check5. serving-pipeline-results-as-an-api#o1 partial [read-only GET routes are not observed; limiting the fields returned is] via the RefundOut-only body asserted in every check that gets a refund accepted (check1, check2, check7, check8): a customer-email leak or a missing response_model fails the item (orchestrator decision, security first). check6-check8 observe the README's business rule and claim no catalog objective; check2 also exercises a voided, an unknown and a cumulative over-refund refusal. Only check1 insists on 201; the other accepted refunds need any success status, so a missing status_code=201 costs one check. Checks call the app with FastAPI's TestClient through dependency overrides, a fresh in-memory store and an httpx mock transport behind the provided PaymentsClient; they observe status codes, bodies, store contents and payments-service calls only. No source inspection, real network, environment variables, Docker or database. Proven scope: clean clone on macOS arm64, CPython 3.12, uv offline install of the pins; the README pip path, Linux, Windows and other Python versions are declared but not proven. Derived from Task 5 of the preserved 60-minute refunds-service prototype. Timing is an authoring estimate (about 13 minutes median, cap 20), not a measured learner pilot."
+  },
+  "minutes": {
+    "estimatedMedian": 13,
+    "cap": 20
+  },
+  "trackRequirement": {
+    "standard": "required",
+    "fast": "required"
+  },
+  "platform": {
+    "handoff": "bundle",
+    "adapter": null
+  },
+  "licensing": []
+}

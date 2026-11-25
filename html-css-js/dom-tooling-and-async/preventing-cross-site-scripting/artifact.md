@@ -58,7 +58,7 @@ Where to act: The first line of the function body.
 
 Next step: Create the paragraph element, then set its class through `classList`, or `className`.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: After the paragraph has its text.
 
@@ -102,7 +102,7 @@ link.href = data; // check the scheme first
 - MDN: Element.innerHTML, retrieved 2026-11-04
 - MDN: Content Security Policy, retrieved 2026-11-04
 
-First draft, retrieved 2026-11-04. These claims have not had independent review yet, so treat them as unverified until that review is recorded.
+Sources checked on 2026-11-04; independent review pending.
 
 ## Static interaction alternatives
 

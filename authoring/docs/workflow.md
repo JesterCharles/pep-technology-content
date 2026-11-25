@@ -66,6 +66,7 @@ Every gate runs locally and in CI except the lab solved-run gate (part of gate 1
 16. Diagrams: inline SVG with title, description and text alternative.
 17. Licensing: every third-party item has a license record.
 18. Critic gate: both critic reports or rechecks cover the final bytes, zero open critical or high findings, and reconciliation by a non-author.
+19. Answer bias (T26): correct-option positions are balanced in page-build topic sources (planned with `authoring/tools/html/answer-order.mjs`) and GIFT banks, and the share of questions whose correct option is the longest is reported. Position is reported until every page-build module is planned, then enforced; length stays report-only because rebalancing wording needs critic review.
 
 The tooling under `authoring/tools/` implements these gates behind `npm run check`.
 
@@ -87,7 +88,7 @@ The tooling under `authoring/tools/` implements these gates behind `npm run chec
 
 - Formative practice quizzes and MCQs may be committed, because they are low-stakes.
 - Assessment answer keys, rubrics, reference solutions, hidden tests and scoring secrets never enter the repository, not even as hashes of short keys.
-  The one captain-approved exception (2026-11-10) is the four Foundation course-final MCQ banks at `<course>/assessments/<module-check>/final-mcq.gift`, whose intrinsic GIFT keys are tracked; it does not extend to key or source files, practical keys, rubrics, solutions or hidden tests.
+  The captain-approved exceptions are the four Foundation course-final MCQ banks at `<course>/assessments/<module-check>/final-mcq.gift` (2026-11-10) and, under the captain's public-answer consent (2026-11-19), the cumulative Standard/Fast final checkpoint bank at `containers-cicd/assessments/standard-fast-final-checkpoint/checkpoint-mcq.gift`; their intrinsic GIFT keys are tracked, and the exceptions do not extend to key or source files, practical keys, rubrics, solutions or hidden tests.
 - Assessment blueprints may hold identity, objectives covered, item counts, durations and learner-facing instructions only.
 - Temporary uncommitted private staging outside the repository is allowed for validation and platform handoff, and is retired after confirmed upload.
 

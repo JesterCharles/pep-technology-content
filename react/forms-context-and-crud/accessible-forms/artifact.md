@@ -55,7 +55,7 @@ Where to act: The `label` and the `input`.
 
 Next step: Give the input an id and point the label at it, using the JSX attribute name. Add the required attribute too.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The attributes of the input, and the error paragraph.
 
@@ -82,7 +82,7 @@ Static version: compare four password fields: a full set of label, invalid and d
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - html.spec.whatwg.org/multipage/forms.html: The label element
 - www.w3.org/TR/WCAG22/: 1.3.1 Info and Relationships; 3.3.1 Error Identification; 3.3.2 Labels or Instructions; 4.1.3 Status Messages

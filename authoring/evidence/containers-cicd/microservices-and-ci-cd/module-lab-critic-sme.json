@@ -1,0 +1,336 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "ops-critic-sme (independent Claude critic subagent, 2026-11-18)",
+  "reviewedPath": "containers-cicd/microservices-and-ci-cd/coding-lab/lab.json",
+  "reviewedSha256": "9c58c9241d704517b6f9baea638de0c5848f51a5180d4112ac83d3e063368d78",
+  "artifactHashes": {
+    "coding-lab/README.md": "9df67c0351afc02676fb64ea88d404a136d9009c5722ea3b1356e8dcdef57517",
+    "coding-lab/expected/solved-summary.txt": "28db168f1d14b0368e49a7fc65d0c2c2788732a4fc1b12ca0cbb2a606b2d7b37",
+    "coding-lab/expected/starter-summary.txt": "039fc674111feca307863bf3dd73b6162ca85b455f5e95822abe2e90727daf2f",
+    "coding-lab/fixtures/.env.example": "16d958ba8d51b7600909af11bbcc39441a8f4b4c80a18379e12e2a50287223e4",
+    "coding-lab/fixtures/briefs/architecture-brief.md": "ee182f1507303308163b72ff003ada5b818ca8ce7322a4d02fdd7bb7fa437bfa",
+    "coding-lab/fixtures/briefs/image-reference.txt": "8a3a8f613ad38f9e27e7a4e8d7419ccc3cfc78e1967a516040a2c58ac1527a0f",
+    "coding-lab/lab.json": "9c58c9241d704517b6f9baea638de0c5848f51a5180d4112ac83d3e063368d78",
+    "coding-lab/starter/.github/workflows/ci.yml": "23e3f3b9efacc064c3ecc267ea1ad4a8b33e8434eaeaa918d027cc197a1a9987",
+    "coding-lab/starter/.gitignore": "6c9e486632f5647c93d52d6c064f6e4ebea0c0ddd0747d9f91511f6a06cf817a",
+    "coding-lab/starter/compose.yaml": "79caf1e98f7b157cf5ac62869d1d5241fd25a2466c2ba467b38d78e3cfe63823",
+    "coding-lab/starter/decisions.yaml": "337d0e1f7712e1857918ba6e7bfd6c842bfa06e1513baa19ce983f980c6ef391",
+    "coding-lab/starter/reviews/.dockerignore": "319f8e376e8fdddd571f42b249ee21d571c6673e526cb8b8577077a77f2fa976",
+    "coding-lab/starter/reviews/Dockerfile": "7617adb046a7b6b9f8a5119747c6d1256391b0c123d1b16a429f8e7c202f8a34",
+    "coding-lab/starter/reviews/app/main.py": "1786d5bf84bb996fd3d03437923e0e9fba81dc841c3df7b685b23df141958393",
+    "coding-lab/starter/reviews/requirements.txt": "44216c29888f2536291b0822db49381252392f80298b391c94c130bf892ebbad",
+    "coding-lab/tests/ci.test.mjs": "32822e43ab8a0caf2540bf2b9410d993dda00fcbafcbc2a252fc0a64f7723f12",
+    "coding-lab/tests/compose.test.mjs": "b3365f5caedfe40b6bcf7816da47cb20fdbfb50cf33c3e5e3bad8a0033db19ba",
+    "coding-lab/tests/decisions.test.mjs": "c20d558eab1b795210d08bc2f6ce2748520db552a0a1ab05fda396ebbab09eb3",
+    "coding-lab/tests/dockerfile.test.mjs": "849779dc9e92f98e1a78c77f8bd215dc70ac31aff289f3eedcd86694be14a3d4",
+    "coding-lab/tests/lab.mjs": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f",
+    "coding-lab/tests/package-lock.json": "967ac4c675131cb4beb93684e07dbbb8f8a427a78dc66422036927ce5c126803",
+    "coding-lab/tests/package.json": "3a5c13790064c853eef28d93aed9525d0b7280843d68c34a43c0f734a8e3a4fd",
+    "coding-lab/tests/service.test.mjs": "92be8e5f4dcdfb0f79d041c8e552eadbf507a97ceb039eec6f087d8482dd6261"
+  },
+  "findings": [
+    {
+      "id": "ops-sme-001",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/app/main.py",
+        "line": 33
+      },
+      "claim": "The starter docstring says the naive call \"sets no connect or read timeout, so a hanging api hangs us too\". That is false for HTTPX: a call with no timeout argument uses the 5-second inactivity default and raises TimeoutException (verified in httpx 0.28.1: DEFAULT_TIMEOUT_CONFIG == Timeout(timeout=5.0)). It also contradicts this module's own service-to-service page (\"HTTPX has a five-second inactivity default that timeout=None turns off\"; \"HTTPX with nothing set stops after about 5 seconds\"). Only timeout=None hangs. README line 147 also tells learners to \"remove timeout=None\", which the starter never contains, which reinforces the wrong idea that the starter has no limit.",
+      "evidence": [
+        {
+          "url": "https://www.python-httpx.org/advanced/timeouts/",
+          "section": "Timeouts (intro: 5 second default)",
+          "retrievedAt": "2026-11-18T07:06:32Z",
+          "textSha256": "64029c1f0a9ba8114e20ada032160159774c52d080da6c1298462e1e9e74c830"
+        }
+      ],
+      "recommendation": "Reword rule 2 of the docstring to say the call relies on an unread 5-second default instead of explicit connect and read limits (or put timeout=None in the starter if the point is that it hangs). Make README troubleshooting line 147 match whatever the starter actually contains.",
+      "reviewedSha256": "1786d5bf84bb996fd3d03437923e0e9fba81dc841c3df7b685b23df141958393"
+    },
+    {
+      "id": "ops-sme-002",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "line": 118
+      },
+      "claim": "Phase 6 makes the pipeline log in to ghcr.io with long-lived REGISTRY_USERNAME/REGISTRY_PASSWORD repository secrets and grant only contents: read. ci-permissions (tests/lab.mjs lines 322-324) then rejects any write scope (\"no permission here needs write\"). GitHub recommends that workflows publishing to the Container registry use GITHUB_TOKEN rather than a personal access token, and its GHCR publish example grants contents: read plus packages: write. This module's own secrets-in-ci page keys answer D (\"contents: read and packages: write\") for a job that pushes to GHCR with GITHUB_TOKEN, and explains that option C (contents: read only) means \"the push is refused\". Repro: the base solution with permissions {contents: read, packages: write} and an env GH_TOKEN of secrets.GITHUB_TOKEN piped to docker login ghcr.io --password-stdin fails both \"registry credentials come from repository secrets\" and \"a permissions block gives GITHUB_TOKEN least access\". The lab therefore drills the less secure pattern and rejects the one its own page teaches.",
+      "evidence": [
+        {
+          "url": "https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry",
+          "section": "About the Container registry (GITHUB_TOKEN recommendation)",
+          "retrievedAt": "2026-11-18T07:06:33Z",
+          "textSha256": "cefc197ad0b492a4512cd142c78dcf8de29ec96cd798baea5979c1f167b25de8"
+        },
+        {
+          "url": "https://docs.github.com/en/actions/tutorials/publish-packages/publish-docker-images",
+          "section": "Publishing images to GitHub Packages",
+          "retrievedAt": "2026-11-18T07:06:34Z",
+          "textSha256": "6bae18a48e63a9bd322e580fad022e4d6897e30c3cc812cad77e9f338004342f"
+        }
+      ],
+      "recommendation": "Either switch the lab to GITHUB_TOKEN with permissions contents: read + packages: write, and accept that in ci-secret-refs and ci-permissions, or name a non-GitHub registry for the REGISTRY_* secrets and state why a stored credential is needed there. In both cases, align the README, the failure messages and the secrets-in-ci page.",
+      "reviewedSha256": "9df67c0351afc02676fb64ea88d404a136d9009c5722ea3b1356e8dcdef57517"
+    },
+    {
+      "id": "ops-sme-003",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 312
+      },
+      "claim": "ci-no-secret-prints matches the text of a run step (echo/printf/cat plus a literal \"${{ secrets.\" in the same run string), not behaviour. False pass: a step with env PW: ${{ secrets.REGISTRY_PASSWORD }} and run: echo \"pushing with $PW\" passes all 27 tests while it prints the secret. This is the obvious way to \"fix\" the starter's debug step by following the README's \"pass it through env\" advice. False fail: run: echo \"${{ secrets.REGISTRY_PASSWORD }}\" | docker login ... --password-stdin is rejected with \"a run step prints a secret\", although it pipes to stdin and writes nothing to the log (inline interpolation is a weaker style, but the stated reason is wrong). Printing via printenv/env/set -x is also not detected.",
+      "evidence": [],
+      "recommendation": "Flag any echo/printf/cat whose arguments expand an environment variable mapped from secrets.*, or require the starter's debug step to be removed by name. Do not flag an echo whose output is piped to --password-stdin; if inline ${{ secrets.* }} in run text is unwanted, reject it with its own accurate message.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-sme-004",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 277
+      },
+      "claim": "ci-build-push accepts any push expression that mentions github.ref or github.event_name. Repros (each a one-line change to an otherwise complete solution; all 27 tests pass): push: ${{ github.event_name == 'pull_request' }} (inverted, so it pushes only pull-request builds and never publishes from main) and push: ${{ github.ref != '' }} (always true, so it pushes every build). Mistyping == for != is a realistic error on exactly the rule this test names (\"pushes only conditionally\").",
+      "evidence": [],
+      "recommendation": "Evaluate the expression shape: for example accept only github.event_name != 'pull_request', github.event_name == 'push', or github.ref == 'refs/heads/main' (and equivalents in a step if:), and reject inverted or always-true forms with a message that names the event they would push on.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-sme-005",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 289
+      },
+      "claim": "The \"never literals\" test (ci-secret-refs) only inspects tokens after whitespace-delimited -p/--password. Once both ${{ secrets.REGISTRY_* }} strings appear anywhere in the file (an unused env block, or even a YAML comment), a literal credential piped in, as in run: echo hunter2-for-ghcr | docker login ghcr.io -u pepshop --password-stdin, passes all 27 tests. -p\"$REGISTRY_PASSWORD\" (no space) also passes, so the password still reaches argv.",
+      "evidence": [],
+      "recommendation": "Require the docker login step to read its password from an env var mapped from secrets.REGISTRY_PASSWORD (or use docker/login-action with a secrets.* password). Scan every run step for the starter literal and for -p/--password in any spacing.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-sme-006",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 260
+      },
+      "claim": "ci-test-job checks that an actions/checkout step and a test command both exist, but not their order. The failure message and README line 113 say the checkout must come \"before\" the tests. Repro: swap the two test-job steps so ./mvnw test runs before checkout; all 27 tests pass, but on a real runner the test step fails on an empty workspace. Appending the checkout after the existing run step is the most natural starter edit, so this false pass is realistic.",
+      "evidence": [],
+      "recommendation": "Require the index of the checkout step to be lower than the index of the test command step.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-sme-007",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 183
+      },
+      "claim": "reviews-listen only recognises a space-separated \"--host\" token in the last CMD/ENTRYPOINT. False pass: CMD [\"fastapi\",\"run\",\"app/main.py\",\"--host=127.0.0.1\",\"--port\",\"8000\"] passes; running fastapi 0.136.3 with --host=127.0.0.1 was verified to start \"Uvicorn running on http://127.0.0.1:8765\", which is the exact defect the test names. False fails: CMD [\"uvicorn\",\"app.main:app\",\"--host=0.0.0.0\",\"--port=8000\"] (a common valid form) and the split ENTRYPOINT [\"fastapi\",\"run\"] + CMD [\"app/main.py\",\"--port\",\"8000\"] are both rejected. FastAPI documents that fastapi run listens on 0.0.0.0 and fastapi dev on 127.0.0.1; the README claims themselves are correct.",
+      "evidence": [
+        {
+          "url": "https://fastapi.tiangolo.com/fastapi-cli/",
+          "section": "fastapi dev / fastapi run",
+          "retrievedAt": "2026-11-18T07:06:33Z",
+          "textSha256": "ac695fcd3b169d70ad689bb0cd7806500c28997c675efac5f1345860c94f21f8"
+        }
+      ],
+      "recommendation": "Parse --host=VALUE as well as --host VALUE for both fastapi and uvicorn, and combine ENTRYPOINT with CMD (exec form) before inspecting the start command.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-sme-008",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 222
+      },
+      "claim": "reviews-timeouts checks for an httpx.Timeout(...) anywhere in the file plus any \"timeout=\" outside it. False passes: (a) timeout = httpx.Timeout(3.0, connect=2.0) assigned to a lowercase local variable and never passed to httpx.get passes, because the assignment itself matches /timeout\\s*=/; (b) httpx.Timeout(3.0, connect=2.0, read=None) passes; httpx 0.28.1 builds it as Timeout(connect=2.0, read=None, write=3.0, pool=3.0), i.e. the read limit is disabled (HTTPX docs: None disables a timeout), so the test named \"sets explicit connect and read timeouts\" accepts a hang on a slow api. The constructor-validity logic (a default or all four limits) is correct: verified that httpx 0.28.1 raises ValueError for Timeout(connect=2.0, read=3.0).",
+      "evidence": [
+        {
+          "url": "https://www.python-httpx.org/advanced/timeouts/",
+          "section": "Timeouts (intro: 5 second default)",
+          "retrievedAt": "2026-11-18T07:06:32Z",
+          "textSha256": "64029c1f0a9ba8114e20ada032160159774c52d080da6c1298462e1e9e74c830"
+        }
+      ],
+      "recommendation": "Require the call (httpx.get/client.get or the Client constructor) to receive timeout=<the Timeout object or variable>, and reject None for connect or read inside the Timeout arguments.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-sme-009",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 235
+      },
+      "claim": "reviews-error-mapping checks that the three pieces each exist somewhere in the file (an except naming TimeoutException, some HTTPException(504), an except naming ConnectError/RequestError, some HTTPException(502|503)), but not how they are linked or ordered. False pass 1: except httpx.RequestError -> 502 placed before except httpx.TimeoutException -> 504 passes. Because TimeoutException subclasses RequestError (MRO verified in httpx 0.28.1: TimeoutException -> TransportError -> RequestError), the 504 branch is unreachable: executing that handler under FastAPI TestClient with a ReadTimeout returned 502. False pass 2: swapping the codes (TimeoutException -> 503, ConnectError -> 504) passes. Both contradict the page's \"504 for a timeout\".",
+      "evidence": [
+        {
+          "url": "https://www.python-httpx.org/exceptions/",
+          "section": "The exception hierarchy; class httpx.HTTPStatusError",
+          "retrievedAt": "2026-11-18T07:06:33Z",
+          "textSha256": "521a0d111d4d2db1a5c2edc58c6424c7f967d72884d4fe6d1eec0390d2f5af71"
+        }
+      ],
+      "recommendation": "Associate each except clause with the status raised in its own body, and require the TimeoutException clause to come before any RequestError/TransportError clause. Mention the subclass ordering in the failure message.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-sme-010",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/README.md",
+        "line": 96
+      },
+      "claim": "Phase 4 rule 1 and reviews-auth-forward (tests/lab.mjs line 229) require the literal shape {\"Authorization\": authorization}, where the handler declares authorization: str | None = Header(default=None). When a caller sends no Authorization header, httpx raises TypeError (\"Header value must be str or bytes, not NoneType\"); this TypeError is not an httpx exception, so the taught except clauses miss it. Verified under TestClient: the README-shaped handler returns 500 for a request without the header. The safer form headers = {}; if authorization: headers[\"Authorization\"] = authorization is rejected, and so is {\"authorization\": authorization}, although header names are case-insensitive. A guard that raises 401 before the call happens to pass.",
+      "evidence": [],
+      "recommendation": "Teach and accept either rejecting a missing token (401) or forwarding only when present. Relax the regex to accept a conditional assignment and a case-insensitive header key; optionally make the parameter required.",
+      "reviewedSha256": "9df67c0351afc02676fb64ea88d404a136d9009c5722ea3b1356e8dcdef57517"
+    },
+    {
+      "id": "ops-sme-011",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/app/main.py",
+        "line": 41
+      },
+      "claim": "The kept response.raise_for_status() raises httpx.HTTPStatusError for a 4xx/5xx reply from the api. HTTPStatusError is not a RequestError subclass (MRO verified in httpx 0.28.1: HTTPStatusError -> HTTPError), so none of the taught except clauses catch it. Verified under TestClient: an api 404 yields an unhandled 500 from reviews in a solution that passes all 27 tests. Test 27's name (\"a failed or timed-out downstream call becomes a clear 502/503/504 response\") and docstring rule 3 therefore overclaim. The topic page lists \"502 for an invalid reply\".",
+      "evidence": [
+        {
+          "url": "https://www.python-httpx.org/exceptions/",
+          "section": "The exception hierarchy; class httpx.HTTPStatusError",
+          "retrievedAt": "2026-11-18T07:06:33Z",
+          "textSha256": "521a0d111d4d2db1a5c2edc58c6424c7f967d72884d4fe6d1eec0390d2f5af71"
+        }
+      ],
+      "recommendation": "Either scope the test name and docstring to timeouts and refused connections, or add a rule that maps HTTPStatusError (for example a 5xx from the api to 502, and a 404 passed through as 404).",
+      "reviewedSha256": "1786d5bf84bb996fd3d03437923e0e9fba81dc841c3df7b685b23df141958393"
+    },
+    {
+      "id": "ops-sme-012",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/.github/workflows/ci.yml",
+        "line": 21
+      },
+      "claim": "The build step tags ghcr.io/pepshop/reviews but builds context \".\" (repository root). The only Dockerfile in the bundle is reviews/Dockerfile, and build-push-action's file input defaults to {context}/Dockerfile, so the \"repaired\" pipeline cannot build the reviews image (no root Dockerfile, or the api image mislabelled as reviews in the real shop repo). ci-build-push only checks that a context key exists, so the test named \"the image build keeps its context and pushes only conditionally\" (tests/ci.test.mjs) never surfaces this. The only tag is the mutable :latest, while the brief's pushed reference is the immutable 1.4.2.",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/docker/build-push-action/c3c9e263c25d99ce0380d002d59b67737d91b0dc/README.md",
+          "section": "Inputs: context, file",
+          "retrievedAt": "2026-11-18T07:06:34Z",
+          "textSha256": "d4795ecedab08c3cfcb878e1acfb3b0dbcec72ae6ce5236f87194f347ec74acf"
+        }
+      ],
+      "recommendation": "Set context: ./reviews (or file: reviews/Dockerfile) in the starter and test that the context or file points at reviews. Consider tagging with a version or SHA in addition to latest.",
+      "reviewedSha256": "23e3f3b9efacc064c3ecc267ea1ad4a8b33e8434eaeaa918d027cc197a1a9987"
+    },
+    {
+      "id": "ops-sme-013",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/.github/workflows/ci.yml",
+        "line": 15
+      },
+      "claim": "The expected pipeline runs on pull_request (README line 112 allows it), and the build job's docker login step reads repository secrets on every run. Runs from forks receive no repository secrets (taught on the secrets-in-ci page), so by that documented behaviour docker login would fail and fail the build job on every fork pull request, even though push is false there (reasoned from the workflow and the GitHub fork-secrets rule; not executed, since no runner is used). The README and tests never say to guard the login step.",
+      "evidence": [],
+      "recommendation": "Guard the login step with if: github.event_name != 'pull_request' (matching the push condition), or note the fork behaviour in phase 6.",
+      "reviewedSha256": "23e3f3b9efacc064c3ecc267ea1ad4a8b33e8434eaeaa918d027cc197a1a9987"
+    },
+    {
+      "id": "ops-sme-014",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 170
+      },
+      "claim": "reviews-deps-order only needs some COPY of requirements.txt, then a pip install, then some later COPY of app. COPY requirements.txt . ; COPY . . ; RUN pip install -r requirements.txt ; COPY ./app ./app passes all 27 tests, although the whole context (including app code) is copied before the install, so every code change still invalidates the dependency layer, which is the defect the test names.",
+      "evidence": [],
+      "recommendation": "Reject any COPY/ADD of \".\" or app between the start of the stage and the pip install step.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-sme-015",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 98
+      },
+      "claim": "compose-reviews-env requires POSTGRES_USER and POSTGRES_DB to be set explicitly. Omitting POSTGRES_DB is valid, because the postgres image then creates a database named after POSTGRES_USER, but it is rejected with \"user and database name must match\". Conversely, reusing the shop's ${DB_PASSWORD} for both the reviews URL and reviews-db passes, so the \"own database\" exercise accepts shared credentials across services.",
+      "evidence": [
+        {
+          "url": "https://raw.githubusercontent.com/docker-library/docs/master/postgres/content.md",
+          "section": "Environment Variables: POSTGRES_DB",
+          "retrievedAt": "2026-11-18T07:06:34Z",
+          "textSha256": "d7677f1404540b9d5efeb261fa5cdf8956b77c43653b0aff1e4f21a403aa233c"
+        }
+      ],
+      "recommendation": "Default the expected database name to POSTGRES_USER when POSTGRES_DB is absent. Consider requiring a variable other than DB_PASSWORD for the reviews database (the README already names REVIEWS_DB_PASSWORD).",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-sme-016",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 161
+      },
+      "claim": "reviews-image requires the FROM reference to start with \"python:3\", so the fully qualified and equivalent docker.io/library/python:3.14-slim is rejected.",
+      "evidence": [],
+      "recommendation": "Strip an optional docker.io/library/ (or library/) prefix before matching.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-sme-017",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/tests/lab.mjs",
+        "line": 107
+      },
+      "claim": "The healthcheck rule only looks for \"pg_isready\" in the test. A single-$ ${POSTGRES_USER} (which Compose interpolates at parse time from the shell/.env, where it is unset, giving empty values and a warning) passes, although README line 84 says \"like the db one\", which uses $$ escaping. The impact is small, because pg_isready does not authenticate, but the escaping lesson is not checked.",
+      "evidence": [],
+      "recommendation": "Optionally reject a bare ${POSTGRES_*} inside the healthcheck test, or accept literal user/db names, with a message that explains $$.",
+      "reviewedSha256": "57133373b66c46c667537a91f1c4e9727d83d928240765978cc67810d407103f"
+    },
+    {
+      "id": "ops-sme-018",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/fixtures/briefs/architecture-brief.md",
+        "line": 9
+      },
+      "claim": "The brief says \"Two incidents drive this review:\" and then lists three numbered incidents (heap crash, whole-app redeploy, tenfold review traffic); decisions.yaml asks about all three.",
+      "evidence": [],
+      "recommendation": "Change to \"Three incidents\".",
+      "reviewedSha256": "ee182f1507303308163b72ff003ada5b818ca8ce7322a4d02fdd7bb7fa437bfa"
+    },
+    {
+      "id": "ops-sme-019",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/.github/workflows/ci.yml",
+        "line": 1
+      },
+      "claim": "The starter header says the pipeline \"runs\", but the test job has no checkout, so ./mvnw test fails on the empty runner, and the bundle contains no mvnw.",
+      "evidence": [],
+      "recommendation": "Say \"it is triggered but breaks\" or similar.",
+      "reviewedSha256": "23e3f3b9efacc064c3ecc267ea1ad4a8b33e8434eaeaa918d027cc197a1a9987"
+    },
+    {
+      "id": "ops-sme-020",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/microservices-and-ci-cd/coding-lab/starter/reviews/Dockerfile",
+        "line": 5
+      },
+      "claim": "The reviews image that the lab treats as \"repaired\" still runs as root (python:3.14-slim with no USER instruction), and neither the README nor the tests mention it. This unsafe default is left unchallenged in a security-themed module.",
+      "evidence": [],
+      "recommendation": "Optionally add a non-root USER step to phase 3 (and a rule), or note it as out of scope if the previous module already teaches it.",
+      "reviewedSha256": "7617adb046a7b6b9f8a5119747c6d1256391b0c123d1b16a429f8e7c202f8a34"
+    }
+  ]
+}

@@ -79,6 +79,7 @@ button, input, select, textarea, summary { font: inherit; }
 a { color: var(--pep-accent-text); text-underline-offset: 3px; }
 a:hover { text-decoration-thickness: 2px; }
 code, kbd, samp { font-family: var(--pep-font-mono); font-size: 0.875em; }
+code, kbd, samp { font-size: max(12px, 0.875em); }
 :focus-visible { outline: 2px solid var(--pep-focus); outline-offset: 2px; }
 ::selection { background: var(--pep-accent-fill); color: var(--pep-on-accent-fill); }
 .pep-main { max-width: 1200px; margin: 0 auto; padding: 24px; min-width: 0; }
@@ -880,7 +881,7 @@ window.PEP_PAGE.checks = {
     notes.push((green ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'every test in the file passes.' + (green ? '' : ' Output shows which one did not.'));
     var chk = PepJunit.own('activity-3', "class FakeRemembersCheck {\n    @Test\n    void namesAreRemembered() {\n        SignupService service = new SignupService(new InMemoryUserStore());\n        assertEquals(\"welcome\", service.signup(\"ada\"));\n        assertEquals(\"welcome\", service.signup(\"bo\"));\n        assertEquals(\"taken\", service.signup(\"ada\"));\n        assertEquals(\"taken\", service.signup(\"bo\"));\n    }\n}");
     if (chk.gate) return chk.gate;
-    var own = chk.res, t2 = own.tests.filter(function (x) { return x.name === 'namesAreRemembered'; })[0];
+    var own = chk.res, t2 = own.tests.filter(function (x) { return x.cls === 'FakeRemembersCheck' && x.name === 'namesAreRemembered'; })[0];
     var p2 = !!t2 && t2.status === 'pass';
     notes.push((p2 ? '<strong>Done:</strong> ' : '<strong>Missing:</strong> ') + 'the checker\u2019s own test, on a fresh InMemoryUserStore, signs up "ada" and then "bo" (welcome for each), then "ada" and "bo" again (taken for each), so your fake remembers every name it saved, not only the last one. Editing the provided test does not change this check.');
     return { pass: green && p2, notes: notes };
@@ -919,7 +920,25 @@ var PepTest = (function () {
     if (e !== undefined && /[bfrsu0-7]/.test(e)) throw limit({ line: l, col: c }, 'the escape \\' + e + ' is outside this practice editor; it models \\n, \\t, \\\', \\" and \\\\.');
     throw err({ line: l, col: c }, 'illegal escape character');
   }
+  /* Java translates every eligible Unicode escape (a backslash preceded by an even number of backslashes, then one or
+     more u and four hex digits) before it reads anything else, comments and strings included. That translation is not
+     modelled, so such an escape anywhere in the raw text is a limit, found before comments are skipped, tokens are
+     compared or code runs. */
+  function unicodeEscapeAt(src) {
+    var run = 0, line = 1, col = 1;
+    for (var i = 0; i < src.length; i++) {
+      var ch = src[i];
+      if (ch === '\\') {
+        if (run % 2 === 0 && src[i + 1] === 'u') { var j = i + 1; while (src[j] === 'u') j++; if (/^[0-9A-Fa-f]{4}$/.test(src.substr(j, 4))) return { line: line, col: col }; }
+        run++;
+      } else run = 0;
+      if (ch === '\n') { line++; col = 1; } else col++;
+    }
+    return null;
+  }
   function lex(src) {
+    var ue = unicodeEscapeAt(src);
+    if (ue) throw limit(ue, 'Java translates Unicode escapes such as \\u0041 before it reads the code, even inside comments and strings. This practice editor does not model that, so this code is not checked here; type the character itself.');
     var out = [], i = 0, line = 1, col = 1, n = src.length;
     function adv(k) { for (var q = 0; q < k; q++) { if (src[i] === '\n') { line++; col = 1; } else col++; i++; } }
     function push(t, v, l, c) { out.push({ t: t, v: v, line: l, col: c }); }
@@ -1329,7 +1348,8 @@ var PepTest = (function () {
           var what = m.annos.some(function (a) { return a.name === 'Test'; }) ? 'this test method: a @Test method' : 'the tests in this class: a @BeforeEach method';
           if (m.type.name !== 'void') report(m, 'JUnit would not run ' + what + ' must return void, and this one returns ' + m.type.name + '. The Java compiles; leave out the return type and write void.', 'junit');
           if (m.params.length) report(m, 'parameters on a @Test method are outside this practice editor.', 'limit');
-          if (m.mods.private) report(m, 'JUnit would not run ' + what + ' must not be private. The Java compiles; leave out private.', 'junit');
+          if (m.mods.private && !m.annos.some(function (a) { return a.name === 'Test'; })) report(m, 'The JUnit User Guide says a @BeforeEach method must not be private. JUnit 6.1.3 still runs the tests in this class, but warns that this will be disallowed in a future release. This practice editor does not check this case; leave out private.', 'limit');
+          else if (m.mods.private) report(m, 'JUnit would not run ' + what + ' must not be private. The Java compiles; leave out private.', 'junit');
           if (m.mods.static) report(m, 'JUnit would not run ' + what + ' must not be static. The Java compiles; leave out static.', 'junit');
         }
         knownType(m.type, u);
@@ -1414,6 +1434,22 @@ var PepTest = (function () {
       if (g === 'void') report(node, "incompatible types: void cannot be converted to " + w);
     }
     function isNullLit(x) { return !!x && x.k === 'lit' && x.v === null; }
+    /* A literal null argument where every resolved candidate of that arity declares the same primitive parameter type:
+       javac rejects it. Anything less certain is left as before. */
+    function nullArgs(cands, args) {
+      args.forEach(function (a, i) {
+        if (!isNullLit(a) || !cands.length) return;
+        var pt = cands[0].params[i].type;
+        if (PRIM[pt.name] && cands.every(function (x) { return x.params[i].type.name === pt.name; })) typeCompat(pt, { name: 'null' }, a);
+      });
+    }
+    function isArith(op) { return op === '+' || op === '-' || op === '*' || op === '/' || op === '%'; }
+    /* A literal null as an arithmetic operand: legal only for + with a String; javac rejects every other case. */
+    function nullArith(e, op, other) {
+      if (op === '+' && other && other.name === 'String') return { name: 'String' };
+      if (op === '+' && !other) { report(e, 'adding the literal null to a value whose type this practice editor cannot work out is outside it; Java allows it only when the other side is a String.', 'limit'); return null; }
+      report(e, "bad operand types for binary operator '" + op + "'"); return null;
+    }
     function isRef(ty) { return !!ty && !!ty.name && !PRIM[ty.name] && ty.name !== 'null' && !ty.isClassRef; }
     function methodsNamed(t, n) { return t.methods.filter(function (m) { return m.name === n; }); }
     function walkExpr(e, sc, u, t) {
@@ -1439,10 +1475,10 @@ var PepTest = (function () {
         }
         case 'assign': {
           if (e.op === '=' && e.target.k === 'name' && holder(sc, e.target.name)) { var vt0 = walkExpr(e.e, sc, u, t), hs2 = holder(sc, e.target.name); capture(e.target, sc, hs2); assignLocal(e.target, sc, hs2); typeCompat(hs2.vars[e.target.name], vt0, e.e); return hs2.vars[e.target.name]; }
-          var tt = walkExpr(e.target, sc, u, t), vt = walkExpr(e.e, sc, u, t); if (e.op === '=') typeCompat(tt, vt, e.e); return tt;
+          var tt = walkExpr(e.target, sc, u, t), vt = walkExpr(e.e, sc, u, t); if (e.op === '=') typeCompat(tt, vt, e.e); else if (isNullLit(e.e)) nullArith(e, e.op.charAt(0), tt); return tt;
         }
         case 'incdec': return walkExpr(e.target, sc, u, t);
-        case 'un': { var at = walkExpr(e.a, sc, u, t); return e.op === '!' ? { name: 'boolean' } : at; }
+        case 'un': { var at = walkExpr(e.a, sc, u, t); if (e.op !== '!' && isNullLit(e.a)) { report(e, "bad operand type <null> for unary operator '" + e.op + "'"); return null; } return e.op === '!' ? { name: 'boolean' } : at; }
         case 'cond': walkExpr(e.c, sc, u, t); condDepth++; var a1 = walkExpr(e.a, sc, u, t); walkExpr(e.b, sc, u, t); condDepth--; return a1;
         case 'bin': {
           var l = walkExpr(e.a, sc, u, t); if (e.op === '&&' || e.op === '||') condDepth++; var r = walkExpr(e.b, sc, u, t); if (e.op === '&&' || e.op === '||') condDepth--;
@@ -1456,6 +1492,7 @@ var PepTest = (function () {
             if ((e.op === '&&' || e.op === '||') && ((l && l.name !== 'boolean' && l.name !== 'Boolean') || (r && r.name !== 'boolean' && r.name !== 'Boolean'))) report(e, "bad operand types for binary operator '" + e.op + "'");
             return { name: 'boolean' };
           }
+          if (isArith(e.op) && (isNullLit(e.a) || isNullLit(e.b))) return nullArith(e, e.op, isNullLit(e.a) ? (isNullLit(e.b) ? { name: 'null' } : r) : l);
           if (e.op === '+' && ((l && l.name === 'String') || (r && r.name === 'String'))) return { name: 'String' };
           if (l && r && (l.name === 'boolean' || r.name === 'boolean')) report(e, "bad operand types for binary operator '" + e.op + "'");
           if (l && r && l.name === 'String' || r && r.name === 'String') { if (e.op !== '+') report(e, "bad operand types for binary operator '" + e.op + "'"); }
@@ -1469,7 +1506,7 @@ var PepTest = (function () {
           knownType(e.ty, u); e.args.forEach(function (a) { walkExpr(a, sc, u, t); });
           var c = classes[e.ty.name];
           if (c && c.kind === 'interface' && !e.body) report(e, c.name + ' is abstract; cannot be instantiated');
-          if (c && c.kind === 'class') { var arity = e.args.length; if (c.ctors.length ? !c.ctors.some(function (k) { return k.params.length === arity; }) : arity !== 0) report(e, 'constructor ' + c.name + ' in class ' + c.name + ' cannot be applied to given types;\n  found: ' + arity + ' argument' + (arity === 1 ? '' : 's')); }
+          if (c && c.kind === 'class') { var arity = e.args.length; nullArgs(c.ctors.filter(function (k) { return k.params.length === arity; }), e.args); if (c.ctors.length ? !c.ctors.some(function (k) { return k.params.length === arity; }) : arity !== 0) report(e, 'constructor ' + c.name + ' in class ' + c.name + ' cannot be applied to given types;\n  found: ' + arity + ' argument' + (arity === 1 ? '' : 's')); }
           if (e.body) { var anonScope = { vars: {}, parent: sc, cls: e.body, uncertain: true, boundary: 'inner' }; e.body.methods.forEach(function (m) { var ms = { vars: {}, parent: anonScope, cls: e.body }; m.params.forEach(function (pp) { ms.vars[pp.name] = pp.type; }); if (m.body) walkBlock(m.body, ms, u, e.body, m); }); }
           return { name: e.ty.name, args: e.ty.args };
         }
@@ -1481,7 +1518,7 @@ var PepTest = (function () {
               if ((e.name === 'assertEquals' || e.name === 'assertNotEquals') && (e.args.length > 3 || (e.args.length === 3 && numT(ats[2])))) report(e, e.name + ' with a third number (a delta for comparing decimals) is outside this practice editor; compare whole numbers, or give the message as a "string".', 'limit');
               if (e.name === 'assertSame' && (numT(ats[0]) || numT(ats[1]) || (ats[0] && ats[0].name === 'String') || (ats[1] && ats[1].name === 'String'))) report(e, 'assertSame on numbers or strings tests object identity, which is outside this practice editor; use assertEquals.', 'limit');
             }
-            if (methodsNamed(t, e.name).length) { var mm = methodsNamed(t, e.name).filter(function (x) { return x.params.length === e.args.length; })[0]; if (!mm) report(e, 'method ' + e.name + ' in class ' + t.name + ' cannot be applied to given types'); return mm ? mm.type : null; }
+            if (methodsNamed(t, e.name).length) { var mm = methodsNamed(t, e.name).filter(function (x) { return x.params.length === e.args.length; })[0]; if (!mm) report(e, 'method ' + e.name + ' in class ' + t.name + ' cannot be applied to given types'); else nullArgs(methodsNamed(t, e.name).filter(function (x) { return x.params.length === e.args.length; }), e.args); return mm ? mm.type : null; }
             if (statics[e.name]) return builtinStaticType(e.name);
             if (starImports.junit && JUNIT_MORE.indexOf(e.name) >= 0) { report(e, e.name + ' is outside this practice editor; it knows these assertions: ' + ASSERTS.join(', ') + '.', 'limit'); return null; }
             if (starImports.mockito && MOCKITO_MORE.indexOf(e.name) >= 0) { report(e, e.name + ' is outside this practice editor; it knows these Mockito methods: ' + MOCKITO.join(', ') + '.', 'limit'); return null; }
@@ -1495,7 +1532,7 @@ var PepTest = (function () {
           if (rt2.isClassRef) {
             var key = rt2.name + '.' + e.name;
             if (/^(Integer\.compare|Integer\.parseInt|Math\.max|Math\.min|Math\.abs|String\.valueOf)$/.test(key)) return { name: key === 'String.valueOf' ? 'String' : 'int' };
-            if (classes[rt2.name]) { var sm = methodsNamed(classes[rt2.name], e.name)[0]; if (!sm) { report(e, 'cannot find symbol\n  symbol: method ' + e.name); return null; } if (!sm.mods.static) report(e, 'non-static method ' + e.name + '() cannot be referenced from a static context'); return sm.type; }
+            if (classes[rt2.name]) { var sm = methodsNamed(classes[rt2.name], e.name)[0]; if (!sm) { report(e, 'cannot find symbol\n  symbol: method ' + e.name); return null; } if (!sm.mods.static) report(e, 'non-static method ' + e.name + '() cannot be referenced from a static context'); nullArgs(methodsNamed(classes[rt2.name], e.name).filter(function (x) { return x.params.length === e.args.length; }), e.args); return sm.type; }
             report(e, key + ' is outside this practice editor.', 'limit'); return null;
           }
           var rc = classes[rt2.name];
@@ -1505,6 +1542,7 @@ var PepTest = (function () {
             if (!cands.length) { report(e, 'cannot find symbol\n  symbol: method ' + e.name + '\n  location: ' + (rc.kind === 'interface' ? 'interface ' : 'class ') + rc.name); return null; }
             var fit = cands.filter(function (x) { return x.params.length === e.args.length; })[0];
             if (!fit) { report(e, 'method ' + e.name + ' in ' + (rc.kind === 'interface' ? 'interface ' : 'class ') + rc.name + ' cannot be applied to given types;\n  required: ' + cands[0].params.map(function (pp) { return pp.type.name; }).join(',') + '\n  found: ' + e.args.length + ' argument' + (e.args.length === 1 ? '' : 's')); return null; }
+            nullArgs(cands.filter(function (x) { return x.params.length === e.args.length; }), e.args);
             if (fit.mods.private && rc !== t) report(e, e.name + '(' + fit.params.map(function (pp) { return pp.type.name; }).join(',') + ') has private access in ' + rc.name);
             return fit.type;
           }
@@ -2246,9 +2284,9 @@ var PepTest = (function () {
     on('[data-step="next"]', function () { if (w.pos < w.events.length - 1) { w.pos++; drawTrace(w); } else traceStatus(w, 'End of the program: there are no more steps.'); });
     on('[data-step="restart"]', function () { w.pos = w.debug ? -1 : 0; drawTrace(w); });
     on('[data-dbg="debug"]', function () { w.pos = -1; dbgMove(w, function () { return true; }, true); });
-    on('[data-dbg="over"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); var d = w.events[w.pos].depth; dbgMove(w, function (ev) { return ev.depth <= d; }); });
+    on('[data-dbg="over"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); if (!w.events[w.pos]) return traceStatus(w, 'The program finished. Step back or restart to look again.'); var d = w.events[w.pos].depth; dbgMove(w, function (ev) { return ev.depth <= d; }); });
     on('[data-dbg="into"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); dbgMove(w, function () { return true; }); });
-    on('[data-dbg="out"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); var d = w.events[w.pos].depth; dbgMove(w, function (ev) { return ev.depth < d; }); });
+    on('[data-dbg="out"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); if (!w.events[w.pos]) return traceStatus(w, 'The program finished. Step back or restart to look again.'); var d = w.events[w.pos].depth; dbgMove(w, function (ev) { return ev.depth < d; }); });
     on('[data-dbg="resume"]', function () { if (w.pos < 0) return traceStatus(w, 'Start a debug session first: press Debug.'); dbgMove(w, function () { return true; }, true); });
     on('[data-dbg="stop"]', function () { w.pos = -1; drawTrace(w); traceStatus(w, 'Debug session stopped.'); });
     drawTrace(w);

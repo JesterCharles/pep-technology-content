@@ -1,12 +1,12 @@
 # HTML and CSS lab: Trail Guides
 
-Standard track, S21 Lab day, inside the Guided lab block. All ten tasks are required; they are small single-rule or single-element edits, each marked by a `TODO` comment in the starter. Authoring estimate, not a measured learner pilot: about 45 minutes for an average learner to read this README and finish all ten tasks, with a 55-minute cap that leaves a buffer. Do the one-time Setup below before the block; it is not counted in those minutes. The cap is a planning allowance, not a timer. Fast Track skips this lab; Fast learners practise the same rules in the course project, and can use this lab as optional remediation.
+Standard track, S21 Lab day, inside the Guided lab block. All eleven tasks are required; they are small edits (single rules, single elements and one box-model task), each marked by a `TODO` comment in the starter. Authoring estimate, not a measured learner pilot: about 53 minutes for an average learner to read this README and finish all eleven tasks, with a 60-minute cap that leaves a buffer. Do the one-time Setup below before the block; it is not counted in those minutes. The cap is a planning allowance, not a timer. Fast Track skips this lab; Fast learners practise the same rules in the course project, and can use this lab as optional remediation.
 
 ## Goal
 
-Turn the Trail Guides page in `starter/` into a responsive, mobile-first layout, then repair its sign-up corner: semantic structure, labelled inputs, built-in validation and accessible controls. You decide which rule or element produces each outcome below. When you finish, the page works from a 400px phone to a wide desktop screen with no sideways scrolling, and the sign-up form is one a browser, a keyboard and a screen reader all understand.
+Turn the Trail Guides page in `starter/` into a responsive, mobile-first layout, then repair its sign-up corner: semantic structure, labelled inputs, built-in validation and accessible controls. Last, size two small tags with the box model, calculating each width yourself. You decide which rule or element produces each outcome below. When you finish, the page works from a 400px phone to a wide desktop screen with no sideways scrolling, and the sign-up form is one a browser, a keyboard and a screen reader all understand.
 
-This lab practises these topics: Flexbox; Grid; Responsive, mobile-first layout (tasks 1 to 6); Semantic HTML page structure; Forms and HTML5 validation; Accessibility basics (tasks 7 to 10). Read those topic pages first; each task names the page section that teaches what it needs.
+This lab practises these topics: Flexbox; Grid; Responsive, mobile-first layout (tasks 1 to 6); Semantic HTML page structure; Forms and HTML5 validation; Accessibility basics (tasks 7 to 10); The box model (task 11), taught on S20. Read those topic pages first; each task names the page section that teaches what it needs.
 
 ## What the tests check, and what they do not
 
@@ -14,7 +14,8 @@ This lab practises these topics: Flexbox; Grid; Responsive, mobile-first layout 
 - Tasks 4 and 5 also open your page in the pinned headless Chromium at the breakpoint boundaries and at the documented 700px and 1100px checks. They measure the card columns and page regions, so valid custom-property indirection is welcome when it produces the required layout.
 - Task 6 measures the page at 400px: it must not scroll sideways, and the hero picture must stay inside its box. Hiding the overflow does not count; the test measures the content with nothing hidden.
 - Tasks 7 to 10 inspect the rendered sign-up corner in the same pinned Chromium: the element and heading structure, whether the browser itself associates each label with its input, what `checkValidity` blocks and accepts, and whether the submit control takes keyboard focus.
-- The tests do not assess colours and spacing. Section "Check it in a browser" lists what to inspect yourself.
+- Task 11 measures the two pack tags in the same pinned Chromium, where they sit in the gear checklist: the padding and border of each, its margins (10px below, none at the sides), its `box-sizing`, and its width from border edge to border edge. At two window sizes (different widths and heights) it fixes the gear checklist's own width at two different sizes and needs 200px and the right `box-sizing` in all four cases. It also removes each tag's own width, min-width and max-width for a moment and checks that the tag then fills the checklist, so the 200px has to come from the width set on the tag itself. It rejects scaling, rotating, translating or zooming a tag or the checklist itself. It does not catch every animation, so task 11 also asks you to keep the checklist layout static.
+- The tests do not assess colours and spacing, apart from the task 11 box sizes. Section "Check it in a browser" lists what to inspect yourself.
 
 ## Prerequisites
 
@@ -48,7 +49,7 @@ This lab practises these topics: Flexbox; Grid; Responsive, mobile-first layout 
    node --test --test-reporter=spec
    ```
 
-   All eleven tests fail, and each message names the outcome that is still missing. This is the expected start.
+   All twelve tests fail, and each message names the outcome that is still missing. This is the expected start.
 
 ## Tasks
 
@@ -134,6 +135,15 @@ Work only in `starter/index.html` and `starter/styles.css`. Every task is requir
 - **Hint 1:** when a native element gives the behavior, prefer it over ARIA on a generic one: the native button is focusable and announceable with no extra attributes. Topic page: Accessibility basics, step 2.
 - **Hint 2:** inside a form, give the button its explicit `type`. Then press Tab through the page: the button now takes focus, which the `div` never did.
 
+### Task 11: two pack tags, two box models
+
+- **Where:** `starter/styles.css`, the `.pack-tag`, `.pack-tag-day` and `.pack-tag-overnight` rules; the two tags are already in the gear checklist in `starter/index.html`.
+- **Outcome:** both tags are exactly 200px wide on screen, measured from the outer edge of the border on the left to the outer edge of the border on the right. Each has a content area, 12px of padding on every side, a 3px solid border, a 10px margin below it and no margin at the sides. `.pack-tag-day` keeps the default `content-box` sizing; `.pack-tag-overnight` uses `border-box`. Both stay ordinary blocks directly in the gear checklist, and each gets its size from its own `width`. Keep that assessed layout static: no animation or transition may change the size, position or scale of the gear checklist, the two tags or any element around them that affects their layout. Decorative effects elsewhere on the page are fine.
+- **Done when:** `task 11: both pack tags are 200px wide border to border, one in each box-sizing model` passes.
+- **Before you type a width:** write down, for each tag, which of the four areas its `width` value counts, then calculate that value. Both tags end up with the same content width; check that number too.
+- **Hint 1:** label the four areas from the inside out: content, padding, border, margin. Margin sits outside the border, so it never counts toward the 200px. Topic page: The box model, "Four areas, inside out".
+- **Hint 2:** with `content-box`, rendered width = width + left and right padding + left and right border; with `border-box`, `width` already includes padding and border. Topic page: The box model, "Two ways to count width".
+
 ## How to test
 
 From `coding-lab/`, run the one test command:
@@ -142,7 +152,7 @@ From `coding-lab/`, run the one test command:
 node --test --test-reporter=spec
 ```
 
-While you work, failing tests show `✖` and a message naming the missing outcome. Tasks 4 to 10 open the test browser, so the command takes a few seconds. When every task is done, all eleven show `✔`.
+While you work, failing tests show `✖` and a message naming the missing outcome. Tasks 4 to 11 open the test browser, so the command takes a few seconds. When every task is done, all twelve show `✔`.
 
 ## Expected output
 
@@ -156,12 +166,13 @@ When you are finished, the output matches `expected/on-completion.txt`, apart fr
 ✔ task 5: from 1000px, the header and footer span the page and the gear checklist sits beside the trails (<ms>ms)
 ✔ task 4 and 5: the stylesheet is mobile-first, adding wider-screen rules from small to large (<ms>ms)
 ✔ task 6: at 400px wide the page does not scroll sideways, and the hero picture stays inside its box (<ms>ms)
+✔ task 11: both pack tags are 200px wide border to border, one in each box-sizing model (<ms>ms)
 ✔ task 7: the sign-up corner is a section whose heading fits the page outline (<ms>ms)
 ✔ task 8: every sign-up input has a label the browser connects to it (<ms>ms)
 ✔ task 9: the browser blocks an empty or invalid sign-up before it is sent (<ms>ms)
 ✔ task 10: the badge has alt text and the submit control is a real button (<ms>ms)
-ℹ tests 11
-ℹ pass 11
+ℹ tests 12
+ℹ pass 12
 ℹ fail 0
 ```
 
@@ -173,6 +184,7 @@ Open `starter/index.html` in your browser (double-click it, or drag it onto a br
 - At 700px wide: the cards are in two columns.
 - At 1100px wide: the gear checklist sits to the right of the trails, and the header and footer span the full width.
 - At every width: the site name and nav are at opposite ends of the header, and the nav links are in one row.
+- On the two pack tags: select each one in the developer tools and open its box-model view. Name each ring from the inside out (content, padding, border, margin), and say which rings the 200px covers and which ring sits outside it.
 - In the sign-up corner: clicking each label focuses its input; pressing Tab reaches every field and the button; submitting with an empty or wrong field shows the browser's own message bubble at the first invalid input.
 
 ## Offline note
@@ -193,4 +205,5 @@ Delete `starter/node_modules/` to remove the test tool and its browser; the test
 - Task 6 still says the page scrolls sideways: look for anything with a fixed width wider than 400px in the base styles, including the picture.
 - Task 8 still finds no label: the `for` attribute must match the input's `id` exactly, and the label needs visible text.
 - Task 9 accepts bad input: check each attribute is on the input element itself, spelled as the browser expects (`required`, `type`, `min`, `max`).
+- Task 11 says a tag is not 200px wide: check which areas its `width` counts under its `box-sizing`; an extra pixel usually means a missing or doubled side. If it says a tag does not fill the checklist once its own width is removed, the message names the cause. Either the tag itself is not an ordinary block (you changed its `display`, for example to `inline-block`, `table`, `contents` or `none`, floated it or positioned it absolutely), or something around it (a wrapper, a float beside it, columns or positioning on the checklist) gives it its size instead of its own `width`. Keep each tag an ordinary block directly in the checklist. A width that depends on the window's width or height, or on the space around the tag, fails when the test changes those sizes. If it says the padding, border or margin is wrong, set those on `.pack-tag` with the exact sizes from the task.
 - The page looks unstyled in the browser: keep `<link rel="stylesheet" href="styles.css">` in `index.html` and keep both files in `starter/`.

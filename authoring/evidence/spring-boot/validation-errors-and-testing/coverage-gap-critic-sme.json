@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "cg-critic-sme (independent Claude critic subagent, 2026-11-17)",
+  "reviewedPath": "spring-boot/validation-errors-and-testing/coding-lab/lab.json",
+  "reviewedSha256": "b2cb99c60e151973f5d23382231cf2b5e4c704579d278bf4505a0c3b82e7d6c9",
+  "artifactHashes": {
+    "coding-lab/README.md": "415843820b9fd385a940bffbe303d868344b193d5de2ea129d3d55871340e95c",
+    "coding-lab/expected/test-summary.txt": "e3548c42db1927ebc078a2d8ecd7b9eb2c1eeeed3a75402278d32931804e08fe",
+    "coding-lab/lab.json": "b2cb99c60e151973f5d23382231cf2b5e4c704579d278bf4505a0c3b82e7d6c9",
+    "coding-lab/starter/pom.xml": "fb0c2acc5f6db04b05b7591f071f62c277ada789fe1fe2681e07969c0cad5bfe",
+    "coding-lab/starter/src/main/java/bookings/Booking.java": "bcefacdb6c60b239abd881a27396a25ea4b68ef73e00442dfa3ee59991408201",
+    "coding-lab/starter/src/main/java/bookings/BookingController.java": "63d5ef94a0a8390ecedf0d1098b93bf588c194ced7e683014d49e9f6900dc2ec",
+    "coding-lab/starter/src/main/java/bookings/BookingService.java": "aec9ed47794c903988a7e5e61d720aaf2531bb7aeff1e200ead76923ef536a3a",
+    "coding-lab/starter/src/main/java/bookings/BookingsApplication.java": "5bcb3140f019b1974fd0f350326c71ae56fcb51249d834921c08f2ca6f338d84",
+    "coding-lab/starter/src/main/java/bookings/NewBooking.java": "494471cac979299843f81708811f48de2b15d58ff68bb973e91d6d4acb4324b3",
+    "coding-lab/starter/src/main/resources/application.properties": "d12626f99550815ea2fc6a6e363e45ace88ff09986f7a8c8473d9ea5fa738584",
+    "coding-lab/tests/bookings/BugReportTest.java": "aae25787e16310a018430c0289f1023d2080746a117a607def5e452f55b635b3",
+    "coding-lab/tests/bookings/ErrorSliceTest.java": "309abe89670c142cbcaa4ee9f3caae325acd736bfb999242e57bca5f92e40d89",
+    "coding-lab/tests/bookings/ValidationApiTest.java": "18f61e91209dbc06c15d0a405d1c2531b76d81fc66d710839efeb31b1a1d7473",
+    "coding-lab/tests/bookings/WebLayerTest.java": "677b591511d7fd52c25280bb7e36689474ae7c30b6a552e281ec7b937ff2eeb9"
+  },
+  "findings": [
+    {
+      "id": "cg-sme-validation-001",
+      "severity": "high",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/BugReportTest.java",
+        "line": 41
+      },
+      "claim": "The shipped check of task5ReproducesTheZeroIdReport asserts only that the learner's MvcResult has status 400; it never checks which request produced it. Critic run (archive copy at 8e24dc2e, untouched starter code, only the null replaced): mvc.perform(get(\"/bookings/abc\")).andReturn() makes the test pass, because a type-mismatched path variable is already a 400. The test therefore passes with no reproduction of the reported GET /bookings/0 and no fix, so debugging-a-failing-request#o2 ('Reproduce the failure in a MockMvc test before fixing it') is not proved by it. The 'before fixing' order is also unenforceable after the fact; the only thing the shipped check could bind is the request itself.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/BugReportTest.java",
+          "section": "task5ReproducesTheZeroIdReport shipped assertions, lines 40-42",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "aae25787e16310a018430c0289f1023d2080746a117a607def5e452f55b635b3"
+        }
+      ],
+      "recommendation": "Make the shipped check bind the reproduction: assert result.getRequest().getMethod() is GET and getRequestURI() is /bookings/0 (and, if wanted, that the resolved exception is a HandlerMethodValidationException once fixed). Keep the README's fail-first instruction, but do not claim the test proves the order.",
+      "reviewedSha256": "aae25787e16310a018430c0289f1023d2080746a117a607def5e452f55b635b3"
+    },
+    {
+      "id": "cg-sme-validation-002",
+      "severity": "high",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ErrorSliceTest.java",
+        "line": 56
+      },
+      "claim": "Both task7 tests only assert mvc != null and the status of whatever MvcResult the learner supplies. Critic run on the untouched starter code: annotating ErrorSliceTest with @SpringBootTest and @AutoConfigureMockMvc (as the neighbouring test files are) and supplying get(\"/no-such-page\") (404) and get(\"/bookings/abc\") (400) makes both tests pass, with no @WebMvcTest slice, no @TestConfiguration fake, no invalid body and no ApiErrors. web-layer-tests-with-mockmvc#o2 ('Test a controller's 404 and 400 responses in a @WebMvcTest, supplying the service bean from a @TestConfiguration fake') is therefore not proved: the starter-failing tests pass by an edit that practises none of it. The README's 'expects ... the title' parts live only in the learner's own expectations, never in a shipped assertion.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ErrorSliceTest.java",
+          "section": "task7 shipped assertions, lines 50-56 and 61-68",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "309abe89670c142cbcaa4ee9f3caae325acd736bfb999242e57bca5f92e40d89"
+        },
+        {
+          "url": "https://docs.spring.io/spring-boot/reference/testing/spring-boot-applications.html",
+          "section": "Auto-configured Spring MVC Tests (@WebMvcTest loads only the web layer)",
+          "retrievedAt": "2026-11-18T03:39:42Z",
+          "textSha256": "a322372c9160652672b5e8d033383b5c939617ade7702384e998e59840c366cb"
+        }
+      ],
+      "recommendation": "In shipped code: assert the context is the slice (e.g. inject ApplicationContext and assert the BookingService bean's class is declared inside ErrorSliceTest, and that it is not the scanned BookingService class itself); assert request method/URI (GET /bookings/42, POST /bookings with a body whose attendee is blank, email invalid, seats 0); assert the problem titles 'Booking not found' and 'Validation failed' from the response.",
+      "reviewedSha256": "309abe89670c142cbcaa4ee9f3caae325acd736bfb999242e57bca5f92e40d89"
+    },
+    {
+      "id": "cg-sme-validation-003",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ValidationApiTest.java",
+        "line": 63
+      },
+      "claim": "task5RejectsANonPositiveIdWith400 checks only statuses. Critic run on a private solution with @Positive removed and replaced by a hand-written 'if (id < 1) throw new ResponseStatusException(HttpStatus.BAD_REQUEST)' in the controller: all 10 tests pass. bean-validation-on-requests#o3 ('Validate a path variable ... with a constraint on the method parameter') is therefore not strictly required; a manual check is an equally cheap, plausible wrong edit for a learner who has not internalised method validation.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ValidationApiTest.java",
+          "section": "task5RejectsANonPositiveIdWith400, lines 62-73",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "18f61e91209dbc06c15d0a405d1c2531b76d81fc66d710839efeb31b1a1d7473"
+        },
+        {
+          "url": "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-validation.html",
+          "section": "Method validation of constrained @PathVariable parameters raises HandlerMethodValidationException",
+          "retrievedAt": "2026-11-18T03:39:41Z",
+          "textSha256": "f74b02ace52957defe61ebdfb1925ae5e806f7e0a4f55b1976442799423cc874"
+        }
+      ],
+      "recommendation": "Bind the mechanism: e.g. assert by reflection that BookingController.byId's id parameter carries a jakarta.validation constraint (Positive or Min(1)), or assert the 400 body is the method-validation problem (detail 'Validation failure', which the critic confirmed GET /bookings/0 returns once Task 6 is on).",
+      "reviewedSha256": "18f61e91209dbc06c15d0a405d1c2531b76d81fc66d710839efeb31b1a1d7473"
+    },
+    {
+      "id": "cg-sme-validation-004",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "line": 86
+      },
+      "claim": "standard-error-responses-with-problemdetail#o2 has two halves: enable the built-in problem details (proved: a critic copy of a private solution without the property line fails task6AnswersFrameworkErrorsWithProblemDetail with 'Content type not set') and 'predict the body of a validation failure' (not practised). Task 6 step 2 asks for the prediction and, in the next sentence, states the answer (detail 'Invalid request content.', no field names); nothing records or checks a prediction. Technical content is right: a critic copy without @Order fails task3 with the built-in detail, and the README's ordering explanation matches Boot's ProblemDetailsExceptionHandler behaviour.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/README.md",
+          "section": "Task 6 steps 1-3",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "415843820b9fd385a940bffbe303d868344b193d5de2ea129d3d55871340e95c"
+        },
+        {
+          "url": "https://docs.spring.io/spring-boot/reference/web/servlet.html",
+          "section": "Error Handling: spring.mvc.problemdetails.enabled",
+          "retrievedAt": "2026-11-18T03:39:41Z",
+          "textSha256": "797f4818d2cfcae75572829118eba92455bbfa0f42b839ecfc47d7d66bac4ee2"
+        },
+        {
+          "url": "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-rest-exceptions.html",
+          "section": "Error Responses: ResponseEntityExceptionHandler and default detail messages",
+          "retrievedAt": "2026-11-18T03:39:41Z",
+          "textSha256": "d0d571465a24606c518cd40d3ebbebf9e79a04b8f66f627ffb868a9a395eb97a"
+        }
+      ],
+      "recommendation": "Remove the stated answer from step 2 (let the failing task3 message reveal it after the learner writes a prediction), or move the prediction into a check the learner answers (e.g. a short file or a test expectation the learner writes before enabling the property). Otherwise record the objective as partially practised.",
+      "reviewedSha256": "415843820b9fd385a940bffbe303d868344b193d5de2ea129d3d55871340e95c"
+    },
+    {
+      "id": "cg-sme-validation-005",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/WebLayerTest.java",
+        "line": 68
+      },
+      "claim": "mockito-in-spring-at-mockitobean#o2: the verify half is genuinely required on the intended path (verifyNoMoreInteractions on the context bean throws NotAMockException unless the bean is a mock, and fails while the create call is unverified). The 'explain how it differs from a plain Mockito mock' half is not elicited: README line 112 states the explanation. Same severity as finding 004 because the pattern is the same (one half proved, the cognitive half told, not practised). Minor extra: a contrived bypass, Mockito.reset(service) in place of the verify line, passes all 10 tests (critic run).",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/WebLayerTest.java",
+          "section": "task8VerifiesTheCreateCall shipped check, line 68",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "677b591511d7fd52c25280bb7e36689474ae7c30b6a552e281ec7b937ff2eeb9"
+        },
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/README.md",
+          "section": "Task 8, lines 109-113",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "415843820b9fd385a940bffbe303d868344b193d5de2ea129d3d55871340e95c"
+        },
+        {
+          "url": "https://docs.spring.io/spring-framework/reference/testing/annotations/integration-spring/annotation-mockitobean.html",
+          "section": "@MockitoBean and @MockitoSpyBean",
+          "retrievedAt": "2026-11-18T03:39:42Z",
+          "textSha256": "29cbb244d91435c90ba2a99a69ae90cab3678b6b8a10db15798d196717d30519"
+        }
+      ],
+      "recommendation": "Optionally assert Mockito.mockingDetails(bean).getInvocations() is non-empty after the request (so reset/clearInvocations no longer pass) and turn the README explanation into a question the learner answers; or record the explain half as not practised by the lab.",
+      "reviewedSha256": "677b591511d7fd52c25280bb7e36689474ae7c30b6a552e281ec7b937ff2eeb9"
+    },
+    {
+      "id": "cg-sme-validation-006",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ErrorSliceTest.java",
+        "line": 33
+      },
+      "claim": "The new tasks' TODOs and README hand over the final code verbatim: the exact BugReportTest request line, the whole nested @TestConfiguration fake class, the exact verify line, the property line, @Order(Ordered.HIGHEST_PRECEDENCE) with imports, and @Positive with its package. Combined with findings 001-003, the starter-failing tests mostly prove transcription. (The earlier tasks follow the same pattern and a prior reconciliation accepted learner-finished test files, not this level of disclosure.) This conflicts with the brief's 'no answer disclosure (README/hints/TODOs must not hand over the final code)'.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ErrorSliceTest.java",
+          "section": "Task 7 step 2 TODO, lines 33-46",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "309abe89670c142cbcaa4ee9f3caae325acd736bfb999242e57bca5f92e40d89"
+        },
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/BugReportTest.java",
+          "section": "Task 5 step 1 TODO, lines 33-37",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "aae25787e16310a018430c0289f1023d2080746a117a607def5e452f55b635b3"
+        },
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/README.md",
+          "section": "Tasks 5-8",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "415843820b9fd385a940bffbe303d868344b193d5de2ea129d3d55871340e95c"
+        }
+      ],
+      "recommendation": "Reconciler decision: either accept the copy-along style explicitly for this Standard lab (and stop counting the objectives as independently practised), or replace the verbatim code with outcome statements and graded hints, as the html-and-css lab does.",
+      "reviewedSha256": "309abe89670c142cbcaa4ee9f3caae325acd736bfb999242e57bca5f92e40d89"
+    },
+    {
+      "id": "cg-sme-validation-007",
+      "severity": "medium",
+      "location": {
+        "file": "authoring/evidence/spring-boot/validation-errors-and-testing/coding-lab/lab-run.json",
+        "line": 1
+      },
+      "claim": "The committed solved-run record (solved at 731d8e1a, 'Tests run: 4') binds pre-extension bytes: its hashes for lab.json, expected/test-summary.txt, BookingController.java, application.properties, ValidationApiTest.java and WebLayerTest.java no longer match 8e24dc2e, and it does not cover BugReportTest.java or ErrorSliceTest.java. The author's claim (starter fails exactly 10, solved passes) has no committed evidence. The critic independently reproduced it: starter fails exactly the 10 declared failingTests; a private solution passes 10/10.",
+      "evidence": [
+        {
+          "url": "file:///authoring/evidence/spring-boot/validation-errors-and-testing/coding-lab/lab-run.json",
+          "section": "artifactHashes and result",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "8061ce409c763deec43fc602ee3e92d15248c345221d24f299855354473d1490"
+        }
+      ],
+      "recommendation": "Re-run the solved-run procedure at the final commit and rewrite lab-run.json so it binds every current public lab file.",
+      "reviewedSha256": "8061ce409c763deec43fc602ee3e92d15248c345221d24f299855354473d1490"
+    },
+    {
+      "id": "cg-sme-validation-008",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/WebLayerTest.java",
+        "line": 21
+      },
+      "claim": "The class Javadoc says the imports needed (WebMvcTest, MockitoBean, BDDMockito.given, Mockito.verify) 'are listed in the README'; the README lists no imports (given and verify are already imported in the file; the TODOs name the other two packages).",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/WebLayerTest.java",
+          "section": "class Javadoc, lines 18-23",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "677b591511d7fd52c25280bb7e36689474ae7c30b6a552e281ec7b937ff2eeb9"
+        },
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/README.md",
+          "section": "Task 4",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "415843820b9fd385a940bffbe303d868344b193d5de2ea129d3d55871340e95c"
+        }
+      ],
+      "recommendation": "Point the Javadoc at the TODOs, or drop the sentence.",
+      "reviewedSha256": "677b591511d7fd52c25280bb7e36689474ae7c30b6a552e281ec7b937ff2eeb9"
+    },
+    {
+      "id": "cg-sme-validation-009",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/lab.json",
+        "line": 59
+      },
+      "claim": "minutes.tasks grew from 25 to 48 with no timing evidence and no 'estimate' label in lab.json or the README (the README has no timing text at all). The README also says Tasks 4, 7, 8 and Task 5 step 1 need the S10 pages and may be finished after S10, but the 48 minutes are budgeted on the S9 lab day only, and S10 is a Concept day with no lab block (topic.json reasons). 53 minutes including setup is plausible for copy-along tasks with ~15-30 s Maven runs, but it is unrecorded.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/lab.json",
+          "section": "minutes",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "b2cb99c60e151973f5d23382231cf2b5e4c704579d278bf4505a0c3b82e7d6c9"
+        },
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/README.md",
+          "section": "Goal",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "415843820b9fd385a940bffbe303d868344b193d5de2ea129d3d55871340e95c"
+        }
+      ],
+      "recommendation": "Add a labelled estimate (README and an evidence record of how 48 was derived) and state where the S10-dependent tasks' time is spent.",
+      "reviewedSha256": "b2cb99c60e151973f5d23382231cf2b5e4c704579d278bf4505a0c3b82e7d6c9"
+    }
+  ]
+}

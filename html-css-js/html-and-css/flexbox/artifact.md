@@ -37,7 +37,7 @@ Each item starts at its `flex-basis`. In the simple case used here, with no padd
 - With space left over, items grow in proportion to `flex-grow`; an item with `flex-grow: 0` keeps its basis.
 - If the bases overflow, items shrink in proportion to `flex-shrink` (weighted by basis); `flex-shrink: 0` never shrinks.
 
-Example: 300px container, bases 50px each, grow 1, 2 and 0: leftover 150px splits 50px and 100px, so the widths are 100px, 150px and 50px. Real layouts also account for padding, borders, gaps and margins, and min and max sizes can stop growing or shrinking.
+Example: 400px container, bases 100px each, grow 1, 0 and 3: leftover 100px splits 25px and 75px, so the widths are 125px, 100px and 175px. Real layouts also account for padding, borders, gaps and margins, and min and max sizes can stop growing or shrinking.
 
 ### Apply it to a new layout
 
@@ -72,8 +72,6 @@ C
 - `display: flex` lays the children out on one main axis; `flex-direction` picks row (default) or column.
 - `justify-content` works along the main axis, `align-items` across it, and `gap` spaces neighbours.
 - Items start at `flex-basis`; leftover space goes out by `flex-grow`, overflow is taken back by `flex-shrink` weighted by basis. That simple sum assumes no padding, border, gap, margins or min and max sizes; real layouts account for those too.
-
-Next topic: Grid
 
 ## Cheat sheet
 
@@ -115,15 +113,15 @@ Prediction (practice, not scored): a 600px flex container holds A, B and C, each
 
 ### explore
 
-Steps: 1. Where to look: The three cards in the model and the container CSS shown above them. 2. What to do: Press the display and flex-direction buttons below the model. 3. What to expect: The cards move as you press, and the CSS above them changes to match. 4. How to know it is done: Both goals in the list show done and Continue appears. Direction builder on three real cards. Goal 1, side by side in source order: display flex with flex-direction row. row-reverse also puts them side by side but in reverse order, so it does not meet the goal. Goal 2, stacked with flex: display flex with flex-direction column. display block also stacks them, but without flex, so flex-direction has no effect and the goal asks for flex.
+Steps: 1. Where to look: The three cards in the model and the container CSS shown above them. 2. What to do: Press the display and flex-direction buttons below the model. 3. What to expect: The cards move as you press, and the CSS above them changes to match. 4. How to know it is done: Both goals in the list show done and Continue becomes available. Direction builder on three real cards. Goal 1, side by side in source order: display flex with flex-direction row. row-reverse also puts them side by side but in reverse order, so it does not meet the goal. Goal 2, stacked with flex: display flex with flex-direction column. display block also stacks them, but without flex, so flex-direction has no effect and the goal asks for flex.
 
 ### explore
 
-Steps: 1. Where to look: The three badges in the 120px-tall box in the model. 2. What to do: Press the justify-content, align-items and gap buttons. 3. What to expect: The badges move, and the measured line under them describes their positions. 4. How to know it is done: Both goals in the list show done and Continue appears. Alignment builder on three real badges in a 120px-tall flex row. Goal 1, centred both ways: justify-content center and align-items center. align-items stretch, the default, makes the badges fill the height instead. Goal 2, packed top left with 16px between: justify-content flex-start, align-items flex-start and gap 16px. space-between pushes the badges to the edges instead of keeping 16px between them.
+Steps: 1. Where to look: The three badges in the 120px-tall box in the model. 2. What to do: Press the justify-content, align-items and gap buttons. 3. What to expect: The badges move, and the measured line under them describes their positions. 4. How to know it is done: Both goals in the list show done and Continue becomes available. Alignment builder on three real badges in a 120px-tall flex row. Goal 1, centred both ways: justify-content center and align-items center. align-items stretch, the default, makes the badges fill the height instead. Goal 2, packed top left with 16px between: justify-content flex-start, align-items flex-start and gap 16px. space-between pushes the badges to the edges instead of keeping 16px between them.
 
 ### explore
 
-Steps: 1. Where to look: The 300px flex container and its CSS in the model; the items stay hidden until you measure. 2. What to do: Type the width you expect, in pixels, in the predicted width field, then press Measure or Enter. 3. What to expect: The items appear with the widths this browser measured; a matching prediction moves you to the next setup. 4. How to know it is done: The counter reads All three setups done and Continue appears. Leftover space predictions in a real 300px flex container. Setup 1: bases 50px each, flex-grow 1, 2 and 0: leftover 150px splits 50 and 100, so B is 150px. Setup 2: bases 100px each, flex-grow 1 each: no leftover, so A is 100px. Setup 3: bases 150px each, flex-shrink 1, 1 and 0: the bases overflow by 150px, C does not shrink, A and B each lose 75px, so A is 75px.
+Steps: 1. Where to look: The 300px flex container and its CSS in the model; the items stay hidden until you measure. 2. What to do: Type the width you expect, in pixels, in the predicted width field, then press Measure or Enter. 3. What to expect: The items appear with the widths this browser measured; a matching prediction moves you to the next setup. 4. How to know it is done: The counter reads All three setups done and Continue becomes available. Leftover space predictions in a real 300px flex container. Setup 1: bases 50px each, flex-grow 1, 2 and 0: leftover 150px splits 50 and 100, so B is 150px. Setup 2: bases 100px each, flex-grow 1 each: no leftover, so A is 100px. Setup 3: bases 150px each, flex-shrink 1, 1 and 0: the bases overflow by 150px, C does not shrink, A and B each lose 75px, so A is 75px.
 
 ### mcq
 

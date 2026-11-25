@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "pep-react-lab-replacement-critic-sme (Claude Opus 5.5, fresh independent context)",
+  "reviewedPath": "react/auth-and-review/coding-lab/lab.json",
+  "reviewedSha256": "9d94a947d1c3e245a89247341fe8e40efe349ff1c02efc11eca9409061466294",
+  "artifactHashes": {
+    "coding-lab/README.md": "8390451283eeaacaa89cd2a42d36502c60731887b377f94e0488c231622a3b40",
+    "coding-lab/lab.json": "9d94a947d1c3e245a89247341fe8e40efe349ff1c02efc11eca9409061466294"
+  },
+  "findings": [
+    {
+      "id": "sme-ar-1",
+      "severity": "high",
+      "location": {
+        "file": "react/auth-and-review/coding-lab/tests/t7-sign-out.test.jsx",
+        "line": 26
+      },
+      "claim": "t7 cannot detect a signOut that does not clear the session. /login is a public route outside AppLayout, so after the header button navigates to /login the 'Sign in to Beacon' heading appears and 'Signed in as' / 'Service overview' are absent regardless of auth state; the guards are never re-exercised. Repro: in a scratch copy of the reference solution, making signOut() a no-op (button still calls it and navigates to /login) passes all 8 tests. The token stays in context, so navigating back to / would show the dashboard with the old credential - the exact failure task 7 ('the session is forgotten and the guards take over again') and objective handling-401-and-403-redirect-and-sign-out exist to prevent.",
+      "evidence": [],
+      "recommendation": "After clicking Sign out, navigate to a guarded route and assert the guard redirects: e.g. render a tiny test-only component inside the MemoryRouter that exposes navigate (or include a Link to '/' outside App), go to '/' (and '/admin'), and assert the login heading appears, no 'Signed in as' text appears, and no further GET /api/services was sent with 'Bearer tok-avery' after sign-out.",
+      "reviewedSha256": "08173e7f5b8ea53d54237bfa198de85aba38297461664dece36df0b76a834381"
+    },
+    {
+      "id": "sme-ar-2",
+      "severity": "high",
+      "location": {
+        "file": "react/auth-and-review/coding-lab/tests/t6-forbidden-action.test.jsx",
+        "line": 30
+      },
+      "claim": "The learner's 401 branch in handleRestart is never exercised: t6 only produces a 403 (operator) and a 200 (admin), and t5's 401 goes through the given useAuthedFetch hook, not learner code. Repro: in a scratch copy of the reference solution, changing handleRestart to show 'You are not allowed to do that.' for every error (including 401) passes all 8 tests. That is precisely the 401-vs-403 confusion objective handling-401-and-403-redirect-and-sign-out#o1 targets (401 means sign in again, 403 means keep the session); a stale token on a restart would leave the user on a dead dashboard with a misleading 'not allowed' message.",
+      "evidence": [],
+      "recommendation": "Add a step to t6 (or t5): while signed in as avery, set api.expireTokens = true, click 'Request restart', and assert the login page with 'Your session expired - sign in again.' appears and no 'You are not allowed to do that.' alert is shown.",
+      "reviewedSha256": "de03c97403a68c0f81bb96398ef34b55471ddfff6707c72c5069d602910a7519"
+    },
+    {
+      "id": "sme-ar-3",
+      "severity": "high",
+      "location": {
+        "file": "react/auth-and-review/coding-lab/tests/t8-dev-profile-off.test.jsx",
+        "line": 28
+      },
+      "claim": "t8 checks apiUrl only as a pure function; nothing verifies that requests are actually built through it. Repro: in a scratch copy of the reference solution, changing authFetch to call fetch with a hard-coded '/api' + path (bypassing apiUrl) passes all 8 tests, so a deployed build with VITE_API_URL set would still send every data request to the dev-origin /api. TASK 2 says authFetch 'calls fetch(apiUrl(path), ...)' and task 8 / objective turning-off-the-dev-profile#o2 claim the front end is pointed at the back end by the environment variable, which is not machine-verified.",
+      "evidence": [],
+      "recommendation": "With VITE_API_URL stubbed (vi.stubEnv), drive a sign-in and a list load and assert the recorded fetch URLs start with the stubbed base; have the stub route on the URL pathname (new URL(url, 'http://localhost').pathname with the base's path prefix) so absolute URLs still resolve.",
+      "reviewedSha256": "e695492a1a571bde6e4d2e7cb104346899c0f7c4a2548cb7844c4ae455f90df4"
+    },
+    {
+      "id": "sme-ar-4",
+      "severity": "medium",
+      "location": {
+        "file": "react/auth-and-review/coding-lab/tests/helpers.js",
+        "line": 27
+      },
+      "claim": "The fetch stub's jsonResponse returns a plain object with only ok, status and json(); it lacks text(), headers and the rest of the Response interface. Repro: in a scratch copy of the reference solution, changing only authFetch's success path to read response.text() and JSON.parse a non-empty body makes t1, t2, t5, t6 and t7 fail (5 failed | 3 passed) with 'Unable to find role=heading ...' because the TypeError 'response.text is not a function' is swallowed into the load error path - a correct implementation is rejected with a misleading message.",
+      "evidence": [],
+      "recommendation": "Return real Response objects from the stub: new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }) (and a null body for any 204), so any standard parsing strategy works.",
+      "reviewedSha256": "de498bb9e9404ed67486a1927375d19e26a146e318ea6615cfcf9127523a27c0"
+    },
+    {
+      "id": "sme-ar-5",
+      "severity": "medium",
+      "location": {
+        "file": "react/auth-and-review/coding-lab/README.md",
+        "line": 51
+      },
+      "claim": "README discloses only that test 1 also needs task 2, but the shipped dev-auth.js (enabled: true) keeps a session in state from mount, so tests 3-7 cannot pass until task 8 is done either. Repro: reference solution with only starter/src/dev-auth.js reverted to the shipped file fails t3, t4, t5, t6, t7 and t8 (6 failed | 2 passed), all with 'Unable to find role=\"heading\" and name \"Sign in to Beacon\"'. A learner working tasks in order sees correct work on tasks 3-7 stay red with a message that points at the login page, not at dev-auth.js, until the last task.",
+      "evidence": [],
+      "recommendation": "Either disclose the coupling next to the existing one ('tests 3-8 start signed out, so they stay red until task 8 turns the dev auto-sign-in off - do task 8 part 1 first') or reorder so the one-line dev-auth switch is task 1/early; alternatively make tests 3-7 mock the dev-auth module so they test only their own task.",
+      "reviewedSha256": "8390451283eeaacaa89cd2a42d36502c60731887b377f94e0488c231622a3b40"
+    },
+    {
+      "id": "sme-ar-6",
+      "severity": "low",
+      "location": {
+        "file": "react/auth-and-review/coding-lab/starter/src/api.js",
+        "line": 5
+      },
+      "claim": "TASK 8 part 2 and README troubleshooting (line 140-142) require reading import.meta.env.VITE_API_URL 'at call time ... not once at module load', implying a module-level read is wrong. In Vite, import.meta.env.VITE_* is statically replaced at build time (and fixed for a dev-server session), so call-time vs module-load reading is behaviourally identical in the real app; the distinction only matters because t8 mutates import.meta.env with vi.stubEnv. Repro: a module-level const read (production-correct) fails only t8 ('expected /api/services to be https://status.example.com/api/services'). The topic page shows a module-level read (const searchUrl = import.meta.env.VITE_SEARCH_URL), so the lab's stated rationale conflicts with what learners were taught.",
+      "evidence": [],
+      "recommendation": "Say explicitly that the call-time read is a testability requirement (vi.stubEnv changes import.meta.env during the test run), and that in a real Vite app the value is fixed at build/dev-server start, so changing VITE_API_URL requires restarting the dev server or rebuilding.",
+      "reviewedSha256": "8e68ab7d6c561dc5a2049013b70c559717bd2fcfd2cbe5e5f550146bef026d2b"
+    },
+    {
+      "id": "sme-ar-7",
+      "severity": "low",
+      "location": {
+        "file": "react/auth-and-review/coding-lab/starter/mock-api.js",
+        "line": 35
+      },
+      "claim": "The dev mock strips the scheme optionally (.replace(/^Bearer /, '')), so a request carrying the raw token without the 'Bearer ' prefix is accepted by the dev server (the test stub at tests/helpers.js:66 does the same; only t2's exact header assertion catches it). Repro: reference authFetch changed to send the bare token fails only t2. In npm run dev the app works with a malformed Authorization header that a real Spring resource server rejects, weakening objective login-with-a-session-cookie-or-jwt#o3 practice outside the test run.",
+      "evidence": [],
+      "recommendation": "Require the scheme in both the dev mock and the stub: match /^Bearer (.+)$/ on the Authorization header and answer 401 when it does not match.",
+      "reviewedSha256": "6d2099f425832eddf3e939eaee76bea9a6f6a5ab808e20eb95f1eb5a6b6ceec3"
+    },
+    {
+      "id": "sme-ar-8",
+      "severity": "low",
+      "location": {
+        "file": "react/auth-and-review/coding-lab/lab.json",
+        "line": 32
+      },
+      "claim": "The node prerequisite '>=22.12' (and README 'Node.js 22.12 or newer') admits Node 23.x, but the committed tests lockfile records vitest 4.1.12 with engines.node '^20.0.0 || ^22.0.0 || >=24.0.0', so Node 23 is outside the test runner's declared support range.",
+      "evidence": [],
+      "recommendation": "Declare the node prerequisite as '^22.12.0 || >=24' and update the README wording to match.",
+      "reviewedSha256": "9d94a947d1c3e245a89247341fe8e40efe349ff1c02efc11eca9409061466294"
+    }
+  ]
+}

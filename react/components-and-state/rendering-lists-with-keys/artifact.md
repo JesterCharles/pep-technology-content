@@ -55,7 +55,7 @@ const open = tasks.filter(t => !t.done);
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - react.dev/learn/rendering-lists: Rendering data from arrays; Filtering arrays of items; Keeping list items in order with key
 

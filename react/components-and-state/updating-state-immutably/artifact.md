@@ -62,7 +62,7 @@ Where to act: The body of `renamed`.
 
 Next step: Return a new object that starts with all the existing properties, then override one.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The body of `moved`.
 
@@ -74,7 +74,7 @@ Where to act: Each function body in turn.
 
 Next step: Match each function to Add, Remove or Replace in the teaching list, then adapt the names.
 
-Another hint Another hint, 2 of 2 for Activity 4
+Another hint Hint 2 of 2 for Activity 4
 
 Where to act: The body of `retitled`.
 
@@ -95,7 +95,7 @@ setItems([...items].sort(byDate));
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax: Description
 - react.dev/learn/updating-arrays-in-state: Updating arrays without mutation; Updating objects inside arrays

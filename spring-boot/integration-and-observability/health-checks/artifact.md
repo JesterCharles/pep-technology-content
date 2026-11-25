@@ -28,7 +28,7 @@ management.endpoints.web.exposure.include=health,info
 
 Never expose everything with `*` on a public port. `env`, `heapdump` and `loggers` can reveal secrets or let callers change behavior.
 
-For platforms, liveness answers "should this process be restarted?", and readiness answers "should it receive traffic?". They appear at `/actuator/health/liveness` and `/actuator/health/readiness` when `management.endpoint.health.probes.enabled=true`, or automatically on Kubernetes.
+For platforms, liveness answers "should this process be restarted?", and readiness answers "should it receive traffic?". Since Spring Boot 4.0 they are on by default, in any environment, at `/actuator/health/liveness` and `/actuator/health/readiness`. Set `management.endpoint.health.probes.enabled=false` to turn them off. In Spring Boot 3.x they were on automatically only on Kubernetes.
 
 A teammate sets `management.endpoints.web.exposure.include=*` on a public port "so ops can see everything".
 
@@ -44,9 +44,9 @@ Every activity is answered, but this topic is not complete: 0 of 4 activities ea
 
 Where to act: Use the command box under the log.
 
-Next step: The supported list shows the two start commands; read the health endpoint after each one.
+Next step: Run both starts from the task, then read the health endpoint once; its two labelled lines show what each start returns.
 
-Printed alternative: Default: {"status":"UP"}. With show-components=always: {"status":"UP","components":{"db":{"status":"UP"},"diskSpace":{"status":"UP"},"ping":{"status":"UP"}}}.
+Printed alternative: Default: {"groups":["liveness","readiness"],"status":"UP"}. With show-components=always: {"components":{"db":{"status":"UP"},"diskSpace":{"status":"UP"},"livenessState":{"status":"UP"},"ping":{"status":"UP"},"readinessState":{"status":"UP"},"ssl":{"status":"UP"}},"groups":["liveness","readiness"],"status":"UP"}.
 
 Where to act: Toggle where the database check is included.
 
@@ -56,14 +56,15 @@ Printed alternative: Database check in readiness only: traffic stops, with no re
 
 - Starter: `spring-boot-starter-actuator`.
 - `management.endpoints.web.exposure.include=health,info`
-- `management.endpoint.health.probes.enabled=true`
+- `management.endpoint.health.probes.enabled=false` turns the probes off; they are on by default in Spring Boot 4.
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
-- https://docs.spring.io/spring-boot/reference/actuator/endpoints.html
-- https://docs.spring.io/spring-boot/reference/actuator/enabling.html
+- https://docs.spring.io/spring-boot/4.1/reference/actuator/endpoints.html
+- https://docs.spring.io/spring-boot/4.1/reference/actuator/enabling.html
+- https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide
 
 ## Static interaction alternatives
 
@@ -78,7 +79,7 @@ Status: minimum release, November 2026. The author checked this page and re-fetc
 
 ### terminal
 
-**Printed alternative:** Default: {"status":"UP"}. With show-components=always: {"status":"UP","components":{"db":{"status":"UP"},"diskSpace":{"status":"UP"},"ping":{"status":"UP"}}}.
+**Printed alternative:** Default: {"groups":["liveness","readiness"],"status":"UP"}. With show-components=always: {"components":{"db":{"status":"UP"},"diskSpace":{"status":"UP"},"livenessState":{"status":"UP"},"ping":{"status":"UP"},"readinessState":{"status":"UP"},"ssl":{"status":"UP"}},"groups":["liveness","readiness"],"status":"UP"}.
 
 ### explore
 

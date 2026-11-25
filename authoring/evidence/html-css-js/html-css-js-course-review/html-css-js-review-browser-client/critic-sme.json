@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "independent web SME critic subagent (claude-opus-5-5), did not author",
+  "reviewedPath": "html-css-js/html-css-js-course-review/html-css-js-review-browser-client/artifact.html",
+  "reviewedSha256": "8312506d03794121e36f089bd300a5c2ca7fec22483655f1bb4344a2ba51ec40",
+  "findings": [
+    {
+      "id": "sme-p2-01",
+      "severity": "high",
+      "location": {
+        "file": "html-css-js/html-css-js-course-review/html-css-js-review-browser-client/artifact.html",
+        "line": 619
+      },
+      "claim": "Activity 3 keyed explanation (\"fetch fulfills on 400 and 502 ... only a rejected fetch reaches catch\") and recap line 650 (\"fetch rejects only when no response arrives\") are stated unconditionally, but the scenario calls the API through import.meta.env.VITE_API_URL, the Vite-client-to-Spring-Boot setup this course teaches as cross-origin (intake topic fixing-cors-spring-security-config-vs-vite-dev-proxy). A gateway's 502 HTML page normally carries no Access-Control-Allow-Origin header, and the browser then turns it into a network error, so fetch rejects and option C still shows \"Check your internet connection\" — report 2 is not fixed. Executed in Chromium with two real node:http servers on different origins: a cross-origin POST answered 502 text/html without CORS headers rejected with \"TypeError: Failed to fetch\" (both a simple and a preflighted JSON POST), while a 400 application/problem+json with Access-Control-Allow-Origin fulfilled (status 400). Same-origin 502 fulfilled. So the keyed option is only correct under an unstated same-origin (proxy) or CORS-on-error-responses assumption, and the recap teaches a rule the platform does not follow (a CORS-blocked response arrives at the browser yet fetch rejects).",
+      "evidence": [
+        {
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch",
+          "section": "Handling the response > Checking response status",
+          "retrievedAt": "2026-11-09T22:22:42Z",
+          "textSha256": "736623bad758f93cdb5a10b7a0e39d5f867e751c423901cf8f4c7887c94cb000"
+        },
+        {
+          "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS",
+          "section": "Cross-Origin Resource Sharing (CORS) (introduction)",
+          "retrievedAt": "2026-11-09T22:22:42Z",
+          "textSha256": "4c532ed9fc24f0b2e22386cd654732c4d5d17ce5fcfa5dfac1586fbc518c61d4"
+        },
+        {
+          "url": "https://fetch.spec.whatwg.org/",
+          "section": "4.3 HTTP fetch (CORS check step)",
+          "retrievedAt": "2026-11-09T22:24:12Z",
+          "textSha256": "d1620dd21d0b88f490635741af1845072d28134961ec136a900e9de263f8003c"
+        },
+        {
+          "url": "https://vite.dev/config/server-options",
+          "section": "server.proxy",
+          "retrievedAt": "2026-11-09T22:24:12Z",
+          "textSha256": "fb34808d3171a1aa7c363e422bf4536996e1fe8c8a4aabd37d8d538330083aa9"
+        }
+      ],
+      "recommendation": "State the setup in the scenario, e.g. \"VITE_API_URL is /api, which the Vite dev proxy and the production gateway serve from the page's own origin\" (or say the gateway adds the CORS headers). Change the recap to: \"fetch rejects when it gets no usable response: a network failure, or a cross-origin response the browser blocks under CORS. HTTP error statuses still fulfill.\" Mirror the same qualifier in the option C explanation, the cheat-sheet comment on line 663 and artifact.md.",
+      "reviewedSha256": "8312506d03794121e36f089bd300a5c2ca7fec22483655f1bb4344a2ba51ec40"
+    },
+    {
+      "id": "sme-p2-02",
+      "severity": "medium",
+      "location": {
+        "file": "html-css-js/html-css-js-course-review/html-css-js-review-browser-client/artifact.html",
+        "line": 647
+      },
+      "claim": "Recap \"Insert untrusted data as text with textContent or setAttribute\" (and option A explanation line 431 \"textContent and setAttribute keep visitor text inert\") presents setAttribute as a generally safe sink. It is only safe for attributes that are not event handlers, URLs or HTML/script sources: setAttribute(\"onclick\", untrusted) runs script, and href/src with a javascript: URL or iframe srcdoc inject code. MDN lists setAttribute itself as an XSS vector. Using it for data-id in this activity is safe; the general recap rule is dangerously simplified security guidance.",
+      "evidence": [
+        {
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Element/setAttribute",
+          "section": "Security considerations",
+          "retrievedAt": "2026-11-09T22:22:42Z",
+          "textSha256": "18552155d31662b5607c153d5f1a8a1cb15193a0f2b8f8e1655e85ccefe3001e"
+        }
+      ],
+      "recommendation": "Narrow the recap: \"Insert untrusted data as text with textContent, or as a plain data or text attribute with setAttribute (never an on* handler, href, src or srcdoc); innerHTML and insertAdjacentHTML parse it as HTML.\" Optionally say \"for data-id\" in the option A explanation.",
+      "reviewedSha256": "8312506d03794121e36f089bd300a5c2ca7fec22483655f1bb4344a2ba51ec40"
+    },
+    {
+      "id": "sme-p2-03",
+      "severity": "low",
+      "location": {
+        "file": "html-css-js/html-css-js-course-review/html-css-js-review-browser-client/artifact.html",
+        "line": 619
+      },
+      "claim": "Option C explanation ends \"only a rejected fetch reaches catch\". In the full saveReview code, catch also receives a rejected res.json() on a 2xx response whose body is not JSON, and any exception from addReview or showMessage, all of which would show the connection message. The claim is true only of the !res.ok paths. Executed in Node 24: Response.json() on an HTML body rejects with SyntaxError.",
+      "evidence": [
+        {
+          "url": "https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch",
+          "section": "Handling the response > Checking response status",
+          "retrievedAt": "2026-11-09T22:22:42Z",
+          "textSha256": "736623bad758f93cdb5a10b7a0e39d5f867e751c423901cf8f4c7887c94cb000"
+        }
+      ],
+      "recommendation": "Say \"only a rejected fetch reaches catch from the error branches\" or \"so the connection message is left for a fetch that rejects\".",
+      "reviewedSha256": "8312506d03794121e36f089bd300a5c2ca7fec22483655f1bb4344a2ba51ec40"
+    }
+  ]
+}

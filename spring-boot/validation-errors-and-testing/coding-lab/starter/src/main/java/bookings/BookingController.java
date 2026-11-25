@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** You edit this file in Task 1 (one annotation). */
+/** You edit this file in Task 1 (one annotation) and Task 5 (one annotation). */
 @RestController
 public class BookingController {
 
@@ -18,6 +18,9 @@ public class BookingController {
         this.service = service;
     }
 
+    // TODO Task 5 step 3: ids start at 1. After you have reproduced the report
+    // and written your prediction, reject zero and negative ids with a Bean
+    // Validation constraint on the id parameter (README Task 5).
     @GetMapping("/bookings/{id}")
     public Booking byId(@PathVariable Long id) {
         return service.byId(id);

@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "Python/FastAPI SME critic (independent Claude subagent, 2026-11-18)",
+  "reviewedPath": "python/fastapi-services/coding-lab/lab.json",
+  "reviewedSha256": "68af88b55de003424f5e4f78be669a228f58d1a2db6494a248025e48846a9e70",
+  "artifactHashes": {
+    "coding-lab/lab.json": "68af88b55de003424f5e4f78be669a228f58d1a2db6494a248025e48846a9e70",
+    "coding-lab/README.md": "0f11916d3aaf8ac05055e126886a34505063b9b8b967b20296b6fe58a83b77cb"
+  },
+  "findings": [
+    {
+      "id": "py-api-lab-sme-001",
+      "severity": "high",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "line": 229
+      },
+      "claim": "Task 8 is the only check behind serving-pipeline-results-as-an-api#o3 (replace the dependency in tests with a dependency override) and calling-...#o3 (test the outbound call with an httpx mock transport), but it observes them only as substrings of ast.unparse(test_api.py) (lines 229-230) plus two mutants that a suite using neither technique still kills. Reproduced in a scratch copy with a correct solution and this starter/test_api.py: test 1 calls app.dependency_overrides.clear() then asserts client.get('/signups/999').status_code == 404 (999 is absent from the shipped fixture, no override in effect); test 2 builds an unused httpx.MockTransport(lambda r: httpx.Response(200)) and asserts pytest.raises(Exception) around fetch_workshop(None, 7) (AttributeError on None.get). Result: 10 passed, Task 8 green. The 'every route answers 200' mutant is killed by the fixture-backed 404 and the 'never raises' mutant by the AttributeError, so neither the override nor the mock transport does any work. A docstring containing both words passes the same way (ast.unparse keeps docstrings). With neither token present the check correctly fails at line 229. The test name 'your_tests_use_testclient_an_override_and_a_mock_transport' and both objectives are therefore over-claimed.",
+      "evidence": [],
+      "recommendation": "Make the mutants observe the techniques instead of the words: (a) add a mutant that fills the real repository with every id (e.g. `import signups_api.repository as r; r._shared = r.SignupRepository([{...id: i...} for i in range(1, 1001)])`) so a 404 test that does not override get_repository fails, while the README's empty-repository override still passes; (b) replace 'fetch_workshop never raises' with a mutant that wraps the real function and returns {} whenever its client argument is not an httpx.Client whose transport is an httpx.MockTransport (or simply returns {} unless client.get raised), so fetch_workshop(None, ...) or a non-mock client no longer kills it. Alternatively assert via AST that a test body contains a Subscript assignment to `<x>.dependency_overrides[...]` and a Call whose func ends in MockTransport passed as transport= to httpx.Client. Keep the substring checks only as early hints.",
+      "reviewedSha256": "6f1eca438dd30446c16f3aa3c5e833c07d99b933f2186ded82f825289f25c63b"
+    },
+    {
+      "id": "py-api-lab-sme-002",
+      "severity": "medium",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "line": 205
+      },
+      "claim": "The 'fetch_workshop never raises' mutant patches only signups_api.upstream.fetch_workshop (`u.fetch_workshop = ...`), but the shipped starter/signups_api/main.py line 11 binds the name at import (`from signups_api.upstream import ... fetch_workshop`), and run_learner_tests imports main before applying the patch, so the route keeps the real function. A learner who tests the outbound call through the route (override get_workshop_client with an httpx.Client on httpx.MockTransport raising ReadTimeout, assert GET /signups/1/workshop answers 504 with the detail), which is a correct mock-transport test and the dependency-override pattern the module teaches, fails Task 8 with 'your tests still pass when fetch_workshop never raises; add a test that catches it'. Reproduced: that test_api.py plus the README 404 test gives '1 failed, 9 passed', with the subprocess showing '2 passed' against the mutant. The README prescribes calling fetch_workshop directly, so a learner who follows it exactly passes, hence medium rather than high, but the message is wrong for this learner: their test would catch the stated bug.",
+      "evidence": [],
+      "recommendation": "Patch both bindings in the mutant: `u.fetch_workshop = m.fetch_workshop = lambda client, workshop_id: {'id': workshop_id}` (main is already imported as m). Optionally state in the README that a route-level test through get_workshop_client is also accepted.",
+      "reviewedSha256": "6f1eca438dd30446c16f3aa3c5e833c07d99b933f2186ded82f825289f25c63b"
+    },
+    {
+      "id": "py-api-lab-sme-003",
+      "severity": "high",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/lab.json",
+        "line": 11
+      },
+      "claim": "lab.json claims python/fastapi-services/fastapi-routes#o1, whose text is 'Define GET and POST routes with path and query parameters and a Pydantic request body, and run the app locally'. No check observes the learner running the app: the uvicorn step (README line 87) is explicitly 'Optional', and every route check uses the in-process TestClient. The route-definition half is observed by Tasks 1-3; the 'run the app locally' half is not. The captain rule forbids claiming an objective a test does not observe the learner performing.",
+      "evidence": [],
+      "recommendation": "Either drop fastapi-routes#o1 from lab.json objectives (keep it in covers), or split the run-locally clause out of the objective in topic.json so the lab claims only what Tasks 1-3 observe. Do not add a check that starts uvicorn; a socket-opening test would breach the lab's network/no-socket statements.",
+      "reviewedSha256": "68af88b55de003424f5e4f78be669a228f58d1a2db6494a248025e48846a9e70"
+    },
+    {
+      "id": "py-api-lab-sme-004",
+      "severity": "medium",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "line": 152
+      },
+      "claim": "Task 6 (and Task 7) test only one timeout type, httpx.ReadTimeout. A fetch_workshop that catches `except httpx.ReadTimeout:` instead of `except httpx.TimeoutException:` passes all eight checks (reproduced: 10 passed), yet a ConnectTimeout, WriteTimeout or PoolTimeout then escapes as an unhandled 500. ConnectTimeout is the instructive case: it is a TimeoutException and not a ConnectError, so the 504-versus-503 mapping the README teaches is only exercised by it. calling-...#o2 ('turn a timeout ... into a clear error response') is therefore only partly observed.",
+      "evidence": [],
+      "recommendation": "Add a ConnectTimeout case to the Task 6 cases list: a named handler `def slow_connect(request): raise httpx.ConnectTimeout('slow connect', request=request)` expecting (504, 'Workshop service timed out'). That kills the ReadTimeout-only solution and makes the README's 'ConnectTimeout is a timeout, not a ConnectError' distinction observable.",
+      "reviewedSha256": "6f1eca438dd30446c16f3aa3c5e833c07d99b933f2186ded82f825289f25c63b"
+    },
+    {
+      "id": "py-api-lab-sme-005",
+      "severity": "medium",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "line": 110
+      },
+      "claim": "The README and Task 6 check require httpx.ConnectError -> UpstreamError(503, 'Workshop service unavailable'), but the module page the lab covers (python/fastapi-services/calling-the-spring-boot-api-from-fastapi-service-url-token-and-timeouts/artifact.md, failure table and explore model) teaches 'Refused connection | ConnectError | 502' and 'commonly 504 for a timeout and 502 for other upstream failures'. A learner applying the taught mapping fails Task 6 with 'expected UpstreamError(503, ...), got UpstreamError(502, ...)' (reproduced). 503 is defensible, but 502 Bad Gateway is the more conventional answer for a gateway whose upstream refuses the connection (RFC 9110 15.6.3 vs 15.6.4; reverse proxies such as nginx answer 502), and the lab gives no reason for diverging from the page.",
+      "evidence": [],
+      "recommendation": "Align the lab with the page: map ConnectError to 502 in README line 110, the starter docstring (upstream.py) and test_main.py line 154 (with a distinct detail such as 'Workshop service unavailable'), or, if 503 is intended, say in Task 6 why it differs from the page's 502 and fix the page in its own module change.",
+      "reviewedSha256": "0f11916d3aaf8ac05055e126886a34505063b9b8b967b20296b6fe58a83b77cb"
+    },
+    {
+      "id": "py-api-lab-sme-006",
+      "severity": "medium",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "line": 127
+      },
+      "claim": "Wrong solutions can make the checks touch the network and bypass their own messages. Reproduced: a make_client that omits transport=transport makes test_task05 call http.get('/workshops/7') on a real HTTPTransport; with a getaddrinfo-blocking plugin the run logs a DNS lookup attempt for 'workshops.test' and fails with a raw httpx.ConnectError, so 'Task 5: pass transport=transport to httpx.Client' (line 128) is unreachable. On an open network the test issues a real DNS query (and on DNS-hijacking resolvers a TCP connect), contradicting the module docstring 'No test opens a network connection', lab.json network.test 'none' and the notes 'No test opens a socket'. Similarly, a Task 7 route that builds its client with make_client(Settings()) instead of Depends(get_workshop_client) will call the real SPRING_BASE_URL if the learner's shell has SPRING_* set (test_task07 does not clear them). The correct solution was confirmed socket-free (10 passed under the same blocking plugin).",
+      "evidence": [],
+      "recommendation": "In test_task05, check the transport before any request and guard the call: e.g. wrap `http.get(...)` in `try/except httpx.TransportError: pytest.fail('Task 5: pass transport=transport to httpx.Client')`, and use a base_url that cannot resolve without a lookup, or install a session-scoped autouse fixture that replaces socket.getaddrinfo/socket.create_connection with a function raising a clear 'tests must not use the network' error. For Task 7, delenv SPRING_BASE_URL/SPRING_TOKEN in the client fixture.",
+      "reviewedSha256": "6f1eca438dd30446c16f3aa3c5e833c07d99b933f2186ded82f825289f25c63b"
+    },
+    {
+      "id": "py-api-lab-sme-007",
+      "severity": "medium",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "line": 147
+      },
+      "claim": "The Offline note says 'Only the setup step uses the network', but the optional step at line 87 opens http://127.0.0.1:8000/docs, and FastAPI 0.163's Swagger UI page loads swagger-ui-bundle.js and swagger-ui.css from https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/ (confirmed by curl against the running app and in fastapi/openapi/docs.py). Offline, /docs renders blank. Separately, the fastapi-routes page teaches 'Run locally with fastapi dev main.py', but the lock installs plain fastapi without fastapi-cli, so that command is not available in this venv; the README's `python -m uvicorn signups_api.main:app` is correct (verified from starter/: GET /signups/1 200; /signups/1/workshop 500 with no SPRING_* env and 503 with SPRING_BASE_URL=http://localhost:8080 and nothing listening, matching the troubleshooting line).",
+      "evidence": [],
+      "recommendation": "Amend the Offline note: the /docs page needs the internet in the browser to load Swagger UI; offline, try the routes with curl or the raw /openapi.json. Add one line near line 87 that `fastapi dev` from the page is not installed in this lab and `python -m uvicorn` is the equivalent. Also give the env-var commands in the troubleshooting entry (export ... / $env:SPRING_TOKEN = ...).",
+      "reviewedSha256": "0f11916d3aaf8ac05055e126886a34505063b9b8b967b20296b6fe58a83b77cb"
+    },
+    {
+      "id": "py-api-lab-sme-008",
+      "severity": "low",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "line": 21
+      },
+      "claim": "README line 21 promises 'Each failing check names its task and the next action', but several states fail with raw library output: the shipped starter fails test_task05 with a pydantic extra_forbidden ValidationError from settings_object (the Settings fields belong to Task 4), not a 'Task 5:' message; a Task 4 solution with spring_token: str = '' fails with 'Failed: DID NOT RAISE Exception' (pytest.raises fires before the line-111 message); a missing timeout default fails with a raw ValidationError at line 102; a Task 7 route without try/except fails with a raw UpstreamError traceback. Also, a learner who adds model_config = SettingsConfigDict(env_file='.env') with a .env in the lab folder fails the 'token is required' check because the test only clears the process environment. Messages are stable under the pins, so the contract's 'stable messages' rule holds; the README claim does not.",
+      "evidence": [],
+      "recommendation": "Wrap the Settings construction in test_task05 and the three Task 4 Settings() calls in try/except that pytest.fail(...) with a 'Task 4: ...' / 'Task 5: ...' message; in Task 4 use `with pytest.raises(ValidationError, match=...)` inside try/except pytest.fail.Exception to keep the task message; pass `_env_file=None` to Settings() in the Task 4 check. Or soften line 21 to 'Most failing checks name their task'.",
+      "reviewedSha256": "0f11916d3aaf8ac05055e126886a34505063b9b8b967b20296b6fe58a83b77cb"
+    },
+    {
+      "id": "py-api-lab-sme-009",
+      "severity": "low",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "line": 226
+      },
+      "claim": "The Task 8 AST check counts only module-level ast.FunctionDef nodes named test_*. Two correct tests written as methods of a pytest class (class TestApi: def test_...) are counted as zero and fail with 'add at least two test functions' and 'assert 0 >= 2' (reproduced), although pytest collects and runs them and they kill both mutants.",
+      "evidence": [],
+      "recommendation": "Count test functions with ast.walk over FunctionDef nodes named test_* (including those inside Test* classes), or count collected tests from the clean subprocess run (`pytest --collect-only -q`).",
+      "reviewedSha256": "6f1eca438dd30446c16f3aa3c5e833c07d99b933f2186ded82f825289f25c63b"
+    },
+    {
+      "id": "py-api-lab-sme-010",
+      "severity": "low",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "line": 105
+      },
+      "claim": "Two README wordings over-state httpx behaviour. Line 105 says 'Translate every failure into an UpstreamError', but the table maps only TimeoutException, ConnectError and non-2xx; other httpx.TransportError subclasses (ReadError, RemoteProtocolError, a mid-response connection reset) and a 2xx with a non-JSON body (response.json() raises JSONDecodeError) still escape as 500. Line 100 says httpx.Timeout(...) means 'a slow catalog cannot hold your request open', but httpx timeouts are per operation (connect, read, write, pool), not a total deadline, so an upstream that trickles bytes inside each read window can still hold the request. The page teaches catching httpx.TransportError for connection failures; a solution doing so also passes (reproduced).",
+      "evidence": [],
+      "recommendation": "Say 'Translate these failures' (or add a final `except httpx.TransportError` -> 502/503 row and accept it), and reword line 100 to 'so a catalog that stops answering cannot hold your request open for longer than the timeout on each step'.",
+      "reviewedSha256": "0f11916d3aaf8ac05055e126886a34505063b9b8b967b20296b6fe58a83b77cb"
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "cg-critic-sme (independent Claude critic subagent, 2026-11-17)",
+  "reviewedPath": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+  "reviewedSha256": "79d561fefd574e9758293c6881aa38b1768eb9b9e244644757cce4765609c824",
+  "artifactHashes": {
+    "coding-lab/lab.json": "398e0439f77a7d208beabef635bc32c854ca8f2bf88f81453427f9b9da92636a",
+    "coding-lab/README.md": "79d561fefd574e9758293c6881aa38b1768eb9b9e244644757cce4765609c824"
+  },
+  "findings": [
+    {
+      "id": "cg-sme-validation-010",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ErrorSliceTest.java",
+        "line": 91
+      },
+      "claim": "assertSliceWithFake accepts any subclass of BookingService declared inside the test, including an empty anonymous subclass that overrides nothing. Critic run on a private solution with the fake's byId override removed (the bean method returns an anonymous BookingService subclass with an empty body): all 11 tests pass, because the real BookingService has a public no-arg constructor that seeds one booking and its own byId already throws NoSuchElementException for any other id. So web-layer-tests-with-mockmvc#o2 (\"a fake that finds nothing\") can be met with the real service logic. Low: the README and hint say to override byId, and the edit is unlikely.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ErrorSliceTest.java",
+          "section": "assertSliceWithFake",
+          "retrievedAt": "2026-11-18T04:46:42Z",
+          "textSha256": "ce2f878bbc104ebd9468511bd69bcc247738747c96b03f4edeeb13e6982b4453"
+        },
+        {
+          "url": "file:///spring-boot/validation-errors-and-testing/coding-lab/starter/src/main/java/bookings/BookingService.java",
+          "section": "BookingService constructor and byId",
+          "retrievedAt": "2026-11-18T04:46:42Z",
+          "textSha256": "aec9ed47794c903988a7e5e61d720aaf2531bb7aeff1e200ead76923ef536a3a"
+        }
+      ],
+      "recommendation": "Also assert that the fake overrides byId (for example, the bean class declares byId itself via getDeclaredMethod), or have the 404 test request the seeded id 1 so only a fake that finds nothing passes.",
+      "reviewedSha256": "ce2f878bbc104ebd9468511bd69bcc247738747c96b03f4edeeb13e6982b4453"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/spring-boot/validation-errors-and-testing/coverage-gap-critic-sme.json",
+    "items": [
+      {
+        "findingId": "cg-sme-validation-001",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/BugReportTest.java",
+        "reviewedSha256": "1f778173fe9b2bc4b942ebcfc6705f2d79f4bae9595cf8c097320757994f1692",
+        "note": "Critic runs at cb8c2e07 on fresh git-archive copies (JDK 25, Maven offline): starter fails exactly the declared tests and a private solution passes all of them; the original bypass (untouched starter code, a non-numeric id request in place of the reported one) now fails the shipped method and URI assertions with the \"request the report describes\" message. Troubleshooting covers both failure modes."
+      },
+      {
+        "findingId": "cg-sme-validation-002",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ErrorSliceTest.java",
+        "reviewedSha256": "ce2f878bbc104ebd9468511bd69bcc247738747c96b03f4edeeb13e6982b4453",
+        "note": "Critic runs at cb8c2e07 on fresh git-archive copies (JDK 25, Maven offline): starter fails exactly the declared tests and a private solution passes all of them; the original bypass (full application context plus an unrelated 404 URL and a non-numeric-id 400) now fails assertSliceWithFake on the missing slice annotation; each test binds method, URI and the ApiErrors title, and the 400 test requires all three invalid fields in the detail. A narrower residual is raised as new finding cg-sme-validation-010."
+      },
+      {
+        "findingId": "cg-sme-validation-003",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/ValidationApiTest.java",
+        "reviewedSha256": "b3d42150abc42876747bce61fdb75e1e06b2120852c487fa6c026d40975de278",
+        "note": "Critic runs at cb8c2e07 on fresh git-archive copies (JDK 25, Maven offline): starter fails exactly the declared tests and a private solution passes all of them; a private solution with the constraint replaced by a hand-written id check and status exception now fails task5RejectsANonPositiveIdWith400 on the reflection check; an alternative standard constraint is accepted, as it should be, because the check looks for any jakarta.validation Constraint meta-annotation."
+      },
+      {
+        "findingId": "cg-sme-validation-004",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/BugReportTest.java",
+        "reviewedSha256": "1f778173fe9b2bc4b942ebcfc6705f2d79f4bae9595cf8c097320757994f1692",
+        "note": "Critic runs at cb8c2e07 on fresh git-archive copies (JDK 25, Maven offline): starter fails exactly the declared tests and a private solution passes all of them; the stated body is gone from README, Troubleshooting, expected/test-summary.txt, starter and tests (git grep at HEAD for both built-in detail strings finds no hit); the prediction is now a learner-written pair of constants checked by the shipped task5PredictsTheProblemBodyOfTheFix against the real problem+json body (the starter fails it while the constants are unset). The order (predict before fix) is honour-based and the README says so; the failure message reveals the real value only after the learner has committed a prediction."
+      },
+      {
+        "findingId": "cg-sme-validation-005",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/WebLayerTest.java",
+        "reviewedSha256": "214cab38884eee1c740751167cc34c2c1638100fef3599a352b3d84f93c758c9",
+        "note": "Critic runs at cb8c2e07 on fresh git-archive copies (JDK 25, Maven offline): starter fails exactly the declared tests and a private solution passes all of them; a private solution with the verify replaced by a mock reset now fails on the shipped mockingDetails check (\"do not reset the mock\"); the explanation in the README is now a check-yourself question with a collapsed answer. The explain half is self-checked, not machine-checked, which is what the original recommendation offered; it differs from the api-security OWASP #o3 handling only because here the verify half of #o2 is machine-checked."
+      },
+      {
+        "findingId": "cg-sme-validation-006",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "reviewedSha256": "79d561fefd574e9758293c6881aa38b1768eb9b9e244644757cce4765609c824",
+        "note": "Rule applied in both Spring rechecks: exact final code outside a collapsed block is open; an outcome statement that names a tool is accepted as a graded hint. Read README, test TODOs and starter TODOs at cb8c2e07: Tasks 5 to 8 state outcomes, the final code sits only inside collapsed <details> hints (git grep for the earlier verbatim strings hits only hint blocks and one Troubleshooting diagnosis). Residual, accepted as a graded hint: Task 6 step 3 names the ordering annotation and its constants class in the main text. Tasks 1 to 4 keep the earlier, previously reconciled copy-along style; that is the reconciler's call, as the original recommendation said."
+      },
+      {
+        "findingId": "cg-sme-validation-007",
+        "status": "open",
+        "file": "authoring/evidence/spring-boot/validation-errors-and-testing/coding-lab/lab-run.json",
+        "reviewedSha256": "8061ce409c763deec43fc602ee3e92d15248c345221d24f299855354473d1490",
+        "note": "Run evidence: the record is byte-identical to the first-pass head 8e24dc2e (git diff empty) and still binds pre-extension lab bytes; the author rewrites it only after this recheck, from the final head, so it stays open until then. Critic reproduction at this head: starter fails exactly the 11 declared failingTests, a private solution passes 11/11 with no output."
+      },
+      {
+        "findingId": "cg-sme-validation-008",
+        "status": "resolved",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/tests/bookings/WebLayerTest.java",
+        "reviewedSha256": "214cab38884eee1c740751167cc34c2c1638100fef3599a352b3d84f93c758c9",
+        "note": "Class Javadoc now says given and verify are already imported and that the Task 4 TODOs name the two imports to add; that matches the file."
+      },
+      {
+        "findingId": "cg-sme-validation-009",
+        "status": "open",
+        "file": "spring-boot/validation-errors-and-testing/coding-lab/README.md",
+        "reviewedSha256": "79d561fefd574e9758293c6881aa38b1768eb9b9e244644757cce4765609c824",
+        "note": "Partly fixed: README and lab.json now label the minutes an authoring estimate with a task-by-task basis, and the split (setup 5, S9 27, S10 35) sums correctly. Still open: the README places Tasks 4, 5, 7 and 8 in \"the S10 day's coding-lab blocks\", but the repository's own records say S10 is a Concept day with no lab overlay and that this module lab is S9 (authoring/evidence/spring-boot/intake.md lab table and no-lab list; the unchanged artifacts.lab reasons of the three S10 topic.json files). Either source an S10 lab block and update those records, or budget the S10 tasks where the calendar has time for them."
+      }
+    ]
+  }
+}

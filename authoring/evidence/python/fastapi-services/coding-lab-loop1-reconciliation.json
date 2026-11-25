@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "author": "pep-standard-fast-labs-python-authoring crewmate (Claude Opus 5.5)",
+  "decidedBy": "l3-recon loop 1 (independent non-author Claude reconciler, 2026-11-18)",
+  "reviewedPath": "python/fastapi-services/coding-lab/lab.json",
+  "reviewedSha256": "be2efea95050e484f9e7e9091c8dd8e20874ba660338c1e8e571ef91eedbabc3",
+  "decisions": [
+    {
+      "findingId": "py-api-lab-edu-r01",
+      "decision": "accept",
+      "rationale": "Verified on the current bytes. README.md (sha256 09cc6cab...) line 85 says '?limit=2&offset=1 skips the first sign-up and returns the next two' without naming a session. The regenerated fixtures/signups.json has one 'general' sign-up (Fay Adams), two 'testing' (Ben Okafor, Eli Novak) and one 'data' (Ana Ruiz), so no session in the shipped snapshot can show that example in the optional uvicorn run at line 87. On this data, general with limit=2&offset=1 is empty and testing returns only Eli Novak, so a learner trying the README's example sees what looks like a contradiction. The checks use their own SIGNUPS, so no test changes. Required fix (README wording only): either give an example the snapshot can show, naming the session (e.g. /sessions/testing/signups?limit=1&offset=1 skips Ben Okafor and returns Eli Novak), or say that the example describes the checks' data, not the shipped snapshot."
+    },
+    {
+      "findingId": "py-api-lab-sme-r01",
+      "decision": "accept",
+      "rationale": "Verified on the current bytes. tests/test_main.py (sha256 80a3bc64...) test_task07 builds TestClient(main.app, raise_server_exceptions=False) for every request. Probe: scratch copy of the current lab (loop1/lab-typo) with my own passing solution plus one typo in the Task 7 route (s[\"workshopid\"], a KeyError); the same solution without the typo passes 10/10 (loop1/lab-ok). With the typo, pytest -k task07 fails only with 'Task 7: GET /signups/1/workshop must answer 200, got 500; add the route with client=Depends(get_workshop_client)'. There is no KeyError and no traceback, and the next action is wrong because the route exists and already uses that dependency. This regression comes from the sme-008 correction, where the loop-0 reconciliation offered raise_server_exceptions=False only as an example. The loop-0 goal (an uncaught UpstreamError shows a Task 7 message) still stands. Required fix (recheckable): (1) a Task 7 route that raises any exception other than UpstreamError must show that exception, by name or traceback, in the test output (the workshopid-typo probe must show KeyError); (2) a route without try/except around fetch_workshop must still fail with the Task 7 'catch UpstreamError and raise HTTPException' message; (3) the 'add the route' action may appear only when the answer is 404. Suggested mechanism: keep the default raising TestClient and turn upstream.UpstreamError into a pytest.fail Task 7 message with try/except. Another option is to use raise_server_exceptions=False only for the timeout and 500 requests and branch the first message on 404 versus 500."
+    },
+    {
+      "findingId": "py-api-lab-sme-r02",
+      "decision": "reject-with-evidence",
+      "rationale": "The point is real but already handled the way the critic's own fallback asks, and the same way the python-fundamentals reconciliation decided it. Evidence: (1) authoring/schemas/lab.schema.json defines prerequisites[] items as exactly {tool, version, check} with additionalProperties false, so a per-OS check cannot be declared. (2) lab.json (sha256 be2efea9...) cleanup.notes already say the README creates the venv 'with python3 -m venv on macOS and Linux and py -m venv on Windows, whose prerequisite check is py --version'. That is the critic's recommended alternative ('state in the notes that the declared check is the macOS/Linux form and Windows uses py --version, so a platform runner can map it'). (3) README.md lines 27-28 give 'macOS and Linux: python3 --version' and 'Windows: py --version', matching the notes. (4) python/python-fundamentals/coding-lab/lab.json keeps check 'python3 --version' with the same Windows note in cleanup.notes, so changing only this lab would make the module labs inconsistent. Optional, not required: the author may reword the notes clause to say explicitly 'the declared check is the macOS and Linux form'."
+    }
+  ]
+}

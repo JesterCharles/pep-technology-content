@@ -36,7 +36,7 @@ Where to act: The def line of add_record.
 
 Next step: Choose a default that is not a mutable object.
 
-Another hint Another hint, 2 of 2 for Activity 4
+Another hint Hint 2 of 2 for Activity 4
 
 Where to act: The first line inside add_record.
 
@@ -56,7 +56,7 @@ Success criteria: Pick the page where you missed a question, and rewrite its cor
 
 ## Sources
 
-First draft, not reviewed. Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.
+Sources checked on 2026-11-04. The author checked this page against these official pages; independent review pending.
 
 - Python FAQ: Why are default values shared between objects?
 - Python reference: Function definitions

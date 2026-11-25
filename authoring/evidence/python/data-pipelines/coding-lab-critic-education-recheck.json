@@ -1,0 +1,161 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "education critic (independent Claude subagent, 2026-11-18)",
+  "reviewedPath": "python/data-pipelines/coding-lab/lab.json",
+  "reviewedSha256": "085d44d3638afbe401c007a919e53d706fc890dc84dad27bf3dbae1900abf5f4",
+  "artifactHashes": {
+    "coding-lab/lab.json": "085d44d3638afbe401c007a919e53d706fc890dc84dad27bf3dbae1900abf5f4",
+    "coding-lab/README.md": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e"
+  },
+  "findings": [
+    {
+      "id": "py-pipe-lab-edu-r01",
+      "severity": "low",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 143
+      },
+      "claim": "The edu-006 correction adds the set route only as a parenthesis inside a dict-shaped instruction, so the step no longer reads in order for the set route. The sentence continues 'and replace the kept sign-up when a later one arrives' and ends 'Return ... sorted(kept.values(), key=lambda s: s.email)'. Both only make sense for the dict. The set route walks newest first and never replaces, and its kept is a list, so `kept.values()` raises AttributeError. A novice who picks the set route gets contradictory steps (the check itself accepts the set route; probe setform passes).",
+      "evidence": [],
+      "recommendation": "Write the two routes as two short alternatives, each with its own return: dict, 'replace the kept sign-up when a later one arrives; return sorted(kept.values(), key=lambda s: s.email)'; or set, 'walk the sign-ups sorted newest first, keep each email's first one; return the kept list sorted by email'. Or keep the dict route only and mention the set in one closing sentence.",
+      "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e"
+    },
+    {
+      "id": "py-pipe-lab-edu-r02",
+      "severity": "low",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "line": 26
+      },
+      "claim": "The new prerequisite line says native ARM64 Windows Python is not supported, because psycopg-binary has no win_arm64 wheel. It does not tell an affected novice what to do instead, so a learner on a Windows ARM laptop (for example Snapdragon) stops at setup with only the statement that their Python is unsupported.",
+      "evidence": [],
+      "recommendation": "Add the next action, for example 'on a Windows ARM laptop, install the 64-bit x64 (AMD64) Python from python.org, which runs under Windows' emulation, and use it for this lab'. Mirror it in Troubleshooting under the pip error a win_arm64 install shows (no matching distribution for psycopg-binary).",
+      "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/python/data-pipelines/coding-lab-critic-education.json",
+    "items": [
+      {
+        "findingId": "py-pipe-lab-edu-001",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e",
+        "note": "README:26 checks `python3 --version` (Windows `py --version`), README:38 creates the venv with `python3 -m venv .venv`, README:49 adds the page's sentence that `python` means the venv's Python once it is active, and README:205 adds the 'command not found: python' Troubleshooting entry. lab.json prerequisites[0].check is `python3 --version`. The setup and test commands stay `python -m pip ...` and `python -m pytest -q`, after activation, as required."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-002",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/lab.json",
+        "reviewedSha256": "085d44d3638afbe401c007a919e53d706fc890dc84dad27bf3dbae1900abf5f4",
+        "note": "Took the reconciliation's primary fix. keeping#o1 is gone from objectives (lab.json:15-35), PERSONAL_FIELDS is gone from the starter, the README and the checks, and the unclaimed objective is recorded in the lab.json cleanup notes ('practised on its page'). No answer is dictated for an objective the lab claims."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-003",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "7ef7ccf61d11de00472e511ed3b1c99c3106ce4c19afdf0c90a37d07317717cc",
+        "note": "test_main.py:388-393 now asserts that every prompt contains json.dumps(Enrichment.model_json_schema()) and the ref of the sign-up it is for. Re-ran probe bypassmin (client.complete(\"classify\")): Task 8 now fails with 'Task 8: send build_prompt(minimize_for_prompt(signup)) so the prompt carries the Enrichment schema and the ref'. ai#o1's request half is observed."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-004",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/lab.json",
+        "reviewedSha256": "085d44d3638afbe401c007a919e53d706fc890dc84dad27bf3dbae1900abf5f4",
+        "note": "load_staging(records) and run_transform() now open `with connect() as conn:`, and the checks read through a second connection (the your_db fixture, test_main.py:78-82). Probes: nocommit (bare connect, executemany, close) fails Task 3 with '0 rows are visible from another connection ... `with connect() as conn:` so a clean exit commits'. autocommitwith fails Task 4 with the rollback message. pageidiom (the page's literal `with psycopg.connect(os.environ[\"DATABASE_URL\"]) as conn:`) passes both. Commit and rollback are both observed, so claiming connecting#o3 (lab.json:21) and loading#o1 (lab.json:22) is honest. README:82 states the Task 2 dependency, and a starter run with only connect() missing gives 'Task 4: finish connect() in Task 2 first'."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-005",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e",
+        "note": "README Task 4 (line 120) now uses the page's idiom, one `with connect() as conn:` block that commits on a clean exit and rolls back on an exception, and explains why the starter's autocommit loses the summary. conn.transaction() is gone from the README, the starter and the check messages (test_main.py:281-286). The page idiom passes (probe pageidiom)."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-006",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "7ef7ccf61d11de00472e511ed3b1c99c3106ce4c19afdf0c90a37d07317717cc",
+        "note": "The structural ast.Dict assertion is removed. test_task06 (test_main.py:324-337) is now behavioural only. Re-ran probes dictcall (`kept = dict()`) and setform (the page's set-of-seen-keys over rows sorted newest first): both pass. README:143 names both a dict and a set."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-007",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "7ef7ccf61d11de00472e511ed3b1c99c3106ce4c19afdf0c90a37d07317717cc",
+        "note": "test_main.py:153 accepts any call whose name ends in `open` and has an encoding keyword. Re-ran probe pathopen (`Path(path).open(encoding=\"utf-8\", newline=\"\")`): Task 1 passes."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-008",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "7ef7ccf61d11de00472e511ed3b1c99c3106ce4c19afdf0c90a37d07317717cc",
+        "note": "The per-body rule is replaced by a module-level check that FakeModelClient and enrich are both called (test_main.py:458-459), plus four mutants. Re-ran probe helper (the client is built in a helper function): Task 9 passes. Tests written as README Task 9 describes kill all four mutants in my scratch solve."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-009",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e",
+        "note": "README:22 is reworded to 'Each check is named after its task, and most failure messages say what to do next', with the read-the-E-lines and `-k task04` tip. README:212 adds the collection-error/NameError/SyntaxError entry, naming the Literal case. run_step (test_main.py:85-93) wraps database errors: a starter run with connect() done gives 'Task 4: the database rejected the SQL: syntax error at or near \"TODO\"'. Probe getenv gives 'Task 2: read os.environ[\"DATABASE_URL\"] so a missing variable raises KeyError, got AttributeError(...)'. The DID NOT RAISE case has its own message (test_main.py:279). Probe noliteral still fails at collection, which the new Troubleshooting entry covers."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-010",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/lab.json",
+        "reviewedSha256": "085d44d3638afbe401c007a919e53d706fc890dc84dad27bf3dbae1900abf5f4",
+        "note": "README:10 gives about 10 minutes of setup plus about 45 for the tasks, with the pause at 60 in total. lab.json minutes.estimatedMedian 55 / cap 60, and the notes keep the 'unpiloted authoring estimate' label. The fallback was applied: the SQL-dedup task, LATEST_CHECKINS_SQL and the checkins table are removed, dedup#o2 is dropped from objectives, and the gap is recorded in the notes. Nine tasks in 45 minutes is plausible with the remaining dictation; it is still unmeasured, as labelled."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-011",
+        "status": "open",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e",
+        "note": "Tasks 1 (README:90) and 5 (README:139) are now predict-then-run steps, and the check is the comparison. Task 3 (README:104) asks for the prediction, then gives the answer in the very next parenthesis: '(A plain INSERT fails with a duplicate-key error on the primary key; the upsert updates each email's row ...)'. That is still a pre-answered reasoning step, which the reconciliation's required fix removes. Fix: drop the parenthesis and tell the learner where to compare: for the upsert half, the Task 3 check's two-loads row count; for the plain-INSERT half, the loading page's 'ON CONFLICT turns a failure into a decision' section, or its 'Prediction' activity. Not part of the required fix, so not a reason to keep this open: dictating the operational code of Tasks 1-3 was rejected by the reconciler on cap grounds, and I accept that."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-012",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "7ef7ccf61d11de00472e511ed3b1c99c3106ce4c19afdf0c90a37d07317717cc",
+        "note": "Task 7 is now an allow-list: test_main.py:351-359 asserts exactly {ref, session, comment}. README:147-151 frames it as 'start from nothing and send only what that needs', with the free-text masking sentence, and README:6 is softened to 'without sending names, emails or phone numbers'. A learner applying the page's allow-list now passes."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-013",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/starter/pipeline/enrich.py",
+        "reviewedSha256": "5608c17a5a46b600973a8a84edf9d49175e724056418a7aba2492b8253b0d8e5",
+        "note": "The pseudonym docstring (enrich.py:19-24) and README:150 now call the plain hash a lab shortcut that anyone who guesses the email can reverse, and name the page's production method: a random token with the mapping kept on your side, or a keyed hash. The overclaiming 'without revealing it' and 'never seeing who it is' wording is gone."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-014",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e",
+        "note": "README:5-7 give the pipeline order (extract, validate, deduplicate, load to staging, transform, enrich) and say that each task builds one step with its own check data; 'ten linked tasks' is gone. README:122 now says 'the validated rows were loaded first'. The checkins table was removed with the SQL-dedup task, so it no longer appears unannounced. The end-to-end composition was not required, per the reconciliation."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-015",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e",
+        "note": "README:27 names the SQL course reading 'Installing Postgres and a SQL client' and adds `psql --version`. README:57-60 show the `postgres@` URL for the Windows installer and Linux packages. README:62 points to the Relational design lab README's Setup section for the password file. README:208 adds the `role \"...\" does not exist` entry, and README:197-198 give POSIX and PowerShell cleanup forms."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-016",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e",
+        "note": "README:158-159 asks for separate ValidationError and ModelError branches with distinct messages, and says why a transient failure gets a bounded retry. The checks accept both messages (test_main.py:397-401). Probe onebranch (both folded into one except) still passes, as the reconciliation allows. My two-branch solve passes."
+      },
+      {
+        "findingId": "py-pipe-lab-edu-017",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "5bce07b8179c0a9c4669122bedd793c13b58b0aa41e998d82f4b5f9d0ad9e88e",
+        "note": "README:8 now says 'Every person in the fixtures and the tests is made up.'"
+      }
+    ]
+  }
+}

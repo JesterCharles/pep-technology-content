@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "pep-react-lab-replacement-critic-sme (Claude Opus 5.5, fresh independent context)",
+  "reviewedPath": "react/effects-routing-and-rendering/coding-lab/lab.json",
+  "reviewedSha256": "cb6a3aa0b1b336fc62761b39bab35054debf71adb3279f870a67aeb825039570",
+  "artifactHashes": {
+    "coding-lab/README.md": "381a60eeacf016fd8cc3c92bf8d4bcfeaa4ff87f18f7aadab462411ac3863358",
+    "coding-lab/lab.json": "cb6a3aa0b1b336fc62761b39bab35054debf71adb3279f870a67aeb825039570"
+  },
+  "findings": [
+    {
+      "id": "sme-err-r1",
+      "severity": "medium",
+      "location": {
+        "file": "react/effects-routing-and-rendering/coding-lab/tests/t6-abort-on-unmount.test.jsx",
+        "line": 32
+      },
+      "claim": "The new Strict Mode check waits for the cards to load and only then asserts there is no 'Could not load' text, so it checks the final state only. A hook that does not ignore the AbortError but clears error on success still passes 8/8. Reproduced in a scratch copy with a correct hook changed in two ways: the AbortError guard is removed and the success branch also clears the error state. Under Strict Mode, that hook sets the aborted first request's AbortError as error state. The page then shows the 'Could not load services' banner until the second request settles; in the browser dev server that is one full network round trip. This contradicts TASK 6 ('an aborted request is not a failure to show') and the README task 6 sentence ('that abort must not show as an error'). A scratch probe confirmed a fix: render <StrictMode><MemoryRouter><App/> with stubPendingFetch() so the surviving request stays pending, flush with await act(async () => { await new Promise((r) => setTimeout(r, 0)); }), then assert no 'Could not load' text and that 'Loading services...' shows. That probe fails this mutant and passes the overlay 3 out of 3 runs.",
+      "evidence": [],
+      "recommendation": "In t6's Strict Mode part, render with stubPendingFetch() first, so the second request stays pending. Flush pending promises and assert there is no error banner while 'Loading services...' shows; then keep the existing loaded-state check with stubRoutedFetch.",
+      "reviewedSha256": "cdd4caba59d3357e56f5e0a3206933c99f9520c9a699dda13cd8cbc5d5613c58"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/react/effects-routing-and-rendering/coding-lab-critic-sme.json",
+    "items": [
+      {
+        "findingId": "sme-err-1",
+        "status": "resolved",
+        "file": "react/effects-routing-and-rendering/coding-lab/tests/helpers.js",
+        "reviewedSha256": "68ea44f4cfd48ab0b3ac4fafda7f4b073a4c7c3d5d17d554325df9cacca48857",
+        "note": "Final bytes at commit 89064f80, rerun in a scratch copy: starter fails all 8 failingTests (t4 now at the first-render loading check, t6 at the missing signal); the updated overlay passes 8/8 three times plus twice more with outbound network denied and starter/node_modules installed, and its file lines match expected/on-completion.txt. helpers.js stubs are now abort-aware (DOMException AbortError on abort or already-aborted signal, settled on a later tick), and t6 adds a Strict Mode render. Both r1 mutants now fail t6 ('Unable to find role=\"heading\"'): the hook that does not ignore AbortError, and the useRef already-fetched guard. Valid alternatives pass 8/8: an AbortError name check, a check of the controller's aborted flag, and an ignore flag set in cleanup. A narrower residual variant (no AbortError guard but error cleared on success) is filed as new finding sme-err-r1."
+      },
+      {
+        "findingId": "sme-err-2",
+        "status": "resolved",
+        "file": "react/effects-routing-and-rendering/coding-lab/tests/t4-use-fetch-hook.test.jsx",
+        "reviewedSha256": "89cd4f9ae9903a19a5a43ad08051a800d872706a3d7affba4f196b79dd801c23",
+        "note": "Final bytes at commit 89064f80, rerun in a scratch copy: starter fails all 8 failingTests (t4 now at the first-render loading check, t6 at the missing signal); the updated overlay passes 8/8 three times plus twice more with outbound network denied and starter/node_modules installed, and its file lines match expected/on-completion.txt. t4 now records every render and asserts seen[0].loading === true; a hook starting with loading false now fails t4 ('expected false to be true')."
+      },
+      {
+        "findingId": "sme-err-3",
+        "status": "resolved",
+        "file": "react/effects-routing-and-rendering/coding-lab/tests/helpers.js",
+        "reviewedSha256": "68ea44f4cfd48ab0b3ac4fafda7f4b073a4c7c3d5d17d554325df9cacca48857",
+        "note": "Final bytes at commit 89064f80, rerun in a scratch copy: starter fails all 8 failingTests (t4 now at the first-render loading check, t6 at the missing signal); the updated overlay passes 8/8 three times plus twice more with outbound network denied and starter/node_modules installed, and its file lines match expected/on-completion.txt. jsonResponse now returns a real Response with a JSON Content-Type. A correct fetchJson that reads the body as text and parses it itself now passes 8/8, including the new t4 non-JSON-body step (its SyntaxError is not an 'HTTP ' error)."
+      },
+      {
+        "findingId": "sme-err-4",
+        "status": "resolved",
+        "file": "react/effects-routing-and-rendering/coding-lab/lab.json",
+        "reviewedSha256": "cb6a3aa0b1b336fc62761b39bab35054debf71adb3279f870a67aeb825039570",
+        "note": "Final bytes at commit 89064f80, rerun in a scratch copy: starter fails all 8 failingTests (t4 now at the first-render loading check, t6 at the missing signal); the updated overlay passes 8/8 three times plus twice more with outbound network denied and starter/node_modules installed, and its file lines match expected/on-completion.txt. lifting-state-up#o3 is now scored: the useEffect-synced visible-list mutant fails t7's ServiceList render count ('expected 4 to be 3'), while a useMemo-derived list passes. Malformed bodies are now scored by t4, and aborted requests by t6 (see sme-err-r1 for a residual). cleanup.notes now names the remaining unscored clauses: the empty-array clause, the Strict-Mode explanation, and the predict and describe-memo clauses."
+      },
+      {
+        "findingId": "sme-err-5",
+        "status": "resolved",
+        "file": "react/effects-routing-and-rendering/coding-lab/README.md",
+        "reviewedSha256": "381a60eeacf016fd8cc3c92bf8d4bcfeaa4ff87f18f7aadab462411ac3863358",
+        "note": "Final bytes at commit 89064f80, rerun in a scratch copy: starter fails all 8 failingTests (t4 now at the first-render loading check, t6 at the missing signal); the updated overlay passes 8/8 three times plus twice more with outbound network denied and starter/node_modules installed, and its file lines match expected/on-completion.txt. The optional block now runs 'cd ../starter' from the tests folder and says the dev server needs its own terminal."
+      }
+    ]
+  }
+}

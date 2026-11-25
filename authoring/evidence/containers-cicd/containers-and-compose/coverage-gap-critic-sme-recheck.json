@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "cg-critic-sme (independent Claude critic subagent, 2026-11-17)",
+  "reviewedPath": "containers-cicd/containers-and-compose/coding-lab/README.md",
+  "reviewedSha256": "09ad1bd35f5456818118ec35e91b79b2afabf1ad2d2e3202756055ea56a0e450",
+  "artifactHashes": {
+    "coding-lab/lab.json": "0e2dd1f9eaec3d4df988740192f75a9ba0f0d6c2b259920c326ee141669fb479",
+    "coding-lab/README.md": "09ad1bd35f5456818118ec35e91b79b2afabf1ad2d2e3202756055ea56a0e450"
+  },
+  "findings": [
+    {
+      "id": "cg-sme-containers-014",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "line": 139
+      },
+      "claim": "frontend-deps now rejects a single glob COPY of the npm manifest files before npm ci, although in this project the glob can match only package.json and package-lock.json, the two files the rule allows (git ls-tree of starter/frontend at this head lists no other package* entry; the build-time glob match itself is inferred, not run with an engine). The message then says \"source copied earlier makes every source change install everything again\", which is false for that form and would send a learner hunting for a non-existent mistake (critic run on a copy of a private solution, one-line change). The README names the two files, so the explicit form is what the lab teaches; this is a valid-form rejection like cg-sme-containers-007.",
+      "evidence": [
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+          "section": "frontend-deps rule",
+          "retrievedAt": "2026-11-18T04:46:42Z",
+          "textSha256": "3a8299fd0d3de494bf17d44b68aa113726375e7313139ff5e09e8e46d3f4238b"
+        },
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/README.md",
+          "section": "Phase 3, frontend/Dockerfile",
+          "retrievedAt": "2026-11-18T04:46:42Z",
+          "textSha256": "09ad1bd35f5456818118ec35e91b79b2afabf1ad2d2e3202756055ea56a0e450"
+        }
+      ],
+      "recommendation": "Accept a source word whose glob matches only manifest names (for example, expand it against the frontend folder), or say in the README and message that the two files must be named explicitly.",
+      "reviewedSha256": "3a8299fd0d3de494bf17d44b68aa113726375e7313139ff5e09e8e46d3f4238b"
+    },
+    {
+      "id": "cg-sme-containers-015",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "line": 246
+      },
+      "claim": "compose-ports checks only ports entries, so a db service set to host network mode with no ports entry passes all compose rules (critic run on a copy of a private solution; first seen in the first pass, not reported then). The Docker host network driver page says a host-mode container shares the host's networking namespace, its application is available on the host's IP address, and publish options are ignored; so the 127.0.0.1-only intent the README states for published ports is bypassed, and runbook-run-env already rejects the equivalent docker run host-network option as \"reachable from the network\", so the two rules disagree. Inferred, not run with an engine: the db would also leave the Compose network, so the api could no longer reach it by service name, which compose-url does not notice. Low: an unlikely edit.",
+      "evidence": [
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+          "section": "compose-ports and runbook-run-env rules",
+          "retrievedAt": "2026-11-18T04:46:42Z",
+          "textSha256": "3a8299fd0d3de494bf17d44b68aa113726375e7313139ff5e09e8e46d3f4238b"
+        },
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/README.md",
+          "section": "Phase 3, compose.yaml",
+          "retrievedAt": "2026-11-18T04:46:42Z",
+          "textSha256": "09ad1bd35f5456818118ec35e91b79b2afabf1ad2d2e3202756055ea56a0e450"
+        },
+        {
+          "url": "https://docs.docker.com/engine/network/drivers/host/",
+          "section": "Host network driver: introduction and note on published ports",
+          "retrievedAt": "2026-11-18T04:45:39Z",
+          "textSha256": "2ea341498864097dcae1a070d6d0fb6301cfbee5d5302fb6d3760fde8d47ec95"
+        }
+      ],
+      "recommendation": "Reject network_mode host (and any non-default network_mode) on both services in compose-ports, with the same message runbook-run-env uses.",
+      "reviewedSha256": "3a8299fd0d3de494bf17d44b68aa113726375e7313139ff5e09e8e46d3f4238b"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/containers-cicd/containers-and-compose/coverage-gap-critic-sme.json",
+    "items": [
+      {
+        "findingId": "cg-sme-containers-001",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "3a8299fd0d3de494bf17d44b68aa113726375e7313139ff5e09e8e46d3f4238b",
+        "note": "Critic runs at cb8c2e07 on a fresh git-archive copy (npm ci, node --test): starter fails 20/20 matching expected/starter-summary.txt, both private solutions pass 20/20 matching expected/solved-summary.txt; the critic variant scripts were rerun against the current rules on a copy of a private solution: whole-context and source-folder copies before the dependency step are now rejected by backend-deps and frontend-deps. A valid-form side effect is raised as new finding cg-sme-containers-014."
+      },
+      {
+        "findingId": "cg-sme-containers-002",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "3a8299fd0d3de494bf17d44b68aa113726375e7313139ff5e09e8e46d3f4238b",
+        "note": "Critic runs at cb8c2e07 on a fresh git-archive copy (npm ci, node --test): starter fails 20/20 matching expected/starter-summary.txt, both private solutions pass 20/20 matching expected/solved-summary.txt; the critic variant scripts were rerun against the current rules on a copy of a private solution: older Java and Node image tags, a wrapper run without the wrapper files copied, and a bare Maven run are all rejected; a JRE image in the build stage is rejected; common valid variants (other Java 25 and Node 24 tag flavours, separate manifest copies, a chmod or cache mount before the wrapper, exec-form RUN, lower-case stage keyword) are accepted."
+      },
+      {
+        "findingId": "cg-sme-containers-003",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "3a8299fd0d3de494bf17d44b68aa113726375e7313139ff5e09e8e46d3f4238b",
+        "note": "Critic runs at cb8c2e07 on a fresh git-archive copy (npm ci, node --test): starter fails 20/20 matching expected/starter-summary.txt, both private solutions pass 20/20 matching expected/solved-summary.txt; the critic variant scripts were rerun against the current rules on a copy of a private solution: run-db-alone now rejects publish-all, host networking, a foreground run, attached-form all-interface port publishing, an explicit all-interfaces address and an attached or long-form typed password, and accepts the equals and attached forms of loopback publishing and the env-file option."
+      },
+      {
+        "findingId": "cg-sme-containers-004",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "3a8299fd0d3de494bf17d44b68aa113726375e7313139ff5e09e8e46d3f4238b",
+        "note": "Critic runs at cb8c2e07 on a fresh git-archive copy (npm ci, node --test): starter fails 20/20 matching expected/starter-summary.txt, both private solutions pass 20/20 matching expected/solved-summary.txt; the critic variant scripts were rerun against the current rules on a copy of a private solution: multi-pair ENV, continuation-line ENV and a short password-like name are now all rejected, with the file and key named."
+      },
+      {
+        "findingId": "cg-sme-containers-005",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/README.md",
+        "reviewedSha256": "09ad1bd35f5456818118ec35e91b79b2afabf1ad2d2e3202756055ea56a0e450",
+        "note": "Troubleshooting now uses a neutral placeholder form for runbook values; no key's answer is given, and the Phase 5 table states needs, not commands."
+      },
+      {
+        "findingId": "cg-sme-containers-006",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "3a8299fd0d3de494bf17d44b68aa113726375e7313139ff5e09e8e46d3f4238b",
+        "note": "Critic runs at cb8c2e07 on a fresh git-archive copy (npm ci, node --test): starter fails 20/20 matching expected/starter-summary.txt, both private solutions pass 20/20 matching expected/solved-summary.txt; the critic variant scripts were rerun against the current rules on a copy of a private solution: one-service start, a ps that prints names only, chained commands, and switched-off follow or volumes options are now rejected; a plain stop instead of down and a foreground up are rejected too."
+      },
+      {
+        "findingId": "cg-sme-containers-007",
+        "status": "open",
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "3a8299fd0d3de494bf17d44b68aa113726375e7313139ff5e09e8e46d3f4238b",
+        "note": "Critic runs at cb8c2e07 on a fresh git-archive copy (npm ci, node --test): starter fails 20/20 matching expected/starter-summary.txt, both private solutions pass 20/20 matching expected/solved-summary.txt; the critic variant scripts were rerun against the current rules on a copy of a private solution: three of the four valid forms rejected before are now accepted (a global file option before the subcommand, the long docker container run form, the hostname option before the image). Still open, low: a shell wrapper that runs printenv for one variable is rejected with \"print exactly one named variable, never the whole environment\", although it prints one variable and the shell-echo form is accepted; the README does not list which exec forms are understood."
+      },
+      {
+        "findingId": "cg-sme-containers-008",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/README.md",
+        "reviewedSha256": "09ad1bd35f5456818118ec35e91b79b2afabf1ad2d2e3202756055ea56a0e450",
+        "note": "README Phase 5 table now says down -v also removes anonymous volumes and never external ones, and runbook-lifecycle excludes external volumes from the expected list; consistent with the Compose down reference retrieved in the first pass."
+      },
+      {
+        "findingId": "cg-sme-containers-009",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "3a8299fd0d3de494bf17d44b68aa113726375e7313139ff5e09e8e46d3f4238b",
+        "note": "Critic runs at cb8c2e07 on a fresh git-archive copy (npm ci, node --test): starter fails 20/20 matching expected/starter-summary.txt, both private solutions pass 20/20 matching expected/solved-summary.txt; the critic variant scripts were rerun against the current rules on a copy of a private solution: an env-file password written as an interpolation is now rejected with a message saying docker run does not expand it, and README Phase 5 says why. The quote-stripping semantics remain inferred from the docs, not run."
+      },
+      {
+        "findingId": "cg-sme-containers-010",
+        "status": "open",
+        "file": "authoring/evidence/containers-cicd/containers-and-compose/deferred-reviewable.json",
+        "reviewedSha256": "e82d1be6582c577d3859cf868cf64517e027bac491770d3feab769d4201484b1",
+        "note": "Partly run evidence. deferred-reviewable.json still lists lab.json and README.md with deferral hashes that do not match the current bytes; the author retires it after both rechecks, so it is open now. Run evidence: the record is byte-identical to the first-pass head 8e24dc2e (git diff empty) and still binds pre-extension lab bytes; the author rewrites it only after this recheck, from the final head, so it stays open until then. Critic reproduction at this head is in the 001 note."
+      },
+      {
+        "findingId": "cg-sme-containers-011",
+        "status": "resolved",
+        "file": "authoring/evidence/containers-cicd/containers-and-compose/coding-lab-timing.json",
+        "reviewedSha256": "5c4efdc0d6ab22122e19dcc0fb034fc3e104469d56237f90bc60b2047a25f19d",
+        "note": "Timing record now counts 20 tests and six file groups, recomputes the worst case and per-day worst, and records re-measured test-run seconds; README Timing labels the figures an authoring estimate and the S36/S37 split equals the phase sums."
+      },
+      {
+        "findingId": "cg-sme-containers-012",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/starter/compose.yaml",
+        "reviewedSha256": "1876d2981bf22d09acd1307633b9628f96808264bedfa2bc7d64cfee2587e354",
+        "note": "Every starter TODO and fixtures/.env.example now points at \"README phase 3, <file heading>\" (runbook: phase 5), and each heading exists in the README."
+      },
+      {
+        "findingId": "cg-sme-containers-013",
+        "status": "resolved",
+        "file": "authoring/evidence/containers-cicd/containers-and-compose/coding-lab-bypass/run-bypass.mjs",
+        "reviewedSha256": "45c8fae82f18938ba8c99fe9f6882f9bada90831072de1b0ba9133802d61183f",
+        "note": "At cb8c2e07 the only file under coding-lab-bypass is the runner, which takes a private cases directory; run against the private staging directory it reports all 59 cases caught. git log --all finds no commit that contains any of the runbook case directories (the pre-rewrite head survives only as an unreferenced local object, on no branch, and the branch is not on the remote). Residual, escalated outside this branch: main's tree and history still carry the 15 older case projects, which together still pass 12 of the 20 current rules (critic run). Resolved for this branch's scope only."
+      }
+    ]
+  }
+}

@@ -79,35 +79,11 @@ add_tag("b")   # ['a', 'b']  the same default list
 - list, dict and set change in place; int, str and tuple never do.
 - Copy with `[:]`, `list()`, `dict.copy()` or `copy.deepcopy()`; use `None` instead of a mutable default.
 
-Next topic: Modules, imports and virtual environments
-
 ## Cheat sheet
 
 A meeting room has a whiteboard screwed to the wall when the room is built. A meeting that brings its own board uses that one, but a meeting that forgets writes on the wall board, and the notes from every earlier meeting are still on it. A careful office instead keeps a stack of fresh boards by the door and hands a new one to each meeting that arrives without one.
 
 A mutable default is made once, like the wall board; checking for nothing and making a fresh one on each call is the stack.
-
-Use these same observable steps when working from the text alternative.
-
-1. Where to look: Read the code in the workspace on the right (below these steps on a narrow screen).
-2. What to do or type: Under Prediction, pick the result you expect.
-3. What to expect: Pick Low, Medium or High confidence, then press Check my prediction.
-4. How to know it's done: Feedback appears below and Continue shows. A wrong guess is fine: the feedback explains it and you still move on.
-
-1. Where to look: In Run a statement, press the statement buttons, starting with `b = a`.
-2. What to do or type: The output box shows each result, and the arrows in the panel show which names point at which list.
-3. What to expect: Statements run in the order you press them: pressing `c.append(4)` before `c = list(a)` gives a `NameError`.
-4. How to know it's done: Each check above changes from open to done when a run shows it. Continue appears when every check is done.
-
-1. Where to look: In What does this operation do?, read the item on the card.
-2. What to do or type: Press the button for the group it belongs to: Changes the original or Makes a new object.
-3. What to expect: Right: the item moves to Sorted so far and the next item appears. Wrong: the feedback says Not this group and the card stays, so try another button.
-4. How to know it's done: Continue appears when every item is sorted.
-
-1. Where to look: Read the question and the code it names in the workspace on the right.
-2. What to do or type: Pick one answer, pick your confidence, then press Check answer.
-3. What to expect: Feedback appears below. If the first answer is not right, a second question appears; answer it and press Check second try.
-4. How to know it's done: Either way, Continue then shows and takes you to the recap.
 
 |  |  |
 | --- | --- |

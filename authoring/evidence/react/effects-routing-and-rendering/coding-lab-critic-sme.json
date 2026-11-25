@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "pep-react-lab-replacement-critic-sme (Claude Opus 5.5, fresh independent context)",
+  "reviewedPath": "react/effects-routing-and-rendering/coding-lab/lab.json",
+  "reviewedSha256": "5bdf324e913020ba7ee0cda2102e96e848663f1d1a0908164f90813d04906bf9",
+  "artifactHashes": {
+    "coding-lab/README.md": "6096832f008e33191c0d2d91e41a60f180896e2f12be6c8ff422f93b7e67e995",
+    "coding-lab/lab.json": "5bdf324e913020ba7ee0cda2102e96e848663f1d1a0908164f90813d04906bf9"
+  },
+  "findings": [
+    {
+      "id": "sme-err-1",
+      "severity": "high",
+      "location": {
+        "file": "react/effects-routing-and-rendering/coding-lab/tests/helpers.js",
+        "line": 63
+      },
+      "claim": "stubRoutedFetch (and stubFailingFetch/stubEmptyListFetch) ignores options.signal: an aborted request still resolves with data, and no test renders under StrictMode even though starter/src/main.jsx does. As a result two wrong useFetch implementations pass 8/8: (a) a hook that aborts in cleanup but does not ignore the AbortError (TASK 4 explicitly requires ignoring it), and (b) a hook with a useRef 'already fetched this url' guard. Reproduced in a scratch copy: both mutants of the solved starter give 8/8 passed. A scratch probe rendering <StrictMode><MemoryRouter><App/> with an abort-aware fetch stub (reject with DOMException AbortError when the signal aborts) passes on the solved starter but fails both mutants ('Unable to find role=heading name Catalog API' - mutant (a) is left showing the error banner from the aborted first Effect run, mutant (b) never refetches after the aborted run). So the exact behaviour in the README claim at README.md lines 98-101 (abort in cleanup makes Strict Mode's double Effect run safe) and in loading-and-error-states#o2 ('handle aborted ... requests separately') can be wrong while all tests pass, and such a solution is broken in 'npm run dev'.",
+      "evidence": [],
+      "recommendation": "Make the shared stubs abort-aware like real fetch (reject with a DOMException named AbortError when the signal aborts, and immediately if signal.aborted), and add a StrictMode render of the overview (e.g. in t5's loaded case or t6) that must reach the loaded cards with no error banner.",
+      "reviewedSha256": "bc7cf7cdcdd047532a30bd1d36a6c2ce30851c152b3b5a35b392f18609f29076"
+    },
+    {
+      "id": "sme-err-2",
+      "severity": "medium",
+      "location": {
+        "file": "react/effects-routing-and-rendering/coding-lab/tests/t4-use-fetch-hook.test.jsx",
+        "line": 29
+      },
+      "claim": "The 'loading is true from the first render' assertion reads result.current after renderHook's act() has already flushed the Effect, so a hook that starts with useState(false) and only sets loading true inside the Effect passes t4. Reproduced in a scratch copy: a correct hook changed only to start with loading false still passes t4 (in that run other tests failed only because the page used read data.length without a null guard when loading is false; a page that guards with !data would pass them too). Rated medium because the visible flash depends on how the page branches. Such a hook makes the first painted frame show the empty/loaded branch before 'Loading...', which is the dishonest-state bug task 5 teaches against.",
+      "evidence": [],
+      "recommendation": "Capture every render's return value (e.g. renderHook(() => { const r = useFetch(url); seen.push(r); return r; })) and assert seen[0].loading === true and seen[0].data === null.",
+      "reviewedSha256": "a88d1cd42843601960cc2ff1bb45d4b9e27fb4f7b2889476d3ce85953b0ef867"
+    },
+    {
+      "id": "sme-err-3",
+      "severity": "high",
+      "location": {
+        "file": "react/effects-routing-and-rendering/coding-lab/tests/helpers.js",
+        "line": 54
+      },
+      "claim": "jsonResponse returns a plain object with only ok, status and json(); it has no text(), headers or statusText. A correct fetchJson that reads the body as text and parses it itself (or that checks the response's content-type header) throws a TypeError inside every stub and is rejected. Reproduced in a scratch copy: a correct solution whose fetchJson reads the body as text and parses it itself fails 7 of 8 tests with misleading messages (e.g. t4 'expected null to deeply equal { from: \\'a\\' }', t5 'Unable to find ... No services reporting yet'), while the same code works against the real dev mock API and Node's Response.",
+      "evidence": [],
+      "recommendation": "Build stub responses with the platform Response, e.g. new Response(JSON.stringify(body), { status, headers: { \"Content-Type\": \"application/json\" } }), which the Vitest jsdom environment already provides. Verified in a scratch copy: with jsonResponse returning a real Response, the correct json()-based solution and the text()-based variant both pass 8/8.",
+      "reviewedSha256": "bc7cf7cdcdd047532a30bd1d36a6c2ce30851c152b3b5a35b392f18609f29076"
+    },
+    {
+      "id": "sme-err-4",
+      "severity": "low",
+      "location": {
+        "file": "react/effects-routing-and-rendering/coding-lab/lab.json",
+        "line": 85
+      },
+      "claim": "The partial-objective note in cleanup.notes lists only navigation#o2 (replace) and loading-data-with-useeffect#o3 (Strict Mode explanation), but other claimed clauses are also not scored: what-makes-a-component-re-render#o3 'describe memo as a performance optimisation rather than a correctness fix' (explanatory, untestable here); lifting-state-up#o3 'remove state that can be computed' - a visible list kept in extra state and synced with useEffect passes t7 because act() flushes the sync Effect before assertions (reproduced in a scratch copy: that variant of a correct solution gives 8/8 passed); loading-and-error-states#o2 'handle aborted ... separately' - unscored (see sme-err-1).",
+      "evidence": [],
+      "recommendation": "Extend the partial-objective sentence to name these clauses, or add checks (for lifting-state-up#o3, a render-count assertion that a filter click causes exactly one OverviewPage render).",
+      "reviewedSha256": "5bdf324e913020ba7ee0cda2102e96e848663f1d1a0908164f90813d04906bf9"
+    },
+    {
+      "id": "sme-err-5",
+      "severity": "low",
+      "location": {
+        "file": "react/effects-routing-and-rendering/coding-lab/README.md",
+        "line": 33
+      },
+      "claim": "Setup says 'From this lab folder: cd tests, npm ci', then the optional block runs 'cd starter' with no reset; followed in sequence from tests/, 'cd starter' fails.",
+      "evidence": [],
+      "recommendation": "Use 'cd ../starter' or restate 'From the lab folder' before the optional block.",
+      "reviewedSha256": "6096832f008e33191c0d2d91e41a60f180896e2f12be6c8ff422f93b7e67e995"
+    }
+  ]
+}

@@ -16,7 +16,7 @@ await fetch("/api/records", {
 });
 ```
 
-A GET needs only a URL. A POST with JSON needs three things: the method, the header and a string body.
+A GET needs only a URL. A request with a JSON body needs three things: the method, the header and a string body.
 
 ```
 const res = await fetch(url, {
@@ -69,7 +69,7 @@ Where to act: The `fetch` call in `createRecord`.
 
 Next step: Pass an options object as the second argument with `method`, `headers` and `body`, following the example on this page.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: The `body` property.
 
@@ -113,7 +113,7 @@ What is the fix?
 - Spring Framework: CORS, retrieved 2026-11-04
 - Spring Framework: Mapping requests, retrieved 2026-11-04
 
-First draft, retrieved 2026-11-04. These claims have not had independent review yet, so treat them as unverified until that review is recorded.
+Sources checked on 2026-11-04; independent review pending.
 
 ## Static interaction alternatives
 

@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "author": "pep-react-lab-replacement author lane (Claude Opus 5.5)",
+  "decidedBy": "pep-react-lab-replacement-reconciler (Claude Opus 5.5, fresh independent context)",
+  "reviewedPath": "react/components-and-state/coding-lab/lab.json",
+  "reviewedSha256": "778d3219a73609becc7ce9048a8e294d8899e66b81449072a15485560cdfcda7",
+  "decisions": [
+    {
+      "findingId": "edu-cs-1",
+      "decision": "accept",
+      "rationale": "Reproduced on a copy of the reviewed snapshot with the private solution applied: replacing the three updater calls with one non-updater setter call that adds three still gives 8/8 passed, so usestate#o3's updater clause is unscored, and cleanup.notes carries no partial-objective note. A scoring fix exists inside the existing test, verified by probe over 3 repeated runs: two native clicks of Run checks inside a single act() (no re-render between them) read 9 after the first click's 3 with updater functions, but 6 with the single-non-updater mutant, and the stale starter shape fails too. Fix: tests/t6-run-checks.test.jsx (same test name) - after the existing first click, add an act(() => { button.click(); button.click(); }) step with a comment explaining that both clicks are handled before React re-renders, and assert the counter reads '9 checks run'; query the counter once and assert with toHaveTextContent (folds in edu-cs-7). lab.json cleanup.notes: add a partial-objective sentence for usestate#o3's 'predict the rendered value' clause only (the TASK 6 comment states the stale result; prediction is practised on the topic page). No change to failingTests or expected/on-completion.txt."
+    },
+    {
+      "findingId": "edu-cs-2",
+      "decision": "accept",
+      "rationale": "Reproduced: with the solved masthead changed to use class instead of className, t1 still passes (React 19 renders the class attribute and only logs an 'Invalid DOM property' console error). The legacy snippet contains no attribute needing camelCase. Probe verified that a console.error spy in t1 catches both class and a lowercase tabindex while the correct solution logs nothing. Fix: starter/src/components/DashboardHeader.jsx TASK 1 legacy snippet - add one attribute that JSX spells in camelCase (e.g. tabindex=\"-1\" on the h1 as a skip-link focus target); tests/t1-masthead.test.jsx (same test name) - spy on console.error around the render, fail on any 'Invalid DOM property' message, and assert the camelCase attribute is present on the rendered element. Combine with sme-cs-1's rerender change."
+    },
+    {
+      "findingId": "edu-cs-3",
+      "decision": "accept",
+      "rationale": "Each sub-claim reproduced as a passing mutant of the solved starter (8/8): (a) ServiceCard keeping its own local StatusBadge/STATUS_LABELS copy; (b) MaintenanceNotice never returning null with the guard moved to the call site; (c) a || fallback instead of a destructuring default for team; (d) a hard-coded Email Relay item and a list derived from the imported initialServices instead of state. Scoring fixes verified by probe: (a) in tests/t3-status-badge-module.test.jsx, vi.mock the StatusBadge module with importOriginal and wrap the default export in vi.fn, render one ServiceCard, and assert the wrapped StatusBadge was called (the local-copy mutant fails, the solution passes; the starter still fails first at the STATUS_LABELS assertion); (b) in starter/src/components/ServiceCard.jsx make MaintenanceNotice a named export, and in tests/t4-conditional-display.test.jsx render it with no maintenance and assert it renders nothing (container empty), which a call-site-only guard cannot satisfy; (d) as sme-cs-2 (t8 hides Email Relay, Down now list must become empty). (c) has no fair behavioral discriminator (both forms render the same text for a missing team), so add props#o1's destructuring-default form to the lab.json cleanup.notes partial-objective sentence. Test names and file set unchanged."
+    },
+    {
+      "findingId": "edu-cs-4",
+      "decision": "accept",
+      "rationale": "Verified in README.md: Setup ends inside tests/ ('cd tests', 'npm ci') and the optional block then runs 'cd starter', which fails from tests/; nothing says npm run dev holds the terminal. Fix: README.md optional dev block - start with 'From the lab folder (cd .. if you are still in tests):' or use 'cd ../starter', and add one line to run the dev server in a second terminal and stop it with Ctrl+C. Same edit closes sme-cs-8."
+    },
+    {
+      "findingId": "edu-cs-5",
+      "decision": "accept",
+      "rationale": "Verified: the TASK 3 comment in starter/src/components/StatusBadge.jsx says ServiceCard should import 'both', and README task 3 says 'import both where the card needs them', but ServiceCard only renders the component; STATUS_LABELS is used inside StatusBadge (and by part 2's StatusLegend via a named import). Fix: StatusBadge.jsx TASK 3 comment and README task 3 - ServiceCard imports the default StatusBadge; STATUS_LABELS is a named export so other modules (such as part 2's legend) can import it with braces. Drop 'both'."
+    },
+    {
+      "findingId": "edu-cs-6",
+      "decision": "accept",
+      "rationale": "Verified: the TASK 1 snippet references /beacon.svg and the snapshot starter has no public/ directory, so the optional dev view shows a broken image after a correct task 1. Fix: ship a tiny self-authored, license-clean starter/public/beacon.svg (Vite serves public/ at the site root; no third-party licence record is needed for an original asset). Same edit closes sme-cs-7."
+    },
+    {
+      "findingId": "edu-cs-7",
+      "decision": "accept",
+      "rationale": "Verified in the critic starter run: t6 fails with the generic 'Unable to find an element with the text: 3 checks run ... broken up by multiple elements' message, which points at markup rather than the stale count. Fix: tests/t6-run-checks.test.jsx - query the counter once (getByText(/checks run/)) and assert with toHaveTextContent so a failure reports expected versus received counts; applied in the same t6 edit as edu-cs-1. The starter still fails t6 with a stable message."
+    },
+    {
+      "findingId": "sme-cs-1",
+      "decision": "accept",
+      "rationale": "Reproduced: the solved masthead with a literal 6 in place of the serviceCount expression still gives 8/8 passed, because t1 renders only serviceCount={6}. Probe verified that rerendering with a second count (4) and asserting the banner follows it fails the literal mutant and passes the solution. Fix: tests/t1-masthead.test.jsx (same test name) - rerender DashboardHeader with a different serviceCount and assert the banner text follows it; combine with the edu-cs-2 console.error check."
+    },
+    {
+      "findingId": "sme-cs-2",
+      "decision": "accept",
+      "rationale": "Reproduced: a hard-coded Email Relay list item, and a Down now list derived from the imported initialServices, both give 8/8 passed, because t8 only hides Catalog API (never changing the down set). Probe verified: hiding Email Relay and asserting the Down now panel has no list items fails both mutants and passes the solution. Fix: tests/t8-hide-keys-and-down-list.test.jsx (same test name) - after the existing assertions, hide Email Relay and assert within the Down now section that queryAllByRole('listitem') is empty."
+    },
+    {
+      "findingId": "sme-cs-3",
+      "decision": "accept",
+      "rationale": "Verified in the critic starter run: t4, t5, t7 and t8 all fail on the shipped starter with 'Unable to find an accessible element with the role \"heading\" ...' because Panel (task 2) drops its children, not for task-specific reasons. Fix: README.md 'How to test' - add one sentence that tests 4, 5, 7 and 8 render the whole App and show their own failure only once task 2 (Panel children) is done."
+    },
+    {
+      "findingId": "sme-cs-4",
+      "decision": "accept",
+      "rationale": "Verified: README task 8 says 'key the cards by the service itself', and a key={service} mutant fails t8 at 'Runbook: runbook/checkout-api' (all keys stringify to the same value), so a literal reader is sent into a confusing failure. Fix: README.md task 8 (and keep the App.jsx TASK 8 part 2 wording aligned) - 'key the cards by a stable value from the service, such as its id, rather than the array index'."
+    },
+    {
+      "findingId": "sme-cs-5",
+      "decision": "accept",
+      "rationale": "Reproduced all three named passing mutants (single non-updater setter, call-site maintenance guard, local StatusBadge copy). Resolution per the preferred order: usestate#o3's updater clause becomes scored by the t6 batched double-click assertion (edu-cs-1), project-structure#o2 by the t3 module-mock assertion (edu-cs-3a) and conditional-display#o3 by the t4 direct MaintenanceNotice render (edu-cs-3b). Fix in lab.json cleanup.notes: add a partial-objective sentence naming only what stays unscored - usestate#o3's 'predict' clause and props#o1's destructuring-default form - as practised on their topic pages. No objective id is removed."
+    },
+    {
+      "findingId": "sme-cs-6",
+      "decision": "accept",
+      "rationale": "Verified: in this reconciler's own solved run Vitest printed t8, t7, t5, t4, t2, t1, t6, t3, so fileParallelism:false does not give name order; expected/on-completion.txt and lab.json already say order varies. Fix: tests/vitest.config.js comment only - files run one at a time (no parallel workers) and file order may vary, matching expected/on-completion.txt."
+    },
+    {
+      "findingId": "sme-cs-7",
+      "decision": "accept",
+      "rationale": "Duplicate of edu-cs-6, verified the same way (no starter/public/beacon.svg). Fix: ship the self-authored starter/public/beacon.svg described under edu-cs-6."
+    },
+    {
+      "findingId": "sme-cs-8",
+      "decision": "accept",
+      "rationale": "Duplicate of edu-cs-4, verified in README.md (Setup leaves the learner in tests/, the optional block runs 'cd starter'). Fix: the README optional-block change described under edu-cs-4."
+    }
+  ]
+}

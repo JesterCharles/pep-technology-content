@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "fresh independent Python technology SME critic subagent (Claude), non-author, non-reconciler, t25 gate-debt loop-3 recheck 2026-11-18",
+  "reviewedPath": "python/python-fundamentals/writing-and-running-script-files/artifact.html",
+  "reviewedSha256": "3da79091bf3d7b784a3938506c089a8545a57d4a706334cfc3d426e9bd6b6b36",
+  "artifactHashes": {
+    "artifact.html": "3da79091bf3d7b784a3938506c089a8545a57d4a706334cfc3d426e9bd6b6b36"
+  },
+  "findings": [
+    {
+      "id": "pyf-sme-loop3-module-001",
+      "severity": "medium",
+      "location": {
+        "file": "python/python-fundamentals/writing-and-running-script-files/artifact.html",
+        "line": 1146
+      },
+      "claim": "Restart does not clear page completion. 2f281e85 removed the off-recap removal of data-pep-complete from show() (now commented 'Leaving the recap keeps the page completion result'), and restart() never recomputes it, so once the learner has reached the recap with every activity passed, returning to an activity and pressing Restart activity clears that activity's completion and credit but leaves data-pep-complete=true until the recap is revisited. DESIGN.md state model: Restart clears that activity's credit, so page completion is false until the activity passes again; qa-paths.json completion reads this attribute. This page carries the byte-identical engine code; the defect was reproduced in Playwright Chromium (file://, 1280x900) on lists-dicts-sets-and-tuples, modules-imports-and-virtual-environments, mutability-and-aliasing and python-syntax-for-java-developers (success route, then timeline to activity 2 and Restart activity: the section reports completed=false and credit 0 while main#lesson still reports data-pep-complete=true). It was not driven to completion here because this page's success input is private. Pure navigation now correctly keeps the result; only Restart is affected.",
+      "evidence": [],
+      "recommendation": "After Restart (in restart() or whenever the current step is not the recap), set data-pep-complete to false when any activity is no longer done, while still never changing it on Previous/Next, timeline or history navigation; add a Restart-after-completion assertion to the page's QA route.",
+      "reviewedSha256": "3da79091bf3d7b784a3938506c089a8545a57d4a706334cfc3d426e9bd6b6b36"
+    },
+    {
+      "id": "pyf-sme-loop3-module-002",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/writing-and-running-script-files/artifact.html",
+        "line": 1257
+      },
+      "claim": "historyChanged() maps any fragment that is not #activity-N to activity 1 (the parsed index defaults to 1), so a hand-edited or host-appended foreign fragment on activity 2 or later moves the learner back to activity 1 and leaves the foreign fragment in the URL; the inline comment and the commit say locked and unknown fragments return to the current activity. Reproduced in Playwright Chromium on lists-dicts-sets-and-tuples, modules-imports-and-virtual-environments, mutability-and-aliasing and python-syntax-for-java-developers (on activity 2, a non-activity fragment selected activity 1); this page carries the same handler. No state or credit is lost and no page link produces such a fragment, so impact is low. Related: the NAVING counter is incremented and decremented synchronously around the location.hash fallback while hashchange is dispatched later, so it never suppresses the resulting event; this is benign only because show() has already selected the destination and the handler then finds nothing to do. In a sandbox='allow-scripts' srcdoc frame (pushState throws SecurityError) Continue, Back, Forward, a locked fragment and Previous all behaved correctly on all eight pages.",
+      "evidence": [],
+      "recommendation": "Map only an empty fragment to activity 1 and treat any other non-matching fragment like a locked one (keep the current activity and replace the fragment with the current #activity-N); remove the NAVING counter or make it compare the expected target fragment so it actually guards the asynchronous hashchange.",
+      "reviewedSha256": "3da79091bf3d7b784a3938506c089a8545a57d4a706334cfc3d426e9bd6b6b36"
+    },
+    {
+      "id": "pyf-sme-loop3-module-003",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/writing-and-running-script-files/artifact.html",
+        "line": 475
+      },
+      "claim": "Stale location wording after the task move. The Activity 1 task step still tells the learner to read the code in the workspace on the right, below these steps on a narrow screen, and the apply task step points to the workspace on the right; the Activity procedures (text alternative) block repeats the wording. After 2f281e85 the steps are themselves at the top of the right-hand workspace card and the code sits directly below them at every width (Playwright Chromium 1280x900 on mutability-and-aliasing: task block and code block share the right column, code below the task; same markup on this page), so the side-by-side description and the narrow-screen qualifier no longer match the layout. The code is still easy to find, so the steps remain followable.",
+      "evidence": [],
+      "recommendation": "Reword the location step to point below the steps (for example: read the code below these steps) in each affected task and in the text-alternative procedures block.",
+      "reviewedSha256": "3da79091bf3d7b784a3938506c089a8545a57d4a706334cfc3d426e9bd6b6b36"
+    },
+    {
+      "id": "pyf-sme-loop3-module-004",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/writing-and-running-script-files/artifact.html",
+        "line": 157
+      },
+      "claim": "The recap is omitted from print unless it is the current step. The new print rules reveal hidden section[data-pep-activity] elements and hidden [data-step] nodes inside them, but the recap section carries data-step without data-pep-activity, so it stays display:none when printing from any activity. Chromium print emulation from activity 1 on all eight pages: every activity section and task block rendered, nav controls hidden, recap not rendered; the newly printed locked or unattempted sections showed no feedback, verdict, correct/wrong marker or retry question, so the print change discloses no answer. DESIGN.md Print requires every enrolled page to print its non-empty activity and teaching content.",
+      "evidence": [],
+      "recommendation": "Extend the print rule to the recap section (for example any hidden section[data-step] directly inside #stage) so the recap prints with the activities.",
+      "reviewedSha256": "3da79091bf3d7b784a3938506c089a8545a57d4a706334cfc3d426e9bd6b6b36"
+    },
+    {
+      "id": "pyf-sme-loop3-module-005",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/writing-and-running-script-files/artifact.html",
+        "line": 1281
+      },
+      "claim": "The new document-level Escape handler for Objectives fires for Escape pressed inside the lesson editor, whose own handler uses Escape to arm leaving the editor (Escape, then Tab). Reproduced in Playwright Chromium on all five editor pages (exceptions-and-logging, functions-and-arguments, python-syntax-for-java-developers, testing-with-pytest, writing-and-running-script-files): open Objectives, focus the editor textarea, press Escape; Objectives closes and focus jumps to the Objectives summary in the topic bar instead of staying for the following Tab, so a keyboard learner loses their place. It needs Objectives to be left open while tabbing into the editor (a pointer click outside already closes it); the editor's armed state does not stick afterwards.",
+      "evidence": [],
+      "recommendation": "Close Objectives on Escape but move focus to its summary only when focus was inside the disclosure (or outside any [data-lesson-editor]); alternatively close it when focus leaves the disclosure.",
+      "reviewedSha256": "3da79091bf3d7b784a3938506c089a8545a57d4a706334cfc3d426e9bd6b6b36"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/python/python-fundamentals/writing-and-running-script-files/critic-sme.json",
+    "items": [
+      {
+        "findingId": "pyf-sme-steps-writing-and-running-script-files",
+        "status": "resolved",
+        "file": "python/python-fundamentals/writing-and-running-script-files/artifact.html",
+        "reviewedSha256": "3da79091bf3d7b784a3938506c089a8545a57d4a706334cfc3d426e9bd6b6b36",
+        "note": "Loop-3 ruling on current bytes at 2f281e85. Governing contract: authoring/docs/html-artifact-contract.md section 4 (a task headed Your task names the action and location; a visible peer [data-pep-activity-checks] block labelled What success looks like or Activity checks follows each task; without JavaScript every activity section stays visible) and DESIGN.md (the wider workspace region opens with Your task; per-activity checks sit beside the task). The literal four-label numbered layout was removed from DESIGN.md by b80bbc4e, so it is not mandated; this page still carries it voluntarily. Rule, unchanged from loops 1 and 2: resolved when every hands-on activity has location, action, observable result and done signal in its numbered path in a followable order (label/content mismatches recorded but non-blocking), and no step supplies the answer to a reasoning step; for a scaffold editor, a step that states the complete fill for every placeholder, leaving only transcription, counts as an embedded answer. Change since the accepted state 77598a8a: 2f281e85 moved each activity's Your task and checks block verbatim (the learner-visible text token set of the page is identical before and after) from the end of the reading region to the top of that activity's bordered workspace card, still before the ask, control and feedback in source and visual order. Activity 1 (prediction): location, action, confidence plus check, done signal. Activity 2 (terminal): aligned steps, reading the last exit status in a POSIX shell and a three-item checks list. Activity 3 (run versus import): aligned steps and a three-item checks list. Activity 4 (summary editor), two placeholders: the first is specified only as a prose requirement (argument-count condition, error stream, status and the accepted usage-line variants) that the learner must turn into code; the second (the top-level guard) is stated in step 2 by its call and is shown in full in the preceding teaching and the no-JavaScript result, which is deliberate teaching of a fixed idiom. Because the first placeholder's code is never stated, not every fill is supplied and the rule is met. Activity 5 (apply): no option cue. Technical check: sys.argv contents, writing usage to stderr with a non-zero status, sys.exit propagating main's return and the __main__ guard on run versus import are described accurately. The stale 'workspace on the right' location wording recorded as pyf-sme-loop3-module-003 (low) does not reopen this item: the code is still directly below the steps in the same workspace, so the location remains findable. Verified by reading the 77598a8a..2f281e85 diff of this page (its changed lines contain no step, checks, procedures or noscript text; the learner-visible text token set is identical) and the current task and checks blocks of every activity, plus Playwright Chromium (no screenshots or traces): JS enabled at 1280x900, every section's task sits inside [data-pep-workspace] and precedes its ask/control, the current task and checks are visible at load and after navigation, no page errors; JS disabled at 1280x900 and 390x844, all 5 activity sections, 5 task blocks and 5 checks blocks visible, no hidden section, no horizontal overflow."
+      }
+    ]
+  }
+}

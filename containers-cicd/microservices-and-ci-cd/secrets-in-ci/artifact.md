@@ -10,14 +10,14 @@
 
 A repository secret is registered in GitHub. A step base64-encodes it and writes the encoded text to the run log.
 
-Store a credential as a repository secret, then reference it with the `secrets` context. Passing it through `env` keeps it out of the command text:
+Store a credential as a repository secret, then reference it with the `secrets` context. Passing it through `env` keeps it out of the command:
 
 ```
 env:
   DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
 ```
 
-Each run also gets an automatic `GITHUB_TOKEN`. A `permissions` block sets what it can do, and any permission you do not list becomes `none`:
+Each run also gets an automatic `GITHUB_TOKEN`. A `permissions` block sets what it can do; any permission not listed becomes `none`:
 
 ```
 permissions:
@@ -26,17 +26,19 @@ permissions:
 
 Grant the least access the workflow needs.
 
-GitHub attempts to redact registered secrets from logs, but redaction relies on matching values. It is best effort, not a permission boundary. Anyone with write access to a repository can read its secrets through a workflow.
+GitHub attempts to redact registered secrets from logs by matching values: best effort, not a permission boundary. Anyone with write access can read the repository's secrets through a workflow.
 
-So never print a secret. Register other sensitive values, including derived ones, before they could appear:
+So never print a secret. Register other sensitive values, including derived ones, before they appear:
 
 ```
 echo "::add-mask::$DERIVED_VALUE"
 ```
 
-A run triggered from a fork receives no repository secrets, except `GITHUB_TOKEN`.
+A run from a fork gets no repository secrets, except `GITHUB_TOKEN`.
 
 A job checks out code and pushes an image to the GitHub Container Registry, signing in with `GITHUB_TOKEN`. It does nothing else.
+
+That push with `GITHUB_TOKEN` needs `packages: write`.
 
 ## Recap
 
@@ -54,7 +56,7 @@ Where to act: Start on the `REGISTRY_PASSWORD` line.
 
 Next step: Look at how the example reads a value through the secrets context.
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Now look at the top level of the file, level with `jobs`.
 
@@ -80,7 +82,7 @@ Reading without JavaScript: decide first, then read on.
 
 ## Sources
 
-Status: minimum release, checked by the page author on 2026-11-08. Sources were fetched live on 2026-11-04 and the author checked the page against them; no independent education or technology review was performed.
+Status: Sources fetched on 2026-11-04 and checked by the page author on 2026-11-08; independent review pending.
 
 - Using secrets: secrets context, not passed to fork-triggered workflows except GITHUB_TOKEN
 - Secrets reference: redaction, structured data

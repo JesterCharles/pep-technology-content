@@ -27,7 +27,7 @@ Use these only for children that truly belong to one parent, such as an order an
 
 Bidirectional entities point at each other, so serializing one directly loops: workshop, sessions, workshop, and so on, until a `StackOverflowError` or a JSON failure. Return DTOs, and the cycle never reaches JSON.
 
-The same trap hides in `toString`, `equals` and `hashCode`: if they touch a lazy collection, they run SQL, and a logging line can load half the database or throw outside a session. Keep these methods to simple fields, and never include associations.
+The same trap hides in `toString`, `equals` and `hashCode`: if they touch a lazy collection, they run SQL, and a logging line can load half the database or throw outside a session. A collection that changes also makes `equals` answer differently as items are added and changes `hashCode`, so a `HashSet` can lose the entity. Keep these methods to simple fields, and never include associations.
 
 An API returns a `Workshop` entity directly. It works in a small test, but in production the endpoint throws a `StackOverflowError` when writing JSON.
 
@@ -58,7 +58,7 @@ Printed alternative: Rewrite toString so it uses only id and title and no associ
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://jakarta.ee/specifications/persistence/3.2/
 - https://docs.hibernate.org/orm/7.4/introduction/html_single/
@@ -72,7 +72,7 @@ Status: minimum release, November 2026. The author checked this page and re-fetc
 
 - **A. Correct answer:** Right. Removing it from the collection makes it an orphan.
 - **B. Not this one:** Orphan removal is exactly the setting that deletes it without a delete call.
-- **C. Not this one:** That can happen without `orphanRemoval`. With it, the row goes.
+- **C. Not this one:** Not with this mapping: `mappedBy` makes `Session.workshop` the owner, so removing from the list never sets `workshop_id` to NULL. With `orphanRemoval`, the row is deleted.
 - **D. Not this one:** Removing one child does not delete the parent.
 
 ### explore

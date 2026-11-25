@@ -564,6 +564,7 @@ async function inspectHtml(html, browser, spec) {
         problems.guidance.push("guidance-contract pages must not label course objectives or activity checks as Goals");
       }
 
+      const pathAnatomy = root?.getAttribute("data-pep-anatomy") === "path";
       const topicbar = root?.querySelector(".pep-topicbar");
       const objectives = [...root?.querySelectorAll("details[data-pep-objectives]") ?? []];
       if (objectives.length !== 1 || !topicbar?.contains(objectives[0])) {
@@ -574,7 +575,7 @@ async function inspectHtml(html, browser, spec) {
         const label = normalize(summary?.textContent);
         const controls = summary?.getAttribute("aria-controls") ?? "";
         const body = controls && document.getElementById(controls);
-        if (!["Objectives", "What you’ll learn", "What you'll learn"].includes(label)) {
+        if (!["Objectives", "Topic objectives", "What you’ll learn", "What you'll learn"].includes(label)) {
           problems.guidance.push("course objectives must have an accepted non-empty label");
         }
         if (!controls || !body || !objective.contains(body) || !normalize(body.textContent) ||
@@ -592,6 +593,9 @@ async function inspectHtml(html, browser, spec) {
       if (timeline.length !== activities.length || timeline.some((link, index) => link.getAttribute("href") !== `#${activityIds[index]}`)) {
         problems.guidance.push("one ordered timeline anchor must resolve to each activity id");
       }
+      if (pathAnatomy && timeline.some((link) => link.closest(".pep-topicbar") || !link.closest("[data-pep-path]"))) {
+        problems.guidance.push("path-anatomy activity links must live in the lesson path ([data-pep-path]), not the topic bar");
+      }
       activities.forEach((activity, index) => {
         if (!focusableHeading(activity)) problems.guidance.push(`activity ${JSON.stringify(activity.id)} requires a focusable labelled heading`);
         const tasks = [...activity.querySelectorAll("[data-pep-task]")].filter((task) => nearestActivity(task) === activity);
@@ -607,12 +611,21 @@ async function inspectHtml(html, browser, spec) {
         const heading = check && ownedText(check, "h2, h3", "[data-pep-activity-checks]")
           .find((item) => /^(What success looks like|Activity checks)$/u.test(normalize(item.textContent)));
         const criteria = check && ownedText(check, "p, li", "[data-pep-activity-checks]");
-        if (checks.length !== 1 || !heading || !criteria?.length || hiddenByStructure(check, activity) ||
-            check.closest("[data-pep-task]") || check.parentElement !== tasks[0]?.parentElement) {
+        const readingColumn = check?.closest("[data-pep-instructions]");
+        const misplaced = pathAnatomy
+          ? !readingColumn || nearestActivity(readingColumn) !== activity || Boolean(check.closest("[data-pep-task]"))
+          : Boolean(check?.closest("[data-pep-task]")) || check?.parentElement !== tasks[0]?.parentElement;
+        if (checks.length !== 1 || !heading || !criteria?.length || hiddenByStructure(check, activity) || (!pathAnatomy && misplaced)) {
           problems.guidance.push(`activity ${JSON.stringify(activity.id)} requires exactly one visible peer activity-check block with direct non-empty criteria`);
         }
-        if (tasks[0] && check && Boolean(tasks[0].compareDocumentPosition(check) & Node.DOCUMENT_POSITION_PRECEDING)) {
+        if (pathAnatomy && check && misplaced) {
+          problems.guidance.push(`activity ${JSON.stringify(activity.id)} path-anatomy activity checks must sit in the activity's reading column (data-pep-instructions), outside the task`);
+        }
+        if (!pathAnatomy && tasks[0] && check && Boolean(tasks[0].compareDocumentPosition(check) & Node.DOCUMENT_POSITION_PRECEDING)) {
           problems.guidance.push(`activity ${JSON.stringify(activity.id)} activity checks must follow its task`);
+        }
+        if (pathAnatomy && tasks[0] && check && !misplaced && Boolean(tasks[0].compareDocumentPosition(check) & Node.DOCUMENT_POSITION_FOLLOWING)) {
+          problems.guidance.push(`activity ${JSON.stringify(activity.id)} path-anatomy activity checks must precede its task in the reading column`);
         }
         if (!tasks.some((task) => [...task.querySelectorAll("h2, h3")].some((item) => normalize(item.textContent).includes("Your task"))) &&
             ![...activity.querySelectorAll(":scope > h2, :scope > h3")].some((item) => normalize(item.textContent).includes("Your task"))) {
@@ -634,7 +647,7 @@ async function inspectHtml(html, browser, spec) {
         const fields = ["decision", "good", "boundary"].map((name) => [...fit.querySelectorAll(`[data-pep-fit-${name}]`)]
           .filter((node) => node.closest("[data-pep-where-fits]") === fit));
         const headings = [...fit.querySelectorAll("h2")].filter((node) => node.closest("[data-pep-where-fits]") === fit);
-        if (headings.length !== 1 || !/^Where this fits$|^When and why$/u.test(normalize(headings[0].textContent)) ||
+        if (headings.length !== 1 || !/^Where this fits$|^When and why$|^On the job$/u.test(normalize(headings[0].textContent)) ||
             fields.some((items) => items.length !== 1 || !normalize(items[0]?.textContent))) {
           problems.guidance.push("Where this fits requires a direct heading and one non-empty decision, good-fit and boundary field, each directly owned");
         } else if (fields.some((items, fieldIndex) => fieldIndex > 0 &&

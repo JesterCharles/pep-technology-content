@@ -1,0 +1,350 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "cg-critic-sme (independent Claude critic subagent, 2026-11-17)",
+  "reviewedPath": "containers-cicd/containers-and-compose/coding-lab/lab.json",
+  "reviewedSha256": "6dddf0339bc17c4485128328ca0fc9ad46bc514fe712f32edc4f1922bbd09d93",
+  "artifactHashes": {
+    "coding-lab/README.md": "a650f25e68d08ad4d95f0ea426cc5de03a334d6319dacbf4b447d25f557fe23b",
+    "coding-lab/expected/solved-summary.txt": "255aeaeb4f441d40cbdfc407b7f287e1a93eea78976e8ba1cb392037b253351c",
+    "coding-lab/expected/starter-summary.txt": "0d90c17d6fe0e3da4452fb8b811d52fd44c5f62ed1359aea75a2e23168dd9993",
+    "coding-lab/fixtures/.env.example": "e91219add60a0737fac595fa43124071a167b279e5a3c6068c4fe2d7e8b80438",
+    "coding-lab/lab.json": "6dddf0339bc17c4485128328ca0fc9ad46bc514fe712f32edc4f1922bbd09d93",
+    "coding-lab/starter/.gitignore": "7ca64479965c6ba256789b7f6345ebd32c56ac76640efee182fd4d3bc33f5a76",
+    "coding-lab/starter/backend/.dockerignore": "8e1c9ee4f533c234bfe6246cf030225ee5ab11844b0a46710b5ad4152949f62e",
+    "coding-lab/starter/backend/Dockerfile": "4fdd7f8874a67f22ebbfd61321d5d567c3bba8574c68ee0bc5ad50f5327db56e",
+    "coding-lab/starter/backend/src/main/resources/application.properties": "2d59a5aa90b57fa5abfbb919ac5dd474787ba6c0aeac1c125a42109a074030e0",
+    "coding-lab/starter/compose.yaml": "f594f1c3f4faea39da04e79fdd91e2aeac31e7938860ca776bdb8978d527d583",
+    "coding-lab/starter/frontend/.dockerignore": "82d079bb82235d9e3fb6603fd38c70f0ee031db2f87152a5c9568514763114d5",
+    "coding-lab/starter/frontend/Dockerfile": "f50a61375643ebd8b5844b6bf61ae12a183c41f80a6c91fd1d73f3bb50fa2718",
+    "coding-lab/starter/frontend/vite.config.js": "f1497e08f3b2b412022ca7470c6d98a818beb79e1805a3863e0ed60c2a4c83f0",
+    "coding-lab/starter/runbook.yaml": "2c46e8383f11891977d9e1c929a67da1af8f564173234b3b3deafd5d448710a4",
+    "coding-lab/tests/backend-dockerfile.test.mjs": "004fb0062ed1fad4c9062acb082efb12cc1105dc20e9b04712b8e54f17f6dd42",
+    "coding-lab/tests/compose.test.mjs": "03ceedd586362cf960d22f51eabe1fa31e39d4059244a28ec39c46856256899a",
+    "coding-lab/tests/dockerignore.test.mjs": "4eb47f4db20fc98b9680f2e4caa41f4deccee8f61d0a83b2c082577a71ff4001",
+    "coding-lab/tests/frontend-dockerfile.test.mjs": "7ae3fddcf999dca53d30dfa16529eb02d8e546374b8963f65e4e9cf3655cfc9f",
+    "coding-lab/tests/lab.mjs": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5",
+    "coding-lab/tests/runbook.test.mjs": "b346e93bb23278e3d43a6245dbd794bf03ce22e8c3837dd4bffa235ea3e19906"
+  },
+  "findings": [
+    {
+      "id": "cg-sme-containers-001",
+      "severity": "high",
+      "location": {
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "line": 76
+      },
+      "claim": "backend-deps and frontend-deps only check that the dependency step comes after the manifest copy and before (or for the front end, before a later) source copy; neither forbids copying the whole source earlier. Critic runs on a copy of a private solution: a backend Dockerfile with 'COPY . .' before the go-offline step passes every one of the 20 rules; a frontend Dockerfile with 'COPY . .' before 'npm ci' passes all three frontend rules (only those were run for it). Copying all source before installing dependencies invalidates the dependency layer on every source change, the exact mistake image-layers-and-build-caching#o2 targets ('copied and installed before application source'). This is a common, plausible wrong edit.",
+      "evidence": [
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+          "section": "rule('backend-deps') and rule('frontend-deps'), lines 76-86 and 117-123",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5"
+        }
+      ],
+      "recommendation": "Reject any COPY of '.', 'src' or other non-manifest sources in the build stage before the dependency RUN (only pom.xml, mvnw, .mvn / package.json, package-lock.json may precede it), and add bypass cases for both.",
+      "reviewedSha256": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5"
+    },
+    {
+      "id": "cg-sme-containers-002",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "line": 67
+      },
+      "claim": "The rules do not enforce the README's own Dockerfile outcomes. Critic runs (each passes all 20 rules): eclipse-temurin:17-jdk / 17-jre (README requires Java 25; the starter pom sets java.version 25, so the real build would fail); node:18 for the front end (README requires Node 24); 'COPY pom.xml .' then 'RUN ./mvnw dependency:go-offline' with mvnw and .mvn never copied (the RUN would fail); plain 'mvn' on a Temurin JDK image. Inferred, not verified (no engine was run): the Java 17 build would fail against java.version 25, the missing wrapper RUN would fail, and the Temurin images are not expected to ship Maven; the node:18 case conflicts only with the README's stated Node 24 outcome (frontend package.json declares no engines). The lab reports all of them correct. This weakens multi-stage-builds#o1/#o2 and image-layers#o2 proofs (declared objectives of the whole lab under review).",
+      "evidence": [
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+          "section": "rule('backend-stages'), rule('backend-deps'), rule('frontend-stages')",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5"
+        },
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/README.md",
+          "section": "Phase 3, backend/Dockerfile and frontend/Dockerfile outcomes",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "a650f25e68d08ad4d95f0ea426cc5de03a334d6319dacbf4b447d25f557fe23b"
+        }
+      ],
+      "recommendation": "Require a 25 tag on the JDK/JRE images and a 24 tag on the Node image (or relax the README), require mvnw and .mvn to be copied before any RUN ./mvnw, and reject bare mvn.",
+      "reviewedSha256": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5"
+    },
+    {
+      "id": "cg-sme-containers-003",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "line": 389
+      },
+      "claim": "runbook-run-env's option parser accepts wrong command lines (critic runs, each passes the rule): '-P' (documented: 'publishes all the exposed ports to the host ... to a random port', and without an address Docker publishes on all interfaces) - a plausible learner command that breaks the 127.0.0.1 rule the task states; '--network host'; a foreground run with no -d although the README asks for the background. Also accepted, but their Docker CLI validity is not shown on the fetched pages and is unverified: attached '-p5432:5432' and attached '-ePOSTGRES_PASSWORD=typed' (the latter would type the password, against the README rule; objective o3 itself allows -e).",
+      "evidence": [
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+          "section": "VALUE_OPTIONS and split(), lines 327-342; rule('runbook-run-env'), lines 389-411",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5"
+        },
+        {
+          "url": "https://docs.docker.com/reference/cli/docker/container/run/",
+          "section": "Publish or expose port (-p, --expose) and Publish all exposed ports (-P, --publish-all)",
+          "retrievedAt": "2026-11-18T03:39:43Z",
+          "textSha256": "520b5a1f40e9746ab3ac2b9dd9f0867fe25eefa892bbf7cc17f4a39f38d61030"
+        }
+      ],
+      "recommendation": "Reject -P/--publish-all and --network host; parse attached short options (-pVALUE, -eVALUE) the way the Docker CLI does; require -d/--detach for run-db-alone; add these as bypass cases.",
+      "reviewedSha256": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5"
+    },
+    {
+      "id": "cg-sme-containers-004",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "line": 388
+      },
+      "claim": "The 'no image holds it' half of test 20 (BAKED) checks only the first variable name on a line starting ENV/ARG and only names matching PASSWORD|SECRET|DATASOURCE. Critic runs (each passes): 'ENV LANG=C.UTF-8 SPRING_DATASOURCE_PASSWORD=dev-only-1' (multi-variable ENV), 'ENV \\' followed by 'SPRING_DATASOURCE_PASSWORD=dev-only-1' on the next line, and 'ENV DB_PASS=dev-only-1'. All three write the password into the image, so the test name 'no image holds it' overstates what is checked for ports-volumes-and-environment-variables#o3.",
+      "evidence": [
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+          "section": "BAKED and the Dockerfile scan, lines 388-395",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5"
+        }
+      ],
+      "recommendation": "Reuse the dockerfile() parser (which already joins continuation lines), check every key of ENV/ARG, and flag any value equal to the env-file password; add bypass cases.",
+      "reviewedSha256": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5"
+    },
+    {
+      "id": "cg-sme-containers-005",
+      "severity": "medium",
+      "location": {
+        "file": "containers-cicd/containers-and-compose/coding-lab/README.md",
+        "line": 275
+      },
+      "claim": "Troubleshooting gives the exact final value of a tested key: 'for example start-stack: \"docker compose up -d\"'. That is the whole answer to the start half of compose-spring-boot-and-database#o3. (The topic pages also show the run-db-alone and logs commands almost verbatim; that is teaching and not flagged.)",
+      "evidence": [
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/README.md",
+          "section": "Troubleshooting, A runbook test fails",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "a650f25e68d08ad4d95f0ea426cc5de03a334d6319dacbf4b447d25f557fe23b"
+        }
+      ],
+      "recommendation": "Use a neutral format example that is not one of the nine keys (e.g. a made-up key and command).",
+      "reviewedSha256": "a650f25e68d08ad4d95f0ea426cc5de03a334d6319dacbf4b447d25f557fe23b"
+    },
+    {
+      "id": "cg-sme-containers-006",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "line": 352
+      },
+      "claim": "runbook-lifecycle and runbook-logs ignore positional words for up/ps/down and only check option names. Critic runs that pass: 'docker compose up -d db' (one service, not the whole stack), 'docker compose ps -a --services' (prints names, not state), 'docker compose down && docker volume prune -af' (contrived), and 'docker compose down --volumes=false' / 'docker compose logs --follow=false api' (contrived; '=false' acceptance by the Compose CLI is unverified).",
+      "evidence": [
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+          "section": "rule('runbook-lifecycle') and rule('runbook-logs'), lines 352-376",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5"
+        },
+        {
+          "url": "https://docs.docker.com/reference/cli/docker/compose/up/",
+          "section": "docker compose up options",
+          "retrievedAt": "2026-11-18T03:39:42Z",
+          "textSha256": "e3896f254958d06f648cdfa72503e027a9cf19e29d51c5de1efd0950c921aafd"
+        },
+        {
+          "url": "https://docs.docker.com/reference/cli/docker/compose/ps/",
+          "section": "docker compose ps options",
+          "retrievedAt": "2026-11-18T03:39:43Z",
+          "textSha256": "077df2deacfbfe29cb5aa80baf9b46d3e856a5f0ad0aaeae190bb6bd9eb69bb0"
+        }
+      ],
+      "recommendation": "Require no positional words after the options for start-stack, list-all-containers and the two down keys, reject --services/--quiet on ps, and reject '=false' values and shell operators.",
+      "reviewedSha256": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5"
+    },
+    {
+      "id": "cg-sme-containers-007",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "line": 344
+      },
+      "claim": "Some valid commands are rejected with a misleading message (critic runs): 'docker compose -f compose.yaml up -d' (-f/--file is a documented global option), 'docker container run -d --env-file .env postgres:18', 'docker run --hostname db -d --env-file .env postgres:18' (an option with a value outside VALUE_OPTIONS shifts the image detection) and \"docker compose exec api sh -c 'printenv SPRING_DATASOURCE_URL'\".",
+      "evidence": [
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+          "section": "composeCommand() and split(), lines 326-348",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5"
+        },
+        {
+          "url": "https://docs.docker.com/reference/cli/docker/compose/",
+          "section": "docker compose options (-f, --file)",
+          "retrievedAt": "2026-11-18T03:53:31Z",
+          "textSha256": "b14e2ae840e3cb3741864eac05b6ce5c82d90158638c49506138e26b38f90b25"
+        },
+        {
+          "url": "https://docs.docker.com/reference/cli/docker/container/run/",
+          "section": "docker container run options",
+          "retrievedAt": "2026-11-18T03:39:43Z",
+          "textSha256": "520b5a1f40e9746ab3ac2b9dd9f0867fe25eefa892bbf7cc17f4a39f38d61030"
+        }
+      ],
+      "recommendation": "Accept 'docker container run' and global compose options before the subcommand, extend VALUE_OPTIONS from the docker run option list, or say in the README which forms the checker understands.",
+      "reviewedSha256": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5"
+    },
+    {
+      "id": "cg-sme-containers-008",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/containers-and-compose/coding-lab/README.md",
+        "line": 232
+      },
+      "claim": "down-v-also-deletes is defined as 'the named volumes your compose.yaml declares'. The Compose reference says -v/--volumes removes 'named volumes declared in the volumes section of the Compose file and anonymous volumes attached to containers', and that volumes defined as external are never removed. For this stack the lists coincide (the named volume is mounted at the postgres:18 image's data path), but the stated rule is incomplete and would require listing an external volume that down -v keeps.",
+      "evidence": [
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/README.md",
+          "section": "Phase 5 table",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "a650f25e68d08ad4d95f0ea426cc5de03a334d6319dacbf4b447d25f557fe23b"
+        },
+        {
+          "url": "https://docs.docker.com/reference/cli/docker/compose/down/",
+          "section": "docker compose down: description and -v, --volumes option",
+          "retrievedAt": "2026-11-18T03:39:42Z",
+          "textSha256": "8a6e69116434d12c4f54acd798168872d1476b647b062f12b50d6494371d0aee"
+        }
+      ],
+      "recommendation": "Say 'the named volumes declared in compose.yaml (plus any anonymous volumes; external volumes are never removed)' and exclude external volumes in the rule.",
+      "reviewedSha256": "a650f25e68d08ad4d95f0ea426cc5de03a334d6319dacbf4b447d25f557fe23b"
+    },
+    {
+      "id": "cg-sme-containers-009",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "line": 168
+      },
+      "claim": "envFileValues applies Compose .env conventions (quote stripping, 'export ' prefix) to the file passed with docker run --env-file. The Docker reference describes that file as '<variable>=value' lines that set the variable to the given value, with no mention of interpolation or quote removal, so a .env line POSTGRES_PASSWORD=${DB_PASSWORD} (accepted by the rule, critic run) would most likely reach the container literally. Inferred from the docs; not verified by execution (no engine used).",
+      "evidence": [
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+          "section": "envFileValues(), lines 167-176",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5"
+        },
+        {
+          "url": "https://docs.docker.com/reference/cli/docker/container/run/",
+          "section": "Set environment variables (-e, --env, --env-file)",
+          "retrievedAt": "2026-11-18T03:39:43Z",
+          "textSha256": "520b5a1f40e9746ab3ac2b9dd9f0867fe25eefa892bbf7cc17f4a39f38d61030"
+        }
+      ],
+      "recommendation": "For run-db-alone, reject values containing '${' and tell learners to write the plain value; mark the remaining semantics as unverified.",
+      "reviewedSha256": "5fd79ab1ce4b2831afa266e8512192c5d8094e3ecaf0b3c77b66d53b297af1d5"
+    },
+    {
+      "id": "cg-sme-containers-010",
+      "severity": "medium",
+      "location": {
+        "file": "authoring/evidence/containers-cicd/containers-and-compose/deferred-reviewable.json",
+        "line": 13
+      },
+      "claim": "Stale evidence after the extension: deferred-reviewable.json still defers lab.json and README.md by hashes that no longer match 8e24dc2e (both files changed), and coding-lab-solved-run.json (ranAt 2026-10-15, commit d9ec7920) predates phase 5 and runbook.yaml. The author's 'starter fails 20, both solutions 20/20, 27 bypass cases caught' has no committed solved-run record. The critic reproduced it independently: npm ci then node --test on an archive copy matches expected/starter-summary.txt; both private solutions pass 20/20 via LAB_PROJECT; run-bypass.mjs reports all 27 cases caught.",
+      "evidence": [
+        {
+          "url": "file:///authoring/evidence/containers-cicd/containers-and-compose/deferred-reviewable.json",
+          "section": "files[].deferredSha256",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "e82d1be6582c577d3859cf868cf64517e027bac491770d3feab769d4201484b1"
+        },
+        {
+          "url": "file:///authoring/evidence/containers-cicd/containers-and-compose/coding-lab-solved-run.json",
+          "section": "record and ranAt",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "5239555df31a032906e1e8584b6192f505e0a2e1db0fc1021719853661463b46"
+        }
+      ],
+      "recommendation": "Retire the deferral entries now that critics review these bytes, and re-run and rewrite the solved-run record at the final commit.",
+      "reviewedSha256": "e82d1be6582c577d3859cf868cf64517e027bac491770d3feab769d4201484b1"
+    },
+    {
+      "id": "cg-sme-containers-011",
+      "severity": "low",
+      "location": {
+        "file": "authoring/evidence/containers-cicd/containers-and-compose/coding-lab-timing.json",
+        "line": 56
+      },
+      "claim": "The timing model was extended (87 typical, S36 40 / S37 47, worst 107) but 'wrongFirstRetry' still says 'each of the 16 tests', 'worstRequiredBasis' still counts 'five file groups' (runbook.yaml is a sixth), and the 'observed' command timings were measured on the 16-test lab. The per-day split stays within 30-60 minutes and the phase-5 12 minutes for nine one-line commands plus one env line is plausible; both are labelled as a model, not observed.",
+      "evidence": [
+        {
+          "url": "file:///authoring/evidence/containers-cicd/containers-and-compose/coding-lab-timing.json",
+          "section": "model.wrongFirstRetry, worstRequiredBasis, observed",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "84e97c20829617a8c6f4b852dee4f18f4778064fe05b08514059340180285ff5"
+        }
+      ],
+      "recommendation": "Update the counts to 20 tests and six file groups (recompute the worst case) and re-measure the command timings.",
+      "reviewedSha256": "84e97c20829617a8c6f4b852dee4f18f4778064fe05b08514059340180285ff5"
+    },
+    {
+      "id": "cg-sme-containers-013",
+      "severity": "high",
+      "location": {
+        "file": "authoring/evidence/containers-cicd/containers-and-compose/coding-lab-bypass/cases/19-runbook-logs-whole-stack/project/runbook.yaml",
+        "line": 1
+      },
+      "claim": "The committed bypass-case projects amount to a near-complete reference solution in the repository. Critic run of all 20 rules over each case project (copied, dotenv -> .env): 17 of 20 rules are passed by at least one committed case. Each runbook case (16-27) carries passing values for three of the four phase-5 rules, so two cases together (e.g. 16 and 19) give passing lines for all of tests 17-20; cases 09-15 each give a compose.yaml (with dotenv) passing 6 of 7 compose rules and cases 05-08 supply the passing healthcheck; cases 01-03 together cover all four backend Dockerfile rules. The bypass method needs a valid baseline per case, but committing it puts 'reference ... solutions' (authoring/AGENTS.md 'Never commit'; lab-contract section 8 'The repository holds only public tests') in the repo, outside private staging. The pre-existing cases 01-15 already had this property for phase 3; this change adds phase 5. (The solved-run record itself holds no solution or hash: checked.)",
+      "evidence": [
+        {
+          "url": "file:///authoring/evidence/containers-cicd/containers-and-compose/coding-lab-bypass/cases/19-runbook-logs-whole-stack/project/runbook.yaml",
+          "section": "committed case project",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "de8fea90f310830d805bb5193761edc70aa895fc5a0da005ddfa44cabedea522"
+        },
+        {
+          "url": "file:///authoring/evidence/containers-cicd/containers-and-compose/coding-lab-bypass/cases/16-runbook-down-keeps-volume/project/runbook.yaml",
+          "section": "committed case project",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "c05dbfeafccfed16c757601be6bf4ef4011ee33d3c05a2da46ee092479883e0a"
+        },
+        {
+          "url": "file:///authoring/docs/lab-contract.md",
+          "section": "section 8 No solutions in the repository",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "0707bc458e3da2dc09adde0c2575faa972ccf48805033ea321aa39dc53256761"
+        }
+      ],
+      "recommendation": "Move the case projects to private staging with the solutions (keep only case.json and the runner, or have the runner build each case by applying a one-line mutation to a private solution), or reduce each committed project so that, together, the cases never pass more than the rule under test plus what the starter already passes. Reconciler to decide with the captain.",
+      "reviewedSha256": "de8fea90f310830d805bb5193761edc70aa895fc5a0da005ddfa44cabedea522"
+    },
+    {
+      "id": "cg-sme-containers-012",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/containers-and-compose/coding-lab/starter/compose.yaml",
+        "line": 1
+      },
+      "claim": "Stale cross-references: starter compose.yaml, .gitignore, both Dockerfiles, both .dockerignore files and fixtures/.env.example point to 'README step 2/3/4/5', but the README is organised in phases 1-5 with no numbered steps (the env-file copy is in Phase 3).",
+      "evidence": [
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/starter/compose.yaml",
+          "section": "TODO line 1",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "f594f1c3f4faea39da04e79fdd91e2aeac31e7938860ca776bdb8978d527d583"
+        },
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/fixtures/.env.example",
+          "section": "line 3",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "e91219add60a0737fac595fa43124071a167b279e5a3c6068c4fe2d7e8b80438"
+        }
+      ],
+      "recommendation": "Point each TODO at the README phase and file heading it belongs to.",
+      "reviewedSha256": "f594f1c3f4faea39da04e79fdd91e2aeac31e7938860ca776bdb8978d527d583"
+    }
+  ]
+}

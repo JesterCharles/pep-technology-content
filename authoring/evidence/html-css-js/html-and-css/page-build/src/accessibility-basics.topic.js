@@ -25,7 +25,7 @@ apply:{A:{fs:'apply-a',correct:'a',okNote:'<p>A native link is focusable, opens 
  B:{fs:'apply-b',correct:'a',reveal:'Use <code>&lt;a href="/pricing"&gt;Pricing&lt;/a&gt;</code>: it is reached by Tab, opened by Enter and announced as a link.',
   why:{a:'that is the native link.',b:'that is role="link" alone.',c:'that is tabindex plus role, still without key behavior.',d:'that is aria-label alone.'}}},
 render:function(S,api){var t=S.t,st=S.step;
- api.$('who').hidden=(st===3||st===4);
+ api.$('live-model').hidden=(st===1&&!S.done.predict);api.$('who').hidden=(st===3||st===4);
  api.$('demo').hidden=(st!==3);
  var w=api.$('walk');w.hidden=(st!==4);
  if(st===4){w.innerHTML='';WALK.forEach(function(c,i){var li=el('li','wk'+(t.pos===i?' at':'')+(t.seen[c.id]?' seen':''));li.appendChild(el('span',null,c.n));li.appendChild(el('span','wst',t.pos===i?' ← focus is here':(t.seen[c.id]?' reached':'')));w.appendChild(li);});}
@@ -39,7 +39,7 @@ act:function(a,b,S,api){var t=S.t,p=a.split(':');
   else{api.say('<p class="verdict no">Not '+LANEN[p[1]]+'.</p><p>'+it.w[p[1]]+' Choose another.</p>');}
   this.render(S,api);}
  if(p[0]==='fixb'){var c=api.qa('input[name="fixb"]:checked')[0];
-  if(!t.aKey||!t.bKey){api.say('<p class="verdict no">Try both controls with the keyboard first.</p><p>Tab to control A and press Enter, then Tab to control B and press Enter. '+(t.aKey?'A is done.':'A is still to try.')+' '+(t.bKey?'B is done.':'B is still to try.')+'</p>');return;}
+  if(!t.aKey||!t.bKey){api.say('<p class="verdict no">Try both controls with the keyboard first.</p><p>Tab to control A and press Enter, then Tab to control B and press Enter. No keyboard? Press Send Enter to both. '+(t.aKey?'A is done.':'A is still to try.')+' '+(t.bKey?'B is done.':'B is still to try.')+'</p>');return;}
   if(!c){api.say('<p class="verdict no">Choose a fix for control B first.</p>');return;}
   var W={native:'',aria:'aria-pressed makes it a toggle in the announcement, and still adds no key behavior.',tab:'it is already reachable; what it lacks is a response to Enter and Space.',none:'the role told assistive technology it is a button, but you just saw Enter do nothing.'};
   if(c.value==='native'){if(!S.done.native){api.complete('native');}api.say('<p class="verdict ok">Right: replace it with a native button.</p><p>You saw the difference yourself: A answered Enter, B ignored it. A native <code>&lt;button&gt;</code> brings focus, Enter and Space, and the button role, so there is nothing to rebuild.</p>');}
@@ -64,5 +64,8 @@ act:function(a,b,S,api){var t=S.t,p=a.split(':');
 prep:function(api){var A=api.$('demo-a'),B=api.$('demo-b');if(A.getAttribute('data-wired')){return;}A.setAttribute('data-wired','1');
  A.addEventListener('click',function(e){var S=api.S;var kb=e.detail===0;if(kb){S.t.aKey=true;}dlog(api,'A: click fired'+(kb?' from the keyboard':'')+'. Saved.');});
  B.addEventListener('click',function(){dlog(api,'B: click fired from the mouse. Saved.');});
- B.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){var S=api.S;S.t.bKey=true;if(e.key===' '){e.preventDefault();}dlog(api,'B: '+(e.key===' '?'Space':'Enter')+' pressed, no click fired. Not saved.');}});}
+ B.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){var S=api.S;S.t.bKey=true;if(e.key===' '){e.preventDefault();}dlog(api,'B: '+(e.key===' '?'Space':'Enter')+' pressed, no click fired. Not saved.');}});
+ /* Touch path: no physical keyboard, so press Enter on both for the learner. A native button turns Enter into a click
+    (detail 0, logged as from the keyboard); the div only gets the keydown, so no click fires. */
+ api.$('demo-sim').addEventListener('click',function(){A.click();B.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));});}
 };})();

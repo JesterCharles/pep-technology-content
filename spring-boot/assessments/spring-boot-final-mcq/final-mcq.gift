@@ -1,0 +1,305 @@
+// Spring Boot course final MCQ (spring-boot-module-check Part 2), 30 questions, 30 minutes.
+
+$CATEGORY: spring-boot/assessments/spring-boot-final-mcq
+
+::sbf-q01::[html]<p>In a generated project that builds, a teammate deletes the <code>&lt;parent&gt;</code> block for spring-boot-starter-parent, imports no BOM, and leaves starters like this one unchanged\:</p><pre><code>&lt;dependency&gt;
+&nbsp; &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+&nbsp; &lt;artifactId&gt;spring-boot-starter-webmvc&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre><p>What happens on the next <code>mvn validate</code>?</p> {
+~It passes\: Maven picks the newest release of each starter.#Not quite. Maven never chooses a version for you. A dependency with no version and no dependency management is an error.
+=It fails\: Maven reports that the starters have no version.#Correct. The starter parent, through the spring-boot-dependencies BOM, supplied the starter versions. With no parent and no imported BOM, a dependency without a version is invalid, so Maven stops.
+~It passes; only startup fails, because auto-configuration came from the parent.#Not quite. Auto-configuration is switched on by <code>@EnableAutoConfiguration</code> inside <code>@SpringBootApplication</code>, not by the parent. Here the build stops before anything runs.
+~It passes, because Initializr pinned the starter versions in application.properties.#Not quite. application.properties holds runtime settings, such as the port. Versions live in pom.xml, here in the parent that was removed.
+}
+
+::sbf-q02::[html]<p>An OpenAPI document contains this operation\:</p><pre><code>/stations/\{code\}/readings\:
+&nbsp; post\:
+&nbsp;   parameters\:
+&nbsp;     - \{ name\: code, in\: path, required\: true \}
+&nbsp;     - \{ name\: unit, in\: query, required\: false \}
+&nbsp;   requestBody\:
+&nbsp;     required\: true
+&nbsp;     content\: \{ application/json\: \{ schema\: \{ $ref\: "\#/components/schemas/Reading" \} \} \}</code></pre><p>Which request matches this contract?</p> {
+~POST /stations/readings?code\=OSL-1 with a Reading body#Not quite. code is declared with in\: path, so it belongs in the path segment, not in the query string.
+~POST /stations/OSL-1/readings?unit\=C with an empty body#Not quite. The optional unit is fine, but the requestBody is marked required, so a request with no Reading does not meet the contract.
+~PUT /stations/OSL-1/readings?unit\=C with a Reading body#Not quite. The operation is listed under post; the document describes no PUT for this path.
+=POST /stations/OSL-1/readings with a Reading body and no query string#Correct. code is a required path value, unit is an optional query value that may be left out, and the required body is a Reading.
+}
+
+::sbf-q03::[html]<p>GateController and ShopController are <code>@RestController</code> classes. Each takes a TallyCounter in its constructor and returns <code>counter.next()</code> from GET /gate and GET /shop.</p><pre><code>@Component @Scope("prototype")
+class TallyCounter \{
+&nbsp; private int count;
+&nbsp; int next() \{ return ++count; \}
+\}</code></pre><p>A client calls GET /gate, GET /gate, then GET /shop. Which bodies come back, in order?</p> {
+=1, 2, 1#Correct. Each injection point gets its own new TallyCounter when the controller is created. Each singleton controller then keeps its instance, so /gate counts 1, 2 and /shop starts at 1.
+~1, 2, 3#Not quite. That would need one shared counter, which is singleton scope. Prototype gives each controller its own instance.
+~1, 1, 1#Not quite. A new prototype instance is made per injection, not per request. The singleton controller keeps the same counter between calls.
+~Startup fails, because a singleton cannot depend on a prototype bean#Not quite. A singleton may depend on a prototype bean; Spring creates one prototype instance for it at injection time.
+}
+
+::sbf-q04::[html]<p>The webmvc starter is on the classpath and a <code>@RestController</code> sits in the same package. To keep only what is needed, someone replaced <code>@SpringBootApplication</code> like this\:</p><pre><code>@SpringBootConfiguration
+@ComponentScan
+public class HarborApplication \{
+&nbsp; public static void main(String[] args) \{
+&nbsp;   SpringApplication.run(HarborApplication.class, args);
+&nbsp; \}
+\}</code></pre><p>What happens when the application runs?</p> {
+~The app starts on port 8080 and the controller answers, because scanning still finds it.#Not quite. Scanning does find the controller, but the embedded server comes from auto-configuration, which is no longer enabled.
+~The app starts, but GET requests answer 404 because only <code>@SpringBootApplication</code> scans for controllers.#Not quite. <code>@ComponentScan</code> scans the package of the class it sits on, so the controller is registered; the missing piece is auto-configuration.
+=Startup fails\: without auto-configuration there is no embedded web server factory.#Correct. <code>@SpringBootApplication</code> also carries <code>@EnableAutoConfiguration</code>. Without it Boot adds none of its auto-configured beans, including the servlet web server factory, so the web app cannot start.
+~Startup fails, because <code>@SpringBootConfiguration</code> also needs <code>@Configuration</code> on the class.#Not quite. <code>@SpringBootConfiguration</code> already makes the class a source of bean definitions; what is missing is <code>@EnableAutoConfiguration</code>.
+}
+
+::sbf-q05::[html]<p>A client sends DELETE /lockers/12. The server deletes it and answers 204, but the response is lost. The client retries and gets 404.</p><p>Which statement about this exchange is right?</p> {
+~The server broke REST rules\: a repeated DELETE must answer 204 again.#Not quite. Idempotence promises the same effect on the server, not the same response. The 404 honestly reports that the locker is already gone.
+~DELETE is not idempotent\: the retry got a different status, so a client should not retry it.#Not quite. Idempotent means the same effect on the server, not the same response. Locker 12 is gone after one call or two, so a retry after a lost response is safe.
+=DELETE is still idempotent\: locker 12 is gone either way; only the status differs.#Correct. Idempotent describes the intended effect on the server, which is the same after one call or two. The status reports what each call found.
+~The client should not have retried, because only GET is idempotent.#Not quite. PUT and DELETE are idempotent too, so a retry after a lost response is safe. POST is the method that is not.
+}
+
+::sbf-q06::[html]<p>The service saves the exhibit and returns it with id 12.</p><pre><code>@PostMapping("/exhibits")
+ResponseEntity&lt;ExhibitResponse&gt; create(@RequestBody NewExhibit body) \{
+&nbsp; ExhibitResponse saved \= service.create(body);
+&nbsp; return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+\}</code></pre><p>What does the client receive?</p> {
+=201 with the exhibit as JSON and no Location header#Correct. status(HttpStatus.CREATED) sets 201 and body(saved) is written as JSON. Nothing adds Location here; <code>ResponseEntity.created(uri)</code> is the builder that sets it.
+~201 with the exhibit as JSON and a Location header of /exhibits/12#Not quite. Spring does not invent a Location header; only created(uri) or an explicit header sets one.
+~200 with the exhibit as JSON, because a body was supplied#Not quite. The status comes from status(HttpStatus.CREATED), not from whether a body is present.
+~201 with an empty body, because a Created response carries no body#Not quite. A 201 can carry a body, and body(saved) puts the exhibit in it.
+}
+
+::sbf-q08::[html]<p>Both <code>@Bean</code> methods sit in one <code>@Configuration</code> class. ReportService and PagerService are <code>@Service</code> classes with these constructors\:</p><pre><code>@Bean @Primary Notifier emailNotifier() \{ return new EmailNotifier(); \}
+@Bean Notifier smsNotifier() \{ return new SmsNotifier(); \}
+&nbsp;
+ReportService(Notifier notifier) \{ ... \}
+PagerService(@Qualifier("smsNotifier") Notifier notifier) \{ ... \}</code></pre><p>Which notifier does each service receive?</p> {
+~Both get the email notifier, because <code>@Primary</code> wins over <code>@Qualifier</code>.#Not quite. A <code>@Qualifier</code> on the injection point is more specific than <code>@Primary</code>, so PagerService gets smsNotifier.
+=ReportService gets the email notifier; PagerService gets the SMS notifier.#Correct. <code>@Primary</code> picks the default when an injection point asks only for the type. <code>@Qualifier</code> names a specific bean, here by its <code>@Bean</code> method name, and overrides that default.
+~Startup fails\: two Notifier beans exist, and ReportService names neither.#Not quite. Two candidates fail only when nothing breaks the tie; <code>@Primary</code> breaks it for ReportService.
+~Startup fails, because the service constructors have no <code>@Autowired</code>.#Not quite. A class with a single constructor needs no <code>@Autowired</code>; Spring calls that constructor and passes in the beans it asks for.
+}
+
+::sbf-q09::[html]<p>application.properties holds the lines below. application-dev.properties sets <code>shipping.free-over\=0</code> and application-prod.properties sets <code>shipping.free-over\=80</code>.</p><pre><code>spring.profiles.active\=dev
+shipping.free-over\=50</code></pre><p>The app starts with the environment variable <code>SPRING_PROFILES_ACTIVE\=prod</code>. Which value does <code>@Value("$\{shipping.free-over\}")</code> receive?</p> {
+=80#Correct. An environment variable outranks application.properties, so prod is the active profile, and the profile file's value overrides the base file.
+~0#Not quite. dev would be active only if nothing outranked the file; SPRING_PROFILES_ACTIVE does, so the dev file is not loaded.
+~50#Not quite. A profile-specific file overrides application.properties for the active profile.
+~Startup fails\: two sources name different active profiles#Not quite. Property sources are ranked, not checked for conflicts; the environment variable simply wins.
+}
+
+::sbf-q10::[html]<p>StudioRepository is an interface extending JpaRepository, with no implementing class. The studio table holds Atlas (Oslo, closed), Birch (Bergen, open), Cedar (Oslo, open) and Dune (Tromso, closed). The repository declares\:</p><pre><code>List&lt;Studio&gt; findByCityOrOpenTrueOrderByNameDesc(String city);</code></pre><p>What does <code>findByCityOrOpenTrueOrderByNameDesc("Oslo")</code> return, in order?</p> {
+~Cedar#Not quite. That reads Or as And; Or keeps a row when either condition holds.
+~Atlas, Birch, Cedar#Not quite. These are the right rows, but Desc sorts names from Z to A.
+~None\: startup fails, because no class implements StudioRepository#Not quite. You write only the interface; Spring Data JPA generates its implementation at startup, and Hibernate runs the SQL.
+=Cedar, Birch, Atlas#Correct. The name means city \= Oslo OR open \= true, so Atlas, Birch and Cedar match, and OrderByNameDesc sorts them from Z to A.
+}
+
+::sbf-q11::[html]<p>A route is ported from Javalin, where it was <code>app.get("/vessels/\{id\}", ...)</code>\:</p><pre><code>@GetMapping("/vessels/\{id\}")
+Vessel one(@RequestParam long id) \{
+&nbsp; return service.find(id);
+\}</code></pre><p>What does GET /vessels/5 return?</p> {
+~200 with vessel 5#Not quite. <code>@RequestParam</code> never reads path segments, so the \{id\} value is ignored however the parameter is named.
+=400#Correct. <code>@RequestParam</code> reads the query string; the \{id\} path segment is bound only by <code>@PathVariable</code>. A missing required request parameter is a 400.
+~404#Not quite. A 404 means no handler matched, but <code>@GetMapping("/vessels/\{id\}")</code> matches /vessels/5. The failure comes later, when the method arguments are resolved.
+~500#Not quite. There is no null to unbox into the long\: Spring rejects the missing required parameter with 400 before it calls the method.
+}
+
+::sbf-q12::[html]<p>POST /hives/\{id\}/inspections carries an inspector email and a frame count. Rules\: (1) the email is well formed; (2) the frame count is positive; (3) the email is a registered inspector's; (4) a hive gets one inspection per day at most.</p><p>Where should each rule live?</p> {
+~1, 2 and 3 as annotations on the request DTO; 4 in the service#Not quite. An annotation sees only the request. Whether an email belongs to a registered inspector needs data, so rule 3 belongs in the service.
+~1 and 2 in the controller; 3 and 4 in the repository#Not quite. A controller translates HTTP and a repository reads and writes data. Format rules fit the request DTO, and rules that need data belong in the service.
+=1 and 2 as annotations on the request DTO; 3 and 4 in the service#Correct. Shape and format rules fit Bean Validation at the edge. Rule 3 looks like an email check, but like rule 4 it needs data, so both are business rules for the service.
+~1 and 2 as annotations on the entity, bound as the request body; 3 and 4 in the service#Not quite. Entities stay out of controller signatures. The body binds to a request DTO that holds only the contract's fields, and its annotations check the format; rules 3 and 4 do belong in the service.
+}
+
+::sbf-q13::[html]<p>No sensor TX-301 exists yet. Constructors are omitted.</p><pre><code>@Entity
+class Sensor \{
+&nbsp; @Id private String serial;
+&nbsp; private String site;
+\}
+&nbsp;
+sensorRepository.save(new Sensor("TX-301", "dock"));</code></pre><p>Does save take the persist path or the merge path here, and why?</p> {
+=Merge, because the id is not null, so save does not treat the entity as new#Correct. save asks whether the entity is new, and by default only a null id (or a primitive 0) counts as new. This id is assigned, so save merges; the SQL log shows a select by id before the insert.
+~Persist, because no row with that id exists in the table yet#Not quite. save does not look in the table to decide; it looks at the id, and a non-null id means merge.
+~Persist, because an id field without <code>@GeneratedValue</code> always marks a new entity#Not quite. The default check is whether the id is null, not how the id is produced; an assigned id is not null.
+~Neither\: save throws, because an <code>@Id</code> field needs <code>@GeneratedValue</code>#Not quite. The application may assign an id itself; <code>@GeneratedValue</code> is optional, and this save succeeds.
+}
+
+::sbf-q14::[html]<p>Bed maps its garden with <code>@ManyToOne(cascade \= CascadeType.REMOVE)</code>; Garden has no beds collection. bed.garden_id is a foreign key to garden. Garden 1 has beds 1, 2 and 3, and a <code>@Transactional</code> service method deletes bed 1 through its repository.</p><p>What happens when the method commits?</p> {
+=Cascading to garden 1 fails on the foreign key; everything rolls back#Correct. REMOVE on the child's <code>@ManyToOne</code> cascades the delete to the shared garden. Beds 2 and 3 still reference it, so the foreign key rejects that delete and the whole transaction rolls back, leaving all three beds and the garden. Cascade REMOVE suits only children that truly belong to one parent.
+~Bed 1 alone is deleted, because cascade runs from a parent to its children#Not quite. Cascade follows the association it is declared on. Here REMOVE sits on Bed.garden, so deleting a bed also deletes its shared garden.
+~Bed 1 and garden 1 are deleted; beds 2 and 3 get garden_id null#Not quite. garden_id is written from each bed's own garden field, the owning side, and those still point at garden 1. Hibernate does not clear them, so the garden delete breaks the foreign key.
+~Beds 1, 2 and 3 and garden 1 are deleted, since its beds go with it#Not quite. Garden has no beds collection and no cascade of its own, so nothing removes beds 2 and 3. They still reference garden 1, and the commit fails.
+}
+
+::sbf-q15::[html]<p>PlantService is a separate bean, and both its methods are <code>@Transactional</code>. moveToBigPot sets pot to big. label sets label to repotted, then throws IllegalStateException. Plant 5 has pot small and label none.</p><pre><code>@PostMapping("/plants/\{id\}/repot")
+void repot(@PathVariable long id) \{
+&nbsp; plants.moveToBigPot(id);
+&nbsp; plants.label(id);
+\}</code></pre><p>After POST /plants/5/repot, what is stored for plant 5?</p> {
+~pot small, label none#Not quite. The controller has no transaction, and moveToBigPot committed when it returned, before label threw.
+~pot big, label repotted#Not quite. An unchecked exception rolls back the transaction it leaves, so label's change is undone.
+~pot small, label repotted#Not quite. The rollback undoes label's change, not the earlier call, which had already committed.
+=pot big, label none#Correct. Each call goes through the service proxy and runs in its own transaction. moveToBigPot commits when it returns. label throws an unchecked exception, so only its own change rolls back.
+}
+
+::sbf-q16::[html]<p><code>logging.level.org.hibernate.SQL\=debug</code> is on and exhibit 4 exists.</p><pre><code>@Transactional(readOnly \= true)
+public void rename(long id, String name) \{
+&nbsp; Exhibit e \= exhibits.findById(id).orElseThrow();
+&nbsp; e.setName(name);
+\}</code></pre><p>What does the log show for one call to <code>rename(4, "Fossils")</code>, and what is stored?</p> {
+~One select, then one update at commit, because the entity is managed#Not quite. Dirty checking would flush an update in a normal transaction, but readOnly turns that flush off.
+=One select and no update, so the stored name is unchanged#Correct. readOnly \= true marks a read path, so Hibernate skips the dirty check at the end and flushes no update. Only the select appears.
+~No SQL lines, because DEBUG output stays hidden while the root level is INFO#Not quite. logging.level.org.hibernate.SQL\=debug sets the level for that logger, and a package level overrides the root level, so the select is printed.
+~One select, then an exception for a setter in a read-only transaction#Not quite. Hibernate does not stop a setter; it just does not write the change.
+}
+
+::sbf-q17::[html]<p>An API adds <code>spring.mvc.problemdetails.enabled\=true</code> and has no advice. Three requests fail\: (1) POST /ferries/4/tickets with a body that is not valid JSON; (2) PUT /ferries/4, which is mapped for GET only; (3) GET /ferries/4/timetable, whose service throws TimetableMissing, an unchecked exception of the app's own.</p><p>Which of them answer with a problem detail body?</p> {
+~1, 2 and 3, since each one ends in an error status#Not quite. The property covers exceptions Spring MVC raises itself. TimetableMissing is the app's own exception and nothing handles it, so it still gets Boot's default error JSON.
+~1 alone, since the property covers problems with the request body#Not quite. The property is not limited to body problems\: an unsupported method is also a Spring MVC exception, so request 2 gets a problem detail too.
+=1 and 2; 3 still gets Boot's default error JSON#Correct. The property makes exceptions that Spring MVC raises itself, such as an unreadable body or an unsupported method, answer with problem details. TimetableMissing is the app's own exception with no handler, so Boot's default error JSON answers it as before.
+~Not 1, 2 or 3; the property formats ProblemDetail values handlers return#Not quite. A handler can return a ProblemDetail without the property. The property is what makes Spring MVC's own exceptions, here requests 1 and 2, use problem details.
+}
+
+::sbf-q18::[html]<p><code>http</code> is a RestClient built with the partner's base URL. Our GET /prices/\{sku\} returns <code>quote(sku)</code> directly, and no advice or onStatus handles client errors.</p><pre><code>Quote quote(String sku) \{
+&nbsp; return http.get().uri("/quotes/\{sku\}", sku)
+&nbsp;     .retrieve().body(Quote.class);
+\}</code></pre><p>The partner answers 404 for sku ZZ-9. What does our client get from GET /prices/ZZ-9?</p> {
+~404#Not quite. RestClient does not pass the partner's status through. That status belongs to the outgoing call. Our own status comes from our code, and an unhandled exception gives 500.
+=500#Correct. retrieve() throws when the partner answers 4xx or 5xx, here a RestClientResponseException subclass. Nothing catches it, so our API reports a server error. Handle it with onStatus, or map it at the client boundary.
+~200 with an empty body#Not quite. retrieve() does not hand back a body for an error status. It throws first, so body(Quote.class) never returns.
+~502#Not quite. Spring does not send 502 by itself when a downstream call fails; it is a status you might choose after catching the exception yourself.
+}
+
+::sbf-q20::[html]<p>Flyway has applied V1__create_hive.sql, which creates hive(id, name), and <code>spring.jpa.hibernate.ddl-auto\=validate</code> is set. A developer adds a field, writes no migration, and restarts\:</p><pre><code>@Entity class Hive \{
+&nbsp; @Id Long id;
+&nbsp; String name;
+&nbsp; private String queenColour;
+\}</code></pre><p>What happens on restart?</p> {
+=Startup fails\: schema validation reports the missing queen_colour column#Correct. validate makes Hibernate compare each entity with the schema and stop when a mapped column is missing. The fix is a new versioned migration, such as V2, that adds the column.
+~Startup succeeds; queenColour is ignored until a migration adds its column#Not quite. Every field of an entity maps to a column by default; <code>@Column</code> only renames or constrains it. validate therefore looks for queen_colour and stops.
+~Startup succeeds, because validate adds the missing column to the table#Not quite. validate only checks the schema; it never changes it.
+~Startup fails\: Flyway reports that the V1 checksum no longer matches#Not quite. Flyway checks the checksums of migration files, and V1 was not edited. The failure is Hibernate's schema validation.
+}
+
+::sbf-q21::[html]<p>This <code>@WebMvcTest</code> was copied from a hive 7 test. The controller passes the id and by to <code>service.inspect</code>; an advice maps HiveBusy to 409.</p><pre><code>@MockitoBean HiveService service;
+&nbsp;
+when(service.inspect(7L, "kai")).thenThrow(new HiveBusy(7L));
+mvc.perform(post("/hives/12/inspections?by\=kai"))
+&nbsp;  .andExpect(status().isConflict());</code></pre><p>The test fails with <code>Status expected\:&lt;409&gt; but was\:&lt;200&gt;</code>. Why?</p> {
+~<code>@WebMvcTest</code> skips <code>@RestControllerAdvice</code> classes, so HiveBusy is never mapped#Not quite. The web slice loads controller advice, which is why it suits error-mapping tests.
+~thenThrow works only for checked exceptions, so the stub is ignored#Not quite. thenThrow throws unchecked exceptions too; HiveBusy would be thrown if the arguments matched.
+=The stub covers hive 7 only; for hive 12 the mock returns its default#Correct. A stub fires only for arguments equal to the ones it names. inspect(12L, "kai") has no stub, so the mock returns its default, null, and the controller answers 200.
+~The advice's JSON body differed from what the test expects#Not quite. That message is a status assertion failure; a wrong JSON value is reported against a JSON path. The request reached a handler that answered 200.
+}
+
+::sbf-q23::[html]<p>There are 30 beds spread over 3 gardens. The list endpoint maps each bed to a BedResponse of id and label and never reads its garden, yet the SQL log shows the bed select followed by 3 garden selects.</p><pre><code>@Entity
+class Bed \{
+&nbsp; @Id @GeneratedValue private Long id;
+&nbsp; private String label;
+&nbsp; @ManyToOne private Garden garden;
+\}</code></pre><p>Which change removes the garden selects?</p> {
+~<code>spring.jpa.open-in-view\=false</code> in application.properties#Not quite. open-in-view decides whether lazy loading can still happen while the response is written; it does not change an EAGER mapping.
+=<code>@ManyToOne(fetch \= FetchType.LAZY)</code> on garden#Correct. A <code>@ManyToOne</code> is EAGER by default, so Hibernate loads each distinct garden right after the bed query even when nothing reads it. LAZY leaves a proxy that loads only when used.
+~<code>@Transactional(readOnly \= true)</code> on the service method that lists beds#Not quite. readOnly skips dirty checking; it does not change what a query fetches.
+~<code>@OneToMany(mappedBy \= "garden") List&lt;Bed&gt; beds</code> added to Garden#Not quite. A collection on Garden is LAZY by default and does not change Bed's own mapping. Bed's <code>@ManyToOne</code> stays EAGER, so the 3 garden selects remain.
+}
+
+::sbf-q24::[html]<p>GET /trails takes a required <code>@RequestParam String region</code>. The app has this advice, and a request without region answers 500\:</p><pre><code>@RestControllerAdvice
+class TrailErrors \{
+&nbsp; @ExceptionHandler(Exception.class)
+&nbsp; ResponseEntity&lt;String&gt; any(Exception e) \{
+&nbsp;   log.error("Unhandled", e);
+&nbsp;   return ResponseEntity.status(500).body("Unexpected error");
+&nbsp; \}
+\}</code></pre><p>Why does that request answer 500?</p> {
+=The catch-all handler also catches the missing-parameter exception and returns 500#Correct. A missing required parameter raises an exception before the controller runs. <code>@ExceptionHandler(Exception.class)</code> matches that too, so a client error is reported as a server error. Map specific exceptions instead.
+~An advice handles every request before Spring binds its parameters, so region is never read#Not quite. Binding runs first and raises the missing-parameter exception; only then does an advice handle it, through a method whose type matches, here Exception.
+~An advice makes required parameters optional, so the controller ran with no region and failed#Not quite. An advice does not change binding rules; region is still required, which is why the exception is raised.
+~log.error rethrows the exception after logging it, so the container answers 500#Not quite. Logging does not rethrow; the 500 is the handler's own return value.
+}
+
+::sbf-q25::[html]<p>200 albums exist; tracks is a lazy <code>@OneToMany</code>, and Boot's default settings apply. The controller wraps this page in a PagedModel for GET /albums?page\=0&amp;size\=50.</p><pre><code>@Transactional(readOnly \= true)
+public Page&lt;AlbumResponse&gt; list(Pageable pageable) \{
+&nbsp; return albums.findAll(pageable)
+&nbsp;     .map(a -&gt; new AlbumResponse(a.getTitle(), a.getTracks().size()));
+\}</code></pre><p>How many SQL statements run for this request?</p> {
+~51\: page, then one tracks select per album#Not quite. A Page also runs a count query to fill in its totals, so there are 52 statements.
+~2\: page and count, since mapping to a DTO reads no lazy data#Not quite. The mapping calls getTracks().size(), which loads that album's lazy collection. Mapping reads whatever it touches.
+=52\: page, count, then one tracks select per album#Correct. A Page runs its select and a count. Each lazy tracks collection then loads on its own when size() is called\: the N+1 pattern. <code>spring.jpa.properties.hibernate.default_batch_fetch_size\=50</code> would cut it to 3.
+~3\: page, count, one batched tracks select; lazy loads batch by default#Not quite. Hibernate does not batch lazy loads by default; setting <code>spring.jpa.properties.hibernate.default_batch_fetch_size</code> is one way to turn batching on. With the defaults each collection loads on its own, one select per album.
+}
+
+::sbf-q26::[html]<p>A user with only role STAFF can POST /api/rosters/4/publish, which is meant for MANAGER.</p><pre><code>.authorizeHttpRequests(a -&gt; a
+&nbsp;   .requestMatchers("/api/**").authenticated()
+&nbsp;   .requestMatchers(HttpMethod.POST, "/api/rosters/**").hasRole("MANAGER")
+&nbsp;   .anyRequest().authenticated())</code></pre><p>What is the cause, and the fix?</p> {
+~hasRole needs ROLE_MANAGER spelled out, or the rule never applies#Not quite. hasRole adds the ROLE_ prefix itself; the rule is fine but is never reached.
+~anyRequest().authenticated() overrides the rules above it; remove it#Not quite. anyRequest is the last fallback and only applies to requests no earlier rule matched.
+~Broken object level authorization; add a check that roster 4 belongs to the caller#Not quite. Object level asks whether this record belongs to this user. Here a STAFF user reaches a MANAGER action, which is function level (API5), and the cause is the rule order.
+=The first matching rule wins and /api/** matches first; move the MANAGER rule above it#Correct. /api/** already matches the POST and asks only for authentication, so the MANAGER rule is never reached. Specific rules go first. This is broken function level authorization, OWASP API5.
+}
+
+::sbf-q27::[html]<p>Two instances behind a load balancer each issue HS256 tokens and verify them with this decoder, keyed from the APP_JWT_KEY environment variable. Since a deploy, some requests just after login get 401.</p><pre><code>@Bean JwtDecoder jwtDecoder(@Value("$\{app.jwt.key\}") String key) \{
+&nbsp; var secret \= new SecretKeySpec(key.getBytes(UTF_8), "HmacSHA256");
+&nbsp; return NimbusJwtDecoder.withSecretKey(secret).build();
+\}</code></pre><p>Which finding explains the 401s?</p> {
+~The tokens expire after 15 minutes, shorter than the old session timeout#Not quite. Expiry would fail every request after the same time on both instances, not at random right after login.
+=The two instances were started with different APP_JWT_KEY values#Correct. Each instance checks signatures with its own key. A token signed by one fails verification on the other, so the result depends on which instance the balancer picks.
+~Each instance keeps its own session store, so the other one does not know the login#Not quite. A JWT API keeps no server-side session; each request carries its token, and any instance with the same key can verify it.
+~Each instance uses its own random bcrypt salt, so a token from one fails on the other#Not quite. A salt belongs to a stored password hash and is kept inside it, so any instance can check a password with matches. Salts play no part in signing or checking tokens.
+}
+
+::sbf-q28::[html]<p>CI runs the integration tests with dev active so front-end stubs load; the security tests check only that signed-in users get 200. Someone changes the real chain to <code>anyRequest().permitAll()</code>, and every test passes.</p><pre><code>@Bean @Profile("dev")
+SecurityFilterChain open(HttpSecurity http) throws Exception \{ ... \}
+@Bean @Profile("!dev")
+SecurityFilterChain real(HttpSecurity http) throws Exception \{ ... \}</code></pre><p>Why did no test catch it?</p> {
+~Dev leaves the real chain unbuilt; without dev the signed-in checks would fail#Not quite. permitAll lets signed-in users through too, so a signed-in 200 passes with either real chain. Only a call the correct chain would reject can show the change.
+~MockMvc skips security filters, so no chain change can fail these tests#Not quite. MockMvc in a <code>@SpringBootTest</code> passes through the security filters; that is how the open chain answers under dev.
+=Dev leaves the real chain unbuilt, and no test makes an anonymous call#Correct. Both causes are needed. With dev active the real chain is never created, so its change cannot show. And a signed-in user gets 200 from the correct chain and from permitAll alike, so those checks cannot tell them apart.
+~Spring merges both chains, and the open one wins under any profile#Not quite. Only one of the two <code>@Profile</code> beans exists in a run. Under dev that is the open chain; without dev it is the real one.
+}
+
+::sbf-q29::[html]<p>GET /exhibits/3 returns 200, but GET /exhibits/999, which does not exist, returns 500. The log shows <code>java.util.NoSuchElementException\: No value present</code> thrown in ExhibitService.get, called from ExhibitController.one, at\:</p><pre><code>return ExhibitResponse.from(exhibits.findById(id).orElseThrow());</code></pre><p>How should you classify and fix this failure?</p> {
+=A client error shown as 500\: throw a not-found exception mapped to 404#Correct. orElseThrow() with no argument throws NoSuchElementException, and nothing maps it, so a missing record is reported as a server error. A not-found exception mapped with <code>@ExceptionHandler</code> in the advice says what happened\: 404.
+~A data-layer failure\: the repository query broke for 999, so fix the query#Not quite. findById ran and returned an empty Optional. The exception comes from orElseThrow in the service, one frame above the repository.
+~No real fault\: catch it and return 200 with a not-found message in the body#Not quite. The status code must say what happened, with one error shape across the API. A not-found message under 200 is the inconsistent pattern; a missing resource answers 404.
+~A binding failure\: 999 did not convert, so name the <code>@PathVariable</code> explicitly#Not quite. A binding failure answers 400, not 500, and the trace shows the call reached the service with the id.
+}
+
+::sbf-q30::[html]<p>POST /api/clinics requires <code>.hasRole("VET")</code>; other requests need authentication. CSRF is disabled for this token API. The controller takes <code>@Valid @RequestBody NewClinic</code>, whose name is <code>@NotBlank</code>. Three clients send <code>\{"name"\:""\}</code>\: (a) with no token, (b) with a valid VET token, (c) with a valid NURSE token.</p><p>What status does each client get?</p> {
+~(a) 401, (b) 201, (c) 403#Not quite. The VET request passes security and reaches <code>@Valid</code>, which rejects the blank name with 400 before the method body runs.
+~(a) 401, (b) 400, (c) 400#Not quite. The NURSE request is stopped by the role rule with 403 before its body is validated.
+~(a) 403, (b) 400, (c) 403#Not quite. A request with no token is unauthenticated, which is 401, not 403.
+=(a) 401, (b) 400, (c) 403#Correct. The security filter runs before the request reaches the controller. No token is 401, a NURSE is authenticated but lacks VET so 403, and only the VET request reaches validation, which rejects the blank name with 400.
+}
+
+::sbf-q31::[html]<p>Two POST /tickets requests to the ferry app overlap. Its log is in Boot's default console format, with the padding after each logger name trimmed\:</p><pre><code>2026-11-19T15\:47\:59.733-05\:00  INFO 68410 --- [ferry] [nio-8080-exec-2] ferry.TicketService \: Reserving seat
+2026-11-19T15\:47\:59.868-05\:00  INFO 68410 --- [ferry] [nio-8080-exec-1] ferry.TicketService \: Reserving seat
+2026-11-19T15\:47\:59.869-05\:00  WARN 68410 --- [ferry] [nio-8080-exec-1] ferry.PaymentClient \: Partner slow, retrying
+2026-11-19T15\:47\:59.871-05\:00  INFO 68410 --- [ferry] [nio-8080-exec-2] ferry.TicketService \: Ticket 81 confirmed
+2026-11-19T15\:47\:59.871-05\:00 ERROR 68410 --- [ferry] [nio-8080-exec-1] ferry.TicketService \: Payment failed</code></pre><p>Which request met the slow partner, and how did it end?</p> {
+~The request that confirmed ticket 81\: its WARN line comes just before that confirmation.#Not quite. Lines from overlapping requests interleave in time order. The thread column shows the WARN line came from nio-8080-exec-1, while ticket 81 was confirmed on nio-8080-exec-2.
+~Both requests\: PaymentClient is one shared bean, so its WARN line belongs to each request that uses it.#Not quite. The logger column names the class that wrote the line, not the requests it serves. The thread column ties this WARN line to one request.
+~The request on nio-8080-exec-1, which then succeeded\: the next line confirms ticket 81 after its retry.#Not quite. Lines from overlapping requests interleave in time order. The confirmation is on nio-8080-exec-2, a different thread; exec-1's own next line is the failed payment.
+=The request on nio-8080-exec-1\: it retried with the partner, then its payment failed.#Correct. Each request is handled on one thread here, so the thread column follows it\: exec-1 reserved a seat, logged the slow partner, then logged the failed payment.
+}
+
+::sbf-q32::[html]<p>The class is annotated <code>@SpringBootTest</code>, <code>@AutoConfigureMockMvc</code> and <code>@Transactional</code>, with no <code>@MockitoBean</code>. POST /workshops saves to H2 through the real service, workshops is the autowired WorkshopRepository, and the table starts empty.</p><pre><code>@Test void adds() throws Exception \{
+&nbsp; mvc.perform(post("/workshops").contentType(APPLICATION_JSON).content(INTRO))
+&nbsp;    .andExpect(status().isCreated());
+&nbsp; assertEquals(1, workshops.count());
+\}
+@Test void startsEmpty() \{ assertEquals(0, workshops.count()); \}</code></pre><p>JUnit may run the two tests in either order. What happens, and why?</p> {
+~startsEmpty fails when it runs second\: both tests share one context and its database, so the row from adds is left over.#Not quite. They do share one context and one database. But the class is <code>@Transactional</code>, so in this mock environment each test rolls back when it ends and leaves nothing behind.
+~adds fails\: the test transaction rolls back each request as soon as MockMvc returns, so count() finds 0.#Not quite. The rollback happens when the test ends, not after each request, so count() inside adds sees the row the POST saved.
+=Both pass in either order\: each test's work, the POST included, rolls back when that test ends.#Correct. With <code>@Transactional</code> on a mock-environment test, the requests MockMvc sends run in the test's transaction. adds sees its own row, and the rollback at its end leaves startsEmpty an empty table in either order.
+~Both pass, because each test method gets a new context with an empty H2 database.#Not quite. Tests that share a context also share its database; without <code>@Transactional</code>, startsEmpty would fail after adds. Here the rollback is what keeps them apart.
+}
+
+::sbf-q33::[html]<p><code>spring.jpa.open-in-view\=false</code> is set, the root level is INFO, and no <code>logging.level.*</code> property is set. Workshop maps a lazy <code>@OneToMany</code> sessions list, and its toString returns <code>"Workshop " + id + " " + sessions</code>. The handler for GET /workshops/1 gets the workshop from a <code>@Transactional(readOnly \= true)</code> service method, runs one of the lines below, then returns a DTO of id and title.</p><pre><code>(a) log.debug("Loaded " + w);
+(b) log.debug("Loaded \{\}", w);</code></pre><p>What does the request return with each line?</p> {
+~200 with both\: DEBUG is off, so neither line does anything.#Not quite. A disabled level skips only the output. Java builds a method's arguments before the call, so in (a) the joined string, and with it toString, is built first.
+~500 with both\: each line calls toString, which reads the lazy sessions after the transaction ended.#Not quite. With a placeholder the logger fills in \{\} only if the line is logged. A debug line is not logged at INFO, so (b) never calls toString.
+~500 with (b) only\: the placeholder makes the logger call toString when it formats the line.#Not quite. The logger formats \{\} only for a line it logs, and DEBUG is off. It is the joined string in (a) that calls toString on every request.
+=500 with (a) only\: joining builds the string, calling toString, before the level is checked.#Correct. toString reads the lazy sessions after the read-only transaction has ended, and with open-in-view off that throws LazyInitializationException. With \{\} the message is built only if the line is logged. Keep associations out of toString.
+}

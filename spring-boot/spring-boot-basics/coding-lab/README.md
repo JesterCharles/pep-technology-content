@@ -2,17 +2,28 @@
 
 ## Goal
 
-Finish the REST API of a small workshop-catalog service.
-Five linked tasks, all in **one file**: wire the configured catalog bean into the controller, then add the list, find-by-id, filter and create endpoints.
+Finish a small workshop-catalog service built with Spring Boot. Seven linked tasks:
+- Task 1: register the seeded catalog as a bean and inject it into the controller.
+- Tasks 2 and 3: add find-by-id (200 or 404) and create (201 with a Location header).
+- Task 4: give the project its settings file.
+- Task 5: make component scanning find a controller in a second package.
+- Task 6: implement one operation from an OpenAPI document.
+- Task 7: start the application and its embedded web server from `main`.
+
 Everything runs on your own computer; no cloud account, no Docker.
+On the Standard track this lab is required, after the four Day 2 pages (it closes the module); on the Fast track it is not required.
+Plan about 36 minutes for the tasks (an estimate, not piloted), after the one-time setup of about 8 minutes. Run the setup once, while online, before you start the tasks.
 
 ## What you edit
 
 | File | Tasks |
 | --- | --- |
-| `starter/src/main/java/workshops/WorkshopController.java` | 1-5 (the only file you edit) |
+| `starter/src/main/java/workshops/CatalogConfig.java` | 1 |
+| `starter/src/main/java/workshops/WorkshopController.java` | 1, 2, 3 and 6 |
+| `starter/src/main/resources/application.properties` | 4 (you create this file, and its folder) |
+| `starter/src/main/java/workshops/WorkshopsApplication.java` | 5 and 7 |
 
-Every other file is complete and stays as shipped.
+Every other file is complete and stays as shipped. Read `fixtures/workshops-openapi.yaml` for Task 6, but do not change it, and do not move `AboutController` out of its `about` package.
 
 ## Prerequisites
 
@@ -38,40 +49,57 @@ This downloads Spring Boot 4.1.2 and the pinned plugins into your local Maven re
 ## Tasks
 
 Open the `starter` folder as a Maven project in your IDE and open `WorkshopController.java`.
-Each task is one `TODO` comment; its test is named after it, so failures tell you which task they belong to.
+Each task has a `TODO` comment, except Task 4, which creates a new file. Each test is named after its task, so a failure tells you which task it belongs to.
 Run the one test command from the `starter` folder after each task:
 
 ```
 mvn -q -o test
 ```
 
-### Task 1: inject the catalog bean
+### Task 1: register and inject the catalog bean
 
-The controller builds its own empty catalog with `new WorkshopCatalog(List.of())`, so it never sees the two seeded workshops that `CatalogConfig` puts in the real bean.
-Replace the manual `new` with constructor injection: make the field `final` and assign it from a constructor parameter.
-Then make `all()` return the catalog's workshops.
+`CatalogConfig` builds the catalog with its two seed workshops, but nothing registers it with Spring.
+Register it as a bean, using the route the beans page recommends for an object whose construction needs logic.
+Then, in `WorkshopController`, replace the manual `new WorkshopCatalog(List.of())` with constructor injection of that bean, and make `all()` return the catalog's workshops.
 Done when `task1ListsTheSeededWorkshops` no longer fails.
 
 ### Task 2: find one workshop by id
 
-Add a `GET /workshops/{id}` handler method that takes the id as a `@PathVariable int id` and returns the matching workshop from the catalog.
-Done when `task2FindsOneWorkshopByItsId` no longer fails.
+Add `GET /workshops/{id}`. It returns `200 OK` with the matching workshop, or `404 Not Found` when the id does not exist (`findById` returns an `Optional` to build on).
+Done when `task2FindsOneWorkshopByItsIdOr404` no longer fails.
 
-### Task 3: 404 for an unknown id
+### Task 3: create a workshop
 
-Change that method to return `ResponseEntity<Workshop>`: `200 OK` with the workshop when the id exists, `404 Not Found` when it does not (`findById` returns an `Optional` to build on).
-Done when `task3UnknownWorkshopIdGives404` no longer fails.
+Add `POST /workshops`. It takes a `NewWorkshop` request body, adds it with `catalog.add(...)`, and returns `201 Created` with a `Location` header ending in `/workshops/{newId}` and the created workshop as the body.
+Done when `task3CreateReturns201AndTheCreatedWorkshop` no longer fails.
 
-### Task 4: filter with a query parameter
+### Task 4: add the settings file
 
-Give `all()` an optional `Integer minSeats` query parameter (`@RequestParam(required = false)`).
-When it is present, return only workshops with at least that many seats; when absent, return all of them.
-Done when `task4FiltersWorkshopsByMinSeats` no longer fails.
+The project needs two settings: the application name `workshop-catalog` and the port `8081`.
+Create the settings file where a Spring Initializr project keeps it (see the generating-a-project page), with the keys `spring.application.name` and `server.port`.
+Done when `task4ApplicationPropertiesNameTheServiceAndPort` no longer fails.
 
-### Task 5: create a workshop
+### Task 5: scan a second package
 
-Add a `POST /workshops` handler that takes a `NewWorkshop` `@RequestBody`, adds it with `catalog.add(...)`, and returns `201 Created` with a `Location` header of `/workshops/{newId}` and the created workshop as the body (`ResponseEntity.created(URI.create(...)).body(...)`).
-Done when `task5CreateReturns201AndTheCreatedWorkshop` no longer fails.
+`AboutController` in the `about` package maps `GET /about`, but that request returns 404.
+Find out why from the auto-configuration page, then make Spring scan both packages. Remember that naming packages replaces the default.
+Done when `task5ScanningFindsTheAboutController` no longer fails.
+
+### Task 6: implement an operation from its OpenAPI document
+
+`fixtures/workshops-openapi.yaml` describes one more operation for the catalog API.
+Read it to find the path, the parameters and where each one goes, the response schema and the status codes (including what a missing or non-numeric parameter gets).
+Then add that handler to `WorkshopController.java`, with a small record for the response body in the same file.
+Use the field names exactly as the schema spells them.
+Done when `task6AvailabilityFollowsTheOpenApiContract` no longer fails.
+
+### Task 7: start the embedded server from main
+
+`main` in `WorkshopsApplication.java` is empty, so running the class does nothing.
+Start Spring Boot from `main` the way a generated project's main class does, passing `args` through.
+Open `pom.xml` and point out the Spring Boot parent and the web starter that make this work.
+The test calls `main` with `--server.port=0`, then sends one real HTTP request to the server it started.
+Done when `task7MainStartsTheEmbeddedServer` no longer fails.
 
 ## Test
 
@@ -81,11 +109,13 @@ The one test command, run from the `starter` folder:
 mvn -q -o test
 ```
 
-Before you start, all five tests fail; when you finish, the command prints nothing and exits with status 0.
-The tests call the API over MockMvc and check only status codes and JSON bodies, not how your code is written, so compare your code with each task's steps yourself.
+Before you start, all seven tests fail; when you finish, the command prints nothing and exits with status 0.
+Most tests call the API over MockMvc and check status codes and JSON bodies. The Task 4 test checks the settings file, and the Task 7 test starts the application from `main`.
+None of them checks how your code is written, so compare your code with each task's steps yourself.
 Full test output, including the Spring log of each run, is written under `starter/target/surefire-reports/`.
 
-You can also run the API itself from the `starter` folder with `mvn -q -o spring-boot:run` and call it with curl (`curl localhost:8080/workshops`); stop it with Ctrl-C.
+After Task 7 you can also run the API itself: run `WorkshopsApplication` from your IDE (its `main` method).
+The startup log names the port, 8081 after Task 4. Call the API with curl, for example `curl localhost:8081/workshops`, and stop the application from your IDE.
 
 ## Expected output
 
@@ -106,5 +136,5 @@ The lab writes only `starter/target`. Delete it from the `starter` folder:
 
 - **`mvn -v` shows a Java version other than 25**: set `JAVA_HOME` to your JDK 25 folder and open a new terminal.
 - **`COMPILATION ERROR`**: fix the file and line Maven names, then rerun the test command.
-- **`Cannot access central in offline mode`**: run the setup command once more while online.
-- **Port 8080 already in use when running the app**: another server is running; stop it, or run the tests instead (they do not open a port).
+- **Maven says it cannot access `central` in offline mode**: run the setup command once more while online.
+- **Port 8081 already in use when running the app**: another server is running; stop it, or run the tests instead (the Task 7 test picks a free port).

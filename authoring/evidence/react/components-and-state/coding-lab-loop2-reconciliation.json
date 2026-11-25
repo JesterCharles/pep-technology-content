@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "author": "pep-react-lab-replacement author lane (Claude Opus 5.5)",
+  "decidedBy": "pep-react-lab-replacement-reconciler (Claude Opus 5.5, fresh independent context)",
+  "reviewedPath": "react/components-and-state/coding-lab/lab.json",
+  "reviewedSha256": "d8e2f6a52105cd34d7bd246afe2436f6315d9157a7fdcd531de0b68f8334be0f",
+  "decisions": [
+    {
+      "findingId": "edu-cs-r1",
+      "decision": "accept",
+      "rationale": "Verified on a scratch copy of the final snapshot (commit 89064f80) with the private solution applied. The t6 comment says React handles both quick clicks before it re-renders, but that only happens because act() queues both dispatches. Probe with IS_REACT_ACT_ENVIRONMENT=false and each click dispatched in its own task (a timer tick between clicks, like real user clicks): the updater solution and a single non-updater setter call that adds three both read 9 after three clicks, so they cannot be told apart. Under the shipped act() block the non-updater version fails (the 9-versus-6 check). So the scoring is sound but the comment teaches the wrong model of when React re-renders. Fix (comment only): tests/t6-run-checks.test.jsx lines 16-18 - credit act() rather than quick clicking, for example 'act() lets the test queue both clicks before React re-renders, the same way several setter calls in one handler are queued. Only updater functions add up correctly when updates are queued, so this must read 9.' No assertion, test name or expected output changes."
+    },
+    {
+      "findingId": "sme-cs-r1",
+      "decision": "accept",
+      "rationale": "Reproduced on the final snapshot with the private solution applied: adding a valid extra named export to StatusBadge.jsx and using it in ServiceCard makes t3 fail with the test-internal error '[vitest] No \"statusTitle\" export is defined on the ... StatusBadge.jsx mock. Did you forget to return it from \"vi.mock\"?'. The task requires only the default and STATUS_LABELS exports, so this is a valid alternative wrongly rejected. Verified fix with one refinement: a plain spread ({ ...actual, default: spy }) breaks the shipped starter's stable failure, because the starter's StatusBadge.jsx exports nothing and t3 would then fail with the same vitest 'No \"STATUS_LABELS\" export is defined on the mock ... forget to return it from vi.mock' message, which points learners at the test. Fix: tests/t3-status-badge-module.test.jsx vi.mock factory - return { ...actual, STATUS_LABELS: actual.STATUS_LABELS, default: <existing spy expression> }. Probe results: the extra-export solution passes, the plain solution passes, the local-StatusBadge-copy version still fails ('ServiceCard should import and render StatusBadge from StatusBadge.jsx'), and the shipped starter keeps its current message ('expected undefined to deeply equal { operational: ... }'). Test name unchanged."
+    }
+  ]
+}

@@ -10,7 +10,7 @@
 
 A team pushes an image as `ghcr.io/acme/shop-api:1.4.2`. A week later someone builds a different image and pushes it with the same tag.
 
-A declarative Jenkinsfile describes a pipeline, much as a workflow does:
+A declarative Jenkinsfile describes a pipeline, like a workflow:
 
 ```
 pipeline {
@@ -26,7 +26,7 @@ pipeline {
 }
 ```
 
-One difference matters: these stages run in the listed order, while GitHub jobs run in parallel unless you add `needs`.
+The difference: these stages run in order, while GitHub jobs run in parallel unless you add `needs`.
 
 A container registry stores images in repositories. A reference reads as registry, repository and tag:
 
@@ -35,9 +35,9 @@ ghcr.io/acme/shop-api:1.4.2
 registry/repository  :tag
 ```
 
-Leave out the registry and Docker assumes Docker Hub (`docker.io`). Leave out the tag and it assumes `latest`, which is just a name and not a promise of newest.
+Leave out the registry and Docker assumes Docker Hub (`docker.io`). Leave out the tag and it assumes `latest`, a name, not a promise of newest.
 
-Kubernetes runs containers across a cluster. A Deployment declares a desired state, such as three replicas of an image, and Kubernetes changes the actual state to match at a controlled rate. A Service gives those changing Pods one stable way to be reached, using a label selector.
+Kubernetes runs containers across a cluster. A Deployment declares a desired state, such as three replicas of an image, and Kubernetes changes the actual state to match at a controlled rate. A Service gives those changing Pods one stable address, using a label selector.
 
 Continuous delivery means every change is built, tested and ready to release, with a manual approval for production. Continuous deployment removes that approval.
 
@@ -47,7 +47,7 @@ A team’s pipeline: tests pass, the image is pushed, staging updates automatica
 
 You finished 0 of 5 activities and got 0 right. Any settled activity shows what to review; Restart activity lets you try it again.
 
-- A Jenkinsfile has stages and steps; a workflow has jobs and steps. Listed stages run in order, while jobs run in parallel by default.
+- A Jenkinsfile has stages and steps; a workflow has jobs and steps. Stages run in order; jobs run in parallel by default.
 - A registry stores images; a reference reads as registry, repository and tag.
 - A Deployment rolls out a pushed image, a Service gives stable access, and an approval separates continuous delivery from continuous deployment.
 
@@ -73,11 +73,10 @@ Reading without JavaScript: decide first, then read on.
 
 - `latest` is only a default name.
 - Pull by digest when you need the exact same image.
-- This reading is optional and has no lab.
 
 ## Sources
 
-Status: minimum release, checked by the page author on 2026-11-08. Sources were fetched live on 2026-11-04 and the author checked the page against them; no independent education or technology review was performed.
+Status: Sources fetched on 2026-11-04 and checked by the page author on 2026-11-08; independent review pending.
 
 - Jenkins Pipeline: declarative pipeline, stages and steps
 - Using a Jenkinsfile

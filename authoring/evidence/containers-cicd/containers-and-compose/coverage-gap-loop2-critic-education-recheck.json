@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "cg-critic-education (independent Claude critic subagent, 2026-11-17)",
+  "reviewedPath": "containers-cicd/containers-and-compose/coding-lab/README.md",
+  "reviewedSha256": "09ad1bd35f5456818118ec35e91b79b2afabf1ad2d2e3202756055ea56a0e450",
+  "artifactHashes": {
+    "coding-lab/lab.json": "0e2dd1f9eaec3d4df988740192f75a9ba0f0d6c2b259920c326ee141669fb479",
+    "coding-lab/README.md": "09ad1bd35f5456818118ec35e91b79b2afabf1ad2d2e3202756055ea56a0e450"
+  },
+  "findings": [
+    {
+      "id": "cg-education-containers-007",
+      "severity": "low",
+      "location": {
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "line": 461
+      },
+      "claim": "Found by probing a completed copy (my own runbook edits). A print-one-api-setting value that does use exec on api, but with a compound or piped shell script, is rejected with the wrong message. Three examples: docker compose exec api sh -c \"env | grep DATASOURCE\", sh -c \"echo $A; echo $B\", and sh -c 'printenv X; env'. All three get \"run the command inside the running api container, not in a new one\", which names a rule the learner already met. The likely cause: the command parser returns no command for a line with ;, | or &&, and runbook-exec reports its first rule. The behaviour is the same at cb8c2e07, so this is not a loop-2 regression. Other runbook rules also give their own outcome message, not a format message, for a chained line (for example start-stack for \"up -d && ps\"). README line 222 says to write one command per key with no ;, &&, pipes or redirection, and line 277 says to read the message for the rule, so the learner is not blocked; but this message sends them to the wrong fix.",
+      "evidence": [
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+          "section": "runbook-exec rule",
+          "retrievedAt": "2026-11-18T05:02:55Z",
+          "textSha256": "34ebc4a12ae73f556d2a1fcec3ec356a56f67956ff53498cd80f2301551c330a"
+        },
+        {
+          "url": "file:///containers-cicd/containers-and-compose/coding-lab/README.md",
+          "section": "Phase 5 command format line and Troubleshooting runbook row",
+          "retrievedAt": "2026-11-18T05:02:55Z",
+          "textSha256": "09ad1bd35f5456818118ec35e91b79b2afabf1ad2d2e3202756055ea56a0e450"
+        }
+      ],
+      "recommendation": "When an entry cannot be parsed as one docker or podman command (it contains ;, |, &&, || or redirection), return one format message naming the key, such as \"<key>: write one command with no ;, &&, pipes or redirection\", before the rule-specific checks. Apply it to every runbook rule.",
+      "reviewedSha256": "34ebc4a12ae73f556d2a1fcec3ec356a56f67956ff53498cd80f2301551c330a"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/containers-cicd/containers-and-compose/coverage-gap-critic-education.json",
+    "items": [
+      {
+        "findingId": "cg-education-containers-001",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "34ebc4a12ae73f556d2a1fcec3ec356a56f67956ff53498cd80f2301551c330a",
+        "note": "Loop-2 recheck at 376b3ea2db652060eaebcab8caa08592820bb090 on fresh git-archive copies. The two loop-2 messages are outcome-level. One is the new compose-ports rejection (\"every published port must be reachable from this machine only, not from the network\"). The other is the unchanged manifest-first message, now also used for COPY globs. Neither gives a template, tag or value. The starter fails all 20 tests and two private completed projects pass all 20; all three outputs match the expected summaries. The private bypass suite (61 cases) is all caught. File changed in loop 2 (cb8c2e07..376b3ea2)."
+      },
+      {
+        "findingId": "cg-education-containers-002",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/README.md",
+        "reviewedSha256": "09ad1bd35f5456818118ec35e91b79b2afabf1ad2d2e3202756055ea56a0e450",
+        "note": "Troubleshooting and the runbook messages are unchanged and still describe the need, not the subcommand or options. File bytes unchanged since cb8c2e07."
+      },
+      {
+        "findingId": "cg-education-containers-003",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/tests/lab.mjs",
+        "reviewedSha256": "34ebc4a12ae73f556d2a1fcec3ec356a56f67956ff53498cd80f2301551c330a",
+        "note": "Loop-2 recheck at 376b3ea2db652060eaebcab8caa08592820bb090 on fresh git-archive copies. I reran my probe script on a completed copy with the HEAD rules. Accepted, as before: \"docker compose logs api -f\", \"docker compose -f compose.yaml up -d\", \"docker container run -d --env-file .env postgres:18\", --env-file=.env, \"logs --tail 50 api\", one echoed variable through sh -c, and plain printenv NAME. Newly accepted: sh -c 'printenv NAME'. Rejected: \"up -d db\", foreground up, run without -d, an attached -ePOSTGRES_PASSWORD literal, exec env, sh -c 'printenv' with no name or two names, logs with no service, and a chain with &&. The valid forms are still for the SME to confirm. File changed in loop 2 (cb8c2e07..376b3ea2)."
+      },
+      {
+        "findingId": "cg-education-containers-004",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/starter/compose.yaml",
+        "reviewedSha256": "1876d2981bf22d09acd1307633b9628f96808264bedfa2bc7d64cfee2587e354",
+        "note": "Starter TODO markers still point to \"README phase 3, <file heading>\"; no \"README step\" marker is left. File bytes unchanged since cb8c2e07."
+      },
+      {
+        "findingId": "cg-education-containers-005",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/README.md",
+        "reviewedSha256": "09ad1bd35f5456818118ec35e91b79b2afabf1ad2d2e3202756055ea56a0e450",
+        "note": "The Timing text is unchanged: an authoring estimate, not a measured learner pilot; S36 42 and S37 45, worst cases 58 and 53, both within 60. The removal of deferred-reviewable.json does not touch the timing evidence. File bytes unchanged since cb8c2e07."
+      },
+      {
+        "findingId": "cg-education-containers-006",
+        "status": "resolved",
+        "file": "containers-cicd/containers-and-compose/coding-lab/README.md",
+        "reviewedSha256": "09ad1bd35f5456818118ec35e91b79b2afabf1ad2d2e3202756055ea56a0e450",
+        "note": "The Goal still lists .env, copied from fixtures/.env.example and never committed. File bytes unchanged since cb8c2e07."
+      }
+    ]
+  }
+}

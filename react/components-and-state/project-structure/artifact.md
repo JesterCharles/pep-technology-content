@@ -53,7 +53,7 @@ Where to act: The first import line in `src/App.jsx`.
 
 Next step: Look at the export keyword on Header in the other file: does it say default? That decides whether braces belong.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The second import line in `src/App.jsx`.
 
@@ -83,7 +83,7 @@ import { Footer } from './Page.jsx';
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules: Default exports versus named exports
 - react.dev/learn/build-a-react-app-from-scratch: Step 1: Install a build tool

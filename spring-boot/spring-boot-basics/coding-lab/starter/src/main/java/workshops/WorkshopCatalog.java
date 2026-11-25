@@ -6,8 +6,8 @@ import java.util.Optional;
 
 /**
  * The in-memory catalog. This class is complete; you do not edit it.
- * It is NOT annotated: CatalogConfig turns it into a bean with seed data,
- * which is exactly what Task 1 wires into the controller.
+ * It is NOT annotated: Task 1 registers it as a bean with seed data
+ * (in CatalogConfig) and injects that bean into the controller.
  */
 public class WorkshopCatalog {
 

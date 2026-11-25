@@ -47,7 +47,7 @@ Where to act: The `Layout` component.
 
 Next step: It needs one new element after the nav, the same one named in the teaching text.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: Inside the parent `Route`, and in `Item`.
 
@@ -71,7 +71,7 @@ const { slug } = useParams();  // always a string
 
 ## Sources
 
-First draft, not yet independently reviewed. Official sources checked 2026-11-04:
+Independent review pending. Official sources checked 2026-11-04:
 
 - reactrouter.com/api/hooks/useParams: Summary; Examples
 - reactrouter.com/start/declarative/routing: Configuring Routes; Nested Routes; Layout Routes; Dynamic Segments; Splats

@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "pep-react-lab-replacement-critic-sme (Claude Opus 5.5, fresh independent context)",
+  "reviewedPath": "react/forms-context-and-crud/coding-lab/lab.json",
+  "reviewedSha256": "06ec583dfb1acff7d4a596867a810181d3d5f86e86e10be218c5929cb7d9cc58",
+  "artifactHashes": {
+    "coding-lab/README.md": "e2ecefdc95b654248b6988064d7e6ead6ddc7418593ec99e6204871df2a9abe8",
+    "coding-lab/lab.json": "06ec583dfb1acff7d4a596867a810181d3d5f86e86e10be218c5929cb7d9cc58"
+  },
+  "findings": [
+    {
+      "id": "sme-fcc-1",
+      "severity": "high",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/helpers.js",
+        "line": 14
+      },
+      "claim": "The fetch stub's jsonResponse returns a plain object with only ok, status and json(); it has no text(), headers or statusText, unlike a real fetch Response. TASK 4 asks sendJson to return null for a 204 and to attach the parsed body (or null if unparseable) on errors, which naturally invites the common, correct pattern of reading response.text() and JSON.parse-ing a non-empty body. Repro: in a scratch copy of the reference solution, changing only sendJson to parse via response.text() (success and error paths) makes t4, t5, t6 and t7 fail (4 failed | 4 passed); the TypeError 'response.text is not a function' is caught by the form and shown as the network-failure banner, so the learner sees a misleading 'Could not reach the server' instead of a stub limitation. The 204 json()-rejects fidelity itself is correct (a sendJson that always calls json() fails t6/t7 with an unhandled SyntaxError).",
+      "evidence": [],
+      "recommendation": "Build stub responses with the platform Response (available in the Vitest jsdom environment, as Headers already is): new Response(status === 204 ? null : JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } }). That keeps 204 json() rejecting while supporting text(), headers.get() and clone(), so every valid learner parsing strategy passes.",
+      "reviewedSha256": "2a475b98754f56ac42944325721573c2d1a8c52026b680d3dae920a7745b0ef4"
+    },
+    {
+      "id": "sme-fcc-2",
+      "severity": "high",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/t3-client-validation.test.jsx",
+        "line": 39
+      },
+      "claim": "The final block ('Fixing the fields clears the errors on the next submit') is vacuous: after a valid submit the form calls onSave, the stub POST succeeds and RegisterServicePage navigates to '/', unmounting the form, so queryByText('Enter a service name.') is absent whether or not the learner ever clears fieldErrors. Repro: in a scratch copy of the reference solution, changing handleSubmit to set fieldErrors only when client validation fails (never clearing stale errors) still passes all 7 public tests (only the overlay's own learner test catches it). Such a solution leaves a stale 'Enter a service name.' error and aria-invalid='true' on a now-valid field during the in-flight request and after any server/network failure, contradicting TASK 3's 'set aria-invalid on the field exactly while it has an error'.",
+      "evidence": [],
+      "recommendation": "Keep the form mounted for the re-validation check: e.g. set api.holdNextMutation = true (or api.failNetwork = true) before the second submit, then assert the name/team errors are gone and the fields no longer have aria-invalid='true'; or fix only the name, submit, and assert the name error is gone while the team error remains and no request was sent.",
+      "reviewedSha256": "815766ee1aebbbb79d48b509d6060f62a813cc6b853b187e7d3241288bd02a6f"
+    },
+    {
+      "id": "sme-fcc-3",
+      "severity": "medium",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/starter/src/service-form.test.jsx",
+        "line": 14
+      },
+      "claim": "TASK 8 step 5 tells learners to 'assert with findBy that the error disappears'. findBy* waits for an element to appear and rejects if it never appears; it cannot assert disappearance (the parenthetical then says queryBy proves absence, contradicting the instruction). This is wrong teaching against the ui-tests topic objective o2 (getBy present, queryBy absent, findBy appears asynchronously), which the topic page teaches correctly. Step 3's rationale ('it renders after a state update, so pick the right query variant') also implies getBy would fail, although after an awaited user-event click the synchronous state update is already flushed inside act, so getBy works there; findBy is safe but not required.",
+      "evidence": [],
+      "recommendation": "Rewrite step 5 as: after the second awaited click, assert absence with expect(screen.queryByText('Enter a service name.')).not.toBeInTheDocument() (or waitForElementToBeRemoved / waitFor for asynchronous removal), and assert onSave was called with the values (inside waitFor if needed). Reword step 3 to say findBy is the safe choice when the element may appear asynchronously, without implying getBy cannot work after an awaited user-event call.",
+      "reviewedSha256": "06022bd7deb6f506cd57fd74c72699da05e3d8f4e09295bf0b89a4287d213805"
+    },
+    {
+      "id": "sme-fcc-4",
+      "severity": "low",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/README.md",
+        "line": 131
+      },
+      "claim": "Troubleshooting says 'Task 4's test hangs - make sure handleSubmit awaits onSave inside try/finally so the button re-enables even on failure.' Repro: in a scratch copy of the reference solution with the finally removed (button stays disabled with 'Saving...' after a failure), t4 passes and nothing hangs; t5 fails fast with 'Unable to find an accessible element with the role \"button\" and name \"Save service\"'. The symptom and the test named are both wrong, so a learner will not match this advice to the failure they see.",
+      "evidence": [],
+      "recommendation": "Re-target the entry: 'Task 5 cannot find the Save service button after a server error - the button is still disabled/labelled Saving...; reset the pending state in a finally block so it re-enables on failure.'",
+      "reviewedSha256": "e2ecefdc95b654248b6988064d7e6ead6ddc7418593ec99e6204871df2a9abe8"
+    },
+    {
+      "id": "sme-fcc-5",
+      "severity": "low",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/lab.json",
+        "line": 36
+      },
+      "claim": "The node prerequisite '>=22.12' (and README 'Node.js 22.12 or newer') admits Node 23.x, but the committed tests lockfile records vitest 4.1.12 with engines.node '^20.0.0 || ^22.0.0 || >=24.0.0' (react-router 7.18.5 requires >=20, vite 6.4.6 '^18 || ^20 || >=22'), so Node 23 is outside the test runner's declared support range.",
+      "evidence": [],
+      "recommendation": "Declare the node prerequisite as '^22.12.0 || >=24' (and say 'Node.js 22.12+ (LTS) or 24+' in the README), matching the strictest engines range in the lockfiles.",
+      "reviewedSha256": "06ec583dfb1acff7d4a596867a810181d3d5f86e86e10be218c5929cb7d9cc58"
+    }
+  ]
+}

@@ -7,6 +7,8 @@ import javax.crypto.spec.SecretKeySpec;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
@@ -28,8 +30,8 @@ public class SecurityConfig {
     //   public PasswordEncoder passwordEncoder() {
     //       return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     //   }
-    // (org.springframework.security.crypto.factory.PasswordEncoderFactories,
-    //  org.springframework.security.crypto.password.PasswordEncoder)
+    // (both imports, PasswordEncoderFactories and PasswordEncoder, are already
+    //  at the top of this file)
 
     // TODO Task 2: define the security rules (and in Task 5, annotate this
     // method with @Profile("!dev")):

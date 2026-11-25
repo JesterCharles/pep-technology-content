@@ -37,7 +37,7 @@ JwtDecoder jwtDecoder(@Value("${app.jwt.key}") String key) {
 }
 ```
 
-A missing, expired or tampered token leads to 401, with a `WWW-Authenticate: Bearer` header.
+A missing, expired or tampered token leads to 401, with a `WWW-Authenticate: Bearer` header. A valid token that lacks a required role gets 403.
 
 A teammate adds the user's date of birth and national id to the JWT claims, so that services do not need to look them up.
 
@@ -67,7 +67,7 @@ Next step: Signature and expiry are checked before any role rule applies.
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-boot/reference/web/spring-security.html
 - https://docs.spring.io/spring-security/reference/servlet/architecture.html

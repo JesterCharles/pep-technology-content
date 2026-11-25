@@ -51,7 +51,7 @@ Reading without JavaScript: decide first, then read on.
 
 ## Sources
 
-Status: minimum release, checked by the page author on 2026-11-08. Sources were fetched live on 2026-11-04 and the author checked the page against them; no independent education or technology review was performed.
+Status: Sources fetched on 2026-11-04 and checked by the page author on 2026-11-08; independent review pending.
 
 - Understand data store models: relational, document, key-value
 - Data considerations for microservices: polyglot persistence

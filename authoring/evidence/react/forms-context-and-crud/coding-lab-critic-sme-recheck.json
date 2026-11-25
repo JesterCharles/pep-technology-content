@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "pep-react-lab-replacement-critic-sme (Claude Opus 5.5, fresh independent context)",
+  "reviewedPath": "react/forms-context-and-crud/coding-lab/lab.json",
+  "reviewedSha256": "e33fcf1aefae6b109306ae0878c343bfdc4aca5e3c0d37678e13b98744ac36b7",
+  "artifactHashes": {
+    "coding-lab/README.md": "c1dda63de395b408ca1700623dd357382f03e3ff6e9d87fa6f3f9eb12bc4e4fe",
+    "coding-lab/lab.json": "e33fcf1aefae6b109306ae0878c343bfdc4aca5e3c0d37678e13b98744ac36b7"
+  },
+  "findings": [
+    {
+      "id": "sme-fcc-r1",
+      "severity": "medium",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/t3-client-validation.test.jsx",
+        "line": 58
+      },
+      "claim": "The new release step makes the task-3 test depend on task 4. Once the learner's sendJson calls fetch, api.releaseHeld is set, so t3 releases the held POST and awaits the overview heading 'Image Resizer'. That heading only appears if createService, sendJson and the success navigation all work. Repro: in a scratch copy of the final bytes with the reference overlay, changing only createService's URL to '/api/service' (a task-4 bug) fails t3 with 'Unable to find role=\"heading\" and name \"Image Resizer\"', alongside t4, t5 and t7. Under the new two-slot sequencing, t3 can be green after S32 (tasks 1-3 only: verified, t1-t3 pass) and then turn red on S33 with a message that points at the overview, not at api.js. The README coupling note covers tests 4-7 building on tasks 1-3, but not test 3 depending on task 4.",
+      "evidence": [],
+      "recommendation": "Release the held request without asserting task-4 behaviour. For example: if (api.releaseHeld) { api.releaseHeld(); await waitFor(() => expect(screen.queryByRole('button', { name: /Saving/ })).not.toBeInTheDocument()); }. That settles whether the form re-enabled or navigated away. Alternatively, keep t3 independent of the network by never releasing and relying on cleanup.",
+      "reviewedSha256": "ef63ad910e708b3b83ed9d7abb3e96d5509645f1943746d17ea0077c2426826a"
+    },
+    {
+      "id": "sme-fcc-r2",
+      "severity": "medium",
+      "location": {
+        "file": "react/forms-context-and-crud/coding-lab/tests/t3-client-validation.test.jsx",
+        "line": 26
+      },
+      "claim": "The new preventDefault probe only sees the submit event if it bubbles from React's root listener up to window. A handler that calls event.preventDefault() and also event.stopPropagation() (a common tutorial pattern; React forwards stopPropagation to the native event) prevents the reload correctly but fails t3. Repro: the reference overlay with only event.stopPropagation() added after preventDefault fails t3 with the opaque 'expected [] to deeply equal [ true ]' (7/8 pass). The starter's failure for this check is also an unlabelled 'expected [ false ] to deeply equal [ true ]', which does not tell the learner preventDefault is missing (only the separate requestSubmit troubleshooting entry hints at it).",
+      "evidence": [],
+      "recommendation": "Detect cancellation regardless of propagation. For example, spy on Event.prototype.preventDefault during the click (const spy = vi.spyOn(Event.prototype, 'preventDefault')) and assert it was called with this === a submit event, or add a capture listener on window that records the event object and check event.defaultPrevented after the click resolves. Give the assertion a message, e.g. expect(prevented, 'handleSubmit must call event.preventDefault()').",
+      "reviewedSha256": "ef63ad910e708b3b83ed9d7abb3e96d5509645f1943746d17ea0077c2426826a"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/react/forms-context-and-crud/coding-lab-critic-sme.json",
+    "items": [
+      {
+        "findingId": "sme-fcc-1",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/helpers.js",
+        "reviewedSha256": "246db4456d970b9989074561992f7a423b6283f637a8764875166ab20fe646ad",
+        "note": "jsonResponse now returns a real Response (null body for 204, Content-Type application/json). On the final bytes the text()+JSON.parse sendJson variant (mutant f1-text) passes 8/8, and the always-json() variant (f5-json-on-204) still fails t6/t7 with the 204 SyntaxError, so 204 fidelity is kept."
+      },
+      {
+        "findingId": "sme-fcc-2",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/tests/t3-client-validation.test.jsx",
+        "reviewedSha256": "ef63ad910e708b3b83ed9d7abb3e96d5509645f1943746d17ea0077c2426826a",
+        "note": "The re-validation check now holds the POST (holdNextMutation) so the form stays mounted, and asserts both errors are gone and neither field has aria-invalid='true'. The never-clear variant (f2-noclear) now fails t3 (and the reference learner test). See the new finding sme-fcc-r1 on the release step that follows."
+      },
+      {
+        "findingId": "sme-fcc-3",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/starter/src/service-form.test.jsx",
+        "reviewedSha256": "b76a2a9413ca2a1129015023505a896d391f3b181acbc8cbdc8da5d89e98c249",
+        "note": "Step 3 now calls findBy the safe choice for an element that may appear asynchronously, without implying getBy fails. Step 5 now says queryBy ... not.toBeInTheDocument() proves absence, findBy rejects when the element is missing, and to wrap in waitFor if needed. That is accurate Testing Library guidance. expect.hasAssertions() was added correctly."
+      },
+      {
+        "findingId": "sme-fcc-4",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/README.md",
+        "reviewedSha256": "c1dda63de395b408ca1700623dd357382f03e3ff6e9d87fa6f3f9eb12bc4e4fe",
+        "note": "Troubleshooting now names test 5 and the real symptom (Save service button still disabled with its pending label) and says to reset pending state in finally. Verified with f4-nofinally: t5 fails with 'Unable to find ... button ... Save service', and t4 passes. A requestSubmit entry was added and matches the starter's console output."
+      },
+      {
+        "findingId": "sme-fcc-5",
+        "status": "resolved",
+        "file": "react/forms-context-and-crud/coding-lab/lab.json",
+        "reviewedSha256": "e33fcf1aefae6b109306ae0878c343bfdc4aca5e3c0d37678e13b98744ac36b7",
+        "note": "The node prerequisite is now '^22.12.0 || >=24' (line 36), and the README says '22.12+ (22.x LTS) or 24+'. Both match vitest 4.1.12 engines '^20 || ^22 || >=24' in the tests lockfile."
+      }
+    ]
+  }
+}

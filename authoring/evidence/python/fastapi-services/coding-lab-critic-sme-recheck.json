@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "Python/FastAPI SME critic (independent Claude subagent, 2026-11-18)",
+  "reviewedPath": "python/fastapi-services/coding-lab/lab.json",
+  "reviewedSha256": "be2efea95050e484f9e7e9091c8dd8e20874ba660338c1e8e571ef91eedbabc3",
+  "artifactHashes": {
+    "coding-lab/lab.json": "be2efea95050e484f9e7e9091c8dd8e20874ba660338c1e8e571ef91eedbabc3",
+    "coding-lab/README.md": "09cc6cab0b593f2089e6061c39f3ddabebeedee7ab8613b97701e5c186f23d6b"
+  },
+  "findings": [
+    {
+      "id": "py-api-lab-sme-r01",
+      "severity": "medium",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "line": 203
+      },
+      "claim": "The sme-008 fix makes test_task07 use TestClient(main.app, raise_server_exceptions=False) for every request, so any bug in the learner's Task 7 route is now hidden behind a 500 with no traceback, and the first assertion's next action is wrong for it. Reproduced: my correct main.py with one typo in the route (signup[\"workshopid\"], a KeyError) fails only with 'Task 7: GET /signups/1/workshop must answer 200, got 500; add the route with client=Depends(get_workshop_client)'. The output contains no KeyError and no traceback, although the route exists and does use Depends(get_workshop_client). Before the fix, TestClient re-raised the KeyError with its line. The same misleading message appears for any exception inside the route, such as a TypeError from calling fetch_workshop with the wrong arguments or an AttributeError.",
+      "evidence": [],
+      "recommendation": "Keep the default raising TestClient for the happy-path and 404 requests, and wrap them so an uncaught UpstreamError becomes the Task 7 message: `try: response = client.get(...) except upstream.UpstreamError: pytest.fail('Task 7: catch UpstreamError and raise HTTPException with its status_code and detail')`. Any other exception then surfaces with its traceback. Alternatively, keep raise_server_exceptions=False only for the timeout and 500 requests, and make the first message branch on 404 (route missing) versus 500 (the route raised: rerun with -x to see the traceback, or check the route body).",
+      "reviewedSha256": "80a3bc6427f5187543b8069716076026f5721888bbf28212d7a1270d56a4e9ca"
+    },
+    {
+      "id": "py-api-lab-sme-r02",
+      "severity": "low",
+      "location": {
+        "file": "python/fastapi-services/coding-lab/lab.json",
+        "line": 24
+      },
+      "claim": "The prerequisite check changed from 'python --version' to 'python3 --version', but lab.json lists windows under os. On Windows the python.org installer provides py and python, not python3; python3 is usually missing or resolves to the Microsoft Store stub. The README already says Windows uses py --version, and the notes mention it, but a tool that runs the single declared check on Windows gets a false prerequisite failure.",
+      "evidence": [],
+      "recommendation": "Use a check that works on all three listed systems, for example 'python --version' with the README's per-OS lines, or record a per-OS check if the lab schema allows it. Otherwise, state in the notes that the declared check is the macOS/Linux form and Windows uses py --version, so a platform runner can map it.",
+      "reviewedSha256": "be2efea95050e484f9e7e9091c8dd8e20874ba660338c1e8e571ef91eedbabc3"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/python/fastapi-services/coding-lab-critic-sme.json",
+    "items": [
+      {
+        "findingId": "py-api-lab-sme-001",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "reviewedSha256": "80a3bc6427f5187543b8069716076026f5721888bbf28212d7a1270d56a4e9ca",
+        "note": "Task 8 now records get_repository assignments into app.dependency_overrides via a Recorder dict, AST-checks for a MockTransport call, and adds the mutants 'app ignores dependency overrides' and 'fetch_workshop answers every failure with the wrong status'. Over my own solution (corrected lab copied to recheck1/work, run with -p plugins.blocknet): FAIL as required for the reconciler's test_nooverride.py and test_422only.py ('replace the repository with app.dependency_overrides[get_repository]'), test_nonemock.py ('wrong status' mutant survives -> fails), my first-pass unused-MockTransport suite (OVERRIDDEN=[]) and my docstring-only suite ('test the outbound call with an httpx.MockTransport'). PASS for the README-style suite, test_routelevel.py (reconciler's and mine), test_class.py (both), a monkeypatch.setitem override, a fixture-based override and a `with TestClient(app)` suite. The fixture still holds id 1, so the README's empty-repository 404 test kills the ignore-overrides mutant. README:140 and the lab.json notes describe the four mutants."
+      },
+      {
+        "findingId": "py-api-lab-sme-002",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "reviewedSha256": "80a3bc6427f5187543b8069716076026f5721888bbf28212d7a1270d56a4e9ca",
+        "note": "MUTANTS now patch `u.fetch_workshop = m.fetch_workshop = ...` for both fetch_workshop mutants. The route-level suites (reconciler's test_routelevel.py and my first-pass altD suite) pass Task 8; README:138 states a route-level test through get_workshop_client is accepted."
+      },
+      {
+        "findingId": "py-api-lab-sme-003",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/lab.json",
+        "reviewedSha256": "be2efea95050e484f9e7e9091c8dd8e20874ba660338c1e8e571ef91eedbabc3",
+        "note": "fastapi-routes#o1 is removed from objectives, the topic stays in covers, and the notes record that Tasks 1-3 observe the route-definition clause while the run-locally clause stays with the page and the optional uvicorn step. No socket-opening check was added."
+      },
+      {
+        "findingId": "py-api-lab-sme-004",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "reviewedSha256": "80a3bc6427f5187543b8069716076026f5721888bbf28212d7a1270d56a4e9ca",
+        "note": "test_task06 adds a ConnectTimeout case expecting (504, 'Workshop service timed out'). The ReadTimeout-only variant of my solution now fails with 'ConnectTimeout(...) escaped; catch TimeoutException before TransportError ...'. A TransportError-before-TimeoutException ordering also fails Task 6."
+      },
+      {
+        "findingId": "py-api-lab-sme-005",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "reviewedSha256": "09cc6cab0b593f2089e6061c39f3ddabebeedee7ab8613b97701e5c186f23d6b",
+        "note": "README Task 6 table, the upstream.py docstring, test_main.py (the down case expects 502) and the troubleshooting entry now use 502 for a refused connection, matching the page. My ConnectError + is_success solution and the page recipe (raise_for_status, TransportError, HTTPStatusError) both pass 10/10, and so does my altA variant (async routes, Annotated deps, SettingsConfigDict, raise_for_status, a float timeout). A 503 variant fails with a Task 6 message. Live uvicorn check (port 8766, SPRING_BASE_URL=http://localhost:8080, nothing listening): /signups/1/workshop answers 502 {'detail': 'Workshop service unavailable'}, matching the troubleshooting line."
+      },
+      {
+        "findingId": "py-api-lab-sme-006",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "reviewedSha256": "80a3bc6427f5187543b8069716076026f5721888bbf28212d7a1270d56a4e9ca",
+        "note": "test_task05 monkeypatches httpx.HTTPTransport.handle_request. make_client without transport= now fails with 'Task 5: pass transport=transport to httpx.Client (the check must not reach the network)' and the blocknet plugin logs no DNS lookup. test_task07 delenvs SPRING_BASE_URL and SPRING_TOKEN. A route that bypasses get_workshop_client with make_client(Settings()), run with SPRING_BASE_URL=http://catalog.example set in the shell, fails Task 7 with a 500 message and no BLOCKNET line. My correct solution passes 10/10 under blocknet."
+      },
+      {
+        "findingId": "py-api-lab-sme-007",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "reviewedSha256": "09cc6cab0b593f2089e6061c39f3ddabebeedee7ab8613b97701e5c186f23d6b",
+        "note": "The Offline note now names the optional /docs page as a network use, and README:87-88 explain that fastapi dev needs fastapi[standard] and that offline learners should use /openapi.json or a route URL. The troubleshooting entry gives export and $env: commands. The `cd starter` ... `cd ..` wording is correct (verified the run from starter/)."
+      },
+      {
+        "findingId": "py-api-lab-sme-008",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "reviewedSha256": "80a3bc6427f5187543b8069716076026f5721888bbf28212d7a1270d56a4e9ca",
+        "note": "The shipped starter now fails all 8 listed tests with task-named messages (Task 5: 'NotImplementedError: Task 5: write make_client', since Task 5 uses a SimpleNamespace config instead of Settings). spring_token: str = '' fails with 'Task 4: the token is required: declare spring_token: str with no default'. With env_file='.env' and a .env holding the token, Task 4 passes thanks to _env_file=None. A Task 7 route without try/except fails with 'Task 7: got 500; catch UpstreamError ...'. Resolved as specified; the raise_server_exceptions=False used for this fix causes a new problem, reported as py-api-lab-sme-r01."
+      },
+      {
+        "findingId": "py-api-lab-sme-009",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/tests/test_main.py",
+        "reviewedSha256": "80a3bc6427f5187543b8069716076026f5721888bbf28212d7a1270d56a4e9ca",
+        "note": "Task 8 counts test_* FunctionDefs with ast.walk. The class-based suites (reconciler's test_class.py and my first-pass altE suite) pass Task 8."
+      },
+      {
+        "findingId": "py-api-lab-sme-010",
+        "status": "resolved",
+        "file": "python/fastapi-services/coding-lab/README.md",
+        "reviewedSha256": "09cc6cab0b593f2089e6061c39f3ddabebeedee7ab8613b97701e5c186f23d6b",
+        "note": "README Task 6 now says 'turns each failure the page lists into an UpstreamError' (no 'every') and teaches the page recipe with the TimeoutException-first ordering explained. README:103 says the timeout limits each step of the call (connecting, sending, waiting for each read), which matches httpx's per-operation timeouts."
+      }
+    ]
+  }
+}

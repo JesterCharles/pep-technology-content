@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "Python SME critic (independent Claude subagent, 2026-11-18)",
+  "reviewedPath": "python/python-fundamentals/coding-lab/lab.json",
+  "reviewedSha256": "e8a109b7ddf10aa3afea321330f2a531b2bd3679e0c3836ebf301644c9a813bf",
+  "artifactHashes": {
+    "coding-lab/lab.json": "e8a109b7ddf10aa3afea321330f2a531b2bd3679e0c3836ebf301644c9a813bf",
+    "coding-lab/README.md": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f"
+  },
+  "findings": [
+    {
+      "id": "py-fund-lab-sme-r01",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 213
+      },
+      "claim": "Regression from the modules#o1 fix: records.py no longer ships `import logging`, so a learner who writes `logger = logging.getLogger(__name__)` before adding the import (README Task 8 step 1 orders them, but partial progress is likely) makes records.py fail at import. Both test files import it, so collection is interrupted and pytest exits with status 2 having run no check at all (probe: rc=2, 'NameError: name 'logging' is not defined. Did you forget to import 'logging''). Python's hint is clear, but Troubleshooting line 213 names only SyntaxError and IndentationError as errors that stop every test.",
+      "evidence": [],
+      "recommendation": "Extend line 213 to 'A SyntaxError, IndentationError or NameError (for example a missing import) stops every test: fix the file and line that pytest names first.'",
+      "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f"
+    },
+    {
+      "id": "py-fund-lab-sme-r02",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "line": 252
+      },
+      "claim": "On the shipped starter, cli.py ends with `main(sys.argv)` but no longer imports sys, so the Task 9 first failure is 'importing signups.cli must run nothing, but it raised NameError(\"name 'sys' is not defined\"); add the __name__ guard'. The stated next action (add the guard) is not what the error is about: adding only the guard moves the NameError into the subprocess runs. The message is stable and the README steps list both, so this is polish.",
+      "evidence": [],
+      "recommendation": "Make the message cover both causes, e.g. '... it raised {err!r}; import what cli.py uses (Task 9 step 1) and put main behind the __name__ guard (step 3)'.",
+      "reviewedSha256": "83997bc3d3b70ed8ada62c202c3c94fb56ba5c25564d66e98d440350afd602b5"
+    },
+    {
+      "id": "py-fund-lab-sme-r03",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/lab.json",
+        "line": 41
+      },
+      "claim": "prerequisites[0].check is now `python3 --version`, but lab.json declares windows in os and README line 27 tells Windows learners to use `py --version`: a python.org Windows install provides no python3.exe, so the declared check either fails or opens the Microsoft Store alias there. The check field is a single string, so it cannot be right on every declared OS.",
+      "evidence": [],
+      "recommendation": "Use a command valid on all three systems once the venv is active (`python --version`), or the form the README uses for the first-time check with a note, e.g. keep `python3 --version` and record in cleanup.notes or the prerequisite that Windows uses `py --version`.",
+      "reviewedSha256": "e8a109b7ddf10aa3afea321330f2a531b2bd3679e0c3836ebf301644c9a813bf"
+    },
+    {
+      "id": "py-fund-lab-sme-r04",
+      "severity": "low",
+      "location": {
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "line": 166
+      },
+      "claim": "Imprecise module-search statement in the lab's only explanation for modules#o1: '`python signups/cli.py general` would search only the `signups` folder itself'. Running a script puts the script's own folder (starter/signups) first on sys.path in place of the current folder; the standard library and site-packages are still searched. The conclusion (No module named 'signups', because starter/ is not on the path) is correct.",
+      "evidence": [],
+      "recommendation": "Reword: '`python signups/cli.py general` puts the `signups` folder itself, not `starter`, first on the search path, so Python cannot find the `signups` package and fails with ModuleNotFoundError: No module named 'signups'.'",
+      "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/python/python-fundamentals/coding-lab-critic-sme.json",
+    "items": [
+      {
+        "findingId": "py-fund-lab-sme-001",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "reviewedSha256": "83997bc3d3b70ed8ada62c202c3c94fb56ba5c25564d66e98d440350afd602b5",
+        "note": "parse_file() now uses ast.parse(path.read_bytes()) at every learner-file parse (records.py line 221, cli.py line 272, test_signups.py line 348). Probe: my solution with a UTF-8 BOM and CRLF line endings on all three learner files gives 15 passed on Python 3.12.11 and 3.14.6."
+      },
+      {
+        "findingId": "py-fund-lab-sme-002",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "reviewedSha256": "83997bc3d3b70ed8ada62c202c3c94fb56ba5c25564d66e98d440350afd602b5",
+        "note": "Lines 200-203 add the empty-list case with a task-named message. Probe: `waitlist = waitlist or []` now fails 'Task 7: an empty waitlist that is passed in is used too; test `waitlist is None`, not `not waitlist`'; the ternary `is None` form still passes."
+      },
+      {
+        "findingId": "py-fund-lab-sme-003",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f",
+        "note": "README lines 111 and 114 state that values may be any type, that join accepts only strings, and give the int example report_line(\"x\", 1, 2, b=True, a=1); the check message at test_main.py line 121 says the same. The `\", \".join(values)` probe still raises TypeError, which the README now explains."
+      },
+      {
+        "findingId": "py-fund-lab-sme-004",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f",
+        "note": "README line 132 now calls add_to_waitlist(\"a@example.com\") then add_to_waitlist(\"b@example.com\") and states the shared-default cause correctly (default list created once, when Python defines the function)."
+      },
+      {
+        "findingId": "py-fund-lab-sme-005",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "reviewedSha256": "83997bc3d3b70ed8ada62c202c3c94fb56ba5c25564d66e98d440350afd602b5",
+        "note": "Line 120 uses b=True, a=1; line 67 adds a duplicate b@example.com and line 69 asserts the first dict with `is`. Probes: sorted(fields.items()) now fails Task 4; the last-match find_signup now fails 'Task 2: return the first matching sign-up dict itself'."
+      },
+      {
+        "findingId": "py-fund-lab-sme-006",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "reviewedSha256": "83997bc3d3b70ed8ada62c202c3c94fb56ba5c25564d66e98d440350afd602b5",
+        "note": "(a) Line 362 requires the fixture among the parameters of the parametrized test; the room-unused probe now fails with that message. (b) Instead of an AST check on the raises argument the author added a fourth mutant (line 309, parse_seats raises ValueError), which closes the false pass behaviourally: pytest.raises(Exception) and pytest.raises((SignupError, ValueError)) now fail 'your tests still pass when parse_seats raises ValueError instead of SignupError', while pytest.raises(SignupError), match= and a bare `raises` import pass. I accept this as equivalent to the required fix."
+      },
+      {
+        "findingId": "py-fund-lab-sme-007",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "reviewedSha256": "83997bc3d3b70ed8ada62c202c3c94fb56ba5c25564d66e98d440350afd602b5",
+        "note": "Probes now pass: CASES module constant, argvalues= keyword, `from pytest import fixture`, tests grouped in a class, `from pytest import mark`. Residual edge only: an annotated constant (`CASES: list = [...]`, ast.AnnAssign) is still counted as 0 cases (case_count line 342 handles ast.Assign only); not worth a new finding since the README teaches the inline form."
+      },
+      {
+        "findingId": "py-fund-lab-sme-008",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "reviewedSha256": "83997bc3d3b70ed8ada62c202c3c94fb56ba5c25564d66e98d440350afd602b5",
+        "note": "Line 85 inspects node.left and comparators: `if None is found:` passes. Lines 276-286 accept `from signups.records import`, `from .records import` and `from signups import records`; all three probes pass."
+      },
+      {
+        "findingId": "py-fund-lab-sme-009",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f",
+        "note": "README Troubleshooting line 210 names pytest.ini, pyproject.toml and PYTEST_ADDOPTS outside the lab and says to copy the lab to its own folder and clear PYTEST_ADDOPTS. No shipped file added, as the reconciliation required."
+      },
+      {
+        "findingId": "py-fund-lab-sme-010",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/expected/on-completion.txt",
+        "reviewedSha256": "958b06e4eb011cb545aa58a63294511068593544e44fdd8d61f774ac94acf5df",
+        "note": "Line 1 now shows the learner's dots first, matching pytest's collection order (starter/test_signups.py before tests/test_main.py), and lab.json notes say so."
+      },
+      {
+        "findingId": "py-fund-lab-sme-011",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/lab.json",
+        "reviewedSha256": "e8a109b7ddf10aa3afea321330f2a531b2bd3679e0c3836ebf301644c9a813bf",
+        "note": "cleanup.notes now lists source/signature checks task by task (including the new import logging, import sys, from-import and keyword-call checks) and states that Task 7 and the __name__ guard are checked by behaviour only, which matches tests/test_main.py."
+      },
+      {
+        "findingId": "py-fund-lab-sme-012",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "reviewedSha256": "83997bc3d3b70ed8ada62c202c3c94fb56ba5c25564d66e98d440350afd602b5",
+        "note": "Part 1: records.py no longer ships `import logging` and cli.py no longer ships `import sys`; README Task 8 step 1 and Task 9 step 1 ask for them; lines 221-224 and 272-275 check module-level ast.Import from bytes. Part 2: README line 155 prescribes session_status(taken=..., capacity=...) and lines 287-296 require a keyword call whose order differs from the def. Probes: same-order keywords and positional calls fail with the task-named message; `import logging as log` passes."
+      },
+      {
+        "findingId": "py-fund-lab-sme-013",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f",
+        "note": "Reject-with-evidence accepted: no python-fundamentals page teaches `raise ... from`, the current implicit chaining is correct Python, and the check accepts `from err` / `from None` (both probes pass)."
+      },
+      {
+        "findingId": "py-fund-lab-sme-014",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f",
+        "note": "README line 159 says to go back with `cd ..`; Troubleshooting line 208 covers 'Only your own tests ran, or no tests ran'; starter/.pytest_cache is in lab.json cleanup.paths and both README cleanup commands (lines 201-202)."
+      },
+      {
+        "findingId": "py-fund-lab-sme-015",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/README.md",
+        "reviewedSha256": "891df04f24ac2810d37892829d4ddca0c5b1e01605e54bf13073bab8a653f68f",
+        "note": "README line 93 (Task 1) and Troubleshooting line 211 tell the learner to press Ctrl+C and check the while loop."
+      },
+      {
+        "findingId": "py-fund-lab-sme-016",
+        "status": "resolved",
+        "file": "python/python-fundamentals/coding-lab/tests/test_main.py",
+        "reviewedSha256": "83997bc3d3b70ed8ada62c202c3c94fb56ba5c25564d66e98d440350afd602b5",
+        "note": "The five bare asserts now carry task-named messages (lines 75-80, 171-173, 178-180, 182-184); README line 20 and the test_main.py docstring line 3 now say most messages name the next action and the check name gives the task. Task 9's import failure is now a task-named pytest.fail (verified with an unguarded sys.exit(main(sys.argv)): 'raised SystemExit(1); add the __name__ guard')."
+      }
+    ]
+  }
+}

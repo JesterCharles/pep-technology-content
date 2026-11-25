@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "cg-critic-sme (independent Claude critic subagent, 2026-11-17)",
+  "reviewedPath": "spring-boot/api-security/coding-lab/lab.json",
+  "reviewedSha256": "17f80c54d9747da4616ec21599650e05665f874e1bca1a7460ef9956cd7dd4ab",
+  "artifactHashes": {
+    "coding-lab/README.md": "62ab7ae06a0e9c61b0f4c980e0f6fcbe53d3464c160909189d7b817f3136208b",
+    "coding-lab/expected/test-summary.txt": "2362bbc5bd7aaa6beb1429a96b262d5db526116d3aac758765f5b5315367871e",
+    "coding-lab/lab.json": "17f80c54d9747da4616ec21599650e05665f874e1bca1a7460ef9956cd7dd4ab",
+    "coding-lab/starter/pom.xml": "aaf0f0c45d6c5ba51580b52a1a354c1b319928f2254b70435b504718cb9ea129",
+    "coding-lab/starter/src/main/java/secure/ApiErrors.java": "91bd1c31236875dfe77ee66ddc699418b1d1dee328a3e655190be15cca8fbb02",
+    "coding-lab/starter/src/main/java/secure/AuthController.java": "10cea6f1dd08110024fa15433b51f66dfbf8181e902928c583c27f37a5583c3a",
+    "coding-lab/starter/src/main/java/secure/Booking.java": "01b003097c00c0e3c056eead2ba5be4e8cc8d03e60bc9291ed3234fbee8fe7b5",
+    "coding-lab/starter/src/main/java/secure/BookingController.java": "a4fbd7dde852f2bcd1df0c4fafcbab54ef16858099b8b0cebcd7b16f76c9c28a",
+    "coding-lab/starter/src/main/java/secure/BookingRepository.java": "4fd0e682b70dcb270c1193680d5db0300dfe4e2cc96d7a38685cd567f3053d2d",
+    "coding-lab/starter/src/main/java/secure/BookingService.java": "2d51c9348bbeb32715b5352cb34bbdf87703f7b822931f4333f310044f737d41",
+    "coding-lab/starter/src/main/java/secure/BookingView.java": "2d865b466cb8c140a15748d80fdb0c538c22d6240a66ae179068eecc354f8279",
+    "coding-lab/starter/src/main/java/secure/SecureApplication.java": "a940b7438b0a05d3a8dec479eb0b111958b3f3cbd5a9468f2e862d5536b987aa",
+    "coding-lab/starter/src/main/java/secure/SecurityConfig.java": "ffc006008cc005888daf770f4ad5b9c292d9e689daac23676fdf2bb66234bf07",
+    "coding-lab/starter/src/main/java/secure/TokenService.java": "fb294bb42654fca291b4c5c043b0c70966046e2c70e838ea807d9c9cfd4e51b3",
+    "coding-lab/starter/src/main/java/secure/UserAccountService.java": "5d4f13c3898f8c70a36545e6e025b6fed63c0fb93cfc05c62c03e604a1bd106c",
+    "coding-lab/starter/src/main/java/secure/WorkshopController.java": "21f53ccbcba0fa6cfbcc9804b4f5b0ede0856028f6de6c84912862c36af15684",
+    "coding-lab/starter/src/main/resources/application.properties": "ddf059f2cd7ddf3111ea4442194489c446c75b87a82666714b34b27667f8af16",
+    "coding-lab/starter/src/main/resources/data.sql": "3aab56a45e6a3b3bdc8f3b7e4f0fdf28c7be59cfccbf013f132838ee77765c49",
+    "coding-lab/tests/secure/DevProfileSecurityTest.java": "610a0951e1ebba4c45204b5c2a8be3d7c9a40064fc13e86e056ac477009d064b",
+    "coding-lab/tests/secure/OwnBookingTest.java": "d0d15deddb854461fa842ccf82060a77e6e729fdfaa7dd1ffc5216f8050d7649",
+    "coding-lab/tests/secure/SecurityLabTest.java": "be71065ec20bf103a8e2267445be2fda7953838957b77a7e69c0bdbff02c78b7"
+  },
+  "findings": [
+    {
+      "id": "cg-sme-apisec-001",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/tests/secure/OwnBookingTest.java",
+        "line": 40
+      },
+      "claim": "task7ProvesTheOwnershipCheck asserts only that the learner's MvcResult is a 404. Critic run (private solution with all Task 7 source reverted to the starter, OwnBookingTest using get(\"/no-such-page\") with Grace's valid token): OwnBookingTest passes while SecurityLabTest.task7 fails. So the declared starter-failing test passes with an unrelated request and no ownership fix. The behaviour itself is still proved by SecurityLabTest.task7ServesOnlyTheCallersOwnBooking; what is not proved is the 'testing' skill the README credits to step 5 ('This is the test that proves the ownership check').",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/tests/secure/OwnBookingTest.java",
+          "section": "shipped assertions, lines 39-41",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "d0d15deddb854461fa842ccf82060a77e6e729fdfaa7dd1ffc5216f8050d7649"
+        }
+      ],
+      "recommendation": "Assert the request: GET, URI /bookings/2, and an Authorization header carrying a token whose subject is grace (e.g. decode it with the injected JwtDecoder).",
+      "reviewedSha256": "d0d15deddb854461fa842ccf82060a77e6e729fdfaa7dd1ffc5216f8050d7649"
+    },
+    {
+      "id": "cg-sme-apisec-002",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "line": 89
+      },
+      "claim": "The README says 'whenever a bean named corsConfigurationSource exists, Spring Security switches CORS on for every chain, so the same bean in SecurityConfig would open the default profile ... and defaultProfileSendsNoCorsHeaders would fail'. Spring Security's reference says CORS is configured automatically 'only if a UrlBasedCorsConfigurationSource instance is present', and javap of spring-security-config 7.1.2 HttpSecurityConfiguration.applyCorsIfAvailable shows a type lookup (getBeanNamesForType(UrlBasedCorsConfigurationSource)), not a name lookup. Observed in critic runs on copies of a private solution: (1) bean moved to the end of SecurityConfig with the README's declared type CorsConfigurationSource -> all 9 tests pass (the guard does not fire); (2) same placement declared UrlBasedCorsConfigurationSource -> defaultProfileSendsNoCorsHeaders fails; (3) bean in a separate unprofiled @Configuration class, declared either way -> guard fails. Hypothesis, not verified: in (1) the bean is not yet instantiated when the default chain's HttpSecurity is built, so a type lookup on the interface-typed factory method does not match. Either way, the guard for 'active only when the dev profile is on' (a-dev-profile...#o1) depends on the declared type and placement, and the README's explanation is inaccurate. (In the passing case the default profile still sent no CORS header, so this is a weaker guard, not a demonstrated leak.) Name does matter for the CorsConfigurer default lookup: a renamed bean fails task6 (critic run), and removing .cors(...) from the dev chain fails task6, so the troubleshooting line 146 is correct.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/README.md",
+          "section": "Task 6, line 89",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "62ab7ae06a0e9c61b0f4c980e0f6fcbe53d3464c160909189d7b817f3136208b"
+        },
+        {
+          "url": "https://docs.spring.io/spring-security/reference/servlet/integrations/cors.html",
+          "section": "CORS: Providing a CorsConfigurationSource (automatic configuration only with a UrlBasedCorsConfigurationSource instance)",
+          "retrievedAt": "2026-11-18T03:39:41Z",
+          "textSha256": "50076445b283a4dedb5d95a5b8294a21b664c240462e02920f6b73404c986791"
+        }
+      ],
+      "recommendation": "Correct the README sentence (type-based, UrlBasedCorsConfigurationSource). Make the default-profile guard placement-independent, e.g. assert in SecurityLabTest that the default-profile context has no CorsConfigurationSource bean, or that no CorsFilter is in the default chain.",
+      "reviewedSha256": "62ab7ae06a0e9c61b0f4c980e0f6fcbe53d3464c160909189d7b817f3136208b"
+    },
+    {
+      "id": "cg-sme-apisec-003",
+      "severity": "high",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "line": 106
+      },
+      "claim": "common-api-security-risks-owasp#o3 ('Connect earlier course practices (validation, DTOs, error bodies without internals, password hashing, role checks) to the risks they reduce') is declared but nothing practises the connecting: no test, file or answer captures it, and README line 106 states the whole mapping ('the query and the 404 close object level access (API1), the DTO stops the internal fields from leaking, ... Tasks 1 to 3 already protect the login itself (API2)'). The tests prove the practices are applied, not that the learner can connect them to risks. The README also leaves the DTO's risk unnamed; in the OWASP API Security Top 10 2023 that is API3:2023 Broken Object Property Level Authorization ('The API endpoint exposes properties of an object that are considered sensitive ... previously named Excessive Data Exposure'). High rather than medium (compare validation findings 004/005): here the whole declared objective is the connecting step, not one half of it.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/README.md",
+          "section": "Task 7, line 106",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "62ab7ae06a0e9c61b0f4c980e0f6fcbe53d3464c160909189d7b817f3136208b"
+        },
+        {
+          "url": "https://owasp.org/API-Security/editions/2023/en/0xa1-broken-object-level-authorization/",
+          "section": "API1:2023 Broken Object Level Authorization",
+          "retrievedAt": "2026-11-18T03:39:45Z",
+          "textSha256": "838060e500f0616879a90bc17077d23f9da72eb8946a53d959a46f8ed5c9249e"
+        },
+        {
+          "url": "https://owasp.org/API-Security/editions/2023/en/0xa3-broken-object-property-level-authorization/",
+          "section": "API3:2023 Broken Object Property Level Authorization",
+          "retrievedAt": "2026-11-18T03:39:45Z",
+          "textSha256": "2643364bd8ff000b7cc3580c26e8487914361e10f546a6d8ec7abd4cc3972400"
+        }
+      ],
+      "recommendation": "Either remove #o3 from lab.json objectives, or make the learner produce the mapping (e.g. a small risks.yaml mapping each Task to an API Top 10 id, checked against an allowed set) and drop the stated answer from the README.",
+      "reviewedSha256": "62ab7ae06a0e9c61b0f4c980e0f6fcbe53d3464c160909189d7b817f3136208b"
+    },
+    {
+      "id": "cg-sme-apisec-004",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+        "line": 123
+      },
+      "claim": "spring-review-layers-data-access-errors-testing-security#o1 claims layering, JPA query, validation, error handling, testing and security are applied. Critic run: a controller that keeps the BookingRepository, calls findById, compares getOwner() with principal.getName() itself, maps with BookingView.from and checks 'id < 1' by hand (no service call, no derived query, no constraint) passes all 9 tests. The tests prove the behaviour (DTO, ownership 404 with a problem body, 400, 401), not the layering, the derived query or Bean Validation; with finding 001 the testing part is not proved either. Verdict partial.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/tests/secure/SecurityLabTest.java",
+          "section": "task7ServesOnlyTheCallersOwnBooking, lines 122-147",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "be71065ec20bf103a8e2267445be2fda7953838957b77a7e69c0bdbff02c78b7"
+        }
+      ],
+      "recommendation": "If the review objective is to be counted, add structural checks: BookingController must not depend on BookingRepository (constructor parameter types by reflection), BookingRepository declares findByIdAndOwner, and the id parameter carries a jakarta.validation constraint. Otherwise narrow the claim.",
+      "reviewedSha256": "be71065ec20bf103a8e2267445be2fda7953838957b77a7e69c0bdbff02c78b7"
+    },
+    {
+      "id": "cg-sme-apisec-005",
+      "severity": "medium",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/README.md",
+        "line": 80
+      },
+      "claim": "Task 6 and Task 7 hand over the final code: the exact CorsConfiguration calls and the .cors line, the full derived-query signature, the service steps, the controller signature and the exact ApiErrors handler body (ApiErrors.java TODO). The new tests mostly prove transcription.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/README.md",
+          "section": "Tasks 6 and 7",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "62ab7ae06a0e9c61b0f4c980e0f6fcbe53d3464c160909189d7b817f3136208b"
+        },
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/starter/src/main/java/secure/ApiErrors.java",
+          "section": "Task 7 step 4 TODO",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "91bd1c31236875dfe77ee66ddc699418b1d1dee328a3e655190be15cca8fbb02"
+        }
+      ],
+      "recommendation": "Reconciler decision as for the validation lab: accept the copy-along style explicitly (and do not count the objectives as independently practised) or replace verbatim code with outcomes and graded hints.",
+      "reviewedSha256": "62ab7ae06a0e9c61b0f4c980e0f6fcbe53d3464c160909189d7b817f3136208b"
+    },
+    {
+      "id": "cg-sme-apisec-006",
+      "severity": "medium",
+      "location": {
+        "file": "authoring/evidence/spring-boot/api-security/coding-lab/lab-run.json",
+        "line": 1
+      },
+      "claim": "The committed solved-run record (solved at 731d8e1a, 'Tests run: 5') binds pre-extension bytes (lab.json, README, expected/test-summary.txt, pom.xml, application.properties, DevProfileSecurityTest.java, SecurityLabTest.java hashes no longer match) and does not cover the new starter files or OwnBookingTest.java. The critic reproduced the author's claim independently: starter fails exactly the 8 declared failingTests (defaultProfileSendsNoCorsHeaders passes, as the README says); a private solution passes 9/9.",
+      "evidence": [
+        {
+          "url": "file:///authoring/evidence/spring-boot/api-security/coding-lab/lab-run.json",
+          "section": "artifactHashes and result",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "fa97c298747ba7d5f83ba063cd0be7d35960ef1265f8d51aaf90a2d9242522a1"
+        }
+      ],
+      "recommendation": "Re-run and rewrite lab-run.json at the final commit.",
+      "reviewedSha256": "fa97c298747ba7d5f83ba063cd0be7d35960ef1265f8d51aaf90a2d9242522a1"
+    },
+    {
+      "id": "cg-sme-apisec-007",
+      "severity": "low",
+      "location": {
+        "file": "spring-boot/api-security/coding-lab/lab.json",
+        "line": 57
+      },
+      "claim": "minutes.tasks grew from 35 to 51 (56 with setup) with no timing evidence and no 'estimate' label in lab.json or the README; the README has no timing text. 56 minutes for seven tasks including a five-step review task and three Spring contexts per run is near the 60-minute ceiling and unrecorded.",
+      "evidence": [
+        {
+          "url": "file:///spring-boot/api-security/coding-lab/lab.json",
+          "section": "minutes",
+          "retrievedAt": "2026-11-18T04:02:39Z",
+          "textSha256": "17f80c54d9747da4616ec21599650e05665f874e1bca1a7460ef9956cd7dd4ab"
+        }
+      ],
+      "recommendation": "Record how 51 was derived and label it an estimate in the README.",
+      "reviewedSha256": "17f80c54d9747da4616ec21599650e05665f874e1bca1a7460ef9956cd7dd4ab"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+# The shop repository's pipeline, as a teammate left it. The repository also
+# holds the api's Maven project in backend/ (with its mvnw); this lab ships
+# only the files you edit. The tests read this workflow, and run only its
+# login step and the steps that can see a secret, with made-up secret values.
+# It breaks rules this module taught. TODO (README phase 6): fix every rule
+# the tests name; do not add new jobs.
+name: shop ci
+on: workflow_dispatch
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: cd backend && ./mvnw test
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: log in to Docker Hub
+        run: docker login docker.io -u pepshop -p hunter2-for-docker-hub
+      - name: show the credentials for debugging
+        run: echo "pushing as pepshop with ${{ secrets.REGISTRY_PASSWORD }}"
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          tags: docker.io/pepshop/reviews:latest
+          push: true

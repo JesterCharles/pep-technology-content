@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "role": "education",
+  "author": "pep-react-lab-replacement-critic-education (Claude Opus 5.5, fresh independent context)",
+  "reviewedPath": "react/components-and-state/coding-lab/lab.json",
+  "reviewedSha256": "778d3219a73609becc7ce9048a8e294d8899e66b81449072a15485560cdfcda7",
+  "artifactHashes": {
+    "coding-lab/README.md": "5556d25ac79ec72a6561e86e4afbac380989fe00121cbe9b3f464d093519dfb8",
+    "coding-lab/lab.json": "778d3219a73609becc7ce9048a8e294d8899e66b81449072a15485560cdfcda7"
+  },
+  "findings": [
+    {
+      "id": "edu-cs-1",
+      "severity": "high",
+      "location": {
+        "file": "react/components-and-state/coding-lab/lab.json",
+        "line": 25
+      },
+      "claim": "lab.json claims react/components-and-state/usestate#o3 (predict the value after several setter calls and use an updater function when the next state depends on the previous one), but nothing scores the updater clause. tests/t6-run-checks.test.jsx lines 10-14 only check the rendered text goes 0 -> 3 -> 6 across two clicks, so replacing the three calls in starter/src/App.jsx lines 34-36 with a single setChecksRun(checksRun + 3) passes task 6 without any updater function; the 'predict' clause is not exercised either (the TASK 6 comment at App.jsx lines 28-31 states the answer). lab.json has no partial-objective note at all (cleanup.notes line 77), so the claim reads as fully practised and scored.",
+      "evidence": [],
+      "recommendation": "Either add an honest partial-objective note in lab.json (updater clause practised by instruction but not distinguishable by behavioral tests; prediction practised on the topic page), or restructure task 6 so only an updater passes, e.g. make the three probes report through a shipped helper the learner may not change that calls the learner's per-probe callback once per region, and assert the count after one click.",
+      "reviewedSha256": "778d3219a73609becc7ce9048a8e294d8899e66b81449072a15485560cdfcda7"
+    },
+    {
+      "id": "edu-cs-2",
+      "severity": "medium",
+      "location": {
+        "file": "react/components-and-state/coding-lab/tests/t1-masthead.test.jsx",
+        "line": 8
+      },
+      "claim": "components-and-jsx#o2 names className and camelCase attributes, but task 1 does not score either. React 19 still renders a JSX class attribute (checked in a scratch copy: renderToString(createElement('header', {class: 'masthead'})) returns <header class=\"masthead\"> with only a console warning, 'Invalid DOM property `class`'), so toHaveClass('masthead') at line 8 passes when the learner copies class=\"masthead\" from the HTML. The masthead snippet (starter/src/components/DashboardHeader.jsx lines 4-8) has no other attribute that needs renaming, so camelCase is not practised. Only closed tags and one root are enforced, by the JSX parser.",
+      "evidence": [],
+      "recommendation": "Either add a partial-objective note for the className/camelCase clause, or make it scored, for example by failing the test when React logs the 'Invalid DOM property' warning (spy on console.error in t1) and adding one camelCase attribute to the legacy snippet (for example tabindex or an inline style) that the test checks.",
+      "reviewedSha256": "ca93291702c6a922ead61d659ae2e314bcb11f008e01d622a18062a965c06f8a"
+    },
+    {
+      "id": "edu-cs-3",
+      "severity": "medium",
+      "location": {
+        "file": "react/components-and-state/coding-lab/lab.json",
+        "line": 20
+      },
+      "claim": "Several more claimed objective clauses can be passed without the technique the TASK comment teaches, and lab.json does not disclose this. (a) project-structure#o2, 'import them correctly': tests/t3-status-badge-module.test.jsx imports only StatusBadge.jsx, so ServiceCard.jsx can keep its own copy (starter lines 7-17) and task 3 still passes; the README lists ServiceCard.jsx for task 3, but nothing checks that edit. (b) conditional-display#o3, return null: t4 lines 21-24 count .maintenance nodes, so guarding in the parent ({maintenance && <MaintenanceNotice .../>}) passes without MaintenanceNotice returning null. (c) props#o1, destructuring default: t2 checks only the text 'Team: Unassigned', so {team || 'Unassigned'} passes. (d) The 'derive it from the services state' instruction in App.jsx lines 97-100: t8 lines 41-45 expect ['Email Relay'] after hiding Catalog API, so a hard-coded <li>Email Relay</li> passes.",
+      "evidence": [],
+      "recommendation": "Tighten the cheap cases: in t8, hide Email Relay and assert that the Down now list becomes empty; in t3 or t4, assert that the card's badge comes from the shared module. For example, render ServiceCard and check that its badge output matches StatusBadge's output for every STATUS_LABELS key after a module mock. List any clause left unscored, such as return null or the destructuring default, in an honest partial-objective note in lab.json.",
+      "reviewedSha256": "778d3219a73609becc7ce9048a8e294d8899e66b81449072a15485560cdfcda7"
+    },
+    {
+      "id": "edu-cs-4",
+      "severity": "low",
+      "location": {
+        "file": "react/components-and-state/coding-lab/README.md",
+        "line": 37
+      },
+      "claim": "The optional dev block tells the learner to run 'cd starter' right after the setup block, where they ran 'cd tests' (lines 27-28), without saying to go back to the lab folder first. Run from tests/, 'cd starter' fails. The block also does not mention that 'npm run dev' keeps running and holds the terminal, so 'How to test' (run npm test from tests) needs a second terminal.",
+      "evidence": [],
+      "recommendation": "Write the dev block as 'From the lab folder (cd .. if you are still in tests): cd starter ...', and add one line saying to run the dev server in a second terminal and stop it with Ctrl+C.",
+      "reviewedSha256": "5556d25ac79ec72a6561e86e4afbac380989fe00121cbe9b3f464d093519dfb8"
+    },
+    {
+      "id": "edu-cs-5",
+      "severity": "low",
+      "location": {
+        "file": "react/components-and-state/coding-lab/starter/src/components/StatusBadge.jsx",
+        "line": 7
+      },
+      "claim": "TASK 3 says 'make ServiceCard.jsx import both from here' and README line 86-87 says 'import both where the card needs them'. ServiceCard uses only the StatusBadge component, and STATUS_LABELS is used only inside StatusBadge. A learner who follows the instruction literally adds an unused import, and one who does not may wonder whether something is missing. This muddies the default-versus-named distinction the task is meant to teach.",
+      "evidence": [],
+      "recommendation": "Say that ServiceCard imports the default StatusBadge, and that STATUS_LABELS is a named export so other modules can import it with braces. Optionally have the learner import it somewhere it is used, or drop 'both'.",
+      "reviewedSha256": "b14034c3b0bb22564c35faeec72edd104252c6ad5bb58695fad12ba47eb784c6"
+    },
+    {
+      "id": "edu-cs-6",
+      "severity": "low",
+      "location": {
+        "file": "react/components-and-state/coding-lab/starter/src/components/DashboardHeader.jsx",
+        "line": 5
+      },
+      "claim": "The masthead the learner must reproduce uses <img src=\"/beacon.svg\">, but the lab ships no beacon.svg (there is no starter/public/ directory). In the optional dev server, a correct task 1 therefore shows a broken image. A learner can read that as a JSX mistake, and README troubleshooting does not mention it.",
+      "evidence": [],
+      "recommendation": "Ship a tiny license-clean starter/public/beacon.svg, or add a note in the TASK 1 comment or troubleshooting that the logo file is intentionally absent and the broken image is expected.",
+      "reviewedSha256": "36c3b32ed328701592ea0bd5829859085a6bc5e91d0b65e9635498deceac01fa"
+    },
+    {
+      "id": "edu-cs-7",
+      "severity": "low",
+      "location": {
+        "file": "react/components-and-state/coding-lab/tests/t6-run-checks.test.jsx",
+        "line": 12
+      },
+      "claim": "On the starter, and for any wrong count, task 6 fails with Testing Library's generic 'Unable to find an element with the text: 3 checks run. This could be because the text is broken up by multiple elements...' (seen in a scratch run). The hint points the learner at markup, when the real problem is the stale-state count. The received value ('1 checks run') appears only deep in a long DOM dump.",
+      "evidence": [],
+      "recommendation": "Query the counter once and assert its content instead, for example expect(screen.getByText(/checks run/)).toHaveTextContent('3 checks run'). This reports 'Expected ... 3 checks run, Received 1 checks run', which points straight at the updater fix.",
+      "reviewedSha256": "e162fde2b03638d0f97bcf5d0e735136e83794dd9a40ded090b019ac3290cef4"
+    }
+  ]
+}

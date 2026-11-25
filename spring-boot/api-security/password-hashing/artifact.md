@@ -53,7 +53,7 @@ Where to act: Start with the `___` in `register`.
 
 Next step: What should you store instead of the raw value?
 
-Another hint Another hint, 2 of 2 for Activity 2
+Another hint Hint 2 of 2 for Activity 2
 
 Where to act: Then fix the login line.
 
@@ -73,7 +73,7 @@ Printed alternative: Stored {bcrypt} with any default: bcrypt checks it. Stored 
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-security/reference/servlet/authentication/passwords/password-encoder.html
 - https://docs.spring.io/spring-security/reference/features/authentication/password-storage.html

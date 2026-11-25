@@ -61,8 +61,6 @@ Both images are already downloaded, so nothing is pulled in this practice.
 - `--name` names it, `-d` runs it in the background, `--rm` deletes the container, never the image, on exit.
 - Podman runs the same OCI images and core commands: daemonless on Linux, a `podman machine` VM on macOS and Windows.
 
-Next topic: Reading: image layers and build caching
-
 ## Cheat sheet
 
 |  |  |

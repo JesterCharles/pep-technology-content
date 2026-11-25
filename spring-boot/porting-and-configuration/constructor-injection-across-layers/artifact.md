@@ -65,7 +65,7 @@ Where to act: Replace the first `___`.
 
 Next step: The constructor you wrote earlier tells you what to pass.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: Replace the second `___`.
 
@@ -78,7 +78,7 @@ Printed alternative: Create the service with a fake repository and assert the re
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://docs.spring.io/spring-boot/reference/using/spring-beans-and-dependency-injection.html
 - https://docs.spring.io/spring-framework/reference/core/beans/dependencies/factory-collaborators.html

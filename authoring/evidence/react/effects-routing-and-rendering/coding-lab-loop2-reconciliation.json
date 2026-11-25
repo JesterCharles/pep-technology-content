@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "author": "pep-react-lab-replacement author lane (Claude Opus 5.5)",
+  "decidedBy": "pep-react-lab-replacement-reconciler (Claude Opus 5.5, fresh independent context)",
+  "reviewedPath": "react/effects-routing-and-rendering/coding-lab/lab.json",
+  "reviewedSha256": "cb6a3aa0b1b336fc62761b39bab35054debf71adb3279f870a67aeb825039570",
+  "decisions": [
+    {
+      "findingId": "sme-err-r1",
+      "decision": "accept",
+      "rationale": "Reproduced on a scratch copy of the final snapshot (commit 89064f80) with the private solution applied: a hook with the AbortError guard removed and setError(null) added to the success branch passes all 8 tests, because t6's Strict Mode block waits for the six cards before checking for 'Could not load'. In that window the aborted first request's AbortError is shown as the error banner, which contradicts TASK 6 and README task 6. Verified fix, 3 of 3 runs: in tests/t6-abort-on-unmount.test.jsx, after the existing signal assertions and before the existing stubRoutedFetch Strict Mode block, add a stubPendingFetch() render of <StrictMode><MemoryRouter initialEntries={['/']}><App/></MemoryRouter></StrictMode>. Flush it with await act(async () => { await new Promise((r) => setTimeout(r, 0)); }), assert queryByText(/Could not load/) is absent and 'Loading services...' is shown, then unmount and vi.unstubAllGlobals() before the existing loaded-state block. Import act from @testing-library/react. Keep the existing loaded-state block: it is what catches the useRef 'already fetched' mutant, which stays on 'Loading' under the pending stub. Probe results: the solution passes t6 and the full 8/8, the critic's mutant and the round-1 no-guard mutant fail at the no-error check, the useRef mutant fails at the loaded block, and the shipped starter still fails t6 at 'expected null not to be null'. Test name, failingTests and expected/on-completion.txt unchanged."
+    }
+  ]
+}

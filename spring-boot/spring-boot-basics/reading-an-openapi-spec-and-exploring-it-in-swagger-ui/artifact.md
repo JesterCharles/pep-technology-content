@@ -70,11 +70,10 @@ Next step: Match the starter to the web stack the app runs on, and the version t
 Printed alternative: With `springdoc-openapi-starter-webmvc-ui:3.2.0` on the classpath, restart the app and open `/swagger-ui.html`. Expand `GET /workshops/{id}`: its documented responses are 200 (a `Workshop`) and 404. Press Try it out, enter an id that does not exist, such as 999, and press Execute. The server answers 404 with an empty body, which matches the documented 404.
 
 - Schemas: `components/schemas`, referenced with `$ref`.
-- Use `curl -i` to see the status line.
 
 ## Sources
 
-Status: minimum release, November 2026. The author checked this page and re-fetched the sources below live; no independent education or technology review has been done, so its claims are not marked as verified by a reviewer.
+Status: Sources checked on 8 November 2026; independent review pending.
 
 - https://springdoc.org/
 - https://swagger.io/specification/

@@ -26,7 +26,15 @@ with psycopg.connect(conninfo) as conn:
 
 A lookup needs three things: a connection string from the environment, a `with` block around the connection, and `execute` with `%s` plus a tuple of values. Then `fetchall()` returns a list of row tuples.
 
-The example in the last activity looks up users by city. Your task uses orders by customer. Keep the shape and change the query.
+This lookup of users by city has that shape. Your task uses orders by customer. Keep the shape and change the query.
+
+```
+conninfo = os.environ["DATABASE_URL"]
+with psycopg.connect(conninfo) as conn:
+    with conn.cursor() as cur:
+        cur.execute("SELECT id FROM users WHERE city = %s", (city,))
+        rows = cur.fetchall()
+```
 
 ### A connection block is a transaction
 
@@ -53,9 +61,9 @@ Next step: Look for the customer text inside the SQL text, then switch modes and
 
 Where to act: The ___ line in find_orders.
 
-Next step: Copy the structure of the users-by-city example from Activity 2, then change the SQL.
+Next step: Copy the structure of the users-by-city example in this activity, then change the SQL.
 
-Another hint Another hint, 2 of 2 for Activity 3
+Another hint Hint 2 of 2 for Activity 3
 
 Where to act: The execute call.
 
@@ -63,7 +71,7 @@ Next step: Check that the value arrives as a second argument, and that it is a t
 
 Optional time: about 2 minutes
 
-Success criteria: State which rows remain if the two inserts below run in separate `with psycopg.connect(...)` blocks and only the second block raises.
+Success criteria: State which rows remain if the two inserts above run in separate `with psycopg.connect(...)` blocks and only the second block raises.
 
 ```
 conninfo = os.environ["DATABASE_URL"]
@@ -76,7 +84,7 @@ with psycopg.connect(conninfo) as conn:
 
 ## Sources
 
-First draft, not reviewed. Retrieved 2026-11-04. Checked by the author against these official pages; no independent reviewer has checked this page yet.
+Sources checked on 2026-11-04. The author checked this page against these official pages; independent review pending.
 
 - psycopg 3: Basic module usage
 - psycopg 3: Passing parameters to SQL queries

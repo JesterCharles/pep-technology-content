@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "Python + PostgreSQL SME critic (independent Claude subagent, 2026-11-18)",
+  "reviewedPath": "python/data-pipelines/coding-lab/lab.json",
+  "reviewedSha256": "1feef7858da9dce72bb0c2c242bf3e17d50706f7232823c7d33cf8c2824f0297",
+  "artifactHashes": {
+    "coding-lab/lab.json": "1feef7858da9dce72bb0c2c242bf3e17d50706f7232823c7d33cf8c2824f0297",
+    "coding-lab/README.md": "0f4308be27cceb6f2b7c53193414b1929e713af480df47eca17ba703ab2198b0"
+  },
+  "findings": [
+    {
+      "id": "py-pipe-lab-sme-r03",
+      "severity": "medium",
+      "location": {
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "line": 163
+      },
+      "claim": "Regression from the r01 fix: Task 1 now rejects every ListComp, SetComp and DictComp anywhere in read_csv or read_jsonl, including per-record ones that do not break streaming, and it reports them with a false message. Reproduced (recheck2/variants_r.py, log recheck2/variants_r.log, at e248294b): `for row in csv.DictReader(f): yield {k.strip(): v for k, v in row.items()}` fails 'Task 1: read_csv must stream record by record, not read the whole file first', although it reads one row at a time. A dict comprehension that rebuilds each parsed JSON line in read_jsonl fails the same way. Trimming CSV headers or values per record is a common, correct pipeline step. The README does not ask for it, so the risk is moderate, but the message tells a learner whose code does stream that it does not. A generator expression over the reader still passes, correctly. I rate it medium, like sme-012: a reproduced false failure on a less likely but correct alternative.",
+      "evidence": [],
+      "recommendation": "Flag a comprehension only when it materialises the source. Reject ListComp/SetComp/DictComp nodes where any comprehension generator's `iter` is the opened file handle, a DictReader(...) call, or a name bound to one (e.g. compare ast.unparse(gen.iter) with the `as` target of the with-open and with DictReader calls). Allow comprehensions over per-record values such as `row.items()`. Alternatively reject only comprehensions that are not inside a Yield node. Keep the task-named message.",
+      "reviewedSha256": "34f99031a7af52296b57097e6dfacbc14b6df4546f1b04ae9cbd0f3919f8efb6"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/python/data-pipelines/coding-lab-critic-sme.json",
+    "items": [
+      {
+        "findingId": "py-pipe-lab-sme-001",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "34f99031a7af52296b57097e6dfacbc14b6df4546f1b04ae9cbd0f3919f8efb6",
+        "note": "Re-run (recheck2/variants_r.py, log recheck2/variants_r.log, at e248294b). The with-connect commit is observed through the checks' second connection. A bare connect() with no commit fails 'Task 3: 0 rows are visible from another connection ...'. A bare connection that commits but has no with block fails the task-named with-block check. `with connect() as conn:`, the page literal `with psycopg.connect(os.environ[\"DATABASE_URL\"]) as conn:` and the combined `with connect() as conn, conn.cursor() as cur:` pass. The Task 4 rollback is observed. Unchanged since loop 1."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-002",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "0f4308be27cceb6f2b7c53193414b1929e713af480df47eca17ba703ab2198b0",
+        "note": "Task 4 still uses the page's `with connect() as conn:` block. Re-run: the starter-shaped autocommit run_transform fails the rollback check, and so does a with block that sets autocommit=True inside. A with block, with or without conn.transaction(), passes."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-003",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "34f99031a7af52296b57097e6dfacbc14b6df4546f1b04ae9cbd0f3919f8efb6",
+        "note": "Re-run: the README tests and a helper-based pair pass all four mutants. The count-only plus no-enrich suite, an enriched-length-only suite and a rejected-only suite each fail on the never-rejects or junk-answer mutant."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-004",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "34f99031a7af52296b57097e6dfacbc14b6df4546f1b04ae9cbd0f3919f8efb6",
+        "note": "Re-run: an enrich hard-coded to range(1, 3) fails Task 8 first with 'with max_attempts=1 make 1 call(s); use max_attempts, do not hard-code the tries'."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-005",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "34f99031a7af52296b57097e6dfacbc14b6df4546f1b04ae9cbd0f3919f8efb6",
+        "note": "Re-run: Path.open, io.open and `from csv import DictReader` pass. fh.readlines(), src.read().splitlines(), [*...], list(...) and now a list comprehension over the reader all fail with the task-named streaming message. The new comprehension rule over-reaches; that is reported as r03."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-006",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "34f99031a7af52296b57097e6dfacbc14b6df4546f1b04ae9cbd0f3919f8efb6",
+        "note": "Re-run: the cursor named `cursor` passes, and so does chunked executemany inside a for loop. A per-row execute fails in a for loop, and also in a list comprehension with a dead executemany. The generator-expression variant (`any(cur.execute(...) for r in records)`) also fails, though behaviourally first, because any() stops after one row."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-007",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/lab.json",
+        "reviewedSha256": "1feef7858da9dce72bb0c2c242bf3e17d50706f7232823c7d33cf8c2824f0297",
+        "note": "The lab.json cleanup.notes now record the source and retrieval date. https://pypi.org/pypi/psycopg/3.3.9/json lists `tzdata; sys_platform == \"win32\"`, and https://pypi.org/pypi/tzdata/json shows 2026.6 (uploaded 2026-10-28) as the latest release; both were retrieved 2026-11-18. That matches the reconciled wording. starter/requirements.txt line 14 still pins `tzdata==2026.6 ; sys_platform == \"win32\"`, which matches the installed psycopg metadata. I could not re-fetch PyPI offline."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-008",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "0f4308be27cceb6f2b7c53193414b1929e713af480df47eca17ba703ab2198b0",
+        "note": "The lab-shortcut pseudonym wording (README lines 150-151 and the enrich.py docstring) is unchanged since loop 1 and still accurate."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-009",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "0f4308be27cceb6f2b7c53193414b1929e713af480df47eca17ba703ab2198b0",
+        "note": "The allow-list of ref, session and comment, the free-text masking sentence and the softened line 6 are unchanged. Re-run: the old deny-list fails Task 7, and a comprehension-built allow-list passes."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-010",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "0f4308be27cceb6f2b7c53193414b1929e713af480df47eca17ba703ab2198b0",
+        "note": "Cleanup step 1 still gives both the POSIX and the PowerShell `$env:DATABASE_URL` forms (lines 196-198)."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-011",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "34f99031a7af52296b57097e6dfacbc14b6df4546f1b04ae9cbd0f3919f8efb6",
+        "note": "Re-run: all nine starter failures name their task. os.getenv, str(err) and inlined-SQL failures give task-named messages, and README line 22 still says 'most'. The only raw failure left is an uncaught ModelError, which the README wording covers."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-012",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "34f99031a7af52296b57097e6dfacbc14b6df4546f1b04ae9cbd0f3919f8efb6",
+        "note": "Re-run: a CTE after a comment line passes, inlined SQL gets the task-named message, dict() and the set route pass, and an extra final-reject WARNING passes. README Task 6 now spells out the set route separately (line 144), and the route as written passes the check (my probe 'set of seen, newest first')."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-013",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "0f4308be27cceb6f2b7c53193414b1929e713af480df47eca17ba703ab2198b0",
+        "note": "README line 104 no longer gives the answer inline (edu-011). It points the learner to the loading page's 'ON CONFLICT turns a failure into a decision' section, and the README makes no inaccurate claim. The answer the learner needs is correct: the page's prediction activity in artifact.html reveals 'It fails with a unique violation, and that transaction rolls back', which matches my PostgreSQL 18.3 reproduction (UniqueViolation, 0 rows of the batch)."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-014",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/README.md",
+        "reviewedSha256": "0f4308be27cceb6f2b7c53193414b1929e713af480df47eca17ba703ab2198b0",
+        "note": "README line 143 keeps `sorted(kept.values(), key=lambda s: s.email)` for the dict route. The set route on line 144 sorts by signed_up_at with reverse=True, then returns the list sorted by email. Both pass."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-015",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/lab.json",
+        "reviewedSha256": "1feef7858da9dce72bb0c2c242bf3e17d50706f7232823c7d33cf8c2824f0297",
+        "note": "lab.json still declares '>=3.12,<3.16' with the wheel evidence (URLs and the 2026-11-18 retrieval date). README line 26 now adds a next action for ARM64 Windows: use a macOS, Linux or x64 Windows computer, which is honest and claims no emulation workaround. Line 215 adds a Troubleshooting entry for pip's 'No matching distribution found for psycopg-binary==3.3.9'."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-r01",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/tests/test_main.py",
+        "reviewedSha256": "34f99031a7af52296b57097e6dfacbc14b6df4546f1b04ae9cbd0f3919f8efb6",
+        "note": "Re-run: in read_csv, `rows = [r for r in csv.DictReader(f)]` then a loop now fails 'Task 1: read_csv must stream record by record ...'. In load_staging, `[cur.execute(UPSERT_SQL, r) for r in records]` plus a dead executemany now fails 'Task 3: send the whole batch with executemany (not one execute per row)'. The generator-expression form also fails. ListComp, SetComp, DictComp and GeneratorExp are now searched (test_main.py lines 163-165 and 239)."
+      },
+      {
+        "findingId": "py-pipe-lab-sme-r02",
+        "status": "resolved",
+        "file": "python/data-pipelines/coding-lab/lab.json",
+        "reviewedSha256": "1feef7858da9dce72bb0c2c242bf3e17d50706f7232823c7d33cf8c2824f0297",
+        "note": "I accept the reject-with-evidence. lab.schema.json fixes prerequisites[] to {tool, version, check} with additionalProperties false, so there is no per-OS slot. README line 26 gives Windows learners `py --version`, and the cleanup.notes now say the declared check is the macOS and Linux form while Windows uses py --version. That is the fallback I proposed."
+      }
+    ]
+  }
+}
