@@ -49,7 +49,7 @@ The model: `==` compares what the two variables hold. For primitives such as `in
 
 ## Cheat sheet
 
-Where to act: The expression shown after Item:, above the two buttons.
+Where to act: The line that starts with Scenario:, just above the two buttons.
 
 Next step: Ask whether the operands are primitives or references. For references, decide whether `==` or an `equals` is used, and whether that class overrides `equals`.
 

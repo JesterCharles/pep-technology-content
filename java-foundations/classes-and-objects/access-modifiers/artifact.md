@@ -62,7 +62,7 @@ The model: each field, method and constructor carries one of four access levels,
 
 ## Cheat sheet
 
-Where to act: The situation shown after Item:, above the two buttons.
+Where to act: The line that starts with Scenario:, just above the two buttons.
 
 Next step: Find the member's modifier, then ask two questions in order: is the using class in the same package, and is it inside the same class?
 

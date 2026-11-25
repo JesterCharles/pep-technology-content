@@ -54,7 +54,7 @@ The model: `final` means "assigned once" or "not replaced", depending on where i
 
 ## Cheat sheet
 
-Where to act: The code shown after Item:, above the two buttons.
+Where to act: The line that starts with Scenario:, just above the two buttons.
 
 Next step: Find what is marked `final`, then ask whether the code assigns that variable a second time, or only uses or changes the object it refers to.
 

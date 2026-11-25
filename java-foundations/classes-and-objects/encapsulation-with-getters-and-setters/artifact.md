@@ -57,7 +57,7 @@ The model: encapsulation makes the fields `private` and lets other classes reach
 
 ## Cheat sheet
 
-Where to act: The field shown after Item:, above the three buttons.
+Where to act: The line that starts with Scenario:, just above the three buttons.
 
 Next step: Ask two questions: may the value change after the object is created at all, and if so, may a caller set it to any new value or only move it by a rule?
 
