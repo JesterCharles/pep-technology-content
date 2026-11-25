@@ -140,7 +140,7 @@ This file is the authoritative visual contract for every learner-facing standalo
 It governs how a page looks and how its interaction is presented.
 Behavior, accessibility gates, metadata and companions stay governed by [`authoring/docs/html-artifact-contract.md`](authoring/docs/html-artifact-contract.md).
 The page anatomy aligns with the HTML contract: position and required minutes live in the topic bar, while course objectives live in a compact native disclosure and per-activity completion criteria stay beside the task.
-Existing pages are not restyled by this file; it applies when a page is authored or re-authored.
+Existing pages are not restyled by this file; it applies when a page is authored or re-authored. Re-authored pages MAY opt into the [path anatomy](#path-anatomy-data-pep-anatomypath), which moves navigation into a lesson path beside the reading column.
 
 Keywords: **MUST** is required for new or re-authored pages, **SHOULD** is the default unless a recorded reason says otherwise, **MAY** is optional.
 Provenance tags: **[T]** stated in the source's Learner token table or HTML-artifact rules; **[G]** measured from the source guide's own light document styling; **[S]** sampled from the source's Learner app screenshots (approximate, JPEG); **[R]** read from the annotated page-anatomy reference; **[A]** a learner-content adaptation made here.
@@ -218,7 +218,7 @@ Narrow frame (<960 px, including the ~570 px Evolv column and phones). The topic
 Nothing the learner needs to finish the activity is removed:
 
 - The honest minutes label and activity position remain quiet text in the topic bar. [A]
-- Course objectives move to a compact native **Objectives** or **What you’ll learn** disclosure in that bar. It keeps `data-pep-objectives` and one `li` per objective for companion derivation. [A]
+- Course objectives move to a compact native **Objectives**, **What you’ll learn** or, on path-anatomy pages, **Topic objectives** disclosure in that bar. It keeps `data-pep-objectives` and one `li` per objective for companion derivation. [A]
 - Observable requirements move beside their activity under **What success looks like** or **Activity checks** (`data-pep-activity-checks`). They are not labeled Goals. [A]
 - A required runtime or version note becomes one sentence in the first instruction that depends on it. [A]
 
@@ -267,6 +267,63 @@ Execution stays honest and bounded:
 - Every control works by keyboard and touch, with no keyboard, focus or scroll trap.
 
 These rules restate the repository contract's honest-simulator, restart and accessibility requirements; they do not add behavior. [A]
+
+### Path anatomy (`data-pep-anatomy="path"`)
+
+Pages opt in with `data-pep-anatomy="path"` on the enrolled `main`, beside `data-pep-guidance-contract`. Adopt it per engine family when a page is re-authored. Every rule above still applies except where this section replaces it. Pages without the marker keep the anatomy above unchanged. [A]
+
+The path anatomy keeps the 5fr / 7fr regions and fixes three things learners met on the earlier anatomy: a near-empty reading column beside a long workspace, task copy ("the editor below", "under **Your prediction**") that only reads correctly when the task sits on top of its controls, and course navigation squeezed into the topic bar. [A]
+
+Wide frame (≥960 px):
+
+```text
+┌──────────────────────────────────────────────────────────────────────────┐
+│ Topic (h1)    Activity 3 of 5 · about 10 min ▰▰▱▱▱  [ⓘ Topic objectives] │
+├─────────────────────────────┬────────────────────────────────────────────┤
+│ ✓ 1 Start with a guess      │ Your task                                  │
+│ ✓ 2 One axis at a time      │ The question, in one line                  │
+│ ┃ 3 Step heading            │ Steps · Need a hint?                       │
+│ ┃ Concept (≤120 words)      │ ┌ model · editor · scenario card ────────┐ │
+│ ┃ On the job (decision)     │ │                                        │ │
+│ ┃ Activity checks · status  │ └────────────────────────────────────────┘ │
+│   4 Later activity  Locked  │ Feedback beside the control                │
+│   5 Later activity  Locked  │ [Restart activity]  [Previous] [Continue]  │
+└─────────────────────────────┴────────────────────────────────────────────┘
+```
+
+Narrow frame (<960 px), one column in source order:
+
+```text
+┌──────────────────────────────────┐
+│ Topic (h1) · progress            │
+│ [ⓘ Topic objectives ▾]           │
+├──────────────────────────────────┤
+│ ✓ 1 … ✓ 2 …  (completed rows)    │
+│ 3 Step heading · concept         │
+│ On the job · Activity checks     │
+├──────────────────────────────────┤
+│ Your task · workspace · feedback │
+│ Restart · Previous · Continue    │
+├──────────────────────────────────┤
+│ 4 … 5 … (later rows)             │
+└──────────────────────────────────┘
+```
+
+- **Lesson path replaces the topic-bar timeline.** The activity links (`a[data-pep-activity-link]`, one per activity, in order) live in the lesson path, never in the topic bar. Each row shows the activity's own title, never "Activity N", plus a status word: Done, Open or Locked. Rows for earlier activities sit above the current activity's reading content, and rows for later activities sit after the activity, in a container marked `data-pep-path`. The path exists once in the document: script moves it into the current activity's `data-pep-path-slot` containers on navigation, the way the model moves into `data-model-slot`, and never clones it. Without JavaScript it stays where it was authored, directly after the topic bar, as the table of contents. Print hides it. [A]
+- **Current activity marker.** The current row and its reading content share one 2 px accent inline-start line, drawn by the path slot wrapper. `data-pep-instructions` itself stays on the page surface with no rail, so the instruction-surface check still holds. [A]
+- **Reading column.** `data-pep-instructions` holds, in order: the step heading, the complete teaching, any **On the job** decision card, and the activity checks. It is the complete instruction block and immediately precedes the workspace in source and visual order. [A]
+- **Your task leads the workspace.** `data-pep-task` stays the first child of `data-pep-workspace`, so directional task copy ("below", "under", "above") reads correctly. Open the task with one short question or instruction line (at most about 160 characters, set at 20/28 bold); worked examples and sample code are teaching and belong in the reading column. Hints stay inside the task. [A]
+- **Activity checks as a tracker.** The activity-check block (`data-pep-activity-checks`, same label and criteria rules) moves out of the workspace to the end of the reading column. It shows a status word, "In progress" or "Done", taken from the activity's `data-pep-completed`, in its own element beside the heading, never inside it, so the heading text stays exactly **What success looks like** or **Activity checks**. "Done" uses the accent with a check icon, because completion is not correctness; status green stays reserved for verified correct results. Where the engine verifies criteria one by one, each criterion shows its own state. Because source order is fixed, on narrow frames the checks appear before the task; do not move them by breakpoint. [A]
+- **Restart lives with the activity.** **Restart activity** (`data-pep-reset`) leaves the topic bar and sits at the foot of the current workspace, left of **Previous activity** and **Continue**, inside the activity-navigation group. It keeps every Restart rule above. [A]
+- **Topic objectives.** The objectives disclosure stays in the topic bar, labelled **Topic objectives**, after the progress text. Its summary is a bordered 44 px control with an information icon drawn by CSS or an inline SVG with no text, so the summary's text is exactly the label. At ≥640 px the open body floats under the summary, right-aligned, 360 px wide, above the page (`position: absolute`, which is not page-level fixed positioning) without moving content. Below 640 px it opens inline. Escape and an outside click close it. Objectives are not repeated anywhere else on the page. [A]
+- **Scenario card.** Activities that present one scenario at a time (lane sorting and similar) show the live scenario in a card directly under the task's lead line ("Sort the following scenario:"). The card holds the "n of m sorted" count, a **Scenario** label, the scenario itself, its answer buttons and that scenario's feedback. The card re-runs the 200 ms reveal when the next scenario arrives. Name the thing being judged a scenario, never an item, in the legend, feedback and hints. [A]
+
+Gate changes for the path anatomy (T08 and the QA harness):
+
+- Activity checks are owned by the activity's `data-pep-instructions`, are not inside the task, and precede the task in source order. This replaces "checks follow the task" and "checks share the task's parent".
+- No `a[data-pep-activity-link]` sits inside `.pep-topicbar`; every one sits inside a `[data-pep-path]` container.
+- The topic-bar objectives label may also be **Topic objectives** (accepted on every page).
+- The decision card may be headed **On the job** (accepted on every page).
 
 ## Colors
 
@@ -484,6 +541,17 @@ Use this pattern after the core explanation and before task instructions **only 
 
 The decision is authentic rather than rhetorical. The good fit describes actual scale and purpose. The boundary names a materially different tool or structure, not merely “when it is hard.” This section may use necessary domain terms, but contains no answer to the activity. It is a peer—not a descendant—of teaching, task, workspace, hints and optional content. Topic-level placement uses the nearest preceding topic teaching and following task/workspace; an activity-local instance belongs to that activity, follows its local/applicable teaching and precedes its own task. Structural QA checks direct ownership, order, non-empty fields and placement; independent education and technology-SME review judges whether the choice is meaningful, authentic and technically true. [A]
 
+**On the job (path anatomy).** On `data-pep-anatomy="path"` pages the same section is headed **On the job**, so it reads as the practitioner judgment it is, and it stays open; never collapse it into a disclosure. It keeps its surface, accent top rail, hooks and placement. Inside, the decision sentence is the headline (16/24, 600, text-strong, with its "Decision:" label visually hidden), followed by two labelled rows: **Use it when** (accent label, 2 px accent inline-start line) and **→ Choose something else when** (text-strong label, 2 px line-strong inline-start line). Neither row uses status green or red or check/cross glyphs; they are guidance, not verdicts. Phrase the decision as the real question a practitioner asks ("Comprehension or ordinary loop?"), and end the boundary by naming the alternative to use instead ("…write a named method instead"), so the card always answers what to reach for. [A]
+
+```css
+[data-pep-anatomy="path"] [data-pep-where-fits] > h2 { margin: 0 0 4px; font: 700 16px/24px var(--pep-font-sans); color: var(--pep-accent-text); }
+[data-pep-anatomy="path"] [data-pep-fit-decision] { margin: 0 0 12px; font: 600 16px/24px var(--pep-font-sans); color: var(--pep-text-strong); }
+[data-pep-anatomy="path"] [data-pep-fit-good], [data-pep-anatomy="path"] [data-pep-fit-boundary] { margin: 0; padding: 8px 0 8px 12px; border-top: 1px solid var(--pep-line); border-inline-start: 2px solid var(--pep-accent); }
+[data-pep-anatomy="path"] [data-pep-fit-boundary] { border-inline-start-color: var(--pep-line-strong); }
+[data-pep-anatomy="path"] [data-pep-fit-good] > strong, [data-pep-anatomy="path"] [data-pep-fit-boundary] > strong { display: block; font: 600 13px/20px var(--pep-font-sans); }
+[data-pep-anatomy="path"] [data-pep-fit-good] > strong { color: var(--pep-accent-text); }
+```
+
 ### Progressive optional hints
 
 Put a native disclosure inside each `data-pep-task data-pep-may-stall` task; this canonical containment implements “beside the task” visually and gives QA one unambiguous local owner. Hints are optional guidance, not delayed error feedback. Multi-hint sequences are nested so a later hint does not exist in the rendered or keyboard path until its predecessor opens.
@@ -676,6 +744,7 @@ The Learner quiz shows a card holding "Question 1 of 3", a type chip and a segme
 ```
 
 - The correct state uses a solid border, a check icon and "Correct answer". The chosen wrong answer uses a dashed border, a cross icon and "Your answer". Locked options stay at full text contrast, never faded below 4.5:1. [T][A]
+- **Colour follows the result, never the option.** Answer controls stay neutral until the learner commits, even when their labels carry meaning ("Compiles" / "Does not compile", "Yes" / "No", "Same" / "Changed"). Pre-colouring options green or red breaks the Meaning-Only Rule, pulls learners toward the green option and leaves a colour-only cue. After a pick: the chosen wrong control takes the dashed danger style with a cross and words ("✗ not this one") until the scenario changes; a right pick shows the success verdict in the feedback and marks the scenario where it lands. Never leave a success state on a control that the next scenario reuses. [A]
 - Confidence ratings are a row of option-style buttons ("Guessing", "Fairly sure", "Certain") at least 96 px wide, with the same selected style. [A]
 - Feedback sits directly under the options in a `pep-callout`. The verdict word comes first, then why each option is right or wrong. [A]
 
@@ -930,7 +999,7 @@ Known `@1` gaps, accepted until a component version changes them: some fragments
 - Convey state with words and icons as well as color.
 
 - Follow the [Page anatomy](#page-anatomy): one topic bar, a reading and instruction panel, and a workspace, stacking below 960 px.
-- Keep course objectives in the topic-bar native disclosure (`data-pep-objectives`) and per-activity completion criteria beside the task (`data-pep-activity-checks`).
+- Keep course objectives in the topic-bar native disclosure (`data-pep-objectives`, labelled **Objectives**, **What you'll learn** or **Topic objectives**) and per-activity completion criteria beside the task (`data-pep-activity-checks`), or, on path-anatomy pages, at the end of the reading column as the activity tracker.
 - Put **Previous activity** beside Next/Continue; preserve activity work across both directions and browser history while keeping future steps locked.
 - Put native progressive **Need a hint?** disclosures beside tasks where a learner may reasonably stall, outside required progress, grading and time.
 - Include a separate **Where this fits** decision, good fit and when-not-to-use boundary when the concept presents a meaningful practitioner choice; otherwise omit it.
@@ -952,7 +1021,7 @@ Known `@1` gaps, accepted until a component version changes them: some fragments
 **Don't**
 
 - Recreate Learner app chrome: top bar, breadcrumbs, sprint or topic rails, assistant buttons, "AI" badges, avatars, role or device switchers, kind badges, or completion buttons.
-- Put a breadcrumb, a "Topic N of M" line, a loose metadata row, a page-wide Goals panel, or objectives outside the topic bar.
+- Put a breadcrumb, a "Topic N of M" line, a loose metadata row, a page-wide Goals panel, or objectives outside the topic bar, including a repeat of the objectives under a task.
 - Rely on hover for objectives, hints or navigation.
 - Use an anecdote for code, syntax, commands, output or a second technical explanation.
 - Make learners assemble code from operand, operator or token radio grids when they could type it.
