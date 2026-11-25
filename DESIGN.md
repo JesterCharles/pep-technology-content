@@ -678,6 +678,7 @@ The Learner quiz shows a card holding "Question 1 of 3", a type chip and a segme
 - The correct state uses a solid border, a check icon and "Correct answer". The chosen wrong answer uses a dashed border, a cross icon and "Your answer". Locked options stay at full text contrast, never faded below 4.5:1. [T][A]
 - Confidence ratings are a row of option-style buttons ("Guessing", "Fairly sure", "Certain") at least 96 px wide, with the same selected style. [A]
 - Feedback sits directly under the options in a `pep-callout`. The verdict word comes first, then why each option is right or wrong. [A]
+- The correct option's position is planned, never authored first: page-build sources use `authoring/tools/html/answer-order.mjs` and topic GIFT banks use `authoring/tools/gift/answer-order.mjs`. Keep option lengths comparable, so the longest option is not a cue to the answer.
 
 ### Progress, stepper, timelines and process maps
 

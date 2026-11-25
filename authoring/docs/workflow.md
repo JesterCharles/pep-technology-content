@@ -66,6 +66,7 @@ Every gate runs locally and in CI except the lab solved-run gate (part of gate 1
 16. Diagrams: inline SVG with title, description and text alternative.
 17. Licensing: every third-party item has a license record.
 18. Critic gate: both critic reports or rechecks cover the final bytes, zero open critical or high findings, and reconciliation by a non-author.
+19. Answer bias (T26): correct-option positions are balanced in page-build topic sources (planned with `authoring/tools/html/answer-order.mjs`) and GIFT banks, and the share of questions whose correct option is the longest is reported. Position is reported until every page-build module is planned, then enforced; length stays report-only because rebalancing wording needs critic review.
 
 The tooling under `authoring/tools/` implements these gates behind `npm run check`.
 

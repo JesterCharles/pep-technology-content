@@ -13,6 +13,7 @@ import {
   walk,
 } from "../lib/common.mjs";
 import { acceptAnswerOrderPermutations } from "../gift/answer-order.mjs";
+import { acceptHtmlAnswerOrderPermutations } from "../html/answer-order.mjs";
 import { bindingsForEvidenceFile } from "../lib/locks.mjs";
 
 export const id = "T25";
@@ -231,13 +232,18 @@ function bindingOptions(repoRoot, scope) {
   };
 }
 
-// Evidence bindings for one scope. The only exception to exact-byte binding is
-// a topic artifact.gift whose recorded blob is in Git history and whose current
-// bytes are proven to be only an answer-order permutation of it.
+// Evidence bindings for one scope. The only exceptions to exact-byte binding
+// are a topic artifact.gift or artifact.html whose recorded blob is in Git
+// history and whose current bytes are proven to be only an answer-order
+// permutation of it (whole GIFT option blocks, or whole option labels inside
+// their own opts block).
 async function scopeBindings(scope, file) {
-  return acceptAnswerOrderPermutations(
+  return acceptHtmlAnswerOrderPermutations(
     scope.repoRoot,
-    await bindingsForEvidenceFile(scope.repoRoot, file, bindingOptions(scope.repoRoot, scope)),
+    await acceptAnswerOrderPermutations(
+      scope.repoRoot,
+      await bindingsForEvidenceFile(scope.repoRoot, file, bindingOptions(scope.repoRoot, scope)),
+    ),
   );
 }
 
