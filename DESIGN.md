@@ -766,12 +766,14 @@ The Learner quiz shows a card holding "Question 1 of 3", a type chip and a segme
 .pep-explain { grid-column: 2; margin: 4px 0 0; font: 400 14px/20px var(--pep-font-sans); color: var(--pep-text); }
 .pep-verdict { display: flex; align-items: center; gap: 8px; font-weight: 700; }
 .pep-verdict--correct { color: var(--pep-success); } .pep-verdict--wrong { color: var(--pep-danger); } .pep-verdict--revealed { color: var(--pep-warning); }
+.pep-verdict--near { color: var(--pep-warning); }
 ```
 
 - The correct state uses a solid border, a check icon and "Correct answer". The chosen wrong answer uses a dashed border, a cross icon and "Your answer". Locked options stay at full text contrast, never faded below 4.5:1. [T][A]
 - **Colour follows the result, never the option.** Answer controls stay neutral until the learner commits, even when their labels carry meaning ("Compiles" / "Does not compile", "Yes" / "No", "Same" / "Changed"). Pre-colouring options green or red breaks the Meaning-Only Rule, pulls learners toward the green option and leaves a colour-only cue. After a pick: the chosen wrong control takes the dashed danger style with a cross and words ("✗ not this one") until the scenario changes; a right pick shows the success verdict in the feedback and marks the scenario where it lands. Never leave a success state on a control that the next scenario reuses. [A]
 - Confidence ratings are a row of option-style buttons ("Guessing", "Fairly sure", "Certain") at least 96 px wide, with the same selected style. [A]
 - Feedback sits directly under the options in a `pep-callout`. The verdict word comes first, then why each option is right or wrong. [A]
+- **Near-miss verdict.** An answer that is right in substance but differs in one named detail (`authoring/docs/practice-feedback-policy.md`) opens with "Almost" in `pep-verdict--near`: warning tone, no cross glyph, never the danger red or the dashed wrong-answer style, because the learner's work is not wrong. A specific nudge follows at once, naming the detail and the line to change without writing the finished answer. [A]
 - The correct option's position is planned, never authored first: page-build sources use `authoring/tools/html/answer-order.mjs` and topic GIFT banks use `authoring/tools/gift/answer-order.mjs`. Keep option lengths comparable, so the longest option is not a cue to the answer.
 
 ### Progress, stepper, timelines and process maps

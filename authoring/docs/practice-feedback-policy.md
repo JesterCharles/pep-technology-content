@@ -9,7 +9,8 @@ This policy sits beside `authoring/docs/html-artifact-contract.md` and root `DES
 ### 1.1 Near-misses lead with a specific nudge
 
 - A near-miss is an attempt that is right in substance but differs in one named detail. Examples: a query returns the right rows without the secondary sort; markup is right except for one missing attribute; code is right in a different but valid style that the check does not accept.
-- DESIGN.md's rule that the verdict word comes first still holds. For a near-miss that word is a near-miss verdict such as "Almost", never a failure verdict such as "Not passed" or "Incorrect", and the nudge follows it at once, naming the one detail to change and where to change it, in beginner words, before any other explanation: "Almost: your rows are right. Add a second sort key, `ORDER BY last_name, first_name`, so ties come out in a fixed order."
+- DESIGN.md's rule that the verdict word comes first still holds. For a near-miss that word is a near-miss verdict such as "Almost", never a failure verdict such as "Not passed" or "Incorrect", and the nudge follows it at once, naming the one detail to change and where to change it, in beginner words, before any other explanation: "Almost: your rows are right, but people with the same last name can come out in any order. In your `ORDER BY` line, add a second column to sort by after `last_name`." The nudge names the detail and the line without writing the finished clause.
+- A near-miss verdict uses DESIGN.md's near-miss verdict style (warning tone, never danger red), so the learner never sees a failure colour for an answer that is right in substance.
 - The message never states the full answer unless the page's existing rules reveal it at that point (for example, after the final allowed retry).
 
 ### 1.2 Learner text never uses grader words
