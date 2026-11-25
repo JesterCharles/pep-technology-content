@@ -34,7 +34,7 @@ This policy sits beside `authoring/docs/html-artifact-contract.md` and root `DES
 
 The rules in this section are not adopted. PR 106 made the java-foundations classes-and-objects lanes engine first-try-only for credit, and the captain has not decided how attempts and credit should work across engines. Authors do not change engine attempt or credit behaviour on the strength of this section, and critics do not record a page as failing these items until the captain decides.
 
-- **Syntax and parse errors never use up an attempt.** On every engine, an attempt that cannot be parsed or run would get its error message and leave the attempt count unchanged. Today engines differ: a Java syntax error does not count as a try, but a SQL syntax error counts as one of the counted runs.
+- **Syntax and parse errors never use up an attempt.** On every engine, an attempt that cannot be parsed or run would get its error message and leave the attempt count unchanged. Today engines differ: some Java practice editors say a compile problem "does not count as a try", while the new-learner review reported that a SQL syntax error counts as one of an activity's two counted runs (not re-verified for this policy).
 - **Attempt budgets allow real iteration.** Code-editor activities would allow enough runs to experiment. A page that limits attempts would say so kindly before the first Run.
 - **First-try credit.** Whether first-try-only credit, as that lanes engine now applies it, should spread to other engines, or whether formative practice should stay lenient everywhere, keeping credit rules but softening the wording, is open.
 
