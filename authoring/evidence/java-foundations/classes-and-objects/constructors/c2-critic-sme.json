@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "c2-sme-kestrel (independent technology SME critic, Claude Opus 5.5 subagent)",
+  "reviewedPath": "java-foundations/classes-and-objects/constructors/artifact.html",
+  "reviewedSha256": "1d3b241cdce29b94cedf2e08021c04460bf61b2068e79d84ca42edbcd20cfcd3",
+  "artifactHashes": {
+    "artifact.html": "1d3b241cdce29b94cedf2e08021c04460bf61b2068e79d84ca42edbcd20cfcd3",
+    "artifact.gift": "0ee7d0a8f74f24b083a22a105353cfb95a7f90dc29bb7cc5c317313dbafc4413",
+    "artifact.md": "358bff029b5219a878467621082f9ab86449409a2943267cdb7b7303c45c7f3e"
+  },
+  "findings": [
+    {
+      "id": "C2-SME-CTOR-01",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/constructors/artifact.html",
+        "selector": "script pep-classes-objects-engine v3: parseJava and J helpers; window.PEP_PAGE.acts[2].checks[3].test, checks[4].test"
+      },
+      "claim": "Constructor bodies are never read as statements, so code that javac rejects is credited. Confirmed in the real page: `this(event, 0)` with no semicolon gives \"Checked: 5 of 5 checks pass\" and full credit (completed, credit 1, grade 1); `this(event, 0); this(event, 0);` (a second constructor invocation, which the ConstructorBody grammar does not allow) gives 5 of 5 and full credit. A parser-level harness built from the page bytes shows that a two-parameter constructor starting `this(event);` while the one-parameter constructor calls `this(event, 0)` (recursive constructor invocation, a compile-time error) also gets 5 of 5. Conversely, `this.event = event` with its ; missing fails with \"event is not set from its parameter yet\", which is false and costs a try. The \"does not compile or run Java\" note hedges this, so medium.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.8.7.1",
+          "section": "JLS SE 25 8.8.7.1 Explicit Constructor Invocations (grammar: this ( ... ) ;)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "9b9072599c9c6bed351bb6c6079ea4b18792cda8eb5563103c692b21d4384315"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.8.7",
+          "section": "JLS SE 25 8.8.7 Constructor Body (grammar: at most one ConstructorInvocation)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "32a3ae179dd84e06213860854475c70aa44abc9a382fda3b1c8cf17e557e4879"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.8.7.1",
+          "section": "JLS SE 25 8.8.7.1 Explicit Constructor Invocations (recursive alternate constructor invocation is a compile-time error)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "a007d57799114d043afe827dddb2c870e5dd9f0aa7e0805da4dbe7e768eed3c9"
+        }
+      ],
+      "recommendation": "Require `this ( ... ) ;` with its semicolon in the delegation checks; fail when a constructor body contains more than one this(...) or super(...) call; detect the two-constructor cycle (the two-parameter constructor calling this(...)) with a message naming recursive constructor invocation; give a missing-semicolon message for `this.event = event` without ;.",
+      "reviewedSha256": "1d3b241cdce29b94cedf2e08021c04460bf61b2068e79d84ca42edbcd20cfcd3"
+    },
+    {
+      "id": "C2-SME-CTOR-02",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/constructors/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[3].test (prologue J.limit message)"
+      },
+      "claim": "For `super(); this(event, 0);` the real page answers \"not supported in this practice editor: statements before this(...). Java 25 allows them, but this task checks a body that starts with this(...)\". That is a false statement about Java 25: a constructor body has at most one explicit constructor invocation, and the prologue is BlockStatements, which cannot contain super(...). The same message is shown for every other prologue the check does not inspect (its own comment says other prologues are not checked), so the editor asserts that javac accepts code it may reject. The rules it does check (no reading fields, no use of this, only simple assignment to a field without an initializer) match JLS 25 and JEP 513.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.8.7",
+          "section": "JLS SE 25 8.8.7 Constructor Body (grammar: at most one ConstructorInvocation)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "32a3ae179dd84e06213860854475c70aa44abc9a382fda3b1c8cf17e557e4879"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.8.7",
+          "section": "JLS SE 25 8.8.7 Constructor Body (definition of the prologue)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "aaddbb9351a7de28e11fe1275b3476418adbbe5ec67cae4fbc7101515375cd31"
+        },
+        {
+          "url": "https://openjdk.org/jeps/513",
+          "section": "JEP 513 Flexible Constructor Bodies (Release 25), Summary",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "b702c1a3b4413fa7fc2d4d7853b8aea5c18b0d899a442bd6e03c557eced99c63"
+        }
+      ],
+      "recommendation": "Detect a second constructor invocation (this or super) before this(...) and report it as an error; reword the not-supported message to \"statements before this(...) are not checked here; Java 25 allows some, such as checking an argument\" so it no longer asserts that this particular code is legal.",
+      "reviewedSha256": "1d3b241cdce29b94cedf2e08021c04460bf61b2068e79d84ca42edbcd20cfcd3"
+    },
+    {
+      "id": "C2-SME-CTOR-03",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/constructors/artifact.html",
+        "selector": "window.PEP_PAGE.acts[0].lead; window.PEP_PAGE.acts[0].expl.b; #activity-1 expected results"
+      },
+      "claim": "The page says a parameter \"hides\" a field with the same name (\"a parameter hides a field\", \"the parameters hide the fields\", \"which hide the fields\"). In the JLS that relationship is shadowing (6.4.1), and the JLS states that shadowing is distinct from hiding, which applies only to members that would otherwise be inherited. The page's own source list cites \"shadowing of a field by a parameter (6.4.1)\". A learner who calls this hiding in a review or interview is using the wrong term.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-6.html#jls-6.4.1",
+          "section": "JLS SE 25 6.4.1 Shadowing (a formal parameter shadows a field)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "70cb44d4527c8804a5262bd88b98c28212eb139999c93f9228b8c506a059e0dc"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-6.html#jls-6.4.1",
+          "section": "JLS SE 25 6.4.1 Shadowing (shadowing is distinct from hiding)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "a9ed3f25e9407a06acb22d6519bfdea0e33a2735c158a475b415a7349a52216d"
+        }
+      ],
+      "recommendation": "Use \"shadows\", with a plain gloss such as \"inside the constructor the parameter name wins\", in the lead, explanation b, the static expected results and artifact.md.",
+      "reviewedSha256": "1d3b241cdce29b94cedf2e08021c04460bf61b2068e79d84ca42edbcd20cfcd3"
+    },
+    {
+      "id": "C2-SME-CTOR-04",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/constructors/artifact.gift",
+        "line": 9
+      },
+      "claim": "The feedback for `return new Item(name, qty);` says \"A constructor does not return a value, and this would call itself again.\" The second clause describes running code that cannot exist: a return statement with an expression in a constructor is a compile-time error, so nothing is ever called.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.17",
+          "section": "JLS SE 25 14.17 The return Statement (return with an Expression in a constructor is a compile-time error)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "8c89a70569478b5185dec568fc322ab08dbed18f93ff9506392b49a567ff8f2b"
+        }
+      ],
+      "recommendation": "Change the feedback to: \"Not quite. A constructor cannot return a value, so this does not compile; assign the fields with this. instead.\"",
+      "reviewedSha256": "0ee7d0a8f74f24b083a22a105353cfb95a7f90dc29bb7cc5c317313dbafc4413"
+    },
+    {
+      "id": "C2-SME-CTOR-06",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/constructors/artifact.html",
+        "selector": "section[data-pep-where-fits] p[data-pep-fit-boundary]"
+      },
+      "claim": "On the job, \"Choose something else when: Many optional values would need many constructors; write named static methods that return a new object.\" is off-target practitioner guidance. Named static factory methods do not reduce the number of entry points needed for many optional values (one method per combination is still needed); for that case teams usually reach for a builder. Where named static methods are the clear answer is when two shortcuts would need the same parameter types, because a class cannot declare two constructors with the same signature. Plausible but imprecise, so low; the row is correctly not badged verified.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.8.2",
+          "section": "JLS SE 25 8.8.2 Constructor Signature (two constructors with override-equivalent signatures is a compile-time error)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "2cb531f36b2aabc9385364bd38b993cec4267c81188976b2469546c24ee7014a"
+        }
+      ],
+      "recommendation": "Reword, for example: \"Choose something else when: two shortcuts would need the same parameter types, or there are many optional values; use named static methods that return a new object, or a builder (a later topic).\" Mirror the change in artifact.md.",
+      "reviewedSha256": "1d3b241cdce29b94cedf2e08021c04460bf61b2068e79d84ca42edbcd20cfcd3"
+    },
+    {
+      "id": "C2-SME-CTOR-05",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/constructors/artifact.html",
+        "selector": "details[data-pep-sources]"
+      },
+      "claim": "The Sources block (and artifact.md) says the claims were checked against the live official pages on 25 November 2026 (UTC), but that date is not backed by the frozen source list: authoring/evidence/java-foundations/classes-and-objects/constructors/sources.json records checkedAt and every retrievedAt as 2026-11-06, its reviewedSha256 is not the current artifact.html hash, and topic.json freshness.checkedAt is 2026-11-06. This critic re-fetched every source in that list on 2026-11-26 (UTC) and each page's raw bytes still match the sha256 recorded in sources.json, so the sources themselves are unchanged and fresh; the defect is only the date label against the record.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html",
+          "section": "JLS SE 25 chapter 8: whole page bytes, compared with the sha256 recorded in sources.json",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "02358c18e0e9a16c3f0a6492478f5108b673162dc1bd822971037ba4a3fe3259"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-6.html",
+          "section": "JLS SE 25 chapter 6: whole page bytes, compared with the sha256 recorded in sources.json",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "cd7874ea8fbb5f9edd1784435ba29be6085abed22803c06b0195cca11b217712"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html",
+          "section": "JLS SE 25 chapter 15: whole page bytes, compared with the sha256 recorded in sources.json",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "829701f2d3efe55e03598155b2be2a2e19e9b3a0f1e9ca5c2401b616a8baae19"
+        },
+        {
+          "url": "https://dev.java/learn/classes-objects/calling-methods-constructors/",
+          "section": "Dev.java Calling Methods and Constructors: whole page bytes, compared with the sha256 recorded in sources.json",
+          "retrievedAt": "2026-11-26T00:43:04Z",
+          "textSha256": "8cbe6416ca259106875af3fd0bf5e8df2bb9af42f6af17339b4dbbb8aa9b69b5"
+        },
+        {
+          "url": "https://dev.java/learn/classes-objects/more-on-classes/",
+          "section": "Dev.java More on Classes: whole page bytes, compared with the sha256 recorded in sources.json",
+          "retrievedAt": "2026-11-26T00:43:04Z",
+          "textSha256": "8278ae15bbf255561aee02642fbf19863bd1d17ed03f8262b70d9437ae79ff01"
+        }
+      ],
+      "recommendation": "Either refresh sources.json (retrieval dates, hashes, reviewedSha256) and topic.json freshness for the current bytes, or state on the page and in artifact.md the date the source list actually records.",
+      "reviewedSha256": "1d3b241cdce29b94cedf2e08021c04460bf61b2068e79d84ca42edbcd20cfcd3"
+    }
+  ]
+}

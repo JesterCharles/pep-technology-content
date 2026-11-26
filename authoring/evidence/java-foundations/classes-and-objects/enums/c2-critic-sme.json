@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "sme-critic-c2-otter (independent technology SME critic, Claude Opus 5.5 subagent)",
+  "reviewedPath": "java-foundations/classes-and-objects/enums/artifact.html",
+  "reviewedSha256": "183211be02b716b2c451f37719a345cbd058d20206b44a1065fe2738bf8b559e",
+  "artifactHashes": {
+    "artifact.html": "183211be02b716b2c451f37719a345cbd058d20206b44a1065fe2738bf8b559e",
+    "artifact.gift": "7089efef9c326647114f536faccf0898139fdf0fe3321d1d9b4e9afb61ad80aa",
+    "artifact.md": "b12a52420edfa00eb03958f30cfbbc4322dc84675b9888f05449837b997c18dd"
+  },
+  "findings": [
+    {
+      "id": "C2-SME-ENUM-01",
+      "severity": "high",
+      "location": {
+        "file": "java-foundations/classes-and-objects/enums/artifact.html",
+        "selector": "#cf-3 practice editor; window.PEP_PAGE.acts[2].checks[6]"
+      },
+      "claim": "A label() whose switch expression has no closing semicolon (`return switch (this) { case PENNY -> \"penny\"; ... }` with `}` instead of `};`) passes all 8 checks, with \"No problems found in the parts this editor reads\" and the done text. A return statement is `return [Expression] ;` (14.17), and a switch expression is an Expression, so javac rejects it. This is the topic's new construct, and leaving out that `;` is a very common beginner error. The Planet example shows `};` precisely so it is learned, and the reading version says the editor \"checks declarations and statement shapes, and reports anything else as not supported\". Accepting it as complete is a check that accepts wrong code in a way that misleads about this topic's syntax, so it is rated high. The scope line's \"It does not compile or run Java\" does not make up for it, for two reasons. First, the same reader does report a missing `;` after a field as \"the compiler would reject this code\", so silence about the switch `;` reads as acceptance. Second, unlike the generic body-level misses rated medium on the == vs equals and final/toString pages (C2-SME-EQ-02, C2-SME-FIN-02), this `;` belongs to the new syntax this topic teaches. Reproduced headless in Chromium (Playwright) against the current bytes; no JDK is installed, so javac was not run and its exact message wording and column are not asserted.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html",
+          "section": "JLS SE 25 §14.17 The return Statement (grammar)",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "fb6538a5232751c37b56a155ef78574420624bbbbb9adcca74d5bae559f13649"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html",
+          "section": "JLS SE 25 §15.28.1 The Switch Block of a switch Expression",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "236b7bd11fe38f2e50f9a599cff1e4c99beb190d6aae91bac3136d83c1c4c7ba"
+        }
+      ],
+      "recommendation": "In the label check (or the engine), require the return statement that holds the switch to end with `}` followed by `;`, and fail with a message such as \"A switch expression used in return ends with };\". More generally, check statement terminators in method bodies.",
+      "reviewedSha256": "183211be02b716b2c451f37719a345cbd058d20206b44a1065fe2738bf8b559e"
+    },
+    {
+      "id": "C2-SME-ENUM-02",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/enums/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[5] and checks[7]"
+      },
+      "claim": "The checks look only for tokens, so some Pass labels are literally false for code javac rejects or that breaks the stated result. Reproduced 8 of 8 with the done text for: `return cents * 2;` (\"Method int cents() returns the field\" passes, but Coin.DIME.cents() would return 20, and the reading version says it \"must return 10\"); `case PENNY -> 1;` in String label() (a result not assignable to String, so the return is a compile-time error by 14.17); and a switch with no `case QUARTER` where QUARTER appears in another case's result (\"a case for every constant\" passes, but the switch expression is not exhaustive, a compile-time error by 15.28.1). Rated medium because none of these is a likely beginner input. Reproduced headless in Chromium (Playwright) against the current bytes; no JDK is installed, so javac was not run and its exact message wording and column are not asserted.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html",
+          "section": "JLS SE 25 §14.17 The return Statement",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "cc2dd688305b9fe7cd8a2ef1603c74bff89d0618156bd6581a41219b78545e24"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html",
+          "section": "JLS SE 25 §15.28.1 The Switch Block of a switch Expression",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "236b7bd11fe38f2e50f9a599cff1e4c99beb190d6aae91bac3136d83c1c4c7ba"
+        }
+      ],
+      "recommendation": "For cents(), require the body to be exactly `return cents;` or `return this.cents;`. For label(), collect the constant names from case labels only (after `case`, separated by commas, before `->` or `:`), and require each result to be a string literal or a String-typed expression.",
+      "reviewedSha256": "183211be02b716b2c451f37719a345cbd058d20206b44a1065fe2738bf8b559e"
+    },
+    {
+      "id": "C2-SME-ENUM-03",
+      "severity": "high",
+      "location": {
+        "file": "java-foundations/classes-and-objects/enums/artifact.html",
+        "selector": "#cf-3 practice editor (shared engine parseJava/typeDecl)"
+      },
+      "claim": "Legal Java is reported as a compiler error with a wrong fix. With `import java.util.Objects;` or `package coins;` (both run) above an otherwise accepted `enum Coin`, the editor shows \"Error, line 1: class, interface, enum, or record expected. This code is outside every class; move it inside the braces of a class.\" and the status \"1 error: the compiler would reject this code\". JLS SE 25 7.3 defines an ordinary compilation unit as an optional package declaration, then imports, then top-level classes, so javac accepts this file, and the suggested fix (moving the line inside the class) would produce code that really does not compile. A learner at this level plausibly meets this: IDE-created files usually start with a package line, and this page's challenge sends learners to their IDE to edit the same Coin enum. The page then teaches something false about how a Java file is laid out, which is why this is rated high. Reproduced headless in Chromium (Playwright) against the current bytes; no JDK is installed, so javac was not run and its exact message wording and column are not asserted.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-7.html",
+          "section": "JLS SE 25 §7.3 Compilation Units (grammar)",
+          "retrievedAt": "2026-11-26T00:33:47Z",
+          "textSha256": "cea3a103e5cd36ded568cd379a0d3a48e05f7d0184a8c812d77f8746fc9de345"
+        }
+      ],
+      "recommendation": "In parseJava, accept an optional `package Name;` and any `import [static] Name[.*];` declarations before the first type declaration (JLS 7.3 OrdinaryCompilationUnit), or at worst report them as \"not supported in this practice editor\" (a limit, not a try). Never label them a compiler error, and never advise moving them inside a class: an import or package declaration inside a class body is itself a syntax error.",
+      "reviewedSha256": "183211be02b716b2c451f37719a345cbd058d20206b44a1065fe2738bf8b559e"
+    },
+    {
+      "id": "C2-SME-ENUM-04",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/enums/artifact.html",
+        "selector": "window.PEP_PAGE.acts[3].r2.expl.err"
+      },
+      "claim": "\"Only a switch expression, or a switch statement with patterns or a `null` case, must be exhaustive.\" is too absolute. By 14.11.2, a switch statement is also an enhanced switch statement, and so must be exhaustive, when its selector type is not char, byte, short, int, their boxes, String or an enum type, even with constant labels only. The page's other wording (\"a plain switch statement over enum constants need not be exhaustive\") is correct.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html",
+          "section": "JLS SE 25 §14.11.2 The Switch Block of a switch Statement",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "7ab8b15b1bc09d754f0c0a6c6f82a275185c76be3130ac8ccfe98b35351ce095"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html",
+          "section": "JLS SE 25 §14.11.2 The Switch Block of a switch Statement",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "9773fc44b0e263accff038b7d481484f14ea685cb345b911683ff0e839c6f4de"
+        }
+      ],
+      "recommendation": "Reword to \"A switch statement over an enum with only constant labels need not cover every constant; a switch expression must.\"",
+      "reviewedSha256": "183211be02b716b2c451f37719a345cbd058d20206b44a1065fe2738bf8b559e"
+    },
+    {
+      "id": "C2-SME-ENUM-05",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/enums/artifact.html",
+        "selector": "#activity-2 [data-pep-teaching] p:last-child"
+      },
+      "claim": "\"The enum gives each constant its own type.\" could be read as each constant having a different type. By 8.9.1, every constant is an instance of the one enum class Volume. The point is that the constants share a type of their own, distinct from int.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html",
+          "section": "JLS SE 25 §8.9.1 Enum Constants",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "cfc3246ba09e199120b3f4fa39270027dd79279283546c372539008c3bec97a8"
+        }
+      ],
+      "recommendation": "Reword to \"The enum gives its constants a type of their own, Volume, so only Volume values are accepted.\", on the page and in artifact.md.",
+      "reviewedSha256": "183211be02b716b2c451f37719a345cbd058d20206b44a1065fe2738bf8b559e"
+    },
+    {
+      "id": "C2-SME-ENUM-06",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/enums/artifact.html",
+        "selector": "section[data-pep-where-fits] p[data-pep-fit-work]; topic.json career.atWork"
+      },
+      "claim": "The At work line \"a switch expression over them flags a status you forgot\" is plausible practitioner guidance, but it holds only when the switch has no default. A default label makes the switch exhaustive (14.11.1.1), so a newly added status silently takes the default branch. The page's own task and challenge depend on \"no default\", but this row stands alone.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html",
+          "section": "JLS SE 25 §14.11.1.1 Exhaustive Switch Blocks",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "1571f25368e9d74c119e8c8fc6f2c8151bc95220c2fe03d440ab56108d88caea"
+        },
+        {
+          "url": "https://dev.java/learn/language/oop/classes-objects/enums/",
+          "section": "Dev.java: Enums (canonical page), switch expressions and exhaustiveness",
+          "retrievedAt": "2026-11-26T00:34:37Z",
+          "textSha256": "4e3a6b993c5d95b208e6318d120710dc9c10b10ada466a8d4e99283d3d4b0c6f"
+        }
+      ],
+      "recommendation": "Change it to \"a switch expression with no default flags a status you forgot\", in both the page and topic.json career.atWork.",
+      "reviewedSha256": "183211be02b716b2c451f37719a345cbd058d20206b44a1065fe2738bf8b559e"
+    },
+    {
+      "id": "C2-SME-ENUM-07",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/enums/artifact.gift",
+        "selector": "::o3 int constants:: correct answer and feedback"
+      },
+      "claim": "The key \"The compiler rejects any argument that is not a Level\" and its feedback \"Only the declared constants can be passed\" leave out null. The null reference can be assigned to any reference type (4.1), so setLevel(null) compiles, as the page itself says (\"accepts only its own constants (or null)\").",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-4.html",
+          "section": "JLS SE 25 §4.1 The Kinds of Types and Values",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "629b2ebf0c83d74a633c87aea62d2940f26814bfc77aecb19a72dafe0d06a06d"
+        }
+      ],
+      "recommendation": "Change the feedback to \"Only Level constants (or null) can be passed; setLevel(7) no longer compiles.\"",
+      "reviewedSha256": "7089efef9c326647114f536faccf0898139fdf0fe3321d1d9b4e9afb61ad80aa"
+    },
+    {
+      "id": "C2-SME-ENUM-08",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/enums/artifact.html",
+        "selector": "details[data-pep-sources] a[href=\"https://dev.java/learn/classes-objects/enums/\"]"
+      },
+      "claim": "The Dev.java link (also the URL in sources.json) now returns a 366-byte redirect stub: a JavaScript redirect plus a meta refresh, whose canonical link is /learn/language/oop/classes-objects/enums/. The sha256 recorded in sources.json (431ac90ef582bbe8c4bc0bfdf55bb616ac6f201a78bae24934f16f8e22405f65), with status 200 and finalUrl equal to the link, is byte-for-byte the sha256 of the 366-byte stub downloaded now, so the record describes the stub, not the content. The content at the canonical URL does support the row: switch expressions over enums are checked for exhaustiveness, and constructors, fields and methods follow a `;` after the constants.",
+      "evidence": [
+        {
+          "url": "https://dev.java/learn/classes-objects/enums/",
+          "section": "Dev.java page as linked by the page: HTTP 200 redirect stub (366 bytes) whose canonical link points elsewhere",
+          "retrievedAt": "2026-11-26T00:34:32Z",
+          "textSha256": "b4673547cef92fe6c71fe47816574d86380ae98849002c827a068286bd33390e"
+        },
+        {
+          "url": "https://dev.java/learn/language/oop/classes-objects/enums/",
+          "section": "Dev.java: Enums (canonical page), switch expressions and exhaustiveness",
+          "retrievedAt": "2026-11-26T00:34:37Z",
+          "textSha256": "4e3a6b993c5d95b208e6318d120710dc9c10b10ada466a8d4e99283d3d4b0c6f"
+        }
+      ],
+      "recommendation": "Link and record https://dev.java/learn/language/oop/classes-objects/enums/ directly.",
+      "reviewedSha256": "183211be02b716b2c451f37719a345cbd058d20206b44a1065fe2738bf8b559e"
+    },
+    {
+      "id": "C2-SME-ENUM-09",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/enums/artifact.html",
+        "selector": "details[data-pep-sources] > p"
+      },
+      "claim": "Source-record freshness does not match the page. The Sources block says the claims \"were checked against the live official pages below on 25 November 2026 (UTC)\", but the frozen source list (sources.json) records checkedAt 2026-11-06 and reviewedSha256 d1ef5c984baf178cb6b1a20e81f82fddd6f5039078695ecb243c7f8bb6d140a5, which is not the current artifact.html (183211be02b716b2c451f37719a345cbd058d20206b44a1065fe2738bf8b559e); topic.json freshness.checkedAt is also 2026-11-06. A later source-check record may exist in evidence files this review was not allowed to read, so the finding rests only on the page's stated date against the frozen source list and topic.json. I re-fetched the listed official pages now, and the claims I checked still hold, so this is a record mismatch, not a false claim. The On the job rows (At work, In interviews) are not sourced and carry no verified badge of their own, but the blanket \"Claims on this page were checked\" sentence and topic.json freshness.status \"verified\" with an empty unverifiedItems list implicitly cover them.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html",
+          "section": "JLS SE 25 §8.9.2 Enum Body Declarations",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "2dda71b2186d8715d7bbc6be3fa5eda32185f71d0759623193948aa3cccc4c42"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html",
+          "section": "JLS SE 25 §15.28.1 The Switch Block of a switch Expression",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "236b7bd11fe38f2e50f9a599cff1e4c99beb190d6aae91bac3136d83c1c4c7ba"
+        }
+      ],
+      "recommendation": "Either record a source check that matches the stated 25 November 2026 date and binds the current bytes, or change the stated date to the one the record supports. Pending the captain decision on career lines, keep the blanket sentence from reading as covering the unsourced On the job rows, for example \"Technical claims on this page were checked...\".",
+      "reviewedSha256": "183211be02b716b2c451f37719a345cbd058d20206b44a1065fe2738bf8b559e"
+    }
+  ]
+}
