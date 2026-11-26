@@ -1,29 +1,113 @@
 {
   "schemaVersion": 1,
-  "author": "pep-m-sql-jdbc-foundations-crud-aggregates-and-joins (module author)",
-  "decidedBy": "firstmate (non-author reconciler; decision of 2026-11-06 accepting both final delta reviews)",
-  "reviewedPath": "authoring/catalog/sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/topic.json",
-  "reviewedSha256": "0e438c630776fe4fae522823959b69cb16fd8997e9d7baf9c15b7c2f77cbd56a",
+  "author": "c2-sql-module-author (author of the C2 re-authoring; did not decide)",
+  "decidedBy": "c2-sql-reconciler (independent non-author reconciliation subagent, read-only; round 1 on 8a7daa17, round 2 on f18bccaf, round 3 on 02be5a14; the rounds are merged into this one file with every decision and rationale unchanged; decisions marked as carried over were made in the earlier review by the decider they name)",
+  "reviewedPath": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.html",
+  "reviewedSha256": "10dbcbf1d6830e82119f2280e2b88c6fc237077bc695622d7e09d2cf26e85e6c",
   "decisions": [
     {
       "findingId": "CEDU-13",
       "decision": "accept",
-      "rationale": "Valid LOW observation retained as non-blocking and deferred by firstmate decision; no learner or GIFT bytes change for it."
+      "rationale": "[earlier review, decided by firstmate (non-author reconciler; decision of 2026-11-06 accepting both final delta reviews); carried over unchanged] Valid LOW observation retained as non-blocking and deferred by firstmate decision; no learner or GIFT bytes change for it."
     },
     {
       "findingId": "L-res-2",
       "decision": "accept",
-      "rationale": "Valid LOW observation retained as non-blocking and deferred by firstmate decision; no learner or GIFT bytes change for it."
+      "rationale": "[earlier review, decided by firstmate (non-author reconciler; decision of 2026-11-06 accepting both final delta reviews); carried over unchanged] Valid LOW observation retained as non-blocking and deferred by firstmate decision; no learner or GIFT bytes change for it."
     },
     {
       "findingId": "L-res-3",
       "decision": "accept",
-      "rationale": "Valid LOW observation retained as non-blocking and deferred by firstmate decision; no learner or GIFT bytes change for it."
+      "rationale": "[earlier review, decided by firstmate (non-author reconciler; decision of 2026-11-06 accepting both final delta reviews); carried over unchanged] Valid LOW observation retained as non-blocking and deferred by firstmate decision; no learner or GIFT bytes change for it."
     },
     {
       "findingId": "CEDU-19",
       "decision": "accept",
-      "rationale": "Valid LOW observation owned by shared tooling; deferred by firstmate decision with no exporter task in this module pass."
+      "rationale": "[earlier review, decided by firstmate (non-author reconciler; decision of 2026-11-06 accepting both final delta reviews); carried over unchanged] Valid LOW observation owned by shared tooling; deferred by firstmate decision with no exporter task in this module pass."
+    },
+    {
+      "findingId": "C2S-NULL-01",
+      "decision": "accept",
+      "rationale": "[round 1, 8a7daa17] Reproduced. COALESCE(fee, 'Not priced') gives 'ERROR: invalid input syntax for type numeric: \"Not priced\"', and the controller.js explain branch says 'a value does not fit its column. Text goes in single quotes; numbers and NULL do not', which points at quoting, not at the common result type. The server behaviour comes from the cited documentation (10.5 UNION, CASE and related constructs) and was not executed. Fix in authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/controller.js: when the failing statement contains a coalesce or case node (SQLCHK.calls/nodes already exist), say that every value of COALESCE or CASE must be the same kind, so a numeric column needs a number fallback; otherwise keep the current sentence.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.html"
+    },
+    {
+      "findingId": "C2E-NULL-01",
+      "decision": "accept",
+      "rationale": "[round 1, 8a7daa17] Reproduced. With the NULL fee in ELSE, the first Activity 3 run says 'Add WHEN fee IS NULL THEN 'Not priced' as the first branch of your CASE', the finished branch (policy 1.1), and hint 1 already gives 'WHEN fee IS NULL' as code. Fix in src/handling-nulls-coalesce-and-case.topic.js: name the problem and the place without the code ('Data Modeling reads Standard: its NULL fee fell through to ELSE. Give NULL its own WHEN before the other branches.'). Make hint 1 a reasoning step without the code. Also reword the 'derive fee_band with a CASE that has its own WHEN fee IS NULL branch' note.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.html"
+    },
+    {
+      "findingId": "C2E-NULL-02",
+      "decision": "accept",
+      "rationale": "[round 1, 8a7daa17] Verified. Every unreadable statement, the empty-file prompt and every real subset limit reach the shell as kind 'limit' from the adapter's check() in authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/engine.js; I reproduced 'SELEC * FROM students;', a missing comma between two VALUES rows, a missing semicolon before a second SELECT and the untouched starter, all kind 'limit'. authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/controller.js relabels 'limit' as 'Not in this practice editor', and LIMITS item 4 in authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/build.mjs plus every page's Sources footer ('not as invalid PostgreSQL') say that label never means the SQL is wrong. The label is page-owned, so it is fixable in scope. Acceptable fix: in controller.js, wrap EDITOR.check (EDITOR is Object.create of the adapter) and re-kind problems by message into three classes. Real subset limits (WITH, psql meta-commands, CREATE TABLE and so on) keep 'Not in this practice editor'. Unreadable statements ('could not read the statement near', 'could not read one starting') get a learner label such as 'Check your SQL'. The empty-file prompt gets its own neutral label. Message matching is feasible: I checked that real limits carry their own messages ('WITH queries are outside this practice editor', 'CREATE is not available here', 'Transactions are outside this practice editor', 'COPY runs on the database server', and the psql meta-command text), distinct from the unreadable-statement messages. Never use the adapter's own 'Lesson check' (B4), and never use kind 'hint', because the shell blocks Run only on non-hint problems. Run gating, the 'limit' notRun status and onSqlRun's 'did not use up a try' path must stay exactly as they are (E2 is pending). Reword LIMITS item 4 and the footer sentence in each src/<topic>.body.html and artifact.md to match. The minimum acceptable fix, if message matching seems too brittle, is one neutral label covering both cases, with LIMITS and footer sentences that no longer say the SQL is fine. Shell wording stays a recipe finding.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.html"
+    },
+    {
+      "findingId": "C2E-NULL-03",
+      "decision": "accept",
+      "rationale": "[round 1, 8a7daa17] Verified in the page simulator. A missing semicolon at the end of line 3 is reported at Ln 4 near \"select\", and a missing comma at the end of line 2 of a multi-row VALUES is reported at Ln 3 near \"(\" (policy 1.3, E5). Where the location comes from (the adapter's Limit token line in authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/engine.js) is out of scope, so record a recipe finding: the adapter should report the end of the previous token. In-loop fix, per policy 1.3's second bullet: in the same controller.js check wrapper, when the message is 'could not read the statement near' and the token is first on its line, either point Ln at the previous non-blank line or append 'If this line looks right, check the end of the line before it for a missing comma or semicolon.' Wording and location only; run gating does not change.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.html"
+    },
+    {
+      "findingId": "C2E-NULL-04",
+      "decision": "accept",
+      "rationale": "[round 1, 8a7daa17] Verified. Activity 2 hint 1 ('Give COALESCE two values: the city column first, then the quoted fallback text') restates the teaching, and with hint 2 ('Name the COALESCE result with AS ... then add ORDER BY student_id') it dictates the query (D5). Fix: make hint 1 a reasoning step ('Which column can be NULL here, and what should a reader see instead?').",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.html"
+    },
+    {
+      "findingId": "C2E-NULL-05",
+      "decision": "accept",
+      "rationale": "[round 1, 8a7daa17] Verified in artifact.gift. 'o1 present values' uses 'phone != NULL', but the module teaches only <> (filtering-and-sorting), and 'o3 no ELSE' tests a fact (no ELSE gives NULL) that the page never states. Fix: use <> (escaped for GIFT as the file already does), and either add 'Without ELSE, a CASE with no true WHEN gives NULL' to Activity 3's teaching (mind the word limit) or replace the item.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.gift"
+    },
+    {
+      "findingId": "C2E-NULL-06",
+      "decision": "accept",
+      "rationale": "[round 1, 8a7daa17] Verified. In 'o2 stored value' the correct option 'Nothing: only the query result shows Unknown' is clearly the longest; the others are at most about 27 characters (D7). Fix: balance the lengths and check with authoring/tools/gift/answer-order.mjs.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.gift"
+    },
+    {
+      "findingId": "C2E-NULL-07",
+      "decision": "accept",
+      "rationale": "[round 1, 8a7daa17] Verified. The At work row says 'data your back end sends to a web page'. 'Back end' is not defined on the page or in its prerequisites (B1). Fix: 'data your Java code sends to a web page' or similar, mirrored in topic.json career and artifact.md.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.html"
+    },
+    {
+      "findingId": "C2E-NULL-08",
+      "decision": "accept",
+      "rationale": "[round 1, 8a7daa17] Verified. The In interviews row in [data-pep-fit-interview] has no pointer to the matching exercise, while the two join pages end theirs with one (A4). Fix: append a short pointer such as 'Activity 1 practises exactly this' in src/<topic>.body.html, and keep the topic.json career object and artifact.md in step. Wording only.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.html"
+    },
+    {
+      "findingId": "C2E-NULL-09",
+      "decision": "accept",
+      "rationale": "[round 1, 8a7daa17] Verified strings. The authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/build.mjs badge reads 'Practice editor: follows PostgreSQL on this page's sample tables' and the status span reads 'SQL practice editor'. In authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/controller.js, EDITOR.language='PostgreSQL server' feeds the shell's Output header '(lesson simulator, not real PostgreSQL server)', while SQLCHK.explain says 'PostgreSQL cannot tell which one you mean' / 'PostgreSQL would stop with the ERROR'. The shell's empty Problems text is 'No problems found by the lesson checker', which also uses B4 grader vocabulary. C2 F5 says a page never says both 'not real' and 'PostgreSQL rejected'. In-loop fix, page-owned bytes only: use one name ('practice editor') in the build.mjs badge and status span, choose EDITOR.language so the shell header reads consistently with it, and word the explain lines as what 'a real PostgreSQL server' would report. The shell's 'lesson simulator, not real' prefix and its 'No problems found by the lesson checker' sentence are engine.js shell bytes: record a recipe finding.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.html"
+    },
+    {
+      "findingId": "C2E-NULL-10",
+      "decision": "accept",
+      "rationale": "[round 1, 8a7daa17] Verified. CONF in authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/build.mjs prints Low / Medium / High, but DESIGN.md (Assessment: options, confidence, feedback) sets \"Guessing\", \"Fairly sure\", \"Certain\". In authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/controller.js, checkPredict writes 'Your guess was not this time', and summarize() joins open activities as 'Activity '+open.join(' and '), which gives 'Activity 2 and 3 and 4 are'. Fix, wording only: in CONF, use the DESIGN.md labels (the radio values low/medium/high may stay). calibration() echoes the raw value ('Your confidence: medium'), so map it to the shown label. Write 'Your guess was not right this time', and join a list as 'Activities 2, 3 and 4 are' (singular 'Activity 2 is').",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.html"
+    },
+    {
+      "findingId": "C2E-NULL-11",
+      "decision": "accept",
+      "rationale": "[round 1, 8a7daa17] Reproduced at 570x1000 under file:// and over http://127.0.0.1: scrollY 157, exactly the top of #activity-1. At 1280 px it is 121 on inner-and-left-joins and 0 where the document fits. Cause confirmed: with history.replaceState stubbed out, scrollY stays 0. The last line of authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/controller.js calls go(...,'replace'), whose history.replaceState(#activity-1) runs during parsing. It does not throw, and the browser's load-time scroll-to-fragment then scrolls to #activity-1, so F1 fails on the narrow frame (G7). Fix in controller.js: on first load with no #activity-N in the URL, do not write a hash (call go with no history mode), or write it after load and keep scroll at 0. Keep the hash behaviour for later navigation. Measured in headless Chromium only; check the platform embed after the fix.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.html"
+    },
+    {
+      "findingId": "C2S-NULL-R1",
+      "decision": "accept",
+      "rationale": "[round 2, f18bccaf] Verified at f18bccaf. Loop 1 (for the second half of C2E-NULL-05, the untaught no-ELSE fact) appended to the 'o3 no ELSE' stem in sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.gift: \"(When ELSE is left out, PostgreSQL behaves as if ELSE NULL had been written.)\". That parenthesis states the keyed answer '=NULL', so the item tests nothing. The fact itself is true per the cited 9.19.1 CASE documentation. Remedy (a), REVERT: restore the 8a7daa17 stem without the parenthesis. This REOPENS the second half of C2E-NULL-05 (low): the item tests a fact the page's Activity 3 teaching still does not state. I checked the f18bccaf body: there is no 'without ELSE' or 'ELSE NULL' sentence. Record it as open for a later loop (add the sentence to Activity 3 teaching within the word limit, or move the context into the correct option's feedback). Remedy (b), leave, is rejected: an item answered in its own stem is worse than a formative item that asks for an untaught fact and explains it in feedback.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.gift"
+    },
+    {
+      "findingId": "C2S-NULL-R2",
+      "decision": "accept",
+      "rationale": "[round 2, f18bccaf] Verified at f18bccaf. Loop 1 (for the first half of C2E-NULL-05, '!=' untaught) replaced the distractor '~phone !\\= NULL' in 'o1 present values' with '~NOT (phone \\= NULL)', which already appears as another option. The four-option item now has two identical distractors and only three distinct choices, and it no longer practises the not-equal-with-NULL misconception. Remedy (a), REVERT: restore the 8a7daa17 distractor '~phone !\\= NULL#Not quite. Any comparison with NULL, including !\\=, is unknown for every row, so WHERE keeps no members at all.' This REOPENS the first half of C2E-NULL-05 (low): '!=' is not taught on any learner page of the module (checked at f18bccaf; it appears only in adapter code). The feedback does name it as a comparison, and the cited 9.2 documentation calls != an alias of <>. Record it as open for a later loop (use <> in the distractor, or teach != as an alias). Remedy (b), leave, is rejected: a duplicated option is a broken item.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.gift"
     }
   ]
 }
