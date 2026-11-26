@@ -55,9 +55,6 @@ var prevBtn=$('previous-activity'),nextBtn=$('next-activity'),resetBtn=$('reset'
 var MIN=main.getAttribute('data-pep-required-minutes');
 /* The shared shell labels editor notes with the adapter's names; this page shows them in learner words. */
 var EDITOR=Object.create(LESSON_EDITOR_SQL);EDITOR.kindLabels={error:'Error',limit:'Not in this practice editor',hint:'Hint'};EDITOR.language='PostgreSQL server';
-/* The adapter files both mistakes it cannot read and features it does not support as "limit". Only the second kind
-   is a limit of this page; a mistake (a typo, a missing comma) is shown as an Error so it is never excused. */
-EDITOR.check=function(src){var r=LESSON_EDITOR_SQL.check(src);(r.problems||[]).forEach(function(p){if(p.kind==='limit'&&!(/psql command|outside this practice editor|not available|only in this practice editor|in this practice editor[:,]|practice editor runs SELECT|works only|too long for this|too many rows for this/i.test(p.msg))){p.kind='error';}});return r;};
 function kind(n){return section(n).getAttribute('data-kind');}
 function blank(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,canContinue:false,missed:false,g:{},tries:0,conf:null,firstPick:null};}
 var S={current:1,unlocked:1,complete:false,routeSettled:false,a:acts.map(blank)};

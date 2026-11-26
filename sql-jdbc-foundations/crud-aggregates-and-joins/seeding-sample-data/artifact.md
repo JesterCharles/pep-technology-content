@@ -32,7 +32,7 @@ A seed script is a file of INSERT statements that fills empty tables with made-u
 
 These foreign keys are checked as each INSERT finishes, so a child row needs its parent row to exist already. Order the script by the table below: a table that others point at goes first. To empty the tables later, go in reverse order, children first, because deleting a parent row that a child still points at is rejected too.
 
-Who points at whom (foreign keys). `lead_id` points at another instructor, the person's team lead, so within one INSERT a lead's row comes before the rows that point at it.
+Who points at whom (foreign keys). `lead_id` points at another instructor, the person's team lead.
 
 | table | column | points at |
 | --- | --- | --- |
