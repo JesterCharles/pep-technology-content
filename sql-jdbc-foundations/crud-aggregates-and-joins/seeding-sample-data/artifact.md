@@ -4,64 +4,79 @@
 
 - Write a seed script that inserts parent rows before child rows so every foreign key holds
 - Generate many sample rows with INSERT ... SELECT and generate\_series
-- Load rows from a CSV file with the psql \\copy command and explain how it differs from server-side COPY
+- Choose the psql \\copy command to load rows from a CSV file and explain how it differs from server-side COPY
 
 ## Teaching
 
-### Activity 1 of 4: Start with a guess
+### Guess what happens to a row with no parent yet
 
-Practice prediction, not scored. A new database has empty tables. In `enrollments`, the `student_id` column is a foreign key to `students`. A seed script starts with the statement shown in the task, before any student exists. Guess what happens.
+This is a guess before any new rule. A new database has four empty tables. In `enrollments`, the `student_id` column is a foreign key to `students`: every enrollment must point at a student that exists. A script that fills the tables starts with this statement, before any student exists:
 
-### Your task
+### Activity checks
 
-1. Where to look: The statement just below.
-2. What to do: Under Prediction, pick what PostgreSQL does.
-3. What to expect: Pick Low, Medium or High confidence, then press Check my prediction.
-4. How to know it's done: Feedback explains every option and Next activity becomes available. A wrong guess is fine.
+In progress
 
-### What success looks like
-
-You chose a prediction and a confidence, then read why each option is right or wrong.
-
-### Activity 2 of 4: Parents before children
-
-A seed script fills empty tables with sample rows, so everyone on a team starts from the same data. These ordinary foreign keys are checked as each INSERT statement finishes, so a child row needs its parent row to exist already. (Only a DEFERRABLE constraint waits until COMMIT.)
-
-Order the script by the arrows: a table that others point at comes first. Here, `courses` points at `instructors`, and `enrollments` points at both `students` and `courses`.
-
-To run the seed again later, empty the tables in the reverse order, children first: deleting a parent row that a child still points at is rejected too.
-
-### Where this fits
-
-Decision: You need sample rows for development or tests. Write them by hand, generate them, or load an existing file?
-
-Good fit: A short hand-written seed script, in parent-before-child order, for the few meaningful rows people reason about; `generate_series` for hundreds of similar rows; `\copy` when the rows already exist as a CSV export.
-
-Choose something else when: the rows would be real customers' personal data. Do not copy live production data into a shared seed file; generate made-up rows or use an approved, anonymised extract.
+You made a guess, chose a confidence and read why each option is right or wrong.
 
 ### Your task
 
-The four tables start empty. seed.sql holds four correct INSERT statements in the wrong order.
+Guess: what does PostgreSQL do with this first statement?
 
-1. Where to look: The seed.sql editor below, and the Who points at whom table above it.
-2. What to do: Move whole statements (cut and paste lines) into an order where every foreign key points at a row that already exists. Do not change the values.
-3. What to expect: Press Run. Output shows `INSERT 0 …` for each statement that worked, or PostgreSQL's foreign key ERROR.
-4. How to know it's done: Both checks below read done. Two runs that still miss a check settle the activity without penalty.
+1. Read the statement in the reading column.
+2. Under Prediction, choose one answer.
+3. Choose your confidence, then press Check my prediction.
 
-### What success looks like
+### Order a seed script so every key holds
+
+A seed script is a file of INSERT statements that fills empty tables with made-up sample rows, so everyone on a team, and every automated test, starts from the same data. Never copy real customers' personal data into it.
+
+These foreign keys are checked as each INSERT finishes, so a child row needs its parent row to exist already. Order the script by the table below: a table that others point at goes first. To empty the tables later, go in reverse order, children first, because deleting a parent row that a child still points at is rejected too.
+
+Who points at whom (foreign keys). `lead_id` points at another instructor, the person's team lead.
+
+| table | column | points at |
+| --- | --- | --- |
+| instructors | lead_id | instructors |
+| courses | instructor_id | instructors |
+| enrollments | student_id | students |
+| enrollments | course_id | courses |
+
+### On the job
+
+Decision: Write the sample rows by hand, generate them, or load a file?
+
+Use it when: You need a few meaningful rows that people and tests reason about, such as the two students a test checks; write them by hand, parents before children.
+
+→ Choose something else when: You need hundreds of similar rows, or the rows already sit in a spreadsheet export; generate them with `generate_series` (Activity 3) or load the file with psql's `\copy` (Activity 4).
+
+At work: Many projects keep a seed script that builds a fresh development or test database; when you add a table, you add its rows to that script in an order that keeps every foreign key valid.
+
+In interviews: You may be asked why an INSERT fails with a foreign key error, or in what order you would load a set of related tables; Activities 1 and 2 practise both.
+
+### Activity checks
+
+In progress
 
 - Every statement runs without an ERROR
 - All four tables end with their seed rows: 2 instructors, 1 course, 2 students, 2 enrollments, values unchanged
 
-### Activity 3 of 4: Many rows from one statement
+### Your task
 
-`generate_series(start, stop)` is a function you use like a table in `FROM`: it returns one row per whole number from start to stop. `AS n` names that column.
+Ticket: the team's seed script fails on a fresh database. Reorder its four statements so every foreign key holds.
+
+1. In seed.sql, move whole statements (cut and paste lines) into an order where every foreign key points at a row that already exists.
+2. Do not change any value.
+3. Press Run. Output shows `INSERT 0 …` for each statement that worked, or PostgreSQL's foreign key ERROR.
+
+### Generate many test rows in one statement
+
+`generate_series(start, stop)` is a function you use like a table after `FROM`: it returns one row per whole number from start to stop. `AS n` names that column `n`.
 
 ```
-SELECT n FROM generate_series(1, 5) AS n;
+SELECT n FROM generate_series(1, 3) AS n;
 ```
 
-`INSERT ... SELECT` inserts every row a query returns, instead of rows listed after VALUES. Build each column from `n`; `||` joins text and numbers into one text value:
+That returns three rows: 1, 2 and 3. `INSERT ... SELECT` inserts every row a query returns, instead of rows listed after VALUES. Build each column from `n`; `||` joins text and numbers into one text value:
 
 ```
 INSERT INTO instructors (instructor_id, name)
@@ -69,57 +84,59 @@ SELECT n, 'Tutor ' || n
 FROM generate_series(10, 12) AS n;
 ```
 
-That adds Tutor 10, Tutor 11 and Tutor 12 in one statement, which makes it easy to fill a table for testing.
+That adds Tutor 10, Tutor 11 and Tutor 12 in one statement, and psql prints `INSERT 0 3`.
+
+### Activity checks
+
+In progress
+
+- `students` holds exactly students 1 to 30 with the names and emails in the task, and no city
+- One INSERT ... SELECT added all 30 rows
 
 ### Your task
 
-The tables start empty again. Fill `students` with 30 test students in one INSERT ... SELECT:
+Ticket: a teammate needs 30 test students to try out a long list screen. Add them in one INSERT ... SELECT.
 
 - `student_id` 1 to 30
 - `name` `Student 1` to `Student 30`
 - `email` `student1@example.com` to `student30@example.com`
 - no city
 
-1. Where to look: The bulk.sql editor below.
-2. What to type: Your INSERT goes on the empty line under the comment. Leave the SELECT at the end: it shows the first and last student.
-3. What to expect: Press Run. Output shows `INSERT 0 30`, then students 1 and 30.
-4. How to know it's done: Both checks below read done.
+1. The tables start empty again. In bulk.sql, write your INSERT on the empty line under the comment.
+2. Leave the SELECT at the end as it is: it shows the first and last student.
+3. Press Run. Output shows `INSERT 0 30`, then students 1 and 30.
 
-### What success looks like
+### Load a CSV file from your laptop
 
-- `students` holds exactly students 1 to 30 with the names and emails above, and no city
-- One INSERT ... SELECT added all 30 rows
-
-### Activity 4 of 4: Loading a CSV file
-
-When rows already exist in a CSV file, load them with psql's `\copy` command, typed on one line at the psql prompt:
+A CSV file is plain text with one row per line and commas between values; spreadsheets export it. Load one with psql's `\copy` command, typed on one line at the psql prompt:
 
 ```
 \copy students (student_id, name, email, city) FROM 'students.csv' WITH (FORMAT csv, HEADER)
 ```
 
-psql reads the file on your computer and streams the rows to the server, so you only need permission to insert into the table. `HEADER` skips the file's first line of column names.
+psql reads the file on your computer and sends the rows to the server, so you only need permission to insert into the table. `HEADER` skips the file's first line of column names.
 
-The SQL command `COPY ... FROM 'file'` looks different only by its backslash, but there the server opens the file on its own disk. That needs a superuser or the `pg_read_server_files` role.
+The SQL command `COPY ... FROM 'file'` lacks only the backslash, but there the server opens the file on its own disk. That needs a superuser (an account allowed to do anything) or the `pg_read_server_files` role, a named set of extra permissions.
+
+### Activity checks
+
+In progress
+
+You chose the command that reads the file where it actually is and read which program opens the file in each case.
 
 ### Your task
 
-`students.csv` is on your laptop. The PostgreSQL server runs on a shared machine elsewhere, and your account is not a superuser. Which command loads the file?
+`students.csv` is on your laptop; the server runs on a shared machine, and you are not a superuser. Which command loads it?
 
 Same idea, new form: which statement about `COPY` and `\copy` is true?
 
-1. Where to look: The four commands below.
-2. What to do: Pick one, pick your confidence, then press Check answer.
-3. What to expect: Feedback explains every option. After a wrong first answer, a second question appears with Check second try.
-4. How to know it's done: Feedback appears and the recap opens below the activities.
-
-### What success looks like
-
-You chose the command that reads the file where it actually is, and can say which program opens the file in each case.
+1. Under Choose the command, pick one option.
+2. Choose your confidence, then press Check answer.
+3. If your first answer misses, a second question appears: answer it and press Check second try.
 
 ## Model
 
-The first statement of the seed script
+The first statement of the script
 
 ```
 INSERT INTO enrollments (student_id, course_id, grade)
@@ -142,7 +159,7 @@ Rows that others point at go in first, and come out last.
 
 Where to act: The top of seed.sql, just after the comments.
 
-Next step: Find the table in Who points at whom that points at nothing else in this seed. Its statement can safely run first.
+Next step: Find the table in Who points at whom that points at no other table in this seed. Its statement can safely run first.
 
 Another hint Another hint, 2 of 2 for Activity 2
 
@@ -153,7 +170,7 @@ Next step: The table that points at two others can only go in once both of them 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
 - ERROR and DETAIL lines use PostgreSQL's own wording; psql's LINE pointer and most HINT lines are left out.
-- Anything else is a Lesson check, not a claim that your SQL is invalid. psql commands such as `\copy`, transactions and CREATE TABLE are not available here.
+- Anything else is marked Not in this practice editor: a limit of this page, not a sign that your SQL is wrong. psql commands such as `\copy`, transactions and CREATE TABLE are not available here.
 - Text sorts by character code here; a real server sorts by its collation, so mixed-case text can sort differently.
 - Run is deterministic and bounded: no network, no files and no real database.
 
@@ -170,7 +187,7 @@ Next step: The email has text both before and after the number, so it needs two 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
 - ERROR and DETAIL lines use PostgreSQL's own wording; psql's LINE pointer and most HINT lines are left out.
-- Anything else is a Lesson check, not a claim that your SQL is invalid. psql commands such as `\copy`, transactions and CREATE TABLE are not available here.
+- Anything else is marked Not in this practice editor: a limit of this page, not a sign that your SQL is wrong. psql commands such as `\copy`, transactions and CREATE TABLE are not available here.
 - Text sorts by character code here; a real server sorts by its collation, so mixed-case text can sort differently.
 - Run is deterministic and bounded: no network, no files and no real database.
 
@@ -183,11 +200,11 @@ Next step: The email has text both before and after the number, so it needs two 
 
 ## Sources
 
-Checked against these live official PostgreSQL 18 documentation pages on 2026-10-16; foreign-key check timing was rechecked on 2026-10-27. Every output and error message the editor shows was compared with a real PostgreSQL 18 server and psql on the same tables.
+Checked against these live official PostgreSQL documentation pages on 2026-11-25. The practice editor imitates PostgreSQL's results and error wording; its runs on this page were not repeated on a live PostgreSQL server.
 
 - 2.4 Populating a Table With Rows
 - INSERT
-- 9.26 Set Returning Functions (generate_series)
+- Set Returning Functions (generate_series)
 - COPY
 - psql (\copy)
 - SET CONSTRAINTS (when constraints are checked)
@@ -196,7 +213,7 @@ Checked against these live official PostgreSQL 18 documentation pages on 2026-10
 
 ### predict
 
-Prediction (practice, not scored): on empty tables, a seed script first inserts an enrollment for student 1 before any student exists. Options: the row is added and the student can come later; an ERROR for the foreign key, and nothing is added; the row is added with student_id set to NULL; PostgreSQL waits for the student row. Answer: an ERROR, insert or update on table enrollments violates foreign key constraint enrollments_student_id_fkey, with DETAIL Key (student_id)=(1) is not present in table students. Nothing is added.
+Prediction (practice, not scored): on empty tables, a script first inserts an enrollment for student 1 before any student exists. Options: the row is added and the student can come later; an ERROR for the foreign key, and nothing is added; the row is added with student_id set to NULL; PostgreSQL waits for the student row. Answer: an ERROR, insert or update on table enrollments violates foreign key constraint enrollments_student_id_fkey, with DETAIL Key (student_id)=(1) is not present in table students. Nothing is added.
 
 ### explore
 

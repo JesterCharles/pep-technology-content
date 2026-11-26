@@ -4,64 +4,102 @@
 
 - Filter rows with WHERE using comparison operators, AND, OR, IN, BETWEEN and LIKE
 - Sort results with ORDER BY on one or more columns, ascending or descending
-- Predict the row order a query returns, and make it deterministic with explicit sort keys, including a tie-breaking column
+- Predict the row order a query returns, and make it repeatable with explicit sort columns, including a tie-breaking column
 
 ## Teaching
 
-### Activity 1 of 4: Start with a guess
+### Guess the order two matching rows come back in
 
-Practice prediction, not scored. The `students` table has two people from Leeds. Predict what PostgreSQL promises about their order before seeing the sorting rule.
+This is a guess before the sorting rule. Two students live in Leeds: Ana, whose row was added first, and Dina. This query keeps only rows whose `city` is `'Leeds'`:
+
+`students` (email not shown)
+
+| student_id | name | city |
+| --- | --- | --- |
+| 1 | Ana | Leeds |
+| 2 | Ben | York |
+| 3 | Chen | NULL |
+| 4 | Dina | Leeds |
+| 5 | Eli | Bristol |
+| 6 | Femi | NULL |
+
+### Activity checks
+
+In progress
+
+You made a guess, chose a confidence and read why each option is right or wrong.
 
 ### Your task
 
-1. Where to look: The query below.
-2. What to do: Choose one prediction.
-3. What to expect: Pick confidence, then press Check my prediction.
-4. How to know it's done: Feedback explains every option; a wrong guess is fine.
+Guess: what does PostgreSQL promise about the order of Ana's and Dina's rows?
 
-### What success looks like
+1. Read the query and the table in the reading column.
+2. Under Prediction, choose one answer.
+3. Choose your confidence, then press Check my prediction.
 
-You made a prediction and read why each option is right or wrong.
+### Filter a contact list by city
 
-### Activity 2 of 4: Filter before you sort
+`WHERE` keeps only rows whose condition is true. Comparisons use `=`, `<>` (not equal), `<`, `<=`, `>` and `>=`. Join conditions with `AND` when both must hold, or `OR` when either is enough. Mixed together, AND is applied before OR, so use brackets: `(a OR b) AND c`.
 
-`WHERE` keeps only rows whose condition is true. Comparisons use `=`, `<>` (or `!=`), `<`, `<=`, `>` and `>=`. Combine conditions with `AND` when both must hold, or `OR` when either may hold.
+`IN ('Hull', 'Bristol')` is a short way to write “equal to any of these”. `BETWEEN 2 AND 3` includes both ends. `LIKE '%Basics%'` matches text containing “Basics”: `%` stands for any run of characters.
 
-`IN ('Leeds', 'York')` is a compact set of equality choices. `BETWEEN 2 AND 3` includes both endpoints. `LIKE '%Basics%'` matches text containing “Basics”; `%` stands for any sequence of characters.
+`ORDER BY` sorts low to high; `DESC` after a column reverses it. A second sort column only orders rows that tie on the first.
 
 ```
 SELECT title, credits FROM courses
 WHERE credits BETWEEN 2 AND 3
-  AND title LIKE '%Basics%';
+  AND title LIKE '%Basics%'
+ORDER BY credits DESC, title;
 ```
 
-### Where this fits
+Its result
 
-Decision: A report needs a known subset in a stable display order.
+| title | credits |
+| --- | --- |
+| SQL Basics | 3 |
+| Web Basics | 2 |
 
-Good fit: Use WHERE for row conditions and ORDER BY for presentation or repeatable tests.
+Starting rows of `students`
 
-Choose something else when: Use a unique constraint, not ORDER BY, when the requirement is to prevent duplicate data; sorting only changes result presentation.
+| student_id | name | email | city |
+| --- | --- | --- | --- |
+| 1 | Ana | ana@example.com | Leeds |
+| 2 | Ben | ben@example.com | York |
+| 3 | Chen | chen@example.com | NULL |
+| 4 | Dina | dina@example.com | Leeds |
+| 5 | Eli | eli@example.com | Bristol |
+| 6 | Femi | femi@example.com | NULL |
+
+### On the job
+
+Decision: Filter and sort in the query, or fetch every row and do it in Java?
+
+Use it when: The rule is a condition on columns, such as one region or a price range; WHERE and ORDER BY do the work, so only the rows you need leave the database.
+
+→ Choose something else when: The rows are already in your program, or the rule needs logic this SQL cannot express; then filter them in Java with an ordinary loop, as in Java Foundations.
+
+At work: A screen such as “customers in this region, newest first” is backed by a query like this one; the JDBC code you write later in this course sends exactly these WHERE and ORDER BY clauses.
+
+In interviews: You may be asked to write a query that filters and sorts a table, or to explain why rows can come back in a different order when there is no ORDER BY; Activities 1 to 3 practise both.
+
+### Activity checks
+
+In progress
+
+- Only the Leeds and York students appear, with student_id, name and city
+- ORDER BY sorts by city, then student_id from high to low
 
 ### Your task
 
-List students from Leeds or York. Show `student_id`, `name` and `city`; sort by city ascending, then student_id descending so ties are deterministic.
+Ticket: the regional coordinator wants the students from Leeds or York, sorted by city, newest student first in each city.
 
-1. Where to look: The sample rows and student-report.sql editor below.
-2. What to type: Write one SELECT on the empty line under the comment.
-3. What to expect: Press Run; Output shows the result rows or an honest lesson limit.
-4. How to know it's done: Every local check below reads done. Two counted runs settle the activity without penalty.
+1. In student-report.sql, write one SELECT on the empty line under the comment, showing `student_id`, `name` and `city`.
+2. Keep only Leeds and York.
+3. Sort by city, then by student_id from high to low, and press Run.
 
-### What success looks like
+### Sort a catalogue so ties stay put
 
-- Only the Leeds and York students appear
-- Rows are ordered by city, then student_id descending
-
-### Activity 3 of 4: Make ties deterministic
-
-`ORDER BY column` sorts ascending by default; add `DESC` for descending. With several keys, PostgreSQL uses the second key only when the first ties, then the third for any remaining tie.
-
-If the sort keys tie completely, PostgreSQL may return those rows in either order. Add a stable unique key, usually the primary key, last when a report, page, or test needs repeatable order.
+If rows tie on every sort column, PostgreSQL may return them in either order, and the order can change from one run to the next. When a report, a page of results or a test needs a repeatable order, end ORDER BY with a column that is different on every row, usually the primary key. That last column is called the tie-breaker.
 
 ```
 SELECT course_id, title, credits
@@ -69,42 +107,52 @@ FROM courses
 ORDER BY credits DESC, course_id;
 ```
 
-That groups equal credit values and then makes their internal order explicit.
+That puts the 4-credit course first, then the two 3-credit courses in course_id order, then the 2-credit ones. NULL sorts as if it were larger than every value, so `DESC` puts a NULL first; writing `NULLS LAST` right after a sort column moves its NULLs to the end.
 
-NULL sorts as if larger than every value, so `DESC` puts it first; `NULLS LAST` after a key moves it to the end.
+Starting rows of `courses`
 
-### Your task
+| course_id | title | credits | fee |
+| --- | --- | --- | --- |
+| 101 | SQL Basics | 3 | 120.00 |
+| 102 | Java Foundations | 4 | 150.00 |
+| 103 | Data Modeling | 3 | NULL |
+| 104 | Web Basics | 2 | 80.00 |
+| 105 | Intro to Testing | 2 | 90.00 |
 
-List courses with at least 3 credits. Show course_id, title, credits and fee. Sort highest fee first with the NULL fee last, then by course_id as the tie-breaker.
+### Activity checks
 
-1. Where to look: The sample rows and course-report.sql editor below.
-2. What to type: Write one SELECT on the empty line under the comment.
-3. What to expect: Press Run; Output shows the result rows or an honest lesson limit.
-4. How to know it's done: Every local check below reads done. Two counted runs settle the activity without penalty.
+In progress
 
-### What success looks like
-
-- Only the courses with at least 3 credits appear
-- Fees descend, the NULL fee is last, and course_id breaks ties
-
-### Activity 4 of 4: Choose the stable report
-
-Filtering and sorting are separate jobs: WHERE decides which rows qualify; ORDER BY decides how all qualifying rows are arranged. A stable report ends its ORDER BY with a key that distinguishes tied rows.
+- Only the courses with at least 3 credits appear, with course_id, title, credits and fee
+- Fees run from highest to lowest, the NULL fee is last, and course_id is the tie-breaker
 
 ### Your task
 
-A report lists all 3-credit courses, highest fee first, and must stay stable when two fees tie. Which ending does that?
+Ticket: the catalogue page lists courses with at least 3 credits, priciest first, unpriced courses last, in a repeatable order.
 
-Same idea, new form: Which condition keeps courses whose credits are 2 or 3 and whose title contains “Basics”?
+1. In course-report.sql, write one SELECT showing course_id, title, credits and fee for courses with at least 3 credits.
+2. Sort by fee from high to low with the NULL fee last, then by course_id as the tie-breaker.
+3. Press Run and compare Output with the activity checks.
 
-1. Where to look: The four options.
-2. What to do: Choose one and report confidence.
-3. What to expect: Every option is explained; one wrong answer gets one retry.
-4. How to know it's done: Feedback appears and the recap opens.
+### Choose the stable report
 
-### What success looks like
+Filtering and sorting are separate jobs. WHERE decides which rows stay; ORDER BY decides how the rows that stayed are arranged, and it always comes after WHERE. A stable report ends its ORDER BY with a tie-breaker that is different on every row.
 
-You choose the query that matches the report requirement and can explain why the others do not.
+### Activity checks
+
+In progress
+
+You chose the ending that matches the report request and read why the other options do not.
+
+### Your task
+
+A report lists all 3-credit courses, highest fee first and unpriced last, and must stay stable when fees tie. Which ending does that?
+
+Same idea, new form: which condition keeps courses whose credits are 2 or 3 and whose title contains “Basics”?
+
+1. Under Choose the ending, pick one option.
+2. Choose your confidence, then press Check answer.
+3. If your first answer misses, a second question appears: answer it and press Check second try.
 
 ## Model
 
@@ -116,58 +164,62 @@ SELECT student_id, name FROM students WHERE city = 'Leeds';
 
 ## Recap
 
-- WHERE filters rows; AND narrows, OR widens, IN lists choices, BETWEEN includes both bounds, and LIKE matches a pattern.
-- ORDER BY sorts ascending by default; add DESC to reverse a key.
-- Without ORDER BY, row order is unspecified. Add a unique final key to make ties deterministic.
+- WHERE filters rows: AND narrows, OR widens, IN lists choices, BETWEEN includes both ends, and LIKE matches a pattern.
+- ORDER BY sorts from low to high unless you add DESC; NULLS LAST moves NULLs to the end.
+- Without ORDER BY, row order is not promised. End ORDER BY with a tie-breaker to make it repeatable.
 
 Next topic: Handling NULLs: COALESCE and CASE
 
 ## Cheat sheet
 
-A music app first filters a library to songs in two chosen genres, then sorts that smaller list by artist and title.
+A music app first narrows a library to songs in two chosen genres, then sorts that smaller list by artist and title.
 
-WHERE decides which cards remain on the table; ORDER BY arranges the cards that remain.
+WHERE decides which songs stay on the list; ORDER BY arranges the songs that stayed.
 
-Where to act: The empty line in student-report.sql.
+Where to act: The WHERE line of your query.
 
-Next step: Build WHERE with `city IN (...)`; the two quoted city names go inside the parentheses.
+Next step: Use `city IN (...)`; the two city names go inside the brackets, each in single quotes.
 
 Another hint Another hint, 2 of 2 for Activity 2
 
-Where to act: The unfinished clause or expression in your query.
+Where to act: The ORDER BY line, at the end of the query.
 
-Next step: ORDER BY accepts a comma-separated list. Put city first, then student_id with DESC.
+Next step: ORDER BY takes a comma-separated list: city first, then student_id with DESC after it.
 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
-- Anything else is a Lesson check, not a claim that your SQL is invalid. Text sorting in a real server follows its collation.
+- ERROR and DETAIL lines use PostgreSQL's own wording; psql's LINE pointer and most HINT lines are left out.
+- Anything else is marked Not in this practice editor: a limit of this page, not a sign that your SQL is wrong. psql commands such as `\copy`, transactions and CREATE TABLE are not available here.
+- Text sorts by character code here; a real server sorts by its collation, so mixed-case text can sort differently.
 - Run is deterministic and bounded: no network, no files and no real database.
 
-Where to act: The empty line in course-report.sql.
+Where to act: The WHERE line of your query.
 
-Next step: Keep courses with 3 or more credits; any comparison, BETWEEN or IN works.
+Next step: “At least 3” includes 3 itself; one comparison operator from the reading column says exactly that.
 
 Another hint Another hint, 2 of 2 for Activity 3
 
-Where to act: The unfinished clause or expression in your query.
+Where to act: The ORDER BY line.
 
-Next step: Sort fee descending, move the NULL fee last, then append the stable key.
+Next step: After fee, write a direction word, then the words from the reading column that move NULL to the end; the tie-breaker comes after a comma.
 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
-- Anything else is a Lesson check, not a claim that your SQL is invalid. Text sorting in a real server follows its collation.
+- ERROR and DETAIL lines use PostgreSQL's own wording; psql's LINE pointer and most HINT lines are left out.
+- Anything else is marked Not in this practice editor: a limit of this page, not a sign that your SQL is wrong. psql commands such as `\copy`, transactions and CREATE TABLE are not available here.
+- Text sorts by character code here; a real server sorts by its collation, so mixed-case text can sort differently.
 - Run is deterministic and bounded: no network, no files and no real database.
 
 |  |  |
 | --- | --- |
-| `WHERE city IN ('Leeds', 'York')` | match either city |
-| `WHERE credits BETWEEN 2 AND 3` | inclusive range |
+| `WHERE city IN ('Hull', 'Bristol')` | match either city |
+| `WHERE credits BETWEEN 2 AND 3` | range, both ends included |
 | `WHERE title LIKE '%Basics%'` | contains text |
-| `ORDER BY fee DESC NULLS LAST, course_id` | descending fee, explicit NULL position, stable tie-breaker |
+| `ORDER BY fee DESC NULLS LAST, course_id` | high to low, NULL last, tie-breaker |
 
 ## Sources
 
-Checked against current official PostgreSQL documentation on 2026-10-16; NULL sort placement was rechecked on 2026-11-06. The bounded editor runs only the documented subset named on this page; unsupported SQL is labelled as a lesson limit, not rejected as invalid PostgreSQL.
+Checked against current official PostgreSQL documentation on 2026-11-25. The practice editor runs only the subset listed under it; anything else is marked as not available in this practice editor, not as invalid PostgreSQL.
 
 - WHERE clause
 - Sorting Rows
@@ -178,16 +230,16 @@ Checked against current official PostgreSQL documentation on 2026-10-16; NULL so
 
 ### predict
 
-Prediction options: Ana must appear before Dina because her row was inserted first; Dina must appear before Ana because her id is larger; Both rows appear, but their order is not promised; The query fails because WHERE requires ORDER BY
+Prediction (practice, not scored): two students live in Leeds, Ana (added first) and Dina. What does PostgreSQL promise about their order in SELECT student_id, name FROM students WHERE city = 'Leeds'; ? Options: Ana must appear before Dina because her row was added first; Dina must appear before Ana because her id is larger; Both rows appear, but their order is not promised; The query fails because WHERE requires ORDER BY. Answer: both rows appear, but without ORDER BY their order is not promised.
 
 ### explore
 
-Write a SELECT over students that keeps Leeds and York and sorts by city, then student_id descending.
+Typed filter-and-sort activity. student-report.sql starts with a comment line. Write one SELECT over students that shows student_id, name and city, keeps Leeds and York, and sorts by city, then student_id descending. A correct run shows Dina and Ana (Leeds, Dina first), then Ben (York).
 
 ### explore
 
-Write a SELECT over courses that keeps at least 3 credits, then sorts fee descending with the NULL fee last and a stable tie-breaker.
+Typed sort activity. course-report.sql starts with a comment line. Write one SELECT over courses that shows course_id, title, credits and fee for courses with at least 3 credits, sorted by fee descending with the NULL fee last, then by course_id. A correct run shows Java Foundations, SQL Basics, then Data Modeling.
 
 ### mcq
 
-Apply question: A report lists all 3-credit courses, highest fee first, and must stay stable when two fees tie. Which ending does that? Options: WHERE credits = 3 ORDER BY fee DESC, course_id; (the answer: WHERE filters to 3 credits; fee sorts high to low; course_id breaks fee ties.); ORDER BY fee DESC WHERE credits = 3, course_id; (SQL places WHERE before ORDER BY, and a comma cannot add a WHERE condition inside ORDER BY.); WHERE credits = 3; (this filters correctly but leaves every row order unspecified.); WHERE credits = 3 ORDER BY fee DESC; (fee order is descending, but rows with the same fee still have no explicit order.). Retry: Which condition keeps courses whose credits are 2 or 3 and whose title contains “Basics”? The answer is credits IN (2, 3) AND title LIKE '%Basics%': IN selects the two credit values, then AND requires the title pattern too.
+Apply question: A report lists all 3-credit courses, highest fee first and unpriced last, and must stay stable when fees tie. Which ending does that? Options: WHERE credits = 3 ORDER BY fee DESC NULLS LAST, course_id; (the answer: WHERE keeps 3 credits, fee sorts high to low with NULL last, and course_id breaks fee ties); ORDER BY fee DESC WHERE credits = 3, course_id; (WHERE must come before ORDER BY); WHERE credits = 3 ORDER BY course_id, fee DESC NULLS LAST; (this sorts by course_id first, so fee order is lost); WHERE credits = 3 ORDER BY fee DESC NULLS LAST; (rows with the same fee still have no promised order). Retry: the condition is credits IN (2, 3) AND title LIKE '%Basics%'.

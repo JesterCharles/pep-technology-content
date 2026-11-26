@@ -1,37 +1,101 @@
 {
   "schemaVersion": 1,
   "role": "sme",
-  "author": "pep-m-sql-crud-sme-d442 (independent SQL/PostgreSQL critic; report data/pep-m-sql-crud-sme-d442/report.md, reviewed exact checkpoint d442eebb24ff610e567b649ad9d56d7264d6ee7d)",
+  "author": "c2-sql-sme-critic (independent PostgreSQL SME critic subagent, fresh context, read-only; reviewed commit 8a7daa17)",
   "reviewedPath": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
-  "reviewedSha256": "d7bbd1dcca1af3bbd89f3aeac5838fb6af7df2177ddaaeccf5b76ac761b78a1e",
+  "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d",
   "artifactHashes": {
-    "artifact.html": "d7bbd1dcca1af3bbd89f3aeac5838fb6af7df2177ddaaeccf5b76ac761b78a1e",
-    "artifact.gift": "c6800d5f07ae4c69d99ecaf36a6bb7c91e26ec05f2451521a80cf4184ba9532e"
+    "artifact.html": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d",
+    "artifact.gift": "d9f70aad4019e442b36eb015e186e7c4b8978eb63ab4cdd9b7c660aab4be6dbf"
   },
   "findings": [
     {
-      "id": "L-res-2",
-      "severity": "low",
+      "id": "C2S-ANTI-01",
+      "severity": "high",
       "location": {
         "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
-        "line": 995
+        "line": 910
       },
-      "claim": "Activity 3 credits a query without the requested ORDER BY when the simulator happens to return rows in the expected order.",
-      "evidence": [],
-      "recommendation": "Optionally require the requested sort key.",
-      "reviewedSha256": "d7bbd1dcca1af3bbd89f3aeac5838fb6af7df2177ddaaeccf5b76ac761b78a1e"
+      "claim": "Simulator fidelity: the editor rejects a valid self-join in which one copy keeps the table name. SELECT instructors.name AS employee, manager.name AS manager FROM instructors LEFT JOIN instructors AS manager ON instructors.lead_id = manager.instructor_id; gives 'ERROR: invalid reference to FROM-clause entry for table \"instructors\"' with 'HINT: Perhaps you meant to reference the table alias \"manager\"'. SQLCHK.explain then tells the learner to stop using the table name. On a real server the two references have distinct names (instructors and manager), so the query runs and returns the four reporting lines. The alias rule hides the original name only for the aliased reference. The cause is that resolve() raises the error as soon as any aliased item has that table name, even when an unaliased item already matched the qualifier. Not executed: no PostgreSQL server was available, so that a server accepts this query is inferred from the documented scope of an alias (it hides the name of the FROM item it is written on). Confirm it on a server before changing the engine.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/sql-select.html",
+          "section": "PostgreSQL 19 (current): SELECT, FROM Clause, alias: \"When an alias is provided, it completely hides the actual name of the table or function; for example given FROM foo AS f, the remainder of the SELECT must refer to this FROM item as f not foo.\" (the hiding applies to the aliased FROM item only)",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "5d4676a94144973703c7de581af6d2690c66d8c81ef3789d14fc6e35a065116c"
+        },
+        {
+          "url": "https://www.postgresql.org/docs/current/queries-table-expressions.html",
+          "section": "PostgreSQL 19 (current): 7.2.1.2 Table and Column Aliases: \"The alias becomes the new name of the table reference so far as the current query is concerned - it is not allowed to refer to the table by the original name elsewhere in the query\" (the rule is per aliased table reference)",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "f3d49820c0644f84da3265d0362726571243ac8f7e29537c72a158ba9ee5fc9a"
+        }
+      ],
+      "recommendation": "In resolve(), raise 'invalid reference to FROM-clause entry' only after no FROM item's reference name matched the qualifier. Keep the Activity 3 requirement for two aliases as a lesson rule, with its own check note, not as a PostgreSQL ERROR.",
+      "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d"
     },
     {
-      "id": "L-res-3",
-      "severity": "low",
+      "id": "C2S-ANTI-02",
+      "severity": "medium",
       "location": {
         "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
-        "line": 995
+        "line": 563
       },
-      "claim": "On a correct-rows, wrong-alias run the alias note was followed by a misdirecting generic structure note.",
-      "evidence": [],
-      "recommendation": "Suppress the generic note when only the names fail.",
-      "reviewedSha256": "d7bbd1dcca1af3bbd89f3aeac5838fb6af7df2177ddaaeccf5b76ac761b78a1e"
+      "claim": "Semantic answer leakage: the Activity 3 static alternative (data-static-alt on the editor, copied into artifact.md under Static interaction alternatives) spells out the finished statement clause by clause: instructors AS employee, LEFT JOIN instructors AS manager, ON employee.lead_id = manager.instructor_id, the two column names and the ORDER BY. The direction of the self-join condition is the one reasoning step the task asks for. The visible task and the no-JavaScript exercise rightly leave it out. The same condition is also the keyed answer to Activity 4's retry question.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/queries-table-expressions.html",
+          "section": "PostgreSQL 19 (current): 7.2.1.2 Table and Column Aliases: self-join example SELECT * FROM people AS mother JOIN people AS child ON mother.id = child.mother_id",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "f3d49820c0644f84da3265d0362726571243ac8f7e29537c72a158ba9ee5fc9a"
+        }
+      ],
+      "recommendation": "Describe the relationship instead of the ON expression, for example: 'lead_id stores the instructor_id of that instructor's lead; join the employee copy to the manager copy on that relationship'. Keep the output description: Mara with NULL, Tomas and Priya with Mara, Ken with Tomas.",
+      "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d"
+    },
+    {
+      "id": "C2S-ANTI-03",
+      "severity": "medium",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
+        "line": 1211
+      },
+      "claim": "Activity 2 check: a valid anti-join that tests an unqualified right-side key is rejected. SELECT s.student_id, s.name FROM students s LEFT JOIN enrollments e ON s.student_id = e.student_id WHERE course_id IS NULL ORDER BY s.student_id; returns exactly Femi, and on a server course_id can only resolve to e.course_id, because students has no such column. The check requires x.a.qual to equal the alias and replies 'find it with a LEFT JOIN to enrollments and an IS NULL test on that right-side key', which is what the query does. The note contradicts the learner's correct query.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/tutorial-join.html",
+          "section": "PostgreSQL 19 (current): 2.6 Joins Between Tables: \"Since the columns all had different names, the parser automatically found which table they belong to. If there were duplicate column names in the two tables you'd need to qualify the column names\"",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "e8b7579ea9a933e9a293840f532d70529224415ef8378f355c055df1ff57a306"
+        }
+      ],
+      "recommendation": "Resolve unqualified column references against the FROM items before the test (course_id belongs only to enrollments), or ask for the qualified form explicitly: 'qualify it with the enrollments alias, for example e.student_id'.",
+      "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d"
+    },
+    {
+      "id": "C2S-ANTI-04",
+      "severity": "low",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.gift",
+        "line": 25
+      },
+      "claim": "GIFT item 'o2 self-join condition': the feedback on employees JOIN employees ON manager_id = emp_id says PostgreSQL rejects it 'so each occurrence needs its own alias'. The rejection is real: table name \"employees\" specified more than once. But PostgreSQL needs only distinct reference names, so one occurrence may keep the table name, as in employees JOIN employees AS m ON employees.manager_id = m.emp_id. The page's own 'why two aliases' item says this correctly ('each appearance needs its own name'). Not executed on a server; inferred from the same documented alias scope as C2S-ANTI-01.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/sql-select.html",
+          "section": "PostgreSQL 19 (current): SELECT, FROM Clause, alias: \"When an alias is provided, it completely hides the actual name of the table or function; for example given FROM foo AS f, the remainder of the SELECT must refer to this FROM item as f not foo.\" (the hiding applies to the aliased FROM item only)",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "5d4676a94144973703c7de581af6d2690c66d8c81ef3789d14fc6e35a065116c"
+        },
+        {
+          "url": "https://www.postgresql.org/docs/current/queries-table-expressions.html",
+          "section": "PostgreSQL 19 (current): 7.2.1.2 Table and Column Aliases: an alias becomes the new name of that table reference; aliases are necessary when joining a table to itself",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "f3d49820c0644f84da3265d0362726571243ac8f7e29537c72a158ba9ee5fc9a"
+        }
+      ],
+      "recommendation": "Reword to 'the same table name appears twice in FROM, so give at least one occurrence an alias; giving both copies role names such as e and m is clearest.'",
+      "reviewedSha256": "d9f70aad4019e442b36eb015e186e7c4b8978eb63ab4cdd9b7c660aab4be6dbf"
     }
   ]
 }

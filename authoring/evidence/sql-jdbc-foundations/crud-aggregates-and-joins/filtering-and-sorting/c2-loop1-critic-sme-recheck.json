@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "c2-sql-sme-critic (independent PostgreSQL SME critic subagent, fresh context, read-only; rechecked commit f18bccaf)",
+  "reviewedPath": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html",
+  "reviewedSha256": "0974933535cc41814aa166f200df9acee7c092130636764e7d857531c36fb96b",
+  "artifactHashes": {
+    "artifact.html": "0974933535cc41814aa166f200df9acee7c092130636764e7d857531c36fb96b",
+    "artifact.gift": "8bc209e07815486fbc0dc4f18dbd0b6d7be5757b1b5ac6b3951666008b50d892"
+  },
+  "findings": [
+    {
+      "id": "C2S-FILT-R1",
+      "severity": "medium",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html",
+        "line": 1292
+      },
+      "claim": "New in the shared controller.js (all eight pages): EDITOR.check relabels as 'Error' every adapter 'limit' message that does not match a phrase list. The adapter's generic parse-failure messages ('This practice editor could not read the statement near ...', 'Expected ... near ...', 'The statement ends too early') are produced both by real mistakes and by valid PostgreSQL the subset cannot parse. Verified with the adapter's check() and the controller's regex: these valid statements are now labelled Error: SELECT * FROM public.students; (a schema-qualified table name), SELECT name FROM students ORDER BY name COLLATE \"C\"; (the documented way to override the collation that this page's LIMITS line says differs from the server), UPDATE students SET (city, name) = ('Hull', 'Ben') WHERE student_id = 2;, SELECT DATE '2024-01-01'; and ORDER BY student_id USING >. This contradicts the editor's own LIMITS promise ('Anything else is marked Not in this practice editor: a limit of this page, not a sign that your SQL is wrong') and tells the learner that valid SQL is wrong.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/sql-select.html",
+          "section": "PostgreSQL 19 (current): SELECT, FROM Clause, table_name: \"The name (optionally schema-qualified) of an existing table or view\"; ORDER BY Clause: \"That can be overridden at need by including a COLLATE clause in the expression, for example ORDER BY mycolumn COLLATE \\\"en_US\\\"\"",
+          "retrievedAt": "2026-11-26T01:27:23Z",
+          "textSha256": "5d4676a94144973703c7de581af6d2690c66d8c81ef3789d14fc6e35a065116c"
+        },
+        {
+          "url": "https://www.postgresql.org/docs/current/sql-update.html",
+          "section": "PostgreSQL 19 (current): UPDATE, Synopsis: SET { column_name = ... | ( column_name [, ...] ) = [ ROW ] ( { expression | DEFAULT } [, ...] ) ... }",
+          "retrievedAt": "2026-11-26T01:27:23Z",
+          "textSha256": "9763bb6877a8e1f880cfe4db5de19a9fbffb75c66ec1979ef59f0bc0ce056f2d"
+        },
+        {
+          "url": "https://www.postgresql.org/docs/current/sql-syntax-lexical.html",
+          "section": "PostgreSQL 19 (current): 4.1.2.7 Constants of Other Types: type 'string' syntax, \"PostgreSQL allows it for all types\"",
+          "retrievedAt": "2026-11-26T01:27:23Z",
+          "textSha256": "b7f37e20ab98fa5dce546bae74b69162a2c2604669e9d2d43fce36fa86c3cfe5"
+        }
+      ],
+      "recommendation": "Keep the parse-failure messages as 'Not in this practice editor' unless the token stream is provably malformed for PostgreSQL too (for example an unclosed quote or bracket, or a statement that ends after AND or WHERE), or relabel them with neutral wording ('This practice editor could not read this; check for a typo, or it may be SQL this editor does not support'). Add a LIMITS line naming schema-qualified names, COLLATE, typed literals and multi-column SET as unsupported.",
+      "reviewedSha256": "0974933535cc41814aa166f200df9acee7c092130636764e7d857531c36fb96b"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/critic-sme.json",
+    "items": [
+      {
+        "findingId": "C2S-FILT-01",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html",
+        "reviewedSha256": "0974933535cc41814aa166f200df9acee7c092130636764e7d857531c36fb96b",
+        "note": "The keyed option is now WHERE credits = 3 ORDER BY fee DESC NULLS LAST, course_id; and the stem says \"highest fee first and unpriced last\". Simulator check on the page table: 101 (120.00) then 103 (NULL), as the 7.5 NULLS rule predicts. The distractors (course_id first; no tie-breaker; WHERE after ORDER BY) are explained correctly, and the static alternative and artifact.md match."
+      },
+      {
+        "findingId": "C2S-FILT-02",
+        "status": "resolved",
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html",
+        "reviewedSha256": "0974933535cc41814aa166f200df9acee7c092130636764e7d857531c36fb96b",
+        "note": "Verified in the simulator: ORDER BY 3, 1 DESC (Activity 2) and ORDER BY fee DESC NULLS LAST, 1 (Activity 3) now get an honest note that the practice check reads sort columns by name; neither note claims the order is unpromised or untied any more. Residual, low: an output alias used as a sort key (SELECT city AS town ... ORDER BY town) still gets \"the order is not the one asked for\", which is untrue for that query."
+      },
+      {
+        "findingId": "C2S-FILT-03",
+        "status": "open",
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html",
+        "reviewedSha256": "0974933535cc41814aa166f200df9acee7c092130636764e7d857531c36fb96b",
+        "note": "Partly fixed. The SQLCHK.explain branch now says \"PostgreSQL has no operator for the two kinds of value on either side, for example a number and text. Check that both sides are the same kind of value\", which is true and no longer calls a quoted literal text. Still open in the adapter (engine.js, recipe accepted): credits LIKE '3%' still prints \"operator does not exist: integer ~~ text\" where PostgreSQL reports the untyped literal as unknown, while LIMITS claims PostgreSQL's own ERROR wording. Server wording documented, not executed."
+      }
+    ]
+  }
+}

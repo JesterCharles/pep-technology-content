@@ -3,61 +3,87 @@
 ## Objectives
 
 - Write INSERT statements that add one or several rows with the column list named explicitly
-- Write UPDATE and DELETE statements whose WHERE clause changes only the intended rows, previewing them with SELECT first
+- Write UPDATE statements, and choose DELETE statements, whose WHERE clause changes only the intended rows, previewing them with SELECT first
 - Use RETURNING to see the rows an INSERT, UPDATE or DELETE changed
 
 ## Teaching
 
-### Activity 1 of 4: Start with a guess
+### Guess what an UPDATE with no WHERE changes
 
-Practice prediction, not scored. The `courses` table holds 5 courses. Someone means to make one course free, but runs the statement shown in the task. Guess what happens before any rules are shown.
+You have not learned this statement yet, so this is a guess. `UPDATE courses SET fee = 0` asks PostgreSQL to set the `fee` column to 0 in the `courses` table. A colleague meant to make one course free and ran exactly this:
+
+`courses` before it runs (other columns not shown)
+
+| course_id | title | fee |
+| --- | --- | --- |
+| 101 | SQL Basics | 120.00 |
+| 102 | Java Foundations | 150.00 |
+| 103 | Data Modeling | NULL |
+| 104 | Web Basics | 80.00 |
+| 105 | Intro to Testing | 90.00 |
+
+### Activity checks
+
+In progress
+
+You made a guess, chose a confidence and read why each option is right or wrong.
 
 ### Your task
 
-1. Where to look: The statement just below.
-2. What to do: Under Prediction, pick how many rows it changes.
-3. What to expect: Pick Low, Medium or High confidence, then press Check my prediction.
-4. How to know it's done: Feedback explains every option and Next activity becomes available. A wrong guess is fine.
+Guess: how many rows of `courses` does this statement change?
 
-### What success looks like
+1. Read the statement and the table in the reading column.
+2. Under Prediction, choose one answer.
+3. Choose your confidence, then press Check my prediction.
 
-You chose a prediction and a confidence, then read why each option is right or wrong.
+### Add new rows with INSERT
 
-### Activity 2 of 4: Add rows with INSERT
-
-`INSERT` adds new rows. Name the table, list the columns in parentheses, then give the values in the same order after `VALUES`:
+`INSERT` adds new rows. Name the table, list the columns in parentheses, then give the values in the same order after `VALUES`. Text goes in single quotes; numbers and `NULL` do not.
 
 ```
 INSERT INTO instructors (instructor_id, name, lead_id)
-VALUES (5, 'Rosa', 1);
+VALUES (5, 'Rosa', 1),
+       (6, 'Sam', NULL);
 ```
 
-Listing the columns keeps the statement correct even if the table's columns are later reordered or extended, and it lets you leave a column out so it gets its default value. Text goes in single quotes; `NULL` has none.
+Here `lead_id` is the id of the instructor's team lead; Sam has none yet, so his value is NULL. psql answers `INSERT 0 2`: the last number is how many rows were added, and you can ignore the 0.
 
-One INSERT can add several rows: put a comma between the parenthesised rows. If any row breaks a constraint, such as a primary key that already exists, the whole statement fails and adds no rows at all.
+One INSERT adds several rows when a comma separates the bracketed rows, and every row has one value per named column. If any row breaks a constraint, such as a primary key that already exists, the whole statement fails and adds no rows at all.
+
+Starting rows of `students` (`student_id` is the primary key; `email` is unique)
+
+| student_id | name | email | city |
+| --- | --- | --- | --- |
+| 1 | Ana | ana@example.com | Leeds |
+| 2 | Ben | ben@example.com | York |
+| 3 | Chen | chen@example.com | NULL |
+| 4 | Dina | dina@example.com | Leeds |
+| 5 | Eli | eli@example.com | Bristol |
+| 6 | Femi | femi@example.com | NULL |
+
+### Activity checks
+
+In progress
+
+- Students 7 and 8 are in the table with exactly the values in the task, added by one INSERT
+- That INSERT names its columns
 
 ### Your task
 
-Two students join. Add both in one INSERT that names its columns:
+Ticket: two students enrolled today. Add both in one INSERT that names its columns.
 
 - student 7: Gus, `gus@example.com`, city Hull
 - student 8: Hana, `hana@example.com`, no city recorded
 
-1. Where to look: The students.sql editor below, and the `students` table above it.
-2. What to type: Your INSERT goes on the empty line under the first comment. Leave the SELECT at the end: it shows the table after your INSERT.
-3. What to expect: Press Run. Output shows `INSERT 0 2` and then the table, or PostgreSQL's ERROR if a row is rejected.
-4. How to know it's done: Both checks below read done. Two runs that still miss a check settle the activity without penalty.
+1. In students.sql, write your INSERT on the empty line under the first comment.
+2. Leave the SELECT at the end as it is: it shows the table after your INSERT.
+3. Press Run. Output shows `INSERT 0 2` and then the table.
 
-### What success looks like
+### Preview, then change one row
 
-- Students 7 and 8 are in the table with exactly the values above, added by one INSERT
-- That INSERT names its columns
+`UPDATE` changes values in existing rows; `DELETE FROM` removes rows. Both use `WHERE` to choose rows: only rows for which its condition is true change. Without WHERE they change every row, as Activity 1 showed.
 
-### Activity 3 of 4: Preview, then change, then confirm
-
-`UPDATE` changes values in existing rows; `DELETE` removes rows. Both use `WHERE` to choose the rows, and without it they affect every row, as Activity 1 showed.
-
-A safe habit: first run a `SELECT` with the exact `WHERE` you plan to use, check that it lists only the rows you mean, then reuse that `WHERE`. A condition on the primary key matches at most one row.
+A safe habit: first run `SELECT * FROM table WHERE ...` with the exact WHERE you plan to use (`*` means every column), check the rows it lists, then reuse that WHERE. An equality test on the primary key, such as `course_id = 104`, matches at most one row.
 
 ```
 SELECT * FROM courses WHERE course_id = 104;
@@ -65,52 +91,93 @@ UPDATE courses SET fee = 85.00
 WHERE course_id = 104 RETURNING course_id, fee;
 ```
 
-`RETURNING` lists the rows the statement just changed: the new values after an INSERT or UPDATE, the removed values after a DELETE. You see the effect without writing a second query.
+`RETURNING` lists the changed rows with their new values (after a DELETE, the removed ones), so you see the effect without a second query; psql then prints `UPDATE 1`.
 
-### Where this fits
+Starting rows of `students`
 
-Decision: A change must touch only some rows of a table other people rely on. Run the UPDATE or DELETE straight away, or preview it with a SELECT first?
+| student_id | name | email | city |
+| --- | --- | --- | --- |
+| 1 | Ana | ana@example.com | Leeds |
+| 2 | Ben | ben@example.com | York |
+| 3 | Chen | chen@example.com | NULL |
+| 4 | Dina | dina@example.com | Leeds |
+| 5 | Eli | eli@example.com | Bristol |
+| 6 | Femi | femi@example.com | NULL |
 
-Good fit: Preview first whenever a WHERE decides which rows change, such as correcting one customer's address or removing one cancelled booking: the SELECT shows exactly what that WHERE matches.
+### On the job
 
-Choose something else when: several statements must all succeed or all be undone, such as moving a booking from one table to another. A preview cannot undo a half-finished change; run them inside a transaction (BEGIN ... COMMIT) instead.
+Decision: Run this UPDATE now, or preview its WHERE first?
 
-### Your task
+Use it when: A WHERE decides which rows of a shared table change, such as correcting one customer's address or removing one cancelled booking; the SELECT shows exactly what that WHERE matches.
 
-Ben (student 2) has moved to Hull. Change only his row, and see the change.
+→ Choose something else when: Several statements must all succeed or all be undone, such as moving a booking from one table to another; a preview cannot undo a half-finished change, so run them in a transaction (BEGIN ... COMMIT), which makes PostgreSQL keep all of their changes or none.
 
-1. Where to look: The move.sql editor below, with the `students` table above it.
-2. First statement: under comment 1, a SELECT that lists the row your WHERE will match.
-3. Second statement: under comment 2, an UPDATE that sets that row's city to Hull, using the same WHERE, with RETURNING student_id, name and city. Then press Run.
-4. What to expect: Output shows your preview row, then the returned row and `UPDATE 1`.
-5. How to know it's done: All three checks below read done.
+At work: Correcting one customer's record in a shared database is a typical support ticket; a teammate who reviews the change will want to see the SELECT you ran first, and RETURNING shows exactly what changed.
 
-### What success looks like
+In interviews: You may be asked what happens when an UPDATE or DELETE has no WHERE clause, or how you would change one customer's row safely; Activities 1 and 3 practise both.
+
+### Activity checks
+
+In progress
 
 - A SELECT before the UPDATE lists exactly the row the UPDATE changes
 - The UPDATE sets student 2's city to Hull and leaves every other row as it was
 - RETURNING shows the changed row's student_id, name and city
 
-### Activity 4 of 4: Aim the WHERE
+### Your task
+
+Ticket: Ben (student 2) has moved to Hull. Change only his row, and show the change.
+
+1. In move.sql, under comment 1, write a SELECT that lists the row your WHERE will match.
+2. Under comment 2, write an UPDATE that sets that row's city to Hull, with the same WHERE and RETURNING student_id, name and city.
+3. Press Run. Output shows your preview row, then the returned row and `UPDATE 1`.
+
+### Aim the WHERE at one enrollment
 
 A WHERE matches every row for which its condition is true. `AND` narrows the match: both parts must hold. `OR` widens it: either part is enough.
 
-The primary key of `enrollments` is the pair (`student_id`, `course_id`), so naming both columns matches exactly one enrollment.
+The primary key of `enrollments` is the pair (`student_id`, `course_id`), so an equality test on both columns matches exactly one enrollment.
+
+Rows of `enrollments` (primary key: `student_id`, `course_id`)
+
+| student_id | course_id | grade |
+| --- | --- | --- |
+| 1 | 101 | 82 |
+| 1 | 102 | NULL |
+| 2 | 101 | 67 |
+| 2 | 103 | 74 |
+| 3 | 101 | NULL |
+| 3 | 102 | 58 |
+| 4 | 102 | 91 |
+| 4 | 103 | NULL |
+| 5 | 101 | 45 |
+
+`students`, for the second question (`email` is unique)
+
+| student_id | name | email | city |
+| --- | --- | --- | --- |
+| 1 | Ana | ana@example.com | Leeds |
+| 2 | Ben | ben@example.com | York |
+| 3 | Chen | chen@example.com | NULL |
+| 4 | Dina | dina@example.com | Leeds |
+| 5 | Eli | eli@example.com | Bristol |
+| 6 | Femi | femi@example.com | NULL |
+
+### Activity checks
+
+In progress
+
+You chose the statement whose WHERE matches only the intended row and read what each other WHERE would also change.
 
 ### Your task
 
-Student 4 cancelled one enrollment: course 102. Which statement removes only that enrollment?
+Ticket: student 4 cancelled one enrollment, course 102. Which statement removes only that enrollment?
 
 Same idea, new form: Femi (student 6) now uses `femi.o@example.com`. Which statement changes only Femi's row?
 
-1. Where to look: The `enrollments` rows, then the four statements below them.
-2. What to do: Pick one statement, pick your confidence, then press Check answer.
-3. What to expect: Feedback explains every option. After a wrong first answer, a second question appears with Check second try.
-4. How to know it's done: Feedback appears and the recap opens below the activities.
-
-### What success looks like
-
-You chose the statement whose WHERE matches only the intended row, and can say what each other WHERE would also change.
+1. Under Choose the statement, pick one option.
+2. Choose your confidence, then press Check answer.
+3. If your first answer misses, a second question appears: answer it and press Check second try.
 
 ## Model
 
@@ -124,8 +191,7 @@ UPDATE courses SET fee = 0;
 
 - `INSERT INTO table (columns) VALUES (...), (...);` names its columns and adds one or more rows; one rejected row cancels the whole statement.
 - `UPDATE ... SET ... WHERE` and `DELETE FROM ... WHERE` change only the rows WHERE matches; with no WHERE they change every row.
-- Preview with a SELECT that uses the same WHERE; a condition on the primary key matches at most one row.
-- `RETURNING` shows the rows a statement changed.
+- Preview with a SELECT that uses the same WHERE; an equality test on every column of the primary key matches at most one row. `RETURNING` shows the rows a statement changed.
 
 Next topic: Seeding sample data
 
@@ -133,7 +199,7 @@ Next topic: Seeding sample data
 
 Where to act: The empty line under the first comment in students.sql.
 
-Next step: Copy the shape of the instructors example, but name the four columns of `students` in the order the table shows them, and give two parenthesised rows after VALUES.
+Next step: Copy the shape of the instructors example, but name the four columns of `students` in the order the table shows them, and give two bracketed rows after VALUES.
 
 Another hint Another hint, 2 of 2 for Activity 2
 
@@ -144,7 +210,7 @@ Next step: With four columns named, every row needs four values. Where Hana has 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
 - ERROR and DETAIL lines use PostgreSQL's own wording; psql's LINE pointer and most HINT lines are left out.
-- Anything else is a Lesson check, not a claim that your SQL is invalid. psql commands such as `\copy`, transactions and CREATE TABLE are not available here.
+- Anything else is marked Not in this practice editor: a limit of this page, not a sign that your SQL is wrong. psql commands such as `\copy`, transactions and CREATE TABLE are not available here.
 - Text sorts by character code here; a real server sorts by its collation, so mixed-case text can sort differently.
 - Run is deterministic and bounded: no network, no files and no real database.
 
@@ -165,7 +231,7 @@ Next step: Build the UPDATE in the example's order: the table, SET with the new 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
 - ERROR and DETAIL lines use PostgreSQL's own wording; psql's LINE pointer and most HINT lines are left out.
-- Anything else is a Lesson check, not a claim that your SQL is invalid. psql commands such as `\copy`, transactions and CREATE TABLE are not available here.
+- Anything else is marked Not in this practice editor: a limit of this page, not a sign that your SQL is wrong. psql commands such as `\copy`, transactions and CREATE TABLE are not available here.
 - Text sorts by character code here; a real server sorts by its collation, so mixed-case text can sort differently.
 - Run is deterministic and bounded: no network, no files and no real database.
 
@@ -179,13 +245,14 @@ Next step: Build the UPDATE in the example's order: the table, SET with the new 
 
 ## Sources
 
-Checked against these live official PostgreSQL 18 documentation pages on 2026-10-16. Every output and error message the editor shows was compared with a real PostgreSQL 18 server and psql on the same sample tables.
+Checked against these live official PostgreSQL documentation pages on 2026-11-25. The practice editor imitates PostgreSQL's results and error wording; its runs on this page were not repeated on a live PostgreSQL server.
 
 - 6.1 Inserting Data
 - 6.2 Updating Data
 - 6.3 Deleting Data
 - 6.4 Returning Data from Modified Rows
 - INSERT, UPDATE and DELETE reference pages
+- 3.4 Transactions
 
 ## Static interaction alternatives
 
@@ -203,4 +270,4 @@ Typed preview-and-update activity. move.sql starts with two comment lines: 1, a 
 
 ### mcq
 
-Apply question: student 4 cancelled the enrollment in course 102; which statement removes only that enrollment? Options: DELETE FROM enrollments WHERE student_id = 4; (also removes student 4's enrollment in course 103); DELETE FROM enrollments WHERE student_id = 4 AND course_id = 102; (the answer: both key columns match exactly one row); DELETE FROM enrollments WHERE course_id = 102; (removes all three enrollments in course 102); DELETE FROM enrollments WHERE student_id = 4 OR course_id = 102; (OR matches four rows). Retry: to change only Femi's email, use UPDATE students SET email = 'femi.o@example.com' WHERE student_id = 6; the student_id primary key matches only Femi. With no WHERE, the UPDATE targets all six rows and fails on the unique email; WHERE city IS NULL also matches Chen.
+Apply question: student 4 cancelled the enrollment in course 102; which statement removes only that enrollment? Options: DELETE FROM enrollments WHERE student_id = 4; (also removes student 4's enrollment in course 103); DELETE FROM enrollments WHERE student_id = 4 AND course_id = 102; (the answer: both key columns match exactly one row); DELETE FROM enrollments WHERE course_id = 102 AND student_id >= 3; (also removes student 3's enrollment in course 102); DELETE FROM enrollments WHERE student_id = 4 OR course_id = 102; (OR matches four rows). Retry: to change only Femi's email, use UPDATE students SET email = 'femi.o@example.com' WHERE student_id = 6; the student_id primary key matches only Femi. With no WHERE, the UPDATE targets all six rows and fails on the unique email; the other WHERE clauses also match Chen, or Ana and Dina, and two rows cannot share one email.

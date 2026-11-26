@@ -8,164 +8,266 @@
 
 ## Teaching
 
-### Activity 1 of 4: Start with a guess
+### Guess what NOT IN does with a NULL
 
-Practice prediction, not scored. The list below holds some instructor ids and one NULL. Predict this NOT IN result before seeing the NULL trap.
+This is a guess before the rule. You met `IN (...)` in filtering: it is true when a value equals any item in the list. `NOT IN (...)` is meant to be true when it equals none of them. This list holds two instructor ids and one NULL.
+
+`instructors` (other columns not shown)
+
+| instructor_id | name |
+| --- | --- |
+| 1 | Mara |
+| 2 | Tomas |
+| 3 | Priya |
+| 4 | Ken |
+
+### Activity checks
+
+In progress
+
+You made a guess, chose a confidence and read why each option is right or wrong.
 
 ### Your task
 
-1. Where to look: The query below.
-2. What to do: Choose one prediction.
-3. What to expect: Pick confidence, then press Check my prediction.
-4. How to know it's done: Feedback explains every option; a wrong guess is fine.
+Guess: which names does this NOT IN query return?
 
-### What success looks like
+1. Read the query and the table in the reading column.
+2. Under Prediction, choose one answer.
+3. Choose your confidence, then press Check my prediction.
 
-You made a prediction and read why each option is right or wrong.
+### Find students with no enrollment
 
-### Activity 2 of 4: Find rows with no match
-
-An anti-join returns left-side rows for which no related right-side row exists. One form left-joins, then keeps only rows where the right-side key is NULL:
+An anti-join returns the rows of one table that have no matching row in another. One way to write it: LEFT JOIN, which you met in the previous topic, then keep only the rows where the right table's key came back NULL.
 
 ```
 SELECT c.course_id, c.title
 FROM courses AS c
 LEFT JOIN enrollments AS e
   ON c.course_id = e.course_id
-WHERE e.course_id IS NULL;
+WHERE e.course_id IS NULL
+ORDER BY c.course_id;
 ```
 
-That finds courses nobody has enrolled in. Because `e.course_id` is a non-NULL key in real enrollment rows, NULL here can only mean “no match.” `NOT EXISTS` is another clear form and avoids NOT IN’s NULL behavior.
+Its result: the courses nobody has enrolled in
 
-### Where this fits
+| course_id | title |
+| --- | --- |
+| 104 | Web Basics |
+| 105 | Intro to Testing |
 
-Decision: A report asks “which expected rows have nothing related yet?”
+A real enrollment row always has a `course_id`, so NULL there can only mean “no match”. Test a right-side column that is never NULL in its own table, such as its key.
 
-Good fit: Use LEFT JOIN ... IS NULL or NOT EXISTS for missing relationships, such as students with no enrollment.
+`students` (other columns not shown)
 
-Choose something else when: Use a normal LEFT JOIN without the NULL filter when both matched and unmatched rows belong in the report; an anti-join intentionally keeps only the unmatched ones.
+| student_id | name |
+| --- | --- |
+| 1 | Ana |
+| 2 | Ben |
+| 3 | Chen |
+| 4 | Dina |
+| 5 | Eli |
+| 6 | Femi |
+
+`enrollments` (other columns not shown)
+
+| student_id | course_id |
+| --- | --- |
+| 1 | 101 |
+| 1 | 102 |
+| 2 | 101 |
+| 2 | 103 |
+| 3 | 101 |
+| 3 | 102 |
+| 4 | 102 |
+| 4 | 103 |
+| 5 | 101 |
+
+### On the job
+
+Decision: Do I need the rows that have a match, or the ones that have none?
+
+Use it when: The question is “which customers have never ordered?” or “which courses has nobody taken?”; use LEFT JOIN with an IS NULL test on the right table's key.
+
+→ Choose something else when: Matched and unmatched rows both belong in the result; use a plain LEFT JOIN without the IS NULL test, as in the previous topic.
+
+At work: Follow-up and clean-up tasks such as “customers who never placed an order” or “accounts that never logged in” are anti-join queries.
+
+In interviews: You may be asked to find the customers who have never placed an order; this activity practises exactly that shape.
+
+### Activity checks
+
+In progress
+
+- Only students with no enrollment appear, found with a LEFT JOIN and an IS NULL test on the enrollments key
+- The result shows exactly `student_id` and `name`
 
 ### Your task
 
-List student_id and name for students with no enrollment. Use LEFT JOIN and test the right-side key for NULL. Sort by student_id.
+Ticket: student services wants to email every student who has not enrolled in any course yet.
 
-1. Where to look: The sample rows and unenrolled-students.sql editor below.
-2. What to type: Write one SELECT on the empty line under the comment.
-3. What to expect: Press Run; Output shows the result rows or an honest lesson limit.
-4. How to know it's done: Every local check below reads done. Two counted runs settle the activity without penalty.
+1. In unenrolled-students.sql, write one SELECT with `students` on the left of a LEFT JOIN to `enrollments`.
+2. Keep only the rows where the enrollments key is NULL, and show student_id and name.
+3. Sort by student_id and press Run.
 
-### What success looks like
+### List each instructor with their lead
 
-- Only students with no enrollment appear
-- The NULL test is on the right-side key after a LEFT JOIN
-
-### Activity 3 of 4: Use two aliases for two roles
-
-A self-join uses the same table twice. Aliases make each occurrence a different role:
+In `instructors`, `lead_id` points at another row of the same table: the instructor's lead. A self-join joins a table to itself. Two aliases give the two copies different roles: one copy for the person, one for their lead. An alias can be a whole word, such as `employee`.
 
 ```
-FROM staff AS worker
-LEFT JOIN staff AS boss
-  ON worker.boss_id = boss.staff_id
+SELECT w.name, l.name
+FROM instructors AS w
+INNER JOIN instructors AS l
+  ON w.lead_id = l.instructor_id
+WHERE w.name = 'Ken';
 ```
 
-The worker row stores boss_id; the boss row supplies that person’s name. LEFT JOIN keeps the top-level person whose boss_id is NULL.
+Its result: Ken's row stores lead_id 2, which is Tomas's instructor_id
+
+| name | name |
+| --- | --- |
+| Ken | Tomas |
+
+Both result columns are called `name`, so a real report names them with AS. Mara has no lead (NULL), so an inner self-join would drop her; LEFT JOIN keeps her. The same shape answers “list each employee with their manager”.
+
+`instructors`
+
+| instructor_id | name | lead_id |
+| --- | --- | --- |
+| 1 | Mara | NULL |
+| 2 | Tomas | 1 |
+| 3 | Priya | 1 |
+| 4 | Ken | 2 |
+
+### Activity checks
+
+In progress
+
+- Every instructor appears with their lead's name, or NULL for Mara, in columns named `employee` and `manager`
+- The rows come from `instructors` used twice, one copy named employee and one named manager
 
 ### Your task
 
-List every instructor with their lead’s name, in two result columns named `employee` and `manager`. Keep Mara, whose manager is NULL. Sort by employee.instructor_id.
+Ticket: HR needs a reporting-lines list: every instructor with the name of their lead, including Mara, who has none.
 
-1. Where to look: The sample rows and reporting-lines.sql editor below.
-2. What to type: Write one SELECT on the empty line under the comment.
-3. What to expect: Press Run; Output shows the result rows or an honest lesson limit.
-4. How to know it's done: Every local check below reads done. Two counted runs settle the activity without penalty.
+1. In reporting-lines.sql, join `instructors` to itself with the aliases `employee` and `manager`, using LEFT JOIN.
+2. Show two columns named `employee` and `manager`.
+3. Sort by the employee's instructor_id and press Run.
 
-### What success looks like
+### Choose a safe way to find unmatched rows
 
-- Every employee appears with the correct manager name or NULL, in columns named employee and manager
-- Two aliases give the table its employee and manager roles
+A subquery is a SELECT in brackets inside another query. `NOT EXISTS (SELECT ...)` is true when the inner SELECT returns no rows. The inner SELECT can use the outer row, so it checks each row in turn:
 
-### Activity 4 of 4: Avoid the nullable NOT IN trap
+```
+SELECT c.title
+FROM courses AS c
+WHERE NOT EXISTS (
+  SELECT 1 FROM enrollments AS e
+  WHERE e.course_id = c.course_id
+);
+```
 
-`NOT EXISTS` asks directly whether no matching row exists. With `NOT IN`, any NULL returned by the subquery can make a non-match unknown, so WHERE selects nothing.
+Its result
+
+| title |
+| --- |
+| Web Basics |
+| Intro to Testing |
+
+`SELECT 1` returns a placeholder; only whether a row exists matters. `NOT IN (SELECT instructor_id FROM courses)` instead compares with the list the inner SELECT returns. Course 104's instructor_id is NULL, so that list holds a NULL and, as in Activity 1, NOT IN keeps nobody. In the options, `i` is the alias of `instructors` in the outer query.
+
+`courses` (other columns not shown)
+
+| course_id | instructor_id |
+| --- | --- |
+| 101 | 2 |
+| 102 | 3 |
+| 103 | 3 |
+| 104 | NULL |
+| 105 | 4 |
+
+### Activity checks
+
+In progress
+
+You chose the pattern that still works when the other table holds NULLs and read why the others do not.
 
 ### Your task
 
-Which pattern safely finds instructors who teach no course, even though courses.instructor_id may be NULL?
+Which WHERE safely finds instructors who teach no course, even though `courses.instructor_id` can be NULL?
 
-Same idea, new form: Which self-join condition connects an employee row to its manager row?
+Same idea, new form: which self-join condition connects an employee row to its manager row?
 
-1. Where to look: The four options.
-2. What to do: Choose one and report confidence.
-3. What to expect: Every option is explained; one wrong answer gets one retry.
-4. How to know it's done: Feedback appears and the recap opens.
-
-### What success looks like
-
-You choose the query that matches the report requirement and can explain why the others do not.
+1. Under Choose the pattern, pick one option.
+2. Choose your confidence, then press Check answer.
+3. If your first answer misses, a second question appears: answer it and press Check second try.
 
 ## Model
 
 The query
 
 ```
-SELECT name FROM instructors WHERE instructor_id NOT IN (2, 3, NULL);
+SELECT name FROM instructors
+WHERE instructor_id NOT IN (2, 3, NULL);
 ```
 
 ## Recap
 
-- An anti-join keeps left-side rows with no right-side match; use LEFT JOIN ... IS NULL or NOT EXISTS.
-- NOT IN can select no rows when its subquery returns a NULL, because the result becomes unknown.
-- A self-join gives one table two aliases so each occurrence can play a different role.
+- An anti-join keeps the rows of one table that have no match in another: LEFT JOIN, then test the right table's key with IS NULL, or use NOT EXISTS.
+- NOT IN keeps nothing when its list or subquery contains a NULL, because the comparison becomes unknown.
+- A self-join gives one table two aliases so each copy plays a different role, such as employee and manager.
 
 This is the final topic in this module.
 
 ## Cheat sheet
 
-A coordinator compares a roster with a sign-in sheet, then circles every roster name that has no matching signature.
+A coordinator compares a class roster with a sign-in sheet, then circles every roster name that has no signature next to it.
 
-The roster is the left table; the missing signature is the NULL right-side key.
+The roster is the left table; a missing signature is the NULL right-side key.
 
-Where to act: The empty line in unenrolled-students.sql.
+Where to act: The FROM and LEFT JOIN lines of your query.
 
-Next step: Start with students on the left and LEFT JOIN enrollments on student_id.
+Next step: Which table holds every row you must be able to see, and which one may have no match? The first goes before LEFT JOIN, joined on the column they share.
 
 Another hint Another hint, 2 of 2 for Activity 2
 
-Where to act: The unfinished clause or expression in your query.
+Where to act: The WHERE line after the join.
 
-Next step: After the join, WHERE should test the enrollments alias’s student_id with IS NULL.
+Next step: After a LEFT JOIN, a student with no enrollment gets NULL in every enrollments column. Keep only those rows with a WHERE test on the enrollments key.
 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
-- Anything else is a Lesson check, not a claim that your SQL is invalid. Text sorting in a real server follows its collation.
+- ERROR and DETAIL lines use PostgreSQL's own wording; psql's LINE pointer and most HINT lines are left out.
+- Anything else is marked Not in this practice editor: a limit of this page, not a sign that your SQL is wrong. psql commands such as `\copy`, transactions and CREATE TABLE are not available here.
+- Text sorts by character code here; a real server sorts by its collation, so mixed-case text can sort differently.
 - Run is deterministic and bounded: no network, no files and no real database.
 
-Where to act: The empty line in reporting-lines.sql.
+Where to act: The FROM and LEFT JOIN lines.
 
-Next step: Write instructors twice, first AS employee and then AS manager in a LEFT JOIN.
+Next step: Write instructors twice, first AS employee, then AS manager after LEFT JOIN.
 
 Another hint Another hint, 2 of 2 for Activity 3
 
-Where to act: The unfinished clause or expression in your query.
+Where to act: The ON line and the SELECT list.
 
-Next step: Compare employee.lead_id with manager.instructor_id, then select one name from each alias and name the result columns employee and manager with AS.
+Next step: In the Ken example, one copy's lead_id was compared with the other copy's instructor_id. Decide which of your aliases plays each part, then take one name from each copy.
 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
-- Anything else is a Lesson check, not a claim that your SQL is invalid. Text sorting in a real server follows its collation.
+- ERROR and DETAIL lines use PostgreSQL's own wording; psql's LINE pointer and most HINT lines are left out.
+- Anything else is marked Not in this practice editor: a limit of this page, not a sign that your SQL is wrong. psql commands such as `\copy`, transactions and CREATE TABLE are not available here.
+- Text sorts by character code here; a real server sorts by its collation, so mixed-case text can sort differently.
 - Run is deterministic and bounded: no network, no files and no real database.
 
 |  |  |
 | --- | --- |
-| `LEFT JOIN ... WHERE right.key IS NULL` | unmatched left rows |
-| `WHERE NOT EXISTS (correlated subquery)` | NULL-safe missing-match test |
-| `table AS employee ... table AS manager` | two roles for one table |
-| `employee.lead_id = manager.id` | self-referencing relationship |
+| `LEFT JOIN ... WHERE right.key IS NULL` | rows with no match |
+| `WHERE NOT EXISTS (SELECT 1 FROM ... WHERE ...)` | no match, safe with NULLs |
+| `instructors AS employee ... instructors AS manager` | two roles for one table |
+| `employee.lead_id = manager.instructor_id` | follow a key within one table |
 
 ## Sources
 
-Checked against current official PostgreSQL documentation on 2026-10-16. The bounded editor runs only the documented subset named on this page; unsupported SQL is labelled as a lesson limit, not rejected as invalid PostgreSQL.
+Checked against current official PostgreSQL documentation on 2026-11-25. The practice editor runs only the subset listed under it; anything else is marked as not available in this practice editor, not as invalid PostgreSQL.
 
 - Joined tables and aliases
 - EXISTS and NOT IN
@@ -175,16 +277,16 @@ Checked against current official PostgreSQL documentation on 2026-10-16. The bou
 
 ### predict
 
-Prediction options: Mara and Ken; Mara only; No rows; An ERROR because NULL is in the list
+Prediction (practice, not scored): instructors are 1 Mara, 2 Tomas, 3 Priya and 4 Ken. Which names does SELECT name FROM instructors WHERE instructor_id NOT IN (2, 3, NULL); return? Options: Mara and Ken; Mara only; No rows; An ERROR because NULL is in the list. Answer: no rows, because comparing with the NULL item gives unknown, so NOT IN is never true.
 
 ### explore
 
-Write a left anti-join that finds students with no enrollment.
+Typed anti-join activity. unenrolled-students.sql starts with a comment line. Write one SELECT with students on the left of a LEFT JOIN to enrollments on student_id, keeping only rows where the enrollments key IS NULL, showing student_id and name, sorted by student_id. A correct run shows only Femi.
 
 ### explore
 
-Write a self left join from employee.lead_id to manager.instructor_id.
+Typed self-join activity. reporting-lines.sql starts with a comment line. Write one SELECT that joins instructors to itself with the aliases employee and manager and a LEFT JOIN, showing the two names in columns named employee and manager, sorted by the employee's instructor_id. A correct run shows Mara with NULL, Tomas and Priya with Mara, and Ken with Tomas.
 
 ### mcq
 
-Apply question: Which pattern safely finds instructors who teach no course, even though courses.instructor_id may be NULL? Options: WHERE i.instructor_id NOT IN (SELECT instructor_id FROM courses) (the subquery includes NULL, so NOT IN can evaluate to unknown for every non-matching instructor.); WHERE NOT EXISTS (SELECT 1 FROM courses c WHERE c.instructor_id = i.instructor_id) (the answer: the correlated subquery tests a real match, and NOT EXISTS keeps the instructor when none exists.); WHERE i.instructor_id <> (SELECT instructor_id FROM courses) (a multi-row scalar comparison is not the anti-join needed here.); WHERE c.instructor_id = NULL (ordinary equality does not test NULL, and c is not introduced in this condition.). Retry: Which self-join condition connects an employee row to its manager row? The answer is employee.lead_id = manager.instructor_id: the employee stores the referenced manager id in lead_id.
+Apply question: Which WHERE safely finds instructors who teach no course, even though courses.instructor_id can be NULL? Options: WHERE i.instructor_id NOT IN (SELECT instructor_id FROM courses) (the list contains NULL, so NOT IN keeps nobody); WHERE NOT EXISTS (SELECT 1 FROM courses AS c WHERE c.instructor_id = i.instructor_id) (the answer: it checks each instructor for a real match); WHERE i.instructor_id <> (SELECT instructor_id FROM courses) (<> needs exactly one value, but the subquery returns five rows); WHERE NOT EXISTS (SELECT 1 FROM courses AS c WHERE c.instructor_id = c.instructor_id) (the inner WHERE never mentions the outer instructor, so a match always exists and nobody is kept). Retry: which self-join condition connects an employee row to its manager row.

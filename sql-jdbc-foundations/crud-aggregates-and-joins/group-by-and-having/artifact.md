@@ -8,24 +8,38 @@
 
 ## Teaching
 
-### Activity 1 of 4: Start with a guess
+### Guess what happens to an ungrouped name
 
-Practice prediction, not scored. This query asks for one count per city but also selects each student name. Predict what PostgreSQL does.
+This is a guess before the grouping rule. `GROUP BY city` asks for one result row per city, with `COUNT(*)` counting the students in each. This query also asks for each student's `name`, and Leeds has two students, Ana and Dina.
+
+`students` (email not shown)
+
+| student_id | name | city |
+| --- | --- | --- |
+| 1 | Ana | Leeds |
+| 2 | Ben | York |
+| 3 | Chen | NULL |
+| 4 | Dina | Leeds |
+| 5 | Eli | Bristol |
+| 6 | Femi | NULL |
+
+### Activity checks
+
+In progress
+
+You made a guess, chose a confidence and read why each option is right or wrong.
 
 ### Your task
 
-1. Where to look: The query below.
-2. What to do: Choose one prediction.
-3. What to expect: Pick confidence, then press Check my prediction.
-4. How to know it's done: Feedback explains every option; a wrong guess is fine.
+Guess: what does PostgreSQL do with this query?
 
-### What success looks like
+1. Read the query and the table in the reading column.
+2. Under Prediction, choose one answer.
+3. Choose your confidence, then press Check my prediction.
 
-You made a prediction and read why each option is right or wrong.
+### Count students in each city
 
-### Activity 2 of 4: One result row per group
-
-`GROUP BY credits` puts courses with the same credits value into one group, then aggregates each group separately. The result has one row per distinct value; NULL values, when a column has them, form one group of their own.
+`GROUP BY credits` puts the courses with the same credits value into one group, then runs the aggregate once per group. The result has one row per distinct value. When the column has NULLs, they form one group of their own.
 
 ```
 SELECT credits, COUNT(*) AS course_count
@@ -34,78 +48,123 @@ GROUP BY credits
 ORDER BY credits;
 ```
 
-Ascending order already puts the NULL group last; with `DESC` you would add `NULLS LAST`.
+Its result
 
-Here, `name` must be grouped or aggregated: grouping by `city` does not determine one name, so a single student name cannot represent a whole city group, but COUNT(*) can summarize it. (PostgreSQL also accepts a column that a grouped primary key determines; this lesson does not rely on that.)
+| credits | course_count |
+| --- | --- |
+| 2 | 2 |
+| 3 | 2 |
+| 4 | 1 |
 
-### Where this fits
+Every column in the SELECT list must be either in GROUP BY or inside an aggregate. That is why Activity 1 failed: one city group can hold several names, but `COUNT(*)` can sum the whole group up. (PostgreSQL has one narrow exception, which this lesson does not use.) Sorting puts a NULL group last by default; `NULLS LAST` says so explicitly.
 
-Decision: A report needs totals per category rather than one grand total.
+Starting rows of `students` (email not shown)
 
-Good fit: Use GROUP BY when every output row represents a category, such as one count per city or course.
+| student_id | name | city |
+| --- | --- | --- |
+| 1 | Ana | Leeds |
+| 2 | Ben | York |
+| 3 | Chen | NULL |
+| 4 | Dina | Leeds |
+| 5 | Eli | Bristol |
+| 6 | Femi | NULL |
 
-Choose something else when: Use a window function when detail rows must stay visible beside a group total; GROUP BY collapses the detail rows.
+### On the job
+
+Decision: One total for the whole table, or one total per category?
+
+Use it when: Each output row should stand for a category, such as one count per city, per product or per week.
+
+→ Choose something else when: You need one number for the whole table, or the detail rows themselves; use an aggregate without GROUP BY, as in the aggregate functions topic, or no aggregate at all.
+
+At work: Breakdowns such as “orders per region” or “sign-ups per week” are typical report and dashboard requests, and each one is a GROUP BY.
+
+In interviews: You may be asked to count rows per category, or to explain why a selected column must appear in GROUP BY; Activities 1 and 2 practise both.
+
+### Activity checks
+
+In progress
+
+- Each city, and the NULL group, has one row with its count, sorted by city with NULL last
+- The columns are named `city` and `student_count`
 
 ### Your task
 
-Return one row per city with columns `city` and `student_count`. Count all rows in each group. Sort by city and put the NULL group last.
+Ticket: marketing's “students per city” query stops with an ERROR. Fix it, counting students with no city too.
 
-1. Where to look: The sample rows and students-by-city.sql editor below.
-2. What to type: Write one SELECT on the empty line under the comment.
-3. What to expect: Press Run; Output shows the result rows or an honest lesson limit.
-4. How to know it's done: Every local check below reads done. Two counted runs settle the activity without penalty.
+1. students-by-city.sql starts with the query from Activity 1. Change it so the result has the columns `city` and `student_count`.
+2. Count all rows in each city group.
+3. Sort by city with the NULL group last, and press Run.
 
-### What success looks like
+### Keep only the busy courses
 
-- Each distinct city, including NULL, has one result row
-- COUNT(*) reports the size of each group
-
-### Activity 3 of 4: Filter rows before grouping, groups after
-
-`WHERE` runs before groups exist, so it can filter input rows but cannot test `COUNT(*)`. `HAVING` runs after grouping and can test an aggregate result.
+`WHERE` runs before groups exist, so it filters rows but cannot test `COUNT(*)`. `HAVING` runs after grouping, so it can test an aggregate and keep or drop whole groups.
 
 ```
-SELECT category, COUNT(*)
-FROM items
-WHERE active = true
-GROUP BY category
-HAVING COUNT(*) >= 3;
+SELECT student_id, COUNT(*) AS graded
+FROM enrollments
+WHERE grade IS NOT NULL
+GROUP BY student_id
+HAVING COUNT(*) >= 2
+ORDER BY student_id;
 ```
 
-Read it in stages: keep active rows, form category groups, compute each count, then keep groups whose count reaches three.
+Its result
+
+| student_id | graded |
+| --- | --- |
+| 2 | 2 |
+
+Read it in stages: WHERE keeps the graded rows, GROUP BY makes one group per student, COUNT counts each group, and HAVING keeps only students with at least two grades. Only Ben (student 2) has two.
+
+Rows of `enrollments`
+
+| student_id | course_id | grade |
+| --- | --- | --- |
+| 1 | 101 | 82 |
+| 1 | 102 | NULL |
+| 2 | 101 | 67 |
+| 2 | 103 | 74 |
+| 3 | 101 | NULL |
+| 3 | 102 | 58 |
+| 4 | 102 | 91 |
+| 4 | 103 | NULL |
+| 5 | 101 | 45 |
+
+### Activity checks
+
+In progress
+
+- Only the courses with at least 3 enrollments appear, in columns course_id and `enrollment_count`
+- HAVING, not WHERE, holds the count condition
 
 ### Your task
 
-Show course_id and `enrollment_count` only for courses with at least 3 enrollments. Sort by course_id.
+Ticket: scheduling needs the courses with at least 3 enrollments, to book them bigger rooms.
 
-1. Where to look: The sample rows and busy-courses.sql editor below.
-2. What to type: Write one SELECT on the empty line under the comment.
-3. What to expect: Press Run; Output shows the result rows or an honest lesson limit.
-4. How to know it's done: Every local check below reads done. Two counted runs settle the activity without penalty.
+1. In busy-courses.sql, write one SELECT over `enrollments` with the columns course_id and `enrollment_count`.
+2. Keep only course groups with at least 3 enrollments.
+3. Sort by course_id and press Run.
 
-### What success looks like
+### Put each condition in the right place
 
-- The result has one row for each qualifying course
-- HAVING filters the computed group count
+A condition on single rows goes in WHERE, before GROUP BY. A condition on a group's aggregate, such as `COUNT(*) >= 2`, goes in HAVING, after GROUP BY, because no group exists until GROUP BY has run.
 
-### Activity 4 of 4: Place each condition in its stage
+### Activity checks
 
-WHERE cannot use a group aggregate because no group has been built yet. HAVING can use one because it runs after GROUP BY.
+In progress
+
+You chose the query that puts the count condition in the right place and read why the others do not.
 
 ### Your task
 
-Which query keeps only city groups with at least two students?
+Which query keeps only the city groups with at least two students?
 
-Same idea, new form: Which SELECT list is valid with `GROUP BY course_id`?
+Same idea, new form: which SELECT list is valid with `GROUP BY course_id`?
 
-1. Where to look: The four options.
-2. What to do: Choose one and report confidence.
-3. What to expect: Every option is explained; one wrong answer gets one retry.
-4. How to know it's done: Feedback appears and the recap opens.
-
-### What success looks like
-
-You choose the query that matches the report requirement and can explain why the others do not.
+1. Under Choose the query, pick one option.
+2. Choose your confidence, then press Check answer.
+3. If your first answer misses, a second question appears: answer it and press Check second try.
 
 ## Model
 
@@ -117,46 +176,50 @@ SELECT city, name, COUNT(*) FROM students GROUP BY city;
 
 ## Recap
 
-- GROUP BY produces one result row per distinct grouping value.
-- Select grouped columns and aggregates; a column such as name that the grouping key does not determine must be grouped or aggregated.
-- WHERE filters input rows before grouping; HAVING filters groups after aggregates are computed.
+- GROUP BY returns one row per distinct value of the grouping column; NULLs form one group.
+- Every selected column must be in GROUP BY or inside an aggregate.
+- WHERE filters rows before grouping; HAVING filters groups after the aggregates are computed.
 
 Next topic: Inner and left joins
 
 ## Cheat sheet
 
-A teacher sorts survey cards into piles by city, then counts each pile. They can label a pile “Leeds,” but cannot put one student’s name on it as if that name represented everyone.
+A teacher sorts survey cards into piles by city, then counts each pile. They can label a pile “Leeds”, but cannot write one student's name on it as if that name stood for everyone.
 
-GROUP BY makes the piles; aggregate functions summarize each pile.
+GROUP BY makes the piles; aggregate functions sum each pile up.
 
-Where to act: The empty line in students-by-city.sql.
+Where to act: The SELECT list of the starting query.
 
-Next step: Select city and COUNT(*), then group by the non-aggregate selected column.
+Next step: Each output row stands for one city, so nothing in the SELECT list may name a single student. Remove that column and keep the count, with the name the task asks for.
 
 Another hint Another hint, 2 of 2 for Activity 2
 
-Where to act: The unfinished clause or expression in your query.
+Where to act: The ORDER BY line at the end.
 
-Next step: Order by city; ascending already puts the missing-city group last, and NULLS LAST says so explicitly.
+Next step: Order by city; ascending order already puts the NULL group last, and NULLS LAST says so explicitly.
 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
-- Anything else is a Lesson check, not a claim that your SQL is invalid. Text sorting in a real server follows its collation.
+- ERROR and DETAIL lines use PostgreSQL's own wording; psql's LINE pointer and most HINT lines are left out.
+- Anything else is marked Not in this practice editor: a limit of this page, not a sign that your SQL is wrong. psql commands such as `\copy`, transactions and CREATE TABLE are not available here.
+- Text sorts by character code here; a real server sorts by its collation, so mixed-case text can sort differently.
 - Run is deterministic and bounded: no network, no files and no real database.
 
-Where to act: The empty line in busy-courses.sql.
+Where to act: The SELECT list and the GROUP BY line.
 
-Next step: Select course_id with COUNT(*), then group by course_id.
+Next step: Decide what each output row stands for: one course. Group by the column that names a course, and count the rows in each group. This task needs no WHERE.
 
 Another hint Another hint, 2 of 2 for Activity 3
 
-Where to act: The unfinished clause or expression in your query.
+Where to act: The line just after GROUP BY.
 
-Next step: After GROUP BY, add HAVING with the same COUNT(*) expression and compare it with 3.
+Next step: The condition is about the size of each group, which only exists after GROUP BY. Which clause filters groups?
 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
-- Anything else is a Lesson check, not a claim that your SQL is invalid. Text sorting in a real server follows its collation.
+- ERROR and DETAIL lines use PostgreSQL's own wording; psql's LINE pointer and most HINT lines are left out.
+- Anything else is marked Not in this practice editor: a limit of this page, not a sign that your SQL is wrong. psql commands such as `\copy`, transactions and CREATE TABLE are not available here.
+- Text sorts by character code here; a real server sorts by its collation, so mixed-case text can sort differently.
 - Run is deterministic and bounded: no network, no files and no real database.
 
 |  |  |
@@ -168,7 +231,7 @@ Next step: After GROUP BY, add HAVING with the same COUNT(*) expression and comp
 
 ## Sources
 
-Checked against current official PostgreSQL documentation on 2026-10-16; NULL group placement was rechecked on 2026-11-06. The bounded editor runs only the documented subset named on this page; unsupported SQL is labelled as a lesson limit, not rejected as invalid PostgreSQL.
+Checked against current official PostgreSQL documentation on 2026-11-25. The practice editor runs only the subset listed under it; anything else is marked as not available in this practice editor, not as invalid PostgreSQL.
 
 - GROUP BY and HAVING
 - SELECT: GROUP BY and HAVING
@@ -179,16 +242,16 @@ Checked against current official PostgreSQL documentation on 2026-10-16; NULL gr
 
 ### predict
 
-Prediction options: One arbitrary name appears for each city; Every name is joined into one text value; An ERROR: name is neither grouped nor aggregated; Six rows appear because name cancels grouping
+Prediction (practice, not scored): what does PostgreSQL do with SELECT city, name, COUNT(*) FROM students GROUP BY city; ? Options: one name, picked at random, appears for each city; every name is joined into one text value; an ERROR, because name is neither grouped nor inside an aggregate; six rows appear because name cancels grouping. Answer: an ERROR, because one city group can hold several names.
 
 ### explore
 
-Write a grouped SELECT that counts students per city and orders NULL last.
+Typed GROUP BY fix activity. students-by-city.sql starts with the failing query SELECT city, name, COUNT(*) FROM students GROUP BY city;. Fix it so it returns city and student_count, counting all rows in each city group, sorted by city with the NULL group last. A correct run shows Bristol 1, Leeds 2, York 1 and the NULL group 2.
 
 ### explore
 
-Write a grouped SELECT that keeps only course groups with at least three enrollment rows.
+Typed HAVING activity. busy-courses.sql starts with a comment line. Write one grouped SELECT over enrollments that returns course_id and enrollment_count, keeps only groups with at least three rows using HAVING, and sorts by course_id. A correct run shows course 101 with 4 and course 102 with 3.
 
 ### mcq
 
-Apply question: Which query keeps only city groups with at least two students? Options: `SELECT city, COUNT(*) FROM students WHERE COUNT(*) >= 2 GROUP BY city;` (WHERE runs before grouping, so `COUNT(*)` is not available there.); `SELECT city, COUNT(*) FROM students GROUP BY city HAVING COUNT(*) >= 2;` (the answer: GROUP BY forms city groups, then HAVING filters their counts.); `SELECT city, COUNT(*) FROM students HAVING COUNT(*) >= 2;` (city is selected without GROUP BY, so it cannot identify one aggregate result row.); `SELECT city FROM students GROUP BY COUNT(*) >= 2;` (GROUP BY needs the grouping expression, not a comparison on an aggregate.). Retry: Which SELECT list is valid with GROUP BY course_id? The answer is `course_id, COUNT(*)`: course_id identifies each group and `COUNT(*)` summarizes it.
+Apply question: Which query keeps only the city groups with at least two students? Options: SELECT city, COUNT(*) FROM students WHERE COUNT(*) >= 2 GROUP BY city ORDER BY city; (WHERE runs before grouping, so COUNT(*) is not available there); SELECT city, COUNT(*) FROM students GROUP BY city HAVING COUNT(*) >= 2; (the answer: GROUP BY forms city groups, then HAVING filters their counts); SELECT city, COUNT(*) FROM students HAVING COUNT(*) >= 2; (city is selected without GROUP BY); SELECT city, COUNT(*) FROM students GROUP BY COUNT(*) >= 2; (GROUP BY needs the column to group on, not a test of an aggregate). Retry: with GROUP BY course_id, the valid SELECT list is course_id, COUNT(*).

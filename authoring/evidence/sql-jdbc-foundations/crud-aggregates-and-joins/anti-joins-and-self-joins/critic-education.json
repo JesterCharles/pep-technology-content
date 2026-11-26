@@ -1,25 +1,145 @@
 {
   "schemaVersion": 1,
   "role": "education",
-  "author": "pep-m-sql-crud-edu-d442 (independent education critic; report data/pep-m-sql-crud-edu-d442/report.md, reviewed exact checkpoint d442eebb24ff610e567b649ad9d56d7264d6ee7d)",
+  "author": "c2-sql-edu-critic (independent education critic subagent, fresh context, read-only; reviewed commit 8a7daa17)",
   "reviewedPath": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
-  "reviewedSha256": "d7bbd1dcca1af3bbd89f3aeac5838fb6af7df2177ddaaeccf5b76ac761b78a1e",
+  "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d",
   "artifactHashes": {
-    "artifact.html": "d7bbd1dcca1af3bbd89f3aeac5838fb6af7df2177ddaaeccf5b76ac761b78a1e",
-    "artifact.gift": "c6800d5f07ae4c69d99ecaf36a6bb7c91e26ec05f2451521a80cf4184ba9532e"
+    "artifact.html": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d",
+    "artifact.gift": "d9f70aad4019e442b36eb015e186e7c4b8978eb63ab4cdd9b7c660aab4be6dbf"
   },
   "findings": [
     {
-      "id": "CEDU-12",
+      "id": "C2E-ANTI-01",
+      "severity": "critical",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
+        "selector": "#activity-3 [data-pep-activity-checks]"
+      },
+      "claim": "Semantic answer leakage (whole statement), graded by the same test as aggregate-functions C2E-AGG-01: after reading the checks and the task, the learner has only syntax to transcribe. Activity 3's second check, which sits above the task, says \"joined from the employee's lead_id to the manager's instructor_id\". That is the one reasoning step of a self-join, and hint 2 repeats it. The task already supplies the aliases, the column names and the sort, so the whole statement (SELECT employee.name AS employee, manager.name AS manager FROM instructors AS employee LEFT JOIN instructors AS manager ON employee.lead_id = manager.instructor_id ORDER BY employee.instructor_id) can be assembled without working out the direction. The same direction is then the answer to Activity 4's retry question.",
+      "evidence": [],
+      "recommendation": "Word the check by result (\"Each instructor's row shows the name of the instructor their lead_id points at\") and let hint 2 ask which row stores the link and which row it points at.",
+      "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d"
+    },
+    {
+      "id": "C2E-ANTI-02",
+      "severity": "high",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
+        "selector": "#activity-4 [data-pep-teaching]"
+      },
+      "claim": "C1/B1/C2: Activity 4 asks the learner to recognise a correlated NOT EXISTS subquery, but the reading column never shows a complete NOT EXISTS query. The first complete forms appear in the options, along with three things never taught: SELECT 1, an alias written without AS (courses c), and an outer alias i whose FROM instructors AS i is not shown. The courses rows behind \"Course 104 has a NULL instructor_id\" are not visible either.",
+      "evidence": [],
+      "recommendation": "Show one complete worked NOT EXISTS query with its outer FROM and its result, on a different pair of tables from the question (for example, courses with no enrollment). Explain SELECT 1 in a clause (\"the inner SELECT only has to return a row, so 1 is enough\"), and write AS in the options as the page does everywhere else.",
+      "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d"
+    },
+    {
+      "id": "C2E-ANTI-03",
       "severity": "medium",
       "location": {
         "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
-        "line": 995
+        "selector": ".le-problems"
       },
-      "claim": "Activity 3 checked result-column names the task never stated, and a hint-following self-join with correct rows lost both criteria, including the alias criterion it satisfied.",
+      "claim": "E1/F5: The Problems panel files ordinary SQL mistakes under the label \"Not in this practice editor\": a typo (\"SELEC * FROM students;\"), a missing comma between two VALUES rows and a missing semicolon all show that label, and so does the untouched starter (\"Write at least one SQL statement, ending with a semicolon\"), before the first Run. Reproduced on all eight pages of the module: a missing semicolon at the end of line 3 (SELECT name / FROM students / WHERE city = 'Leeds' / SELECT 2;) shows \"Ln 4 Not in this practice editor ... could not read the statement near select\". The editor's own limits list says the label means \"a limit of this page, not a sign that your SQL is wrong\", so a beginner whose SQL is wrong is told it may be fine.",
       "evidence": [],
-      "recommendation": "State the employee and manager column names in the task and hints and keep the alias criterion independent of output names.",
-      "reviewedSha256": "d7bbd1dcca1af3bbd89f3aeac5838fb6af7df2177ddaaeccf5b76ac761b78a1e"
+      "recommendation": "In page-build/controller.js, where EDITOR.kindLabels maps the adapter's limit kind to \"Not in this practice editor\", show parse problems under their own learner label, such as \"Check your SQL\", and keep \"Not in this practice editor\" for genuine subset limits (WITH, COPY, CREATE TABLE). If the adapter cannot tell the two apart, reword the matching LIMITS sentence in page-build/build.mjs so it no longer says the label is never a sign of wrong SQL.",
+      "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d"
+    },
+    {
+      "id": "C2E-ANTI-04",
+      "severity": "medium",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
+        "selector": ".le-problems"
+      },
+      "claim": "E5 (practice-feedback-policy 1.3): Parse problems point at the line after the mistake, not at the line to change. A missing comma at the end of line 2 of a multi-row INSERT is reported as \"Ln 3 ... near \"(\"\", and a missing semicolon at the end of line 4 is reported as \"Ln 5 ... near \"select\"\", which is the policy's own counter-example. Reproduced on all eight pages: a missing semicolon at the end of line 3 is reported at Ln 4. The message does not say that the place to look is the end of the line before.",
+      "evidence": [],
+      "recommendation": "Where the adapter reports \"could not read the statement near\" on the first token of a line, have the page controller (page-build/controller.js) add \"Check the end of the line before it too, for a missing comma or semicolon\", or point the Ln marker at the previous non-blank line. The adapter is copied unchanged, so the wording fix belongs in this module's controller unless a new adapter version changes the location.",
+      "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d"
+    },
+    {
+      "id": "C2E-ANTI-05",
+      "severity": "medium",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
+        "selector": "#fb-3"
+      },
+      "claim": "E1: The ambiguous-column translation always suggests the alias s. In Activity 3, a learner who writes an unqualified name in this self-join (aliases employee and manager) is told \"for example s.name\". No alias s exists, and following the suggestion gives a second ERROR.",
+      "evidence": [],
+      "recommendation": "In page-build/controller.js (SQLCHK.explain), take the example alias from the learner's FROM or JOIN, for example employee.name.",
+      "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d"
+    },
+    {
+      "id": "C2E-ANTI-06",
+      "severity": "medium",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
+        "selector": "#task-2 [data-pep-hint-step]"
+      },
+      "claim": "D5: Activity 2's hints dictate the whole anti-join: \"Copy the shape of the courses example: students on the left, enrollments on the right, joined on student_id\" and \"Test the enrollments alias's student_id with IS NULL\". The worked example has the same shape, so a learner who opens both hints is transcribing.",
+      "evidence": [],
+      "recommendation": "Make hint 2 a reasoning step, for example \"Which column can only be NULL when no enrollment matched?\"",
+      "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d"
+    },
+    {
+      "id": "C2E-ANTI-07",
+      "severity": "low",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
+        "selector": "#task-3"
+      },
+      "claim": "D3/cognitive load: The task asks for table aliases employee and manager and also output columns named employee and manager, so the same word names a table copy and a result column (employee.name AS employee). The worked example uses w and l, and the page has not said that an alias may be a whole word.",
+      "evidence": [],
+      "recommendation": "Use distinct names, for example aliases e and m (or emp and mgr) with output columns employee and manager, or say in one clause that an alias can be any name.",
+      "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d"
+    },
+    {
+      "id": "C2E-ANTI-08",
+      "severity": "low",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.gift",
+        "line": 21
+      },
+      "claim": "B1: Item \"o2 self-join condition\" writes JOIN without INNER in every option. The module always writes INNER JOIN and never says that JOIN alone means the same.",
+      "evidence": [],
+      "recommendation": "Write INNER JOIN in the options, or add \"JOIN on its own means INNER JOIN\" to the inner-and-left-joins teaching.",
+      "reviewedSha256": "d9f70aad4019e442b36eb015e186e7c4b8978eb63ab4cdd9b7c660aab4be6dbf"
+    },
+    {
+      "id": "C2E-ANTI-09",
+      "severity": "low",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
+        "selector": ".le-output"
+      },
+      "claim": "F5/B5: One editor has three names and two verdicts. Output opens with \"(lesson simulator, not real PostgreSQL server)\", the bar says \"Practice editor: follows PostgreSQL on this page's sample tables\", the status line says \"SQL practice editor\", and after a run that stops with a PostgreSQL ERROR the Problems tab still says \"No problems found by the lesson checker\".",
+      "evidence": [],
+      "recommendation": "Use one name everywhere, such as \"practice editor\". The \"not real\" tail of the Output header comes from EDITOR.language = 'PostgreSQL server' in page-build/controller.js, and its \"lesson simulator\" prefix and the Problems sentence come from the shared shell. Change the page-owned part now; ask for a shell version that, after an ERROR, says \"No problems before Run; see Output for the ERROR\" and drops \"not real\".",
+      "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d"
+    },
+    {
+      "id": "C2E-ANTI-10",
+      "severity": "low",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
+        "selector": "#pconf"
+      },
+      "claim": "B5: Shared controller and build wording. (1) Confidence choices read Low / Medium / High; DESIGN.md \"Assessment: options, confidence, feedback\" sets \"Guessing\", \"Fairly sure\", \"Certain\". (2) A wrong prediction opens \"Your guess was not this time; the right answer is marked.\", which drops a word. (3) The end-of-page message reads \"Activity 2 and 3 and 4 are not done yet\".",
+      "evidence": [],
+      "recommendation": "In page-build/build.mjs (CONF) use Guessing / Fairly sure / Certain. In page-build/controller.js write \"Your guess was not right this time; the right answer is marked.\" and join several open activities as \"Activities 2, 3 and 4 are not done yet\".",
+      "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d"
+    },
+    {
+      "id": "C2E-ANTI-11",
+      "severity": "low",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/anti-joins-and-self-joins/artifact.html",
+        "selector": "main#lesson"
+      },
+      "claim": "G7/F1: On a headless Chromium 570 x 1000 viewport, opening the page from file:// leaves it scrolled 157 px down with the hash #activity-1. The topic title, progress line and Topic objectives are above the first screen, which starts at the lesson-path row. At 1280 px the scroll was 0 on seven pages and 121 px on inner-and-left-joins. This was measured only under file:// in headless Chromium, and the cause was not found: history.replaceState did not throw when called after load, and turning off scroll anchoring did not change the result.",
+      "evidence": [],
+      "recommendation": "Check this in a desktop browser and in the platform embed. If it reproduces, do not set location.hash on first load (restore scroll to 0, or skip the hash when there is none), so the first screen shows the title and Topic objectives.",
+      "reviewedSha256": "8f2938e3859020aed22aac5ffeb3f18d0ee8f284fb212668ac3cbb82f33d0f9d"
     }
   ]
 }

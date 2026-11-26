@@ -1,37 +1,76 @@
 {
   "schemaVersion": 1,
   "role": "sme",
-  "author": "pep-m-sql-crud-sme-d442 (independent SQL/PostgreSQL critic; report data/pep-m-sql-crud-sme-d442/report.md, reviewed exact checkpoint d442eebb24ff610e567b649ad9d56d7264d6ee7d)",
+  "author": "c2-sql-sme-critic (independent PostgreSQL SME critic subagent, fresh context, read-only; reviewed commit 8a7daa17)",
   "reviewedPath": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html",
-  "reviewedSha256": "762eb16b8fb26b0823d1bbe3a933826c45449be71926e39456568d915457af9f",
+  "reviewedSha256": "8e8b9f9577e502382b18016758c6a21817491a977f6c4fadee029b6f7466256b",
   "artifactHashes": {
-    "artifact.html": "762eb16b8fb26b0823d1bbe3a933826c45449be71926e39456568d915457af9f",
-    "artifact.gift": "d18ac7011e412bdbbeb8a04bc2af9671388b352969b210dee496218092c07e1c"
+    "artifact.html": "8e8b9f9577e502382b18016758c6a21817491a977f6c4fadee029b6f7466256b",
+    "artifact.gift": "8bc209e07815486fbc0dc4f18dbd0b6d7be5757b1b5ac6b3951666008b50d892"
   },
   "findings": [
     {
-      "id": "SME-07",
-      "severity": "medium",
+      "id": "C2S-FILT-01",
+      "severity": "high",
       "location": {
         "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html",
-        "line": 993
+        "line": 1225
       },
-      "claim": "The sort goal was awarded to a query that never sorts by fee: a credits filter with the worked example's credits-descending, course_id order earned both goals.",
-      "evidence": [],
-      "recommendation": "Require an ORDER BY key referencing fee before the final course_id and say so in the failure note.",
-      "reviewedSha256": "762eb16b8fb26b0823d1bbe3a933826c45449be71926e39456568d915457af9f"
+      "claim": "Activity 4 apply question A ('A report lists all 3-credit courses, highest fee first, and must stay stable when two fees tie'): the keyed answer is WHERE credits = 3 ORDER BY fee DESC, course_id;, and its feedback says 'fee sorts high to low'. On this page's own courses table the 3-credit rows are 101 (120.00) and 103 (fee NULL). DESC puts NULL first by default, so the keyed answer lists the unpriced Data Modeling above SQL Basics: the opposite of 'highest fee first'. I checked this in the simulator (103 with NULL, then 101 with 120.00), and it matches PostgreSQL's documented default. Activity 3 on the same page teaches exactly this trap (DESC puts a NULL first, so add NULLS LAST), and the apply check then rewards the form that falls into it.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/queries-order.html",
+          "section": "PostgreSQL 19 (current): 7.5 Sorting Rows: \"By default, null values sort as if larger than any non-null value; that is, NULLS FIRST is the default for DESC order, and NULLS LAST otherwise.\"",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "7ceda2e198d6fd994834967300db47566b1aa4535cae4cd5ac4122d8e21e2a85"
+        }
+      ],
+      "recommendation": "Make the keyed option WHERE credits = 3 ORDER BY fee DESC NULLS LAST, course_id; and say why in its feedback. Alternatively, state in the stem that every 3-credit course has a fee and use a table without a NULL fee. Update the static alternative and artifact.md to match.",
+      "reviewedSha256": "8e8b9f9577e502382b18016758c6a21817491a977f6c4fadee029b6f7466256b"
     },
     {
-      "id": "L-res-1",
+      "id": "C2S-FILT-02",
+      "severity": "high",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html",
+        "line": 1198
+      },
+      "claim": "Check notes misjudge valid ORDER BY forms. H.orderCols reads only bare column names, so an output-column number or output alias counts as 'no such sort key'. Activity 2: ORDER BY 3, 1 DESC returns the right rows and does sort by city, then student_id descending, yet the near-miss note says 'your ORDER BY does not say city first, then student_id from high to low, so that order is not promised'. That is false: the order is promised. Activity 3: ORDER BY fee DESC NULLS LAST, 1 gets 'nothing breaks a tie between equal fees ... add course_id as the last sort column', but output column 1 is course_id. Neither task can then be completed with a valid, ordered query.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/queries-order.html",
+          "section": "PostgreSQL 19 (current): 7.5 Sorting Rows: \"A sort_expression can also be the column label or number of an output column\"",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "7ceda2e198d6fd994834967300db47566b1aa4535cae4cd5ac4122d8e21e2a85"
+        }
+      ],
+      "recommendation": "In H.orderCols, map an integer literal k to the k-th output column's expression and an output alias to the expression it names, before comparing. Or, if the lesson wants named columns, reword the notes so they ask for names without saying the order is not promised.",
+      "reviewedSha256": "8e8b9f9577e502382b18016758c6a21817491a977f6c4fadee029b6f7466256b"
+    },
+    {
+      "id": "C2S-FILT-03",
       "severity": "low",
       "location": {
         "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html",
-        "line": 993
+        "line": 1271
       },
-      "claim": "The credits-predicate invariant accepts any WHERE that mentions credits, so a tautological credits test combined with an explicit course list can pass filter.",
-      "evidence": [],
-      "recommendation": "Optionally require a comparison, BETWEEN or IN on credits.",
-      "reviewedSha256": "762eb16b8fb26b0823d1bbe3a933826c45449be71926e39456568d915457af9f"
+      "claim": "Shared SQLCHK.explain, branch 'operator does not exist': the advice says \"Check the quotes: '3' is text, 3 is a number.\" In PostgreSQL a quoted literal starts as type unknown and takes the other operand's type, so course_id = '104' is valid; the simulator itself runs it. This ERROR comes from operands that already have a type, such as title = 3 (text = integer) or credits LIKE '3%'. For credits LIKE '3%' the quote advice points away from the real cause. Related fidelity detail: for credits LIKE '3%' the simulator prints 'operator does not exist: integer ~~ text', but PostgreSQL reports the literal's type as unknown ('integer ~~ unknown'), even though the editor claims PostgreSQL's own wording for ERROR lines. Not executed: no PostgreSQL server or psql was available for this review, so the server-side outcome and exact ERROR wording come from the documented rule and PostgreSQL's usual message text, not from a run.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/typeconv-oper.html",
+          "section": "PostgreSQL 19 (current): 10.2 Operators, Operator Type Resolution: \"If one argument of a binary operator invocation is of the unknown type, then assume it is the same type as the other argument\"",
+          "retrievedAt": "2026-11-26T00:30:00Z",
+          "textSha256": "56e4fff14d06612d09c29b5bd20a309eba0cee6845db00461e317818ade74607"
+        },
+        {
+          "url": "https://www.postgresql.org/docs/current/sql-syntax-lexical.html",
+          "section": "PostgreSQL 19 (current): 4.1.2.7 Constants of Other Types: the explicit type cast can be omitted when there is no ambiguity, \"in which case it is automatically coerced\"",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "b7f37e20ab98fa5dce546bae74b69162a2c2604669e9d2d43fce36fa86c3cfe5"
+        }
+      ],
+      "recommendation": "Reword the branch, for example: 'the two sides have different types, such as a text column compared with a number, or LIKE used on a number column; compare a column with a value of its own type.' In the simulator's LIKE type check, report an untyped literal as unknown.",
+      "reviewedSha256": "8e8b9f9577e502382b18016758c6a21817491a977f6c4fadee029b6f7466256b"
     }
   ]
 }
