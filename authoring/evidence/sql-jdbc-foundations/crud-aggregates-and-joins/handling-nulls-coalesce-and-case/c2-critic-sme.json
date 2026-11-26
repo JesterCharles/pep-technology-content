@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "c2-sql-sme-critic (independent PostgreSQL SME critic subagent, fresh context, read-only; reviewed commit 8a7daa17)",
+  "reviewedPath": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.html",
+  "reviewedSha256": "10dbcbf1d6830e82119f2280e2b88c6fc237077bc695622d7e09d2cf26e85e6c",
+  "artifactHashes": {
+    "artifact.html": "10dbcbf1d6830e82119f2280e2b88c6fc237077bc695622d7e09d2cf26e85e6c",
+    "artifact.gift": "c8f59444b94ffb8e07db49dda1ddf4078dfe54710f2c2d331244921a71ce0f21"
+  },
+  "findings": [
+    {
+      "id": "C2S-NULL-01",
+      "severity": "low",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/handling-nulls-coalesce-and-case/artifact.html",
+        "line": 1272
+      },
+      "claim": "Shared SQLCHK.explain, branch 'invalid input syntax for type': it always says 'a value does not fit its column. Text goes in single quotes; numbers and NULL do not.' On this page the likely trigger is a fallback of the wrong type, such as COALESCE(fee, 'Not priced') or CASE WHEN fee IS NULL THEN 'none' ELSE fee END. The simulator then shows ERROR: invalid input syntax for type numeric: \"Not priced\". No column is being stored, and the quotes are correct; the cause is that every COALESCE or CASE result must convert to one common type, here numeric. The plain-language advice sends the learner to the wrong fix.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/typeconv-union-case.html",
+          "section": "PostgreSQL 19 (current): 10.5 UNION, CASE, and Related Constructs: \"Convert all inputs to the final candidate type. Fail if there is not an implicit conversion from a given input type to the candidate type.\"",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "4ce17eb0235730c9c1c75d90caf307126fb4f6ad6b9c97d59f14da75da5a0ec7"
+        },
+        {
+          "url": "https://www.postgresql.org/docs/current/functions-conditional.html",
+          "section": "PostgreSQL 19 (current): 9.19.2 COALESCE: \"The COALESCE function returns the first of its arguments that is not null.\"",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "95c6f7b830aafe30b0733b4270a15b214f56e56227511225177d998b92b749f7"
+        }
+      ],
+      "recommendation": "Add a COALESCE/CASE-aware sentence to that branch, for example: 'If this comes from COALESCE or CASE, all its values must be the same kind: a numeric column needs a number fallback, and a text label needs a text column.' Or detect a coalesce or case in the failing statement and say that.",
+      "reviewedSha256": "10dbcbf1d6830e82119f2280e2b88c6fc237077bc695622d7e09d2cf26e85e6c"
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "author": "c2-sql-module-author (author of the C2 re-authoring; did not decide)",
+  "decidedBy": "c2-sql-reconciler (independent non-author reconciliation subagent, fresh context, read-only; reviewed commit 8a7daa17)",
+  "reviewedPath": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html",
+  "reviewedSha256": "8e8b9f9577e502382b18016758c6a21817491a977f6c4fadee029b6f7466256b",
+  "decisions": [
+    {
+      "findingId": "C2S-FILT-01",
+      "decision": "accept",
+      "rationale": "Reproduced. On this page's courses table, 'WHERE credits = 3 ORDER BY fee DESC, course_id' returns 103 (NULL fee) before 101 (120.00), so the keyed answer to 'highest fee first' lists the unpriced course first, the exact trap Activity 3 teaches. The NULL ordering is the simulator's, and it matches the cited documentation default; no server was run. The critic's second option ('state every 3-credit course has a fee') contradicts the page's own table, so the required fix is the first: make the keyed option 'WHERE credits = 3 ORDER BY fee DESC NULLS LAST, course_id;'. Then update its why/okNote in src/filtering-and-sorting.topic.js, the 'Question, with its answer' static block, artifact.md, and the distractor d text and feedback so it still differs only by the tie-breaker. This rewords the content of the apply item. The apply mechanics do not change.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    },
+    {
+      "findingId": "C2S-FILT-02",
+      "decision": "accept",
+      "rationale": "Reproduced. 'ORDER BY 3, 1 DESC' in Activity 2 returns the right order but gets 'your ORDER BY does not say city first ... so that order is not promised', which is false, because output-column numbers are valid sort keys (cited documentation). 'ORDER BY fee DESC NULLS LAST, 1' in Activity 3 gets 'nothing breaks a tie', although column 1 is course_id. SQLCHK.orderCols in authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/controller.js reads only k.e.col. Acceptable fix: map an integer literal k to the k-th select item's column, and an output alias to its expression, before comparing. This loosens what completes the activities, but it corrects the per-activity query check, not the attempt, retry or credit rules that the captain decision covers. If the task owner reads the constraint as covering check criteria, use the critic's fallback: keep the criterion and reword the notes to ask for column names ('name the sort columns instead of their numbers') without claiming the order is not promised. A note that calls a promised order unpromised must not ship.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    },
+    {
+      "findingId": "C2S-FILT-03",
+      "decision": "accept",
+      "rationale": "Reproduced. course_id = '104' runs and returns Web Basics, while credits LIKE '3%' gives 'operator does not exist: integer ~~ text', and the controller.js explain branch says 'Check the quotes: '3' is text, 3 is a number', which points away from the cause. The server wording ('integer ~~ unknown') is from the cited type-resolution documentation and was not executed. Fix in authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/controller.js: reword the 'operator does not exist' branch (two sides of different types, such as a text column compared with a number, or LIKE on a number column). The simulator's 'text' vs 'unknown' type name lives in the engine.js adapter: record a recipe finding.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    },
+    {
+      "findingId": "C2E-FILT-01",
+      "decision": "accept",
+      "rationale": "Verified. The Activity 2 teaching example is 'IN ('Leeds', 'York')', exactly the filter the task asks for, hint 1 repeats 'city IN (...)', and the recap's cheat sheet repeats the same pair. The cheat sheet may stay: the recap section has class 'recap is-pending' and engine.css hides html.pep-js .recap.is-pending (display: none) until every activity is settled (verified in the browser: display none on load). Fix: change the teaching example's values or column (for example IN ('Bristol', 'Hull'), or IN on credits), so the learner still builds the task's filter. The sql[2] note 'city IN (...) with both city names' is fine once the teaching no longer gives the values.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    },
+    {
+      "findingId": "C2E-FILT-02",
+      "decision": "accept",
+      "rationale": "Verified. Activity 3 hint 2 says 'The fee column needs two words after it', but the required 'DESC NULLS LAST' is three words. Fix: reword without a word count, as the critic proposes.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    },
+    {
+      "findingId": "C2E-FILT-03",
+      "decision": "accept",
+      "rationale": "Verified. Activity 2's teaching says only 'Join conditions with AND ... or OR' and never says AND is applied before OR. The retry distractor 'credits = 2 OR credits = 3 AND title LIKE ...' is wrong only because of that rule, and its explanation teaches the rule only after the last try (D3). Fix: add one sentence on AND before OR (and brackets) to Activity 2's teaching, within the 120-word limit, or replace the distractor with one that depends only on taught ideas.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    },
+    {
+      "findingId": "C2E-FILT-04",
+      "decision": "accept",
+      "rationale": "Reproduced. The right three rows in the wrong order leave both checks unticked, including 'Only the Leeds and York students appear, with student_id, name and city', which is true. In src/filtering-and-sorting.topic.js, done.rows uses sameList. Fix: tick 'rows' when the same set of rows and columns appears (sameSet on the picked columns, with no extra columns), and require the exact list plus the right ORDER BY for 'order'. Completion still needs every goal, so the set of runs that complete the activity does not change. This is display-only and inside the constraint.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    },
+    {
+      "findingId": "C2E-FILT-05",
+      "decision": "accept",
+      "rationale": "Verified in src/filtering-and-sorting.topic.js. The sql[2] notes say 'list city, then student_id DESC' and 'city first, then student_id with DESC', and the sql[3] note says 'add NULLS LAST right after fee DESC'. That is the finished clause, which policy 1.1 rules out for a nudge. Fix: name the detail and the line without the code (for example 'Your ORDER BY line does not yet sort the newest student first within each city; look again at the second sort column'). Also reword the sql[3] notes 'add course_id as the last sort column' and 'add DESC after fee' in the same way.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    },
+    {
+      "findingId": "C2E-FILT-06",
+      "decision": "accept",
+      "rationale": "Verified. Every unreadable statement, the empty-file prompt and every real subset limit reach the shell as kind 'limit' from the adapter's check() in authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/engine.js; I reproduced 'SELEC * FROM students;', a missing comma between two VALUES rows, a missing semicolon before a second SELECT and the untouched starter, all kind 'limit'. authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/controller.js relabels 'limit' as 'Not in this practice editor', and LIMITS item 4 in authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/build.mjs plus every page's Sources footer ('not as invalid PostgreSQL') say that label never means the SQL is wrong. The label is page-owned, so it is fixable in scope. Acceptable fix: in controller.js, wrap EDITOR.check (EDITOR is Object.create of the adapter) and re-kind problems by message into three classes. Real subset limits (WITH, psql meta-commands, CREATE TABLE and so on) keep 'Not in this practice editor'. Unreadable statements ('could not read the statement near', 'could not read one starting') get a learner label such as 'Check your SQL'. The empty-file prompt gets its own neutral label. Message matching is feasible: I checked that real limits carry their own messages ('WITH queries are outside this practice editor', 'CREATE is not available here', 'Transactions are outside this practice editor', 'COPY runs on the database server', and the psql meta-command text), distinct from the unreadable-statement messages. Never use the adapter's own 'Lesson check' (B4), and never use kind 'hint', because the shell blocks Run only on non-hint problems. Run gating, the 'limit' notRun status and onSqlRun's 'did not use up a try' path must stay exactly as they are (E2 is pending). Reword LIMITS item 4 and the footer sentence in each src/<topic>.body.html and artifact.md to match. The minimum acceptable fix, if message matching seems too brittle, is one neutral label covering both cases, with LIMITS and footer sentences that no longer say the SQL is fine. Shell wording stays a recipe finding.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    },
+    {
+      "findingId": "C2E-FILT-07",
+      "decision": "accept",
+      "rationale": "Verified in the page simulator. A missing semicolon at the end of line 3 is reported at Ln 4 near \"select\", and a missing comma at the end of line 2 of a multi-row VALUES is reported at Ln 3 near \"(\" (policy 1.3, E5). Where the location comes from (the adapter's Limit token line in authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/engine.js) is out of scope, so record a recipe finding: the adapter should report the end of the previous token. In-loop fix, per policy 1.3's second bullet: in the same controller.js check wrapper, when the message is 'could not read the statement near' and the token is first on its line, either point Ln at the previous non-blank line or append 'If this line looks right, check the end of the line before it for a missing comma or semicolon.' Wording and location only; run gating does not change.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    },
+    {
+      "findingId": "C2E-FILT-08",
+      "decision": "accept",
+      "rationale": "Verified. Objective o3 in authoring/catalog/.../filtering-and-sorting/topic.json says 'make it deterministic', a word the page never defines (the page says 'repeatable'), and the Activity 2 ticket says 'grouped by city' one topic before GROUP BY. Fix: 'repeatable' in o3 (topic.json, and the topic bar text the build generates from it) and 'sorted by city' or 'city by city' in the ticket.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    },
+    {
+      "findingId": "C2E-FILT-09",
+      "decision": "accept",
+      "rationale": "Verified. The In interviews row in [data-pep-fit-interview] has no pointer to the matching exercise, while the two join pages end theirs with one (A4). Fix: append a short pointer such as 'Activities 1 and 2 practise exactly this' in src/<topic>.body.html, and keep the topic.json career object and artifact.md in step. Wording only.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    },
+    {
+      "findingId": "C2E-FILT-10",
+      "decision": "accept",
+      "rationale": "Verified strings. The authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/build.mjs badge reads 'Practice editor: follows PostgreSQL on this page's sample tables' and the status span reads 'SQL practice editor'. In authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/controller.js, EDITOR.language='PostgreSQL server' feeds the shell's Output header '(lesson simulator, not real PostgreSQL server)', while SQLCHK.explain says 'PostgreSQL cannot tell which one you mean' / 'PostgreSQL would stop with the ERROR'. The shell's empty Problems text is 'No problems found by the lesson checker', which also uses B4 grader vocabulary. C2 F5 says a page never says both 'not real' and 'PostgreSQL rejected'. In-loop fix, page-owned bytes only: use one name ('practice editor') in the build.mjs badge and status span, choose EDITOR.language so the shell header reads consistently with it, and word the explain lines as what 'a real PostgreSQL server' would report. The shell's 'lesson simulator, not real' prefix and its 'No problems found by the lesson checker' sentence are engine.js shell bytes: record a recipe finding.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    },
+    {
+      "findingId": "C2E-FILT-11",
+      "decision": "accept",
+      "rationale": "Verified. CONF in authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/build.mjs prints Low / Medium / High, but DESIGN.md (Assessment: options, confidence, feedback) sets \"Guessing\", \"Fairly sure\", \"Certain\". In authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/controller.js, checkPredict writes 'Your guess was not this time', and summarize() joins open activities as 'Activity '+open.join(' and '), which gives 'Activity 2 and 3 and 4 are'. Fix, wording only: in CONF, use the DESIGN.md labels (the radio values low/medium/high may stay). calibration() echoes the raw value ('Your confidence: medium'), so map it to the shown label. Write 'Your guess was not right this time', and join a list as 'Activities 2, 3 and 4 are' (singular 'Activity 2 is').",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    },
+    {
+      "findingId": "C2E-FILT-12",
+      "decision": "accept",
+      "rationale": "Reproduced at 570x1000 under file:// and over http://127.0.0.1: scrollY 157, exactly the top of #activity-1. At 1280 px it is 121 on inner-and-left-joins and 0 where the document fits. Cause confirmed: with history.replaceState stubbed out, scrollY stays 0. The last line of authoring/evidence/sql-jdbc-foundations/crud-aggregates-and-joins/page-build/controller.js calls go(...,'replace'), whose history.replaceState(#activity-1) runs during parsing. It does not throw, and the browser's load-time scroll-to-fragment then scrolls to #activity-1, so F1 fails on the narrow frame (G7). Fix in controller.js: on first load with no #activity-N in the URL, do not write a hash (call go with no history mode), or write it after load and keep scroll at 0. Keep the hash behaviour for later navigation. Measured in headless Chromium only; check the platform embed after the fix.",
+      "file": "sql-jdbc-foundations/crud-aggregates-and-joins/filtering-and-sorting/artifact.html"
+    }
+  ]
+}

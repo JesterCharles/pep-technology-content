@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "c2-sql-sme-critic (independent PostgreSQL SME critic subagent, fresh context, read-only; reviewed commit 8a7daa17)",
+  "reviewedPath": "sql-jdbc-foundations/crud-aggregates-and-joins/insert-update-and-delete/artifact.html",
+  "reviewedSha256": "2f16bf48013501d51fb90ab9be3d254eb9b49c2b3ed6d9bf2e6f2c591852dbaf",
+  "artifactHashes": {
+    "artifact.html": "2f16bf48013501d51fb90ab9be3d254eb9b49c2b3ed6d9bf2e6f2c591852dbaf",
+    "artifact.gift": "50fe282c8f5eabfff34ffccdd99164e5385648fbcc6b11cd8059773a8ad88fa2"
+  },
+  "findings": [
+    {
+      "id": "C2S-IUD-01",
+      "severity": "high",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/insert-update-and-delete/artifact.html",
+        "line": 1115
+      },
+      "claim": "Simulator fidelity: a multi-row VALUES whose rows have different lengths runs in the practice editor. INSERT INTO students VALUES (7,'Gus','gus@example.com','Hull'),(8,'Hana','hana@example.com'); prints INSERT 0 2, stores NULL for Hana's missing city, and the Activity 2 check then ticks 'rows' and shows the near-miss note 'Both rows are right'. A real server rejects the statement with ERROR: VALUES lists must all be the same length and adds nothing. With a column list, the editor reports 'INSERT has more target columns than expressions' for a short row, while PostgreSQL reports the VALUES-length error first. The editor fills omitted trailing columns only for a single-row VALUES with no column list, which PostgreSQL does allow. Not executed: no PostgreSQL server or psql was available for this review, so the server-side outcome and exact ERROR wording come from the documented rule and PostgreSQL's usual message text, not from a run.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/sql-values.html",
+          "section": "PostgreSQL 19 (current): VALUES, Description: \"When more than one row is specified, all the rows must have the same number of elements.\"",
+          "retrievedAt": "2026-11-26T00:30:00Z",
+          "textSha256": "3947623cb7c788e950e240f0053c4e8fa0f3117ceda2e204afff93c02d20c0ed"
+        },
+        {
+          "url": "https://www.postgresql.org/docs/current/queries-values.html",
+          "section": "PostgreSQL 19 (current): 7.7 VALUES Lists: \"The lists must all have the same number of elements\"",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "9c9bf34331a34b16f216cb3ad25e203a55e67400ea379b626d65104d9d4ba504"
+        },
+        {
+          "url": "https://www.postgresql.org/docs/current/sql-insert.html",
+          "section": "PostgreSQL 19 (current): INSERT, Description: each column not present in the explicit or implicit column list is filled with a default value",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "f38bad14b4c372f8fe9d6224ba63694ac0ec1cac437cc7c6ad60d33b02e41205"
+        }
+      ],
+      "recommendation": "In the sql-practice adapter's execInsert (or the parser), when st.rows has more than one row and the rows differ in length, raise the PgError 'VALUES lists must all be the same length' before any other length check. Keep the default-fill only for a single-row VALUES. Then re-run the Activity 2 check, so a ragged VALUES can no longer earn the 'rows' tick or the 'Both rows are right' note.",
+      "reviewedSha256": "2f16bf48013501d51fb90ab9be3d254eb9b49c2b3ed6d9bf2e6f2c591852dbaf"
+    },
+    {
+      "id": "C2S-IUD-02",
+      "severity": "high",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/insert-update-and-delete/artifact.gift",
+        "line": 9
+      },
+      "claim": "GIFT item 'o1 two rows, named columns': the feedback on the distractor INSERT INTO pets (pet_id, name) VALUES (1, 'Rex') VALUES (2, 'Mia'); says 'this form also omits the column list'. The option does name its columns, (pet_id, name). The real fault is only the second VALUES keyword: rows go after one VALUES, separated by commas. The feedback states something false about the statement on screen.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/sql-insert.html",
+          "section": "PostgreSQL 19 (current): INSERT, Synopsis: INSERT INTO table_name [ ( column_name [, ...] ) ] ... VALUES ( { expression | DEFAULT } [, ...] ) [, ...]",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "f38bad14b4c372f8fe9d6224ba63694ac0ec1cac437cc7c6ad60d33b02e41205"
+        }
+      ],
+      "recommendation": "Replace the feedback with, for example: 'Not quite. VALUES appears once; put a comma between the bracketed rows.' Drop the column-list clause.",
+      "reviewedSha256": "50fe282c8f5eabfff34ffccdd99164e5385648fbcc6b11cd8059773a8ad88fa2"
+    },
+    {
+      "id": "C2S-IUD-03",
+      "severity": "medium",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/insert-update-and-delete/artifact.html",
+        "line": 602
+      },
+      "claim": "Unverified claim presented as verified: the Sources footer, repeated in artifact.md, says the editor's outputs and error messages 'were compared with a real PostgreSQL 18 server and psql on the same sample tables when the editor was built'. This module's evidence holds no transcript, run id or receipt for such a comparison on these tables: sources.json records documentation retrievals only, and the PostgreSQL 18.3 transcripts in relational-design/simulator-transcripts.md cover a different module's tables. The page also cites the live 'current' documentation, which is now PostgreSQL 19. I could not run a server in this review (no PostgreSQL or psql is installed locally), so the claim stays unverified. This review did find outputs that differ from a real server (C2S-IUD-01, C2S-IUD-05).",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/sql-insert.html",
+          "section": "PostgreSQL 19 (current): INSERT reference page; its title reads \"PostgreSQL: Documentation: 19: INSERT\", so the documentation the page checks against is version 19",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "f38bad14b4c372f8fe9d6224ba63694ac0ec1cac437cc7c6ad60d33b02e41205"
+        }
+      ],
+      "recommendation": "Either record the server comparison in this module's evidence as 'validated at <commit> by run <id>', naming the server version and these sample tables, or reword the footer to 'checked against the official documentation; the practice editor's output was not executed on a server'. Do the same on seeding-sample-data (C2S-SEED-01).",
+      "reviewedSha256": "2f16bf48013501d51fb90ab9be3d254eb9b49c2b3ed6d9bf2e6f2c591852dbaf"
+    },
+    {
+      "id": "C2S-IUD-04",
+      "severity": "medium",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/insert-update-and-delete/artifact.html",
+        "line": 544
+      },
+      "claim": "Overstated rule, repeated in the Recap: 'A condition on the primary key matches at most one row.' Only an equality test on every column of the primary key does that. student_id >= 3 is a condition on the students primary key and matches four rows. In Activity 4, course_id = 102 AND student_id >= 3 names both enrollments key columns and still matches two rows; the page itself explains that option correctly.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/dml-update.html",
+          "section": "PostgreSQL 19 (current): 6.2 Updating Data: \"Only if you have a primary key in the table ... can you reliably address individual rows by choosing a condition that matches the primary key.\"",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "67e7a071d282b108e9ff2fc2c017deedf0e0367df94d2bd45c1384245cc0e3df"
+        },
+        {
+          "url": "https://www.postgresql.org/docs/current/dml-delete.html",
+          "section": "PostgreSQL 19 (current): 6.3 Deleting Data: \"If you have a primary key in the table then you can specify the exact row.\"",
+          "retrievedAt": "2026-11-26T00:23:10Z",
+          "textSha256": "c6d46e5c35454b03a6669c4f3205718ee03dbeab31b17872980b28b1928c1b91"
+        }
+      ],
+      "recommendation": "Say 'An equality test on every column of the primary key, such as WHERE student_id = 2, matches at most one row' in the reading column and in the Recap.",
+      "reviewedSha256": "2f16bf48013501d51fb90ab9be3d254eb9b49c2b3ed6d9bf2e6f2c591852dbaf"
+    },
+    {
+      "id": "C2S-IUD-05",
+      "severity": "low",
+      "location": {
+        "file": "sql-jdbc-foundations/crud-aggregates-and-joins/insert-update-and-delete/artifact.html",
+        "line": 1094
+      },
+      "claim": "Simulator fidelity: the editor checks primary-key and unique constraints once, after the whole UPDATE. PostgreSQL checks non-deferrable uniqueness immediately as each row changes. UPDATE instructors SET instructor_id = 5 - instructor_id; prints UPDATE 4 in the editor, but on a server the first changed row collides with an existing key and fails with ERROR: duplicate key value violates unique constraint \"instructors_pkey\". UPDATE courses SET course_id = course_id + 1; shows a foreign key ERROR in the editor where a server would report the duplicate key first. No task on this page needs this, so the risk is limited to free exploration. Not executed: no PostgreSQL server or psql was available for this review, so the server-side outcome and exact ERROR wording come from the documented rule and PostgreSQL's usual message text, not from a run. Which ERROR a server reports first in the courses case also depends on the physical scan order.",
+      "evidence": [
+        {
+          "url": "https://www.postgresql.org/docs/current/sql-set-constraints.html",
+          "section": "PostgreSQL 19 (current): SET CONSTRAINTS, Description: \"Uniqueness and exclusion constraints that have not been declared DEFERRABLE are also checked immediately.\"; Compatibility: \"PostgreSQL checks non-deferrable uniqueness constraints immediately, not at end of statement\"",
+          "retrievedAt": "2026-11-26T00:30:00Z",
+          "textSha256": "0f9474bef3e084edc1e65ac937014aaed2d2b0e0f731f398829d33d63741af0b"
+        }
+      ],
+      "recommendation": "Either check key uniqueness row by row during execUpdate, in table order, or list it as a limit under 'What this practice editor can and cannot do': updates that move key values are checked only at the end of the statement here.",
+      "reviewedSha256": "2f16bf48013501d51fb90ab9be3d254eb9b49c2b3ed6d9bf2e6f2c591852dbaf"
+    }
+  ]
+}
