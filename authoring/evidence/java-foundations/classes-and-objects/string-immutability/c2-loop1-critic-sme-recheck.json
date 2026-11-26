@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "sme-bastion (independent sme critic, Claude Opus 5.5 subagent)",
+  "reviewedPath": "java-foundations/classes-and-objects/string-immutability/artifact.html",
+  "reviewedSha256": "a2f25c5954dbe40a26dbbac2a1708194ad4780d38256643fb5e78a036f26d5b5",
+  "artifactHashes": {
+    "artifact.html": "a2f25c5954dbe40a26dbbac2a1708194ad4780d38256643fb5e78a036f26d5b5",
+    "artifact.gift": "3cae8c47e32c60121cdc530b418934638f95f69ec461b2650e68a9f90efc4826",
+    "artifact.md": "d51f6bf32baf5114b8c1c9d0719b011d93274ecf24e0cdf973ae77c3a77abe7b"
+  },
+  "findings": [
+    {
+      "id": "C2-SME-STR-05",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/string-immutability/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[2] (J.limit('a changed loop header. ...') when the first 15 body tokens from for are not exactly 'for ( int i = 1 ; i <= n ; i ++ ) {')"
+      },
+      "claim": "The loop-shape limit misdescribes an unchanged loop. Repro (run on the page headless): the starter's header kept exactly, for (int i = 1; i <= n; i++), with a single unbraced body statement sb.append(i).append(\",\"); gives 'Not supported, line 4: not supported in this practice editor: a changed loop header. Keep the loop exactly as it was: for (int i = 1; i <= n; i++) with its body in braces.' The header is not changed; only the braces are absent, and a single-statement body is legal Java by the basic for grammar. The attempt is not counted and nothing is credited, so only the wording is wrong, hence low.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.14.1",
+          "section": "JLS SE 25 14.14.1 The basic for Statement",
+          "retrievedAt": "2026-11-26T01:43:11Z",
+          "textSha256": "49a05f18289b12d78b3bb6aaa2ad9d11c08e5ee515855e09b8c194459dfb9c89"
+        }
+      ],
+      "recommendation": "Report the two cases separately: when the header tokens match but the next token is not '{', say 'not supported in this practice editor: a loop body without braces. Put the body in { } as in the starter.'; keep 'a changed loop header' only when the header tokens differ.",
+      "reviewedSha256": "a2f25c5954dbe40a26dbbac2a1708194ad4780d38256643fb5e78a036f26d5b5"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/java-foundations/classes-and-objects/string-immutability/critic-sme.json",
+    "items": [
+      {
+        "findingId": "C2-SME-STR-01",
+        "status": "open",
+        "file": "java-foundations/classes-and-objects/string-immutability/artifact.html",
+        "reviewedSha256": "a2f25c5954dbe40a26dbbac2a1708194ad4780d38256643fb5e78a036f26d5b5",
+        "note": "Retested headless (Playwright, file://) at c0066ed8. Fixed: (a) sb.append(i); now fails (\"Each pass must add the number and then a comma ... numbers(3) still returns \\\"1,2,3,\\\".\"), (c) appending to a second builder fails (\"Append to the builder you created before the loop, sb ...\"), and (d) a changed loop bound is a not-supported limit, not a try and not credited. Still credited 5 of 5 with the done text: (b) sb = new StringBuilder(); inside the loop before sb.append(i).append(\",\"); (returns \"3,\"); also sb.append(\",\").append(i); (returns \",1,2,3\", order not checked although the reconciler asked for the loop variable and then the comma) and sb.append(i).append(i).append(\",\"); (returns \"11,22,33,\"). The new content check only tests that the loop body contains the token i and a comma literal, and no check refuses reassigning the builder inside the loop."
+      },
+      {
+        "findingId": "C2-SME-STR-02",
+        "status": "resolved",
+        "file": "java-foundations/classes-and-objects/string-immutability/artifact.html",
+        "reviewedSha256": "a2f25c5954dbe40a26dbbac2a1708194ad4780d38256643fb5e78a036f26d5b5",
+        "note": "Retested headless (Playwright, file://) at c0066ed8: (a) only the loop's append lacking \";\" is now \"Error, line 5: ';' expected. Add a semicolon (;) at the end of line 5.\" (its own line); (b) the declaration, append and return all lacking \";\" give \"Error, line 3: ';' expected ...\" (the first one); both say \"This does not count as a try\", a second identical check still leaves the activity unsettled, and neither is credited."
+      },
+      {
+        "findingId": "C2-SME-STR-03",
+        "status": "resolved",
+        "file": "java-foundations/classes-and-objects/string-immutability/artifact.html",
+        "reviewedSha256": "a2f25c5954dbe40a26dbbac2a1708194ad4780d38256643fb5e78a036f26d5b5",
+        "note": "Retested headless (Playwright, file://) at c0066ed8: (b) int next = i + 0; in the loop now passes 5 of 5; (c) var sb = new StringBuilder(); now passes 5 of 5; (a) the unbraced single-statement loop body no longer gets the false \"Remove the string reassignment\" message: it is now a not-supported limit that does not count as a try (two checks leave it unsettled at zero credit). Note for the reconciler: the C2 decision asked not to convert (a) into a not-counted limit in this loop; the page does so. The limit's wording (\"a changed loop header\") is recorded as new finding C2-SME-STR-05. A += reassignment of a String local in the loop is still refused, correctly."
+      },
+      {
+        "findingId": "C2-SME-STR-04",
+        "status": "resolved",
+        "file": "java-foundations/classes-and-objects/string-immutability/artifact.html",
+        "reviewedSha256": "a2f25c5954dbe40a26dbbac2a1708194ad4780d38256643fb5e78a036f26d5b5",
+        "note": "The Sources block now says 26 November 2026 (UTC); sources.json checkedAt and every retrievedAt are 2026-11-26T01:33:24.388Z with reviewedSha256 equal to the current artifact.html, and topic.json freshness.checkedAt is 2026-11-26."
+      },
+      {
+        "findingId": "CO-SME-01",
+        "status": "resolved",
+        "file": "java-foundations/classes-and-objects/string-immutability/artifact.html",
+        "reviewedSha256": "a2f25c5954dbe40a26dbbac2a1708194ad4780d38256643fb5e78a036f26d5b5",
+        "note": "Retested headless (Playwright, file://) at c0066ed8: completed all four activities (main data-pep-complete=true), opened activity 3, pressed Restart activity: activity 3 went to completed=false/credit 0 and the page to data-pep-complete=false with the completion text cleared; passing activity 3 again restored data-pep-complete=true. Completion no longer latches through Restart."
+      }
+    ]
+  }
+}

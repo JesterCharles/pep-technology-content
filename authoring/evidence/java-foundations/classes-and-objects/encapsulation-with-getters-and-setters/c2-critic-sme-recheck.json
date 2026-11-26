@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "sme-bastion (independent technology SME critic, Claude Opus 5.5 subagent)",
+  "reviewedPath": "java-foundations/classes-and-objects/encapsulation-with-getters-and-setters/artifact.html",
+  "reviewedSha256": "f9ff8eeec6da8239c989ac1ecd383fca50bdd822bf44b48c0dd7ed209ad2761e",
+  "artifactHashes": {
+    "artifact.html": "f9ff8eeec6da8239c989ac1ecd383fca50bdd822bf44b48c0dd7ed209ad2761e",
+    "artifact.gift": "44443ee91636de11e5e5d1c88e45fb03d573c5bea1d2159cc39c2992bfd841e5",
+    "artifact.md": "cb1113bc6980baf59c7b0df09831fb36976adbe81e325137daa03aa499b30685"
+  },
+  "findings": [
+    {
+      "id": "C2-SME-ENC-01",
+      "severity": "high",
+      "location": {
+        "file": "java-foundations/classes-and-objects/encapsulation-with-getters-and-setters/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[3] (range check: LO/HI token patterns such as [p,'<','10'])"
+      },
+      "claim": "The range check matches the parameter name as a bare token, so when the parameter is named target (as the task tells the learner to name it) a test of the old field value is accepted as a test of the argument. Repro (run on the page headless, file://): setTarget(int target) { if (this.target < 10 || this.target > 30) { throw new IllegalArgumentException(\"out of range\"); } this.target = target; } gives 'Checked: 5 of 5 checks pass', data-pep-completed=true, credit 1, grade 1, and the done message 'No caller can now store a target outside 10 to 30'. In Java the parameter target shadows the field and this.target is the field, so the condition tests the currently stored value (20), not the argument: setTarget(50) passes the guard and stores 50. This is the exact parameter/field confusion the topic exists to prevent, and the page certifies it with a false behavioural claim.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-6.html#jls-6.4.1",
+          "section": "JLS SE 25 6.4.1 Shadowing",
+          "retrievedAt": "2026-11-26T00:27:56Z",
+          "textSha256": "70cb44d4527c8804a5262bd88b98c28212eb139999c93f9228b8c506a059e0dc"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-6.html#jls-6.4.1",
+          "section": "JLS SE 25 6.4.1 Shadowing",
+          "retrievedAt": "2026-11-26T00:27:56Z",
+          "textSha256": "c878206ecd46cdb02f57d7725a4e44af4239df187c4e0a210045eae1bf843cac"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html#jls-15.8.3",
+          "section": "JLS SE 25 15.8.3 this",
+          "retrievedAt": "2026-11-26T00:27:56Z",
+          "textSha256": "0e5ee3f962185e07d659fa5310c0e0afc3c725d9c7bdcb91cb11efe84788d8ee"
+        }
+      ],
+      "recommendation": "In the LO/HI/LOK/HOK matching, refuse a match whose parameter token is immediately preceded by 'this' '.'; when the condition compares only this.target, return a specific message such as 'this.target is the field's current value; compare the parameter target, the new value, with 10 and 30.' Add this repro to the page's QA negative paths.",
+      "reviewedSha256": "f9ff8eeec6da8239c989ac1ecd383fca50bdd822bf44b48c0dd7ed209ad2761e"
+    },
+    {
+      "id": "C2-SME-ENC-02",
+      "severity": "high",
+      "location": {
+        "file": "java-foundations/classes-and-objects/encapsulation-with-getters-and-setters/artifact.html",
+        "selector": "script: parseJava member() reads method bodies with balanced('{','}'); window.PEP_PAGE.acts[2].checks"
+      },
+      "claim": "Method bodies are never syntax-checked: the reader only balances braces and the checks look for token sequences, so code javac must reject earns full credit with 'No problems found in the parts this editor reads.' Repros, each run on the page headless with 5 of 5 checks, completed=true, credit 1: (a) the throw and the assignment both lack ';' (throw new IllegalArgumentException(\"out of range\") and this.target = target); (b) an extra 'return target;' at the end of the void setter. By the grammar a throw statement and an expression statement each end with ';', and a return with a value in a void method is a compile-time error. A missing semicolon is the commonest beginner compile error, so the learner is told finished code is correct when it would not compile. The scope note 'It does not compile or run Java' is present, but the Problems panel explicitly reports no problems and the done message asserts runtime behaviour, so the note does not prevent the false assurance.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.18",
+          "section": "JLS SE 25 14.18 The throw Statement",
+          "retrievedAt": "2026-11-26T00:27:56Z",
+          "textSha256": "76ae3f0f0777682d4c76e18613ad1c6fcdf661d511ebbff011a867d831b3335b"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.8",
+          "section": "JLS SE 25 14.8 Expression Statements",
+          "retrievedAt": "2026-11-26T00:27:56Z",
+          "textSha256": "bf8b321c5601bd13498db9b07002778b64d574707a23ab18aaf99b2e89c93ef9"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.17",
+          "section": "JLS SE 25 14.17 The return Statement",
+          "retrievedAt": "2026-11-26T00:27:56Z",
+          "textSha256": "8c89a70569478b5185dec568fc322ab08dbed18f93ff9506392b49a567ff8f2b"
+        }
+      ],
+      "recommendation": "Give the shared reader a bounded statement pass over method bodies: walk J.top statements and report error: ';' expected (at the end of the previous token) when a simple statement is not terminated before the next statement or the closing brace, and report a value return in a void method. Where a body shape is outside what the reader can check, return J.limit(...) (not supported, not a try) rather than letting checks pass.",
+      "reviewedSha256": "f9ff8eeec6da8239c989ac1ecd383fca50bdd822bf44b48c0dd7ed209ad2761e"
+    },
+    {
+      "id": "C2-SME-ENC-03",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/encapsulation-with-getters-and-setters/artifact.html",
+        "selector": "script: parseJava member() field branch (init=expr([',',';']) then error at after())"
+      },
+      "claim": "A field initializer that lacks its ';' is reported on the wrong line whenever a braced member follows it, and the editor's own repair advice does not fix the code. Repro (task step 1, run on the page headless): line 3 'private int target = 20' without ';', followed by the getter on lines 6-8. The page shows 'Error, line 8: ';' expected. Add a semicolon (;) at the end of line 8.' Line 8 is the getter's closing '}': expr() tracks brace depth and swallows the following method body, so the reported position comes from the token before the class's closing brace. By the FieldDeclaration grammar the missing ';' ends the field declaration on line 3, and adding ';' after line 8's '}' as advised leaves the field unterminated. The code is still rejected and the attempt is not counted, hence medium.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.3",
+          "section": "JLS SE 25 8.3 Field Declarations",
+          "retrievedAt": "2026-11-26T00:27:57Z",
+          "textSha256": "8b976b3bd3cdcef370375be19b4e4b62c29022c6eaba2252c45b19463516e0e2"
+        }
+      ],
+      "recommendation": "In the field-initializer expr(), stop before a token at depth 0 that starts a new member on a later line (a modifier such as public/private/protected/static/final, or a type followed by an identifier and '('), and report ';' expected at after() of the initializer's last token, so the line shown is the field's line.",
+      "reviewedSha256": "f9ff8eeec6da8239c989ac1ecd383fca50bdd822bf44b48c0dd7ed209ad2761e"
+    },
+    {
+      "id": "C2-SME-ENC-04",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/encapsulation-with-getters-and-setters/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[3] (walk(): only ||-split then-throw disjuncts with LO/HI, or &&-split else-throw conditions with LOK/HOK, are recognised)"
+      },
+      "claim": "A correct negated in-range guard is rejected with a message that misdescribes the code, the try counts, and a second identical try settles the activity at zero credit. Repro (run on the page headless): if (!(target >= 10 && target <= 30)) { throw new IllegalArgumentException(\"out of range\"); } this.target = target; gives 4 of 5 with 'Compare the parameter target with 10 and with 30 in the if that throws; 10 and 30 themselves are allowed.' (the code does exactly that), attempts 1; the second check gives 'Not this time', settled=true, credit 0. By the definition of '!' the guard is logically identical to target < 10 || target > 30. Rated medium rather than high only because the hints steer toward the || form and the negated form is less common for this audience; by the brief's rubric (rejects right code in a way that misleads) a reconciler may raise it. Two separate ifs and the then-store/else-throw form were confirmed accepted.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html#jls-15.15.6",
+          "section": "JLS SE 25 15.15.6 Logical Complement Operator !",
+          "retrievedAt": "2026-11-26T00:27:56Z",
+          "textSha256": "c06562f73e176127be58aad1f352bdd13b1301f8b4bb9c95d3c9ab8aad689554"
+        }
+      ],
+      "recommendation": "Recognise a then-branch throw whose condition is '!' '(' in-range conjunction ')' by applying the existing LOK/HOK && logic to the inner tokens; for any other guard shape the walker cannot classify, return J.limit('a range test written in this form') so it is reported as not supported and never counts as a try.",
+      "reviewedSha256": "f9ff8eeec6da8239c989ac1ecd383fca50bdd822bf44b48c0dd7ed209ad2761e"
+    },
+    {
+      "id": "C2-SME-ENC-05",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/encapsulation-with-getters-and-setters/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[1] (getter: body tokens contain 'target') and checks[4] (store: ['this','.','target','=',p] found as a prefix)"
+      },
+      "claim": "The getter and store checks accept code that returns or stores the wrong value, because they only test that a token sequence is present. Repros, each 5 of 5 with credit on the page headless: the setter storing this.target = target + 1; the getter returning target + 1. The check labels say the getter 'returns target' and the setter 'stores the value', which these do not. A refused value still leaves the old target in place, so the done message's range claim stays true, hence medium.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.8",
+          "section": "JLS SE 25 14.8 Expression Statements",
+          "retrievedAt": "2026-11-26T00:27:56Z",
+          "textSha256": "bf8b321c5601bd13498db9b07002778b64d574707a23ab18aaf99b2e89c93ef9"
+        }
+      ],
+      "recommendation": "Require the getter's return to be exactly return target; or return this.target;, and the store to be exactly this.target = p; (or target = p; when p differs) ending in ';', with a specific Not yet message otherwise.",
+      "reviewedSha256": "f9ff8eeec6da8239c989ac1ecd383fca50bdd822bf44b48c0dd7ed209ad2761e"
+    },
+    {
+      "id": "C2-SME-ENC-06",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/encapsulation-with-getters-and-setters/artifact.gift",
+        "selector": "::o2 reject value:: option \"if (isBad(age)) age \\= 0; this.age \\= age;\" feedback"
+      },
+      "claim": "The feedback 'This silently changes the caller value instead of reporting the mistake' implies that age = 0 changes the caller's value. In Java the argument value initializes a new parameter variable; assigning to it changes only that local copy, never the caller's variable. The key is right (the option stores 0 instead of reporting the bad argument), but the reason invites the pass-by-reference misconception that the stack-and-heap topic corrects.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.4.1",
+          "section": "JLS SE 25 8.4.1 Formal Parameters",
+          "retrievedAt": "2026-11-26T00:27:57Z",
+          "textSha256": "08b26c8f452722cf26f49679e81e5881aff70a49786ccfa814670f8256a2de49"
+        }
+      ],
+      "recommendation": "Reword to 'Not quite. This quietly stores 0 instead of the value the caller asked for, so the mistake is hidden rather than reported.'",
+      "reviewedSha256": "44443ee91636de11e5e5d1c88e45fb03d573c5bea1d2159cc39c2992bfd841e5"
+    },
+    {
+      "id": "C2-SME-ENC-07",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/encapsulation-with-getters-and-setters/artifact.html",
+        "selector": "#recap details[data-pep-sources] > p"
+      },
+      "claim": "The page states 'Claims on this page were checked against the live official pages below on 25 November 2026 (UTC)', but the frozen source list (sources.json checkedAt and every retrievedAt 2026-11-06T20:14:42.496Z) and topic.json freshness.checkedAt (2026-11-06) record 6 November 2026. I cannot tell which record is stale. The cited claims still hold on the live pages fetched in this review (for example the IllegalArgumentException class description), so this is provenance, not technical truth.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/IllegalArgumentException.html",
+          "section": "IllegalArgumentException (Java SE 25 API), class description",
+          "retrievedAt": "2026-11-26T00:27:58Z",
+          "textSha256": "05bc9e755cb1b4dffbcf474151a7d6c4e6e50f6a31cdcc7daf13dec358c43681"
+        }
+      ],
+      "recommendation": "Make the page's review date match the recorded retrieval: refresh sources.json and topic.json freshness with a real re-check, or restate the page date as 6 November 2026.",
+      "reviewedSha256": "f9ff8eeec6da8239c989ac1ecd383fca50bdd822bf44b48c0dd7ed209ad2761e"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/java-foundations/classes-and-objects/encapsulation-with-getters-and-setters/critic-sme.json",
+    "items": []
+  }
+}

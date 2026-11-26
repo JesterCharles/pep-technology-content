@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "c2-sme-kestrel (independent technology SME critic, Claude Opus 5.5 subagent)",
+  "reviewedPath": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+  "reviewedSha256": "2756d87ea87b78d4f4239baada6ca8d8630f759662b56553ec59f0ae7f254498",
+  "artifactHashes": {
+    "artifact.html": "2756d87ea87b78d4f4239baada6ca8d8630f759662b56553ec59f0ae7f254498",
+    "artifact.gift": "b0ee9140b302f837ab242dd18b925e907263f8cc35d7b364a549da8d6dac79f5",
+    "artifact.md": "0fbdce721f554f53fd3cda22b304b4536c0c954bc187ee41f0739b638fe6b2fc"
+  },
+  "findings": [
+    {
+      "id": "C2-SME-CO-01",
+      "severity": "high",
+      "location": {
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[5].test"
+      },
+      "claim": "The check \"Each of those objects gets a different title\" takes whatever token follows `name.title =` and only tests that the two tokens differ. Run headless in the real page (Activities 1 and 2 completed, then Check code): `a.title = Dune; b.title = Emma;` (unquoted, undeclared names) and `a.title = 1; b.title = 2;` (an int assigned to a String field) both show \"Checked: 6 of 6 checks pass\" and the done message, and the activity is credited (data-pep-completed=true, data-pep-credit=1, data-pep-grade=1 on the first try; progress 3 of 4 answered). javac rejects both: the first because no variable Dune is in scope, the second because an int is not assignment compatible with String. Forgetting the quotes on a String literal is one of the commonest beginner errors, and this page, whose whole task is typed fields, credits it.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-6.html#jls-6.5.6.1",
+          "section": "JLS SE 25 6.5.6.1 Simple Expression Names (no declaration in scope is a compile-time error)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "d50f8737cd98dc0f2ddc8772e2664638cde95fb238679bdab62fdfd7e75a3edd"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html#jls-15.26.1",
+          "section": "JLS SE 25 15.26.1 Simple Assignment Operator = (an incompatible right-hand type is a compile-time error)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "eb501afd3026f2669888aa5198cd126a4faff4633ded499b88d2962479f9c4ef"
+        }
+      ],
+      "recommendation": "Require the value assigned to each title to be a string literal token (it starts and ends with a double quote). Otherwise return a fail message such as: title is a String, so put the text in double quotes, like a.title = \"Dune\";.",
+      "reviewedSha256": "2756d87ea87b78d4f4239baada6ca8d8630f759662b56553ec59f0ae7f254498"
+    },
+    {
+      "id": "C2-SME-CO-02",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "selector": "script pep-classes-objects-engine v3: parseJava and J helpers"
+      },
+      "claim": "Method and main bodies are only brace-balanced, never read as statements, so statement-level errors that javac rejects are credited. Confirmed in the real page: `return pages > 300 }` and `Book a = new Book()` (both missing ;) give 6 of 6 checks pass and full credit (completed, credit 1, grade 1), and a parser-level harness built from the page bytes shows `return pagez > 300 || pages > 300;` (undeclared name) also passes. The same omission on a field line is reported as \"Error, line 2: ';' expected\" with the status \"the compiler would reject this code\", so the learner reasonably infers the editor checks semicolons everywhere. The \"does not compile or run Java\" note and \"No problems found in the parts this editor reads\" hedge this, which is why it is medium, not high. The engine is shared by every page in the module.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.17",
+          "section": "JLS SE 25 14.17 The return Statement (grammar ends with ;)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "526ea7bd71f0323690e34f4daa9d77b09fa44126a63e5c8275e3a991d0468605"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.8",
+          "section": "JLS SE 25 14.8 Expression Statements (grammar ends with ;)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "bf8b321c5601bd13498db9b07002778b64d574707a23ab18aaf99b2e89c93ef9"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-6.html#jls-6.5.6.1",
+          "section": "JLS SE 25 6.5.6.1 Simple Expression Names (no declaration in scope is a compile-time error)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "d50f8737cd98dc0f2ddc8772e2664638cde95fb238679bdab62fdfd7e75a3edd"
+        }
+      ],
+      "recommendation": "Split each body with J.top and report a top-level statement that does not end in ; or } as \"error: ';' expected\" on its line, matching the field-level behaviour; or state next to the editor that statements inside methods are not checked for semicolons or names.",
+      "reviewedSha256": "2756d87ea87b78d4f4239baada6ca8d8630f759662b56553ec59f0ae7f254498"
+    },
+    {
+      "id": "C2-SME-CO-03",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "selector": "#activity-4 [data-pep-teaching] p"
+      },
+      "claim": "\"Only new creates an object.\" (also the Activity 4 heading \"Only new makes an object\", and artifact.md) is stated as an absolute rule. It is false in Java SE 25: loading a class with a string literal or text block, string concatenation and boxing conversion create objects without new (JLS 12.5). The learner writes String literals for title in this very topic, the module later teaches String immutability, and \"how many objects does new String(\\\"x\\\") create?\" is a classic interview probe that this rule answers wrongly.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-12.html#jls-12.5",
+          "section": "JLS SE 25 12.5 Creation of New Class Instances (implicit creation: string literals, text blocks, boxing, string concatenation)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "616a5ec511fa18818c6b2d71e9418ccfeed731fa14fb6c8abb221e09eb59d167"
+        }
+      ],
+      "recommendation": "Scope the rule, for example: \"For your own classes such as Order, only new creates an object; assigning one reference variable to another copies the reference.\" Scope the heading too, for example \"Assignment copies a reference, not an object\".",
+      "reviewedSha256": "2756d87ea87b78d4f4239baada6ca8d8630f759662b56553ec59f0ae7f254498"
+    },
+    {
+      "id": "C2-SME-CO-04",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[3].test, checks[4].test, checks[5].test"
+      },
+      "claim": "Valid alternative code is rejected and counted as a checked try, with a message that is false for that code. Confirmed in the real page: `Book a = new Book(), b = new Book();` and `Book a; a = new Book(); Book b = new Book();` both get \"Only one Book variable is created with new; make a second one\" (4 of 6, one try used, no credit); `var a = new Book(); var b = new Book();` gets \"Declare a Book variable and create the object with new Book()\"; `return !(pages <= 300);`, which is correct for 300, gets \"Over 300 means more than 300; compare pages with 300 so that exactly 300 is not long\". The isLong matcher is a token-subsequence search, so it also credits the wrong `return pages > 300 - 1;` (exactly 300 counted as long). Rated medium rather than high only on plausibility: these forms are less common from beginners than the default pattern the teaching shows, but each one costs a try with a message that is false for the code.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.4",
+          "section": "JLS SE 25 14.4 Local Variable Declarations (var, and a VariableDeclaratorList with several declarators)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "2063ebdecc1f6c937377a1c6f7f7905cbf33568dacca9a483256fdc2478bd8eb"
+        }
+      ],
+      "recommendation": "Recognise `Book x;` followed by `x = new Book();`, comma-separated declarators and `var x = new Book();` as Book variables, or return J.limit(...) for those shapes so they are not a try. Return J.limit for a negated comparison instead of the false \"Over 300\" message. Require the 300 (or 301) literal to be followed by ;, ) or ? so arithmetic on it is not matched.",
+      "reviewedSha256": "2756d87ea87b78d4f4239baada6ca8d8630f759662b56553ec59f0ae7f254498"
+    },
+    {
+      "id": "C2-SME-CO-05",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "selector": "#activity-2 [data-pep-teaching], #recap li"
+      },
+      "claim": "\"new followed by the class name creates an object ... with its own copy of every field\" and the recap \"Each new creates a separate object with its own copy of every field\" are untrue for static fields, which have exactly one incarnation however many objects exist. static-members-and-methods is a listed prerequisite, so the learner already knows static fields, and the page itself hints \"Leave out static so every book gets its own values\".",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.3.1.1",
+          "section": "JLS SE 25 8.3.1.1 static Fields",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "c048504fe788c6030be80d7ce27c134b814c88005757dbbe0007f119c659a1ac"
+        }
+      ],
+      "recommendation": "Say \"its own copy of every instance (non-static) field\" in the teaching paragraph, the recap and artifact.md.",
+      "reviewedSha256": "2756d87ea87b78d4f4239baada6ca8d8630f759662b56553ec59f0ae7f254498"
+    },
+    {
+      "id": "C2-SME-CO-06",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "selector": "script pep-classes-objects-engine v3: parseJava and J helpers"
+      },
+      "claim": "A missing closing brace on class Book (so class Shelf falls inside Book) is reported in the real page as \"Not supported, line 6: not supported in this practice editor: a type declared inside another type\". That points the learner at a legal construct (a member class is a legal class member) instead of the real cause, an unbalanced brace, for which javac reports reaching the end of the file while parsing. The reader also places its own \"reached end of file\" error at the line of the opening brace rather than at the end of the file.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.1.6",
+          "section": "JLS SE 25 8.1.6 Class Body and Member Declarations (a member class is a legal member)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "7634cd51799d58d75ffc5289ec55039452c0d5accb75c71a0ef08b888646c73c"
+        }
+      ],
+      "recommendation": "When a class keyword is met inside a top-level class and the outer class is never closed, report \"error: reached end of file while parsing; a } is missing\" instead of the not-supported message.",
+      "reviewedSha256": "2756d87ea87b78d4f4239baada6ca8d8630f759662b56553ec59f0ae7f254498"
+    },
+    {
+      "id": "C2-SME-CO-07",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[3].test (J.limit messages)"
+      },
+      "claim": "Hint leakage: the two not-supported messages in the isLong check print the exact answer line, \"Return the comparison itself, for example return pages > 300;\". Any if-based attempt with a negated test, or another unrecognised return form, triggers them, which reveals the full answer for that check without opening the hints. This is semantic leakage, not a Java-truth issue, so no external source applies.",
+      "evidence": [],
+      "recommendation": "Replace the example with the teaching pattern, for example \"return the comparison itself, the way isEmpty() returns count == 0\".",
+      "reviewedSha256": "2756d87ea87b78d4f4239baada6ca8d8630f759662b56553ec59f0ae7f254498"
+    },
+    {
+      "id": "C2-SME-CO-08",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "selector": "details[data-pep-sources]"
+      },
+      "claim": "The Sources block (and artifact.md) says the claims were checked against the live official pages on 25 November 2026 (UTC), but that date is not backed by the frozen source list: authoring/evidence/java-foundations/classes-and-objects/classes-and-objects/sources.json records checkedAt and every retrievedAt as 2026-11-06, its reviewedSha256 is not the current artifact.html hash, and topic.json freshness.checkedAt is 2026-11-06. This critic re-fetched every source in that list on 2026-11-26 (UTC) and each page's raw bytes still match the sha256 recorded in sources.json, so the sources themselves are unchanged and fresh; the defect is only the date label against the record.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html",
+          "section": "JLS SE 25 chapter 8: whole page bytes, compared with the sha256 recorded in sources.json",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "02358c18e0e9a16c3f0a6492478f5108b673162dc1bd822971037ba4a3fe3259"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-4.html",
+          "section": "JLS SE 25 chapter 4: whole page bytes, compared with the sha256 recorded in sources.json",
+          "retrievedAt": "2026-11-26T00:43:04Z",
+          "textSha256": "3533c67f716b435922a322dbaf0bf51c6eca82279b9bd70766bb6491e95110df"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html",
+          "section": "JLS SE 25 chapter 15: whole page bytes, compared with the sha256 recorded in sources.json",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "829701f2d3efe55e03598155b2be2a2e19e9b3a0f1e9ca5c2401b616a8baae19"
+        },
+        {
+          "url": "https://dev.java/learn/classes-objects/creating-classes/",
+          "section": "Dev.java Creating Classes: whole page bytes, compared with the sha256 recorded in sources.json",
+          "retrievedAt": "2026-11-26T00:43:04Z",
+          "textSha256": "83089b8096454feb45b641bd64c244d7e45e63d12755f8fccc0dfd63b6dbf22e"
+        },
+        {
+          "url": "https://dev.java/learn/classes-objects/creating-objects/",
+          "section": "Dev.java Creating and Using Objects: whole page bytes, compared with the sha256 recorded in sources.json",
+          "retrievedAt": "2026-11-26T00:43:04Z",
+          "textSha256": "301393e3fd9d4b11906639d1fd709fbe383774a2c43d8bd27973d18f1120f3d4"
+        }
+      ],
+      "recommendation": "Either refresh sources.json (retrieval dates, hashes, reviewedSha256) and topic.json freshness for the current bytes, or state on the page and in artifact.md the date the source list actually records.",
+      "reviewedSha256": "2756d87ea87b78d4f4239baada6ca8d8630f759662b56553ec59f0ae7f254498"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/java-foundations/classes-and-objects/classes-and-objects/critic-sme.json",
+    "items": []
+  }
+}

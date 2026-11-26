@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "c2-sme-kestrel (independent sme critic, Claude Opus 5.5 subagent)",
+  "reviewedPath": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+  "reviewedSha256": "c3ce0c86e0037ad8876966872962ffce24f8b6c95766aaac546b34e9a593d421",
+  "artifactHashes": {
+    "artifact.html": "c3ce0c86e0037ad8876966872962ffce24f8b6c95766aaac546b34e9a593d421",
+    "artifact.gift": "e0a88f5bb707cf52b51b490b2ed13271aaf5d96a653117b7d2d71c640e62c3c2",
+    "artifact.md": "68aafb1519c8ca85027ef383f9244b22d493d8e6b35453561f77ae100d09e4cd"
+  },
+  "findings": [
+    {
+      "id": "C2-SME-CO-09",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "selector": "script pep-classes-objects-engine v3: parseJava, checkBody and plain() (checkBody end-of-line rule)"
+      },
+      "claim": "New in the correction loop: the bounded statement pass treats any value at a line end followed by a name on the next line as a missing semicolon. Valid Java that breaks a declaration after its type, such as `Book\\n    a = new Book();`, is now reported in the real page as \"Error, line 9: ';' expected\" with the status \"1 error: the compiler would reject this code\". Line terminators are white space between tokens in Java, so javac accepts it. The attempt is not counted as a try, and the layout is rare for beginners, hence low; but the editor asserts a compiler error that does not exist.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-3.html#jls-3.6",
+          "section": "JLS SE 25 3.6 White Space (line terminators are white space)",
+          "retrievedAt": "2026-11-26T01:43:53Z",
+          "textSha256": "e1b69ef0947a7d0939151e35d74c4ded95288345924474d95063c25125231dbc"
+        }
+      ],
+      "recommendation": "Do not raise ';' expected when the value at the line end is a type name and the next line continues the same declaration (next tokens are a name followed by =, ; or ,); or report that shape as not supported instead of as a compiler error.",
+      "reviewedSha256": "c3ce0c86e0037ad8876966872962ffce24f8b6c95766aaac546b34e9a593d421"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/java-foundations/classes-and-objects/classes-and-objects/critic-sme.json",
+    "items": [
+      {
+        "findingId": "C2-SME-CO-01",
+        "status": "resolved",
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "reviewedSha256": "c3ce0c86e0037ad8876966872962ffce24f8b6c95766aaac546b34e9a593d421",
+        "note": "Re-tested headless at branch head c0066ed8 in the real page (Playwright: Activities 1 and 2 completed, then Check code in Activity 3, reading data-pep-completed/credit/grade) and with a parser-level harness built from the current page bytes. `a.title = Dune; b.title = Emma;` and `a.title = 1; b.title = 2;` now get 5 of 6 with \"A title is text: write it in double quotes, like \\\"Dune\\\".\" and no credit (completed=false, credit 0). Valid `a.title = \"Du\" + \"ne\";` still passes with credit."
+      },
+      {
+        "findingId": "C2-SME-CO-02",
+        "status": "open",
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "reviewedSha256": "c3ce0c86e0037ad8876966872962ffce24f8b6c95766aaac546b34e9a593d421",
+        "note": "Re-tested headless at branch head c0066ed8 in the real page (Playwright: Activities 1 and 2 completed, then Check code in Activity 3, reading data-pep-completed/credit/grade) and with a parser-level harness built from the current page bytes. The semicolon part is fixed: `return pages > 300 }` and `Book a = new Book()` are now reported as \"Error, line 4 (line 9): ';' expected\" on the right line, not counted as a try and not credited. Still open: `return pagez > 300 || pages > 300;` (undeclared name) still passes all six checks (deferred by the reconciler to a checker-hardening pass), and the no-JavaScript \"What the practice editor reads\" paragraph still says it \"checks their declarations and statement shapes\" rather than the rewording the reconciler required (declarations, statement endings and brackets; not names, types or reachability)."
+      },
+      {
+        "findingId": "C2-SME-CO-03",
+        "status": "open",
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "reviewedSha256": "c3ce0c86e0037ad8876966872962ffce24f8b6c95766aaac546b34e9a593d421",
+        "note": "The teaching sentence now reads \"For your own classes, only new creates an object\" (also artifact.md), which is correct. Still open: the Activity 4 heading h2#a4-h is still the absolute \"Only new makes an object\", which the reconciler asked to scope as well."
+      },
+      {
+        "findingId": "C2-SME-CO-04",
+        "status": "open",
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "reviewedSha256": "c3ce0c86e0037ad8876966872962ffce24f8b6c95766aaac546b34e9a593d421",
+        "note": "Re-tested headless at branch head c0066ed8 in the real page (Playwright: Activities 1 and 2 completed, then Check code in Activity 3, reading data-pep-completed/credit/grade) and with a parser-level harness built from the current page bytes. Fixed: `return pages > 300 - 1;` is no longer credited (5 of 6), and the comma-declarator and split-declaration messages now name the shape the editor reads (\"This editor looks for a second line of the form Book name = new Book(); ...\") instead of calling the code wrong. Still open: `Book a = new Book(), b = new Book();`, `Book a; a = new Book();` and `var a = new Book();` are still rejected and each costs a checked try (deferred; try counting is pending a captain decision), and correct `return !(pages <= 300);` still costs a try with \"Compare pages with 300 so that a book over 300 pages is long and a book of exactly 300 is not.\", which still reads as a correction of code that already does exactly that."
+      },
+      {
+        "findingId": "C2-SME-CO-05",
+        "status": "resolved",
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "reviewedSha256": "c3ce0c86e0037ad8876966872962ffce24f8b6c95766aaac546b34e9a593d421",
+        "note": "Teaching now says \"its own copy of every instance (non-static) field\" and the recap \"its own copy of every instance field\" (also artifact.md)."
+      },
+      {
+        "findingId": "C2-SME-CO-06",
+        "status": "open",
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "reviewedSha256": "c3ce0c86e0037ad8876966872962ffce24f8b6c95766aaac546b34e9a593d421",
+        "note": "Unchanged (accepted as deferred): an unclosed class Book still gives \"Not supported, line 6: ... a type declared inside another type\" in the real page."
+      },
+      {
+        "findingId": "C2-SME-CO-07",
+        "status": "resolved",
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "reviewedSha256": "c3ce0c86e0037ad8876966872962ffce24f8b6c95766aaac546b34e9a593d421",
+        "note": "Both not-supported messages now say \"Return the comparison itself, the way isEmpty() returns count == 0.\"; confirmed in the real page with an if-based negated test. The answer line is no longer printed."
+      },
+      {
+        "findingId": "C2-SME-CO-08",
+        "status": "resolved",
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "reviewedSha256": "c3ce0c86e0037ad8876966872962ffce24f8b6c95766aaac546b34e9a593d421",
+        "note": "The Sources block now says 26 November 2026 (UTC); sources.json checkedAt and every retrievedAt are 2026-11-26, its reviewedSha256 equals the current artifact.html sha256, and topic.json freshness.checkedAt is 2026-11-26. The page links and sources.json now use the dev.java /learn/language/oop/classes-objects/ URLs; this critic re-fetched them at 2026-11-26T01:42:37Z and each page's bytes match the sha256 recorded in sources.json."
+      },
+      {
+        "findingId": "CO-SME-01",
+        "status": "resolved",
+        "file": "java-foundations/classes-and-objects/classes-and-objects/artifact.html",
+        "reviewedSha256": "c3ce0c86e0037ad8876966872962ffce24f8b6c95766aaac546b34e9a593d421",
+        "note": "Verified in the real page at c0066ed8: completed all four activities (main data-pep-complete=true), went back to Activity 3 and pressed Restart activity: data-pep-complete became false and Activity 3 data-pep-completed false; after the same correct code passed again, data-pep-complete returned to true. Completion does not latch through Restart."
+      }
+    ]
+  }
+}

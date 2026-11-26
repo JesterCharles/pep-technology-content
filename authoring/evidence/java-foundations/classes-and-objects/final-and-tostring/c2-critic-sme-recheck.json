@@ -1,0 +1,194 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "sme-critic-c2-otter (independent technology SME critic, Claude Opus 5.5 subagent)",
+  "reviewedPath": "java-foundations/classes-and-objects/final-and-tostring/artifact.html",
+  "reviewedSha256": "cd1866c100e332308adc61a92e29a68ce80cc4490e9b9ff2cc768b0a9f67ae44",
+  "artifactHashes": {
+    "artifact.html": "cd1866c100e332308adc61a92e29a68ce80cc4490e9b9ff2cc768b0a9f67ae44",
+    "artifact.gift": "bd4b9f84dbed971996a6cdac8e891fe8ecb970755bbeea4ef30d5b488a23acc0",
+    "artifact.md": "0c8d554a6e1ffd78e44bf8e17b1778950101b22f6af504e77a70d5cfa637a87d"
+  },
+  "findings": [
+    {
+      "id": "C2-SME-FIN-01",
+      "severity": "high",
+      "location": {
+        "file": "java-foundations/classes-and-objects/final-and-tostring/artifact.html",
+        "selector": "#cf-3 practice editor (shared engine parseJava/typeDecl)"
+      },
+      "claim": "Legal Java is reported as a compiler error with a wrong fix. With `import java.util.Objects;` or `package cards;` (both run) above an otherwise accepted `class Card`, the editor shows \"Error, line 1: class, interface, enum, or record expected. This code is outside every class; move it inside the braces of a class.\" and the status \"1 error: the compiler would reject this code\". JLS SE 25 7.3 defines an ordinary compilation unit as an optional package declaration, then imports, then top-level classes, so javac accepts this file, and the suggested fix (moving the line inside the class) would produce code that really does not compile. A learner at this level plausibly meets this: IDE-created files usually start with a package line, and this page's reading version tells learners to \"Work on paper or in your IDE\", so pasting an IDE file back into the editor is a natural move. The page then teaches something false about how a Java file is laid out, which is why this is rated high. Reproduced headless in Chromium (Playwright) against the current bytes; no JDK is installed, so javac was not run and its exact message wording and column are not asserted.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-7.html",
+          "section": "JLS SE 25 §7.3 Compilation Units (grammar)",
+          "retrievedAt": "2026-11-26T00:33:47Z",
+          "textSha256": "cea3a103e5cd36ded568cd379a0d3a48e05f7d0184a8c812d77f8746fc9de345"
+        }
+      ],
+      "recommendation": "In parseJava, accept an optional `package Name;` and any `import [static] Name[.*];` declarations before the first type declaration (JLS 7.3 OrdinaryCompilationUnit), or at worst report them as \"not supported in this practice editor\" (a limit, not a try). Never label them a compiler error, and never advise moving them inside a class: an import or package declaration inside a class body is itself a syntax error.",
+      "reviewedSha256": "cd1866c100e332308adc61a92e29a68ce80cc4490e9b9ff2cc768b0a9f67ae44"
+    },
+    {
+      "id": "C2-SME-FIN-02",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/final-and-tostring/artifact.html",
+        "selector": "#cf-3 practice editor; window.PEP_PAGE.acts[2].checks[4]; noscript[data-pep-no-js] \"What the practice editor reads\""
+      },
+      "claim": "Method bodies are never parsed, so code that javac rejects passes, including a breach of this topic's own rule. Reproduced: (a) `return rank + \" of \" + suit` with no semicolon passes 5 of 5 with the done text, although a return statement ends with `;` (14.17). (b) Adding `rank = \"K\";` inside toString passes 5 of 5, including \"Both fields are still final\", although assigning a final field that is not definitely unassigned is a compile-time error (4.12.4). Activity 2 on this same page sorts \"assigning a final field in setId\" as Does not compile, so the editor contradicts the lane. The reading version says the editor \"checks declarations and statement shapes, and reports anything else as not supported\". Rated medium because the scope line says it does not compile Java, and (b) is an unlikely input. Reproduced headless in Chromium (Playwright) against the current bytes; no JDK is installed, so javac was not run and its exact message wording and column are not asserted.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html",
+          "section": "JLS SE 25 §14.17 The return Statement (grammar)",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "fb6538a5232751c37b56a155ef78574420624bbbbb9adcca74d5bae559f13649"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-4.html",
+          "section": "JLS SE 25 §4.12.4 final Variables",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "8055fdf6f5291d7592bdba768e19631295c1ec336c10051600afbba753d0c572"
+        }
+      ],
+      "recommendation": "Add a check that flags any assignment to rank or suit (`rank =`, `this.rank =`, and the same for suit) outside the constructor, with the 4.12.4 reason. Check statement terminators in method bodies, or reword the reading version, scope line and artifact.md to say body statements are not checked.",
+      "reviewedSha256": "cd1866c100e332308adc61a92e29a68ce80cc4490e9b9ff2cc768b0a9f67ae44"
+    },
+    {
+      "id": "C2-SME-FIN-03",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/final-and-tostring/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[2] and checks[3]"
+      },
+      "claim": "The output checks accept toString bodies that do not print `Q of hearts`, while the ticket says \"print as Q of hearts\" and the reading version says printing \"must show exactly Q of hearts\". Reproduced 5 of 5 with the done text for: `rank + \"  of  \" + suit` (prints `Q  of  hearts`), `\"Card \" + rank + \" of \" + suit + \"!\"` (prints `Card Q of hearts!`), and `rank + suit + \" of \"` (prints `Qhearts of `). By 15.18.1 the operands join left to right, so in the last case the Pass label \"The word of, with a space on each side, joins rank and suit\" is literally false. Rated medium: adding a prefix or punctuation is plausible, and the reordered case is not. Reproduced headless in Chromium (Playwright) against the current bytes; no JDK is installed, so javac was not run and its exact message wording and column are not asserted.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html",
+          "section": "JLS SE 25 §15.18.1 String Concatenation Operator +",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "322356f9a8ef5475969203267c02b27137cf1b40d4855e52bca17587781cd559"
+        }
+      ],
+      "recommendation": "Require the return expression to be exactly `rank|this.rank + \" of \" + suit|this.suit` (literal matched by /^\" of \"$/), optionally also accepting `String.format(\"%s of %s\", rank, suit)` or concat chains with the same order. Otherwise fail with \"The text must be exactly rank, \" of \", suit.\"",
+      "reviewedSha256": "cd1866c100e332308adc61a92e29a68ce80cc4490e9b9ff2cc768b0a9f67ae44"
+    },
+    {
+      "id": "C2-SME-FIN-04",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/final-and-tostring/artifact.html",
+        "selector": "#cf-3 practice editor (shared engine mods())"
+      },
+      "claim": "`@java.lang.Override` above toString is legal: a marker annotation is `@ TypeName` (9.7.2), and a TypeName may be qualified (6.5). The editor reports it as \"Error, line 10: <identifier> expected. A name is missing or a keyword is in the wrong place\" with \"1 error: the compiler would reject this code\". That is a false compiler-error claim, though rare at this level. Reproduced headless in Chromium (Playwright) against the current bytes; no JDK is installed, so javac was not run and its exact message wording and column are not asserted.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-9.html",
+          "section": "JLS SE 25 §9.7.2 Marker Annotations",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "d68b3a54854fe66bdd213ca18772e0937a0642152b858013c0072b7a6bdf8edb"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-6.html",
+          "section": "JLS SE 25 §6.5 Determining the Meaning of a Name (TypeName grammar)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "a4f8aa65369b7358a3ced31f449c85babff4341a7e8b0074ec549a0175e5abf7"
+        }
+      ],
+      "recommendation": "In mods(), read the annotation name as a dotted name (`ident { . ident }`) and record its last segment.",
+      "reviewedSha256": "cd1866c100e332308adc61a92e29a68ce80cc4490e9b9ff2cc768b0a9f67ae44"
+    },
+    {
+      "id": "C2-SME-FIN-05",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/final-and-tostring/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[3]"
+      },
+      "claim": "`return String.format(\"%s of %s\", rank, suit);` builds exactly `Q of hearts` (String.format returns the formatted string), but it is marked \"Not yet\" with \"Between the fields, add a string literal holding the word of with a space on each side\". The task does not require `+`; only hint 2 suggests it. Reproduced headless in Chromium (Playwright) against the current bytes; no JDK is installed, so javac was not run and its exact message wording and column are not asserted.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html",
+          "section": "String.format(String, Object...) (Java SE 25 API)",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "6e9e5318199766cdd1d36c3f0aefb5b2a215f8c1a5506543d970618463a2fc0e"
+        }
+      ],
+      "recommendation": "Accept the String.format form, or state in the task that the text is built with `+`.",
+      "reviewedSha256": "cd1866c100e332308adc61a92e29a68ce80cc4490e9b9ff2cc768b0a9f67ae44"
+    },
+    {
+      "id": "C2-SME-FIN-06",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/final-and-tostring/artifact.html",
+        "selector": "#activity-2 [data-pep-teaching] li:first-child; window.PEP_PAGE.acts[1].items[5].ok; #recap li:first-child"
+      },
+      "claim": "The final-field rule is stated as if it covered every field: \"A final field must be assigned by the end of every constructor and never afterwards\", the lane \"only in its declaration or a constructor\", and the recap \"a final field must be set by the end of every constructor\". By 8.3.1.2, that holds for a blank final instance field. A blank final static field must be assigned by a static initializer and cannot be assigned in a constructor. By 16.9, a blank final instance field is still definitely unassigned before the leftmost instance initializer, so an instance initializer block can also assign it, which makes \"only in its declaration or a constructor\" too absolute. artifact.md repeats the teaching and recap wording.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html",
+          "section": "JLS SE 25 §8.3.1.2 final Fields",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "1da8a976919f45eb79e4a977e4920f0a6d48c5e0be0cfabfdcb4fb259c003b3d"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-16.html",
+          "section": "JLS SE 25 §16.9 Definite Assignment, Constructors, and Instance Initializers",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "d14f49eb6924e2525d5746fcbb6a7039d38b1da15dacdd8e4b5e2f400e0d8c9f"
+        }
+      ],
+      "recommendation": "Say \"A final instance field (one without static)\" in the teaching and recap, on the page and in artifact.md. In the lane say \"only in its declaration, an initializer block or a constructor\", or \"only once, while the object is being built\".",
+      "reviewedSha256": "cd1866c100e332308adc61a92e29a68ce80cc4490e9b9ff2cc768b0a9f67ae44"
+    },
+    {
+      "id": "C2-SME-FIN-08",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/final-and-tostring/artifact.html",
+        "selector": "#task-3 details[data-pep-hint-order=\"2\"] p[data-pep-hint-step]"
+      },
+      "claim": "Hint 2 for Activity 3 narrates the whole return expression: \"Build the text from three pieces joined with `+`: the rank field, the literal word between them with its spaces, and the suit field.\" With the ticket text `Q of hearts`, that is `rank + \" of \" + suit` in words, so the last hint gives away the finished expression that is the task's only real step. Hint 1 (the header shape from the Point example) is fine. The hint is technically safe; the problem is semantic leakage, which the hint rules leave to review. Rated low because the task already fixes the output text.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html",
+          "section": "JLS SE 25 §15.18.1 String Concatenation Operator +",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "322356f9a8ef5475969203267c02b27137cf1b40d4855e52bca17587781cd559"
+        }
+      ],
+      "recommendation": "Make hint 2 point to the reasoning, not the pieces, for example: \"Look at how the Point example joins fields and literal text with `+`, then do the same with your two fields and the words that appear between them in Q of hearts.\"",
+      "reviewedSha256": "cd1866c100e332308adc61a92e29a68ce80cc4490e9b9ff2cc768b0a9f67ae44"
+    },
+    {
+      "id": "C2-SME-FIN-07",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/final-and-tostring/artifact.html",
+        "selector": "details[data-pep-sources] > p"
+      },
+      "claim": "Source-record freshness does not match the page. The Sources block says the claims \"were checked against the live official pages below on 25 November 2026 (UTC)\", but the frozen source list (sources.json) records checkedAt 2026-11-06 and reviewedSha256 ac7082334bd73fd301c79621759f632dc34b487fa31904116082528f130cfa48, which is not the current artifact.html (cd1866c100e332308adc61a92e29a68ce80cc4490e9b9ff2cc768b0a9f67ae44); topic.json freshness.checkedAt is also 2026-11-06. A later source-check record may exist in evidence files this review was not allowed to read, so the finding rests only on the page's stated date against the frozen source list and topic.json. I re-fetched the listed official pages now, and the claims I checked still hold, so this is a record mismatch, not a false claim. The On the job rows (At work, In interviews) are not sourced and carry no verified badge of their own, but the blanket \"Claims on this page were checked\" sentence and topic.json freshness.status \"verified\" with an empty unverifiedItems list implicitly cover them.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-4.html",
+          "section": "JLS SE 25 §4.12.4 final Variables",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "8055fdf6f5291d7592bdba768e19631295c1ec336c10051600afbba753d0c572"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html",
+          "section": "JLS SE 25 §15.18.1 String Concatenation Operator +",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "322356f9a8ef5475969203267c02b27137cf1b40d4855e52bca17587781cd559"
+        }
+      ],
+      "recommendation": "Either record a source check that matches the stated 25 November 2026 date and binds the current bytes, or change the stated date to the one the record supports. Pending the captain decision on career lines, keep the blanket sentence from reading as covering the unsourced On the job rows, for example \"Technical claims on this page were checked...\".",
+      "reviewedSha256": "cd1866c100e332308adc61a92e29a68ce80cc4490e9b9ff2cc768b0a9f67ae44"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/java-foundations/classes-and-objects/final-and-tostring/critic-sme.json",
+    "items": []
+  }
+}

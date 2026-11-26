@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "sme-bastion (independent technology SME critic, Claude Opus 5.5 subagent)",
+  "reviewedPath": "java-foundations/classes-and-objects/string-immutability/artifact.html",
+  "reviewedSha256": "98440db797062adbf97f502faaec077d8ac753b3800453a7cace118ba4889c50",
+  "artifactHashes": {
+    "artifact.html": "98440db797062adbf97f502faaec077d8ac753b3800453a7cace118ba4889c50",
+    "artifact.gift": "5593b70e2bf428ea631cba7b0bf4098f014d977a9e9fc0bdabfce92375ba8b49",
+    "artifact.md": "a416486a9918a36e83d88525d8304fb0c8984b50eea2a778cb4a9852a0521347"
+  },
+  "findings": [
+    {
+      "id": "C2-SME-STR-01",
+      "severity": "high",
+      "location": {
+        "file": "java-foundations/classes-and-objects/string-immutability/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks (checks[1]-[4] test only that new StringBuilder( precedes for, that .append( occurs in the loop, and that return name.toString() follows it)"
+      },
+      "claim": "The checks never verify what is appended, that the returned builder is the one appended to, or that it accumulates across passes, so code that does not return \"1,2,3,\" earns full credit, although the task says 'builds the same text' and the starter comment says numbers(3) must still return \"1,2,3,\". Repros, each run on the page headless with 5 of 5, completed=true, credit 1 and the done message 'One builder now grows in place on every pass': (a) loop body sb.append(i); returns \"123\"; (b) sb = new StringBuilder(); then sb.append(i).append(\",\"); inside the loop returns \"3,\"; (c) appending to a second builder other while returning sb.toString() returns \"\"; (d) the loop changed to for (int i = 0; i < n; i++) returns \"0,1,2,\". Case (a) is the likeliest slip when translating line + i + \",\" into calls.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/StringBuilder.html#append(int)",
+          "section": "StringBuilder (Java SE 25 API), append(int)",
+          "retrievedAt": "2026-11-26T00:27:58Z",
+          "textSha256": "b75be609be00491a271c7753c7935c7fc12b09f0bfd8cde493842214abd08a0e"
+        },
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/StringBuilder.html#%3Cinit%3E()",
+          "section": "StringBuilder (Java SE 25 API), StringBuilder()",
+          "retrievedAt": "2026-11-26T00:27:58Z",
+          "textSha256": "91167f0a5a744de9f4a1da028c3c67973324c3a14cce1a6ff7de2da87130059f"
+        }
+      ],
+      "recommendation": "Add checks that the loop body appends both pieces the old line added, in order (the loop variable, then the \",\" literal, as one chain or two calls on the same builder name), that the appended and returned names are the declared builder, that the builder is not reassigned inside the loop, and that the for header is unchanged from the starter; give a specific Not yet message for each.",
+      "reviewedSha256": "98440db797062adbf97f502faaec077d8ac753b3800453a7cace118ba4889c50"
+    },
+    {
+      "id": "C2-SME-STR-02",
+      "severity": "high",
+      "location": {
+        "file": "java-foundations/classes-and-objects/string-immutability/artifact.html",
+        "selector": "script: parseJava member() reads method bodies with balanced('{','}'); window.PEP_PAGE.acts[2].checks[4]"
+      },
+      "claim": "Method bodies are not syntax-checked, so a missing semicolon is either accepted or misdiagnosed. Repros: (a) only sb.append(i).append(\",\") inside the loop lacks ';': 5 of 5 checks pass with 'No problems found' (run with the page's own reader and checks extracted from the bytes); (b) the builder declaration, the append and the return all lack ';' (run on the page headless): no syntax error is shown, the try counts, and the fifth check says 'Return sb.toString() after the loop ends, as a statement of its own; a return inside the loop stops after one pass.' although the return is already after the loop; a second try settles the activity at zero credit. By the grammar each of those statements ends with ';'. The scope note says the editor does not compile, but the Problems panel reports no problems and the misdiagnosis sends the learner to fix the wrong thing.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.4",
+          "section": "JLS SE 25 14.4 Local Variable Declarations",
+          "retrievedAt": "2026-11-26T00:27:56Z",
+          "textSha256": "4ccad1a03681a4f9b7b4439fd404fbe9475522ec86312aacce1e61a05ea0a310"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.8",
+          "section": "JLS SE 25 14.8 Expression Statements",
+          "retrievedAt": "2026-11-26T00:27:56Z",
+          "textSha256": "bf8b321c5601bd13498db9b07002778b64d574707a23ab18aaf99b2e89c93ef9"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.17",
+          "section": "JLS SE 25 14.17 The return Statement",
+          "retrievedAt": "2026-11-26T00:27:56Z",
+          "textSha256": "526ea7bd71f0323690e34f4daa9d77b09fa44126a63e5c8275e3a991d0468605"
+        }
+      ],
+      "recommendation": "Add the bounded statement-terminator pass recommended for the shared reader (report error: ';' expected at the end of the previous token, not counted as a try); until it exists, make the fifth check's message say what it found rather than assuming a return inside the loop.",
+      "reviewedSha256": "98440db797062adbf97f502faaec077d8ac753b3800453a7cace118ba4889c50"
+    },
+    {
+      "id": "C2-SME-STR-03",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/string-immutability/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[2], checks[3] and checks[4]"
+      },
+      "claim": "Valid Java is rejected with messages that are technically false, the tries count, and a second try settles at zero credit (each confirmed on the page headless: attempts 1, then settled=true, credit 0): (a) a for loop whose body is a single unbraced statement sb.append(i).append(\",\"); is legal, but the page says 'Keep the loop body in braces.' and also 'Remove the string reassignment from the loop.' when there is none; (b) an int statement in the loop such as int next = i + 0; is reported as 'An assignment with + in the loop still builds a new string each pass.', which is false because + on two ints is numeric addition; (c) var sb = new StringBuilder(); is rejected with 'Declare the builder as StringBuilder name = new StringBuilder();'. Rated medium rather than high because each case needs the learner to depart from the braced starter loop or add unrelated statements; by the brief's rubric a reconciler may raise (a) and (b).",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.14.1",
+          "section": "JLS SE 25 14.14.1 The basic for Statement",
+          "retrievedAt": "2026-11-26T00:27:56Z",
+          "textSha256": "49a05f18289b12d78b3bb6aaa2ad9d11c08e5ee515855e09b8c194459dfb9c89"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html#jls-15.18",
+          "section": "JLS SE 25 15.18 Additive Operators",
+          "retrievedAt": "2026-11-26T00:27:56Z",
+          "textSha256": "790bbaa87d9fc2126cd09a452368e16fb6a9f5092e2e135c33687ebcff30fc09"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.4",
+          "section": "JLS SE 25 14.4 Local Variable Declarations",
+          "retrievedAt": "2026-11-26T00:27:56Z",
+          "textSha256": "f7bc7c0586b16df55b64f47b366908577a4ec3351f244b6b3cb0ddb38f486bc1"
+        }
+      ],
+      "recommendation": "Use J.limit(...) (not supported, not a try) for an unbraced loop body and for a var-declared builder, and narrow the '+' assignment test in checks[3] to an assignment whose target is a String-declared local (the names list it already computes) rather than any x = y + z.",
+      "reviewedSha256": "98440db797062adbf97f502faaec077d8ac753b3800453a7cace118ba4889c50"
+    },
+    {
+      "id": "C2-SME-STR-04",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/string-immutability/artifact.html",
+        "selector": "#recap details[data-pep-sources] > p"
+      },
+      "claim": "The page states the claims were checked against the live official pages on 25 November 2026 (UTC), but sources.json (checkedAt and every retrievedAt 2026-11-06T19:04:50.291Z) and topic.json freshness.checkedAt (2026-11-06) record 6 November 2026. I cannot tell which is stale. The cited String and StringBuilder claims still hold on the live API pages fetched in this review (immutability; replace, concat and trim returning this string when nothing changes; append, insert and reverse modifying the builder).",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html",
+          "section": "String (Java SE 25 API), class description",
+          "retrievedAt": "2026-11-26T00:27:58Z",
+          "textSha256": "5b927588a5bf560ec3a7587dad36dc423047255c9ca049526dda30787b4dc821"
+        }
+      ],
+      "recommendation": "Align the page date with the recorded retrieval, or refresh sources.json and topic.json with a real re-check.",
+      "reviewedSha256": "98440db797062adbf97f502faaec077d8ac753b3800453a7cace118ba4889c50"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/java-foundations/classes-and-objects/string-immutability/critic-sme.json",
+    "items": []
+  }
+}

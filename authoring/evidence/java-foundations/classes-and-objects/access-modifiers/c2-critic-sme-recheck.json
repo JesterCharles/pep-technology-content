@@ -1,0 +1,205 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "c2-sme-kestrel (independent technology SME critic, Claude Opus 5.5 subagent)",
+  "reviewedPath": "java-foundations/classes-and-objects/access-modifiers/artifact.html",
+  "reviewedSha256": "2b46ec09f6c23324e3f7bd0ff1829fea45764065263b16eff3ae3b76733b75e7",
+  "artifactHashes": {
+    "artifact.html": "2b46ec09f6c23324e3f7bd0ff1829fea45764065263b16eff3ae3b76733b75e7",
+    "artifact.gift": "3c29b3c7e2d74b2cbaf15065b12617aebd6e556a23f8491013194729fb42942c",
+    "artifact.md": "b32bed45b6a2b697b8e07f964a2fff8743dfb310a63caa027ab0ff0b36142e48"
+  },
+  "findings": [
+    {
+      "id": "C2-SME-ACC-01",
+      "severity": "high",
+      "location": {
+        "file": "java-foundations/classes-and-objects/access-modifiers/artifact.html",
+        "selector": "script pep-classes-objects-engine v3: parseJava and J helpers (MODS, J.access); window.PEP_PAGE.acts[2].checks"
+      },
+      "claim": "The access checks read the first access keyword they find and never reject illegal modifier sets, so a page about access modifiers credits code that javac rejects on its modifiers. Confirmed in the real page: prepending instead of replacing (`public private int reading()`, `protected private int offset`) gives \"Checked: 6 of 6 checks pass\", the done message and full credit (data-pep-completed=true, credit 1, grade 1; progress 3 of 4 answered); a parser-level harness built from the page bytes shows the same for `public public int reading()`. `private class Room` and `protected class Room` also get 6 of 6 and full credit in the real page, though neither modifier is allowed on a top-level class. `public class Room` also gets 6 of 6 and full credit in the real page, though javac requires a public class to be in Room.java and allows one per file. \"Change only those modifiers\" invites exactly the prepend edit.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.3.1",
+          "section": "JLS SE 25 8.3.1 Field Modifiers (more than one access modifier, or a repeated modifier, is a compile-time error)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "eeda1546c99ec4e47a9526258288b46706ab943fb55a96192a7847a07a94e662"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.4.3",
+          "section": "JLS SE 25 8.4.3 Method Modifiers (more than one access modifier, or a repeated modifier, is a compile-time error)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "67f83ac1c12a4ad19ea21e59e82aa07a77a844230d6df5aa05878f74fe761911"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.1.1",
+          "section": "JLS SE 25 8.1.1 Class Modifiers (protected, private and static pertain only to member or local classes)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "69b7ad55107f9a0cf5a5c7f78d4b740d4d1559817181284ecbaf21a92befbbc1"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-7.html#jls-7.6",
+          "section": "JLS SE 25 7.6 Top Level Class and Interface Declarations (host file-name restriction)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "dc7e207e72e67553b72ae2c102c70c38e2e8e38ac6ae05476c60b552bfd80bb0"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-7.html#jls-7.6",
+          "section": "JLS SE 25 7.6 Top Level Class and Interface Declarations (a public class: at most one per compilation unit)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "769ff14afd5864975bc9f72c6fc794ccf3e5774201034287573dbf49db0f47e7"
+        }
+      ],
+      "recommendation": "In the reader or the checks, report \"error: illegal combination of modifiers\" when a member has more than one of public, protected and private; \"error: repeated modifier\" for a duplicate; \"error: modifier private (or protected) not allowed here\" on a top-level class; and \"class Room is public, should be declared in a file named Room.java\" when a second top-level class in Thermostat.java is public.",
+      "reviewedSha256": "2b46ec09f6c23324e3f7bd0ff1829fea45764065263b16eff3ae3b76733b75e7"
+    },
+    {
+      "id": "C2-SME-ACC-02",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/access-modifiers/artifact.html",
+        "selector": "script pep-classes-objects-engine v3: parseJava and J helpers (typeDecl)"
+      },
+      "claim": "In the real page a `package home;` line (and, in the harness, an `import java.util.List;` line) at the top of Thermostat.java is reported as \"Error, line 1: class, interface, enum, or record expected. This code is outside every class; move it inside the braces of a class\", with the status \"1 error: the compiler would reject this code\". Both are legal at the top of a compilation unit, and the advice to move them inside a class is wrong. The page's own prediction example uses `package shop;`, and the Activity 3 scenario needs a package (see C2-SME-ACC-03), so a learner is likely to add one.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-7.html#jls-7.3",
+          "section": "JLS SE 25 7.3 Compilation Units (package and import declarations precede top level classes)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "cea3a103e5cd36ded568cd379a0d3a48e05f7d0184a8c812d77f8746fc9de345"
+        }
+      ],
+      "recommendation": "Accept an optional package declaration and import declarations before the first type, or report them as not supported (which is not a try), but never as a compiler error.",
+      "reviewedSha256": "2b46ec09f6c23324e3f7bd0ff1829fea45764065263b16eff3ae3b76733b75e7"
+    },
+    {
+      "id": "C2-SME-ACC-03",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/access-modifiers/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].starter; #activity-3 task"
+      },
+      "claim": "Thermostat.java has no package declaration, so Thermostat and Room are in the unnamed package. The scenario says Dashboard and SmartThermostat are classes \"in another package\" that call reading() and use offset, and the compare text says \"Thermostat must stay public, because Dashboard is in another package\". As written this cannot work: a class in a named package cannot import a class from the unnamed package, and a top-level class is in scope only in its own package. The access reasoning is right, but the code sample is not a program that could exist.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-7.html#jls-7.5.1",
+          "section": "JLS SE 25 7.5.1 Single-Type-Import Declarations (the imported class must be a member of a named package)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "9e6f07387eb604931a81f4f257587a46cc6d57dc1e81927732e672469ba8c6bc"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-6.html#jls-6.3",
+          "section": "JLS SE 25 6.3 Scope of a Declaration (a top level class is in scope only in its own package)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "fbf9fc227f60d56f5b702357b1707071196fbbd2222b922084193a0dcfc5f399"
+        }
+      ],
+      "recommendation": "Once the reader accepts it (C2-SME-ACC-02), add `package home;` (any name) as the first line of the starter, the static starter and artifact.md, and name the package of Dashboard and SmartThermostat in the task text.",
+      "reviewedSha256": "2b46ec09f6c23324e3f7bd0ff1829fea45764065263b16eff3ae3b76733b75e7"
+    },
+    {
+      "id": "C2-SME-ACC-04",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/access-modifiers/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[5].test"
+      },
+      "claim": "For `public static class Thermostat` the check says \"Change only the access modifiers: static on Thermostat changes more than who can use it\", implying the code is legal but goes too far. static is not allowed on a top-level class at all, so javac rejects it.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html#jls-8.1.1",
+          "section": "JLS SE 25 8.1.1 Class Modifiers (protected, private and static pertain only to member or local classes)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "69b7ad55107f9a0cf5a5c7f78d4b740d4d1559817181284ecbaf21a92befbbc1"
+        }
+      ],
+      "recommendation": "For static on the top-level class, say \"static is not allowed on a top-level class, so this does not compile\"; keep the current wording for final and abstract, which are legal.",
+      "reviewedSha256": "2b46ec09f6c23324e3f7bd0ff1829fea45764065263b16eff3ae3b76733b75e7"
+    },
+    {
+      "id": "C2-SME-ACC-05",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/access-modifiers/artifact.html",
+        "selector": "#recap li"
+      },
+      "claim": "The recap line \"Access is checked by the compiler; a forbidden use is a compile error, not a run-time error\" is overstated as a general rule. The JVM also enforces access at run time: IllegalAccessError is thrown when a class definition has changed incompatibly since the caller was compiled (for example a field made private and only its class recompiled). The prediction-specific explanation (\"so nothing is thrown at run time\" for that code) is correct.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/IllegalAccessError.html",
+          "section": "Java SE 25 API, java.lang.IllegalAccessError class description",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "be1602c887139d51902fb71884e13f3d3ae71d970136bcd8e7f1b1fcd5eb3456"
+        }
+      ],
+      "recommendation": "Write \"Access is checked by the compiler, so a forbidden use in your source code is a compile error, not a run-time error\" in the recap and artifact.md.",
+      "reviewedSha256": "2b46ec09f6c23324e3f7bd0ff1829fea45764065263b16eff3ae3b76733b75e7"
+    },
+    {
+      "id": "C2-SME-ACC-06",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/access-modifiers/artifact.html",
+        "selector": "script pep-classes-objects-engine v3: parseJava and J helpers"
+      },
+      "claim": "Same shared-engine gap as the sibling pages: method bodies are not read as statements, so `t.setTarget(21)` with its semicolon deleted still gives 6 of 6 checks pass in the harness. It is low here because the task changes only modifiers and tells the learner to leave Room unchanged.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.8",
+          "section": "JLS SE 25 14.8 Expression Statements (grammar ends with ;)",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "bf8b321c5601bd13498db9b07002778b64d574707a23ab18aaf99b2e89c93ef9"
+        }
+      ],
+      "recommendation": "Fix with the shared statement-terminator check recommended for the sibling pages, or note under the editor that statements inside methods are not checked.",
+      "reviewedSha256": "2b46ec09f6c23324e3f7bd0ff1829fea45764065263b16eff3ae3b76733b75e7"
+    },
+    {
+      "id": "C2-SME-ACC-07",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/access-modifiers/artifact.html",
+        "selector": "details[data-pep-hint-for=\"task-3\"][data-pep-hint-order=\"2\"]"
+      },
+      "claim": "Hint leakage: hint 2 of 2 says \"Dashboard is not a subclass, so only the widest level reaches it; SmartThermostat is a subclass, so the level that adds subclasses in other packages is enough\". Read against the four-row table directly above, that gives the answers for reading (public) and offset (protected) outright, two of the six checks. This is semantic leakage, not a Java-truth issue, so no external source applies.",
+      "evidence": [],
+      "recommendation": "Make the last hint a question that sends the learner back to the table row by row, for example \"Which row includes a class in another package that is not a subclass? Which row adds only subclasses?\", rather than describing the answer level.",
+      "reviewedSha256": "2b46ec09f6c23324e3f7bd0ff1829fea45764065263b16eff3ae3b76733b75e7"
+    },
+    {
+      "id": "C2-SME-ACC-08",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/access-modifiers/artifact.html",
+        "selector": "details[data-pep-sources]"
+      },
+      "claim": "The Sources block (and artifact.md) says the claims were checked against the live official pages on 25 November 2026 (UTC), but that date is not backed by the frozen source list: authoring/evidence/java-foundations/classes-and-objects/access-modifiers/sources.json records checkedAt and every retrievedAt as 2026-11-06, its reviewedSha256 is not the current artifact.html hash, and topic.json freshness.checkedAt is 2026-11-06. This critic re-fetched every source in that list on 2026-11-26 (UTC) and each page's raw bytes still match the sha256 recorded in sources.json, so the sources themselves are unchanged and fresh; the defect is only the date label against the record.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-6.html",
+          "section": "JLS SE 25 chapter 6: whole page bytes, compared with the sha256 recorded in sources.json",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "cd7874ea8fbb5f9edd1784435ba29be6085abed22803c06b0195cca11b217712"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html",
+          "section": "JLS SE 25 chapter 8: whole page bytes, compared with the sha256 recorded in sources.json",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "02358c18e0e9a16c3f0a6492478f5108b673162dc1bd822971037ba4a3fe3259"
+        },
+        {
+          "url": "https://dev.java/learn/classes-objects/more-on-classes/",
+          "section": "Dev.java More on Classes: whole page bytes, compared with the sha256 recorded in sources.json",
+          "retrievedAt": "2026-11-26T00:43:04Z",
+          "textSha256": "8278ae15bbf255561aee02642fbf19863bd1d17ed03f8262b70d9437ae79ff01"
+        }
+      ],
+      "recommendation": "Either refresh sources.json (retrieval dates, hashes, reviewedSha256) and topic.json freshness for the current bytes, or state on the page and in artifact.md the date the source list actually records.",
+      "reviewedSha256": "2b46ec09f6c23324e3f7bd0ff1829fea45764065263b16eff3ae3b76733b75e7"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/java-foundations/classes-and-objects/access-modifiers/critic-sme.json",
+    "items": []
+  }
+}

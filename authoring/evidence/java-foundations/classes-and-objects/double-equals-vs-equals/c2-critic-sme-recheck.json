@@ -1,0 +1,175 @@
+{
+  "schemaVersion": 1,
+  "role": "sme",
+  "author": "sme-critic-c2-otter (independent technology SME critic, Claude Opus 5.5 subagent)",
+  "reviewedPath": "java-foundations/classes-and-objects/double-equals-vs-equals/artifact.html",
+  "reviewedSha256": "108c7ca285b38258da62df735e42b544d730386313ccd04c83669b1f2542a8ea",
+  "artifactHashes": {
+    "artifact.html": "108c7ca285b38258da62df735e42b544d730386313ccd04c83669b1f2542a8ea",
+    "artifact.gift": "a6edc1b506cbc2bda1461fb0c86469aa98d27eaa30e4a7cebadf131a36220f6a",
+    "artifact.md": "ce04fe2fcd5bbe36f9e54f0462d65c63f455ddbcf3dba1d2562d1597d75258e5"
+  },
+  "findings": [
+    {
+      "id": "C2-SME-EQ-01",
+      "severity": "high",
+      "location": {
+        "file": "java-foundations/classes-and-objects/double-equals-vs-equals/artifact.html",
+        "selector": "#cf-3 practice editor (shared engine parseJava/typeDecl)"
+      },
+      "claim": "Legal Java is reported as a compiler error with a wrong fix. With `import java.util.Objects;` or `package menu;` (both run) above an otherwise accepted `class Menu`, the editor shows \"Error, line 1: class, interface, enum, or record expected. This code is outside every class; move it inside the braces of a class.\" and the status \"1 error: the compiler would reject this code\". JLS SE 25 7.3 defines an ordinary compilation unit as an optional package declaration, then imports, then top-level classes, so javac accepts this file, and the suggested fix (moving the line inside the class) would produce code that really does not compile. A learner at this level plausibly meets this: IDE-created files usually start with a package line, and this page's challenge sends learners to their IDE, where the null-safe Objects.equals alternative needs a java.util import. The page then teaches something false about how a Java file is laid out, which is why this is rated high. Reproduced headless in Chromium (Playwright) against the current bytes; no JDK is installed, so javac was not run and its exact message wording and column are not asserted.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-7.html",
+          "section": "JLS SE 25 §7.3 Compilation Units (grammar)",
+          "retrievedAt": "2026-11-26T00:33:47Z",
+          "textSha256": "cea3a103e5cd36ded568cd379a0d3a48e05f7d0184a8c812d77f8746fc9de345"
+        }
+      ],
+      "recommendation": "In parseJava, accept an optional `package Name;` and any `import [static] Name[.*];` declarations before the first type declaration (JLS 7.3 OrdinaryCompilationUnit), or at worst report them as \"not supported in this practice editor\" (a limit, not a try). Never label them a compiler error, and never advise moving them inside a class: an import or package declaration inside a class body is itself a syntax error.",
+      "reviewedSha256": "108c7ca285b38258da62df735e42b544d730386313ccd04c83669b1f2542a8ea"
+    },
+    {
+      "id": "C2-SME-EQ-02",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/double-equals-vs-equals/artifact.html",
+        "selector": "#cf-3 practice editor; noscript[data-pep-no-js] \"What the practice editor reads\"; #cf-3[data-static-alt]"
+      },
+      "claim": "Method bodies are never parsed: the reader only balances braces, so code that javac rejects inside choose is accepted as \"No problems found in the parts this editor reads\", \"Checked: 5 of 5 checks pass\" and the success text. Reproduced: `if (input.equals(\"quit\") {` (missing `)`), `return \"unknown\"` with no semicolon, stray tokens `@@@ ;;; int` after the last return, an undeclared name (`inptu.equals(\"quit\") || ...`), and a second statement after the final return. javac rejects each: the if statement needs `( Expression )` (14.9), a return statement ends with `;` (14.17), an undeclared simple name is a compile-time error (6.5.6.1), and an unreachable statement is a compile-time error (14.22). The reading version and data-static-alt say the editor \"checks declarations and statement shapes, and reports anything else as not supported\", which these runs contradict. Rated medium, not high, because the scope line under the editor does say it \"does not compile or run Java\". Reproduced headless in Chromium (Playwright) against the current bytes; no JDK is installed, so javac was not run and its exact message wording and column are not asserted.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html",
+          "section": "JLS SE 25 §14.9 The if Statement (grammar)",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "93b9b9fdc56fb886fdb8474fea74de34ed1720be4d2cb9064e8c88f9a2e1e483"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html",
+          "section": "JLS SE 25 §14.17 The return Statement (grammar)",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "fb6538a5232751c37b56a155ef78574420624bbbbb9adcca74d5bae559f13649"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-6.html",
+          "section": "JLS SE 25 §6.5.6.1 Simple Expression Names",
+          "retrievedAt": "2026-11-26T00:29:06Z",
+          "textSha256": "d50f8737cd98dc0f2ddc8772e2664638cde95fb238679bdab62fdfd7e75a3edd"
+        },
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html",
+          "section": "JLS SE 25 §14.22 Unreachable Statements",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "7c5c1f508cedb3af4f0f4edad78992a4bfc4376ba3436229cda0ab124cf53759"
+        }
+      ],
+      "recommendation": "Either check method bodies at least for balanced parentheses and a `;` or block ending every statement (J.top already splits statements), reporting anything else as not supported, or reword the reading version, data-static-alt, scope line and the same sentence in artifact.md to say exactly what it reads: \"It reads declarations and looks for a few patterns inside method bodies; it does not check the statements themselves, so it can miss compile errors there.\"",
+      "reviewedSha256": "108c7ca285b38258da62df735e42b544d730386313ccd04c83669b1f2542a8ea"
+    },
+    {
+      "id": "C2-SME-EQ-03",
+      "severity": "medium",
+      "location": {
+        "file": "java-foundations/classes-and-objects/double-equals-vs-equals/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[2] and checks[3]"
+      },
+      "claim": "The quit and help checks only look for the token sequence `input . equals ( \"quit\" )` (or the reverse) anywhere in the body, so fixes with the wrong logic pass all five checks and get the done text \"typed input such as quit matches\". Reproduced: `if (!input.equals(\"quit\"))` returns \"bye\" for every input except quit, and `if (input.equals(\"help\") || input.equals(\"quit\"))` as the first condition returns \"bye\" for help. By String.equals, both break the behaviour the reading version requires (choose(new String(\"quit\"), 5) returns bye, and help returns showing help). Rated medium: the negation slip is plausible for a beginner, the second is not. Reproduced headless in Chromium (Playwright) against the current bytes; no JDK is installed, so javac was not run and its exact message wording and column are not asserted.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html",
+          "section": "String.equals(Object) (Java SE 25 API)",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "de9670ddfba00d5fc5c36ef04fdc8d44cc86284a7b6cf2cf344b76c550138721"
+        }
+      ],
+      "recommendation": "Use J.top to take the three if conditions in order. Require condition 1 to be exactly `p.equals(\"quit\")` or `\"quit\".equals(p)`, condition 3 the same for \"help\", and condition 2 to be `count == 0` or `0 == count`, with nothing negated or added.",
+      "reviewedSha256": "108c7ca285b38258da62df735e42b544d730386313ccd04c83669b1f2542a8ea"
+    },
+    {
+      "id": "C2-SME-EQ-04",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/double-equals-vs-equals/artifact.html",
+        "selector": "#cf-3 practice editor (shared engine member/expr for field initializers)"
+      },
+      "claim": "A missing semicolon after a field with an initializer is reported on the wrong line, with a fix that hides the problem. Adding `static int calls = 0` (no `;`) as line 2 of Menu.java gives \"Error, line 14: ';' expected. Add a semicolon (;) at the end of line 14.\", because expr() swallows the whole following method up to the class's closing brace. The incomplete declaration is on line 2: FieldDeclaration ends with `;` (8.3), so the error belongs at the end of line 2. If the learner follows the advice, the error goes away, the method silently becomes part of the field initializer, and the signature check fails for an unrelated-looking reason. Rated low because this task adds no field. Reproduced headless in Chromium (Playwright) against the current bytes; no JDK is installed, so javac was not run and its exact message wording and column are not asserted.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-8.html",
+          "section": "JLS SE 25 §8.3 Field Declarations (grammar)",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "1dc1830c11b1753db8bbb39a27837bcadd4a703435f1f9a0465c1ce75d067fbe"
+        }
+      ],
+      "recommendation": "Stop a field initializer at a depth-0 `{` that does not follow `new ...(...)`, `=` or `,`, or at a modifier or type keyword that follows a complete operand, and report \"';' expected\" at the end of the token before it.",
+      "reviewedSha256": "108c7ca285b38258da62df735e42b544d730386313ccd04c83669b1f2542a8ea"
+    },
+    {
+      "id": "C2-SME-EQ-05",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/double-equals-vs-equals/artifact.html",
+        "selector": "window.PEP_PAGE.acts[2].checks[2] and checks[3]"
+      },
+      "claim": "`java.util.Objects.equals(input, \"quit\")` and the same for \"help\" compare content correctly, and null-safely (Objects.equals calls the first argument's equals when it is not null). They are still marked \"Not yet\" with \"Compare the text of input with \"quit\" by calling equals.\", which is confusing, because the learner did call an equals method. Reproduced headless in Chromium (Playwright) against the current bytes; no JDK is installed, so javac was not run and its exact message wording and column are not asserted.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/Objects.html",
+          "section": "Objects.equals(Object, Object) (Java SE 25 API)",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "17220dc84555b75b3a5cefe172dc526e9c81674f872aa638e11c73dab0111323"
+        }
+      ],
+      "recommendation": "Accept `Objects.equals(p, \"quit\")` and its qualified form, or make the message name the task requirement: \"Call equals on one of the two strings, as in the teaching.\"",
+      "reviewedSha256": "108c7ca285b38258da62df735e42b544d730386313ccd04c83669b1f2542a8ea"
+    },
+    {
+      "id": "C2-SME-EQ-06",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/double-equals-vs-equals/artifact.html",
+        "selector": "#q-4-2 pre (Coin overriding equals) and #activity-4 [data-pep-teaching]"
+      },
+      "claim": "Activity 4's teaching says classes that override equals \"must also override hashCode\", and the retry Coin right below it overrides equals with no hashCode. The Object API note says it is generally necessary to override hashCode whenever equals is overridden, because equal objects must have equal hash codes. Without that, these Coins misbehave as HashSet or HashMap keys. The snippet is a prediction prompt rather than model code, but it is the only override on the page, and learners copy it.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html",
+          "section": "Object.equals(Object), API Note (Java SE 25 API)",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "b926d6e81586bccd3ec4ebf9e1abfbbbb62332a8ded13a27f3974009ddcb60ee"
+        }
+      ],
+      "recommendation": "Add a line to the snippet, such as `// hashCode omitted to keep the example short; real code overrides it too`, or add a matching `@Override public int hashCode() { return Integer.hashCode(cents); }`.",
+      "reviewedSha256": "108c7ca285b38258da62df735e42b544d730386313ccd04c83669b1f2542a8ea"
+    },
+    {
+      "id": "C2-SME-EQ-07",
+      "severity": "low",
+      "location": {
+        "file": "java-foundations/classes-and-objects/double-equals-vs-equals/artifact.html",
+        "selector": "details[data-pep-sources] > p"
+      },
+      "claim": "Source-record freshness does not match the page. The Sources block says the claims \"were checked against the live official pages below on 25 November 2026 (UTC)\", but the frozen source list (sources.json) records checkedAt 2026-11-06 and reviewedSha256 0a4d07b90f54c9285e02a1b9a56a63af6092b371487d52a055d4bf8cacb08e6a, which is not the current artifact.html (108c7ca285b38258da62df735e42b544d730386313ccd04c83669b1f2542a8ea); topic.json freshness.checkedAt is also 2026-11-06. A later source-check record may exist in evidence files this review was not allowed to read, so the finding rests only on the page's stated date against the frozen source list and topic.json. I re-fetched the listed official pages now, and the claims I checked still hold, so this is a record mismatch, not a false claim. The On the job rows (At work, In interviews) are not sourced and carry no verified badge of their own, but the blanket \"Claims on this page were checked\" sentence and topic.json freshness.status \"verified\" with an empty unverifiedItems list implicitly cover them.",
+      "evidence": [
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/String.html",
+          "section": "String.equals(Object) (Java SE 25 API)",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "de9670ddfba00d5fc5c36ef04fdc8d44cc86284a7b6cf2cf344b76c550138721"
+        },
+        {
+          "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html",
+          "section": "Object.equals(Object), API Note (Java SE 25 API)",
+          "retrievedAt": "2026-11-26T00:27:50Z",
+          "textSha256": "b926d6e81586bccd3ec4ebf9e1abfbbbb62332a8ded13a27f3974009ddcb60ee"
+        }
+      ],
+      "recommendation": "Either record a source check that matches the stated 25 November 2026 date and binds the current bytes, or change the stated date to the one the record supports. Pending the captain decision on career lines, keep the blanket sentence from reading as covering the unsourced On the job rows, for example \"Technical claims on this page were checked...\".",
+      "reviewedSha256": "108c7ca285b38258da62df735e42b544d730386313ccd04c83669b1f2542a8ea"
+    }
+  ],
+  "recheck": {
+    "of": "authoring/evidence/java-foundations/classes-and-objects/double-equals-vs-equals/critic-sme.json",
+    "items": []
+  }
+}

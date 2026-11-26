@@ -8,7 +8,7 @@
 
 ## Teaching
 
-Before any explanation, predict what happens. These are two files in two different packages.
+Access modifiers are new here, so guess. A package groups related classes, like a folder; a file names its package on its first line. An `import` line lets a class use a class from another package by its short name. These two files are in different packages:
 
 ```
 // File shop/Item.java
@@ -34,11 +34,11 @@ public class Main {
 | Modifier | Usable from |
 | --- | --- |
 | `public` | any class in any package |
-| `protected` | its package, plus subclasses in other packages (subclasses come in a later module) |
-| no modifier | only its own package (package access) |
-| `private` | only inside its own top-level class |
+| `protected` | its package, plus subclasses in other packages (a subclass is a class built on another class; a later module covers them) |
+| no modifier | only its own package (package access, also called package-private) |
+| `private` | only inside its own class |
 
-To be used from another package, the class itself must also be `public`.
+To be used from another package, the class itself must also be `public`. In the scenarios, `shop.Box` means class `Box` in package `shop`, and `b` is a `Box` variable.
 
 Give each member the narrowest access that still lets every real use compile. A narrow member can change later without breaking other classes, because no other class could depend on it.
 
@@ -51,18 +51,18 @@ Choose from who really uses the member, not from who might one day want it.
 
 ## Model
 
-The model: each field, method and constructor carries one of four access levels, from widest to narrowest. The compiler rejects any use from outside the allowed area.
+Each field, method and constructor (together, a class's members) carries one of four access levels, from widest to narrowest. The compiler rejects any use from outside the allowed area.
 
 ## Recap
 
 - `private`: only its own class. No modifier: its package. `protected`: its package plus subclasses elsewhere. `public`: everywhere.
-- Access is checked by the compiler; a forbidden use is a compile error, not a run-time error.
+- A forbidden use in your source code is a compile error, not a run-time error.
 - A class used from another package must itself be `public`.
 - Choose the narrowest access that lets every real use compile.
 
 ## Cheat sheet
 
-Where to act: The line that starts with Scenario:, just above the two buttons.
+Where to act: The scenario card, just above the two lane buttons.
 
 Next step: Find the member's modifier, then ask two questions in order: is the using class in the same package, and is it inside the same class?
 
@@ -74,7 +74,7 @@ Another hint Another hint, 2 of 2 for Activity 3
 
 Where to act: `reading` and `offset`.
 
-Next step: `Dashboard` is not a subclass, so only the widest level reaches it; `SmartThermostat` is a subclass, so the level that adds subclasses in other packages is enough.
+Next step: For each one, ask two questions about its caller: is it in the same package, and is it a subclass? Then read the table from the bottom up and stop at the first row whose Usable from covers that caller.
 
 |  |  |
 | --- | --- |
@@ -85,7 +85,7 @@ Next step: `Dashboard` is not a subclass, so only the widest level reaches it; `
 
 ## Sources
 
-Claims on this page were checked against the live official pages below on 16 October 2026 (UTC), for Java SE 25. Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 26 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
 
 - Java Language Specification SE 25, chapter 6: Names: access control (6.6), including package access, protected access (6.6.2) and private access.
 - Java Language Specification SE 25, chapter 8: Classes: class and member modifiers (8.1.1, 8.3.1, 8.4.3) and the default constructor's access (8.8.9).
@@ -103,7 +103,7 @@ Expected results and why. Private pin used by another method of Safe : compiles.
 
 ### explore
 
-Practice editor, reading version. JavaScript is off, so the editor cannot check code here. Work on paper. Task: every member of Thermostat starts private . Change only those modifiers so each member has the narrowest access its real uses need, and leave Room unchanged. Uses outside Thermostat : Room , in this file, calls setTarget and reading ; Dashboard , in another package, calls reading() ; SmartThermostat , a subclass in another package, reads and sets offset . Starter, Thermostat.java: public class Thermostat { private int target = 20; private int current = 18; private int offset = 0; private void setTarget(int t) { target = clamp(t + offset); } private int reading() { return current; } private int clamp(int t) { return Math.max(10, Math.min(30, t)); } } class Room { void evening(Thermostat t) { t.setTarget(21); System.out.println(t.reading()); } } What the practice editor reads: top-level classes with fields, constructors and methods; it checks the modifiers and statement shapes, and reports anything else as not supported. How to compare: for each member, list every class that uses it, then pick the narrowest level that includes all of them: only Thermostat itself, its package, its package plus subclasses elsewhere, or every class. Thermostat must stay public , because Dashboard is in another package, and Room must keep both calls.
+Practice editor, reading version. JavaScript is off, so the editor cannot check code here. Work on paper. Task: every member of Thermostat starts private . Change only those modifiers so each member has the narrowest access its real uses need, and leave Room unchanged. Uses outside Thermostat : Room , in this file, calls setTarget and reading ; Dashboard , in another package, calls reading() ; SmartThermostat , a subclass in another package, reads and sets offset . Starter, Thermostat.java: package home; public class Thermostat { private int target = 20; private int current = 18; private int offset = 0; private void setTarget(int t) { target = clamp(t + offset); } private int reading() { return current; } private int clamp(int t) { return Math.max(10, Math.min(30, t)); } } class Room { void evening(Thermostat t) { t.setTarget(21); System.out.println(t.reading()); } } What the practice editor reads: top-level classes with fields, constructors and methods; it checks the modifiers and statement shapes, and reports anything else as not supported. How to compare: for each member, list every class that uses it, then pick the narrowest level that includes all of them: only Thermostat itself, its package, its package plus subclasses elsewhere, or every class. Thermostat must stay public , because Dashboard is in another package, and Room must keep both calls.
 
 ### mcq
 
