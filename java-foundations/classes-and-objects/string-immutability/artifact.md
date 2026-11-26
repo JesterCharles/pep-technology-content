@@ -8,7 +8,7 @@
 
 ## Teaching
 
-Before any explanation, predict what this program prints.
+Immutability is new here, so guess what this program prints.
 
 ```
 // inside main:
@@ -35,7 +35,7 @@ Because no code can change a `String` object, any number of variables can safely
 
 ## Model
 
-The model: a `String` object is immutable: once created, its characters never change. Methods such as `toUpperCase`, `replace`, `concat` and `trim` return the result as a string and leave the original untouched; when there is nothing to change, some may simply return the same string. To keep a result, assign it: `s = s.trim();`. That moves the variable to the result; the old string is not altered.
+A `String` object is immutable: once created, its characters never change. Methods such as `toUpperCase`, `replace`, `concat` and `trim` return the result as a string and leave the original untouched; when there is nothing to change, some may simply return the same string. To keep a result, assign it: `s = s.trim();`. That moves the variable to the result; the old string is not altered.
 
 ## Recap
 
@@ -46,7 +46,7 @@ The model: a `String` object is immutable: once created, its characters never ch
 
 ## Cheat sheet
 
-Where to act: The line that starts with Scenario:, just above the two buttons.
+Where to act: The scenario card, just above the two lane buttons.
 
 Next step: First look at the variable's type: is the call made on `s` or on `sb`? The type decides the answer before the method name does.
 
@@ -70,7 +70,7 @@ Next step: The method promises a `String`, but your builder is a `StringBuilder`
 
 ## Sources
 
-Claims on this page were checked against the live official pages below on 16 October 2026 (UTC), for Java SE 25. Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 25 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
 
 - String (Java SE 25 API): strings are constant and cannot be changed after creation; toUpperCase, replace, concat and trim return their result, and trim returns this string when there is nothing to remove.
 - StringBuilder (Java SE 25 API): a mutable sequence of characters; append, insert and reverse modify the builder and return it; toString.
@@ -89,7 +89,7 @@ Expected results and why. Original unchanged, result returned: s.toUpperCase() ,
 
 ### explore
 
-Practice editor, reading version. JavaScript is off, so the editor cannot check code here. Work on paper or in any Java 25 setup you already use. Task: rewrite the body of numbers so it creates one StringBuilder before the loop, appends inside the loop, and returns the builder's contents as a String after the loop. Keep the loop and the signature. Starter, Report.java: class Report { // Rewrite this body to use a StringBuilder. // numbers(3) must still return "1,2,3,". static String numbers(int n) { String line = ""; for (int i = 1; i <= n; i++) { line = line + i + ","; } return line; } } What the practice editor reads: top-level classes with fields, constructors and methods; it checks declarations and statement shapes, and reports anything else as not supported. How to compare: numbers(3) must still return 1,2,3, . The five checks are the unchanged signature, a builder created before the loop, append inside the loop, no + or += reassignment inside the loop, and a return of the builder's toString() .
+Practice editor, reading version. JavaScript is off, so the editor cannot check code here. Work on paper or in your IDE. Task: rewrite the body of numbers so it creates one StringBuilder before the loop, appends inside the loop, and returns the builder's contents as a String after the loop. Keep the loop and the signature. Starter, Report.java: class Report { // Rewrite this body to use a StringBuilder. // numbers(3) must still return "1,2,3,". static String numbers(int n) { String line = ""; for (int i = 1; i <= n; i++) { line = line + i + ","; } return line; } } What the practice editor reads: top-level classes with fields, constructors and methods; it checks declarations and statement shapes, and reports anything else as not supported. How to compare: numbers(3) must still return 1,2,3, . The five checks are the unchanged signature, a builder created before the loop, append inside the loop, no + or += reassignment inside the loop, and a return of the builder's toString() .
 
 ### mcq
 

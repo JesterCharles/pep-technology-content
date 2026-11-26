@@ -8,7 +8,7 @@
 
 ## Teaching
 
-Before any explanation, predict what this program prints.
+Memory is new here, so guess what this program prints.
 
 ```
 class Box {
@@ -37,7 +37,7 @@ Java passes every argument by value. For an object, the value copied into the pa
 
 ## Model
 
-The model: each method call gets a frame on its thread's stack. The frame holds that call's parameters and local variables, and it disappears when the call returns. Every object made by `new` lives on the heap, together with its fields. A local variable of a class type holds only a reference: an arrow to an object on the heap.
+Each method call gets a frame on the stack. The frame holds that call's parameters and local variables, and it disappears when the call returns. Every object made by `new` lives on the heap, together with its fields. A local variable of a class type holds only a reference: an arrow to an object on the heap.
 
 ## Recap
 
@@ -48,7 +48,7 @@ The model: each method call gets a frame on its thread's stack. The frame holds 
 
 ## Cheat sheet
 
-Where to act: The line that starts with Scenario:, just above the three buttons.
+Where to act: The scenario card, just above the three lane buttons.
 
 Next step: Trace the program line by line. A variable declared in `main` goes in the frame, a field goes in the object its variable refers to, and an arrow ends at the object whose reference the variable was given; `b = a` copies `a`'s arrow.
 
@@ -75,7 +75,7 @@ Next step: A box is eligible only if no variable at all refers to it at that poi
 
 ## Sources
 
-Claims on this page were checked against the live official pages below on 16 October 2026 (UTC), for Java SE 25. Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 25 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
 
 - Java Virtual Machine Specification SE 25, chapter 2: run-time data areas: Java Virtual Machine stacks and frames (2.5.2, 2.6) and the heap where all class instances and arrays are allocated (2.5.3).
 - Java Language Specification SE 25, chapter 12: Execution: reachable and unreachable objects and finalization (12.6, 12.6.1).

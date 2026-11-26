@@ -8,7 +8,7 @@
 
 ## Teaching
 
-Before any explanation, predict what happens when this runs.
+`final` is new here, so guess what happens when this runs.
 
 ```
 // inside main:
@@ -18,11 +18,11 @@ System.out.println(sb);
 ```
 
 - A final variable or field can be assigned only once. A final field must be assigned by the end of every constructor and never afterwards.
-- A final method cannot be overridden by a subclass, and a final class, such as `String`, cannot be extended at all. Subclasses arrive in the next module; here you only need to know what the keyword forbids.
+- A final method cannot be overridden (replaced) by a subclass, and a final class, such as `String`, cannot be extended at all. Subclasses come in the next module.
 
 For a reference variable, "assigned once" means it always refers to the same object. The object itself can still change, unless its own class prevents that.
 
-When you print an object or join it to a string with `+`, Java calls its `toString()` method. The version every class inherits from `Object` prints the class name, an `@` and a hexadecimal number, such as `Card@1b6d3586`, which tells a reader almost nothing. Override it to return a useful text form:
+When you print an object or join it to a string with `+`, Java calls its `toString()` method. The version every class inherits from `Object`, the class every class builds on, prints the class name, an `@` and a hexadecimal number, such as `Card@1b6d3586`, which tells a reader almost nothing. Override it to return a useful text form:
 
 ```
 class Point {
@@ -39,11 +39,11 @@ class Point {
 
 `@Override` asks the compiler to confirm that the method really replaces an inherited one; a misspelled name then becomes a compile error.
 
-Printing an object and joining it to a string both call `toString()`: the inherited one, or your override if there is one.
+Printing an object, or joining it to a string, calls its `toString()`.
 
 ## Model
 
-The model: `final` means "assigned once" or "not replaced", depending on where it appears.
+`final` means "assigned once" or "not replaced", depending on where it appears.
 
 ## Recap
 
@@ -54,7 +54,7 @@ The model: `final` means "assigned once" or "not replaced", depending on where i
 
 ## Cheat sheet
 
-Where to act: The line that starts with Scenario:, just above the two buttons.
+Where to act: The scenario card, just above the two lane buttons.
 
 Next step: Find what is marked `final`, then ask whether the code assigns that variable a second time, or only uses or changes the object it refers to.
 
@@ -81,7 +81,7 @@ Next step: Build the text from three pieces joined with `+`: the rank field, the
 
 ## Sources
 
-Claims on this page were checked against the live official pages below on 16 October 2026 (UTC), for Java SE 25. Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 25 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
 
 - Java Language Specification SE 25, chapter 4: Types, Values, and Variables: final variables (4.12.4): a final variable may be assigned only once; a final reference always refers to the same object, whose state may still change.
 - Java Language Specification SE 25, chapter 8: Classes: final classes (8.1.1.2), final fields that must be definitely assigned by the end of every constructor (8.3.1.2) and final methods (8.4.3.3).
@@ -101,7 +101,7 @@ Expected results and why. Does not compile: max = 20 after final int max ; sb = 
 
 ### explore
 
-Practice editor, reading version. JavaScript is off, so the editor cannot check code here. Work on paper or in any Java 25 setup you already use. Task: add a toString override marked @Override so that printing new Card("Q", "hearts") shows Q of hearts ; keep both fields final . Starter, Card.java: class Card { private final String rank; private final String suit; Card(String rank, String suit) { this.rank = rank; this.suit = suit; } // Override toString so that printing new Card("Q", "hearts") // shows: Q of hearts } What the practice editor reads: top-level classes with fields, constructors and methods; it checks declarations and statement shapes, and reports anything else as not supported. How to compare: printing new Card("Q", "hearts") must show exactly Q of hearts , and new Card("7", "clubs") must show 7 of clubs . Without the override you would see Card@ followed by a hexadecimal number.
+Practice editor, reading version. JavaScript is off, so the editor cannot check code here. Work on paper or in your IDE. Task: add a toString override marked @Override so that printing new Card("Q", "hearts") shows Q of hearts ; keep both fields final . Starter, Card.java: class Card { private final String rank; private final String suit; Card(String rank, String suit) { this.rank = rank; this.suit = suit; } // Override toString so that printing new Card("Q", "hearts") // shows: Q of hearts } What the practice editor reads: top-level classes with fields, constructors and methods; it checks declarations and statement shapes, and reports anything else as not supported. How to compare: printing new Card("Q", "hearts") must show exactly Q of hearts , and new Card("7", "clubs") must show 7 of clubs . Without the override you would see Card@ followed by a hexadecimal number.
 
 ### mcq
 

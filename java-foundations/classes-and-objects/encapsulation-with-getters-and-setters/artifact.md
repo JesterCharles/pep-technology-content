@@ -8,7 +8,7 @@
 
 ## Teaching
 
-Before any explanation, predict what this program prints.
+Encapsulation is new here, so guess what this program prints.
 
 ```
 class Player {
@@ -46,7 +46,7 @@ Apply the setter decision to a new class.
 
 ## Model
 
-The model: encapsulation makes the fields `private` and lets other classes reach the data only through methods the class controls. A getter such as `getLives()` returns a field's value. A setter such as `setLives(int lives)` changes it, and can refuse a value that would leave the object in an invalid state.
+Encapsulation makes the fields `private` and lets other classes reach the data only through methods the class controls. A getter such as `getLives()` returns a field's value. A setter such as `setLives(int lives)` changes it, and can refuse a value that would leave the object in an invalid state.
 
 ## Recap
 
@@ -57,7 +57,7 @@ The model: encapsulation makes the fields `private` and lets other classes reach
 
 ## Cheat sheet
 
-Where to act: The line that starts with Scenario:, just above the three buttons.
+Where to act: The scenario card, just above the three lane buttons.
 
 Next step: Ask two questions: may the value change after the object is created at all, and if so, may a caller set it to any new value or only move it by a rule?
 
@@ -77,7 +77,7 @@ Next step: The check comes first and must catch values on either side of the all
 
 Optional time: about 5 minutes, in addition to this topic's time.
 
-Write the `ClickCounter` from Activity 2: a private `count` field, a getter, and action methods `click()` and `reset()`, with no setter. Try it in any Java 25 setup you already use.
+Write the `ClickCounter` from Activity 2: a private `count` field, a getter, and action methods `click()` and `reset()`, with no setter. Try it in your IDE.
 
 Success criteria: no code outside the class can make `count` negative or skip a number, and you can explain why leaving out a setter achieves that.
 
@@ -90,7 +90,7 @@ Success criteria: no code outside the class can make `count` negative or skip a 
 
 ## Sources
 
-Claims on this page were checked against the live official pages below on 16 October 2026 (UTC), for Java SE 25. Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 25 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
 
 - Java Language Specification SE 25, chapter 6: Names: private access control (6.6).
 - Java Language Specification SE 25, chapter 14: Blocks, Statements, and Patterns: the throw statement (14.18) completes abruptly, so the statements after it do not run.
@@ -109,7 +109,7 @@ Expected results and why. Account id : no setter, set once in the constructor. A
 
 ### explore
 
-Practice editor, reading version. JavaScript is off, so the editor cannot check code here. Work on paper or in any Java 25 setup you already use. Task: make target private; add a public getter getTarget() ; add a public setter setTarget(int target) that throws IllegalArgumentException when the value is below 10 or above 30, and otherwise stores it. Starter, Thermostat.java: class Thermostat { // 1. Make this field private. int target = 20; // 2. Add a public getter getTarget(). // 3. Add a public setter setTarget(int target) that throws // IllegalArgumentException below 10 or above 30. } What the practice editor reads: top-level classes with fields, constructors and methods; it checks declarations and statement shapes, and reports anything else as not supported. How to compare: try the values 9, 10, 30 and 31 in your head. 10 and 30 must be stored; 9 and 31 must throw before the field changes, so getTarget() still returns the old value.
+Practice editor, reading version. JavaScript is off, so the editor cannot check code here. Work on paper or in your IDE. Task: make target private; add a public getter getTarget() ; add a public setter setTarget(int target) that throws IllegalArgumentException when the value is below 10 or above 30, and otherwise stores it. Starter, Thermostat.java: class Thermostat { // 1. Make this field private. int target = 20; // 2. Add a public getter getTarget(). // 3. Add a public setter setTarget(int target) that throws // IllegalArgumentException below 10 or above 30. } What the practice editor reads: top-level classes with fields, constructors and methods; it checks declarations and statement shapes, and reports anything else as not supported. How to compare: try the values 9, 10, 30 and 31 in your head. 10 and 30 must be stored; 9 and 31 must throw before the field changes, so getTarget() still returns the old value.
 
 ### mcq
 

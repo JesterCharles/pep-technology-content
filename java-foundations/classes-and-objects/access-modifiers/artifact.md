@@ -8,7 +8,7 @@
 
 ## Teaching
 
-Before any explanation, predict what happens. These are two files in two different packages.
+Access modifiers are new here, so guess. These are two files in two different packages.
 
 ```
 // File shop/Item.java
@@ -34,7 +34,7 @@ public class Main {
 | Modifier | Usable from |
 | --- | --- |
 | `public` | any class in any package |
-| `protected` | its package, plus subclasses in other packages (subclasses come in a later module) |
+| `protected` | its package, plus subclasses in other packages (a subclass is a class built on another class; a later module covers them) |
 | no modifier | only its own package (package access) |
 | `private` | only inside its own top-level class |
 
@@ -51,7 +51,7 @@ Choose from who really uses the member, not from who might one day want it.
 
 ## Model
 
-The model: each field, method and constructor carries one of four access levels, from widest to narrowest. The compiler rejects any use from outside the allowed area.
+Each field, method and constructor carries one of four access levels, from widest to narrowest. The compiler rejects any use from outside the allowed area.
 
 ## Recap
 
@@ -62,7 +62,7 @@ The model: each field, method and constructor carries one of four access levels,
 
 ## Cheat sheet
 
-Where to act: The line that starts with Scenario:, just above the two buttons.
+Where to act: The scenario card, just above the two lane buttons.
 
 Next step: Find the member's modifier, then ask two questions in order: is the using class in the same package, and is it inside the same class?
 
@@ -85,7 +85,7 @@ Next step: `Dashboard` is not a subclass, so only the widest level reaches it; `
 
 ## Sources
 
-Claims on this page were checked against the live official pages below on 16 October 2026 (UTC), for Java SE 25. Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 25 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
 
 - Java Language Specification SE 25, chapter 6: Names: access control (6.6), including package access, protected access (6.6.2) and private access.
 - Java Language Specification SE 25, chapter 8: Classes: class and member modifiers (8.1.1, 8.3.1, 8.4.3) and the default constructor's access (8.8.9).
