@@ -74,9 +74,9 @@ Use it when: The value really is unknown and a report or screen needs readable t
 
 → Choose something else when: The value must always exist, such as a customer's email; make the column NOT NULL when you create the table, as in the CREATE TABLE topic, so a missing value is rejected instead of hidden.
 
-At work: Exports, dashboards and data your back end sends to a web page often need readable text where data is missing; COALESCE in the query does that without changing what is stored.
+At work: Exports, dashboards and the data your program sends to a web page often need readable text where data is missing; COALESCE in the query does that without changing what is stored.
 
-In interviews: You may be asked why `WHERE column = NULL` returns no rows, or what COALESCE returns.
+In interviews: You may be asked why `WHERE column = NULL` returns no rows, or what COALESCE returns; Activities 1 and 2 practise both.
 
 ### Activity checks
 
@@ -187,7 +187,7 @@ NULL is the unknown ticket number; COALESCE supplies display text without changi
 
 Where to act: The SELECT list of your query.
 
-Next step: Give COALESCE two values: the city column first, then the quoted fallback text.
+Next step: COALESCE returns the first of its values that is not NULL. Decide which should come first, the stored city or the fallback text, so that a recorded city always wins.
 
 Another hint Another hint, 2 of 2 for Activity 2
 
@@ -204,7 +204,7 @@ Next step: Name the COALESCE result with AS, as in the example, then add ORDER B
 
 Where to act: The first WHEN line of your CASE.
 
-Next step: Give a NULL fee its own `WHEN fee IS NULL` branch first; without it, a NULL fee falls through to ELSE and reads Standard.
+Next step: A NULL fee never passes a comparison such as “at least 100”, so it would fall through to ELSE and read Standard. It needs a branch of its own that tests for NULL, placed first.
 
 Another hint Another hint, 2 of 2 for Activity 3
 

@@ -31,12 +31,13 @@ sql:{
     else{notes.push('Only Femi has no enrollment in the sample rows.');}
     var lj=(o.st.from||[]).filter(function(f){return f.kind==='left'&&f.name==='enrollments';})[0],rq=lj&&(lj.alias||lj.name);
     var anti=!!lj&&H.nodes(o.st.where,function(x){return x.op==='isnull'&&x.a&&x.a.qual===rq&&(x.a.col==='student_id'||x.a.col==='course_id');}).length>0;
-    if(done.rows&&!anti){done.rows=false;notes.push('The row is right, but find it with a LEFT JOIN to enrollments and an IS NULL test on that right-side key.');}
+    var unq=!!lj&&H.nodes(o.st.where,function(x){return x.op==='isnull'&&x.a&&!x.a.qual&&(x.a.col==='student_id'||x.a.col==='course_id');}).length>0;
+    if(done.rows&&!anti){done.rows=false;notes.push(unq?'The row is right. This practice check looks for the IS NULL test written with the enrollments alias and a dot in front of the column; add the alias there.':'The row is right, but find it with a LEFT JOIN to enrollments and an IS NULL test on that right-side key.');}
     if(done.rows&&H.sameList(o.res.cols,['student_id','name'])){done.anti=true;}
     else if(done.rows){near=true;notes.push('The row is right. In your SELECT line, show exactly the columns student_id and name.');}
     return {done:done,notes:notes,near:near};}},
 3:{file:'reporting-lines.sql',goals:['rows','aliases'],starter:'-- Join instructors to itself: employee to manager.\n\n',
-  fallback:'Write a self LEFT JOIN from employee.lead_id to manager.instructor_id, with columns named employee and manager.',
+  fallback:'Write a self LEFT JOIN of instructors with the aliases employee and manager, with columns named employee and manager.',
   check:function(rep,H){var done={},notes=[],near=false,sels=H.selects(rep),o=sels[sels.length-1];
     if(!o){if(!H.errors(rep).length){notes.push('No SELECT returned rows yet. Write one SELECT on the empty line under the comment.');}return {done:done,notes:notes};}
     var rows=H.rows(o.res),want=[['Mara',null],['Tomas','Mara'],['Priya','Mara'],['Ken','Tomas']];
@@ -49,7 +50,7 @@ sql:{
     var ins=(o.st.from||[]).filter(function(f){return f.name==='instructors';}),self=false;
     if(ins.length===2&&ins[0].alias&&ins[1].alias&&ins[0].alias!==ins[1].alias&&ins[1].on){var e=ins[0].alias,m=ins[1].alias;self=H.nodes(ins[1].on,function(x){return x.op==='='&&x.a&&x.b&&((x.a.qual===e&&x.a.col==='lead_id'&&x.b.qual===m&&x.b.col==='instructor_id')||(x.b.qual===e&&x.b.col==='lead_id'&&x.a.qual===m&&x.a.col==='instructor_id'));}).length>0;}
     if(rowsOk&&self){done.aliases=true;}
-    else if(rowsOk){near=true;notes.push('The rows match; get them from instructors twice, with an employee alias and a manager alias, joining employee.lead_id to manager.instructor_id.');}
+    else if(rowsOk){near=true;notes.push('The rows match; get them from instructors used twice, with an employee alias and a manager alias, joined the way the Ken example joins its two copies.');}
     return {done:done,notes:notes,near:near};}}},
 apply:{A:{fs:'apply-a',correct:'b',okNote:'<p>NOT EXISTS checks each instructor for a real matching course, so the NULL in course 104 cannot spoil the answer.</p>',
   why:{a:'the list from courses contains a NULL, so NOT IN is unknown for every instructor with no course and keeps nobody.',b:'the inner SELECT looks for a course of this instructor, and NOT EXISTS keeps the instructor when there is none.',c:'&lt;&gt; needs exactly one value, but the subquery returns five rows, so PostgreSQL stops with an ERROR.',d:'the inner WHERE compares a course with itself and never mentions the outer instructor, so a match always exists and nobody is kept.'},

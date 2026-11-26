@@ -40,16 +40,17 @@ Guess: what do `all_courses` and `staffed_courses` show?
 An aggregate function reads many rows and returns one value. Used without anything else in the SELECT list, it turns the whole table into one summary row. `COUNT(*)` counts rows. `COUNT(column)` counts only the rows where that column is not NULL.
 
 ```
-SELECT COUNT(*) AS enrollments,
-       COUNT(grade) AS graded
+SELECT COUNT(grade) AS graded
 FROM enrollments;
 ```
 
-Its result: 9 enrollment rows, 3 of them still without a grade
+Its result
 
-| enrollments | graded |
-| --- | --- |
-| 9 | 6 |
+| graded |
+| --- |
+| 6 |
+
+There are 9 enrollment rows, so `COUNT(*)` on the same table returns 9; `COUNT(grade)` skips the 3 rows whose grade is still NULL. One SELECT list can hold several aggregates, separated by commas.
 
 Starting rows of `students` (email not shown)
 
@@ -70,15 +71,15 @@ Use it when: A dashboard tile or a data check needs one number from many rows, s
 
 → Choose something else when: Someone must look at the individual records, such as which customers have no city; return those rows with `WHERE city IS NULL`, as in the NULL topic, instead of a count.
 
-At work: A colleague may ask how many customer records are missing an email; `COUNT(*)` next to `COUNT(email)` answers it in one query.
+At work: A colleague may ask how many customer records are missing an email; two counts side by side in one query answer it.
 
-In interviews: You may be asked how `COUNT(*)` differs from `COUNT(column)`, or how aggregate functions treat NULL values.
+In interviews: You may be asked how `COUNT(*)` differs from `COUNT(column)`, or how aggregate functions treat NULL values; Activities 1 to 3 practise both.
 
 ### Activity checks
 
 In progress
 
-- One row shows 6 students and 4 known cities, counted from `students` with COUNT(*) and COUNT(city)
+- One row shows 6 for all students and 4 for students with a city recorded
 - The columns are named `student_count` and `known_city_count`
 
 ### Your task
@@ -94,18 +95,17 @@ Ticket: before a mailing, the team asks how many students there are and how many
 `SUM` adds values, `AVG` averages them, and `MIN` and `MAX` find the smallest and largest. All four skip NULL values: a missing value is not treated as zero.
 
 ```
-SELECT SUM(grade) AS total, AVG(grade) AS average,
-       MIN(grade) AS lowest, MAX(grade) AS highest
+SELECT AVG(grade) AS average, MAX(grade) AS highest
 FROM enrollments;
 ```
 
 Its result, from the 6 grades that are not NULL
 
-| total | average | lowest | highest |
-| --- | --- | --- | --- |
-| 417 | 69.5000000000000000 | 45 | 91 |
+| average | highest |
+| --- | --- |
+| 69.5000000000000000 | 91 |
 
-The average is 417 divided by 6, not by 9. PostgreSQL shows an average with many decimal places. If a column has no values that are not NULL, these four return NULL, while COUNT returns 0.
+SUM and MIN work the same way: the known grades add up to 417, and the lowest is 45. The average is 417 divided by 6, not by 9. PostgreSQL shows an average with many decimal places. If a column has no values that are not NULL, these four return NULL, while COUNT returns 0.
 
 Starting rows of `courses` (other columns not shown)
 
@@ -122,7 +122,7 @@ Starting rows of `courses` (other columns not shown)
 In progress
 
 - One row shows the total, average, lowest and highest of the four known fees, named `total_fee`, `average_fee`, `lowest_fee` and `highest_fee`
-- SUM, AVG, MIN and MAX each read `fee` from `courses`
+- Each value is computed from the `fee` column of `courses`
 
 ### Your task
 
@@ -168,7 +168,7 @@ FROM courses;
 
 - COUNT(*) counts rows; COUNT(column) counts the rows where that column is not NULL.
 - SUM, AVG, MIN and MAX skip NULL values rather than treating them as zero.
-- Without GROUP BY, aggregates turn all the rows they read into one summary row. For a percentage, put a decimal such as 100.0 before the division.
+- Used on their own, aggregates turn all the rows they read into one summary row. For a percentage, put a decimal such as 100.0 before the division.
 
 Next topic: GROUP BY and HAVING
 
@@ -176,13 +176,13 @@ Next topic: GROUP BY and HAVING
 
 Where to act: The first value in your SELECT list.
 
-Next step: The count of every row puts an asterisk inside COUNT.
+Next step: You need two counts: one of every row, and one that skips students whose city is NULL. Decide which form of COUNT gives each.
 
 Another hint Another hint, 2 of 2 for Activity 2
 
 Where to act: The second value in your SELECT list.
 
-Next step: For known cities, put the column that can be NULL inside the second COUNT, and name both results with AS.
+Next step: Name each count with AS, using the two names from the task, in the order the task gives them.
 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
@@ -193,7 +193,7 @@ Next step: For known cities, put the column that can be NULL inside the second C
 
 Where to act: The SELECT list of your query.
 
-Next step: Copy the shape of the grade example, but give each of the four functions `fee` and read FROM courses.
+Next step: The grade example uses two of the four functions; the task needs one function for each of its four results, and each reads fee from courses.
 
 Another hint Another hint, 2 of 2 for Activity 3
 

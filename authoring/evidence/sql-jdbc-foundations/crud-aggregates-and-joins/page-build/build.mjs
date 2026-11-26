@@ -51,7 +51,7 @@ function editor({ n, file, legend, alt }) {
   return `<div class="pep-js-only">
 <fieldset class="le" id="${e}" data-interaction="explore" data-pep-explore aria-describedby="task-${n}" data-lesson-editor="3" data-lesson-editor-adapter="sql-practice@1" data-lesson-editor-source="head" data-le-state="loading" data-static-alt="${alt}">
 <legend>${legend}</legend>
-<div class="le-bar"><span class="le-file">${file}</span><span class="le-badge">Practice editor: follows PostgreSQL on this page's sample tables</span></div>
+<div class="le-bar"><span class="le-file">${file}</span><span class="le-badge">Practice editor: imitates PostgreSQL on this page's sample tables, without a real server</span></div>
 <div class="le-main"><pre class="le-gutter" aria-hidden="true">1</pre><label class="vh" for="${e}-code">Code editor for ${file}</label><textarea id="${e}-code" class="le-code" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-describedby="${e}-keys"></textarea></div>
 <div class="le-actions"><button type="button" class="primary le-run" id="${e}-run">Run</button><button type="button" class="ghost le-reset" id="${e}-reset">Reset code</button><p class="le-keys" id="${e}-keys">In the editor: Tab indents, Shift+Tab outdents, Ctrl+Enter (Cmd+Enter on a Mac) runs. To leave it, press Escape, then Tab.</p></div>
 <div class="le-tabs" role="tablist" aria-label="Editor panels for ${file}"><button type="button" role="tab" id="${e}-tab-p" aria-controls="${e}-p" aria-selected="true">Problems</button><button type="button" role="tab" id="${e}-tab-o" aria-controls="${e}-o" aria-selected="false" tabindex="-1">Output</button></div>
@@ -81,7 +81,7 @@ function lessonPath({ titles }) {
   const rows = titles.split("|").map((title, i) => `<li class="pep-path__row" data-pep-path-row><a class="pep-path__link" id="step-link-${i + 1}" href="#activity-${i + 1}" data-pep-activity-link${i ? "" : ' aria-current="step"'}><span class="pep-path__n" aria-hidden="true"><span>${i + 1}</span></span><span class="pep-path__title">${title}</span><span class="pep-path__status" data-pep-path-status></span></a></li>`);
   return `<nav class="pep-path-toc" aria-label="Lesson path" data-pep-path-toc><p class="pep-path-toc__label">Lesson path</p><ol class="pep-path" data-pep-path>${rows.join("")}</ol></nav>`;
 }
-const CONF = (name, id, legend, help) => `<fieldset class="conf" id="${id}" ${id === "pconf" ? "data-pep-predict-confidence" : "data-pep-confidence"} aria-describedby="${help}"><legend id="${help}">${legend}</legend><label class="opt"><input type="radio" name="${name}" value="low"> <span>Low</span></label><label class="opt"><input type="radio" name="${name}" value="medium"> <span>Medium</span></label><label class="opt"><input type="radio" name="${name}" value="high"> <span>High</span></label></fieldset>`;
+const CONF = (name, id, legend, help) => `<fieldset class="conf" id="${id}" ${id === "pconf" ? "data-pep-predict-confidence" : "data-pep-confidence"} aria-describedby="${help}"><legend id="${help}">${legend}</legend><label class="opt"><input type="radio" name="${name}" value="low"> <span>Guessing</span></label><label class="opt"><input type="radio" name="${name}" value="medium"> <span>Fairly sure</span></label><label class="opt"><input type="radio" name="${name}" value="high"> <span>Certain</span></label></fieldset>`;
 function expand(body, topic) {
   return body
     .replace(/\{\{MINUTES\}\}/g, String(topic.minutes.aboutLabel))

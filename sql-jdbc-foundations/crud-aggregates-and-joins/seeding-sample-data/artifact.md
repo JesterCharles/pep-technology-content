@@ -4,7 +4,7 @@
 
 - Write a seed script that inserts parent rows before child rows so every foreign key holds
 - Generate many sample rows with INSERT ... SELECT and generate\_series
-- Load rows from a CSV file with the psql \\copy command and explain how it differs from server-side COPY
+- Choose the psql \\copy command to load rows from a CSV file and explain how it differs from server-side COPY
 
 ## Teaching
 
@@ -28,13 +28,11 @@ Guess: what does PostgreSQL do with this first statement?
 
 ### Order a seed script so every key holds
 
-A seed script is a file of INSERT statements that fills empty tables with sample rows, so everyone on a team, and every automated test, starts from the same data. These foreign keys are checked as each INSERT finishes, so a child row needs its parent row to exist already.
+A seed script is a file of INSERT statements that fills empty tables with made-up sample rows, so everyone on a team, and every automated test, starts from the same data. Never copy real customers' personal data into it.
 
-Order the script by the table below: a table that others point at goes first. Here `courses` points at `instructors`, and `enrollments` points at both `students` and `courses`. To run the seed again later, empty the tables in the reverse order, children first: deleting a parent row that a child still points at is rejected too.
+These foreign keys are checked as each INSERT finishes, so a child row needs its parent row to exist already. Order the script by the table below: a table that others point at goes first. To empty the tables later, go in reverse order, children first, because deleting a parent row that a child still points at is rejected too.
 
-Seed rows are made up. Never copy real customers' personal data into a seed file that the whole team shares.
-
-Who points at whom (foreign keys)
+Who points at whom (foreign keys). `lead_id` points at another instructor, the person's team lead, so within one INSERT a lead's row comes before the rows that point at it.
 
 | table | column | points at |
 | --- | --- | --- |
@@ -53,7 +51,7 @@ Use it when: You need a few meaningful rows that people and tests reason about, 
 
 At work: Many projects keep a seed script that builds a fresh development or test database; when you add a table, you add its rows to that script in an order that keeps every foreign key valid.
 
-In interviews: You may be asked why an INSERT fails with a foreign key error, or in what order you would load a set of related tables.
+In interviews: You may be asked why an INSERT fails with a foreign key error, or in what order you would load a set of related tables; Activities 1 and 2 practise both.
 
 ### Activity checks
 
@@ -110,7 +108,7 @@ Ticket: a teammate needs 30 test students to try out a long list screen. Add the
 
 ### Load a CSV file from your laptop
 
-A CSV file is a plain text file with one row per line and commas between values, the format spreadsheets export. When rows already exist in a CSV file, load them with psql's `\copy` command, typed on one line at the psql prompt:
+A CSV file is plain text with one row per line and commas between values; spreadsheets export it. Load one with psql's `\copy` command, typed on one line at the psql prompt:
 
 ```
 \copy students (student_id, name, email, city) FROM 'students.csv' WITH (FORMAT csv, HEADER)
@@ -118,7 +116,7 @@ A CSV file is a plain text file with one row per line and commas between values,
 
 psql reads the file on your computer and sends the rows to the server, so you only need permission to insert into the table. `HEADER` skips the file's first line of column names.
 
-The SQL command `COPY ... FROM 'file'` differs only by its missing backslash, but there the server opens the file on its own disk. That needs a superuser (an account allowed to do anything) or an account given the `pg_read_server_files` role, a named set of extra permissions.
+The SQL command `COPY ... FROM 'file'` lacks only the backslash, but there the server opens the file on its own disk. That needs a superuser (an account allowed to do anything) or the `pg_read_server_files` role, a named set of extra permissions.
 
 ### Activity checks
 
@@ -202,7 +200,7 @@ Next step: The email has text both before and after the number, so it needs two 
 
 ## Sources
 
-Checked against these live official PostgreSQL documentation pages on 2026-11-25. The editor's outputs and error messages were compared with a real PostgreSQL 18 server and psql on the same tables when the editor was built.
+Checked against these live official PostgreSQL documentation pages on 2026-11-25. The practice editor imitates PostgreSQL's results and error wording; its runs on this page were not repeated on a live PostgreSQL server.
 
 - 2.4 Populating a Table With Rows
 - INSERT

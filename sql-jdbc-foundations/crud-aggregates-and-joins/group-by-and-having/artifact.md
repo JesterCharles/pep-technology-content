@@ -56,7 +56,7 @@ Its result
 | 3 | 2 |
 | 4 | 1 |
 
-Every column in the SELECT list must be either in GROUP BY or inside an aggregate. That is why Activity 1 failed: one city group can hold several names, but `COUNT(*)` can sum the whole group up. (PostgreSQL makes one exception, for a column fully decided by a grouped primary key; this lesson does not use it.) Sorting puts a NULL group last by default; `NULLS LAST` says so explicitly.
+Every column in the SELECT list must be either in GROUP BY or inside an aggregate. That is why Activity 1 failed: one city group can hold several names, but `COUNT(*)` can sum the whole group up. (PostgreSQL has one narrow exception, which this lesson does not use.) Sorting puts a NULL group last by default; `NULLS LAST` says so explicitly.
 
 Starting rows of `students` (email not shown)
 
@@ -79,7 +79,7 @@ Use it when: Each output row should stand for a category, such as one count per 
 
 At work: Breakdowns such as “orders per region” or “sign-ups per week” are typical report and dashboard requests, and each one is a GROUP BY.
 
-In interviews: You may be asked to count rows per category, or to explain why a selected column must appear in GROUP BY.
+In interviews: You may be asked to count rows per category, or to explain why a selected column must appear in GROUP BY; Activities 1 and 2 practise both.
 
 ### Activity checks
 
@@ -90,9 +90,9 @@ In progress
 
 ### Your task
 
-Ticket: marketing wants the number of students in each city, including students with no city recorded.
+Ticket: marketing's “students per city” query stops with an ERROR. Fix it, counting students with no city too.
 
-1. In students-by-city.sql, write one SELECT over `students` with the columns `city` and `student_count`.
+1. students-by-city.sql starts with the query from Activity 1. Change it so the result has the columns `city` and `student_count`.
 2. Count all rows in each city group.
 3. Sort by city with the NULL group last, and press Run.
 
@@ -188,9 +188,9 @@ A teacher sorts survey cards into piles by city, then counts each pile. They can
 
 GROUP BY makes the piles; aggregate functions sum each pile up.
 
-Where to act: The SELECT list and the GROUP BY line.
+Where to act: The SELECT list of the starting query.
 
-Next step: Copy the shape of the credits example: select city and COUNT(*), then group by the column that is not inside an aggregate.
+Next step: Each output row stands for one city, so nothing in the SELECT list may name a single student. Remove that column and keep the count, with the name the task asks for.
 
 Another hint Another hint, 2 of 2 for Activity 2
 
@@ -207,13 +207,13 @@ Next step: Order by city; ascending order already puts the NULL group last, and 
 
 Where to act: The SELECT list and the GROUP BY line.
 
-Next step: Select course_id with COUNT(*), then group by course_id; this task needs no WHERE.
+Next step: Decide what each output row stands for: one course. Group by the column that names a course, and count the rows in each group. This task needs no WHERE.
 
 Another hint Another hint, 2 of 2 for Activity 3
 
 Where to act: The line just after GROUP BY.
 
-Next step: Add HAVING with the same COUNT(*) and compare it with 3, as the example does with 2.
+Next step: The condition is about the size of each group, which only exists after GROUP BY. Which clause filters groups?
 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
@@ -246,7 +246,7 @@ Prediction (practice, not scored): what does PostgreSQL do with SELECT city, nam
 
 ### explore
 
-Typed GROUP BY activity. students-by-city.sql starts with a comment line. Write one SELECT over students that returns city and student_count, counting all rows in each city group, sorted by city with the NULL group last. A correct run shows Bristol 1, Leeds 2, York 1 and the NULL group 2.
+Typed GROUP BY fix activity. students-by-city.sql starts with the failing query SELECT city, name, COUNT(*) FROM students GROUP BY city;. Fix it so it returns city and student_count, counting all rows in each city group, sorted by city with the NULL group last. A correct run shows Bristol 1, Leeds 2, York 1 and the NULL group 2.
 
 ### explore
 

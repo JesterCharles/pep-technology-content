@@ -40,6 +40,7 @@ sql:{
   check:function(rep,H){var done={},notes=[],near=false,rows=H.table(rep,'students'),want=[];
    for(var i=1;i<=30;i++){want.push([String(i),'Student '+i,'student'+i+'@example.com',null]);}
    var ins=H.of(rep,'insert','students');
+   if(!ins.length&&!H.errors(rep).length){notes.push('No INSERT into students ran yet. Write your INSERT ... SELECT on the empty line under the comment.');}
    if(H.sameSet(rows,want)){done.thirty=true;}
    else if(rows.length){var bad=rows.filter(function(r){var n=+r[0];return !(n>=1&&n<=30&&r[1]==='Student '+n&&r[2]==='student'+n+'@example.com'&&r[3]===null);})[0];
      if(bad){var n=+bad[0];notes.push('Compare this row with the pattern in the task: '+bad.map(function(v){return v===null?'NULL':v;}).join(', ')+(bad[1]!=='Student '+n?'. Its name should read Student '+n+', with a space.':(bad[2]!=='student'+n+'@example.com'?'. Its email should read student'+n+'@example.com.':'.')));}

@@ -111,7 +111,7 @@ Ticket: student services wants to email every student who has not enrolled in an
 
 ### List each instructor with their lead
 
-In `instructors`, `lead_id` points at another row of the same table: the instructor's lead. A self-join joins a table to itself. Two aliases give the two copies different roles: one copy for the person, one for their lead.
+In `instructors`, `lead_id` points at another row of the same table: the instructor's lead. A self-join joins a table to itself. Two aliases give the two copies different roles: one copy for the person, one for their lead. An alias can be a whole word, such as `employee`.
 
 ```
 SELECT w.name, l.name
@@ -143,7 +143,7 @@ Both result columns are called `name`, so a real report names them with AS. Mara
 In progress
 
 - Every instructor appears with their lead's name, or NULL for Mara, in columns named `employee` and `manager`
-- The rows come from `instructors` twice, joined from the employee's lead_id to the manager's instructor_id
+- The rows come from `instructors` used twice, one copy named employee and one named manager
 
 ### Your task
 
@@ -155,9 +155,35 @@ Ticket: HR needs a reporting-lines list: every instructor with the name of their
 
 ### Choose a safe way to find unmatched rows
 
-A subquery is a SELECT in brackets inside another query. `NOT IN (SELECT instructor_id FROM courses)` compares each instructor with the list that inner SELECT returns. Course 104 has a NULL instructor_id, so that list holds a NULL, and as in Activity 1 NOT IN then keeps nobody.
+A subquery is a SELECT in brackets inside another query. `NOT EXISTS (SELECT ...)` is true when the inner SELECT returns no rows. The inner SELECT can use the outer row, so it checks each row in turn:
 
-`NOT EXISTS (SELECT ...)` is true when the inner SELECT returns no rows at all. Its inner SELECT can use the outer row, here `i.instructor_id`, so it checks each instructor in turn, and a NULL elsewhere in courses cannot spoil it.
+```
+SELECT c.title
+FROM courses AS c
+WHERE NOT EXISTS (
+  SELECT 1 FROM enrollments AS e
+  WHERE e.course_id = c.course_id
+);
+```
+
+Its result
+
+| title |
+| --- |
+| Web Basics |
+| Intro to Testing |
+
+`SELECT 1` returns a placeholder; only whether a row exists matters. `NOT IN (SELECT instructor_id FROM courses)` instead compares with the list the inner SELECT returns. Course 104's instructor_id is NULL, so that list holds a NULL and, as in Activity 1, NOT IN keeps nobody. In the options, `i` is the alias of `instructors` in the outer query.
+
+`courses` (other columns not shown)
+
+| course_id | instructor_id |
+| --- | --- |
+| 101 | 2 |
+| 102 | 3 |
+| 103 | 3 |
+| 104 | NULL |
+| 105 | 4 |
 
 ### Activity checks
 
@@ -200,13 +226,13 @@ The roster is the left table; a missing signature is the NULL right-side key.
 
 Where to act: The FROM and LEFT JOIN lines of your query.
 
-Next step: Copy the shape of the courses example: students on the left, enrollments on the right, joined on student_id.
+Next step: Which table holds every row you must be able to see, and which one may have no match? The first goes before LEFT JOIN, joined on the column they share.
 
 Another hint Another hint, 2 of 2 for Activity 2
 
 Where to act: The WHERE line after the join.
 
-Next step: Test the enrollments alias's student_id with IS NULL.
+Next step: After a LEFT JOIN, a student with no enrollment gets NULL in every enrollments column. Keep only those rows with a WHERE test on the enrollments key.
 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
@@ -223,7 +249,7 @@ Another hint Another hint, 2 of 2 for Activity 3
 
 Where to act: The ON line and the SELECT list.
 
-Next step: Compare the employee's lead_id with the manager's instructor_id, then select one name from each alias and name the two columns with AS.
+Next step: In the Ken example, one copy's lead_id was compared with the other copy's instructor_id. Decide which of your aliases plays each part, then take one name from each copy.
 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
@@ -259,8 +285,8 @@ Typed anti-join activity. unenrolled-students.sql starts with a comment line. Wr
 
 ### explore
 
-Typed self-join activity. reporting-lines.sql starts with a comment line. Write one SELECT that joins instructors AS employee with LEFT JOIN instructors AS manager on employee.lead_id = manager.instructor_id, showing employee and manager names in columns named employee and manager, sorted by employee.instructor_id. A correct run shows Mara with NULL, Tomas and Priya with Mara, and Ken with Tomas.
+Typed self-join activity. reporting-lines.sql starts with a comment line. Write one SELECT that joins instructors to itself with the aliases employee and manager and a LEFT JOIN, showing the two names in columns named employee and manager, sorted by the employee's instructor_id. A correct run shows Mara with NULL, Tomas and Priya with Mara, and Ken with Tomas.
 
 ### mcq
 
-Apply question: Which WHERE safely finds instructors who teach no course, even though courses.instructor_id can be NULL? Options: WHERE i.instructor_id NOT IN (SELECT instructor_id FROM courses) (the list contains NULL, so NOT IN keeps nobody); WHERE NOT EXISTS (SELECT 1 FROM courses c WHERE c.instructor_id = i.instructor_id) (the answer: it checks each instructor for a real match); WHERE i.instructor_id <> (SELECT instructor_id FROM courses) (<> needs exactly one value, but the subquery returns five rows); WHERE NOT EXISTS (SELECT 1 FROM courses c WHERE c.instructor_id = c.instructor_id) (the inner WHERE never mentions the outer instructor, so a match always exists and nobody is kept). Retry: the self-join condition is employee.lead_id = manager.instructor_id.
+Apply question: Which WHERE safely finds instructors who teach no course, even though courses.instructor_id can be NULL? Options: WHERE i.instructor_id NOT IN (SELECT instructor_id FROM courses) (the list contains NULL, so NOT IN keeps nobody); WHERE NOT EXISTS (SELECT 1 FROM courses AS c WHERE c.instructor_id = i.instructor_id) (the answer: it checks each instructor for a real match); WHERE i.instructor_id <> (SELECT instructor_id FROM courses) (<> needs exactly one value, but the subquery returns five rows); WHERE NOT EXISTS (SELECT 1 FROM courses AS c WHERE c.instructor_id = c.instructor_id) (the inner WHERE never mentions the outer instructor, so a match always exists and nobody is kept). Retry: which self-join condition connects an employee row to its manager row.

@@ -19,8 +19,9 @@ predict:{correct:'c',
  job:'you will meet this ERROR while writing report queries. It always means the same thing: a selected column must be added to GROUP BY or put inside an aggregate.',
  why:{a:'PostgreSQL does not pick a value at random for a column that is not grouped.',b:'COUNT does not join text together; nothing combines the names automatically.',c:'name is neither grouped nor inside an aggregate, and one city group can hold several names.',d:'adding a column that is not allowed does not cancel GROUP BY; the query stops with an ERROR.'}},
 sql:{
-2:{file:'students-by-city.sql',goals:['groups','counts'],starter:'-- Count students in each city group, including the NULL group.\n\n',
-  fallback:'Write a grouped SELECT over students that returns city and student_count, sorted by city with the NULL group last.',
+2:{file:'students-by-city.sql',goals:['groups','counts'],starter:'-- This query stops with an ERROR. Fix it: one row per city, with city and student_count.\nSELECT city, name, COUNT(*) FROM students GROUP BY city;\n',
+  starterNote:'That is still the starting query, which stops with an ERROR because <code>name</code> is neither grouped nor inside an aggregate. Change the SELECT list, then press <em>Run</em>.',
+  fallback:'Fix the starting query so it returns city and student_count for each city group, sorted by city with the NULL group last.',
   check:function(rep,H){var done={},notes=[],near=false,sels=H.selects(rep),o=sels[sels.length-1];
     if(!o){if(!H.errors(rep).length){notes.push('No SELECT returned rows yet. Write one SELECT on the empty line under the comment.');}return {done:done,notes:notes};}
     var rows=H.rows(o.res),want=[['Bristol','1'],['Leeds','2'],['York','1'],[null,'2']];
@@ -40,7 +41,7 @@ sql:{
     else if(rows.length===3&&H.sameSet(rows.slice(0,2),[['101','4'],['102','3']])){notes.push('Course 103, with only 2 enrollments, is still in the result. Keep only groups whose COUNT(*) is at least 3, with HAVING after GROUP BY.');}
     else{notes.push('Courses 101 and 102 are the only groups with at least three enrollments.');}
     if(done.groups&&!H.sameList(o.res.cols,['course_id','enrollment_count'])){done.groups=false;near=true;notes.push('Your groups are right. In your SELECT line, name the count with AS enrollment_count.');}
-    if(done.groups&&(o.st.group||[]).length&&H.nodes(o.st.having,function(x){return x.op==='call'&&x.agg;}).length){done.having=true;}
+    if(done.groups&&(o.st.group||[]).length&&H.nodes(o.st.having,function(x){return x.op==='call'&&x.agg;}).length){done.having=true;if(!(o.st.order||[]).length){notes.push('Tip: add ORDER BY course_id at the end. These rows happen to come out in order here, but without ORDER BY PostgreSQL does not promise it.');}}
     else if(done.groups){near=true;notes.push('Your groups match, but the count condition must sit in HAVING after GROUP BY, not in WHERE.');}
     return {done:done,notes:notes,near:near};}}},
 apply:{A:{fs:'apply-a',correct:'b',okNote:'<p>HAVING is the filter that runs after grouping, so it can test the count.</p>',

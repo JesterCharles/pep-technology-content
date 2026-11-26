@@ -22,9 +22,10 @@ var SQLCHK={
      statement starts, so the message says so and points there. Returns '' when the run had no ERROR. */
   explain:function(rep){var o=SQLCHK.errors(rep)[0];if(!o){return '';}
     var m=String(o.error),x,say=function(t){return 'In the statement that starts on line '+o.line+', '+t;};
-    if((x=/^column reference "([^"]+)" is ambiguous/.exec(m))){return say('two of your tables both have a column named <code>'+x[1]+'</code>, so PostgreSQL cannot tell which one you mean. Put the table alias and a dot in front of it everywhere it appears, for example <code>s.'+x[1]+'</code>.');}
+    var refs=(o.st&&o.st.from)||[],withCol=function(c){return refs.filter(function(f){var t=rep.db&&rep.db[f.name];return t&&t.def.cols.some(function(k){return k.name===c;});}).map(function(f){return f.alias||f.name;});};
+    if((x=/^column reference "([^"]+)" is ambiguous/.exec(m))){var q=withCol(x[1]);return say('two of your tables both have a column named <code>'+x[1]+'</code>, so PostgreSQL cannot tell which one you mean. Put a table alias and a dot in front of it everywhere it appears'+(q.length?', for example <code>'+q[0]+'.'+x[1]+'</code>'+(q[1]?' or <code>'+q[1]+'.'+x[1]+'</code>':'')+', whichever table you mean':'')+'.');}
     if((x=/^missing FROM-clause entry for table "([^"]+)"/.exec(m))){return say('<code>'+x[1]+'.</code> names a table or alias that FROM and JOIN do not define. Use the alias you gave the table, or add the table to FROM.');}
-    if((x=/^invalid reference to FROM-clause entry for table "([^"]+)"/.exec(m))){return say('you gave <code>'+x[1]+'</code> an alias, so use the alias, not the table name, in front of its columns.');}
+    if((x=/^invalid reference to FROM-clause entry for table "([^"]+)"/.exec(m))){var dup=refs.filter(function(f){return f.name===x[1];}).length>1;return say(dup?'<code>'+x[1]+'</code> appears twice. When a table is joined to itself, give each copy its own alias, as in the example, and write that alias in front of each column.':'you gave <code>'+x[1]+'</code> an alias, so use the alias, not the table name, in front of its columns.');}
     if((x=/^column "([^"]+)" of relation "([^"]+)" does not exist/.exec(m))){return say('the table <code>'+x[2]+'</code> has no column <code>'+x[1]+'</code>. Check the column list against the sample table.');}
     if((x=/^column "([^"]+)" does not exist/.exec(m))||(x=/^column (\S+) does not exist/.exec(m))){return say('there is no column <code>'+x[1]+'</code> in the tables this statement reads. Check its spelling against the sample table, and check that its table is in FROM or a JOIN.');}
     if((x=/^relation "([^"]+)" does not exist/.exec(m))){return say('there is no table named <code>'+x[1]+'</code> here. Check the spelling against the sample tables.');}
@@ -37,8 +38,8 @@ var SQLCHK={
     if((x=/^null value in column "([^"]+)"/.exec(m))){return say('the column <code>'+x[1]+'</code> must have a value. Name it in the column list and give it a value in every row.');}
     if(/^INSERT has more expressions than target columns/.test(m)){return say('a row has more values than the columns you named. Give exactly one value per named column, in the same order.');}
     if(/^INSERT has more target columns than expressions/.test(m)){return say('a row has fewer values than the columns you named. Give exactly one value per named column, in the same order.');}
-    if(/^invalid input syntax for type/.test(m)){return say('a value does not fit its column. Text goes in single quotes; numbers and NULL do not.');}
-    if(/^operator does not exist/.test(m)){return say('two values of different kinds are compared or joined together. Check the quotes: <code>\'3\'</code> is text, <code>3</code> is a number.');}
+    if(/^invalid input syntax for type/.test(m)){return say('a value cannot be read as the type it needs. Check that every value in one column, or in one COALESCE or CASE, is the same kind: all text or all numbers. Text goes in single quotes; numbers and NULL do not.');}
+    if(/^operator does not exist/.test(m)){return say('PostgreSQL has no operator for the two kinds of value on either side, for example a number and text. Check that both sides are the same kind of value.');}
     return say('PostgreSQL would stop with the ERROR shown in Output. Read its first line, then compare that statement with the example in the reading column.');}
 };
 (function(){
@@ -54,6 +55,9 @@ var prevBtn=$('previous-activity'),nextBtn=$('next-activity'),resetBtn=$('reset'
 var MIN=main.getAttribute('data-pep-required-minutes');
 /* The shared shell labels editor notes with the adapter's names; this page shows them in learner words. */
 var EDITOR=Object.create(LESSON_EDITOR_SQL);EDITOR.kindLabels={error:'Error',limit:'Not in this practice editor',hint:'Hint'};EDITOR.language='PostgreSQL server';
+/* The adapter files both mistakes it cannot read and features it does not support as "limit". Only the second kind
+   is a limit of this page; a mistake (a typo, a missing comma) is shown as an Error so it is never excused. */
+EDITOR.check=function(src){var r=LESSON_EDITOR_SQL.check(src);(r.problems||[]).forEach(function(p){if(p.kind==='limit'&&!(/psql command|outside this practice editor|not available|only in this practice editor|in this practice editor[:,]|practice editor runs SELECT|works only|too long for this|too many rows for this/i.test(p.msg))){p.kind='error';}});return r;};
 function kind(n){return section(n).getAttribute('data-kind');}
 function blank(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,canContinue:false,missed:false,g:{},tries:0,conf:null,firstPick:null};}
 var S={current:1,unlocked:1,complete:false,routeSettled:false,a:acts.map(blank)};
@@ -130,15 +134,16 @@ function summarize(){
   S.complete=S.a.every(function(x){return x.completed;});
   S.routeSettled=S.a.every(function(x){return x.completed||x.settled;});
   var open=S.a.map(function(x,i){return x.settled&&!x.completed?i+1:0;}).filter(Boolean);
-  $('complete-msg').textContent=S.complete?'All '+N+' activities done.':(S.routeSettled?'You reached the end. Activity '+open.join(' and ')+(open.length===1?' is':' are')+' not done yet: go back with the lesson path and keep practising there, or press Restart activity there to start it fresh.':'');
+  $('complete-msg').textContent=S.complete?'All '+N+' activities done.':(S.routeSettled?'You reached the end. '+(open.length===1?'Activity '+open[0]+' is':'Activities '+open.slice(0,-1).join(', ')+' and '+open[open.length-1]+' are')+' not done yet: go back with the lesson path and keep practising there, or press Restart activity there to start it fresh.':'');
 }
 function finish(n){S.unlocked=Math.max(S.unlocked,Math.min(n+1,N));summarize();render();}
 function nextNote(n){return n<N?' Choose <em>Next activity</em> when ready.':' The recap now follows the activities.';}
 /* A short calibration reply when confidence and correctness disagree; confidence is never marked. */
+var CONF={low:'Guessing',medium:'Fairly sure',high:'Certain'};
 function calibration(conf,ok){
   if(conf==='high'&&!ok){return 'You were sure, and this one surprised you: that makes it a rule worth remembering.';}
   if(conf==='low'&&ok){return 'You were unsure but right: your reasoning here is sound.';}
-  return 'Your confidence: '+esc(conf)+'. It is only for you and is never marked.';
+  return 'Your confidence: '+esc(CONF[conf]||conf)+'. It is only for you and is never marked.';
 }
 
 /* Prediction before teaching: practice, not scored. */
@@ -149,7 +154,7 @@ function checkPredict(){
   qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
   qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
     if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your guess</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not this one</span>');l.querySelector('span').appendChild(w);}});
-  var html='<p class="verdict">'+(ch===P.correct?'Your guess was right.':'Your guess was not this time; the right answer is marked.')+' This guess is only practice. Each option, explained:</p><ul class="explain">';
+  var html='<p class="verdict">'+(ch===P.correct?'Your guess was right.':'Not this time; the right answer is marked.')+' This guess is only practice. Each option, explained:</p><ul class="explain">';
   Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
     html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not this one</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your guess)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
   feedback(n,html+'</ul>'+(P.job?'<p><strong>On the job:</strong> '+P.job+'</p>':'')+'<p class="conf-report">'+calibration(pc,ch===P.correct)+'</p><p>'+nextNote(n)+'</p>');
@@ -163,13 +168,13 @@ var editors={};
 function normal(code){return String(code).replace(/\r\n?/g,'\n').replace(/[ \t]+$/gm,'').trim();}
 function onSqlRun(n,report,code){var cfg=TOPIC.sql[n],s=act(n),m=[];
   if(normal(code)===normal(cfg.starter)){feedback(n,'<p>'+(cfg.starterNote||'That is still the starting file. Write your statement on the empty line under the comment, then press <em>Run</em>.')+'</p>');return;}
-  if(report.status==='limit'){feedback(n,'<p>Not run yet: open <em>Problems</em>, fix the line it names, then press <em>Run</em> again. This run did not use up a try.</p>');return;}
+  if(report.status==='limit'){feedback(n,'<p>Not run yet: open <em>Problems</em> and fix what it names, then press <em>Run</em> again. The editor names the line where it noticed the problem; a missing comma or semicolon is often at the end of the line before it. This run did not use up a try.</p>');return;}
   var r=cfg.check(report,SQLCHK)||{},done=r.done||{},all=true,why=SQLCHK.explain(report),lead='';
   if(!s.completed){s.g={};} /* ticks show the current run until the activity is completed */
   cfg.goals.forEach(function(g){if(done[g]){s.g[g]=1;}if(!done[g]){all=false;}});
   if(why){m.push(why);}
   (r.notes||[]).forEach(function(t){m.push(t);});
-  if(!all&&r.near){lead='<p class="verdict near pep-verdict--near">Almost.</p>';}
+  if(!all&&r.near&&(r.notes||[]).length===1){lead='<p class="verdict near pep-verdict--near">Almost.</p>';}
   if(!s.completed){s.attempts++;
     if(all){lead='<p class="verdict ok">Every check is met.</p>';m.push(nextNote(n));complete(n,1);}
     else if(s.attempts>=2){m.push('<em>Next activity</em> is open now if you want to move on. You can also keep working here: a run that meets every check still completes this activity.');settle(n);}
@@ -253,5 +258,5 @@ Object.keys(TOPIC.sql).forEach(function(k){var n=+k,cfg=TOPIC.sql[k],root=$('ed'
   try{editors[n]=LESSON_EDITOR.mount(root,{adapter:EDITOR,file:cfg.file,starter:cfg.starter,calls:cfg.tables||SQL_TABLES,fallbackText:cfg.fallback,onRun:function(rep,code){onSqlRun(n,rep,code);}});}
   catch(e){feedback(n,'<p>The editor could not start; the static exercise text still describes the task.</p>');}});
 var start=fromHash();
-go(start>=1&&start<=S.unlocked?start:1,'replace',false);
+go(start>=1&&start<=S.unlocked?start:1,start?'replace':null,false);
 })();

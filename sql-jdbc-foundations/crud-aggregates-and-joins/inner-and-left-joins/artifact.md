@@ -49,11 +49,11 @@ Guess: does Mara appear in this query's result?
 
 ### Pair each enrollment with its student
 
-An inner join pairs a row of one table with a row of another whenever its `ON` condition is true. Usually `ON` compares a foreign key with the key it points at, the relationship you met in Tables, keys and relationships.
+An inner join pairs a row of one table with a row of another whenever its `ON` condition is true, usually on a foreign key and the key it points at.
 
 Review: Tables, keys and relationships
 
-An alias is a short nickname written after a table's name: `courses AS c`. Then `c.title` means the `title` column of `courses`. Putting the alias and a dot in front of a column is called qualifying it. When both tables have a column with the same name, such as `instructor_id` here, you must qualify it, or PostgreSQL stops with `column reference "instructor_id" is ambiguous`.
+An alias is a short name written after a table: with `courses AS c`, `c.title` means the title column of courses. Writing the alias and a dot before a column is called qualifying it. A column name both tables share, such as `instructor_id` here, must be qualified, or PostgreSQL stops with `column reference "instructor_id" is ambiguous`.
 
 ```
 SELECT c.title, i.name
@@ -72,7 +72,7 @@ Its result
 | Data Modeling | Priya |
 | Intro to Testing | Ken |
 
-Priya appears twice because two course rows match her. Web Basics has no `instructor_id`, so `ON` is never true for it and it is left out. This is the everyday shape of a report query, and of the queries your Java code will send through JDBC later in this course.
+Priya appears twice, once per matching course; Web Basics has no `instructor_id`, so `ON` is never true for it and it is left out.
 
 `students` (other columns not shown)
 
@@ -168,8 +168,8 @@ In progress
 Ticket: the staffing report must list every instructor with each course they teach, including instructors who teach none.
 
 1. In instructor-courses.sql, write one SELECT with `instructors` as the left table of a LEFT JOIN to `courses`.
-2. Name the result columns with AS: `i.name AS instructor` and `c.title AS course`.
-3. Sort by instructor_id, then course_id, and press Run.
+2. Name the two result columns `instructor` and `course`.
+3. Sort by the instructor's id, then the course's id, and press Run. Both tables have an instructor_id column, so qualify it.
 
 ### Choose the join a report needs
 
@@ -236,7 +236,7 @@ Another hint Another hint, 2 of 2 for Activity 2
 
 Where to act: The ON line and the ORDER BY line of your query.
 
-Next step: Both tables have student_id, so ON compares it through the two aliases; ORDER BY takes two keys separated by a comma.
+Next step: Both tables have student_id, so ON compares it through the two aliases; ORDER BY takes two sort columns separated by a comma.
 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
@@ -253,7 +253,7 @@ Another hint Another hint, 2 of 2 for Activity 3
 
 Where to act: The ON line and the ORDER BY line.
 
-Next step: Join instructor_id to instructor_id through the two aliases; for the sort, give the instructor's id first and the course's id second.
+Next step: ON compares the column the two tables share, qualified on each side. For the sort, the instructor's id decides first and the course's id only breaks ties.
 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
@@ -288,7 +288,7 @@ Typed join activity. enrolled-students.sql starts with a comment line. Write one
 
 ### explore
 
-Typed left join activity. instructor-courses.sql starts with a comment line. Write one SELECT with instructors on the left of LEFT JOIN courses, joined on instructor_id, selecting i.name AS instructor and c.title AS course, sorted by instructor_id, then course_id. A correct run shows Mara with a NULL course, Tomas once, Priya twice and Ken once.
+Typed left join activity. instructor-courses.sql starts with a comment line. Write one SELECT with instructors on the left of LEFT JOIN courses, joined on instructor_id, with result columns named instructor and course, sorted by the instructor's id, then the course's id. A correct run shows Mara with a NULL course, Tomas once, Priya twice and Ken once.
 
 ### mcq
 

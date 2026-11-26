@@ -32,7 +32,9 @@ sql:{
    var has7=final.filter(function(r){return r[0]==='7';})[0],has8=final.filter(function(r){return r[0]==='8';})[0];
    var exact=has7&&has8&&H.sameList(has7,want7)&&H.sameList(has8,want8)&&final.length===8;
    if(!ins.length&&!H.errors(rep).length){notes.push('No INSERT into students ran yet. Write it on the empty line under the first comment.');}
-   if(exact&&both){done.rows=true;}
+   var ragged=ins.some(function(o){var rs=o.st.rows||[];return rs.some(function(r){return r.length!==rs[0].length||(o.st.cols&&r.length!==o.st.cols.length);});});
+   if(ragged){notes.push('One of your rows has a different number of values from the others. PostgreSQL requires every row after VALUES to have the same number of values, one for each named column; this practice editor did not stop it, so count the values in each row.');}
+   else if(exact&&both){done.rows=true;}
    else if(exact){near=true;notes.push('Both rows are right, but they came from two INSERT statements. Put both bracketed rows after one VALUES, separated by a comma, and delete the second INSERT.');}
    else if(has7||has8){notes.push('Compare students 7 and 8 in Output with the task, letter by letter: the spelling, the single quotes around text, and Hana\'s city, which should be NULL without quotes.');}
    if(both&&both.st.cols){done.cols=true;}else if(ins.length&&ins.some(function(o){return !o.st.cols;})){if(exact){near=true;}notes.push('In your INSERT line, name the four columns in brackets after <code>students</code>, before VALUES.');}

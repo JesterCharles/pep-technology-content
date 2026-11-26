@@ -38,7 +38,7 @@ sql:{
     else{notes.push('Output should show 9 rows, one per enrollment, each with its student’s name. Check that FROM names students, INNER JOIN names enrollments, and ON compares their two student_id columns.');}
     return {done:done,notes:notes,near:near};}},
 3:{file:'instructor-courses.sql',goals:['rows','nulls'],starter:'-- Keep every instructor, even when no course matches.\n\n',
-  fallback:'Write one SELECT with instructors on the left of LEFT JOIN courses, joined on instructor_id, selecting i.name AS instructor and c.title AS course, sorted by instructor_id, then course_id.',
+  fallback:'Write one SELECT with instructors on the left of LEFT JOIN courses, joined on instructor_id, with result columns named instructor and course, sorted by the instructor\'s id, then the course\'s id.',
   check:function(rep,H){var done={},notes=[],near=false,sels=H.selects(rep),o=sels[sels.length-1];
     if(!o){if(!H.errors(rep).length){notes.push('No SELECT returned rows yet. Write one SELECT on the empty line under the comment.');}return {done:done,notes:notes};}
     var want=[['Mara',null],['Tomas','SQL Basics'],['Priya','Java Foundations'],['Priya','Data Modeling'],['Ken','Intro to Testing']];
@@ -48,7 +48,7 @@ sql:{
     if(done.rows&&rows[0][1]===null&&cols&&keys>=2){done.nulls=true;}
     else if(done.rows&&!cols){near=true;notes.push('Your rows are right. In your SELECT line, name the two columns with AS: <code>instructor</code> and <code>course</code>.');}
     else if(done.rows&&keys===0){near=true;notes.push('Your rows are right, and here they happen to come out in order, but without ORDER BY PostgreSQL does not promise any order. Add an ORDER BY line at the end: the instructor’s id first, then the course’s id.');}
-    else if(done.rows){near=true;notes.push('Your rows are right, but Priya’s two courses can come out in either order on a real server. In your ORDER BY line, add the course’s id as a second key.');}
+    else if(done.rows){near=true;notes.push('Your rows are right, but Priya’s two courses can come out in either order on a real server. In your ORDER BY line, add the course’s id as a second sort column.');}
     else if(rows.length===5&&H.sameSet(rows,want)){near=true;notes.push('You have the right 5 rows in a different order. In your ORDER BY line, sort by the instructor’s id first, then the course’s id.');}
     else if(titles.indexOf('Web Basics')>=0||names.indexOf('Web Basics')>=0){notes.push('Web Basics appears, so courses is acting as your left table. Swap them: instructors before LEFT JOIN, courses after it.');}
     else if(names.indexOf('Mara')<0&&titles.indexOf('SQL Basics')>=0){notes.push('Mara is missing, so this works like an inner join. Check that instructors is written before LEFT JOIN and courses after it.');}

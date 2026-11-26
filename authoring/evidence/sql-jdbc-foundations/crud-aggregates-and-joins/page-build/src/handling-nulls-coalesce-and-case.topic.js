@@ -40,7 +40,7 @@ sql:{
     if(!o){if(!H.errors(rep).length){notes.push('No SELECT returned rows yet. Write one SELECT on the empty line under the comment.');}return {done:done,notes:notes};}
     var rows=H.rows(o.res),want=[['101','SQL Basics','Premium'],['102','Java Foundations','Premium'],['103','Data Modeling','Not priced'],['104','Web Basics','Standard'],['105','Intro to Testing','Standard']];
     if(H.sameList(rows,want)){done.labels=true;}
-    else if(rows.length===5&&rows[2]&&rows[2][0]==='103'&&rows[2][2]==='Standard'){notes.push('Data Modeling reads Standard: its NULL fee fell through to ELSE. Add <code>WHEN fee IS NULL THEN \'Not priced\'</code> as the first branch of your CASE.');}
+    else if(rows.length===5&&rows[2]&&rows[2][0]==='103'&&rows[2][2]==='Standard'){notes.push('Data Modeling reads Standard: its NULL fee skipped every comparison and fell through to ELSE. Give NULL a branch of its own, placed first in your CASE.');}
     else if(rows.length===5&&H.sameSet(rows,want)){near=true;notes.push('Your labels are right but not in course_id order. Add ORDER BY course_id at the end.');}
     else{notes.push('Compare the five labels in Output with the three rules in the task, and check the spelling of each label inside its quotes.');}
     if(done.labels&&!H.sameList(o.res.cols,['course_id','title','fee_band'])){done.labels=false;near=true;notes.push('Your labels are right. In your SELECT line, name the CASE column with END AS fee_band.');}

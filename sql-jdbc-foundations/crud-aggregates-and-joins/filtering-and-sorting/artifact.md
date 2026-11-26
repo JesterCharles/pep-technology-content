@@ -4,7 +4,7 @@
 
 - Filter rows with WHERE using comparison operators, AND, OR, IN, BETWEEN and LIKE
 - Sort results with ORDER BY on one or more columns, ascending or descending
-- Predict the row order a query returns, and make it deterministic with explicit sort keys, including a tie-breaking column
+- Predict the row order a query returns, and make it repeatable with explicit sort columns, including a tie-breaking column
 
 ## Teaching
 
@@ -39,11 +39,11 @@ Guess: what does PostgreSQL promise about the order of Ana's and Dina's rows?
 
 ### Filter a contact list by city
 
-`WHERE` keeps only rows whose condition is true. Comparisons use `=`, `<>` (not equal), `<`, `<=`, `>` and `>=`. Join conditions with `AND` when both must hold, or `OR` when either is enough.
+`WHERE` keeps only rows whose condition is true. Comparisons use `=`, `<>` (not equal), `<`, `<=`, `>` and `>=`. Join conditions with `AND` when both must hold, or `OR` when either is enough. Mixed together, AND is applied before OR, so use brackets: `(a OR b) AND c`.
 
-`IN ('Leeds', 'York')` is a short way to write “equal to any of these”. `BETWEEN 2 AND 3` includes both ends. `LIKE '%Basics%'` matches text containing “Basics”: `%` stands for any run of characters.
+`IN ('Hull', 'Bristol')` is a short way to write “equal to any of these”. `BETWEEN 2 AND 3` includes both ends. `LIKE '%Basics%'` matches text containing “Basics”: `%` stands for any run of characters.
 
-`ORDER BY column` sorts from low to high; add `DESC` after a column to sort it from high to low. With two columns, the second one sorts only the rows that tie on the first.
+`ORDER BY` sorts low to high; `DESC` after a column reverses it. A second sort column only orders rows that tie on the first.
 
 ```
 SELECT title, credits FROM courses
@@ -80,7 +80,7 @@ Use it when: The rule is a condition on columns, such as one region or a price r
 
 At work: A screen such as “customers in this region, newest first” is backed by a query like this one; the JDBC code you write later in this course sends exactly these WHERE and ORDER BY clauses.
 
-In interviews: You may be asked to write a query that filters and sorts a table, or to explain why rows can come back in a different order when there is no ORDER BY.
+In interviews: You may be asked to write a query that filters and sorts a table, or to explain why rows can come back in a different order when there is no ORDER BY; Activities 1 to 3 practise both.
 
 ### Activity checks
 
@@ -91,7 +91,7 @@ In progress
 
 ### Your task
 
-Ticket: the regional coordinator wants the students from Leeds or York, grouped by city, newest student first in each city.
+Ticket: the regional coordinator wants the students from Leeds or York, sorted by city, newest student first in each city.
 
 1. In student-report.sql, write one SELECT on the empty line under the comment, showing `student_id`, `name` and `city`.
 2. Keep only Leeds and York.
@@ -146,7 +146,7 @@ You chose the ending that matches the report request and read why the other opti
 
 ### Your task
 
-A report lists all 3-credit courses, highest fee first, and must stay stable when two fees tie. Which ending does that?
+A report lists all 3-credit courses, highest fee first and unpriced last, and must stay stable when fees tie. Which ending does that?
 
 Same idea, new form: which condition keeps courses whose credits are 2 or 3 and whose title contains “Basics”?
 
@@ -201,7 +201,7 @@ Another hint Another hint, 2 of 2 for Activity 3
 
 Where to act: The ORDER BY line.
 
-Next step: The fee column needs two words after it, one for direction and one for where NULL goes; the tie-breaker comes after a comma.
+Next step: After fee, write a direction word, then the words from the reading column that move NULL to the end; the tie-breaker comes after a comma.
 
 - Runs SELECT (with JOIN or LEFT JOIN ... ON, WHERE, GROUP BY, HAVING, ORDER BY and DISTINCT), INSERT with VALUES or a SELECT, UPDATE and DELETE, each with optional RETURNING, on the sample tables shown on this page. Functions: count, sum, avg, min, max, coalesce, round, lower, upper, length, and generate_series in FROM.
 - Every Run starts again from the starting rows. Statements run in order, like a script file in psql: an ERROR stops only its own statement.
@@ -212,7 +212,7 @@ Next step: The fee column needs two words after it, one for direction and one fo
 
 |  |  |
 | --- | --- |
-| `WHERE city IN ('Leeds', 'York')` | match either city |
+| `WHERE city IN ('Hull', 'Bristol')` | match either city |
 | `WHERE credits BETWEEN 2 AND 3` | range, both ends included |
 | `WHERE title LIKE '%Basics%'` | contains text |
 | `ORDER BY fee DESC NULLS LAST, course_id` | high to low, NULL last, tie-breaker |
@@ -242,4 +242,4 @@ Typed sort activity. course-report.sql starts with a comment line. Write one SEL
 
 ### mcq
 
-Apply question: A report lists all 3-credit courses, highest fee first, and must stay stable when two fees tie. Which ending does that? Options: WHERE credits = 3 ORDER BY fee DESC, course_id; (the answer: WHERE keeps 3 credits, fee sorts high to low and course_id breaks fee ties); ORDER BY fee DESC WHERE credits = 3, course_id; (WHERE must come before ORDER BY); WHERE credits = 3 ORDER BY course_id, fee DESC; (this sorts by course_id first, so fee order is lost); WHERE credits = 3 ORDER BY fee DESC; (rows with the same fee still have no promised order). Retry: the condition is credits IN (2, 3) AND title LIKE '%Basics%'.
+Apply question: A report lists all 3-credit courses, highest fee first and unpriced last, and must stay stable when fees tie. Which ending does that? Options: WHERE credits = 3 ORDER BY fee DESC NULLS LAST, course_id; (the answer: WHERE keeps 3 credits, fee sorts high to low with NULL last, and course_id breaks fee ties); ORDER BY fee DESC WHERE credits = 3, course_id; (WHERE must come before ORDER BY); WHERE credits = 3 ORDER BY course_id, fee DESC NULLS LAST; (this sorts by course_id first, so fee order is lost); WHERE credits = 3 ORDER BY fee DESC NULLS LAST; (rows with the same fee still have no promised order). Retry: the condition is credits IN (2, 3) AND title LIKE '%Basics%'.

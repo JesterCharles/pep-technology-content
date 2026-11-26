@@ -3,7 +3,7 @@
 ## Objectives
 
 - Write INSERT statements that add one or several rows with the column list named explicitly
-- Write UPDATE and DELETE statements whose WHERE clause changes only the intended rows, previewing them with SELECT first
+- Write UPDATE statements, and choose DELETE statements, whose WHERE clause changes only the intended rows, previewing them with SELECT first
 - Use RETURNING to see the rows an INSERT, UPDATE or DELETE changed
 
 ## Teaching
@@ -42,12 +42,13 @@ Guess: how many rows of `courses` does this statement change?
 
 ```
 INSERT INTO instructors (instructor_id, name, lead_id)
-VALUES (5, 'Rosa', 1);
+VALUES (5, 'Rosa', 1),
+       (6, 'Sam', NULL);
 ```
 
-psql answers `INSERT 0 1`: the last number is how many rows were added, and you can ignore the 0. Naming the columns keeps the statement correct even if someone later adds a column to the table.
+Here `lead_id` is the id of the instructor's team lead; Sam has none yet, so his value is NULL. psql answers `INSERT 0 2`: the last number is how many rows were added, and you can ignore the 0.
 
-One INSERT can add several rows: put a comma between the bracketed rows. If any row breaks a constraint, such as a primary key that already exists, the whole statement fails and adds no rows at all.
+One INSERT adds several rows when a comma separates the bracketed rows, and every row has one value per named column. If any row breaks a constraint, such as a primary key that already exists, the whole statement fails and adds no rows at all.
 
 Starting rows of `students` (`student_id` is the primary key; `email` is unique)
 
@@ -82,7 +83,7 @@ Ticket: two students enrolled today. Add both in one INSERT that names its colum
 
 `UPDATE` changes values in existing rows; `DELETE FROM` removes rows. Both use `WHERE` to choose rows: only rows for which its condition is true change. Without WHERE they change every row, as Activity 1 showed.
 
-A safe habit: first run `SELECT * FROM table WHERE ...` with the exact WHERE you plan to use. It lists the rows the condition matches (`*` means every column). Check them, then reuse the same WHERE. A condition on the primary key matches at most one row.
+A safe habit: first run `SELECT * FROM table WHERE ...` with the exact WHERE you plan to use (`*` means every column), check the rows it lists, then reuse that WHERE. An equality test on the primary key, such as `course_id = 104`, matches at most one row.
 
 ```
 SELECT * FROM courses WHERE course_id = 104;
@@ -90,7 +91,7 @@ UPDATE courses SET fee = 85.00
 WHERE course_id = 104 RETURNING course_id, fee;
 ```
 
-`RETURNING` lists the rows the statement just changed, with their new values (after a DELETE, the removed values), so you see the effect without a second query. psql then prints `UPDATE 1`: one row changed.
+`RETURNING` lists the changed rows with their new values (after a DELETE, the removed ones), so you see the effect without a second query; psql then prints `UPDATE 1`.
 
 Starting rows of `students`
 
@@ -113,7 +114,7 @@ Use it when: A WHERE decides which rows of a shared table change, such as correc
 
 At work: Correcting one customer's record in a shared database is a typical support ticket; a teammate who reviews the change will want to see the SELECT you ran first, and RETURNING shows exactly what changed.
 
-In interviews: You may be asked what happens when an UPDATE or DELETE has no WHERE clause, or how you would change one customer's row safely.
+In interviews: You may be asked what happens when an UPDATE or DELETE has no WHERE clause, or how you would change one customer's row safely; Activities 1 and 3 practise both.
 
 ### Activity checks
 
@@ -135,7 +136,7 @@ Ticket: Ben (student 2) has moved to Hull. Change only his row, and show the cha
 
 A WHERE matches every row for which its condition is true. `AND` narrows the match: both parts must hold. `OR` widens it: either part is enough.
 
-The primary key of `enrollments` is the pair (`student_id`, `course_id`), so naming both columns matches exactly one enrollment.
+The primary key of `enrollments` is the pair (`student_id`, `course_id`), so an equality test on both columns matches exactly one enrollment.
 
 Rows of `enrollments` (primary key: `student_id`, `course_id`)
 
@@ -150,6 +151,17 @@ Rows of `enrollments` (primary key: `student_id`, `course_id`)
 | 4 | 102 | 91 |
 | 4 | 103 | NULL |
 | 5 | 101 | 45 |
+
+`students`, for the second question (`email` is unique)
+
+| student_id | name | email | city |
+| --- | --- | --- | --- |
+| 1 | Ana | ana@example.com | Leeds |
+| 2 | Ben | ben@example.com | York |
+| 3 | Chen | chen@example.com | NULL |
+| 4 | Dina | dina@example.com | Leeds |
+| 5 | Eli | eli@example.com | Bristol |
+| 6 | Femi | femi@example.com | NULL |
 
 ### Activity checks
 
@@ -179,7 +191,7 @@ UPDATE courses SET fee = 0;
 
 - `INSERT INTO table (columns) VALUES (...), (...);` names its columns and adds one or more rows; one rejected row cancels the whole statement.
 - `UPDATE ... SET ... WHERE` and `DELETE FROM ... WHERE` change only the rows WHERE matches; with no WHERE they change every row.
-- Preview with a SELECT that uses the same WHERE; a condition on the primary key matches at most one row. `RETURNING` shows the rows a statement changed.
+- Preview with a SELECT that uses the same WHERE; an equality test on every column of the primary key matches at most one row. `RETURNING` shows the rows a statement changed.
 
 Next topic: Seeding sample data
 
@@ -233,7 +245,7 @@ Next step: Build the UPDATE in the example's order: the table, SET with the new 
 
 ## Sources
 
-Checked against these live official PostgreSQL documentation pages on 2026-11-25. The editor's outputs and error messages were compared with a real PostgreSQL 18 server and psql on the same sample tables when the editor was built.
+Checked against these live official PostgreSQL documentation pages on 2026-11-25. The practice editor imitates PostgreSQL's results and error wording; its runs on this page were not repeated on a live PostgreSQL server.
 
 - 6.1 Inserting Data
 - 6.2 Updating Data
