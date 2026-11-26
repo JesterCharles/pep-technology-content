@@ -12,10 +12,10 @@ $CATEGORY: sql-jdbc-foundations/crud-aggregates-and-joins/seeding-sample-data
 }
 
 ::o1 child first::With an ordinary foreign key, what happens when a seed script inserts a review for book 7 before book 7 exists? {
-~The review waits until book 7 is inserted#Not quite. An ordinary foreign key is checked as soon as the statement finishes; nothing waits.
+~The review waits until book 7 is inserted#Not quite. Only a constraint declared DEFERRABLE can wait, until COMMIT.
 ~PostgreSQL creates an empty book 7#Not quite. PostgreSQL never invents a parent row.
 =That INSERT fails with a foreign key ERROR and adds nothing#Correct. The reference is checked when the statement finishes, and a missing parent is not accepted for later.
-~The review is added anyway, with its book_id quietly set to NULL#Not quite. PostgreSQL does not change the value you supplied.
+~The review is added with book_id set to NULL#Not quite. PostgreSQL does not change the value you supplied.
 }
 
 ::o2 series values::Which values does SELECT n FROM generate_series(1, 5) AS n; return? {
@@ -34,14 +34,14 @@ $CATEGORY: sql-jdbc-foundations/crud-aggregates-and-joins/seeding-sample-data
 
 ::o3 server-side path::A teammate runs COPY products FROM '/srv/data/products.csv' WITH (FORMAT csv) as a superuser. On which machine must /srv/data/products.csv exist? {
 ~The teammate's laptop#Not quite. That is where \\copy would read from, because psql opens the file.
-~Either machine, because PostgreSQL searches both for the file#Not quite. COPY looks only on the server; it never searches the client.
+~Either machine; PostgreSQL searches both#Not quite. COPY looks only on the server; it never searches the client.
 ~The folder psql was started in#Not quite. psql is not involved in reading the file for server-side COPY.
 =The machine running the PostgreSQL server#Correct. Server-side COPY is executed by the server, which opens the path on its own file system.
 }
 
 ::o3 which program reads it::What is the difference between \\copy in psql and COPY ... FROM 'file' in SQL? {
-=\\copy\: psql reads your file; COPY\: the server reads a file on its disk#Correct. The difference is which program can see the file.
+=psql opens the file for \\copy on your computer; the server opens it for COPY on its own disk#Correct. The difference is which program can see the file.
 ~They are the same command spelled two ways#Not quite. They read files from different machines.
-~COPY is the psql-only command, and \\copy is the one the server runs on its own disk#Not quite. It is the other way round\: \\copy is a psql command, and psql reads its file on your computer.
+~COPY is psql-only and \\copy runs on the server#Not quite. It is the other way round\: \\copy is a psql meta-command.
 ~Only \\copy understands CSV#Not quite. Both accept FORMAT csv.
 }
