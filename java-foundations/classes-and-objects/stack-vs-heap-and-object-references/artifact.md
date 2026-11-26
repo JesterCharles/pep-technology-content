@@ -23,9 +23,9 @@ b.size = 5;
 System.out.println(a.size);
 ```
 
-Stack frame and heap after Box b = aThe main method's frame on the stack holds n = 7 and two reference variables, a and b. Both arrows point to one Box object on the heap whose size field is 5. Stack: frame of main n = 7 a b Heap Box size = 5
+Stack frame and heap after the Activity 1 programThe main method's frame on the stack holds two reference variables, a and b. Both arrows point to one Box object on the heap whose size field is 5. Stack: frame of main a b Heap Box size = 5
 
-Two references on the stack, one object on the heap.
+The program from Activity 1: two references on the stack, one object on the heap.
 
 This is the model the Java Virtual Machine Specification describes. A running JVM may optimize where data really sits, but it never changes what your program can observe.
 

@@ -8,7 +8,7 @@
 
 ## Teaching
 
-The strings topic used this rule without naming it; predict what this program prints before you read why.
+The strings topic said a String never changes. Predict what this program prints, then read why.
 
 ```
 // inside main:
