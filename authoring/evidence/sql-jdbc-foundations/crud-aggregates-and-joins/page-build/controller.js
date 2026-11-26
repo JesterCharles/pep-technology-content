@@ -1,7 +1,8 @@
 /* sql-practice@1 page controller. Shared by every page of the module; page content comes from TOPIC and SQL_TABLES.
    Activity 1 is a practice prediction, the middle activities are SQL editor tasks, and the last is an apply check
    with confidence, one retry and the answer. Navigation never changes activity state; Restart resets only the
-   current activity. No storage, no network. */
+   current activity. Path anatomy: the lesson path rows, the activity navigation group and the activity-check status
+   move with the current activity; nothing is cloned. No storage, no network. */
 var SQLCHK={
   show:function(v){return v===null?null:LESSON_EDITOR_SQL.show(v);},
   rows:function(res){return res.rows.map(function(r){return r.map(SQLCHK.show);});},
@@ -16,7 +17,29 @@ var SQLCHK={
   table:function(rep,name){var t=rep.db&&rep.db[name];return t?t.rows.map(function(r){return r.map(SQLCHK.show);}):[];},
   orderCols:function(o){return (o.st.order||[]).map(function(k){return k.e&&k.e.col?k.e.col:null;});},
   nodes:function(n,pred,acc){acc=acc||[];if(n&&typeof n==='object'){if(!Array.isArray(n)&&pred(n)){acc.push(n);}Object.keys(n).forEach(function(k){SQLCHK.nodes(n[k],pred,acc);});}return acc;},
-  calls:function(n,name){return SQLCHK.nodes(n,function(x){return x.op==='call'&&x.name===name;});}
+  calls:function(n,name){return SQLCHK.nodes(n,function(x){return x.op==='call'&&x.name===name;});},
+  /* Plain-words reading of the first PostgreSQL ERROR in a run. The practice editor knows only the line on which the
+     statement starts, so the message says so and points there. Returns '' when the run had no ERROR. */
+  explain:function(rep){var o=SQLCHK.errors(rep)[0];if(!o){return '';}
+    var m=String(o.error),x,say=function(t){return 'In the statement that starts on line '+o.line+', '+t;};
+    if((x=/^column reference "([^"]+)" is ambiguous/.exec(m))){return say('two of your tables both have a column named <code>'+x[1]+'</code>, so PostgreSQL cannot tell which one you mean. Put the table alias and a dot in front of it everywhere it appears, for example <code>s.'+x[1]+'</code>.');}
+    if((x=/^missing FROM-clause entry for table "([^"]+)"/.exec(m))){return say('<code>'+x[1]+'.</code> names a table or alias that FROM and JOIN do not define. Use the alias you gave the table, or add the table to FROM.');}
+    if((x=/^invalid reference to FROM-clause entry for table "([^"]+)"/.exec(m))){return say('you gave <code>'+x[1]+'</code> an alias, so use the alias, not the table name, in front of its columns.');}
+    if((x=/^column "([^"]+)" of relation "([^"]+)" does not exist/.exec(m))){return say('the table <code>'+x[2]+'</code> has no column <code>'+x[1]+'</code>. Check the column list against the sample table.');}
+    if((x=/^column "([^"]+)" does not exist/.exec(m))||(x=/^column (\S+) does not exist/.exec(m))){return say('there is no column <code>'+x[1]+'</code> in the tables this statement reads. Check its spelling against the sample table, and check that its table is in FROM or a JOIN.');}
+    if((x=/^relation "([^"]+)" does not exist/.exec(m))){return say('there is no table named <code>'+x[1]+'</code> here. Check the spelling against the sample tables.');}
+    if(/must appear in the GROUP BY clause or be used in an aggregate function/.test(m)){return say('a selected column is neither in GROUP BY nor inside an aggregate such as COUNT. Add it to GROUP BY, put it inside an aggregate, or remove it from the SELECT list.');}
+    if(/^aggregate functions are not allowed in WHERE/.test(m)){return say('WHERE runs before any group exists, so it cannot use COUNT, SUM or another aggregate. Move that condition into HAVING, after GROUP BY.');}
+    if(/^aggregate functions are not allowed/.test(m)){return say('an aggregate such as COUNT or SUM sits in a clause that works one row at a time. Keep aggregates in the SELECT list, HAVING or ORDER BY.');}
+    if(/^insert or update on table .* violates foreign key constraint/.test(m)){return say('a new row points at a row that does not exist yet. Insert the row it points at first, earlier in the file.');}
+    if(/^update or delete on table .* violates foreign key constraint/.test(m)){return say('another table still has rows that point at the row you are removing. Remove or change those rows first.');}
+    if(/^duplicate key value violates unique constraint/.test(m)){return say('a row with that key or unique value already exists. Use a value no other row has, or change the existing row with UPDATE.');}
+    if((x=/^null value in column "([^"]+)"/.exec(m))){return say('the column <code>'+x[1]+'</code> must have a value. Name it in the column list and give it a value in every row.');}
+    if(/^INSERT has more expressions than target columns/.test(m)){return say('a row has more values than the columns you named. Give exactly one value per named column, in the same order.');}
+    if(/^INSERT has more target columns than expressions/.test(m)){return say('a row has fewer values than the columns you named. Give exactly one value per named column, in the same order.');}
+    if(/^invalid input syntax for type/.test(m)){return say('a value does not fit its column. Text goes in single quotes; numbers and NULL do not.');}
+    if(/^operator does not exist/.test(m)){return say('two values of different kinds are compared or joined together. Check the quotes: <code>\'3\'</code> is text, <code>3</code> is a number.');}
+    return say('PostgreSQL would stop with the ERROR shown in Output. Read its first line, then compare that statement with the example in the reading column.');}
 };
 (function(){
 'use strict';
@@ -25,8 +48,12 @@ function $(id){return d.getElementById(id);}
 function qa(sel,root){return Array.prototype.slice.call((root||d).querySelectorAll(sel));}
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 var acts=qa('[data-pep-activity]'),links=qa('[data-pep-activity-link]'),N=acts.length;
+var rows=links.map(function(a){return a.closest('[data-pep-path-row]');}),toc=d.querySelector('[data-pep-path-toc]');
+var navGroup=d.querySelector('[data-pep-activity-nav]');
 var prevBtn=$('previous-activity'),nextBtn=$('next-activity'),resetBtn=$('reset');
 var MIN=main.getAttribute('data-pep-required-minutes');
+/* The shared shell labels editor notes with the adapter's names; this page shows them in learner words. */
+var EDITOR=Object.create(LESSON_EDITOR_SQL);EDITOR.kindLabels={error:'Error',limit:'Not in this practice editor',hint:'Hint'};EDITOR.language='PostgreSQL server';
 function kind(n){return section(n).getAttribute('data-kind');}
 function blank(){return {attempts:0,settled:false,completed:false,credit:0,grade:0,canContinue:false,missed:false,g:{},tries:0,conf:null,firstPick:null};}
 var S={current:1,unlocked:1,complete:false,routeSettled:false,a:acts.map(blank)};
@@ -49,19 +76,26 @@ function reflect(){
     sec.setAttribute('data-pep-grade',String(s.grade));sec.setAttribute('data-pep-continue',String(s.canContinue));});
 }
 function progress(){
-  var done=0,missed=0;
-  S.a.forEach(function(s,i){if(s.completed){done++;}else if(s.settled){missed++;}
+  var done=0;
+  S.a.forEach(function(s,i){if(s.completed){done++;}
     var seg=qa('#progress .seg')[i];seg.className='seg'+(s.completed?' is-done':(s.settled?' is-settled':(i+1===S.current?' is-current':'')));});
-  $('prog-text').textContent='Activity '+S.current+' of '+N+' · '+done+' of '+N+' done'+(missed?' ('+missed+' settled, not passed)':'')+' · about '+MIN+' min';
+  $('prog-text').textContent='Activity '+S.current+' of '+N+' · '+done+' of '+N+' done · about '+MIN+' min';
 }
-function checks(n){var s=act(n);qa('[data-goal]',section(n)).forEach(function(li){li.classList.toggle('done',!!s.g[li.getAttribute('data-goal')]);});}
+function checks(n){var s=act(n),sec=section(n);qa('[data-goal]',sec).forEach(function(li){li.classList.toggle('done',!!s.g[li.getAttribute('data-goal')]);});
+  qa('[data-pep-checks-status]',sec).forEach(function(st){st.textContent=s.completed?'Done':'In progress';st.classList.toggle('is-done',s.completed);});}
+/* Lesson path: earlier rows and the current row go to the current activity's before-slot, later rows to its
+   after-slot; the navigation group goes to the foot of its workspace. Rows are moved, never cloned. */
+function placePath(){var sec=section(S.current),before=sec.querySelector('[data-pep-path-slot="before"]'),after=sec.querySelector('[data-pep-path-slot="after"]'),slot=sec.querySelector('[data-pep-nav-slot]');
+  if(before&&after){rows.forEach(function(r,i){if(r){(i+1<=S.current?before:after).appendChild(r);}});if(toc){toc.hidden=true;}}
+  if(slot&&navGroup&&navGroup.parentNode!==slot){slot.appendChild(navGroup);}}
 function render(){
   acts.forEach(function(sec,i){sec.hidden=(i+1!==S.current);});
-  links.forEach(function(a,i){var n=i+1,s=S.a[i],state=a.querySelector('.pep-step__state');
+  placePath();
+  links.forEach(function(a,i){var n=i+1,s=S.a[i],state=a.querySelector('[data-pep-path-status]'),row=rows[i];
     if(n===S.current){a.setAttribute('aria-current','step');}else{a.removeAttribute('aria-current');}
     if(n>S.unlocked){a.setAttribute('aria-disabled','true');}else{a.removeAttribute('aria-disabled');}
-    a.classList.toggle('is-done',s.completed);
-    state.textContent=n>S.unlocked?', locked':(s.completed?', done':(s.settled?', settled, not passed':(n===S.current?', current':'')));});
+    a.classList.toggle('is-done',s.completed);if(row){row.classList.toggle('is-current',n===S.current);}
+    if(state){state.textContent=n>S.unlocked?'Locked':(s.completed?'Done':'Open');}});
   prevBtn.disabled=S.current===1;
   nextBtn.disabled=S.current>=N||S.current>=S.unlocked||!act(S.current).canContinue;
   $('recap').classList.toggle('is-pending',!S.routeSettled);
@@ -95,11 +129,17 @@ function settle(n){var s=act(n);
 function summarize(){
   S.complete=S.a.every(function(x){return x.completed;});
   S.routeSettled=S.a.every(function(x){return x.completed||x.settled;});
-  var m=S.a.filter(function(x){return x.settled&&!x.completed;}).length;
-  $('complete-msg').textContent=S.complete?'All '+N+' activities finished.':(S.routeSettled?'All '+N+' activities reached; '+m+' settled without passing, so the page is not complete yet. Review the explanation, then use Restart activity on it to try again.':'');
+  var open=S.a.map(function(x,i){return x.settled&&!x.completed?i+1:0;}).filter(Boolean);
+  $('complete-msg').textContent=S.complete?'All '+N+' activities done.':(S.routeSettled?'You reached the end. Activity '+open.join(' and ')+(open.length===1?' is':' are')+' not done yet: go back with the lesson path and keep practising there, or press Restart activity there to start it fresh.':'');
 }
 function finish(n){S.unlocked=Math.max(S.unlocked,Math.min(n+1,N));summarize();render();}
 function nextNote(n){return n<N?' Choose <em>Next activity</em> when ready.':' The recap now follows the activities.';}
+/* A short calibration reply when confidence and correctness disagree; confidence is never marked. */
+function calibration(conf,ok){
+  if(conf==='high'&&!ok){return 'You were sure, and this one surprised you: that makes it a rule worth remembering.';}
+  if(conf==='low'&&ok){return 'You were unsure but right: your reasoning here is sound.';}
+  return 'Your confidence: '+esc(conf)+'. It is only for you and is never marked.';
+}
 
 /* Prediction before teaching: practice, not scored. */
 function checkPredict(){
@@ -108,60 +148,63 @@ function checkPredict(){
   s.attempts=1;
   qa('input[name="predict"],input[name="pconf"]').forEach(function(i){i.disabled=true;});$('predict-check').disabled=true;
   qa('input[name="predict"]').forEach(function(i){var l=optLabel(i);if(i.value===P.correct){l.classList.add('right');}else if(i.value===ch){l.classList.add('wrong');}
-    if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your prediction</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>');l.querySelector('span').appendChild(w);}});
-  var html='<p class="verdict">Practice prediction, not scored. '+(ch===P.correct?'Your prediction was correct.':'Your prediction was not correct; the correct answer is marked.')+' Each option, explained:</p><ul class="explain">';
+    if(i.value===P.correct||i.value===ch){var w=d.createElement('span');w.className='badges';w.innerHTML=(i.value===ch?'<span class="badge me">Your guess</span>':'')+(i.value===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not this one</span>');l.querySelector('span').appendChild(w);}});
+  var html='<p class="verdict">'+(ch===P.correct?'Your guess was right.':'Your guess was not this time; the right answer is marked.')+' This guess is only practice. Each option, explained:</p><ul class="explain">';
   Object.keys(P.why).forEach(function(k){var i=qa('input[name="predict"][value="'+k+'"]')[0];
-    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your prediction)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
-  feedback(n,html+'</ul><p class="conf-report">Your confidence: '+esc(pc)+' (not graded).</p><p>'+nextNote(n)+'</p>');
+    html+='<li'+(k===ch?' class="mine"':'')+'><span class="on">'+(k===P.correct?'<span class="badge ok">Correct</span>':'<span class="badge no">Not this one</span>')+esc(optLabel(i).querySelector('span').firstChild.textContent.trim())+(k===ch?' <em>(your guess)</em>':'')+'</span><span class="ex">'+P.why[k]+'</span></li>';});
+  feedback(n,html+'</ul>'+(P.job?'<p><strong>On the job:</strong> '+P.job+'</p>':'')+'<p class="conf-report">'+calibration(pc,ch===P.correct)+'</p><p>'+nextNote(n)+'</p>');
   complete(n,0);
 }
 
-/* SQL editor tasks: every Run starts from the lesson's starting rows. Two runs that still miss a check settle the
-   activity without revealing a finished statement; the editor stays open for practice. */
+/* SQL editor tasks: every Run starts from the lesson's starting rows. Two runs that still miss a check open Next
+   activity without revealing a finished statement; the editor stays open, and a later run that meets every check
+   still completes the activity. A check may mark a miss as near: right in substance, one named detail to change. */
 var editors={};
 function normal(code){return String(code).replace(/\r\n?/g,'\n').replace(/[ \t]+$/gm,'').trim();}
 function onSqlRun(n,report,code){var cfg=TOPIC.sql[n],s=act(n),m=[];
-  if(normal(code)===normal(cfg.starter)){feedback(n,'<p>That is the starting file, so nothing was counted. Add your statement where the comment says, then press <em>Run</em>.</p>');return;}
-  if(report.status==='limit'){feedback(n,'<p>Not run yet: fix the items under <em>Problems</em> first. Nothing was counted.</p>');return;}
-  var r=cfg.check(report,SQLCHK)||{},done=r.done||{},all=true;
+  if(normal(code)===normal(cfg.starter)){feedback(n,'<p>'+(cfg.starterNote||'That is still the starting file. Write your statement on the empty line under the comment, then press <em>Run</em>.')+'</p>');return;}
+  if(report.status==='limit'){feedback(n,'<p>Not run yet: open <em>Problems</em>, fix the line it names, then press <em>Run</em> again. This run did not use up a try.</p>');return;}
+  var r=cfg.check(report,SQLCHK)||{},done=r.done||{},all=true,why=SQLCHK.explain(report),lead='';
   if(!s.completed){s.g={};} /* ticks show the current run until the activity is completed */
   cfg.goals.forEach(function(g){if(done[g]){s.g[g]=1;}if(!done[g]){all=false;}});
+  if(why){m.push(why);}
   (r.notes||[]).forEach(function(t){m.push(t);});
+  if(!all&&r.near){lead='<p class="verdict near pep-verdict--near">Almost.</p>';}
   if(!s.completed){s.attempts++;
-    if(all){m.push('<strong>All checks done.</strong>'+nextNote(n));complete(n,1);}
-    else if(s.attempts>=2){m.push('<strong>Settled after two tries: not passed, so no credit yet.</strong> Compare Output with the checks, open the hints for the next reasoning step, and keep practising here; a later run that passes every check still completes it.'+nextNote(n));settle(n);}
-    else{m.push('One more try before this activity settles; the hints give the next reasoning step.');render();}}
-  else{if(all){m.push('<strong>All checks now pass.</strong> Your earlier result for this activity stands.');}render();}
-  feedback(n,'<p>'+m.join(' ')+'</p>');
+    if(all){lead='<p class="verdict ok">Every check is met.</p>';m.push(nextNote(n));complete(n,1);}
+    else if(s.attempts>=2){m.push('<em>Next activity</em> is open now if you want to move on. You can also keep working here: a run that meets every check still completes this activity.');settle(n);}
+    else{m.push('Open <em>Need a hint?</em> for the next step, then press <em>Run</em> again.');render();}}
+  else{if(all){lead='<p class="verdict ok">Every check is met again.</p>';}render();}
+  feedback(n,lead+'<p>'+m.join(' ')+'</p>');
 }
 
 /* Apply check with confidence, one retry, then the answer. */
 function markOpts(set,chosen){qa('input',$(set.fs)).forEach(function(i){var l=optLabel(i);i.disabled=true;
   if(i.value===set.correct&&chosen===set.correct){l.classList.add('right');}
   if(i.value===chosen&&chosen!==set.correct){l.classList.add('wrong');}});}
-function badges(ok,mine){return '<span class="badges">'+(mine?'<span class="badge me">Your answer</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not correct</span>')+'</span>';}
+function badges(ok,mine){return '<span class="badges">'+(mine?'<span class="badge me">Your answer</span>':'')+(ok?'<span class="badge ok">Correct</span>':'<span class="badge no">Not this one</span>')+'</span>';}
 function annotate(set,chosen){qa('input',$(set.fs)).forEach(function(i){var sp=optLabel(i).querySelector('span');var w=d.createElement('span');w.className='why';
   w.innerHTML=badges(i.value===set.correct,i.value===chosen)+set.why[i.value];sp.appendChild(w);});}
 function explainList(set){var html='<ul>';Object.keys(set.why).forEach(function(k){var i=qa('input[value="'+k+'"]',$(set.fs))[0];
-  html+='<li><strong>'+(k===set.correct?'Correct: ':'Not this: ')+'</strong><span class="on">'+esc(optLabel(i).textContent.trim())+'</span>: '+set.why[k]+'</li>';});return html+'</ul>';}
-function confText(s){return '<p class="conf-report" data-pep-confidence-report>Your confidence: '+esc(s.conf)+' (reported to you, never graded).</p>';}
+  html+='<li><strong>'+(k===set.correct?'Correct: ':'Not this one: ')+'</strong><span class="on">'+esc(optLabel(i).textContent.trim())+'</span>: '+set.why[k]+'</li>';});return html+'</ul>';}
+function confText(s,ok){return '<p class="conf-report" data-pep-confidence-report>'+calibration(s.conf,ok)+'</p>';}
 function applyN(){return +$('apply-a').closest('[data-pep-activity]').id.split('-')[1];}
 function focusVerdict(n){var v=section(n).querySelector('[data-pep-feedback] .verdict');if(v){v.setAttribute('tabindex','-1');v.focus();}}
 function checkApply(which){var A=TOPIC.apply.A,B=TOPIC.apply.B,n=applyN(),s=act(n);
   if(s.completed||s.settled){return;}
   if(which==='a'){var ch=checked('apply-a');s.conf=checked('conf');if(!ch||!s.conf){return;}
     s.attempts=1;s.tries=1;qa('input[name="conf"]').forEach(function(i){i.disabled=true;});$('apply-check').disabled=true;markOpts(A,ch);
-    if(ch===A.correct){annotate(A,ch);$('apply-check').hidden=true;feedback(n,'<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText(s)+'<p>'+nextNote(n)+'</p>');complete(n,1);focusVerdict(n);return;}
+    if(ch===A.correct){annotate(A,ch);$('apply-check').hidden=true;feedback(n,'<p class="verdict ok">Correct.</p>'+A.okNote+'<p>Each option is explained in the list.</p>'+confText(s,true)+'<p>'+nextNote(n)+'</p>');complete(n,1);focusVerdict(n);return;}
     s.firstPick=optLabel(qa('input[name="apply-a"][value="'+ch+'"]')[0]).textContent.trim();
-    feedback(n,'<p class="verdict no">Not yet. Try once more with the same idea shown a different way.</p><p>Your first answer, <span class="on">'+esc(s.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText(s));
+    feedback(n,'<p class="verdict no">Not this one. Try once more: the same idea comes back in a new form.</p><p>Your first answer, <span class="on">'+esc(s.firstPick)+'</span>: '+A.miss[ch]+'</p><p>'+A.hint+'</p>'+confText(s,false));
     qa('[data-retry]',section(n)).forEach(function(x){x.hidden=false;});qa('[data-first]',section(n)).forEach(function(x){x.hidden=true;});
     render();$('task-apply-b').focus();
   }else{var c2=checked('apply-b');if(!c2||s.tries!==1){return;}
     s.attempts=2;s.tries=2;$('apply-check-b').hidden=true;markOpts(B,c2);annotate(B,c2);
     var details='<details><summary>First question: every option explained</summary>'+explainList(A)+'</details>';
-    if(c2===B.correct){feedback(n,'<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+details+confText(s)+'<p>'+nextNote(n)+'</p>');complete(n,1);}
+    if(c2===B.correct){feedback(n,'<p class="verdict ok">Correct on the second try.</p><p>Each option is explained in the list.</p>'+details+'<p>'+nextNote(n)+'</p>');complete(n,1);}
     else{qa('input',$(B.fs)).forEach(function(i){if(i.value===B.correct){optLabel(i).classList.add('right');}});
-      feedback(n,'<p class="verdict set">Answered, not marked correct: settled, no penalty.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+details+confText(s)+'<p>'+nextNote(n)+'</p>');settle(n);}
+      feedback(n,'<p class="verdict set">Not this one either. Here is the answer to learn from.</p><p>'+B.reveal+' Each option is explained in the list.</p>'+details+'<p>This activity is not done yet; press <em>Restart activity</em> to try it again from the start.'+nextNote(n)+'</p>');settle(n);}
     focusVerdict(n);}
 }
 function syncButtons(){var pf=$('predict-fs'),af=$('apply-a');
@@ -207,7 +250,7 @@ addEventListener('beforeprint',function(){printOpened=qa('details:not([open])',m
 addEventListener('afterprint',function(){printOpened.forEach(function(x){x.open=false;});printOpened=[];});
 
 Object.keys(TOPIC.sql).forEach(function(k){var n=+k,cfg=TOPIC.sql[k],root=$('ed'+n);
-  try{editors[n]=LESSON_EDITOR.mount(root,{adapter:LESSON_EDITOR_SQL,file:cfg.file,starter:cfg.starter,calls:cfg.tables||SQL_TABLES,fallbackText:cfg.fallback,onRun:function(rep,code){onSqlRun(n,rep,code);}});}
+  try{editors[n]=LESSON_EDITOR.mount(root,{adapter:EDITOR,file:cfg.file,starter:cfg.starter,calls:cfg.tables||SQL_TABLES,fallbackText:cfg.fallback,onRun:function(rep,code){onSqlRun(n,rep,code);}});}
   catch(e){feedback(n,'<p>The editor could not start; the static exercise text still describes the task.</p>');}});
 var start=fromHash();
 go(start>=1&&start<=S.unlocked?start:1,'replace',false);
