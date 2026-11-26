@@ -17,12 +17,12 @@ sb.append("b");
 System.out.println(sb);
 ```
 
-- A final variable or field can be assigned only once. A final field must be assigned by the end of every constructor and never afterwards.
-- A final method cannot be overridden (replaced) by a subclass, and a final class, such as `String`, cannot be extended at all. Subclasses come in the next module.
+- A final variable or field is assigned once; a final instance field, by the end of every constructor.
+- A final method cannot be overridden (replaced) by a subclass, and a final class, such as `String`, cannot be extended. `class LoudBell extends Bell` makes `LoudBell` a subclass of `Bell`; the next module covers subclasses.
 
 For a reference variable, "assigned once" means it always refers to the same object. The object itself can still change, unless its own class prevents that.
 
-When you print an object or join it to a string with `+`, Java calls its `toString()` method. The version every class inherits from `Object`, the class every class builds on, prints the class name, an `@` and a hexadecimal number, such as `Card@1b6d3586`, which tells a reader almost nothing. Override it to return a useful text form:
+When you print an object or join it to a string with `+`, Java calls its `toString()` method. The version every class inherits from `Object`, the class every class builds on, prints the class name, an `@` and a number in hexadecimal (digits 0 to 9 and a to f), such as `Card@1b6d3586`, which tells a reader almost nothing. Override it to return a useful text form:
 
 ```
 class Point {
@@ -37,7 +37,7 @@ class Point {
 }
 ```
 
-`@Override` asks the compiler to confirm that the method really replaces an inherited one; a misspelled name then becomes a compile error.
+`@Override`, an annotation (a note to the compiler), asks it to confirm that the method really replaces an inherited one; a misspelled name then becomes a compile error.
 
 Printing an object, or joining it to a string, calls its `toString()`.
 
@@ -47,7 +47,7 @@ Printing an object, or joining it to a string, calls its `toString()`.
 
 ## Recap
 
-- A `final` variable or field is assigned once; a final field must be set by the end of every constructor.
+- A `final` variable or field is assigned only once.
 - `final` on a reference freezes the reference, not the object it refers to.
 - A `final` method cannot be overridden, and a `final` class cannot be extended.
 - Printing or joining an object calls `toString()`; override it, with `@Override`, to show useful field values.
@@ -70,7 +70,7 @@ Another hint Another hint, 2 of 2 for Activity 3
 
 Where to act: The method's `return` line.
 
-Next step: Build the text from three pieces joined with `+`: the rank field, the literal word between them with its spaces, and the suit field.
+Next step: Look at the target text `Q of hearts` and ask which parts come from fields and which part is the same for every card.
 
 |  |  |
 | --- | --- |
@@ -81,7 +81,7 @@ Next step: Build the text from three pieces joined with `+`: the rank field, the
 
 ## Sources
 
-Claims on this page were checked against the live official pages below on 25 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 26 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
 
 - Java Language Specification SE 25, chapter 4: Types, Values, and Variables: final variables (4.12.4): a final variable may be assigned only once; a final reference always refers to the same object, whose state may still change.
 - Java Language Specification SE 25, chapter 8: Classes: final classes (8.1.1.2), final fields that must be definitely assigned by the end of every constructor (8.3.1.2) and final methods (8.4.3.3).

@@ -8,7 +8,7 @@
 
 ## Teaching
 
-Memory is new here, so guess what this program prints.
+You saw two variables share one object in the classes topic; predict what this program prints.
 
 ```
 class Box {
@@ -23,15 +23,15 @@ b.size = 5;
 System.out.println(a.size);
 ```
 
-Stack frame and heap after Box b = aThe main method's frame on the stack holds count = 3 and two reference variables, a and b. Both arrows point to one Box object on the heap whose size field is 5. Stack: frame of main count = 3 a b Heap Box size = 5
+Stack frame and heap after Box b = aThe main method's frame on the stack holds n = 7 and two reference variables, a and b. Both arrows point to one Box object on the heap whose size field is 5. Stack: frame of main n = 7 a b Heap Box size = 5
 
 Two references on the stack, one object on the heap.
 
 This is the model the Java Virtual Machine Specification describes. A running JVM may optimize where data really sits, but it never changes what your program can observe.
 
-An object is reachable while a chain of references leads to it from a variable that running code can still use, such as a local variable of a method that has not returned. When no such chain is left, the object is unreachable: no code can ever use it again, so it is eligible for garbage collection. The JVM reclaims its memory when it chooses, possibly never; you cannot force it.
+An object is reachable while a chain of references leads to it from a variable that running code can still use, such as a local variable the running method will still use. When no such chain is left, the object is unreachable: no code can ever use it again, so it is eligible for garbage collection. The JVM reclaims its memory when it chooses, possibly never; you cannot force it.
 
-Reassigning a variable or setting it to `null` removes one reference. An object created by `new` but never stored has no reference at all.
+Reassigning a variable or setting it to `null` removes one reference: after `Box p = new Box(); p = null;` no variable reaches that box, so it is eligible. An object created by `new` but never stored has no reference at all.
 
 Java passes every argument by value. For an object, the value copied into the parameter is the reference, so the method's parameter and the caller's variable point at the same object, but reassigning the parameter moves only the method's own copy.
 
@@ -50,7 +50,7 @@ Each method call gets a frame on the stack. The frame holds that call's paramete
 
 Where to act: The scenario card, just above the three lane buttons.
 
-Next step: Trace the program line by line. A variable declared in `main` goes in the frame, a field goes in the object its variable refers to, and an arrow ends at the object whose reference the variable was given; `b = a` copies `a`'s arrow.
+Next step: Trace the program line by line. A variable declared in `main` goes in the frame, a field goes in the object its variable refers to, and an arrow ends at the object whose reference the variable was given. For a line with no `new`, ask where that reference came from.
 
 Balloons at a fair are tied to strings that children hold. A child may let go of one string, but the balloon stays as long as anyone still holds a string tied to it. A balloon with no string held by anyone drifts off and is gone for good, whenever the wind happens to take it.
 
@@ -75,7 +75,7 @@ Next step: A box is eligible only if no variable at all refers to it at that poi
 
 ## Sources
 
-Claims on this page were checked against the live official pages below on 25 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 26 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
 
 - Java Virtual Machine Specification SE 25, chapter 2: run-time data areas: Java Virtual Machine stacks and frames (2.5.2, 2.6) and the heap where all class instances and arrays are allocated (2.5.3).
 - Java Language Specification SE 25, chapter 12: Execution: reachable and unreachable objects and finalization (12.6, 12.6.1).

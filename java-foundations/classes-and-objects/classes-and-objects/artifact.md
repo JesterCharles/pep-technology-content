@@ -8,7 +8,7 @@
 
 ## Teaching
 
-Classes are new here, so guess: reviewers and interviewers check understanding by asking what code prints. `count++` adds 1 to `count`.
+Guess, using what the static members topic showed you; interviewers often ask what code prints. `count++` adds 1 to `count`.
 
 ```
 class Counter {
@@ -25,7 +25,7 @@ b.add();
 System.out.println(a.count + " " + b.count);
 ```
 
-A class is the blueprint written in code. It declares fields (data each object holds) and instance methods (actions on one object's fields). `new` followed by the class name creates an object while the program runs, with its own copy of every field. A reference variable does not hold the object: it holds a value that points to one object, the way a note with a street address points to one house.
+A class is the blueprint written in code. It declares fields (data each object holds) and instance methods (its actions). `new` followed by the class name creates an object while the program runs, with its own copy of every instance (non-static) field. A reference variable does not hold the object: it holds a value that points to one object, the way a note with a street address points to one house.
 
 ```
 class Lamp {
@@ -40,7 +40,7 @@ Lamp hall = desk;
 
 Here `Lamp` is the class, `new Lamp()` creates one object, and `desk` and `hall` both point to that same object.
 
-A field is declared in the class body with a type and a name, such as `int count;`. An instance method is written without `static` and runs on one object, the way `a.add()` changed only `a`'s count. A method that answers yes or no returns `boolean`:
+A field is declared in the class body with a type and a name, such as `int count;`. An instance method is written without `static` and runs on one object, the way `a.add()` changed only `a`'s count. A yes-or-no method returns `boolean`:
 
 ```
 class Counter {
@@ -49,18 +49,22 @@ class Counter {
         return count == 0;
     }
 }
+
+// inside main:
+Counter c = new Counter();
+Counter d = new Counter();
+c.count = 5;
 ```
 
-In `main`, `Counter c = new Counter();` creates an object and `c.count = 5;` sets that object's field. Fields you never set start at a default: `0` for numbers, `false` for `boolean`, `null` (no object) for references.
+Fields you never set start at a default: `0` for numbers, `false` for `boolean`, `null` (no object) for references.
 
-Only `new` creates an object. Assigning one reference variable to another copies the reference, so both variables then point to the same object. Interviewers ask about this often.
+For your own classes, only `new` creates an object. Assigning one reference variable to another copies the reference, so both variables then point to the same object. Interviewers ask about this often.
 
 ## Recap
 
 - A class declares fields and instance methods once; it is the blueprint.
-- Each `new` creates a separate object with its own copy of every field.
+- Each `new` creates a separate object with its own copy of every instance field.
 - A reference variable points to an object; assigning it to another variable copies the reference, not the object.
-- An instance method works on the fields of the object it is called on.
 
 ## Cheat sheet
 
@@ -104,7 +108,7 @@ Success criteria: the two printed lines differ because each object keeps its own
 
 ## Sources
 
-Claims on this page were checked against the live official pages below on 25 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 26 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
 
 - Java Language Specification SE 25, chapter 8: Classes: class declarations, fields (8.3) and instance methods (8.4).
 - Java Language Specification SE 25, chapter 4: Types, Values, and Variables: reference values that point to objects (4.3.1) and default field values (4.12.5).
@@ -124,7 +128,7 @@ Expected results and why. class Lamp { ... } : class; it declares the blueprint.
 
 ### explore
 
-Practice editor, reading version. JavaScript is off, so the editor cannot check code here. Work on paper or in your IDE. Task: in Book , add a String field title , an int field pages , and an instance method isLong() with no parameters that returns true when pages is over 300. In main , create two Book objects with new , each in its own variable, and set a different title on each. Starter, Shelf.java: class Book { // 1. Add a String field named title and an int field named pages. // 2. Add an instance method isLong() that returns true // when pages is over 300. } class Shelf { public static void main(String[] args) { // 3. Create two Book objects with new, each in its own // variable, and give each one a different title. } } What the practice editor reads: top-level classes with fields, constructors and methods; it checks their declarations and statement shapes, and reports anything else as not supported. How to compare: the six checks are: a String field title ; an int field pages ; isLong() is not static , takes no parameters and returns boolean ; it returns a comparison of pages with 300 in which exactly 300 is not long; main declares two Book variables, each created with new Book() ; and each variable's title is set to a different value. If you add a line that prints both titles, two different titles appear.
+Practice editor, reading version. JavaScript is off, so the editor cannot check code here. Work on paper or in your IDE. Task: in Book , add a String field title , an int field pages , and an instance method isLong() with no parameters that returns true when pages is over 300. In main , create two Book objects with new , each in its own variable, and set a different title on each. Starter, Shelf.java: class Book { // 1. Add a String field named title // and an int field named pages. // 2. Add an instance method isLong() that returns true // when pages is over 300. } class Shelf { public static void main(String[] args) { // 3. Create two Book objects with new, each in its own // variable, and give each one a different title. } } What the practice editor reads: top-level classes with fields, constructors and methods; it checks their declarations and statement shapes, and reports anything else as not supported. How to compare: the six checks are: a String field title ; an int field pages ; isLong() is not static , takes no parameters and returns boolean ; it returns a comparison of pages with 300 in which exactly 300 is not long; main declares two Book variables, each created with new Book() ; and each variable's title is set to a different value. If you add a line that prints both titles, two different titles appear.
 
 ### mcq
 

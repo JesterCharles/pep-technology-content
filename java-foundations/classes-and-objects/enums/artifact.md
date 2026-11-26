@@ -26,7 +26,7 @@ static final int LEVEL_HIGH = 2;
 void setLevel(int level) { ... }
 ```
 
-With `int` constants, the names are just labels for numbers, so any `int` is accepted. The enum gives each constant its own type.
+With `int` constants, the names are just labels for numbers, so any `int` is accepted. With the enum, only `Volume` values are accepted.
 
 An enum is a class, so it can have fields, a constructor and methods. Each constant passes arguments to the constructor in parentheses. The constant list comes first and ends with a semicolon, and an enum constructor is never `public`: only the constants call it.
 
@@ -59,7 +59,7 @@ A `switch` expression, one that produces a value, must cover every constant or h
 
 ## Model
 
-An enum declares a type whose only values are a fixed list of named constants. A variable of type `Size` can hold only `Size.SMALL`, `Size.MEDIUM`, `Size.LARGE` or `null`, and the compiler enforces that. Compare two ways to say how loud a speaker is:
+An enum declares a type whose only values are a fixed list of named constants. A variable of type `Size` can hold only `Size.SMALL`, `Size.MEDIUM`, `Size.LARGE` or `null`, and the compiler enforces that (this is called type safety). Compare two ways to say how loud a speaker is:
 
 ## Recap
 
@@ -99,7 +99,7 @@ Success criteria: the compiler rejects `label()` until it has a case for the new
 
 ## Sources
 
-Claims on this page were checked against the live official pages below on 25 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 26 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
 
 - Java Language Specification SE 25, chapter 8: Classes: enum classes (8.9): enum constants, bodies with fields, constructors and methods, and enum constructors that must not be public or protected (8.9.2).
 - Java Language Specification SE 25, chapter 14: Blocks, Statements, and Patterns: the switch statement and which switch statements must be exhaustive (14.11.1.1, 14.11.2).

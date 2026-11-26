@@ -23,7 +23,7 @@ System.out.println(p.lives);
 
 Not every field deserves a setter. A value fixed at creation is set once in the constructor and never again. A value that changes only by rules, such as a balance, changes through methods named for those actions, such as `deposit`.
 
-A setter checks its argument before it changes the field. To refuse a value, it can throw an exception: the statement `throw new IllegalArgumentException("message");` stops the method at once and reports the bad argument to the caller, so the field keeps its old valid value. Exceptions get a full module later; here you need only this one statement.
+A setter checks its argument before it changes the field. To refuse a value, it can throw an exception: the statement `throw new IllegalArgumentException("message");` stops the method at once and reports the bad argument to the caller, so the field keeps its old valid value. Exceptions get a full module later; here you need only this one statement. The access modifiers page clamped a target into range; refusing instead tells the caller the value was wrong.
 
 ```
 class Player {
@@ -90,7 +90,7 @@ Success criteria: no code outside the class can make `count` negative or skip a 
 
 ## Sources
 
-Claims on this page were checked against the live official pages below on 25 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 26 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
 
 - Java Language Specification SE 25, chapter 6: Names: private access control (6.6).
 - Java Language Specification SE 25, chapter 14: Blocks, Statements, and Patterns: the throw statement (14.18) completes abruptly, so the statements after it do not run.

@@ -8,7 +8,7 @@
 
 ## Teaching
 
-Immutability is new here, so guess what this program prints.
+The strings topic used this rule without naming it; predict what this program prints before you read why.
 
 ```
 // inside main:
@@ -17,9 +17,9 @@ s.toUpperCase();
 System.out.println(s);
 ```
 
-A `StringBuilder` is the mutable partner. Its `append`, `insert` and `reverse` methods change the builder object itself.
+A `StringBuilder` is the mutable partner. Its `append` (add to the end), `insert` (add at a position) and `reverse` methods change the builder object itself; `toString()` only reads it and returns a new `String`.
 
-Because a `String` cannot change, `line = line + i + ","` inside a loop builds a whole new string on every pass and drops the old one. A `StringBuilder` keeps one growing buffer instead:
+Because a `String` cannot change, `line = line + i + ","` inside a loop builds a whole new string on every pass and drops the old one. A `StringBuilder` keeps one piece of text that grows in place. `append` returns the same builder, so calls can be chained:
 
 ```
 StringBuilder sb = new StringBuilder();
@@ -35,7 +35,7 @@ Because no code can change a `String` object, any number of variables can safely
 
 ## Model
 
-A `String` object is immutable: once created, its characters never change. Methods such as `toUpperCase`, `replace`, `concat` and `trim` return the result as a string and leave the original untouched; when there is nothing to change, some may simply return the same string. To keep a result, assign it: `s = s.trim();`. That moves the variable to the result; the old string is not altered.
+A `String` object is immutable: once created, its characters never change. Methods such as `toUpperCase`, `replace` (swap characters), `concat` (join text) and `trim` (drop outer spaces) return the result as a string and leave the original untouched; when there is nothing to change, some may simply return the same string. To keep a result, assign it: `s = s.trim();`. That moves the variable to the result; the old string is not altered.
 
 ## Recap
 
@@ -48,7 +48,7 @@ A `String` object is immutable: once created, its characters never change. Metho
 
 Where to act: The scenario card, just above the two lane buttons.
 
-Next step: First look at the variable's type: is the call made on `s` or on `sb`? The type decides the answer before the method name does.
+Next step: Ask whether the call edits the object it is made on, or only reads it and hands back a result. A `String` can only do the second; a `StringBuilder` can do either.
 
 Where to act: The line `String line = "";` and the loop body under it.
 
@@ -70,7 +70,7 @@ Next step: The method promises a `String`, but your builder is a `StringBuilder`
 
 ## Sources
 
-Claims on this page were checked against the live official pages below on 25 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
+Claims on this page were checked against the live official pages below on 26 November 2026 (UTC), for Java SE 25. Links open outside this lesson.
 
 - String (Java SE 25 API): strings are constant and cannot be changed after creation; toUpperCase, replace, concat and trim return their result, and trim returns this string when there is nothing to remove.
 - StringBuilder (Java SE 25 API): a mutable sequence of characters; append, insert and reverse modify the builder and return it; toString.
@@ -85,7 +85,7 @@ Expected results and why. It prints java . toUpperCase() returns its result inst
 
 ### drag
 
-Expected results and why. Original unchanged, result returned: s.toUpperCase() , s.replace('a', 'o') , s.concat("!") , s.trim() . Changes the object itself: sb.append("!") , sb.reverse() , sb.insert(0, "x") .
+Expected results and why. Original unchanged, result returned: s.toUpperCase() , sb.toString() , s.concat("!") , s.trim() . Changes the object itself: sb.append("!") , sb.reverse() , sb.insert(0, "x") .
 
 ### explore
 
